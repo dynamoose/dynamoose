@@ -1,0 +1,41 @@
+{
+  "name": "dynamoose",
+  "version": "0.0.1",
+  "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt test"
+  },
+  "keywords": [
+    "dynamodb",
+    "dynamo",
+    "mongoose",
+    "aws",
+    "amazon",
+    "document",
+    "model",
+    "schema",
+    "database",
+    "data",
+    "datastore",
+    "query",
+    "scan",
+    "nosql",
+    "db"
+  ],
+  "author": "Brandon Goode <brandon@automategreen.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*",
+    "grunt": "*",
+    "grunt-contrib-jshint": "*",
+    "grunt-mocha-test": "*",
+    "blanket": "*",
+    "travis-cov": "*"
+  },
+  "dependencies": {
+    "debug": "~0.7.4",
+    "aws-sdk": "~2.0.0-rc9"
+  }
+}

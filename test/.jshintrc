@@ -1,0 +1,26 @@
+{
+  "boss": true,
+  "curly": true,
+  "eqeqeq": true,
+  "eqnull": true,
+  "expr": true,
+  "immed": false,
+  "noarg": true,
+  "smarttabs": true,
+  "trailing": true,
+  "undef": true,
+  "unused": true,
+  "jquery": true,
+  "browser": true,
+  "node": true,
+  "globals": {
+    "describe": false,
+    "it": false,
+    "suite": false,
+    "test": false,
+    "before": false,
+    "after": false,
+    "afterEach": false,
+    "beforeEach": false
+  }
+}

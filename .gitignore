@@ -1,0 +1,8 @@
+.DS_Store
+thumbs.db
+*.log
+node_modules/
+.settings
+.session.vim
+coverage.html
+lib-cov/
