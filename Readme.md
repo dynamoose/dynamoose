@@ -12,7 +12,7 @@ Dynamoose uses the official [AWS SDK](https://github.com/aws/aws-sdk-js).
     
 ## Stability
 
-**Unstable** This modules is currently under development and functionally may change.
+**Unstable** This module is currently under development and functionally may change.
 
 ## Overview
 
@@ -20,7 +20,7 @@ Here's a simple example:
 
 ```js
 
-var dynamoose = require('Dynamoose');
+var dynamoose = require('dynamoose');
 
 dynamoose.AWS.config.update({
   accessKeyId: 'AKID',
@@ -44,7 +44,7 @@ badCat.save(function (err) {
 ### Dynamoose
 
 ```js
-var dynamoose = require('Dynamoose');
+var dynamoose = require('dynamoose');
 ```
 
 #### dynamoose.model(name, schema, options)
@@ -138,7 +138,7 @@ var dogSchema  = new Schema({
 
 ##### Attribute Types
 
-Each key represent an attribute in the DynamoDB table.  The value of the key can either be the attribute type or an Object describing the attribute.
+Each key represents an attribute in the DynamoDB table.  The value of the key can either be the attribute type or an Object describing the attribute.
 
 Valid attribute types are:
 
@@ -162,11 +162,11 @@ Required for all attribute definitions. Defines the attribute type.  See [Attrib
 
 **hashKey**: boolean
 
-Defines which attribute is the hash key for the table.  If no attribute is defined as the hash key, the first attribute is assumed to be the hash key.
+Defines the hash key attribute for the table.  If no attribute is defined as the hash key, the first attribute is assumed to be the hash key.
 
 **rangeKey**: boolean
 
-Defines which attribute is the range key.
+Defines the range key attribute.
 
 **required**: boolean
 
@@ -174,7 +174,7 @@ Defines if the attribute is required.  Prior to saving an entry, if the attribut
 
 **index**: boolean | {...}
 
-Defines the attribute as a local or global secondary index. Index can either be true or a index definition object. The index definition object can contain the following keys:
+Defines the attribute as a local or global secondary index. Index can either be true or an index definition object. The index definition object can contain the following keys:
 
 - _name: 'string'_ - Name of index (Default is `attribute.name + (global ? 'GlobalIndex' : 'LocalIndex')``).
 - _global: boolean_ - Set the index to be a global secondary index.  Attribute will be the hash key for the Index.
@@ -186,7 +186,7 @@ Defines the attribute as a local or global secondary index. Index can either be 
 
 Applies a default to the attribute's value when saving, if the values is null or undefined.
 
-If default is a function, the function is called and the response is assigned to the attribute's value.
+If default is a function, the function is called, and the response is assigned to the attribute's value.
 
 If it is a value, the value is simply assigned. 
 
@@ -194,7 +194,7 @@ If it is a value, the value is simply assigned.
 
 Validation required before for saving.  
 
-If validate is a function, the function is used to validate the attributes value. Must have the signature:
+If validate is a function, the function is used to validate the attribute's value. The function must have the signature:
 
 ```js
 function(value) {
@@ -211,7 +211,7 @@ If it is a value, it is compared with `===`.
 
 **trim**: boolean
 
-Trim white space from string when saving to DB.
+Trim whitespace from string when saving to DB.
 
 **lowercase**: boolean
 
@@ -225,7 +225,7 @@ Convert to uppercase when saving to DB.
 
 **throughput**: boolean | {read: number, write: number}
 
-Sets the through put of the DynamoDB table.  The value can either be a number or an Object with the keys read and write `{read: 5, write: 2}`. If it is a number, both read and write are configured to the same number.  If it is omitted the default value is 1 for both read and write.
+Sets the throughput of the DynamoDB table.  The value can either be a number or an Object with the keys read and write `{read: 5, write: 2}`. If it is a number, both read and write are configured to the same number.  If it is omitted, the default value is 1 for both read and write.
 
 ```js
 var schema = New Schema({...}, { throughput: 5});
@@ -301,7 +301,7 @@ Scans a table. If callback is not provided, then a Scan object is returned. See 
 
 #### Model.query(query, options, callback)
 
-Queries a table or index. The query parameter can either the the hash key of the table or global index or a complete query object. If the callback is provided, the exec command is called automatically and the query parameter must be a query object.
+Queries a table or index. The query parameter can either the the hash key of the table or global index or a complete query object. If the callback is provided, the exec command is called automatically, and the query parameter must be a query object.
 
 ```js
 Dog.query('breed').eq('Beagle').exec(function (err, dogs) {
@@ -325,11 +325,11 @@ Set the range key of the table or index to query.
 
 #### query.eq(value)
 
-Hash or range key must equal the value provided. This is the only comparison allowed for a hash key.
+Hash or range key must equal the value provided. This is the only comparison option allowed for a hash key.
 
 #### query.lt(value)
 
-Range key less than value.
+Range key less than the value.
 
 #### query.le(value)
 
@@ -341,7 +341,7 @@ Range key greater than or equal value.
 
 #### query.gt(value)
 
-Range key greater than value.
+Range key greater than the value.
 
 #### query.beginsWith(value)
 
@@ -353,7 +353,7 @@ Range key is between values a and b.
 
 #### query.limit(limit)
 
-Limits the number of responses.
+Limit the number of responses.
 
 #### query.consistent()
 
@@ -380,7 +380,7 @@ Set the attributes to return.
 
 #### Model.scan(filter, options, callback)
 
-Scans a table. The optional filter parameter can either be an attribute of the table or a complete filter object. If the callback is provided, the exec command is called automatically and the scan parameter must be a scan object.
+Scans a table. The optional filter parameter can either be an attribute of the table or a complete filter object. If the callback is provided, the exec command is called automatically, and the scan parameter must be a Scan object.
 
 ```js
 Dog.scan('breed').contains('Terrier').exec(function (err, dogs) {
@@ -409,35 +409,68 @@ Dog.scan().exec(function (err, dogs, lastKey) {
 
 #### scan.exec(callback)
 
+Executes a scan against a table
+
 #### scan.and()
+
+For readability only. Scans us AND logic for multiple attributes.  `and()` does not provide any functionality and can be omitted.
 
 #### scan.where(filter)
 
+Add additional attribute to the filter list.
+
 #### scan.not()
+
+Inverts the filter logic that follows.
 
 #### scan.null()
 
+Scan attribute for null.
+
 #### scan.eq(value)
+
+Attribute is equal to the value.
 
 #### scan.lt(value)
 
+Attribute is less than the value.
+
 #### scan.le(value)
+
+Attribute is less than or equal value.
 
 #### scan.ge(value)
 
+Attribute is greater than or equal value.
+
 #### scan.gt(value)
+
+Attribute is greater than the value.
 
 #### scan.contains(value)
 
+Attribute contains the value.
+
 #### scan.beginsWith(value)
+
+Attribute begins with the value.
 
 #### scan.in(values)
 
+Attribute is in values array.
+
 #### scan.between(a, b)
+
+Attribute is between value a and b.
 
 #### scan.limit(limit)
 
+Limit scan response to limit.
+
 #### scan.startAt(key)
+
+Start scan at key.  Use LastEvaluatedKey returned in scan.exec() callback.
 
 #### scan.attributes(attributes)
 
+Set the attributes to return.
