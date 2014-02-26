@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - "0.10"
+before_script:
+  - npm install -g grunt-cli
+  - wget http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest
+  - tar xfz dynamodb_local_latest -C dynamodb_local
+  - cd dynamodb_local
+  - java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -inMemory &

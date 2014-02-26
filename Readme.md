@@ -252,7 +252,7 @@ var odie = new Dog({
 });
 ```
 
-#### model.put(callback) & model.save(callback)
+#### model.put(options, callback) & model.save(options, callback)
 
 Puts the item in the DynamoDB table.  Will overwrite the item.
 
@@ -263,14 +263,48 @@ odie.save(function (err) {
 });
 ```
 
+##### Options
+
+**overwrite**: boolean
+
+Overwrite existing item. Defaults to true.
+
+#### Model.create(object, options, callback)
+
+Creates a new instance of the model and save the item in the table. 
+
+```js
+Dog.create({
+  ownerId: 4,
+  name: 'Odie',
+  breed: 'Beagle',
+  color: ['Tan'],
+  cartoon: true
+}, function(err, odie) {
+  if(err) { return console.log(err); }
+  console.log('Odie is a ' + odie.breed);
+});
+```
+
 #### Model.get(key, options, callback)
 
-Get's an item from the table. 
+Gets an item from the table. 
 
 ```js
 Dog.get('{ownerId: 4, name: 'Odie'}, function(err, odie) {
   if(err) { return console.log(err); }
   console.log('Odie is a ' + odie.breed);
+});
+```
+
+#### Model.delete(key, options, callback)
+
+Deletes an item from the table. 
+
+```js
+Dog.delete('{ownerId: 4, name: 'Odie'}, function(err) {
+  if(err) { return console.log(err); }
+  console.log('Bye bye Odie');
 });
 ```
 
