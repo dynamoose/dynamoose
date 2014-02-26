@@ -7,3 +7,4 @@ before_script:
   - tar xfz dynamodb_local_2014-01-08.tar.gz
   - cd dynamodb_local_2014-01-08
   - java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -inMemory &
+  - cd ..
