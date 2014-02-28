@@ -210,6 +210,14 @@ If it is a RegExp, it is compared using `RegExp.text(value)`.
 
 If it is a value, it is compared with `===`.
 
+**set**: function
+
+Adds a setter function that will be used to transform the value before writing to the DB.
+
+**get**: function
+
+Adds a getter function that will be used to transform the value return from the DB.
+
 **trim**: boolean
 
 Trim whitespace from string when saving to DB.
