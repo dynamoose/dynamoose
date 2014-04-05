@@ -117,6 +117,18 @@ describe('Query', function (){
     });
   });
 
+
+  it('Basic Query One', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.queryOne('ownerId').eq(1).exec(function (err, oneDog) {
+      should.not.exist(err);
+      should.exist(oneDog);
+      oneDog.ownerId.should.eql(1);
+      done();
+    });
+  });
+
   it('Basic Query on Secondary Global Index', function (done) {
     var Dog = dynamoose.model('Dog');
 
