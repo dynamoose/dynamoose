@@ -311,7 +311,7 @@ Dog.get('{ownerId: 4, name: 'Odie'}, function(err, odie) {
 Deletes an item from the table. 
 
 ```js
-Dog.delete('{ownerId: 4, name: 'Odie'}, function(err) {
+Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
   if(err) { return console.log(err); }
   console.log('Bye bye Odie');
 });
@@ -332,13 +332,53 @@ odie.delete(function(err) {
 
 Queries a table or index.  If callback is not provided, then a Query object is returned. See [Query](#query).
 
+#### Model.queryOne(query, options, callback)
+
+Same functionality as query except only return the first result object (if any). See [Query](#query).
+
 #### Model.scan(filter, options, callback)
 
 Scans a table. If callback is not provided, then a Scan object is returned. See [Scan](#scan).
 
 #### Model.update(key, update, callback)
 
-*Future release*
+Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE. Refer to DynamoDB's updateItem documentation for details on how PUT, ADD, and DELETE work.
+
+**$PUT**
+
+Put is the default behavior.  The two example below are identical.
+
+```js
+Dog.update({ownerId: 4, name: 'Odie'}, {age: 1}, function (err) {
+  if(err) { return console.log(err); }
+  console.log('Just a puppy');
+})
+```
+
+```js
+Dog.update({ownerId: 4, name: 'Odie'}, {$PUT: {age: 1}}, function (err) {
+  if(err) { return console.log(err); }
+  console.log('Just a puppy');
+})
+```
+
+**$ADD**
+
+```js
+Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
+  if(err) { return console.log(err); }
+  console.log('Birthday boy');
+})
+```
+
+**$DELETE**
+
+```js
+Dog.update({ownerId: 4, name: 'Odie'}, {$DELETE: {age: null}}, function (err) {
+  if(err) { return console.log(err); }
+  console.log('Too old to keep count');
+})
+```
 
 ### Query
 
