@@ -185,9 +185,9 @@ describe('Query', function (){
   it('Basic Query on SGI limit 1', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').eq('Jack Russell Terrier').limit(1).exec(function (err, dogs, lastKey) {
+    Dog.query('breed').eq('Jack Russell Terrier').limit(1).exec(function (err, dogs) {
       should.not.exist(err);
-      should.exist(lastKey);
+      should.exist(dogs.lastKey);
       dogs.length.should.eql(1);
       dogs[0].ownerId.should.eql(1);
       done();
@@ -201,9 +201,9 @@ describe('Query', function (){
      ownerId: { N: '1' },
      name: { S: 'Foxy Lady' } };
 
-    Dog.query('breed').eq('Jack Russell Terrier').startAt(startKey).limit(1).exec(function (err, dogs, lastKey) {
+    Dog.query('breed').eq('Jack Russell Terrier').startAt(startKey).limit(1).exec(function (err, dogs) {
       should.not.exist(err);
-      should.exist(lastKey);
+      should.exist(dogs.lastKey);
       dogs.length.should.eql(1);
       dogs[0].ownerId.should.eql(2);
       done();
@@ -213,9 +213,9 @@ describe('Query', function (){
   it('Basic Query on SGI with attributes', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').eq('Jack Russell Terrier').attributes(['name']).exec(function (err, dogs, lastKey) {
+    Dog.query('breed').eq('Jack Russell Terrier').attributes(['name']).exec(function (err, dogs) {
       should.not.exist(err);
-      should.not.exist(lastKey);
+      should.not.exist(dogs.lastKey);
       dogs.length.should.eql(4);
       dogs[0].should.not.have.property('ownerId');
       dogs[0].should.have.property('name', 'Foxy Lady');
