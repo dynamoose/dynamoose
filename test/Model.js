@@ -11,9 +11,19 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat = dynamoose.model('Cat', { id: Number, name: String, owner: String, age: Number });
+var Cat;
 
 describe('Model', function (){
+
+
+  before(function(done) {
+    this.timeout(12000);
+
+    Cat = dynamoose.model('Cat', { id: Number, name: String, owner: String, age: Number });
+
+    //Wait for table to be created -- temp travis CI work around
+    setTimeout(done, 10000);
+  });
 
   it('Create simple model', function (done) {
 
@@ -51,10 +61,7 @@ describe('Model', function (){
 
     dynamoObj.should.eql({ id: { N: '1' }, name: { S: 'Fluffy' } });
 
-    // wait for table to be created
-    setTimeout(function() {
-        kitten.save(done);
-    }, 1000);
+    kitten.save(done);
 
 
   });
