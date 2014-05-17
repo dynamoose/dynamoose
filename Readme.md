@@ -10,7 +10,7 @@ Dynamoose uses the official [AWS SDK](https://github.com/aws/aws-sdk-js).
 ## Installation
 
     $ npm install dynamoose
-    
+
 ## Stability
 
 **Unstable** This module is currently under development and functionally may change.
@@ -189,7 +189,7 @@ Applies a default to the attribute's value when saving, if the values is null or
 
 If default is a function, the function is called, and the response is assigned to the attribute's value.
 
-If it is a value, the value is simply assigned. 
+If it is a value, the value is simply assigned.
 
 **validate**: function | RegExp | value
 
@@ -280,7 +280,7 @@ Overwrite existing item. Defaults to true.
 
 #### Model.create(object, options, callback)
 
-Creates a new instance of the model and save the item in the table. 
+Creates a new instance of the model and save the item in the table.
 
 ```js
 Dog.create({
@@ -297,7 +297,7 @@ Dog.create({
 
 #### Model.get(key, options, callback)
 
-Gets an item from the table. 
+Gets an item from the table.
 
 ```js
 Dog.get('{ownerId: 4, name: 'Odie'}, function(err, odie) {
@@ -308,7 +308,7 @@ Dog.get('{ownerId: 4, name: 'Odie'}, function(err, odie) {
 
 #### Model.delete(key, options, callback)
 
-Deletes an item from the table. 
+Deletes an item from the table.
 
 ```js
 Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
@@ -404,7 +404,11 @@ Executes the query against the table or index.
 
 #### query.where(rangeKey)
 
-Set the range key of the table or index to query. 
+Set the range key of the table or index to query.
+
+#### query.filter(filter)
+
+Set the atribulte on which to filter.
 
 #### query.eq(value)
 
@@ -477,7 +481,7 @@ Dog.scan({breed: {contains: 'Terrier'} }, function (err, dogs) {
 });
 ```
 
-To get all the items in a table, do not provide a filter. 
+To get all the items in a table, do not provide a filter.
 
 ```js
 Dog.scan().exec(function (err, dogs, lastKey) {
@@ -498,7 +502,7 @@ Executes a scan against a table
 
 For readability only. Scans us AND logic for multiple attributes.  `and()` does not provide any functionality and can be omitted.
 
-#### scan.where(filter)
+#### scan.where(filter) | scan.filter(filter)
 
 Add additional attribute to the filter list.
 

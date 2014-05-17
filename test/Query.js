@@ -51,7 +51,7 @@ describe('Query', function (){
       }
     });
 
-    var Dog = dynamoose.model('Dog', dogSchema);
+    var Dog = dynamoose.model('Dog', dogSchema, {create: false});
 
     function addDogs (dogs) {
       if(dogs.length <= 0) {
@@ -66,7 +66,10 @@ describe('Query', function (){
       });
     }
 
-    setTimeout(function() {
+    Dog.$__.table.create(function (err) {
+      if(err) {
+        done(err);
+      }
       addDogs([
         {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black'},
         {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown'},
@@ -87,10 +90,9 @@ describe('Query', function (){
         {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: 'Yellow'},
         {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
         {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white'},
-        {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white'}]);
-        }, 1000);
-
-
+        {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white'}
+      ]);
+    });
   });
 
   after(function (done) {
@@ -228,6 +230,57 @@ describe('Query', function (){
 
     Dog.query('ownerId').eq(2).consistent().exec(function (err, dogs) {
       should.not.exist(err);
+      dogs.length.should.eql(2);
+      done();
+    });
+  });
+
+  it('Basic Query on SGI with filter contains', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .where('ownerId').eq(1)
+    .filter('color').contains('Black').exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(1);
+      done();
+    });
+  });
+
+  it('Basic Query on SGI with filter null', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .filter('color').not().null().exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(5);
+      done();
+    });
+  });
+
+  it('Basic Query on SGI with filter not eq and not lt', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .filter('color').not().eq('Brown')
+    .and()
+    .filter('ownerId').not().lt(10).exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(11);
+      done();
+    });
+  });
+
+  it('Basic Query on SGI with filter not contains or beginsWith', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').not().contains('Brown')
+    .or()
+    .filter('name').beginsWith('Q').exec()
+    .then(function (dogs) {
       dogs.length.should.eql(2);
       done();
     });
