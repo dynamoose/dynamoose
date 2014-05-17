@@ -48,13 +48,32 @@ badCat.save(function (err) {
 var dynamoose = require('dynamoose');
 ```
 
-#### dynamoose.model(name, schema, options)
+#### dynamoose.model(name, schema, [options], [callback])
 
-Compiles a new model or looks up an existing model.
+Compiles a new model or looks up an existing model. `options` and `callback` are optional. `callback` can be used to wait for a model's table to be created.
+
+Default `options`:
+
+```js
+{
+  create: true // Create table in DB if it does not exist
+}
+```
 
 ```js
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
 ```
+
+Example of using callback:
+
+```js
+var Dog = dynamoose.model('Dog', { name: String, breed: String}, addDogs);
+
+function addDogs(err) {
+  Dog.create({name: 'Odie', breed: 'Beagle'}, function (err, odie) {
+
+  });
+}
 
 #### dynamoose.local(url)
 

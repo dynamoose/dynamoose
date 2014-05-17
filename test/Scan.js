@@ -50,7 +50,6 @@ describe('Scan', function (){
       }
     });
 
-    var Dog = dynamoose.model('Dog', dogSchema);
 
     function addDogs (dogs) {
       if(dogs.length <= 0) {
@@ -65,7 +64,10 @@ describe('Scan', function (){
       });
     }
 
-    setTimeout(function() {
+    var Dog = dynamoose.model('Dog', dogSchema, function (err) {
+      if(err) {
+        return done(err);
+      }
       addDogs([
         {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier ', color: ['White', 'Brown', 'Black']},
         {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: ['White', 'Brown']},
@@ -87,7 +89,7 @@ describe('Scan', function (){
         {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
         {ownerId:18, name: 'Lassie', breed: 'Collie', color: ['tan', 'white']},
         {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true}]);
-        }, 1000);
+      });
 
 
   });
