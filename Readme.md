@@ -7,15 +7,13 @@ In switching from MongoDB/Mongoose to DynamoDB, we missed the modeling provided 
 
 Dynamoose uses the official [AWS SDK](https://github.com/aws/aws-sdk-js).
 
-## Installation
+## Getting Started
+
+### Installation
 
     $ npm install dynamoose
 
-## Stability
-
-**Unstable** This module is currently under development and functionally may change.
-
-## Overview
+### Example
 
 Here's a simple example:
 
@@ -99,6 +97,24 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
+```
+
+#### dynamoose.defaults(options)
+
+Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.  
+
+Default `options`:
+
+```js
+{
+  create: true // Create table in DB if it does not exist
+}
+```
+
+It is recommended that `create` be disabled for production environments.
+
+```js
+dynamoose.defaults( { create: false });
 ```
 
 #### dynamoose.Schema
