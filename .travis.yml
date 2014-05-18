@@ -5,6 +5,5 @@ before_script:
   - npm install -g grunt-cli
   - wget http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_2014-04-24.tar.gz
   - tar xfz dynamodb_local_2014-04-24.tar.gz
-  - cd dynamodb_local_2014-04-24
   - java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -inMemory &
   - cd ..
