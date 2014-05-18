@@ -7,37 +7,41 @@ In switching from MongoDB/Mongoose to DynamoDB, we missed the modeling provided 
 
 Dynamoose uses the official [AWS SDK](https://github.com/aws/aws-sdk-js).
 
-## Installation
+## Getting Started
+
+### Installation
 
     $ npm install dynamoose
-    
-## Stability
 
-**Unstable** This module is currently under development and functionally may change.
+### Example
 
-## Overview
+Set AWS configurations in enviroment varable:
+
+```sh
+export AWS_ACCESS_KEY_ID="Your AWS Access Key ID"
+export AWS_SECRET_ACCESS_KEY="Your AWS Secret Access Key"
+export AWS_REGION="us-east-1"
+```
 
 Here's a simple example:
 
 ```js
-
 var dynamoose = require('dynamoose');
 
-dynamoose.AWS.config.update({
-  accessKeyId: 'AKID',
-  secretAccessKey: 'SECRET',
-  region: 'us-east-1'
-});
-
+// Create cat model with default options
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
 
-var badCat = new Cat({id: 666, name: 'Garfield'});
+// Create a new cat object
+var garfield = new Cat({id: 666, name: 'Garfield'});
 
-badCat.save(function (err) {
-  if (err) { return console.log(err); }
-  console.log('Never trust a smiling cat.');
+// Save to DynamoDB
+garfield.save();
+
+// Lookup in DynamoDB
+Cat.get(666)
+.then(function (badCat) {
+  console.log('Never trust a smiling cat. - ' + badCat.name);
 });
-
 ```
 
 ## API
@@ -48,9 +52,21 @@ badCat.save(function (err) {
 var dynamoose = require('dynamoose');
 ```
 
-#### dynamoose.model(name, schema, options)
+#### dynamoose.model(name, schema, [options])
 
-Compiles a new model or looks up an existing model.
+Compiles a new model or looks up an existing model. `options` is optional.
+
+Default `options`:
+
+```js
+{
+  create: true, // Create table in DB, if it does not exist
+  waitForActive: true, // Wait for table to be created before trying to us it
+  waitForActiveTimeout: 180000 // wait 3 minutes for table to activate
+}
+```
+
+Basic example:
 
 ```js
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
@@ -80,6 +96,24 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
+```
+
+#### dynamoose.defaults(options)
+
+Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.  
+
+Default `options`:
+
+```js
+{
+  create: true // Create table in DB if it does not exist
+}
+```
+
+It is recommended that `create` be disabled for production environments.
+
+```js
+dynamoose.defaults( { create: false });
 ```
 
 #### dynamoose.Schema
@@ -189,7 +223,7 @@ Applies a default to the attribute's value when saving, if the values is null or
 
 If default is a function, the function is called, and the response is assigned to the attribute's value.
 
-If it is a value, the value is simply assigned. 
+If it is a value, the value is simply assigned.
 
 **validate**: function | RegExp | value
 
@@ -280,7 +314,7 @@ Overwrite existing item. Defaults to true.
 
 #### Model.create(object, options, callback)
 
-Creates a new instance of the model and save the item in the table. 
+Creates a new instance of the model and save the item in the table.
 
 ```js
 Dog.create({
@@ -297,10 +331,10 @@ Dog.create({
 
 #### Model.get(key, options, callback)
 
-Gets an item from the table. 
+Gets an item from the table.
 
 ```js
-Dog.get('{ownerId: 4, name: 'Odie'}, function(err, odie) {
+Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
   if(err) { return console.log(err); }
   console.log('Odie is a ' + odie.breed);
 });
@@ -308,7 +342,7 @@ Dog.get('{ownerId: 4, name: 'Odie'}, function(err, odie) {
 
 #### Model.delete(key, options, callback)
 
-Deletes an item from the table. 
+Deletes an item from the table.
 
 ```js
 Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
@@ -404,35 +438,69 @@ Executes the query against the table or index.
 
 #### query.where(rangeKey)
 
-Set the range key of the table or index to query. 
+Set the range key of the table or index to query.
+
+#### query.filter(filter)
+
+Set the atribulte on which to filter.
+
+#### query.and()
+
+Use add logic for filters.
+
+#### query.or()
+
+Use or logic for filters.
+
+#### scan.not()
+
+Inverts the filter logic that follows.
+
+#### scan.null()
+
+Filter attribute for null.
 
 #### query.eq(value)
 
-Hash or range key must equal the value provided. This is the only comparison option allowed for a hash key.
+Hash, range key, or filter must equal the value provided. This is the only comparison option allowed for a hash key.
 
 #### query.lt(value)
 
-Range key less than the value.
+Range key or filter less than the value.
 
 #### query.le(value)
 
-Range key less than or equal value.
+Range key or filter less than or equal value.
 
 #### query.ge(value)
 
-Range key greater than or equal value.
+Range key or filter greater than or equal value.
 
 #### query.gt(value)
 
-Range key greater than the value.
+Range key or filter greater than the value.
 
 #### query.beginsWith(value)
 
-Range key begins with value
+Range key or filter begins with value
 
 #### query.between(a, b)
 
-Range key is between values a and b.
+Range key or filter is between values a and b.
+
+Attribute is greater than the value.
+
+#### scan.contains(value)
+
+Filter contains the value.
+
+#### scan.beginsWith(value)
+
+Filter begins with the value.
+
+#### scan.in(values)
+
+Filter is in values array.
 
 #### query.limit(limit)
 
@@ -477,7 +545,7 @@ Dog.scan({breed: {contains: 'Terrier'} }, function (err, dogs) {
 });
 ```
 
-To get all the items in a table, do not provide a filter. 
+To get all the items in a table, do not provide a filter.
 
 ```js
 Dog.scan().exec(function (err, dogs, lastKey) {
@@ -498,7 +566,7 @@ Executes a scan against a table
 
 For readability only. Scans us AND logic for multiple attributes.  `and()` does not provide any functionality and can be omitted.
 
-#### scan.where(filter)
+#### scan.where(filter) | scan.filter(filter)
 
 Add additional attribute to the filter list.
 

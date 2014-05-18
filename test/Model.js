@@ -19,10 +19,15 @@ describe('Model', function (){
   before(function(done) {
     this.timeout(12000);
 
-    Cat = dynamoose.model('Cat', { id: Number, name: String, owner: String, age: Number });
+    Cat = dynamoose.model('Cat',
+    {
+      id: Number,
+      name: String,
+      owner: String,
+      age: Number
+    });
 
-    //Wait for table to be created -- temp travis CI work around
-    setTimeout(done, 10000);
+    done();
   });
 
   it('Create simple model', function (done) {
