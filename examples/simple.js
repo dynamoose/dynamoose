@@ -22,13 +22,13 @@ dynamoose.AWS.config.update({
 // dynamoose.local(); // Use a local DynamoDB
 
 
-var Cat = dynamoose.model('Cat', { id: Number, name: String }, function (err) {
-  if (err) { return console.log(err); }
+var Cat = dynamoose.model('Cat', { id: Number, name: String });
 
-  var badCat = new Cat({id: 666, name: 'Garfield'});
+var garfield = new Cat({id: 666, name: 'Garfield'});
 
-  badCat.save(function (err) {
-    if (err) { return console.log(err); }
-    console.log('Never trust a smiling cat.');
-  });
+garfield.save();
+
+Cat.get(666)
+.then(function (badCat) {
+  console.log('Never trust a smiling cat. - ' + badCat.name);
 });

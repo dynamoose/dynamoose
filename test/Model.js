@@ -25,10 +25,9 @@ describe('Model', function (){
       name: String,
       owner: String,
       age: Number
-    }, done);
+    });
 
-    //Wait for table to be created -- temp travis CI work around
-    // setTimeout(done, 10000);
+    done();
   });
 
   it('Create simple model', function (done) {

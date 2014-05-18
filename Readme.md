@@ -15,27 +15,33 @@ Dynamoose uses the official [AWS SDK](https://github.com/aws/aws-sdk-js).
 
 ### Example
 
+Set AWS config in enviroment varable:
+
+```sh
+export AWS_ACCESS_KEY_ID="Your AWS Access Key ID"
+export AWS_SECRET_ACCESS_KEY="Your AWS Secret Access Key"
+export AWS_REGION="us-east-1"
+```
+
 Here's a simple example:
 
 ```js
-
 var dynamoose = require('dynamoose');
 
-dynamoose.AWS.config.update({
-  accessKeyId: 'AKID',
-  secretAccessKey: 'SECRET',
-  region: 'us-east-1'
-});
-
+// Create cat model with default options
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
 
-var badCat = new Cat({id: 666, name: 'Garfield'});
+// Create a new cat object
+var garfield = new Cat({id: 666, name: 'Garfield'});
 
-badCat.save(function (err) {
-  if (err) { return console.log(err); }
-  console.log('Never trust a smiling cat.');
+// Save to DynamoDB
+garfield.save();
+
+// Lookup in DynamoDB
+Cat.get(666)
+.then(function (badCat) {
+  console.log('Never trust a smiling cat. - ' + badCat.name);
 });
-
 ```
 
 ## API
@@ -46,32 +52,25 @@ badCat.save(function (err) {
 var dynamoose = require('dynamoose');
 ```
 
-#### dynamoose.model(name, schema, [options], [callback])
+#### dynamoose.model(name, schema, [options])
 
-Compiles a new model or looks up an existing model. `options` and `callback` are optional. `callback` can be used to wait for a model's table to be created.
+Compiles a new model or looks up an existing model. `options` is optional.
 
 Default `options`:
 
 ```js
 {
-  create: true // Create table in DB if it does not exist
+  create: true, // Create table in DB, if it does not exist
+  waitForActive: true, // Wait for table to be created before trying to us it
+  waitForActiveTimeout: 180000 // wait 3 minutes for table to activate
 }
 ```
+
+Basic example:
 
 ```js
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
 ```
-
-Example of using callback:
-
-```js
-var Dog = dynamoose.model('Dog', { name: String, breed: String}, addDogs);
-
-function addDogs(err) {
-  Dog.create({name: 'Odie', breed: 'Beagle'}, function (err, odie) {
-
-  });
-}
 
 #### dynamoose.local(url)
 
@@ -335,7 +334,7 @@ Dog.create({
 Gets an item from the table.
 
 ```js
-Dog.get('{ownerId: 4, name: 'Odie'}, function(err, odie) {
+Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
   if(err) { return console.log(err); }
   console.log('Odie is a ' + odie.breed);
 });
@@ -445,33 +444,63 @@ Set the range key of the table or index to query.
 
 Set the atribulte on which to filter.
 
+#### query.and()
+
+Use add logic for filters.
+
+#### query.or()
+
+Use or logic for filters.
+
+#### scan.not()
+
+Inverts the filter logic that follows.
+
+#### scan.null()
+
+Filter attribute for null.
+
 #### query.eq(value)
 
-Hash or range key must equal the value provided. This is the only comparison option allowed for a hash key.
+Hash, range key, or filter must equal the value provided. This is the only comparison option allowed for a hash key.
 
 #### query.lt(value)
 
-Range key less than the value.
+Range key or filter less than the value.
 
 #### query.le(value)
 
-Range key less than or equal value.
+Range key or filter less than or equal value.
 
 #### query.ge(value)
 
-Range key greater than or equal value.
+Range key or filter greater than or equal value.
 
 #### query.gt(value)
 
-Range key greater than the value.
+Range key or filter greater than the value.
 
 #### query.beginsWith(value)
 
-Range key begins with value
+Range key or filter begins with value
 
 #### query.between(a, b)
 
-Range key is between values a and b.
+Range key or filter is between values a and b.
+
+Attribute is greater than the value.
+
+#### scan.contains(value)
+
+Filter contains the value.
+
+#### scan.beginsWith(value)
+
+Filter begins with the value.
+
+#### scan.in(values)
+
+Filter is in values array.
 
 #### query.limit(limit)
 

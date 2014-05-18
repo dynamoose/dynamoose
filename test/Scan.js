@@ -64,33 +64,29 @@ describe('Scan', function (){
       });
     }
 
-    var Dog = dynamoose.model('Dog', dogSchema, function (err) {
-      if(err) {
-        return done(err);
-      }
-      addDogs([
-        {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier ', color: ['White', 'Brown', 'Black']},
-        {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: ['White', 'Brown']},
-        {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: ['White', 'Brown']},
-        {ownerId:3, name: 'Toto', breed: 'Terrier', color: ['Brown']},
-        {ownerId:4, name: 'Odie', breed: 'Beagle', color: ['Tan'], cartoon: true},
-        {ownerId:5, name: 'Pluto', breed: 'unknown', color: ['Mustard'], cartoon: true},
-        {ownerId:6, name: 'Brian Griffin', breed: 'unknown', color: ['White']},
-        {ownerId:7, name: 'Scooby Doo', breed: 'Great Dane', cartoon: true},
-        {ownerId:8, name: 'Blue', breed: 'unknown', color: ['Blue'], cartoon: true},
-        {ownerId:9, name: 'Lady', breed: ' Cocker Spaniel', cartoon: true},
-        {ownerId:10, name: 'Copper', breed: 'Hound', cartoon: true},
-        {ownerId:11, name: 'Old Yeller', breed: 'unknown', color: ['Tan']},
-        {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: ['Brown']},
-        {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd'},
-        {ownerId:14, name: 'Benji', breed: 'unknown'},
-        {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: ['White']},
-        {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: ['Yellow']},
-        {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
-        {ownerId:18, name: 'Lassie', breed: 'Collie', color: ['tan', 'white']},
-        {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true}]);
-      });
+    var Dog = dynamoose.model('Dog', dogSchema);
 
+    addDogs([
+      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier ', color: ['White', 'Brown', 'Black']},
+      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: ['White', 'Brown']},
+      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: ['White', 'Brown']},
+      {ownerId:3, name: 'Toto', breed: 'Terrier', color: ['Brown']},
+      {ownerId:4, name: 'Odie', breed: 'Beagle', color: ['Tan'], cartoon: true},
+      {ownerId:5, name: 'Pluto', breed: 'unknown', color: ['Mustard'], cartoon: true},
+      {ownerId:6, name: 'Brian Griffin', breed: 'unknown', color: ['White']},
+      {ownerId:7, name: 'Scooby Doo', breed: 'Great Dane', cartoon: true},
+      {ownerId:8, name: 'Blue', breed: 'unknown', color: ['Blue'], cartoon: true},
+      {ownerId:9, name: 'Lady', breed: ' Cocker Spaniel', cartoon: true},
+      {ownerId:10, name: 'Copper', breed: 'Hound', cartoon: true},
+      {ownerId:11, name: 'Old Yeller', breed: 'unknown', color: ['Tan']},
+      {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: ['Brown']},
+      {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd'},
+      {ownerId:14, name: 'Benji', breed: 'unknown'},
+      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: ['White']},
+      {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: ['Yellow']},
+      {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
+      {ownerId:18, name: 'Lassie', breed: 'Collie', color: ['tan', 'white']},
+      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true}]);
 
   });
 
