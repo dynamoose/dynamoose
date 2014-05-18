@@ -15,7 +15,7 @@ Dynamoose uses the official [AWS SDK](https://github.com/aws/aws-sdk-js).
 
 ### Example
 
-Set AWS config in enviroment varable:
+Set AWS configurations in enviroment varable:
 
 ```sh
 export AWS_ACCESS_KEY_ID="Your AWS Access Key ID"
