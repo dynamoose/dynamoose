@@ -15,6 +15,7 @@ var should = require('should');
 
 
 describe('Query', function (){
+  this.timeout(5000);
 
   before(function (done) {
     var dogSchema  = new Schema({

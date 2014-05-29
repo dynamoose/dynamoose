@@ -15,6 +15,7 @@ var should = require('should');
 
 
 describe('Schema tests', function (){
+  this.timeout(5000);
 
   it('Simple schema', function (done) {
     var schema = new Schema({ id: Number, name: String, childern: [Number] });
