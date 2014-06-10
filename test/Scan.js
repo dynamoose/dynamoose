@@ -397,6 +397,36 @@ describe('Scan', function (){
     });
   });
 
+  it('Scan with ANDed filters (default)', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().filter('breed').eq('unknown').filter('name').eq('Benji').exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(1);
+      done();
+    });
+  });
+
+  it('Scan with ANDed filter', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().and().filter('breed').eq('unknown').filter('name').eq('Benji').exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(1);
+      done();
+    });
+  });
+
+  it('Scan with ORed filters', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().or().filter('breed').eq('unknown').filter('name').eq('Odie').exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(6);
+      done();
+    });
+  });
+
 
 
 });
