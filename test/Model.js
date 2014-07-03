@@ -132,6 +132,14 @@ describe('Model', function (){
     });
   });
 
+  it('Prevent duplicate create', function (done) {
+    Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+      should.exist(err);
+      should.not.exist(garfield);
+      done();
+    });
+  });
+
   it('Static Delete', function (done) {
     Cat.delete(666, function (err) {
       should.not.exist(err);
