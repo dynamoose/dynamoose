@@ -106,6 +106,35 @@ describe('Model', function (){
     });
   });
 
+  it('Save with a pre hook', function (done) {
+    var flag = false;
+    Cat.pre('save', function (next) {
+      flag = true;
+      next();
+    });
+
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.name.should.eql('Bad Cat');
+
+      model.name = 'Fluffy';
+      model.save(function (err) {
+        should.not.exist(err);
+
+        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+          should.not.exist(err);
+          badCat.name.should.eql('Fluffy');
+          flag.should.be.true;
+
+          Cat.removePre('save');
+          done();
+        });
+      });
+    });
+  });
+
   it('Deletes item', function (done) {
 
     var cat = new Cat({id: 1});
