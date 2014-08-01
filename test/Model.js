@@ -106,6 +106,35 @@ describe('Model', function (){
     });
   });
 
+  it('Save with a pre hook', function (done) {
+    var flag = false;
+    Cat.pre('save', function (next) {
+      flag = true;
+      next();
+    });
+
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.name.should.eql('Bad Cat');
+
+      model.name = 'Fluffy';
+      model.save(function (err) {
+        should.not.exist(err);
+
+        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+          should.not.exist(err);
+          badCat.name.should.eql('Fluffy');
+          flag.should.be.true;
+
+          Cat.removePre('save');
+          done();
+        });
+      });
+    });
+  });
+
   it('Deletes item', function (done) {
 
     var cat = new Cat({id: 1});
@@ -132,6 +161,14 @@ describe('Model', function (){
     });
   });
 
+  it('Prevent duplicate create', function (done) {
+    Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+      should.exist(err);
+      should.not.exist(garfield);
+      done();
+    });
+  });
+
   it('Static Delete', function (done) {
     Cat.delete(666, function (err) {
       should.not.exist(err);
@@ -143,6 +180,38 @@ describe('Model', function (){
     });
   });
 
+  it('Static Creates new item', function (done) {
+    Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+      should.not.exist(err);
+      should.exist(garfield);
+      garfield.id.should.eql(666);
+      done();
+    });
+  });
+
+  it('Static Delete with update', function (done) {
+    Cat.delete(666, { update: true }, function (err, data) {
+      should.not.exist(err);
+      should.exist(data);
+      data.id.should.eql(666);
+      data.name.should.eql('Garfield');
+      Cat.get(666, function (err, delCat) {
+        should.not.exist(err);
+        should.not.exist(delCat);
+        done();
+      });
+    });
+  });
+
+  it('Static Delete with update failure', function (done) {
+    Cat.delete(666, { update: true }, function (err) {
+      should.exist(err);
+      err.statusCode.should.eql(400);
+      err.code.should.eql('ConditionalCheckFailedException');
+      done();
+    });
+  });
+
 
   describe('Model.update', function (){
     before(function (done) {
@@ -151,8 +220,11 @@ describe('Model', function (){
     });
 
     it('Default puts attribute', function (done) {
-      Cat.update({id: 999}, {name: 'Tom'}, function (err) {
+      Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {
         should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        data.name.should.equal('Tom');
         Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
@@ -167,8 +239,11 @@ describe('Model', function (){
 
 
     it('Manual puts attribute', function (done) {
-      Cat.update({id: 999}, {$PUT: {owner: 'Jerry', age: 3}}, function (err) {
+      Cat.update({id: 999}, {$PUT: {owner: 'Jerry', age: 3}}, function (err, data) {
         should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        data.owner.should.equal('Jerry');
         Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
@@ -182,8 +257,11 @@ describe('Model', function (){
     });
 
     it('Add attribute', function (done) {
-      Cat.update({id: 999}, {$ADD: {age: 1}}, function (err) {
+      Cat.update({id: 999}, {$ADD: {age: 1}}, function (err, data) {
         should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        data.age.should.equal(4);
         Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
@@ -197,8 +275,11 @@ describe('Model', function (){
     });
 
     it('Delete attribute', function (done) {
-      Cat.update({id: 999}, {$DELETE: {owner: null}}, function (err) {
+      Cat.update({id: 999}, {$DELETE: {owner: null}}, function (err, data) {
         should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        should.not.exist(data.owner);
         Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
