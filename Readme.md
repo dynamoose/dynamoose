@@ -297,7 +297,7 @@ var odie = new Dog({
 
 #### model.put(options, callback) & model.save(options, callback)
 
-Puts the item in the DynamoDB table.
+Puts the item in the DynamoDB table.  Will overwrite the item.
 
 ```js
 odie.save(function (err) {
@@ -306,6 +306,11 @@ odie.save(function (err) {
 });
 ```
 
+##### Options
+
+**overwrite**: boolean
+
+Overwrite existing item. Defaults to true.
 
 #### Model.create(object, options, callback)
 
