@@ -148,6 +148,55 @@ describe('Model', function (){
     });
   });
 
+  it('Save existing item with a false condition', function (done) {
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.name.should.eql('Bad Cat');
+
+      model.name = 'Whiskers';
+      model.save({
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Muffin' }
+      }, function (err) {
+        should.exist(err);
+        err.code.should.eql('ConditionalCheckFailedException');
+
+        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+          should.not.exist(err);
+          badCat.name.should.eql('Bad Cat');
+          done();
+        });
+      });
+    });
+  });
+
+  it('Save existing item with a true condition', function (done) {
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.name.should.eql('Bad Cat');
+
+      model.name = 'Whiskers';
+      model.save({
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Bad Cat' }
+      }, function (err) {
+        should.not.exist(err);
+
+        Cat.get({id: 1}, {consistent: true}, function(err, whiskers) {
+          should.not.exist(err);
+          whiskers.name.should.eql('Whiskers');
+          done();
+        });
+      });
+    });
+  });
+
   it('Save with a pre hook', function (done) {
     var flag = false;
     Cat.pre('save', function (next) {
@@ -159,7 +208,7 @@ describe('Model', function (){
       should.not.exist(err);
       should.exist(model);
 
-      model.name.should.eql('Bad Cat');
+      model.name.should.eql('Whiskers');
 
       model.name = 'Fluffy';
       model.save(function (err) {
@@ -285,8 +334,49 @@ describe('Model', function (){
 
   describe('Model.update', function (){
     before(function (done) {
-      var stray = new Cat({id: 999});
+      var stray = new Cat({id: 999, name: 'Tom'});
       stray.save(done);
+    });
+
+    it('False condition', function (done) {
+      Cat.update({id: 999}, {name: 'Oliver'}, {
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Muffin' }
+      }, function (err) {
+        should.exist(err);
+        Cat.get(999, function (err, tomcat) {
+          should.not.exist(err);
+          should.exist(tomcat);
+          tomcat.id.should.eql(999);
+          tomcat.name.should.eql('Tom');
+          should.not.exist(tomcat.owner);
+          should.not.exist(tomcat.age);
+          done();
+        });
+      });
+    });
+
+    it('True condition', function (done) {
+      Cat.update({id: 999}, {name: 'Oliver'}, {
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Tom' }
+      }, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        data.name.should.equal('Oliver');
+        Cat.get(999, function (err, oliver) {
+          should.not.exist(err);
+          should.exist(oliver);
+          oliver.id.should.eql(999);
+          oliver.name.should.eql('Oliver');
+          should.not.exist(oliver.owner);
+          should.not.exist(oliver.age);
+          done();
+        });
+      });
     });
 
     it('Default puts attribute', function (done) {
@@ -307,9 +397,24 @@ describe('Model', function (){
       });
     });
 
+    it('Manual puts attribute with removal', function (done) {
+      Cat.update({id: 999}, {$PUT: {name: null}}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        should.not.exist(data.name);
+        Cat.get(999, function (err, tomcat){
+          should.not.exist(err);
+          should.exist(tomcat);
+          tomcat.id.should.eql(999);
+          should.not.exist(tomcat.name);
+          done();
+        });
+      });
+    });
 
     it('Manual puts attribute', function (done) {
-      Cat.update({id: 999}, {$PUT: {owner: 'Jerry', age: 3}}, function (err, data) {
+      Cat.update({id: 999}, {$PUT: {name: 'Tom', owner: 'Jerry', age: 3}}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
