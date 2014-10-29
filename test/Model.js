@@ -11,7 +11,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat;
+var Cat, Cat2;
 
 describe('Model', function (){
   this.timeout(5000);
@@ -26,6 +26,19 @@ describe('Model', function (){
       name: String,
       owner: String,
       age: Number
+    });
+
+    // Create a model with a range key
+    Cat2 = dynamoose.model('Cat2',
+    {
+      ownerId: {
+        type: Number,
+        hashKey: true
+      },
+      name: {
+        type: String,
+        rangeKey: true
+      }
     });
 
     done();
@@ -69,6 +82,35 @@ describe('Model', function (){
 
     kitten.save(done);
 
+
+  });
+
+  it('Create simple model with range key', function () {
+
+
+    Cat2.should.have.property('$__');
+
+    Cat2.$__.name.should.eql('Cat2');
+    Cat2.$__.options.should.have.property('create', true);
+
+    var schema = Cat2.$__.schema;
+
+    should.exist(schema);
+
+    schema.attributes.ownerId.type.name.should.eql('number');
+    should(schema.attributes.ownerId.isSet).not.be.ok;
+    should.not.exist(schema.attributes.ownerId.default);
+    should.not.exist(schema.attributes.ownerId.validator);
+    should(schema.attributes.ownerId.required).not.be.ok;
+
+    schema.attributes.name.type.name.should.eql('string');
+    schema.attributes.name.isSet.should.not.be.ok;
+    should.not.exist(schema.attributes.name.default);
+    should.not.exist(schema.attributes.name.validator);
+    should(schema.attributes.name.required).not.be.ok;
+
+    schema.hashKey.should.equal(schema.attributes.ownerId); // should be same object
+    schema.rangeKey.should.equal(schema.attributes.name);
 
   });
 
@@ -161,8 +203,25 @@ describe('Model', function (){
     });
   });
 
+  it('Static Creates new item with range key', function (done) {
+    Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
+      should.not.exist(err);
+      should.exist(garfield);
+      garfield.ownerId.should.eql(666);
+      done();
+    });
+  });
+
   it('Prevent duplicate create', function (done) {
     Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+      should.exist(err);
+      should.not.exist(garfield);
+      done();
+    });
+  });
+
+  it('Prevent duplicate create with range key', function (done) {
+    Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
       should.exist(err);
       should.not.exist(garfield);
       done();
@@ -173,6 +232,17 @@ describe('Model', function (){
     Cat.delete(666, function (err) {
       should.not.exist(err);
       Cat.get(666, function (err, delCat) {
+        should.not.exist(err);
+        should.not.exist(delCat);
+        done();
+      });
+    });
+  });
+
+  it('Static Delete with range key', function (done) {
+    Cat2.delete({ ownerId: 666, name: 'Garfield' }, function (err) {
+      should.not.exist(err);
+      Cat2.get({ ownerId: 666, name: 'Garfield' }, function (err, delCat) {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
