@@ -277,13 +277,30 @@ describe('Model', function (){
     });
   });
 
+  it('Static Creates second item', function (done) {
+    Cat.create({id: 777, name: 'Catbert'}, function (err, catbert) {
+      should.not.exist(err);
+      should.exist(catbert);
+      catbert.id.should.eql(777);
+      done();
+    });
+  });
+
+  it('BatchGet items', function (done) {
+    Cat.batchGet([{id: 666}, {id: 777}], function (err, cats) {
+      cats.length.should.eql(2);
+      done();
+    });
+  });
+
   it('Static Delete', function (done) {
     Cat.delete(666, function (err) {
       should.not.exist(err);
       Cat.get(666, function (err, delCat) {
         should.not.exist(err);
         should.not.exist(delCat);
-        done();
+
+        Cat.delete(777, done);
       });
     });
   });
