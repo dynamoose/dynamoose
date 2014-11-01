@@ -365,6 +365,17 @@ Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
 });
 ```
 
+#### Model.batchGet(keys, options, callback)
+
+Gets multiple items from the table.
+
+```js
+Dog.get([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], function (err, dogs) {
+  if (err) { return console.log(err); }
+  console.log('Retrieved two dogs: ' + dogs);
+});
+```
+
 #### Model.delete(key, options, callback)
 
 Deletes an item from the table.
