@@ -24,7 +24,10 @@ describe('Schema tests', function (){
      children: [Number],
      aMap: {
         mapId: Number,
-        mapName: String
+        mapName: String,
+        anotherMap:{
+          m1:String,
+        }
      },
      aList:[
         {
@@ -60,15 +63,11 @@ describe('Schema tests', function (){
     should.not.exist( schema.attributes.aMap.attributes.mapId.default);
     should.not.exist( schema.attributes.aMap.attributes.mapId.validator);
     should( schema.attributes.aMap.attributes.mapId.required).not.be.ok;
+    schema.attributes.aMap.attributes.anotherMap.attributes.m1.type.name.should.eql('string');
 
     schema.attributes.aList.type.name.should.eql('list');
-
-    // TODO list attributes???
-    //schema.attributes.aList.attributes.listMapName.type.name.should.eql('string');
-    /*should.not.exist( schema.attributes.aMap.attributes.mapId.default);
-    should.not.exist( schema.attributes.aMap.attributes.mapId.validator);
-    should( schema.attributes.aMap.attributes.mapId.required).not.be.ok;*/
-
+    schema.attributes.aList.attributes[0].attributes.listMapId.type.name.should.eql('number');
+    schema.attributes.aList.attributes[0].attributes.listMapName.type.name.should.eql('string');
 
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
@@ -108,7 +107,7 @@ describe('Schema tests', function (){
       },
       aList:[
         {
-          listMapId: {type: Number, default: 0},
+          listMapId: {type: Number, default: 1},
           listMapName: {type: String, default:"SomeName"}
         }
       ]
@@ -146,7 +145,11 @@ describe('Schema tests', function (){
     schema.attributes.aMap.attributes.mapName.type.name.should.eql('string');
     schema.attributes.aMap.attributes.mapName.required.should.be.ok;
 
-    // TODO aList
+    schema.attributes.aList.attributes[0].attributes.listMapId.type.name.should.eql('number');
+    schema.attributes.aList.attributes[0].attributes.listMapId.default().should.be.ok;
+    schema.attributes.aList.attributes[0].attributes.listMapName.type.name.should.eql('string');
+    schema.attributes.aList.attributes[0].attributes.listMapName.default().should.be.ok;
+
 
 
     schema.hashKey.should.equal(schema.attributes.breed); // should be same object

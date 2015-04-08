@@ -29,7 +29,11 @@ describe('Model', function (){
       vet:{
         name: String,
         address: String
-      }
+      },
+      ears:[{
+        name:String
+      }],
+      legs:[String]
     });
 
     done();
@@ -59,19 +63,28 @@ describe('Model', function (){
     should.not.exist(schema.attributes.name.validator);
     should(schema.attributes.name.required).not.be.ok;
 
-    //schema.attributes.vet.attributes.name.should.eql('string');
+    schema.attributes.vet.attributes.name.type.name.should.eql('string');
 
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cat({id: 1, name: 'Fluffy', vet:{name:'theVet', address:'12 somewhere'}});
+    var kitten = new Cat({id: 1, name: 'Fluffy', vet:{name:'theVet', address:'12 somewhere'},
+                                 ears:[{name:'left'}, {name:'right'}]});
 
     kitten.id.should.eql(1);
     kitten.name.should.eql('Fluffy');
 
     var dynamoObj = schema.toDynamo(kitten);
 
-    dynamoObj.should.eql({ id: { N: '1' }, name: { S: 'Fluffy' }, vet:{ M: { name: { S: 'theVet'}, address:{ S: '12 somewhere'} }   } });
+    dynamoObj.should.eql({ ears: {
+                              L: [
+                                { M: { name: { S: 'left' } } },
+                                { M: { name: { S: 'right' } } }
+                              ]
+                            },
+                           id: { N: '1' },
+                           name: { S: 'Fluffy' },
+                           vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } } });
 
     kitten.save(done);
 
@@ -102,6 +115,8 @@ describe('Model', function (){
 
       model.name = 'Bad Cat';
       model.vet.name = 'Tough Vet';
+      model.ears[0].name = 'right';
+
       model.save(function (err) {
         should.not.exist(err);
 
@@ -109,6 +124,8 @@ describe('Model', function (){
           should.not.exist(err);
           badCat.name.should.eql('Bad Cat');
           badCat.vet.name.should.eql('Tough Vet');
+          badCat.ears[0].name.should.eql('right');
+          badCat.ears[1].name.should.eql('right');
           done();
         });
       });
