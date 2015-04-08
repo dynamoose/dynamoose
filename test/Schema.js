@@ -18,7 +18,23 @@ describe('Schema tests', function (){
   this.timeout(5000);
 
   it('Simple schema', function (done) {
-    var schema = new Schema({ id: Number, name: String, childern: [Number] });
+    var schemaObj = {
+     id: Number,
+     name: String,
+     children: [Number],
+     aMap: {
+        mapId: Number,
+        mapName: String
+     },
+     aList:[
+        {
+          listMapId: Number,
+          listMapName: String
+        }
+      ]
+    };
+
+    var schema = new Schema(schemaObj);
 
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
@@ -32,11 +48,27 @@ describe('Schema tests', function (){
     should.not.exist(schema.attributes.name.validator);
     should(schema.attributes.name.required).not.be.ok;
 
-    schema.attributes.childern.type.name.should.eql('number');
-    schema.attributes.childern.isSet.should.be.ok;
-    should.not.exist(schema.attributes.childern.default);
-    should.not.exist(schema.attributes.childern.validator);
-    should(schema.attributes.childern.required).not.be.ok;
+    schema.attributes.children.type.name.should.eql('number');
+    schema.attributes.children.isSet.should.be.ok;
+    should.not.exist(schema.attributes.children.default);
+    should.not.exist(schema.attributes.children.validator);
+    should(schema.attributes.children.required).not.be.ok;
+
+    schema.attributes.aMap.type.name.should.eql('map');
+    schema.attributes.aMap.attributes.mapId.type.name.should.eql('number');
+    schema.attributes.aMap.attributes.mapName.type.name.should.eql('string');
+    should.not.exist( schema.attributes.aMap.attributes.mapId.default);
+    should.not.exist( schema.attributes.aMap.attributes.mapId.validator);
+    should( schema.attributes.aMap.attributes.mapId.required).not.be.ok;
+
+    schema.attributes.aList.type.name.should.eql('list');
+
+    // TODO list attributes???
+    //schema.attributes.aList.attributes.listMapName.type.name.should.eql('string');
+    /*should.not.exist( schema.attributes.aMap.attributes.mapId.default);
+    should.not.exist( schema.attributes.aMap.attributes.mapId.validator);
+    should( schema.attributes.aMap.attributes.mapId.required).not.be.ok;*/
+
 
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
@@ -69,7 +101,17 @@ describe('Schema tests', function (){
       born: {
         type: Date,
         default: Date.now
-      }
+      },
+      aMap: {
+        mapId: {type: Number, required:true },
+        mapName: {type: String, required:true }
+      },
+      aList:[
+        {
+          listMapId: {type: Number, default: 0},
+          listMapName: {type: String, default:"SomeName"}
+        }
+      ]
     }, {throughput: {read: 10, write: 2}});
 
     schema.attributes.id.type.name.should.eql('number');
@@ -98,6 +140,14 @@ describe('Schema tests', function (){
     schema.attributes.born.default().should.be.ok;
     should.not.exist(schema.attributes.born.validator);
     should(schema.attributes.born.required).not.be.ok;
+
+    schema.attributes.aMap.attributes.mapId.type.name.should.eql('number');
+    schema.attributes.aMap.attributes.mapId.required.should.be.ok;
+    schema.attributes.aMap.attributes.mapName.type.name.should.eql('string');
+    schema.attributes.aMap.attributes.mapName.required.should.be.ok;
+
+    // TODO aList
+
 
     schema.hashKey.should.equal(schema.attributes.breed); // should be same object
     schema.rangeKey.should.equal(schema.attributes.id);
@@ -223,5 +273,6 @@ describe('Schema tests', function (){
 
     done();
   });
+
 
 });

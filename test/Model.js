@@ -25,7 +25,11 @@ describe('Model', function (){
       id: Number,
       name: String,
       owner: String,
-      age: Number
+      age: { type: Number },
+      vet:{
+        name: String,
+        address: String
+      }
     });
 
     done();
@@ -55,17 +59,19 @@ describe('Model', function (){
     should.not.exist(schema.attributes.name.validator);
     should(schema.attributes.name.required).not.be.ok;
 
+    //schema.attributes.vet.attributes.name.should.eql('string');
+
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cat({id: 1, name: 'Fluffy'});
+    var kitten = new Cat({id: 1, name: 'Fluffy', vet:{name:'theVet', address:'12 somewhere'}});
 
     kitten.id.should.eql(1);
     kitten.name.should.eql('Fluffy');
 
     var dynamoObj = schema.toDynamo(kitten);
 
-    dynamoObj.should.eql({ id: { N: '1' }, name: { S: 'Fluffy' } });
+    dynamoObj.should.eql({ id: { N: '1' }, name: { S: 'Fluffy' }, vet:{ M: { name: { S: 'theVet'}, address:{ S: '12 somewhere'} }   } });
 
     kitten.save(done);
 
@@ -80,6 +86,7 @@ describe('Model', function (){
 
       model.should.have.property('id', 1);
       model.should.have.property('name', 'Fluffy');
+      model.should.have.property('vet', { address: '12 somewhere', name: 'theVet' });
       model.should.have.property('$__');
       done();
     });
@@ -94,12 +101,14 @@ describe('Model', function (){
       model.name.should.eql('Fluffy');
 
       model.name = 'Bad Cat';
+      model.vet.name = 'Tough Vet';
       model.save(function (err) {
         should.not.exist(err);
 
         Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
           should.not.exist(err);
           badCat.name.should.eql('Bad Cat');
+          badCat.vet.name.should.eql('Tough Vet');
           done();
         });
       });
@@ -120,12 +129,14 @@ describe('Model', function (){
       model.name.should.eql('Bad Cat');
 
       model.name = 'Fluffy';
+      model.vet.name = 'Nice Guy';
       model.save(function (err) {
         should.not.exist(err);
 
         Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
           should.not.exist(err);
           badCat.name.should.eql('Fluffy');
+          badCat.vet.name.should.eql('Nice Guy');
           flag.should.be.true;
 
           Cat.removePre('save');
