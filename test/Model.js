@@ -7,6 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
+dynamoose.setNamespace('T');
 dynamoose.local();
 
 var should = require('should');
@@ -44,7 +45,7 @@ describe('Model', function (){
 
     Cat.should.have.property('$__');
 
-    Cat.$__.name.should.eql('Cat');
+    Cat.$__.name.should.eql(dynamoose.namespace + 'Cat');
     Cat.$__.options.should.have.property('create', true);
 
     var schema = Cat.$__.schema;
