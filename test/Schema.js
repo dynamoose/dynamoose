@@ -1,5 +1,6 @@
 'use strict';
 
+//var util = require('util');
 
 var dynamoose = require('../');
 dynamoose.AWS.config.update({
@@ -277,6 +278,99 @@ describe('Schema tests', function (){
 
     done();
   });
+
+
+  it('Schema with added instance methods', function (done) {
+
+    var schema = new Schema({
+     id: Number
+    });
+
+    schema.method('meow', function() {
+      this.lastcall = 'meooowwww';
+    });
+
+    var Kitty = dynamoose.model('Kitty', schema);
+    var fizz = new Kitty();
+    fizz.meow();
+    fizz.lastcall.should.eql('meooowwww');
+
+    schema.method({
+      purr:function(){this.didpurr = 1;},
+      scratch:function(){this.didscratch = 1;}
+    });
+
+    var Tabby = dynamoose.model('Tabby', schema);
+    var tom = new Tabby();
+
+    tom.should.not.have.property('didpurr');
+    tom.should.not.have.property('didscratch');
+
+    tom.purr();
+    tom.scratch();
+
+    tom.didscratch.should.be.ok;
+    tom.didpurr.should.be.ok;
+
+    done();
+
+  });
+
+
+  it('Schema with added static methods', function (done) {
+
+    var schema = new Schema({
+     name: String
+    });
+
+    schema.static('findKittenName', function (name){
+      return name + '\'s kitten';
+    });
+
+    var Cat = dynamoose.model('Cat',schema);
+    var kitten = Cat.findKittenName('sue');
+    kitten.should.eql('sue\'s kitten');
+
+    schema.static({
+      findCatsByOwner:function(owner){return owner + 'fluffy';},
+      findCatsByRace:function(owner){return owner + 'bobbly';}
+    });
+
+    var Cats = dynamoose.model('Cats',schema);
+    var catsByOwner = Cats.findCatsByOwner('fred');
+    var catsByRace = Cats.findCatsByRace('siamese');
+
+    catsByOwner.should.eql('fredfluffy');
+    catsByRace.should.eql('siamesebobbly');
+
+    done();
+  });
+
+
+  it('Schema with added virtual methods', function (done) {
+
+    var schema = new Schema({
+     name: String,
+     owner: String
+    });
+
+    schema.virtual('mergedname').get(function () {
+      return 'fred';//this.name + this.owner;
+    });
+
+    var Cat = dynamoose.model('Cat', schema);
+    var tom = new Cat();
+
+    //console.log(tom);
+    tom.name = 'tommy';
+    tom.owner = 'bill';
+
+    // TODO get virtual result
+    //console.log(tom.get('mergedname'));
+
+    done();
+  });
+
 
 
 });
