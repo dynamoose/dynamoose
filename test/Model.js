@@ -40,6 +40,12 @@ describe('Model', function (){
     done();
   });
 
+  after(function (done) {
+
+    delete dynamoose.models[dynamoose.namespace + 'Cat'];
+    done();
+  });
+
   it('Create simple model', function (done) {
 
 

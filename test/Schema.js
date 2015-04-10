@@ -280,7 +280,7 @@ describe('Schema tests', function (){
   });
 
 
-  /*it('Schema with added instance methods', function (done) {
+  it('Schema with added instance methods', function (done) {
 
     var schema = new Schema({
      id: Number
@@ -312,42 +312,46 @@ describe('Schema tests', function (){
     tom.didscratch.should.be.ok;
     tom.didpurr.should.be.ok;
 
+    delete dynamoose.models[dynamoose.namespace + 'Tabby'];
+     delete dynamoose.models[dynamoose.namespace + 'Kitty'];
+
+
     done();
 
   });
 
-
   it('Schema with added static methods', function (done) {
 
-    var schema = new Schema({
+    var staticSchema = new Schema({
      name: String
     });
 
-    schema.static('findKittenName', function (name){
+    staticSchema.static('findKittenName', function (name){
       return name + '\'s kitten';
     });
 
-    var Cat = dynamoose.model('Cat',schema);
+    var Cat = dynamoose.model('Cat',staticSchema);
     var kitten = Cat.findKittenName('sue');
     kitten.should.eql('sue\'s kitten');
 
-    schema.static({
+    staticSchema.static({
       findCatsByOwner:function(owner){return owner + 'fluffy';},
       findCatsByRace:function(owner){return owner + 'bobbly';}
     });
 
-    var Cats = dynamoose.model('Cats',schema);
+    var Cats = dynamoose.model('Cats',staticSchema);
     var catsByOwner = Cats.findCatsByOwner('fred');
     var catsByRace = Cats.findCatsByRace('siamese');
 
     catsByOwner.should.eql('fredfluffy');
     catsByRace.should.eql('siamesebobbly');
 
+    delete dynamoose.models[dynamoose.namespace + 'Cat'];
+    delete dynamoose.models[dynamoose.namespace + 'Cats'];
+
     done();
   });
 
-
-*/
 
   it('Schema with added virtual methods', function (done) {
 
@@ -357,7 +361,7 @@ describe('Schema tests', function (){
     });
 
     schema.virtual('mergedname').get(function () {
-      return (this._mergedname)?this._mergedname:'fred';//this.name + this.owner;
+      return (this._mergedname)?this._mergedname:this.name;//this.name + this.owner;
     });
 
     schema.virtual('mergedname').set(function(v){
@@ -365,16 +369,18 @@ describe('Schema tests', function (){
     });
 
     var Cat = dynamoose.model('Cat', schema);
-    var tom = new Cat();
+    var tim = new Cat();
 
-    tom.name = 'tommy';
-    tom.owner = 'bill';
+    tim.name = 'tommy';
+    tim.owner = 'bill';
 
-    tom.should.have.property('mergedname');
-    tom.mergedname.should.eql('fred');
+    tim.should.have.property('mergedname');
+    tim.mergedname.should.eql('tommy');
 
-    tom.mergedname = 'george';
-    tom.mergedname.should.eql('george');
+    tim.mergedname = 'george';
+    tim.mergedname.should.eql('george');
+
+    delete dynamoose.models[dynamoose.namespace + 'Cat'];
 
     done();
   });
