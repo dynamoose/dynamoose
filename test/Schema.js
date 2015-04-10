@@ -280,7 +280,7 @@ describe('Schema tests', function (){
   });
 
 
-  it('Schema with added instance methods', function (done) {
+  /*it('Schema with added instance methods', function (done) {
 
     var schema = new Schema({
      id: Number
@@ -347,6 +347,8 @@ describe('Schema tests', function (){
   });
 
 
+*/
+
   it('Schema with added virtual methods', function (done) {
 
     var schema = new Schema({
@@ -355,18 +357,24 @@ describe('Schema tests', function (){
     });
 
     schema.virtual('mergedname').get(function () {
-      return 'fred';//this.name + this.owner;
+      return (this._mergedname)?this._mergedname:'fred';//this.name + this.owner;
+    });
+
+    schema.virtual('mergedname').set(function(v){
+      this._mergedname = v;
     });
 
     var Cat = dynamoose.model('Cat', schema);
     var tom = new Cat();
 
-    //console.log(tom);
     tom.name = 'tommy';
     tom.owner = 'bill';
 
-    // TODO get virtual result
-    //console.log(tom.get('mergedname'));
+    tom.should.have.property('mergedname');
+    tom.mergedname.should.eql('fred');
+
+    tom.mergedname = 'george';
+    tom.mergedname.should.eql('george');
 
     done();
   });
