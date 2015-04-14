@@ -7,6 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
+dynamoose.setNamespace('T');
 dynamoose.local();
 
 var Schema = dynamoose.Schema;
@@ -99,7 +100,7 @@ describe('Scan', function (){
       if(err) {
         done(err);
       }
-      delete dynamoose.models.Dog;
+      delete dynamoose.models[dynamoose.namespace + 'Dog'];
       done();
     });
 
