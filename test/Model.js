@@ -32,10 +32,13 @@ describe('Model', function (){
         address: String
       },
       ears:[{
-        name:String
+        name: String
       }],
-      legs:[String]
-    });
+      legs: [String],
+      more: Object,
+      array: Array
+    },
+    {useDocumentTypes: true});
 
     done();
   });
@@ -70,28 +73,41 @@ describe('Model', function (){
     should.not.exist(schema.attributes.name.validator);
     should(schema.attributes.name.required).not.be.ok;
 
-    schema.attributes.vet.attributes.name.type.name.should.eql('string');
-
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cat({id: 1, name: 'Fluffy', vet:{name:'theVet', address:'12 somewhere'},
-                                 ears:[{name:'left'}, {name:'right'}]});
+    var kitten = new Cat(
+      {
+        id: 1,
+        name: 'Fluffy',
+        vet:{name:'theVet', address:'12 somewhere'},
+        ears:[{name:'left'}, {name:'right'}],
+        legs: ['front right', 'front left', 'back right', 'back left'],
+        more: {fovorites: {food: 'fish'}},
+        array: [{one: '1'}]
+      }
+    );
 
     kitten.id.should.eql(1);
     kitten.name.should.eql('Fluffy');
 
     var dynamoObj = schema.toDynamo(kitten);
 
-    dynamoObj.should.eql({ ears: {
-                              L: [
-                                { M: { name: { S: 'left' } } },
-                                { M: { name: { S: 'right' } } }
-                              ]
-                            },
-                           id: { N: '1' },
-                           name: { S: 'Fluffy' },
-                           vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } } });
+    dynamoObj.should.eql(
+      {
+        ears: {
+          L: [
+            { M: { name: { S: 'left' } } },
+            { M: { name: { S: 'right' } } }
+          ]
+        },
+        id: { N: '1' },
+        name: { S: 'Fluffy' },
+        vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
+        legs: { SS: ['front right', 'front left', 'back right', 'back left']},
+        more: { S: '{"fovorites":{"food":"fish"}}' },
+        array: { S: '[{"one":"1"}]' }
+      });
 
     kitten.save(done);
 

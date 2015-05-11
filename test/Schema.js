@@ -24,6 +24,8 @@ describe('Schema tests', function (){
      id: Number,
      name: String,
      children: [Number],
+     aObject: Object,
+     aArray: Array,
      aMap: {
         mapId: Number,
         mapName: String,
@@ -59,17 +61,13 @@ describe('Schema tests', function (){
     should.not.exist(schema.attributes.children.validator);
     should(schema.attributes.children.required).not.be.ok;
 
-    schema.attributes.aMap.type.name.should.eql('map');
-    schema.attributes.aMap.attributes.mapId.type.name.should.eql('number');
-    schema.attributes.aMap.attributes.mapName.type.name.should.eql('string');
-    should.not.exist( schema.attributes.aMap.attributes.mapId.default);
-    should.not.exist( schema.attributes.aMap.attributes.mapId.validator);
-    should( schema.attributes.aMap.attributes.mapId.required).not.be.ok;
-    schema.attributes.aMap.attributes.anotherMap.attributes.m1.type.name.should.eql('string');
+    schema.attributes.aObject.type.name.should.eql('object');
 
-    schema.attributes.aList.type.name.should.eql('list');
-    schema.attributes.aList.attributes[0].attributes.listMapId.type.name.should.eql('number');
-    schema.attributes.aList.attributes[0].attributes.listMapName.type.name.should.eql('string');
+    schema.attributes.aArray.type.name.should.eql('array');
+
+    schema.attributes.aMap.type.name.should.eql('object');
+
+    schema.attributes.aList.type.name.should.eql('array');
 
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
@@ -103,16 +101,26 @@ describe('Schema tests', function (){
         type: Date,
         default: Date.now
       },
-      aMap: {
-        mapId: {type: Number, required:true },
-        mapName: {type: String, required:true }
+      aObject: {
+        type: 'Object',
+        default: { state: 'alive' }
       },
-      aList:[
-        {
-          listMapId: {type: Number, default: 1},
-          listMapName: {type: String, default:"SomeName"}
+      aMap: {
+        type: 'map',
+        map: {
+          mapId: {type: Number, required:true },
+          mapName: {type: String, required:true }
         }
-      ]
+      },
+      aList: {
+        type: 'list',
+        list: [
+          {
+            listMapId: {type: Number, default: 1},
+            listMapName: {type: String, default:"SomeName"}
+          }
+        ]
+      }
     }, {throughput: {read: 10, write: 2}});
 
     schema.attributes.id.type.name.should.eql('number');
@@ -142,23 +150,99 @@ describe('Schema tests', function (){
     should.not.exist(schema.attributes.born.validator);
     should(schema.attributes.born.required).not.be.ok;
 
-    schema.attributes.aMap.attributes.mapId.type.name.should.eql('number');
-    schema.attributes.aMap.attributes.mapId.required.should.be.ok;
-    schema.attributes.aMap.attributes.mapName.type.name.should.eql('string');
-    schema.attributes.aMap.attributes.mapName.required.should.be.ok;
+    schema.attributes.aObject.type.name.should.eql('object');
+    should.exist(schema.attributes.aObject.default);
 
-    schema.attributes.aList.attributes[0].attributes.listMapId.type.name.should.eql('number');
-    schema.attributes.aList.attributes[0].attributes.listMapId.default().should.be.ok;
-    schema.attributes.aList.attributes[0].attributes.listMapName.type.name.should.eql('string');
-    schema.attributes.aList.attributes[0].attributes.listMapName.default().should.be.ok;
+    schema.attributes.aMap.type.name.should.eql('object');
 
-
+    schema.attributes.aList.type.name.should.eql('array');
 
     schema.hashKey.should.equal(schema.attributes.breed); // should be same object
     schema.rangeKey.should.equal(schema.attributes.id);
 
     schema.throughput.read.should.equal(10);
     schema.throughput.write.should.equal(2);
+
+    done();
+  });
+
+  it('Schema with use Document Types', function (done) {
+    var schema = new Schema({
+      id: {
+        type: Number,
+        validate: function(v) { return v > 0; },
+        rangeKey: true
+      },
+      breed: {
+        type: String,
+        hashKey: true
+      },
+      aObject: {
+        type: 'Object',
+        default: { state: 'alive' }
+      },
+      anotherObject: Object,
+      aArray: Array,
+      aMap: {
+        mapId: Number,
+        mapName: String,
+        anotherMap:{
+          m1:String,
+        }
+      },
+      aList:[
+        {
+          listMapId: Number,
+          listMapName: String
+        }
+      ],
+      anotherMap: {
+        type: 'map',
+        map: {
+          mapId: {type: Number, required:true },
+          mapName: {type: String, required:true }
+        }
+      },
+      anotherList: {
+        type: 'list',
+        list: [
+          {
+            listMapId: {type: Number, default: 1},
+            listMapName: {type: String, default:"SomeName"}
+          }
+        ]
+      }
+    }, {useDocumentTypes: true});
+
+    schema.useDocumentTypes.should.be.ok;
+
+    schema.attributes.aObject.type.name.should.eql('object');
+    schema.attributes.anotherObject.type.name.should.eql('object');
+    schema.attributes.aArray.type.name.should.eql('array');
+
+    schema.attributes.aMap.type.name.should.eql('map');
+
+    schema.attributes.aMap.type.name.should.eql('map');
+    schema.attributes.aMap.attributes.mapId.type.name.should.eql('number');
+    schema.attributes.aMap.attributes.mapName.type.name.should.eql('string');
+    should.not.exist( schema.attributes.aMap.attributes.mapId.default);
+    should.not.exist( schema.attributes.aMap.attributes.mapId.validator);
+    should( schema.attributes.aMap.attributes.mapId.required).not.be.ok;
+    schema.attributes.aMap.attributes.anotherMap.attributes.m1.type.name.should.eql('string');
+
+    schema.attributes.anotherMap.attributes.mapId.type.name.should.eql('number');
+    schema.attributes.anotherMap.attributes.mapId.required.should.be.ok;
+    schema.attributes.anotherMap.attributes.mapName.type.name.should.eql('string');
+    schema.attributes.anotherMap.attributes.mapName.required.should.be.ok;
+
+    schema.attributes.aList.type.name.should.eql('list');
+    schema.attributes.aList.attributes[0].attributes.listMapId.type.name.should.eql('number');
+    schema.attributes.aList.attributes[0].attributes.listMapName.type.name.should.eql('string');
+
+    schema.attributes.anotherList.attributes[0].attributes.listMapId.type.name.should.eql('number');
+    schema.attributes.anotherList.attributes[0].attributes.listMapId.default().should.be.ok;
+    schema.attributes.anotherList.attributes[0].attributes.listMapName.type.name.should.eql('string');
+    schema.attributes.anotherList.attributes[0].attributes.listMapName.default().should.be.ok;
 
     done();
   });
