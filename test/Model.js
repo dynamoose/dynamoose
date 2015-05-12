@@ -11,7 +11,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat;
+var Cat, Cat2;
 
 describe('Model', function (){
   this.timeout(5000);
@@ -26,6 +26,19 @@ describe('Model', function (){
       name: String,
       owner: String,
       age: Number
+    });
+
+    // Create a model with a range key
+    Cat2 = dynamoose.model('Cat2',
+    {
+      ownerId: {
+        type: Number,
+        hashKey: true
+      },
+      name: {
+        type: String,
+        rangeKey: true
+      }
     });
 
     done();
@@ -72,6 +85,35 @@ describe('Model', function (){
 
   });
 
+  it('Create simple model with range key', function () {
+
+
+    Cat2.should.have.property('$__');
+
+    Cat2.$__.name.should.eql('Cat2');
+    Cat2.$__.options.should.have.property('create', true);
+
+    var schema = Cat2.$__.schema;
+
+    should.exist(schema);
+
+    schema.attributes.ownerId.type.name.should.eql('number');
+    should(schema.attributes.ownerId.isSet).not.be.ok;
+    should.not.exist(schema.attributes.ownerId.default);
+    should.not.exist(schema.attributes.ownerId.validator);
+    should(schema.attributes.ownerId.required).not.be.ok;
+
+    schema.attributes.name.type.name.should.eql('string');
+    schema.attributes.name.isSet.should.not.be.ok;
+    should.not.exist(schema.attributes.name.default);
+    should.not.exist(schema.attributes.name.validator);
+    should(schema.attributes.name.required).not.be.ok;
+
+    schema.hashKey.should.equal(schema.attributes.ownerId); // should be same object
+    schema.rangeKey.should.equal(schema.attributes.name);
+
+  });
+
   it('Get item for model', function (done) {
 
     Cat.get(1, function(err, model) {
@@ -106,6 +148,55 @@ describe('Model', function (){
     });
   });
 
+  it('Save existing item with a false condition', function (done) {
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.name.should.eql('Bad Cat');
+
+      model.name = 'Whiskers';
+      model.save({
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Muffin' }
+      }, function (err) {
+        should.exist(err);
+        err.code.should.eql('ConditionalCheckFailedException');
+
+        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+          should.not.exist(err);
+          badCat.name.should.eql('Bad Cat');
+          done();
+        });
+      });
+    });
+  });
+
+  it('Save existing item with a true condition', function (done) {
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.name.should.eql('Bad Cat');
+
+      model.name = 'Whiskers';
+      model.save({
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Bad Cat' }
+      }, function (err) {
+        should.not.exist(err);
+
+        Cat.get({id: 1}, {consistent: true}, function(err, whiskers) {
+          should.not.exist(err);
+          whiskers.name.should.eql('Whiskers');
+          done();
+        });
+      });
+    });
+  });
+
   it('Save with a pre hook', function (done) {
     var flag = false;
     Cat.pre('save', function (next) {
@@ -117,7 +208,7 @@ describe('Model', function (){
       should.not.exist(err);
       should.exist(model);
 
-      model.name.should.eql('Bad Cat');
+      model.name.should.eql('Whiskers');
 
       model.name = 'Fluffy';
       model.save(function (err) {
@@ -161,6 +252,15 @@ describe('Model', function (){
     });
   });
 
+  it('Static Creates new item with range key', function (done) {
+    Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
+      should.not.exist(err);
+      should.exist(garfield);
+      garfield.ownerId.should.eql(666);
+      done();
+    });
+  });
+
   it('Prevent duplicate create', function (done) {
     Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
       should.exist(err);
@@ -169,10 +269,46 @@ describe('Model', function (){
     });
   });
 
+  it('Prevent duplicate create with range key', function (done) {
+    Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
+      should.exist(err);
+      should.not.exist(garfield);
+      done();
+    });
+  });
+
+  it('Static Creates second item', function (done) {
+    Cat.create({id: 777, name: 'Catbert'}, function (err, catbert) {
+      should.not.exist(err);
+      should.exist(catbert);
+      catbert.id.should.eql(777);
+      done();
+    });
+  });
+
+  it('BatchGet items', function (done) {
+    Cat.batchGet([{id: 666}, {id: 777}], function (err, cats) {
+      cats.length.should.eql(2);
+      done();
+    });
+  });
+
   it('Static Delete', function (done) {
     Cat.delete(666, function (err) {
       should.not.exist(err);
       Cat.get(666, function (err, delCat) {
+        should.not.exist(err);
+        should.not.exist(delCat);
+
+        Cat.delete(777, done);
+      });
+    });
+  });
+
+  it('Static Delete with range key', function (done) {
+    Cat2.delete({ ownerId: 666, name: 'Garfield' }, function (err) {
+      should.not.exist(err);
+      Cat2.get({ ownerId: 666, name: 'Garfield' }, function (err, delCat) {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
@@ -215,8 +351,49 @@ describe('Model', function (){
 
   describe('Model.update', function (){
     before(function (done) {
-      var stray = new Cat({id: 999});
+      var stray = new Cat({id: 999, name: 'Tom'});
       stray.save(done);
+    });
+
+    it('False condition', function (done) {
+      Cat.update({id: 999}, {name: 'Oliver'}, {
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Muffin' }
+      }, function (err) {
+        should.exist(err);
+        Cat.get(999, function (err, tomcat) {
+          should.not.exist(err);
+          should.exist(tomcat);
+          tomcat.id.should.eql(999);
+          tomcat.name.should.eql('Tom');
+          should.not.exist(tomcat.owner);
+          should.not.exist(tomcat.age);
+          done();
+        });
+      });
+    });
+
+    it('True condition', function (done) {
+      Cat.update({id: 999}, {name: 'Oliver'}, {
+        condition: '#name = :name',
+        conditionNames: { name: 'name' },
+        conditionValues: { name: 'Tom' }
+      }, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        data.name.should.equal('Oliver');
+        Cat.get(999, function (err, oliver) {
+          should.not.exist(err);
+          should.exist(oliver);
+          oliver.id.should.eql(999);
+          oliver.name.should.eql('Oliver');
+          should.not.exist(oliver.owner);
+          should.not.exist(oliver.age);
+          done();
+        });
+      });
     });
 
     it('Default puts attribute', function (done) {
@@ -237,9 +414,24 @@ describe('Model', function (){
       });
     });
 
+    it('Manual puts attribute with removal', function (done) {
+      Cat.update({id: 999}, {$PUT: {name: null}}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        should.not.exist(data.name);
+        Cat.get(999, function (err, tomcat){
+          should.not.exist(err);
+          should.exist(tomcat);
+          tomcat.id.should.eql(999);
+          should.not.exist(tomcat.name);
+          done();
+        });
+      });
+    });
 
     it('Manual puts attribute', function (done) {
-      Cat.update({id: 999}, {$PUT: {owner: 'Jerry', age: 3}}, function (err, data) {
+      Cat.update({id: 999}, {$PUT: {name: 'Tom', owner: 'Jerry', age: 3}}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);

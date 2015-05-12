@@ -297,15 +297,45 @@ var odie = new Dog({
 
 #### model.put(options, callback) & model.save(options, callback)
 
-Puts the item in the DynamoDB table.
+Puts the item in the DynamoDB table.  Will overwrite the item.
 
 ```js
 odie.save(function (err) {
   if(err) { return console.log(err); }
   console.log('Ta-da!');
 });
+
+odie.save({
+    condition: '#o = :ownerId',
+    conditionNames: { o: 'ownerId' },
+    conditionValues: { ownerId: 4 }
+  }, function (err) {
+  if(err) { return console.log(err); }
+  console.log('Ta-da!');
+});
 ```
 
+##### Options
+
+**overwrite**: boolean
+
+Overwrite existing item. Defaults to true.
+
+**condition**: string
+
+An expression for a conditional update. See
+[the AWS documentation](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html)
+for more information about condition expressions.
+
+**conditionNames**: object
+
+A map of name substitutions for the condition expression.
+
+**conditionValues**: object
+
+A map of values for the condition expression. Note that in order for
+automatic object conversion to work, the keys in this object must
+match schema attribute names.
 
 #### Model.create(object, options, callback)
 
@@ -332,6 +362,17 @@ Gets an item from the table.
 Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
   if(err) { return console.log(err); }
   console.log('Odie is a ' + odie.breed);
+});
+```
+
+#### Model.batchGet(keys, options, callback)
+
+Gets multiple items from the table.
+
+```js
+Dog.get([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], function (err, dogs) {
+  if (err) { return console.log(err); }
+  console.log('Retrieved two dogs: ' + dogs);
 });
 ```
 
