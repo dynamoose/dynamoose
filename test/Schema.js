@@ -8,7 +8,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
-dynamoose.setNamespace('T');
+
 dynamoose.local();
 
 var Schema = dynamoose.Schema;
@@ -366,6 +366,8 @@ describe('Schema tests', function (){
 
   it('Schema with added instance methods', function (done) {
 
+    dynamoose.setDefaults({ prefix: '' });
+
     var schema = new Schema({
      id: Number
     });
@@ -396,8 +398,8 @@ describe('Schema tests', function (){
     tom.didscratch.should.be.ok;
     tom.didpurr.should.be.ok;
 
-    delete dynamoose.models[dynamoose.namespace + 'Tabby'];
-     delete dynamoose.models[dynamoose.namespace + 'Kitty'];
+    delete dynamoose.models.Tabby;
+    delete dynamoose.models.Kitty;
 
 
     done();
@@ -405,6 +407,8 @@ describe('Schema tests', function (){
   });
 
   it('Schema with added static methods', function (done) {
+
+    dynamoose.setDefaults({ prefix: '' });
 
     var staticSchema = new Schema({
      name: String
@@ -430,8 +434,8 @@ describe('Schema tests', function (){
     catsByOwner.should.eql('fredfluffy');
     catsByRace.should.eql('siamesebobbly');
 
-    delete dynamoose.models[dynamoose.namespace + 'Cat'];
-    delete dynamoose.models[dynamoose.namespace + 'Cats'];
+    delete dynamoose.models.Cat;
+    delete dynamoose.models.Cats;
 
     done();
   });
@@ -464,7 +468,7 @@ describe('Schema tests', function (){
     tim.mergedname = 'george';
     tim.mergedname.should.eql('george');
 
-    delete dynamoose.models[dynamoose.namespace + 'Cat'];
+    delete dynamoose.models.Cat;
 
     done();
   });

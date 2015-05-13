@@ -7,7 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
-dynamoose.setNamespace('T');
+
 dynamoose.local();
 
 var Schema = dynamoose.Schema;
@@ -53,8 +53,8 @@ describe('Table tests', function (){
     }
   });
 
-  var table = new Table(dynamoose.namespace + 'person', schema, null, dynamoose);
-  var globalIndexTable = new Table(dynamoose.namespace + 'dog', globalIndexSchema, null, dynamoose);
+  var table = new Table('person', schema, null, dynamoose);
+  var globalIndexTable = new Table('dog', globalIndexSchema, null, dynamoose);
 
   it('Create simple table', function (done) {
 
@@ -83,7 +83,7 @@ describe('Table tests', function (){
   });
 
   it('Describe missing table', function (done) {
-    var missing = new Table(dynamoose.namespace + 'missing', schema, null, dynamoose);
+    var missing = new Table('missing', schema, null, dynamoose);
 
 
     missing.describe(function(err, data) {

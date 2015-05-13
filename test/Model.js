@@ -7,7 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
-dynamoose.setNamespace('T');
+
 dynamoose.local();
 
 var should = require('should');
@@ -20,6 +20,9 @@ describe('Model', function (){
 
   before(function(done) {
     this.timeout(12000);
+
+    dynamoose.setDefaults({ prefix: 'test-' });
+
 
     Cat = dynamoose.model('Cat',
     {
@@ -45,7 +48,7 @@ describe('Model', function (){
 
   after(function (done) {
 
-    delete dynamoose.models[dynamoose.namespace + 'Cat'];
+    delete dynamoose.models['test-Cat'];
     done();
   });
 
@@ -54,7 +57,7 @@ describe('Model', function (){
 
     Cat.should.have.property('$__');
 
-    Cat.$__.name.should.eql(dynamoose.namespace + 'Cat');
+    Cat.$__.name.should.eql('test-Cat');
     Cat.$__.options.should.have.property('create', true);
 
     var schema = Cat.$__.schema;
