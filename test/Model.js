@@ -116,7 +116,7 @@ describe('Model', function (){
 
     Cat2.should.have.property('$__');
 
-    Cat2.$__.name.should.eql('Cat2');
+    Cat2.$__.name.should.eql(dynamoose.namespace + 'Cat2');
     Cat2.$__.options.should.have.property('create', true);
 
     var schema = Cat2.$__.schema;
@@ -518,5 +518,233 @@ describe('Model', function (){
         });
       });
     });
+  });
+
+  describe('Model.batchPut', function (){
+
+    it('Batch put new', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat({id: 10+i, name: 'Tom_'+i}));
+      }
+      
+      Cat.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
+
+        for (var i=0 ; i<10 ; ++i) {
+          delete cats[i].name;
+        }
+
+        Cat.batchGet(cats, function (err2, result2) {
+          should.not.exist(err2);
+          should.exist(result2);
+          result2.length.should.eql(cats.length);
+          done();
+        });
+      });
+    });
+
+    it('Batch put new with range key', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat2({ownerId: 10+i, name: 'Tom_'+i}));
+      }
+      
+      Cat2.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
+        
+        Cat2.batchGet(cats, function (err2, result2) {
+          should.not.exist(err2);
+          should.exist(result2);
+          result2.length.should.eql(cats.length);
+          done();
+        });
+      });
+    });
+
+    it('Batch put new without range key', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat2({ownerId: 10+i}));
+      }
+      
+      Cat2.batchPut(cats, function (err, result) {
+        should.exist(err);
+        should.not.exist(result);
+        done();
+      });
+    });
+
+    it('Batch update', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat({id: 20+i, name: 'Tom_'+i}));
+      }
+      
+      Cat.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+
+        for (var i=0 ; i<10 ; ++i) {
+          var cat = cats[i];
+          cat.name = 'John_' + (cat.id + 100);
+        }
+
+        Cat.batchPut(cats, function (err2, result2) {
+          should.not.exist(err2);
+          should.exist(result2);
+          Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+          for (var i=0 ; i<10 ; ++i) {
+            delete cats[i].name;
+          }
+          
+          Cat.batchGet(cats, function (err3, result3) {
+            should.not.exist(err3);
+            should.exist(result3);
+            result3.length.should.eql(cats.length);
+            done();
+          });
+        });
+      });
+    });
+
+    it('Batch update with range key', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
+      }
+      
+      Cat2.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+
+        for (var i=0 ; i<10 ; ++i) {
+          var cat = cats[i];
+          cat.name = 'John_' + (cat.ownerId + 100);
+        }
+
+        Cat2.batchPut(cats, function (err2, result2) {
+          should.not.exist(err2);
+          should.exist(result2);
+          Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+          Cat2.batchGet(cats, function (err3, result3) {
+            should.not.exist(err3);
+            should.exist(result3);
+            result3.length.should.eql(cats.length);
+            done();
+          });
+        });
+      });
+    });
+
+    it('Batch update without range key', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
+      }
+      
+      Cat2.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+
+        for (var i=0 ; i<10 ; ++i) {
+          cats[i].name = null;
+        }
+
+        Cat2.batchPut(cats, function (err2, result2) {
+          should.exist(err2);
+          should.not.exist(result2);
+          done();
+        });
+      });
+    });
+
+    it('Batch delete', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat({id: 30+i, name: 'Tom_'+i}));
+      }
+      
+      Cat.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+
+        Cat.batchDelete(cats, function (err2, result2) {
+          should.not.exist(err2);
+          should.exist(result2);
+          Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+          Cat.batchGet(cats, function (err3, result3) {
+            should.not.exist(err3);
+            should.exist(result3);
+            result3.length.should.eql(0);
+            done();
+          });
+        });
+      });
+    });
+
+    it('Batch delete with range key', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
+      }
+      
+      Cat2.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+
+        Cat2.batchDelete(cats, function (err2, result2) {
+          should.not.exist(err2);
+          should.exist(result2);
+          Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+          Cat2.batchGet(cats, function (err3, result3) {
+            should.not.exist(err3);
+            should.exist(result3);
+            result3.length.should.eql(0);
+            done();
+          });
+        });
+      });
+    });
+
+    it('Batch delete without range key', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<10 ; ++i) {
+        cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
+      }
+      
+      Cat2.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+
+        for (var i=0 ; i<10 ; ++i) {
+          delete cats[i].name;
+        }
+
+        Cat2.batchDelete(cats, function (err2, result2) {
+          should.exist(err2);
+          should.not.exist(result2);
+          done();
+        });
+      });
+    });
+
   });
 });
