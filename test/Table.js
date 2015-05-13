@@ -7,6 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
+
 dynamoose.local();
 
 var Schema = dynamoose.Schema;
@@ -18,7 +19,7 @@ var should = require('should');
 describe('Table tests', function (){
   this.timeout(5000);
 
-  var schema = new Schema({ id: Number, name: String, childern: [Number] });
+  var schema = new Schema({ id: Number, name: String, childern: [Number], address: { street:String,city:String} });
   var globalIndexSchema = new Schema({
     ownerId: {
       type: Number,

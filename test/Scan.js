@@ -7,6 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
+
 dynamoose.local();
 
 var Schema = dynamoose.Schema;
@@ -18,6 +19,9 @@ describe('Scan', function (){
   this.timeout(5000);
 
   before(function (done) {
+
+    dynamoose.setDefaults({ prefix: '' });
+
     var dogSchema  = new Schema({
       ownerId: {
         type: Number,
