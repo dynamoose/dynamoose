@@ -136,7 +136,7 @@ describe('Model', function (){
 
     Cat2.should.have.property('$__');
 
-    Cat2.$__.name.should.eql(dynamoose.namespace + 'Cat2');
+    Cat2.$__.name.should.eql('test-Cat2');
     Cat2.$__.options.should.have.property('create', true);
 
     var schema = Cat2.$__.schema;
