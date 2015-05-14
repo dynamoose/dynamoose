@@ -542,7 +542,7 @@ describe('Model', function (){
 
   describe('Model.batchPut', function (){
 
-    it('Batch put new', function (done) {
+    it('Put new', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -568,7 +568,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch put new, a lot', function (done) {
+    it('Put lots of new items', function (done) {
       var cats = [];
 
       for (var i=0 ; i<100 ; ++i) {
@@ -593,7 +593,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch put new with range key', function (done) {
+    it('Put new with range key', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -614,7 +614,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch put new without range key', function (done) {
+    it('Put new without range key', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -628,7 +628,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch update', function (done) {
+    it('Update items', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -663,7 +663,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch update with range key', function (done) {
+    it('Update with range key', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -694,7 +694,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch update without range key', function (done) {
+    it('Update without range key', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -716,8 +716,10 @@ describe('Model', function (){
         });
       });
     });
+  });
 
-    it('Batch delete', function (done) {
+  describe('Model.batchDelete', function (){
+    it('Simple delete', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -743,7 +745,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch delete with range key', function (done) {
+    it('Delete with range key', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
@@ -769,7 +771,7 @@ describe('Model', function (){
       });
     });
 
-    it('Batch delete without range key', function (done) {
+    it('Delete without range key', function (done) {
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {

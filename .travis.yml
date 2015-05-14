@@ -2,6 +2,7 @@ language: node_js
 node_js:
   - "0.10"
   - "0.11"
+  - "0.12"
 before_script:
   - npm install -g grunt-cli
   - wget http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_2015-01-27.tar.gz
