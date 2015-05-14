@@ -7,7 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
-dynamoose.setNamespace('T');
+
 dynamoose.local();
 
 var should = require('should');
@@ -21,6 +21,9 @@ describe('Model', function (){
   before(function(done) {
     this.timeout(12000);
 
+    dynamoose.setDefaults({ prefix: 'test-' });
+
+
     Cat = dynamoose.model('Cat',
     {
       id: Number,
@@ -32,10 +35,13 @@ describe('Model', function (){
         address: String
       },
       ears:[{
-        name:String
+        name: String
       }],
-      legs:[String]
-    });
+      legs: [String],
+      more: Object,
+      array: Array
+    },
+    {useDocumentTypes: true});
 
     // Create a model with a range key
     Cat2 = dynamoose.model('Cat2',
@@ -55,16 +61,17 @@ describe('Model', function (){
 
   after(function (done) {
 
-    delete dynamoose.models[dynamoose.namespace + 'Cat'];
+    delete dynamoose.models['test-Cat'];
     done();
   });
 
   it('Create simple model', function (done) {
+    this.timeout(12000);
 
 
     Cat.should.have.property('$__');
 
-    Cat.$__.name.should.eql(dynamoose.namespace + 'Cat');
+    Cat.$__.name.should.eql('test-Cat');
     Cat.$__.options.should.have.property('create', true);
 
     var schema = Cat.$__.schema;
@@ -83,28 +90,41 @@ describe('Model', function (){
     should.not.exist(schema.attributes.name.validator);
     should(schema.attributes.name.required).not.be.ok;
 
-    schema.attributes.vet.attributes.name.type.name.should.eql('string');
-
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cat({id: 1, name: 'Fluffy', vet:{name:'theVet', address:'12 somewhere'},
-                                 ears:[{name:'left'}, {name:'right'}]});
+    var kitten = new Cat(
+      {
+        id: 1,
+        name: 'Fluffy',
+        vet:{name:'theVet', address:'12 somewhere'},
+        ears:[{name:'left'}, {name:'right'}],
+        legs: ['front right', 'front left', 'back right', 'back left'],
+        more: {fovorites: {food: 'fish'}},
+        array: [{one: '1'}]
+      }
+    );
 
     kitten.id.should.eql(1);
     kitten.name.should.eql('Fluffy');
 
     var dynamoObj = schema.toDynamo(kitten);
 
-    dynamoObj.should.eql({ ears: {
-                              L: [
-                                { M: { name: { S: 'left' } } },
-                                { M: { name: { S: 'right' } } }
-                              ]
-                            },
-                           id: { N: '1' },
-                           name: { S: 'Fluffy' },
-                           vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } } });
+    dynamoObj.should.eql(
+      {
+        ears: {
+          L: [
+            { M: { name: { S: 'left' } } },
+            { M: { name: { S: 'right' } } }
+          ]
+        },
+        id: { N: '1' },
+        name: { S: 'Fluffy' },
+        vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
+        legs: { SS: ['front right', 'front left', 'back right', 'back left']},
+        more: { S: '{"fovorites":{"food":"fish"}}' },
+        array: { S: '[{"one":"1"}]' }
+      });
 
     kitten.save(done);
 

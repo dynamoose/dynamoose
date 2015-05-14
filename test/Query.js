@@ -7,7 +7,7 @@ dynamoose.AWS.config.update({
   secretAccessKey: 'SECRET',
   region: 'us-east-1'
 });
-dynamoose.setNamespace('T');
+
 dynamoose.local();
 
 var Schema = dynamoose.Schema;
@@ -19,6 +19,9 @@ describe('Query', function (){
   this.timeout(5000);
 
   before(function (done) {
+
+    dynamoose.setDefaults({ prefix: '' });
+
     var dogSchema  = new Schema({
       ownerId: {
         type: Number,
@@ -100,7 +103,7 @@ describe('Query', function (){
       if(err) {
         done(err);
       }
-      delete dynamoose.models[dynamoose.namespace + 'Dog'];
+      delete dynamoose.models.Dog;
       done();
     });
 
