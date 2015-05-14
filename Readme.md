@@ -1,4 +1,4 @@
-# Dynamoose [![Build Status](https://travis-ci.org/automategreen/dynamoose.png)](https://travis-ci.org/automategreen/dynamoose)
+# Dynamoose [![Build Status](https://travis-ci.org/ricardopinto/dynamoose.png)](https://travis-ci.org/ricardopinto/dynamoose)
 
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http://mongoosejs.com/))
@@ -315,6 +315,45 @@ odie.save({
 });
 ```
 
+#### Model.batchPut(items, options, callback)
+
+Puts multiple items in the table. Will overwrite existing items.
+
+```js
+Dog.batchPut([
+  {
+    ownerId: 2,
+    name: 'Princes',
+    breed: 'Jack Russell Terrier',
+    color: ['White', 'Brown'],
+    cartoon: true
+  },
+  {
+    ownerId: 3,
+    name: 'Toto',
+    breed: 'Terrier',
+    color: ['Brown'],
+    cartoon: false
+  },
+  {
+    ownerId: 4,
+    name: 'Odie',
+    breed: 'Beagle',
+    color: ['Tan'],
+    cartoon: true
+  },
+  {
+    ownerId: 5,
+    name: 'Lassie',
+    breed: 'Beagle',
+    color: ['Tan'],
+    cartoon: false
+  }], function (err, dogs) {
+    if (err) { return console.log(err); }
+    console.log('Ta-da!');
+  });
+```
+
 ##### Options
 
 **overwrite**: boolean
@@ -370,7 +409,7 @@ Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
 Gets multiple items from the table.
 
 ```js
-Dog.get([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], function (err, dogs) {
+Dog.batchGet([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], function (err, dogs) {
   if (err) { return console.log(err); }
   console.log('Retrieved two dogs: ' + dogs);
 });
@@ -395,6 +434,22 @@ Deletes the item from the table.
 odie.delete(function(err) {
   if(err) { return console.log(err); }
   console.log('Bye bye Odie');
+});
+```
+
+#### Model.batchDelete(keys, options, callback)
+
+Deletes multiple items from the table.
+
+```js
+Dog.batchDelete([
+  { ownerId: 2, name: 'Princes' },
+  { ownerId: 3, name: 'Toto' },
+  { ownerId: 4, name: 'Odie' },
+  { ownerId: 5, name: 'Lassie'}
+], function (err, dogs) {
+  if (err) { return console.log(err); }
+  console.log('Bye bye my friends');
 });
 ```
 
