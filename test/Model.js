@@ -535,6 +535,32 @@ describe('Model', function (){
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
 
         for (var i=0 ; i<10 ; ++i) {
+
+          delete cats[i].name;
+        }
+
+        Cat.batchGet(cats, function (err2, result2) {
+          should.not.exist(err2);
+          should.exist(result2);
+          result2.length.should.eql(cats.length);
+          done();
+        });
+      });
+    });
+
+    it('Batch put new, a lot', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<100 ; ++i) {
+        cats.push(new Cat({id: 100+i, name: 'Tom_'+i}));
+      }
+
+      Cat.batchPut(cats, function (err, result) {
+        should.not.exist(err);
+        should.exist(result);
+        Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
+
+        for (var i=0 ; i<100 ; ++i) {
           delete cats[i].name;
         }
 
@@ -553,12 +579,12 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 10+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
-        
+
         Cat2.batchGet(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
