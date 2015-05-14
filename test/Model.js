@@ -53,6 +53,7 @@ describe('Model', function (){
   });
 
   it('Create simple model', function (done) {
+    this.timeout(12000);
 
 
     Cat.should.have.property('$__');
