@@ -398,11 +398,15 @@ describe('Schema tests', function (){
     tom.didscratch.should.be.ok;
     tom.didpurr.should.be.ok;
 
-    delete dynamoose.models.Tabby;
-    delete dynamoose.models.Kitty;
 
+    Tabby.$__.table.delete(function () {
+      delete dynamoose.models.Tabby;
 
-    done();
+      Kitty.$__.table.delete(function () {
+        delete dynamoose.models.Kitty;
+        done();
+      });
+    });
 
   });
 
@@ -434,10 +438,14 @@ describe('Schema tests', function (){
     catsByOwner.should.eql('fredfluffy');
     catsByRace.should.eql('siamesebobbly');
 
-    delete dynamoose.models.Cat;
-    delete dynamoose.models.Cats;
+    Cat.$__.table.delete(function () {
+      delete dynamoose.models.Cat;
 
-    done();
+      Cats.$__.table.delete(function () {
+        delete dynamoose.models.Cats;
+        done();
+      });
+    });
   });
 
 
@@ -468,9 +476,11 @@ describe('Schema tests', function (){
     tim.mergedname = 'george';
     tim.mergedname.should.eql('george');
 
-    delete dynamoose.models.Cat;
 
-    done();
+    Cat.$__.table.delete(function () {
+      delete dynamoose.models.Cat;
+      done();
+    });
   });
 
 

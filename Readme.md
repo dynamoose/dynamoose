@@ -447,7 +447,7 @@ Dog.batchDelete([
   { ownerId: 3, name: 'Toto' },
   { ownerId: 4, name: 'Odie' },
   { ownerId: 5, name: 'Lassie'}
-], function (err, dogs) {
+], function (err) {
   if (err) { return console.log(err); }
   console.log('Bye bye my friends');
 });
