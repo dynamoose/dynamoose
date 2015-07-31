@@ -1,4 +1,4 @@
-# Dynamoose [![Build Status](https://travis-ci.org/ricardopinto/dynamoose.png)](https://travis-ci.org/ricardopinto/dynamoose)
+# Dynamoose [![Build Status](https://travis-ci.org/automategreen/dynamoose.png)](https://travis-ci.org/automategreen/dynamoose)
 
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http://mongoosejs.com/))
@@ -100,7 +100,7 @@ dynamoose.AWS.config.update({
 
 #### dynamoose.defaults(options)
 
-Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.  
+Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.
 
 Default `options`:
 
@@ -227,7 +227,7 @@ If it is a value, the value is simply assigned.
 
 **validate**: function | RegExp | value
 
-Validation required before for saving.  
+Validation required before for saving.
 
 If validate is a function, the function is used to validate the attribute's value. The function must have the signature:
 
