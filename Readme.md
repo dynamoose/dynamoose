@@ -474,14 +474,14 @@ Updates and existing item in the table. Three types of updates: $PUT, $ADD, and 
 Put is the default behavior.  The two example below are identical.
 
 ```js
-Dog.update({ownerId: 4, name: 'Odie'}, {age: 1}, function (err) {
+Dog.update({age: 1},{ownerId: 4, name: 'Odie'}, function (err) {
   if(err) { return console.log(err); }
   console.log('Just a puppy');
 })
 ```
 
 ```js
-Dog.update({ownerId: 4, name: 'Odie'}, {$PUT: {age: 1}}, function (err) {
+Dog.update({$PUT: {age: 1}},{ownerId: 4, name: 'Odie'} function (err) {
   if(err) { return console.log(err); }
   console.log('Just a puppy');
 })
@@ -490,7 +490,7 @@ Dog.update({ownerId: 4, name: 'Odie'}, {$PUT: {age: 1}}, function (err) {
 **$ADD**
 
 ```js
-Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
+Dog.update({$ADD: {age: 1}},{ownerId: 4, name: 'Odie'}, function (err) {
   if(err) { return console.log(err); }
   console.log('Birthday boy');
 })
@@ -499,7 +499,7 @@ Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
 **$DELETE**
 
 ```js
-Dog.update({ownerId: 4, name: 'Odie'}, {$DELETE: {age: null}}, function (err) {
+Dog.update({$DELETE: {age: null}},{ownerId: 4, name: 'Odie'}, function (err) {
   if(err) { return console.log(err); }
   console.log('Too old to keep count');
 })
