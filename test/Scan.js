@@ -199,6 +199,16 @@ describe('Scan', function (){
     });
   });
 
+  it('Scan with eq with filter object short version', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan({'breed': 'Jack Russell Terrier'}, function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(4);
+      done();
+    });
+  });
+
   it('Scan with eq', function (done) {
     var Dog = dynamoose.model('Dog');
 
