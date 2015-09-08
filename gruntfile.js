@@ -6,12 +6,14 @@ module.exports = function(grunt) {
       app: {
         src: ['gruntfile.js', 'index.js', 'lib/**/*.js'],
         options: {
+          node: true,
           jshintrc: '.jshintrc'
         }
       },
       test: {
         src: ['test/**/*.js' ],
         options: {
+          node: true,
           jshintrc: 'test/.jshintrc'
         }
       }
