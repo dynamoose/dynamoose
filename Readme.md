@@ -481,7 +481,7 @@ Dog.update({age: 1},{ownerId: 4, name: 'Odie'}, function (err) {
 ```
 
 ```js
-Dog.update({$PUT: {age: 1}},{ownerId: 4, name: 'Odie'} function (err) {
+Dog.update({ownerId: 4, name: 'Odie'}, {$PUT: {age: 1}}, function (err) {
   if(err) { return console.log(err); }
   console.log('Just a puppy');
 })
@@ -490,7 +490,7 @@ Dog.update({$PUT: {age: 1}},{ownerId: 4, name: 'Odie'} function (err) {
 **$ADD**
 
 ```js
-Dog.update({$ADD: {age: 1}},{ownerId: 4, name: 'Odie'}, function (err) {
+Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
   if(err) { return console.log(err); }
   console.log('Birthday boy');
 })
@@ -499,7 +499,7 @@ Dog.update({$ADD: {age: 1}},{ownerId: 4, name: 'Odie'}, function (err) {
 **$DELETE**
 
 ```js
-Dog.update({$DELETE: {age: null}},{ownerId: 4, name: 'Odie'}, function (err) {
+Dog.update({ownerId: 4, name: 'Odie'}, {$DELETE: {age: null}}, function (err) {
   if(err) { return console.log(err); }
   console.log('Too old to keep count');
 })
