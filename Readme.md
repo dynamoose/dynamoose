@@ -98,7 +98,7 @@ dynamoose.AWS.config.update({
 });
 ```
 
-#### dynamoose.defaults(options)
+#### dynamoose.setDefaults(options)
 
 Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.
 
@@ -113,7 +113,7 @@ Default `options`:
 It is recommended that `create` be disabled for production environments.
 
 ```js
-dynamoose.defaults( { create: false });
+dynamoose.setDefaults( { create: false });
 ```
 
 #### dynamoose.Schema
