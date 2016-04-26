@@ -639,10 +639,10 @@ Dog.scan({breed: {contains: 'Terrier'} }, function (err, dogs) {
 To get all the items in a table, do not provide a filter.
 
 ```js
-Dog.scan().exec(function (err, dogs, lastKey) {
+Dog.scan().exec(function (err, dogs) {
   // Look at all the dogs
-  if(lastKey) { // More dogs to get
-    Dog.scan().startAt(lastKey).exec(function (err, dogs, lastKey) {
+  if(dogs.lastKey) { // More dogs to get
+    Dog.scan().startAt(dogs.lastKey).exec(function (err, dogs) {
       // Look more dogs
     });
   }
