@@ -40,7 +40,7 @@
     "grunt": "*",
     "grunt-contrib-jshint": "*",
     "grunt-mocha-test": "*",
-    "blanket": "*",
+    "blanket": "1.1.*",
     "travis-cov": "*"
   },
   "dependencies": {
