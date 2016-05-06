@@ -98,7 +98,7 @@ dynamoose.AWS.config.update({
 });
 ```
 
-#### dynamoose.defaults(options)
+#### dynamoose.setDefaults(options)
 
 Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.
 
@@ -113,7 +113,7 @@ Default `options`:
 It is recommended that `create` be disabled for production environments.
 
 ```js
-dynamoose.defaults( { create: false });
+dynamoose.setDefaults( { create: false });
 ```
 
 #### dynamoose.Schema
@@ -639,10 +639,10 @@ Dog.scan({breed: {contains: 'Terrier'} }, function (err, dogs) {
 To get all the items in a table, do not provide a filter.
 
 ```js
-Dog.scan().exec(function (err, dogs, lastKey) {
+Dog.scan().exec(function (err, dogs) {
   // Look at all the dogs
-  if(lastKey) { // More dogs to get
-    Dog.scan().startAt(lastKey).exec(function (err, dogs, lastKey) {
+  if(dogs.lastKey) { // More dogs to get
+    Dog.scan().startAt(dogs.lastKey).exec(function (err, dogs) {
       // Look more dogs
     });
   }
