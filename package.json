@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "debug": "*",
-    "aws-sdk": "2.1.*",
+    "aws-sdk": "^2.1.0",
     "q": "~1.0.1",
     "hooks": "0.3.2"
   }
