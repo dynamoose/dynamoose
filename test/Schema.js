@@ -166,6 +166,92 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Schema with timestamps options', function (done) {
+    var schema1 = new Schema({
+      id: {
+        type: Number,
+        validate: function(v) { return v > 0; },
+        rangeKey: true
+      },
+      name: {
+        type: String,
+        required: true
+      },
+    }, 
+    {
+      throughput: {read: 10, write: 2},
+      timestamps: true
+    });
+
+    var schema2 = new Schema({
+      id: {
+        type: Number,
+        validate: function(v) { return v > 0; },
+        rangeKey: true
+      },
+      name: {
+        type: String,
+        required: true
+      },
+    }, 
+    {
+      throughput: {read: 10, write: 2},
+      timestamps: { createdAt: 'createDate', updatedAt: 'lastUpdate'}
+    });
+
+
+    schema1.attributes.id.type.name.should.eql('number');
+    should(schema1.attributes.id.isSet).not.be.ok;
+    should.not.exist(schema1.attributes.id.default);
+    var validator = schema1.attributes.id.validator;
+    should.exist(validator);
+    validator(-1).should.not.be.ok;
+    validator(1).should.be.ok;
+    should(schema1.attributes.id.required).not.be.ok;
+
+    schema1.attributes.name.type.name.should.eql('string');
+    schema1.attributes.name.isSet.should.not.be.ok;
+    should.not.exist(schema1.attributes.name.default);
+    should.not.exist(schema1.attributes.name.validator);
+    schema1.attributes.name.required.should.be.ok;
+
+    schema1.rangeKey.should.equal(schema1.attributes.id);
+
+    schema1.throughput.read.should.equal(10);
+    schema1.throughput.write.should.equal(2);
+    //
+    // Schema1 timestamps validation
+    //
+    schema1.timestamps.should.exists;
+    schema1.timestamps.createdAt.should.exists;
+    schema1.timestamps.createdAt.should.be.equal('createdAt');
+    schema1.timestamps.updatedAt.should.exists;
+    schema1.timestamps.updatedAt.should.be.equal('updatedAt');
+    
+    schema1.attributes.createdAt.type.name.should.eql('date');
+    should.exist(schema1.attributes.createdAt.default);
+
+    schema1.attributes.updatedAt.type.name.should.eql('date');
+    should.exist(schema1.attributes.updatedAt.default);
+    //
+    // Schema2 timestamps validation
+    //
+    schema2.timestamps.should.exists;
+    schema2.timestamps.createdAt.should.exists;
+    schema2.timestamps.createdAt.should.be.equal('createDate');
+    schema2.timestamps.updatedAt.should.exists;
+    schema2.timestamps.updatedAt.should.be.equal('lastUpdate');
+    
+    schema2.attributes.createDate.type.name.should.eql('date');
+    should.exist(schema2.attributes.createDate.default);
+
+    schema2.attributes.lastUpdate.type.name.should.eql('date');
+    should.exist(schema2.attributes.lastUpdate.default);
+
+    done();
+  });
+
+
   it('Schema with use Document Types', function (done) {
     var schema = new Schema({
       id: {

@@ -275,6 +275,20 @@ var schema = New Schema({...}, { throughput: 5});
 var schema = New Schema({...}, { throughput: { read: 5, write: 2 } });
 ```
 
+**timestamps**: boolean | {createdAt: string, updatedAt: string}
+
+Defines that _schema_ must contain fields to control creation and last update timestamps. If it is set to true, this fields will be createdAt for creation date and updatedAt for last update. for example:
+
+```js
+var schema = New Schema({...}, { throughput: 5, timestamps: true});
+```
+
+Also it is possible to specify wich names that field will use, like in the following example:
+
+```js
+var schema = New Schema({...}, { throughput: 5, timestamps: {createdAt: 'creationDate', updatedAt: 'lastUpdateDate'});
+```
+
 ### Model
 
 ```js
@@ -474,7 +488,7 @@ Updates and existing item in the table. Three types of updates: $PUT, $ADD, and 
 Put is the default behavior.  The two example below are identical.
 
 ```js
-Dog.update({age: 1},{ownerId: 4, name: 'Odie'}, function (err) {
+Dog.update({ownerId: 4, name: 'Odie'}, {age: 1}, function (err) {
   if(err) { return console.log(err); }
   console.log('Just a puppy');
 })
