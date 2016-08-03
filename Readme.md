@@ -479,7 +479,7 @@ Same functionality as query except only return the first result object (if any).
 
 Scans a table. If callback is not provided, then a Scan object is returned. See [Scan](#scan).
 
-#### Model.update(key, update, options, callback, emptyarrayallowed)
+#### Model.update(key, update, options, callback)
 
 Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE. Refer to DynamoDB's updateItem documentation for details on how PUT, ADD, and DELETE work. options is an optional JSON object. If emptyarrayallowed inside of that is set to true then you are allowed to pass in an empty array into the update function.
 
