@@ -2,14 +2,14 @@
   "name": "dynamoose",
   "version": "0.6.0",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
-  "homepage": "https://github.com/automategreen/dynamoose",
+  "homepage": "https://github.com/fishcharlie/dynamoose",
   "repository": {
     "type": "git",
-    "url": "https://github.com/automategreen/dynamoose"
+    "url": "https://github.com/fishcharlie/dynamoose"
   },
   "bugs": {
-    "email": "support@automategreen.com",
-    "url": "https://github.com/automategreen/dynamoose/issues"
+    "email": "fishcharlie@me.com",
+    "url": "https://github.com/fishcharlie/dynamoose/issues"
   },
   "main": "index.js",
   "scripts": {
