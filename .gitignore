@@ -6,3 +6,6 @@ node_modules/
 .session.vim
 coverage.html
 lib-cov/
+
+# Ignore webstorm directories
+.idea/
