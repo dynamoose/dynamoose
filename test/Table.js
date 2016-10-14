@@ -160,27 +160,28 @@ describe('Table tests', function () {
     var tom_sawyer = new Song({id: 1, band: 'Rush', album: 'Moving Pictures', song: 'Tom Sawyer', track: 1});
     tom_sawyer.save();
     var params = {TableName: 'DMSong'};
-    dynamoose.ddb().describeTable(params, function (err, data) {
-      if (err) {
-        done(err);
-      }
-      else {
-        var found = false;
-        for (var i in data.Table.GlobalSecondaryIndexes) {
-          var gsi = data.Table.GlobalSecondaryIndexes[i];
-          if (gsi.IndexName === 'albumIndex') {
-            should.equal(gsi.Projection.ProjectionType, 'INCLUDE');
-            found = true;
-          }
+    setTimeout(function() {
+      dynamoose.ddb().describeTable(params, function (err, data) {
+        if (err) {
+          done(err);
         }
-        should.equal(found, true);
-        delete dynamoose.models['DMSong'];
-        done();
-      }
-    });
+        else {
+          var found = false;
+          for (var i in data.Table.GlobalSecondaryIndexes) {
+            var gsi = data.Table.GlobalSecondaryIndexes[i];
+            if (gsi.IndexName === 'albumIndex') {
+              should.equal(gsi.Projection.ProjectionType, 'INCLUDE');
+              found = true;
+            }
+          }
+          should.equal(found, true);
+          delete dynamoose.models['DMSong'];
+          done();
+        }
+      });
+    }, 4000);
   });
   it('update DMSong with broader projection', function (done) {
-    var params = {TableName: 'DMSong'};
     var Song = dynamoose.model('DMSong', {
         id: {
           type: Number,
@@ -229,24 +230,28 @@ describe('Table tests', function () {
 
     var red_barchetta = new Song({id: 2, band: 'Rush', album: 'Moving Pictures', song: 'Red Barchetta', track: 2});
     red_barchetta.save();
-    dynamoose.ddb().describeTable(params, function (err, data) {
-      if (err) {
-        done(err);
-      }
-      else {
-        console.log("---------------------REVISED TABLE");
-        console.log(JSON.stringify(data, null, 2));
-        var found = false;
-        for (var i in data.Table.GlobalSecondaryIndexes) {
-          var gsi = data.Table.GlobalSecondaryIndexes[i];
-          if (gsi.IndexName === 'albumIndex') {
-            should.equal(gsi.Projection.ProjectionType, 'ALL');
-            found = true;
-          }
+
+    var params = {TableName: 'DMSong'};
+    setTimeout(function() {
+      dynamoose.ddb().describeTable(params, function (err, data) {
+        if (err) {
+          done(err);
         }
-        should.equal(found, true);
-        done();
-      }
-    });
+        else {
+          console.log("---------------------REVISED TABLE");
+          console.log(JSON.stringify(data, null, 2));
+          var found = false;
+          for (var i in data.Table.GlobalSecondaryIndexes) {
+            var gsi = data.Table.GlobalSecondaryIndexes[i];
+            if (gsi.IndexName === 'albumIndex') {
+              should.equal(gsi.Projection.ProjectionType, 'ALL');
+              found = true;
+            }
+          }
+          should.equal(found, true);
+          done();
+        }
+      });
+    }, 4000);
   });
 });
