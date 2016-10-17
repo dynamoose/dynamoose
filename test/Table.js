@@ -179,7 +179,7 @@ describe('Table tests', function () {
           done();
         }
       });
-    }, 4000);
+    }, 2000);
   });
   it('update DMSong with broader projection', function (done) {
     var Song = dynamoose.model('DMSong', {
@@ -252,6 +252,6 @@ describe('Table tests', function () {
           done();
         }
       });
-    }, 4000);
+    }, 2000);
   });
 });
