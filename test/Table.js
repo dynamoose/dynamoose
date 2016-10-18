@@ -175,7 +175,7 @@ describe('Table tests', function () {
             }
           }
           should.equal(found, true);
-          delete dynamoose.models['DMSong'];
+          delete dynamoose.models.DMSong;
           done();
         }
       });
