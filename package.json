@@ -39,6 +39,7 @@
     "should": "*",
     "grunt": "*",
     "grunt-contrib-jshint": "*",
+    "gruntify-eslint":"^3.1.0",
     "grunt-mocha-test": "*",
     "blanket": "1.1.5",
     "travis-cov": "*"

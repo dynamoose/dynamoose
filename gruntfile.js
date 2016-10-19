@@ -18,6 +18,14 @@ module.exports = function(grunt) {
         }
       }
     },
+    eslint: {
+      app: {
+        src: ['gruntfile.js', 'index.js', 'lib/**/*.js']
+      },
+      test: {
+        src: ['test/**/*.js' ]
+      }
+    },
     mochaTest: {
       test: {
         options: {
@@ -54,14 +62,15 @@ module.exports = function(grunt) {
 
   // Load libs
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('gruntify-eslint');
   grunt.loadNpmTasks('grunt-mocha-test');
 
 
   // Register the default tasks
-  grunt.registerTask('default', ['jshint', 'mochaTest']);
+  grunt.registerTask('default', ['eslint', 'mochaTest']);
 
-  grunt.registerTask('test', ['jshint', 'mochaTest:test']);
+  grunt.registerTask('test', ['eslint', 'mochaTest:test']);
 
-  grunt.registerTask('coverage', ['jshint', 'mochaTest:testCoverage', 'mochaTest:coverage', 'mochaTest:travis-cov']);
+  grunt.registerTask('coverage', ['eslint', 'mochaTest:testCoverage', 'mochaTest:coverage', 'mochaTest:travis-cov']);
 
 };

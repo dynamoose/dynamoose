@@ -1,5 +1,6 @@
-'use strict';
+/* eslint no-invalid-this: 'off' */
 
+'use strict';
 
 var dynamoose = require('../');
 dynamoose.AWS.config.update({
@@ -633,7 +634,5 @@ describe('Scan', function (){
       done();
     });
   });
-
-
 
 });

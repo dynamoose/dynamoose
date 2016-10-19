@@ -1,5 +1,6 @@
-'use strict';
+/* eslint no-invalid-this: 'off' */
 
+'use strict';
 
 var dynamoose = require('../');
 dynamoose.AWS.config.update({
@@ -15,17 +16,19 @@ var Schema = dynamoose.Schema;
 var should = require('should');
 
 
-describe('Query', function (){
+describe('Query', function () {
   this.timeout(5000);
 
   before(function (done) {
 
-    dynamoose.setDefaults({ prefix: '' });
+    dynamoose.setDefaults({prefix: ''});
 
-    var dogSchema  = new Schema({
+    var dogSchema = new Schema({
       ownerId: {
         type: Number,
-        validate: function(v) { return v > 0; },
+        validate: function (v) {
+          return v > 0;
+        },
         hashKey: true
       },
       breed: {
@@ -49,7 +52,7 @@ describe('Query', function (){
         default: 'Brown',
         index: [{ // name: colorLocalIndex
           project: ['name'] // ProjectionType: INCLUDE
-        },{ // name: colorGlobalIndex, no ragne key
+        }, { // name: colorGlobalIndex, no ragne key
           global: true,
           project: ['name'] // ProjectionType: INCLUDE
         }]
@@ -58,8 +61,8 @@ describe('Query', function (){
 
     var Dog = dynamoose.model('Dog', dogSchema);
 
-    function addDogs (dogs) {
-      if(dogs.length <= 0) {
+    function addDogs(dogs) {
+      if (dogs.length <= 0) {
         return done();
       }
       var dog = new Dog(dogs.pop());
@@ -72,26 +75,26 @@ describe('Query', function (){
     }
 
     addDogs([
-      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black'},
-      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown'},
-      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown'},
-      {ownerId:3, name: 'Toto', breed: 'Terrier', color: 'Brown'},
-      {ownerId:4, name: 'Oddie', breed: 'beagle', color: 'Tan'},
-      {ownerId:5, name: 'Pluto', breed: 'unknown', color: 'Mustard'},
-      {ownerId:6, name: 'Brian Griffin', breed: 'unknown', color: 'White'},
-      {ownerId:7, name: 'Scooby Doo', breed: 'Great Dane'},
-      {ownerId:8, name: 'Blue', breed: 'unknown', color: 'Blue'},
-      {ownerId:9, name: 'Lady', breed: ' Cocker Spaniel'},
-      {ownerId:10, name: 'Copper', breed: 'Hound'},
-      {ownerId:11, name: 'Old Yeller', breed: 'unknown', color: 'Tan'},
-      {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: 'Brown'},
-      {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd'},
-      {ownerId:14, name: 'Benji', breed: 'unknown'},
-      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: 'White'},
-      {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: 'Yellow'},
-      {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
-      {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white'},
-      {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white'}
+      {ownerId: 1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black'},
+      {ownerId: 2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown'},
+      {ownerId: 2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown'},
+      {ownerId: 3, name: 'Toto', breed: 'Terrier', color: 'Brown'},
+      {ownerId: 4, name: 'Oddie', breed: 'beagle', color: 'Tan'},
+      {ownerId: 5, name: 'Pluto', breed: 'unknown', color: 'Mustard'},
+      {ownerId: 6, name: 'Brian Griffin', breed: 'unknown', color: 'White'},
+      {ownerId: 7, name: 'Scooby Doo', breed: 'Great Dane'},
+      {ownerId: 8, name: 'Blue', breed: 'unknown', color: 'Blue'},
+      {ownerId: 9, name: 'Lady', breed: ' Cocker Spaniel'},
+      {ownerId: 10, name: 'Copper', breed: 'Hound'},
+      {ownerId: 11, name: 'Old Yeller', breed: 'unknown', color: 'Tan'},
+      {ownerId: 12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: 'Brown'},
+      {ownerId: 13, name: 'Rin Tin Tin', breed: 'German Shepherd'},
+      {ownerId: 14, name: 'Benji', breed: 'unknown'},
+      {ownerId: 15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: 'White'},
+      {ownerId: 16, name: 'Marley', breed: 'Labrador Retriever', color: 'Yellow'},
+      {ownerId: 17, name: 'Beethoven', breed: 'St. Bernard'},
+      {ownerId: 18, name: 'Lassie', breed: 'Collie', color: 'tan and white'},
+      {ownerId: 19, name: 'Snoopy', breed: 'beagle', color: 'black and white'}
     ]);
 
   });
@@ -100,7 +103,7 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.$__.table.delete(function (err) {
-      if(err) {
+      if (err) {
         done(err);
       }
       delete dynamoose.models.Dog;
@@ -199,9 +202,11 @@ describe('Query', function (){
   it('Basic Query on SGI startAt key', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    var startKey = { breed: { S: 'Jack Russell Terrier' },
-     ownerId: { N: '1' },
-     name: { S: 'Foxy Lady' } };
+    var startKey = {
+      breed: {S: 'Jack Russell Terrier'},
+      ownerId: {N: '1'},
+      name: {S: 'Foxy Lady'}
+    };
 
     Dog.query('breed').eq('Jack Russell Terrier').startAt(startKey).limit(1).exec(function (err, dogs) {
       should.not.exist(err);
@@ -239,50 +244,50 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .where('ownerId').eq(1)
-    .filter('color').contains('Black').exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(1);
-      done();
-    });
+      .where('ownerId').eq(1)
+      .filter('color').contains('Black').exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(1);
+        done();
+      });
   });
 
   it('Basic Query on SGI with filter null', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .filter('color').not().null().exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(5);
-      done();
-    });
+      .filter('color').not().null().exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(5);
+        done();
+      });
   });
 
   it('Basic Query on SGI with filter not eq and not lt', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .filter('color').not().eq('Brown')
-    .and()
-    .filter('ownerId').not().lt(10).exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(11);
-      done();
-    });
+      .filter('color').not().eq('Brown')
+      .and()
+      .filter('ownerId').not().lt(10).exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(11);
+        done();
+      });
   });
 
   it('Basic Query on SGI with filter not contains or beginsWith', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .filter('color').not().contains('Brown')
-    .or()
-    .filter('name').beginsWith('Q').exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(2);
-      done();
-    });
+      .filter('color').not().contains('Brown')
+      .or()
+      .filter('name').beginsWith('Q').exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(2);
+        done();
+      });
   });
 });

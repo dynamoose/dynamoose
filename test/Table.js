@@ -1,5 +1,6 @@
-'use strict';
+/* eslint no-invalid-this: 'off' */
 
+'use strict';
 
 var dynamoose = require('../');
 dynamoose.AWS.config.update({
@@ -114,7 +115,8 @@ describe('Table tests', function () {
   });
 
   it('create DMSong with limited projection', function (done) {
-    var Song = dynamoose.model('DMSong', {
+    var Song = dynamoose.model('DMSong',
+      {
         id: {
           type: Number,
           required: true,
@@ -160,7 +162,7 @@ describe('Table tests', function () {
     var tom_sawyer = new Song({id: 1, band: 'Rush', album: 'Moving Pictures', song: 'Tom Sawyer', track: 1});
     tom_sawyer.save();
     var params = {TableName: 'DMSong'};
-    setTimeout(function() {
+    setTimeout(function () {
       dynamoose.ddb().describeTable(params, function (err, data) {
         if (err) {
           done(err);
@@ -182,7 +184,8 @@ describe('Table tests', function () {
     }, 2000);
   });
   it('update DMSong with broader projection', function (done) {
-    var Song = dynamoose.model('DMSong', {
+    var Song = dynamoose.model('DMSong',
+      {
         id: {
           type: Number,
           required: true,
@@ -232,14 +235,14 @@ describe('Table tests', function () {
     red_barchetta.save();
 
     var params = {TableName: 'DMSong'};
-    setTimeout(function() {
+    setTimeout(function () {
       dynamoose.ddb().describeTable(params, function (err, data) {
         if (err) {
           done(err);
         }
         else {
-          console.log("---------------------REVISED TABLE");
-          console.log(JSON.stringify(data, null, 2));
+          // console.log("---------------------REVISED TABLE");
+          // console.log(JSON.stringify(data, null, 2));
           var found = false;
           for (var i in data.Table.GlobalSecondaryIndexes) {
             var gsi = data.Table.GlobalSecondaryIndexes[i];
