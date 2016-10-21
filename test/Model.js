@@ -45,7 +45,7 @@ describe('Model', function (){
       array: Array,
       validated: {
         type: String,
-        validate: function (v) { return v == 'valid'; }
+        validate: function (v) { return v === 'valid'; }
       }
     },
     {useDocumentTypes: true});
@@ -593,6 +593,7 @@ describe('Model', function (){
     it('With invalid attribute', function (done) {
       Cat.update({id: 999}, {name: 'Oliver', validated: 'bad'}, function (err, data) {
         should.exist(err);
+        should.not.exist(data);
         err.name.should.equal('ValidationError');
         Cat.get(999, function (err, tomcat) {
           should.not.exist(err);
