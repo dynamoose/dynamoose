@@ -304,7 +304,7 @@ describe('Model', function (){
       should.exist(model);
 
       model.validated = 'test';
-      model.save(function (err) {
+      model.save().catch(function(err) {
         should.exist(err);
         err.name.should.equal('ValidationError');
         done();
@@ -317,6 +317,17 @@ describe('Model', function (){
     var cat = new Cat({id: 1});
 
     cat.delete(done);
+  });
+
+  it('Deletes item with invalid key', function (done) {
+
+    var cat = new Cat({id: 0});
+
+    cat.delete(function(err) {
+      should.exist(err);
+      err.name.should.equal('ValidationError');
+      done();
+    });
   });
 
   it('Get missing item', function (done) {
