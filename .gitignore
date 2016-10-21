@@ -6,3 +6,4 @@ node_modules/
 .session.vim
 coverage.html
 lib-cov/
+.vscode

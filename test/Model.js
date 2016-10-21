@@ -26,7 +26,10 @@ describe('Model', function (){
 
     Cat = dynamoose.model('Cat',
     {
-      id: Number,
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; }
+      },
       name: String,
       owner: String,
       age: { type: Number },
@@ -39,7 +42,11 @@ describe('Model', function (){
       }],
       legs: [String],
       more: Object,
-      array: Array
+      array: Array,
+      validated: {
+        type: String,
+        validate: function (v) { return v.length > 5; }
+      }
     },
     {useDocumentTypes: true});
 
@@ -81,7 +88,7 @@ describe('Model', function (){
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
     should.not.exist(schema.attributes.id.default);
-    should.not.exist(schema.attributes.id.validator);
+    should.exist(schema.attributes.id.validator);
     should(schema.attributes.id.required).not.be.ok;
 
     schema.attributes.name.type.name.should.eql('string');
@@ -170,6 +177,16 @@ describe('Model', function (){
       model.should.have.property('name', 'Fluffy');
       model.should.have.property('vet', { address: '12 somewhere', name: 'theVet' });
       model.should.have.property('$__');
+      done();
+    });
+  });
+
+  it('Get item with invalid key', function (done) {
+
+    Cat.get(0, function(err, model) {
+      should.exist(err);
+      err.name.should.equal('ValidationError');
+      should.not.exist(model);
       done();
     });
   });
@@ -277,6 +294,20 @@ describe('Model', function (){
           Cat.removePre('save');
           done();
         });
+      });
+    });
+  });
+
+  it('Save existing item with an invalid attribute', function (done) {
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.validated = 'test';
+      model.save(function (err) {
+        should.exist(err);
+        err.name.should.equal('ValidationError');
+        done();
       });
     });
   });
