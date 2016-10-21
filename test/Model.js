@@ -45,7 +45,7 @@ describe('Model', function (){
       array: Array,
       validated: {
         type: String,
-        validate: function (v) { return v.length > 5; }
+        validate: function (v) { return v == 'valid'; }
       }
     },
     {useDocumentTypes: true});
@@ -108,7 +108,8 @@ describe('Model', function (){
         ears:[{name:'left'}, {name:'right'}],
         legs: ['front right', 'front left', 'back right', 'back left'],
         more: {fovorites: {food: 'fish'}},
-        array: [{one: '1'}]
+        array: [{one: '1'}],
+        validated: 'valid'
       }
     );
 
@@ -130,7 +131,8 @@ describe('Model', function (){
         vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
         legs: { SS: ['front right', 'front left', 'back right', 'back left']},
         more: { S: '{"fovorites":{"food":"fish"}}' },
-        array: { S: '[{"one":"1"}]' }
+        array: { S: '[{"one":"1"}]' },
+        validated: { S: 'valid' }
       });
 
     kitten.save(done);
@@ -303,11 +305,18 @@ describe('Model', function (){
       should.not.exist(err);
       should.exist(model);
 
-      model.validated = 'test';
+      model.validated = 'bad';
       model.save().catch(function(err) {
         should.exist(err);
         err.name.should.equal('ValidationError');
-        done();
+        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+          should.not.exist(err);
+          badCat.name.should.eql('Fluffy');
+          badCat.vet.name.should.eql('Nice Guy');
+          badCat.ears[0].name.should.eql('right');
+          badCat.ears[1].name.should.eql('right');
+          done();
+        });
       });
     });
   });
@@ -576,6 +585,20 @@ describe('Model', function (){
           tomcat.name.should.eql('Tom');
           should.not.exist(tomcat.owner);
           tomcat.age.should.eql(4);
+          done();
+        });
+      });
+    });
+
+    it('With invalid attribute', function (done) {
+      Cat.update({id: 999}, {name: 'Oliver', validated: 'bad'}, function (err, data) {
+        should.exist(err);
+        err.name.should.equal('ValidationError');
+        Cat.get(999, function (err, tomcat) {
+          should.not.exist(err);
+          should.exist(tomcat);
+          tomcat.id.should.eql(999);
+          tomcat.name.should.eql('Tom');
           done();
         });
       });
