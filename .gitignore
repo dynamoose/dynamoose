@@ -7,3 +7,6 @@ node_modules/
 coverage.html
 lib-cov/
 .vscode
+
+# Ignore webstorm directories
+.idea/

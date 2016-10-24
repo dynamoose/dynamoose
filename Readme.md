@@ -60,7 +60,8 @@ Default `options`:
 
 ```js
 {
-  create: true, // Create table in DB, if it does not exist
+  create: true, // Create table in DB, if it does not exist,
+  update: false, // Update remote indexes if they do not match local index structure
   waitForActive: true, // Wait for table to be created before trying to us it
   waitForActiveTimeout: 180000 // wait 3 minutes for table to activate
 }
