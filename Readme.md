@@ -141,13 +141,19 @@ var appleSchema = new dynamoose.Schema({
 Table class
 
 
-## Schema API
+## Schemas
 
-Schemas are used to define constraints on DynamoDB tables. They come with a host of useful options as well.
+Schemas are used to define DynamoDB table attributes and their constraints.
 
-### new Schema(attrDefObj, options)
+### Creating a new Schema
 
-Create a new Schema object. The schema maps back to a DynamoDB table.
+Schemas are created using `new Schema(attrDefObj, options)`. 
+
+The first argument (`attrDefObj`) is an object containing attribute definitions. Keys of this object correspond to attributes in the resulting DynamoDB table. The values of these keys define constraints on those attributes (as well as a few handy features...). See [Attribute Definitions](#attribute-definitions) for a more thorough description.
+
+The second argument (`options`) defines options for the table that are beyond the scope of individual attributes. See [Schema Options](#schema-options) for more.
+
+The following is an example of creating a new Schema:
 
 ```js
 var Schema = dynamoose.Schema;
@@ -189,21 +195,25 @@ var dogSchema = new Schema({
 
 ### Attribute Types
 
-Each key represents an attribute in the DynamoDB table. The value of the key can either be the attribute type or an Object describing the attribute.
+Attribute Types define the domain of a particular attribute. For example, a `name` might be set to `String` or `age` to `Number`. 
 
-Valid attribute types are:
+The following table describes valid Attribute Types, and their translation to DynamoDB types:
 
-- String
-- Number
-- Boolean
-- Date
-- Object
-- Array
-- Buffer
-
-String, Boolean, Object, and Array all map to the DynamoDB type of 'S'.  Number and Date map to 'N'. Buffer maps to 'B'.
-
-Types can also be sets of the above types.  This is done by making the type an array. For example, [String] would be a String Set (DynamoDB 'SS') and [Number] would be a Number Set (DynamoDB 'NS').
+| Attribute Type | Resulting DynamoDB Type |
+|:--------------:|:-----------------------:|
+| String         | 'S'                     |
+| Number         | 'N'                     |
+| Boolean        | 'S'                     |
+| Date           | 'N'                     |
+| Object         | 'S'                     |
+| Array          | 'S'                     |
+| Buffer         | 'B'                     |
+| [String]       | 'SS'                    |
+| [Number]       | 'NS'                    |
+| [Boolean]      | 'SS'                    |
+| [Date]         | 'NS'                    |
+| [Object]       | 'SS'                    |
+| [Array]        | 'SS'                    |
 
 ### Attribute Definitions
 
