@@ -263,9 +263,10 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .filter('color').not().eq('Brown')
+    .where('ownerId').not().lt(10)
     .and()
-    .filter('ownerId').not().lt(10).exec()
+    .filter('color').not().eq('Brown')
+    .exec()
     .then(function (dogs) {
       dogs.length.should.eql(1);
       dogs[0].ownerId.should.eql(11);

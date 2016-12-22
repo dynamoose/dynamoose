@@ -26,7 +26,10 @@ describe('Model', function (){
 
     Cat = dynamoose.model('Cat',
     {
-      id: Number,
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; }
+      },
       name: String,
       owner: String,
       age: { type: Number },
@@ -39,7 +42,11 @@ describe('Model', function (){
       }],
       legs: [String],
       more: Object,
-      array: Array
+      array: Array,
+      validated: {
+        type: String,
+        validate: function (v) { return v === 'valid'; }
+      }
     },
     {useDocumentTypes: true});
 
@@ -81,7 +88,7 @@ describe('Model', function (){
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
     should.not.exist(schema.attributes.id.default);
-    should.not.exist(schema.attributes.id.validator);
+    should.exist(schema.attributes.id.validator);
     should(schema.attributes.id.required).not.be.ok;
 
     schema.attributes.name.type.name.should.eql('string');
@@ -101,7 +108,8 @@ describe('Model', function (){
         ears:[{name:'left'}, {name:'right'}],
         legs: ['front right', 'front left', 'back right', 'back left'],
         more: {fovorites: {food: 'fish'}},
-        array: [{one: '1'}]
+        array: [{one: '1'}],
+        validated: 'valid'
       }
     );
 
@@ -123,7 +131,8 @@ describe('Model', function (){
         vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
         legs: { SS: ['front right', 'front left', 'back right', 'back left']},
         more: { S: '{"fovorites":{"food":"fish"}}' },
-        array: { S: '[{"one":"1"}]' }
+        array: { S: '[{"one":"1"}]' },
+        validated: { S: 'valid' }
       });
 
     kitten.save(done);
@@ -170,6 +179,16 @@ describe('Model', function (){
       model.should.have.property('name', 'Fluffy');
       model.should.have.property('vet', { address: '12 somewhere', name: 'theVet' });
       model.should.have.property('$__');
+      done();
+    });
+  });
+
+  it('Get item with invalid key', function (done) {
+
+    Cat.get(0, function(err, model) {
+      should.exist(err);
+      err.name.should.equal('ValidationError');
+      should.not.exist(model);
       done();
     });
   });
@@ -281,11 +300,43 @@ describe('Model', function (){
     });
   });
 
+  it('Save existing item with an invalid attribute', function (done) {
+    Cat.get(1, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.validated = 'bad';
+      model.save().catch(function(err) {
+        should.exist(err);
+        err.name.should.equal('ValidationError');
+        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+          should.not.exist(err);
+          badCat.name.should.eql('Fluffy');
+          badCat.vet.name.should.eql('Nice Guy');
+          badCat.ears[0].name.should.eql('right');
+          badCat.ears[1].name.should.eql('right');
+          done();
+        });
+      });
+    });
+  });
+
   it('Deletes item', function (done) {
 
     var cat = new Cat({id: 1});
 
     cat.delete(done);
+  });
+
+  it('Deletes item with invalid key', function (done) {
+
+    var cat = new Cat({id: 0});
+
+    cat.delete(function(err) {
+      should.exist(err);
+      err.name.should.equal('ValidationError');
+      done();
+    });
   });
 
   it('Get missing item', function (done) {
@@ -534,6 +585,21 @@ describe('Model', function (){
           tomcat.name.should.eql('Tom');
           should.not.exist(tomcat.owner);
           tomcat.age.should.eql(4);
+          done();
+        });
+      });
+    });
+
+    it('With invalid attribute', function (done) {
+      Cat.update({id: 999}, {name: 'Oliver', validated: 'bad'}, function (err, data) {
+        should.exist(err);
+        should.not.exist(data);
+        err.name.should.equal('ValidationError');
+        Cat.get(999, function (err, tomcat) {
+          should.not.exist(err);
+          should.exist(tomcat);
+          tomcat.id.should.eql(999);
+          tomcat.name.should.eql('Tom');
           done();
         });
       });

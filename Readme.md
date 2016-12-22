@@ -60,7 +60,8 @@ Default `options`:
 
 ```js
 {
-  create: true, // Create table in DB, if it does not exist
+  create: true, // Create table in DB, if it does not exist,
+  update: false, // Update remote indexes if they do not match local index structure
   waitForActive: true, // Wait for table to be created before trying to us it
   waitForActiveTimeout: 180000 // wait 3 minutes for table to activate
 }
@@ -271,8 +272,8 @@ Convert to uppercase when saving to DB.
 Sets the throughput of the DynamoDB table.  The value can either be a number or an Object with the keys read and write `{read: 5, write: 2}`. If it is a number, both read and write are configured to the same number.  If it is omitted, the default value is 1 for both read and write.
 
 ```js
-var schema = New Schema({...}, { throughput: 5});
-var schema = New Schema({...}, { throughput: { read: 5, write: 2 } });
+var schema = new Schema({...}, { throughput: 5});
+var schema = new Schema({...}, { throughput: { read: 5, write: 2 } });
 ```
 
 **timestamps**: boolean | {createdAt: string, updatedAt: string}
@@ -280,13 +281,13 @@ var schema = New Schema({...}, { throughput: { read: 5, write: 2 } });
 Defines that _schema_ must contain fields to control creation and last update timestamps. If it is set to true, this fields will be createdAt for creation date and updatedAt for last update. for example:
 
 ```js
-var schema = New Schema({...}, { throughput: 5, timestamps: true});
+var schema = new Schema({...}, { throughput: 5, timestamps: true});
 ```
 
 Also it is possible to specify wich names that field will use, like in the following example:
 
 ```js
-var schema = New Schema({...}, { throughput: 5, timestamps: {createdAt: 'creationDate', updatedAt: 'lastUpdateDate'});
+var schema = new Schema({...}, { throughput: 5, timestamps: {createdAt: 'creationDate', updatedAt: 'lastUpdateDate'});
 ```
 
 ### Model

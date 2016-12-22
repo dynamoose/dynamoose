@@ -1,11 +1,13 @@
 language: node_js
 node_js:
-  - "0.10"
+  - "6"
+  - "5"
+  - "4"
   - "0.12"
 env: DEBUG=dynamoose*
 before_script:
   - npm install -g grunt-cli
-  - wget http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_2015-01-27.tar.gz
-  - tar xfz dynamodb_local_2015-01-27.tar.gz
+  - wget http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz
+  - tar xfz dynamodb_local_latest.tar.gz
   - java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -inMemory &
 
