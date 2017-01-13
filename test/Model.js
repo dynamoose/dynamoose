@@ -68,7 +68,8 @@ describe('Model', function (){
     {
       id: {
         type:  Number,
-        validate: function (v) { return v > 0; }
+        validate: function (v) { return v > 0; },
+        default: 888
       },
       name: {
         type: String,
@@ -535,6 +536,69 @@ describe('Model', function (){
           oliver.name.should.eql('Oliver');
           should.not.exist(oliver.owner);
           should.not.exist(oliver.age);
+          done();
+        });
+      });
+    });
+
+    it("If key is null or undefined, will use defaults", function (done) {
+      Cat3.update(null, {age: 3, name: 'Furrgie'}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(888);
+        data.name.should.equal('Furrgie');
+        data.age.should.equal(3);
+
+        Cat3.get(888, function (err, furrgie) {
+          should.not.exist(err);
+          should.exist(furrgie);
+          furrgie.id.should.eql(888);
+          furrgie.name.should.eql('Furrgie');
+          data.age.should.equal(3);
+
+          Cat3.update(undefined, {age: 4}, function (err, data) {
+            should.not.exist(err);
+            should.exist(data);
+            data.id.should.eql(888);
+            data.name.should.equal('Furrgie');
+            data.age.should.equal(4);
+
+            Cat3.get(888, function (err, furrgie) {
+              should.not.exist(err);
+              should.exist(furrgie);
+              furrgie.id.should.eql(888);
+              furrgie.name.should.eql('Furrgie');
+              should.not.exist(furrgie.owner);
+              data.age.should.equal(4);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it("If key is null or undefined and default isn't provided, will throw an error", function (done) {
+      Cat.update(null, {name: 'Oliver'}, function (err, data) {
+        should.not.exist(data);
+        should.exist(err);
+        done();
+      });
+    });
+
+    it("If key is a value, will search by that value", function (done) {
+      Cat3.update(888, {age: 5}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(888);
+        data.name.should.equal('Furrgie');
+        data.age.should.equal(5);
+
+        Cat3.get(888, function (err, furrgie) {
+          should.not.exist(err);
+          should.exist(furrgie);
+          furrgie.id.should.eql(888);
+          furrgie.name.should.eql('Furrgie');
+          data.age.should.equal(5);
           done();
         });
       });
