@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2;
+var Cat, Cat2, Cat3;
 
 describe('Model', function (){
   this.timeout(5000);
@@ -60,6 +60,44 @@ describe('Model', function (){
       name: {
         type: String,
         rangeKey: true
+      }
+    });
+
+    // Create a model with required attributes
+    Cat3 = dynamoose.model('Cat3',
+    {
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; }
+      },
+      name: {
+        type: String,
+        required: true,
+        default: 'Mittens'
+      },
+      owner: String,
+      age: { 
+        type: Number,
+        required: true
+      }
+    });
+
+    // Create a model with timestamps
+    Cat4 = dynamoose.model('Cat4',
+    {
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; }
+      },
+      name: {
+        type: String,
+        default: 'Bobo'
+      }
+    },
+    {
+      timestamps: {
+        createdAt: 'myLittleCreatedAt',
+        updatedAt: 'myLittleUpdatedAt'
       }
     });
 
@@ -500,6 +538,116 @@ describe('Model', function (){
           done();
         });
       });
+    });
+
+    it("Creates an item with required attributes' defaults, even when not specified, if createRequired is true", function (done) {
+      Cat3.update({id: 25}, {age: 3}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(25);
+        data.name.should.equal('Mittens');
+        data.age.should.equal(3);
+        Cat3.get(25, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(25);
+          mittens.name.should.eql('Mittens');
+          should.not.exist(mittens.owner);
+          data.age.should.equal(3);
+          done();
+        });
+      });
+    });
+
+    it("Throws an error when a required attribute has no default and has not been specified in the update (if createRequired is true)", function (done) {
+      Cat3.update({id: 25}, {name: 'Rufflestiltskins'}, function (err, data) {
+        should.not.exist(data);
+        should.exist(err);
+        Cat3.get(25, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(25);
+          mittens.name.should.eql('Mittens');
+          should.not.exist(mittens.owner);
+          done();
+        });
+      });
+    });
+
+    it('Adds required attributes, even when not specified, if createRequired is true', function (done) {
+      Cat3.update({id: 25}, {age: 4}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(25);
+        data.name.should.equal('Mittens');
+        data.age.should.equal(4);
+        Cat3.get(25, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(25);
+          mittens.name.should.eql('Mittens');
+          should.not.exist(mittens.owner);
+          data.age.should.equal(4);
+          done();
+        });
+      });
+    });
+
+    it('Does not add required attributes if createRequired is false', function (done) {
+      Cat3.update({id: 24}, {name: 'Grumpy'}, {createRequired: false}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(24);
+        data.name.should.equal('Grumpy');
+        should.not.exist(data.age);
+        Cat3.get(24, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(24);
+          data.name.should.equal('Grumpy');
+          should.not.exist(data.age);
+          should.not.exist(mittens.owner);
+          done();
+        });
+      });
+    });
+
+    it('UpdatedAt will be updated', function (done) {
+      Cat4.update({id: 22}, {name: 'Pawmeranian'}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(24);
+        data.name.should.equal('Grumpy');
+        should.not.exist(data.age);
+        Cat4.get(24, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(24);
+          data.name.should.equal('Grumpy');
+          should.not.exist(data.age);
+          should.not.exist(mittens.owner);
+          done();
+        });
+      });
+    });
+
+    it('If item did not exist and timestamps are desired, createdAt and updatedAt will both be filled in', function (done) {
+      // Cat3.update({id: 24}, {name: 'Grumpy'}, {createRequired: false}, function (err, data) {
+      //   should.not.exist(err);
+      //   should.exist(data);
+      //   data.id.should.eql(24);
+      //   data.name.should.equal('Grumpy');
+      //   should.not.exist(data.age);
+      //   Cat3.get(24, function (err, mittens) {
+      //     should.not.exist(err);
+      //     should.exist(mittens);
+      //     mittens.id.should.eql(24);
+      //     data.name.should.equal('Grumpy');
+      //     should.not.exist(data.age);
+      //     should.not.exist(mittens.owner);
+      //     done();
+      //   });
+      // });
     });
 
     it('Default puts attribute', function (done) {
