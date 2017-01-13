@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3;
+var Cat, Cat2, Cat3, Cat4;
 
 describe('Model', function (){
   this.timeout(5000);
@@ -594,36 +594,17 @@ describe('Model', function (){
     });
 
     it('Does not add required attributes if createRequired is false', function (done) {
-      Cat3.update({id: 24}, {name: 'Grumpy'}, {createRequired: false}, function (err, data) {
+      Cat3.update({id: 24}, {name: 'Cat-rina'}, {createRequired: false}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(24);
-        data.name.should.equal('Grumpy');
+        data.name.should.equal('Cat-rina');
         should.not.exist(data.age);
         Cat3.get(24, function (err, mittens) {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(24);
-          data.name.should.equal('Grumpy');
-          should.not.exist(data.age);
-          should.not.exist(mittens.owner);
-          done();
-        });
-      });
-    });
-
-    it('UpdatedAt will be updated', function (done) {
-      Cat4.update({id: 22}, {name: 'Pawmeranian'}, function (err, data) {
-        should.not.exist(err);
-        should.exist(data);
-        data.id.should.eql(24);
-        data.name.should.equal('Grumpy');
-        should.not.exist(data.age);
-        Cat4.get(24, function (err, mittens) {
-          should.not.exist(err);
-          should.exist(mittens);
-          mittens.id.should.eql(24);
-          data.name.should.equal('Grumpy');
+          data.name.should.equal('Cat-rina');
           should.not.exist(data.age);
           should.not.exist(mittens.owner);
           done();
@@ -632,22 +613,58 @@ describe('Model', function (){
     });
 
     it('If item did not exist and timestamps are desired, createdAt and updatedAt will both be filled in', function (done) {
-      // Cat3.update({id: 24}, {name: 'Grumpy'}, {createRequired: false}, function (err, data) {
-      //   should.not.exist(err);
-      //   should.exist(data);
-      //   data.id.should.eql(24);
-      //   data.name.should.equal('Grumpy');
-      //   should.not.exist(data.age);
-      //   Cat3.get(24, function (err, mittens) {
-      //     should.not.exist(err);
-      //     should.exist(mittens);
-      //     mittens.id.should.eql(24);
-      //     data.name.should.equal('Grumpy');
-      //     should.not.exist(data.age);
-      //     should.not.exist(mittens.owner);
-      //     done();
-      //   });
-      // });
+      // try a delete beforehand in case the test is run more than once
+      Cat4.delete({id: 22}, function () {
+        Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+          should.not.exist(err);
+          should.exist(data);
+          should.exist(data.myLittleCreatedAt);
+          should.exist(data.myLittleUpdatedAt);
+          data.id.should.eql(22);
+          data.name.should.equal('Twinkles');
+
+          Cat4.get(22, function (err, twinkles) {
+            should.not.exist(err);
+            should.exist(twinkles);
+            twinkles.id.should.eql(22);
+            twinkles.name.should.equal('Twinkles');
+            should.exist(twinkles.myLittleCreatedAt);
+            should.exist(twinkles.myLittleUpdatedAt);
+            done();
+          });
+        });
+      });
+    });
+
+    it('UpdatedAt will be updated ', function (done) {
+      // try a delete beforehand in case the test is run more than once
+      Cat4.delete({id: 22}, function () {
+        Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+          should.not.exist(err);
+          should.exist(data);
+          data.id.should.eql(22);
+          data.name.should.equal('Twinkles');
+          should.exist(data.myLittleCreatedAt);
+          should.exist(data.myLittleUpdatedAt);
+
+          // now do another update
+          Cat4.update({id: 22}, {name: 'Furr-nando'}, function (err, data) {
+            should.not.exist(err);
+            should.exist(data);
+            data.id.should.eql(22);
+            data.name.should.equal('Furr-nando');
+            data.myLittleUpdatedAt.getTime().should.be.above(data.myLittleCreatedAt.getTime());
+            Cat4.get(22, function (err, furrnando) {
+              should.not.exist(err);
+              should.exist(furrnando);
+              furrnando.id.should.eql(22);
+              furrnando.name.should.equal('Furr-nando');
+              furrnando.myLittleUpdatedAt.getTime().should.be.above(furrnando.myLittleCreatedAt.getTime());
+              done();
+            });
+          });
+        });
+      });
     });
 
     it('Default puts attribute', function (done) {

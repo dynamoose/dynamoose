@@ -530,6 +530,10 @@ If true, the attribute can be updated to an empty array. If falsey, empty arrays
 
 If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to true.
 
+**updateTimestamps**: boolean
+
+If true, the `timestamps` attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
+
 ### Query
 
 #### Model.query(query, options, callback)
