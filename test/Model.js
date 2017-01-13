@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2;
+var Cat, Cat2, Cat3, Cat4;
 
 describe('Model', function (){
   this.timeout(5000);
@@ -60,6 +60,45 @@ describe('Model', function (){
       name: {
         type: String,
         rangeKey: true
+      }
+    });
+
+    // Create a model with required attributes
+    Cat3 = dynamoose.model('Cat3',
+    {
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; },
+        default: 888
+      },
+      name: {
+        type: String,
+        required: true,
+        default: 'Mittens'
+      },
+      owner: String,
+      age: { 
+        type: Number,
+        required: true
+      }
+    });
+
+    // Create a model with timestamps
+    Cat4 = dynamoose.model('Cat4',
+    {
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; }
+      },
+      name: {
+        type: String,
+        default: 'Bobo'
+      }
+    },
+    {
+      timestamps: {
+        createdAt: 'myLittleCreatedAt',
+        updatedAt: 'myLittleUpdatedAt'
       }
     });
 
@@ -498,6 +537,196 @@ describe('Model', function (){
           should.not.exist(oliver.owner);
           should.not.exist(oliver.age);
           done();
+        });
+      });
+    });
+
+    it("If key is null or undefined, will use defaults", function (done) {
+      Cat3.update(null, {age: 3, name: 'Furrgie'}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(888);
+        data.name.should.equal('Furrgie');
+        data.age.should.equal(3);
+
+        Cat3.get(888, function (err, furrgie) {
+          should.not.exist(err);
+          should.exist(furrgie);
+          furrgie.id.should.eql(888);
+          furrgie.name.should.eql('Furrgie');
+          data.age.should.equal(3);
+
+          Cat3.update(undefined, {age: 4}, function (err, data) {
+            should.not.exist(err);
+            should.exist(data);
+            data.id.should.eql(888);
+            data.name.should.equal('Furrgie');
+            data.age.should.equal(4);
+
+            Cat3.get(888, function (err, furrgie) {
+              should.not.exist(err);
+              should.exist(furrgie);
+              furrgie.id.should.eql(888);
+              furrgie.name.should.eql('Furrgie');
+              should.not.exist(furrgie.owner);
+              data.age.should.equal(4);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it("If key is null or undefined and default isn't provided, will throw an error", function (done) {
+      Cat.update(null, {name: 'Oliver'}, function (err, data) {
+        should.not.exist(data);
+        should.exist(err);
+        done();
+      });
+    });
+
+    it("If key is a value, will search by that value", function (done) {
+      Cat3.update(888, {age: 5}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(888);
+        data.name.should.equal('Furrgie');
+        data.age.should.equal(5);
+
+        Cat3.get(888, function (err, furrgie) {
+          should.not.exist(err);
+          should.exist(furrgie);
+          furrgie.id.should.eql(888);
+          furrgie.name.should.eql('Furrgie');
+          data.age.should.equal(5);
+          done();
+        });
+      });
+    });
+
+    it("Creates an item with required attributes' defaults, even when not specified, if createRequired is true", function (done) {
+      Cat3.update({id: 25}, {age: 3}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(25);
+        data.name.should.equal('Mittens');
+        data.age.should.equal(3);
+        Cat3.get(25, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(25);
+          mittens.name.should.eql('Mittens');
+          should.not.exist(mittens.owner);
+          data.age.should.equal(3);
+          done();
+        });
+      });
+    });
+
+    it("Throws an error when a required attribute has no default and has not been specified in the update (if createRequired is true)", function (done) {
+      Cat3.update({id: 25}, {name: 'Rufflestiltskins'}, function (err, data) {
+        should.not.exist(data);
+        should.exist(err);
+        Cat3.get(25, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(25);
+          mittens.name.should.eql('Mittens');
+          should.not.exist(mittens.owner);
+          done();
+        });
+      });
+    });
+
+    it('Adds required attributes, even when not specified, if createRequired is true', function (done) {
+      Cat3.update({id: 25}, {age: 4}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(25);
+        data.name.should.equal('Mittens');
+        data.age.should.equal(4);
+        Cat3.get(25, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(25);
+          mittens.name.should.eql('Mittens');
+          should.not.exist(mittens.owner);
+          data.age.should.equal(4);
+          done();
+        });
+      });
+    });
+
+    it('Does not add required attributes if createRequired is false', function (done) {
+      Cat3.update({id: 24}, {name: 'Cat-rina'}, {createRequired: false}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(24);
+        data.name.should.equal('Cat-rina');
+        should.not.exist(data.age);
+        Cat3.get(24, function (err, mittens) {
+          should.not.exist(err);
+          should.exist(mittens);
+          mittens.id.should.eql(24);
+          data.name.should.equal('Cat-rina');
+          should.not.exist(data.age);
+          should.not.exist(mittens.owner);
+          done();
+        });
+      });
+    });
+
+    it('If item did not exist and timestamps are desired, createdAt and updatedAt will both be filled in', function (done) {
+      // try a delete beforehand in case the test is run more than once
+      Cat4.delete({id: 22}, function () {
+        Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+          should.not.exist(err);
+          should.exist(data);
+          should.exist(data.myLittleCreatedAt);
+          should.exist(data.myLittleUpdatedAt);
+          data.id.should.eql(22);
+          data.name.should.equal('Twinkles');
+
+          Cat4.get(22, function (err, twinkles) {
+            should.not.exist(err);
+            should.exist(twinkles);
+            twinkles.id.should.eql(22);
+            twinkles.name.should.equal('Twinkles');
+            should.exist(twinkles.myLittleCreatedAt);
+            should.exist(twinkles.myLittleUpdatedAt);
+            done();
+          });
+        });
+      });
+    });
+
+    it('UpdatedAt will be updated ', function (done) {
+      // try a delete beforehand in case the test is run more than once
+      Cat4.delete({id: 22}, function () {
+        Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+          should.not.exist(err);
+          should.exist(data);
+          data.id.should.eql(22);
+          data.name.should.equal('Twinkles');
+          should.exist(data.myLittleCreatedAt);
+          should.exist(data.myLittleUpdatedAt);
+
+          // now do another update
+          Cat4.update({id: 22}, {name: 'Furr-nando'}, function (err, data) {
+            should.not.exist(err);
+            should.exist(data);
+            data.id.should.eql(22);
+            data.name.should.equal('Furr-nando');
+            data.myLittleUpdatedAt.getTime().should.be.above(data.myLittleCreatedAt.getTime());
+            Cat4.get(22, function (err, furrnando) {
+              should.not.exist(err);
+              should.exist(furrnando);
+              furrnando.id.should.eql(22);
+              furrnando.name.should.equal('Furr-nando');
+              furrnando.myLittleUpdatedAt.getTime().should.be.above(furrnando.myLittleCreatedAt.getTime());
+              done();
+            });
+          });
         });
       });
     });
