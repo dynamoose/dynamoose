@@ -604,8 +604,8 @@ describe('Model', function (){
       });
     });
 
-    it("Creates an item with required attributes' defaults, even when not specified, if createRequired is true", function (done) {
-      Cat3.update({id: 25}, {age: 3}, function (err, data) {
+    it("Creates an item with required attributes' defaults if createRequired is true", function (done) {
+      Cat3.update({id: 25}, {age: 3}, {createRequired: true}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(25);
@@ -623,8 +623,8 @@ describe('Model', function (){
       });
     });
 
-    it("Throws an error when a required attribute has no default and has not been specified in the update (if createRequired is true)", function (done) {
-      Cat3.update({id: 25}, {name: 'Rufflestiltskins'}, function (err, data) {
+    it("Throws an error when a required attribute has no default and has not been specified in the update if createRequired is true", function (done) {
+      Cat3.update({id: 25}, {name: 'Rufflestiltskins'}, {createRequired: true}, function (err, data) {
         should.not.exist(data);
         should.exist(err);
         Cat3.get(25, function (err, mittens) {
@@ -632,23 +632,22 @@ describe('Model', function (){
           should.exist(mittens);
           mittens.id.should.eql(25);
           mittens.name.should.eql('Mittens');
-          should.not.exist(mittens.owner);
           done();
         });
       });
     });
 
     it('Adds required attributes, even when not specified, if createRequired is true', function (done) {
-      Cat3.update({id: 25}, {age: 4}, function (err, data) {
+      Cat3.update({id: 45}, {age: 4}, {createRequired: true}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
-        data.id.should.eql(25);
+        data.id.should.eql(45);
         data.name.should.equal('Mittens');
         data.age.should.equal(4);
-        Cat3.get(25, function (err, mittens) {
+        Cat3.get(45, function (err, mittens) {
           should.not.exist(err);
           should.exist(mittens);
-          mittens.id.should.eql(25);
+          mittens.id.should.eql(45);
           mittens.name.should.eql('Mittens');
           should.not.exist(mittens.owner);
           data.age.should.equal(4);
