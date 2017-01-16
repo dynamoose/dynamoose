@@ -528,7 +528,7 @@ If true, the attribute can be updated to an empty array. If falsey, empty arrays
 
 **createRequired**: boolean
 
-If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to true.
+If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
 
 **updateTimestamps**: boolean
 
