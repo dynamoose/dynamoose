@@ -467,10 +467,11 @@ describe('Scan', function (){
     var Dog = dynamoose.model('Dog');
 
     (function() {
-      Dog.scan('name').not().beginsWith('B').exec(function () {
-        should.not.exist(true);
+      Dog.scan('name').not().beginsWith('B').exec(function (err) {
+        should.exist(err);
+        err.code.should.eql('Invalid scan state: beginsWith() cannot follow not()');
       });
-    }).should.throw('Invalid scan state: beginsWith() cannot follow not()');
+    });
     done();
   });
 
@@ -499,10 +500,11 @@ describe('Scan', function (){
     var Dog = dynamoose.model('Dog');
 
     (function() {
-      Dog.scan('name').not().in(['Beagle', 'Hound']).exec(function () {
-        should.not.exist(true);
+      Dog.scan('name').not().in(['Beagle', 'Hound']).exec(function (err) {
+        should.exist(err);
+        err.code.should.eql('Invalid scan state: in() cannot follow not()');
       });
-    }).should.throw('Invalid scan state: in() cannot follow not()');
+    });
     done();
   });
 
@@ -531,10 +533,11 @@ describe('Scan', function (){
     var Dog = dynamoose.model('Dog');
 
     (function() {
-      Dog.scan('ownerId').not().between(5, 8).exec(function () {
-        should.not.exist(true);
+      Dog.scan('ownerId').not().between(5, 8).exec(function (err) {
+        should.exist(err);
+        err.code.should.eql('Invalid scan state: between() cannot follow not()');
       });
-    }).should.throw('Invalid scan state: between() cannot follow not()');
+    });
     done();
   });
 
@@ -597,10 +600,11 @@ describe('Scan', function (){
     var Dog = dynamoose.model('Dog');
 
     (function() {
-      Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]},function () {
-        should.not.exist(true);
+      Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]},function (err) {
+        should.exist(err);
+        err.code.should.eql('Invalid scan state; %s can only be used once');
       });
-    }).should.throw('Invalid scan state; %s can only be used once');
+    });
     done();
   });
 
