@@ -484,13 +484,6 @@ Scans a table. If callback is not provided, then a Scan object is returned. See 
 
 Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE. Refer to DynamoDB's updateItem documentation for details on how PUT, ADD, and DELETE work.
 
-
-##### Options
-
-**allowEmptyArray**: boolean
-
-If true, the attribute can be updated to an empty array. If falsey, empty arrays will remove the attribute.  Defaults to false.
-
 **$PUT**
 
 Put is the default behavior.  The two example below are identical.
@@ -526,6 +519,20 @@ Dog.update({ownerId: 4, name: 'Odie'}, {$DELETE: {age: null}}, function (err) {
   console.log('Too old to keep count');
 })
 ```
+
+##### Options
+
+**allowEmptyArray**: boolean
+
+If true, the attribute can be updated to an empty array. If falsey, empty arrays will remove the attribute. Defaults to false.
+
+**createRequired**: boolean
+
+If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
+
+**updateTimestamps**: boolean
+
+If true, the `timestamps` attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
 
 ### Query
 
