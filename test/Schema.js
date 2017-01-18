@@ -9,7 +9,7 @@ dynamoose.AWS.config.update({
   region: 'us-east-1'
 });
 
-dynamoose.local();
+dynamoose.local('http://172.17.0.3:8000');
 
 var Schema = dynamoose.Schema;
 

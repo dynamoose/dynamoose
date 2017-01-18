@@ -482,7 +482,7 @@ Scans a table. If callback is not provided, then a Scan object is returned. See 
 
 #### Model.update(key, update, options, callback)
 
-Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE. Refer to DynamoDB's updateItem documentation for details on how PUT, ADD, and DELETE work.
+Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
 
 **$PUT**
 
@@ -504,6 +504,8 @@ Dog.update({ownerId: 4, name: 'Odie'}, {$PUT: {age: 1}}, function (err) {
 
 **$ADD**
 
+Removes one or more attributes from an item.
+
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
   if(err) { return console.log(err); }
@@ -512,6 +514,8 @@ Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
 ```
 
 **$DELETE**
+
+Removes one or more attributes from an item.
 
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {$DELETE: {age: null}}, function (err) {
@@ -562,7 +566,7 @@ Set the range key of the table or index to query.
 
 #### query.filter(filter)
 
-Set the atribulte on which to filter.
+Set the attribute on which to filter.
 
 #### query.and()
 
@@ -606,9 +610,7 @@ Range key or filter begins with value
 
 #### query.between(a, b)
 
-Range key or filter is between values a and b.
-
-Attribute is greater than the value.
+Range key or filter is greater than or equal `a`. and less than or equal to `b`.
 
 #### scan.contains(value)
 
@@ -624,7 +626,7 @@ Filter is in values array.
 
 #### query.limit(limit)
 
-Limit the number of responses.
+The maximum number of items to evaluate (not necessarily the number of matching items). If DynamoDB processes the number of items up to the limit while processing the results, it stops the operation and returns the matching values up to that point, and a key in `lastKey` to apply in a subsequent operation, so that you can pick up where you left off. Also, if the processed data set size exceeds 1 MB before DynamoDB reaches this limit, it stops the operation and returns the matching values up to the limit, and a key in `lastKey` to apply in a subsequent operation to continue the operation. For more information, see Query and Scan in the Amazon DynamoDB Developer Guide.
 
 #### query.consistent()
 
@@ -640,11 +642,28 @@ Sort in ascending order (default).
 
 #### query.startAt(key)
 
-Start query at key.  Use LastEvaluatedKey returned in query.exec() callback.
+Start query at key. Use `lastKey` returned in query.exec() callback.
 
 #### query.attributes(attributes)
 
-Set the attributes to return.
+Set the list of attributes to return.
+
+#### query.count()
+
+Return the number of matching items, rather than the matching items themselves.
+
+#### query.counts()
+
+Return the counts objects of matching items, rather than the matching items themselves:
+
+```js
+{
+    "count": 2,
+    "scannedCount": 1000
+}
+```
+
+If you used a filter in the request, then `count` is the number of items returned after the filter was applied, and `scannedCount` is the number of matching items before the filter was applied.
 
 ### Scan
 
@@ -732,16 +751,35 @@ Attribute is in values array.
 
 #### scan.between(a, b)
 
-Attribute is between value a and b.
+Attribute value is greater than or equal `a`. and less than or equal to `b`.
 
 #### scan.limit(limit)
 
-Limit scan response to limit.
+The maximum number of items to evaluate (not necessarily the number of matching items). If DynamoDB processes the number of items up to the limit while processing the results, it stops the operation and returns the matching values up to that point, and a key in `lastKey` to apply in a subsequent operation, so that you can pick up where you left off. Also, if the processed data set size exceeds 1 MB before DynamoDB reaches this limit, it stops the operation and returns the matching values up to the limit, and a key in `lastKey` to apply in a subsequent operation to continue the operation. For more information, see Query and Scan in the Amazon DynamoDB Developer Guide.
 
 #### scan.startAt(key)
 
-Start scan at key.  Use LastEvaluatedKey returned in scan.exec() callback.
+Start scan at key. Use `lastKey` returned in `scan.exec()` callback.
 
 #### scan.attributes(attributes)
 
-Set the attributes to return.
+Set the list of attributes to return.
+
+#### scan.count()
+
+Return the number of matching items, rather than the matching items themselves.
+
+#### scan.counts()
+
+Return the counts objects of matching items, rather than the matching items themselves:
+
+```js
+{
+    "count": 2,
+    "scannedCount": 1000
+}
+```
+
+If you used a filter in the scan, then `count` is the number of items returned after the filter was applied, and `scannedCount` is the number of matching items before the filter was applied.
+
+
