@@ -531,7 +531,7 @@ Dog.update({ownerId: 4, name: 'Odie'}, {$PUT: {age: 1}}, function (err) {
 
 **$ADD**
 
-Removes one or more attributes from an item.
+Adds one or more attributes to the item.
 
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
