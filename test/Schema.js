@@ -333,6 +333,29 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Schema with use Native Booleans', function (done) {
+    var schema = new Schema({
+     name: String,
+     isAwesome: Boolean
+    }, {useNativeBooleans: true});
+
+    var Cat = dynamoose.model('Cat', schema);
+    var fluffy = new Cat();
+
+    fluffy.name = 'Fluff Johnson';
+    fluffy.isAwesome = true;
+
+    schema.useNativeBooleans.should.be.ok;
+
+    Cat.$__.schema.attributes.isAwesome.type.dynamo.should.eql('BOOL');
+
+    Cat.$__.table.delete(function () {
+      delete dynamoose.models.Cat;
+      done();
+    });
+
+  });
+
   it('Schema with secondary indexes', function (done) {
     var schema = new Schema({
       ownerId: {
