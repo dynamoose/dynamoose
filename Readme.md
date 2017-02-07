@@ -215,6 +215,8 @@ The following table describes valid Attribute Types, and their translation to Dy
 | [Object]       | 'SS'                    |
 | [Array]        | 'SS'                    |
 
+_**: Use the useNativeBooleans flag to store Boolean values as 'BOOL'_
+
 ### Attribute Definitions
 
 Attribute definitions define constraints on a particular attribute specified in a Schema. Attribute definitions may be an object type (see [Attribute Types](#attribute-types)) or an object with the following options:
@@ -244,6 +246,7 @@ Defines the attribute as a local or global secondary index. Index can either be 
 - _rangeKey: 'string'_ - The range key for a global secondary index.
 - _project: boolean | ['string', ...]_ - Sets the attributes to be projected for the index.  `true` projects all attributes, `false` projects only the key attributes, and ['string', ...] projects the attributes listed. Default is `true`.
 - _throughput: number | {read: number, write: number}_ - Sets the throughput for the global secondary index.
+- _useNativeBooleans: boolean_ - Later versions of Dynamo added support for Boolean attributes. Set to true to add support for Boolean values that aren't stored as strings.
 
 **default**: function | value
 
