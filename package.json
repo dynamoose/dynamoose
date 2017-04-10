@@ -1,7 +1,8 @@
 {
   "name": "dynamoose",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
+  "typings": "./dynamoose.d.ts",
   "homepage": "https://github.com/automategreen/dynamoose",
   "repository": {
     "type": "git",
