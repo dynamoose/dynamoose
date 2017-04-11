@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4;
+var Cat, Cat2, Cat3, Cat4, Cat5;
 
 describe('Model', function (){
   this.timeout(5000);
@@ -101,6 +101,25 @@ describe('Model', function (){
         updatedAt: 'myLittleUpdatedAt'
       }
     });
+
+    // Create a model with unnamed attributes
+    Cat5 = dynamoose.model('Cat5',
+      {
+        id: {
+          type:  Number,
+          validate: function (v) { return v > 0; },
+          default: 888
+        },
+        name: {
+          type: String,
+          required: true,
+          default: 'Mittens'
+        },
+        owner: String,
+      },
+      {
+        saveUnknown: true
+      });
 
     done();
   });
@@ -206,6 +225,80 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.ownerId); // should be same object
     schema.rangeKey.should.equal(schema.attributes.name);
 
+  });
+
+  it('Create simple model with unnamed attributes', function (done) {
+
+
+    this.timeout(12000);
+
+
+    Cat5.should.have.property('$__');
+
+    Cat5.$__.name.should.eql('test-Cat5');
+    Cat5.$__.options.should.have.property('saveUnknown', true);
+
+    var schema = Cat5.$__.schema;
+
+    should.exist(schema);
+
+    schema.attributes.id.type.name.should.eql('number');
+    should(schema.attributes.id.isSet).not.be.ok;
+    should.exist(schema.attributes.id.default);
+    should.exist(schema.attributes.id.validator);
+    should(schema.attributes.id.required).not.be.ok;
+
+    schema.attributes.name.type.name.should.eql('string');
+    schema.attributes.name.isSet.should.not.be.ok;
+    should.exist(schema.attributes.name.default);
+    should.not.exist(schema.attributes.name.validator);
+    should(schema.attributes.name.required).be.ok;
+
+    schema.hashKey.should.equal(schema.attributes.id); // should be same object
+    should.not.exist(schema.rangeKey);
+
+    var kitten = new Cat5(
+      {
+        id: 2,
+        name: 'Fluffy',
+        owner: 'Someone',
+        unnamedInt: 1,
+        unnamedString: 'unnamed',
+      }
+    );
+
+    kitten.id.should.eql(2);
+    kitten.name.should.eql('Fluffy');
+
+    var dynamoObj = schema.toDynamo(kitten);
+
+    dynamoObj.should.eql(
+      {
+        id: { N: '2' },
+        name: { S: 'Fluffy' },
+        owner: { S: 'Someone' },
+        unnamedInt: { N: '1' },
+        unnamedString: { S: 'unnamed' },
+      });
+
+    kitten.save(done);
+
+  });
+
+  it('Get item for model with unnamed attributes', function (done) {
+
+    Cat5.get(2, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.should.have.property('id', 2);
+      model.should.have.property('name', 'Fluffy');
+      model.should.have.property('owner', 'Someone');
+      model.should.have.property('unnamedInt', 1);
+      model.should.have.property('unnamedString', 'unnamed');
+      model.should.have.property('$__');
+      done();
+    });
   });
 
   it('Get item for model', function (done) {
