@@ -254,7 +254,7 @@ describe('Query', function (){
     Dog.query('breed').eq('unknown')
     .filter('color').not().null().exec()
     .then(function (dogs) {
-      dogs.length.should.eql(5);
+      dogs.length.should.eql(4);
       done();
     });
   });
@@ -268,7 +268,7 @@ describe('Query', function (){
     .filter('color').not().eq('Brown')
     .exec()
     .then(function (dogs) {
-      dogs.length.should.eql(1);
+      dogs.length.should.eql(2);
       dogs[0].ownerId.should.eql(11);
       done();
     });
