@@ -1089,4 +1089,69 @@ describe('Model', function (){
     });
 
   });
+
+  describe('Model.default', function() {
+    it('Default is set properly', function() {
+      var CatModel = dynamoose.model('CatDefault',
+          {
+              id: {
+                  type:  Number,
+                  validate: function (v) { return v > 0; }
+              },
+              name: String,
+              owner: String,
+              shouldRemainUnchanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'shouldRemainUnchanged_'+ model.name +'_'+ model.owner;
+                  }
+              },
+              shouldBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'shouldBeChanged_'+ model.name +'_'+ model.owner;
+                  }
+              },
+              shouldAlwaysBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'shouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
+                  },
+                  forceDefault: true
+              },
+              unsetShouldBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'unsetShouldBeChanged_'+ model.name +'_'+ model.owner;
+                  }
+              },
+              unsetShouldAlwaysBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'unsetShouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
+                  }
+              }
+          }
+      );
+
+      var cat = new CatModel({
+          id: 1111,
+          name: 'NAME_VALUE',
+          owner: 'OWNER_VALUE',
+          shouldRemainUnchanged: 'AAA',
+          shouldBeChanged: undefined,
+          shouldAlwaysBeChanged: 'BBB'
+      });
+
+      return cat
+        .save()
+        .then(function() {
+            cat.shouldRemainUnchanged.should.eql('AAA');
+            cat.shouldBeChanged.should.eql('shouldBeChanged_NAME_VALUE_OWNER_VALUE');
+            cat.shouldAlwaysBeChanged.should.eql('shouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
+            cat.unsetShouldBeChanged.should.eql('unsetShouldBeChanged_NAME_VALUE_OWNER_VALUE');
+            cat.unsetShouldAlwaysBeChanged.should.eql('unsetShouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
+        });
+    });
+  });
 });
