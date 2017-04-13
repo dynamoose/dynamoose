@@ -35,12 +35,13 @@
   "author": "Brandon Goode <brandon@automategreen.com>",
   "license": "MIT",
   "devDependencies": {
-    "mocha": "*",
-    "should": "*",
+    "blanket": "1.1.5",
+    "dynamodb-local": "0.0.18",
     "grunt": "*",
     "grunt-contrib-jshint": "*",
     "grunt-mocha-test": "*",
-    "blanket": "1.1.5",
+    "mocha": "*",
+    "should": "*",
     "travis-cov": "*"
   },
   "dependencies": {

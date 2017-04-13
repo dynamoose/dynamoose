@@ -1,4 +1,7 @@
 'use strict';
+
+var DynamoDbLocal = require('dynamodb-local');
+
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -56,6 +59,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-mocha-test');
 
+  grunt.registerTask('dynamo:start', function() {
+    var done = this.async();
+    DynamoDbLocal
+        .launch(8000)
+        .then(function() { done(); })
+        .catch(function(e) { done(e); });
+  });
+
+  grunt.registerTask('dynamo:stop', function() {
+      DynamoDbLocal.stop(8000);
+  });
 
   // Register the default tasks
   grunt.registerTask('default', ['jshint', 'mochaTest']);
