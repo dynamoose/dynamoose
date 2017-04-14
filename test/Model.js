@@ -1146,11 +1146,11 @@ describe('Model', function (){
       return cat
         .save()
         .then(function() {
-            cat.shouldRemainUnchanged.should.eql('AAA');
-            cat.shouldBeChanged.should.eql('shouldBeChanged_NAME_VALUE_OWNER_VALUE');
-            cat.shouldAlwaysBeChanged.should.eql('shouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
-            cat.unsetShouldBeChanged.should.eql('unsetShouldBeChanged_NAME_VALUE_OWNER_VALUE');
-            cat.unsetShouldAlwaysBeChanged.should.eql('unsetShouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
+            should(cat.shouldRemainUnchanged).eql('AAA');
+            should(cat.shouldBeChanged).eql('shouldBeChanged_NAME_VALUE_OWNER_VALUE');
+            should(cat.shouldAlwaysBeChanged).eql('shouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
+            should(cat.unsetShouldBeChanged).eql('unsetShouldBeChanged_NAME_VALUE_OWNER_VALUE');
+            should(cat.unsetShouldAlwaysBeChanged).eql('unsetShouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
         });
     });
   });
