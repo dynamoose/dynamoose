@@ -586,6 +586,16 @@ Dog.query({breed: {eq: 'Beagle'} }, function (err, dogs) {
 });
 ```
 
+#### query.using(indexName)
+
+Tells the query to use a particular index.  This is necessary when there are multiple indexes defined on the hashkey attribute of the table, otherwise it will default to using the first index in the list.
+
+```js
+Dog.query('ownerId').using('BreedRangeIndex').eq(20).where('breed').beginsWith('S').exec(function (err, dogs) {
+  // Look at all the breeds that start with S for owner 20 
+});
+```
+
 #### query.exec(callback)
 
 Executes the query against the table or index.
