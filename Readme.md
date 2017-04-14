@@ -252,9 +252,19 @@ Defines the attribute as a local or global secondary index. Index can either be 
 
 Applies a default to the attribute's value when saving, if the values is null or undefined.
 
-If default is a function, the function is called, and the response is assigned to the attribute's value.
+If default is a function, the function is called with the current model instance, and the response is assigned to the attribute's value.
 
 If it is a value, the value is simply assigned.
+
+```js
+function(model) {
+    return model.name +'_'+ model.category;
+}
+```
+
+**forceDefault: boolean**
+
+(default: false) Will force the default value to always be applied to the attribute event if it already set. This is good for populating data that will be used as sort or secondary indexes.
 
 **validate**: function, regular expression, or value
 
