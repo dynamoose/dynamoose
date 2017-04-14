@@ -320,6 +320,14 @@ Also it is possible to specify wich names that field will use, like in the follo
 var schema = new Schema({...}, { throughput: 5, timestamps: {createdAt: 'creationDate', updatedAt: 'lastUpdateDate'});
 ```
 
+**saveUnknown**: boolean
+
+Specifies that attributes not defined in the _schema_ will be saved and retrieved
+
+```js
+var schema = new Schema({...}, { saveUnknown: true });
+```
+
 ## Model API
 
 ```js
