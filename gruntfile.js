@@ -63,7 +63,7 @@ module.exports = function(grunt) {
   grunt.registerTask('dynamo:start', function() {
     var done = this.async();
     DynamoDbLocal
-        .launch(DYNAMO_DB_PORT, null, ['-inMemory'])
+        .launch(DYNAMO_DB_PORT)
         .then(function() { done(); })
         .catch(function(e) { done(e); });
   });
