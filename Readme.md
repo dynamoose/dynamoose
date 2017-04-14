@@ -322,7 +322,7 @@ var schema = new Schema({...}, { throughput: 5, timestamps: {createdAt: 'creatio
 
 **saveUnknown**: boolean
 
-Specifies that attributes not defined in the _schema_ will be saved and retrieved
+Specifies that attributes not defined in the _schema_ will be saved and retrieved.  This defaults to false.
 
 ```js
 var schema = new Schema({...}, { saveUnknown: true });
