@@ -238,8 +238,8 @@ describe('Table tests', function () {
           done(err);
         }
         else {
-          console.log("---------------------REVISED TABLE");
-          console.log(JSON.stringify(data, null, 2));
+          // console.log("---------------------REVISED TABLE");
+          // console.log(JSON.stringify(data, null, 2));
           var found = false;
           for (var i in data.Table.GlobalSecondaryIndexes) {
             var gsi = data.Table.GlobalSecondaryIndexes[i];
