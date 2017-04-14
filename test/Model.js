@@ -15,7 +15,7 @@ var should = require('should');
 var Cat, Cat2, Cat3, Cat4;
 
 describe('Model', function (){
-  this.timeout(5000);
+  this.timeout(15000);
 
 
   before(function(done) {
