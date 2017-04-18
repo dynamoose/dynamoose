@@ -283,7 +283,9 @@ describe('Query', function (){
       dogs.length.should.eql(1);
       dogs[0].ownerId.should.eql(1);
       done();
-    });
+    })
+    .catch(done);
+
   });
 
   it('Basic Query on SGI with filter null', function (done) {
@@ -292,9 +294,10 @@ describe('Query', function (){
     Dog.query('breed').eq('unknown')
     .filter('color').not().null().exec()
     .then(function (dogs) {
-      dogs.length.should.eql(4);
+      dogs.length.should.eql(5);
       done();
-    });
+    })
+    .catch(done);
   });
 
   it('Basic Query on SGI with filter not eq and not lt', function (done) {
@@ -306,10 +309,11 @@ describe('Query', function (){
     .filter('color').not().eq('Brown')
     .exec()
     .then(function (dogs) {
-      dogs.length.should.eql(2);
+      dogs.length.should.eql(1);
       dogs[0].ownerId.should.eql(11);
       done();
-    });
+    })
+    .catch(done);
   });
 
   it('Basic Query on SGI with filter not contains or beginsWith', function (done) {
@@ -322,6 +326,8 @@ describe('Query', function (){
     .then(function (dogs) {
       dogs.length.should.eql(2);
       done();
-    });
+    })
+    .catch(done);
+
   });
 });
