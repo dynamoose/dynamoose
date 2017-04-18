@@ -17,7 +17,7 @@ var should = require('should');
 
 
 describe('Schema tests', function (){
-  this.timeout(5000);
+  this.timeout(10000);
 
   it('Simple schema', function (done) {
     var schemaObj = {
@@ -177,7 +177,7 @@ describe('Schema tests', function (){
         type: String,
         required: true
       },
-    }, 
+    },
     {
       throughput: {read: 10, write: 2},
       timestamps: true
@@ -193,7 +193,7 @@ describe('Schema tests', function (){
         type: String,
         required: true
       },
-    }, 
+    },
     {
       throughput: {read: 10, write: 2},
       timestamps: { createdAt: 'createDate', updatedAt: 'lastUpdate'}
@@ -227,7 +227,7 @@ describe('Schema tests', function (){
     schema1.timestamps.createdAt.should.be.equal('createdAt');
     schema1.timestamps.updatedAt.should.exists;
     schema1.timestamps.updatedAt.should.be.equal('updatedAt');
-    
+
     schema1.attributes.createdAt.type.name.should.eql('date');
     should.exist(schema1.attributes.createdAt.default);
 
@@ -241,7 +241,7 @@ describe('Schema tests', function (){
     schema2.timestamps.createdAt.should.be.equal('createDate');
     schema2.timestamps.updatedAt.should.exists;
     schema2.timestamps.updatedAt.should.be.equal('lastUpdate');
-    
+
     schema2.attributes.createDate.type.name.should.eql('date');
     should.exist(schema2.attributes.createDate.default);
 
