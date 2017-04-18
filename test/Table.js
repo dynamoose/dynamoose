@@ -17,7 +17,7 @@ var should = require('should');
 
 
 describe('Table tests', function () {
-  this.timeout(5000);
+  this.timeout(10000);
 
   var schema = new Schema({id: Number, name: String, childern: [Number], address: {street: String, city: String}});
   var globalIndexSchema = new Schema({
