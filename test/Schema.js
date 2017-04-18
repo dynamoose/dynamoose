@@ -222,10 +222,10 @@ describe('Schema tests', function (){
     //
     // Schema1 timestamps validation
     //
-    schema1.timestamps.should.exists;
-    schema1.timestamps.createdAt.should.exists;
+    should.exist(schema1.timestamps);
+    should.exist(schema1.timestamps.createdAt);
     schema1.timestamps.createdAt.should.be.equal('createdAt');
-    schema1.timestamps.updatedAt.should.exists;
+    should.exist(schema1.timestamps.updatedAt);
     schema1.timestamps.updatedAt.should.be.equal('updatedAt');
 
     schema1.attributes.createdAt.type.name.should.eql('date');
@@ -236,10 +236,10 @@ describe('Schema tests', function (){
     //
     // Schema2 timestamps validation
     //
-    schema2.timestamps.should.exists;
-    schema2.timestamps.createdAt.should.exists;
+    should.exist(schema2.timestamps);
+    should.exist(schema2.timestamps.createdAt);
     schema2.timestamps.createdAt.should.be.equal('createDate');
-    schema2.timestamps.updatedAt.should.exists;
+    should.exist(schema2.timestamps.updatedAt);
     schema2.timestamps.updatedAt.should.be.equal('lastUpdate');
 
     schema2.attributes.createDate.type.name.should.eql('date');
