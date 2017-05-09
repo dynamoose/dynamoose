@@ -467,6 +467,60 @@ Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
 });
 ```
 
+#### Model.populate(options)
+
+Populates paths from an item from the table.
+
+(Only promise mode yet)
+
+```js
+Dog = dynamoose.model('Dog', {
+    id: {
+      type:  Number
+    },
+    name: {
+      type: String
+    },
+    parent: Number
+  })
+
+/*
+Available dogs
+{ id: 1, name: 'Odie'}
+{ id: 2, name: 'Rex', parent: 1 }
+{ id: 3, name: 'Fox', parent: 2 }
+*/
+
+Dog.get(3)
+  .then(function(dog) {
+    return dog.populate({
+      path: 'parent',
+      model: 'Dog',
+      populate: {
+        path: 'parent',
+        model: 'Dog'
+      }
+    });
+  })
+  then(function(dog) {
+    console.log(dog);
+    /*
+    { 
+      id: 3, 
+      name: 'Fox',
+      parent: {
+        id: 2, 
+        name: 'Rex', 
+        parent: {
+          id: 1, 
+          name: 'Odie'
+        }
+      }
+    }
+    */
+  });
+```
+
 #### Model.batchGet(keys, options, callback)
 
 Gets multiple items from the table.
