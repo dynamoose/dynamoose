@@ -50,6 +50,7 @@
     "aws-sdk": "^2.1.0",
     "q": "~1.0.1",
     "hooks": "0.3.2",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "lodash": "*"
   }
 }
