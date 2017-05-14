@@ -7,7 +7,3 @@ node_js:
 env: DEBUG=dynamoose*
 before_script:
   - npm install -g grunt-cli
-  - wget http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz
-  - tar xfz dynamodb_local_latest.tar.gz
-  - java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -inMemory &
-

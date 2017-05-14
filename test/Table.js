@@ -17,7 +17,7 @@ var should = require('should');
 
 
 describe('Table tests', function () {
-  this.timeout(5000);
+  this.timeout(10000);
 
   var schema = new Schema({id: Number, name: String, childern: [Number], address: {street: String, city: String}});
   var globalIndexSchema = new Schema({
@@ -238,8 +238,8 @@ describe('Table tests', function () {
           done(err);
         }
         else {
-          console.log("---------------------REVISED TABLE");
-          console.log(JSON.stringify(data, null, 2));
+          // console.log("---------------------REVISED TABLE");
+          // console.log(JSON.stringify(data, null, 2));
           var found = false;
           for (var i in data.Table.GlobalSecondaryIndexes) {
             var gsi = data.Table.GlobalSecondaryIndexes[i];
