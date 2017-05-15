@@ -638,6 +638,15 @@ describe('Scan', function (){
     });
   });
 
+  it('Scan with consistent()', function (done) {
+    var Dog = dynamoose.model('Dog');
+    Dog.scan('ownerId').eq(2).consistent().exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(2);
+      done();
+    });
+  });
+
   it('Scan.all', function (done) {
     var Dog = dynamoose.model('Dog');
 
