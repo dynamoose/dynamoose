@@ -638,7 +638,7 @@ describe('Scan', function (){
     });
   });
 
-  it('Scan with consistent()', function (done) {
+  it('Scan.consistent', function (done) {
     var Dog = dynamoose.model('Dog');
     Dog.scan('ownerId').eq(2).consistent().exec(function (err, dogs) {
       should.not.exist(err);
