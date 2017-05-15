@@ -637,6 +637,25 @@ describe('Scan', function (){
       done();
     });
   });
+  
+  it('Scan.all', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan({}, function (err, dogs) {
+      should.not.exist(err);
+      done();
+    }).all();
+  });
+  
+  it('Scan.all(5,2)', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan({}, function (err, dogs) {
+      should.not.exist(err);
+      done();
+    }).all(5,2);
+  });
+
 
 
 
