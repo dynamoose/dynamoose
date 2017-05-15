@@ -743,6 +743,14 @@ Dog.scan().exec(function (err, dogs) {
 
 Executes a scan against a table
 
+#### scan.all([delay[, max]])
+
+Recursively scan as long as lastKey exists. This function will also return a property called `timesScanned` indicating how many scans were completed.
+
+`delay` is the time (in seconds) between recursive scans. Default: 1sec
+
+`max` is the maximum number of recursive scans. Default: 0 - unlimited
+
 #### scan.and()
 
 For readability only. Scans us AND logic for multiple attributes.  `and()` does not provide any functionality and can be omitted.
