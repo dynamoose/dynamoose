@@ -2,10 +2,6 @@
 main:
   - title: "Quick-Start Guide"
     url: /quick-start-guide/
-  - title: "Quick-Start Guide"
-    url: /quick-start-guide/
-  - title: "Configurations"
-    url: /configurations/
   - title: "Schemas"
     url: /schemas/
   - title: "Models"
