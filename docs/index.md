@@ -1,5 +1,6 @@
 ---
 title: Dynamoose
+layout: single
 ---
 
 # Dynamoose [![Build Status](https://travis-ci.org/automategreen/dynamoose.png)](https://travis-ci.org/automategreen/dynamoose)
