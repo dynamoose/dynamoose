@@ -833,3 +833,7 @@ Return the counts objects of matching items, rather than the matching items them
 If you used a filter in the scan, then `count` is the number of items returned after the filter was applied, and `scannedCount` is the number of matching items before the filter was applied.
 
 
+#### scan.consistent()
+
+Scan with consistent read.
+
