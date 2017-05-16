@@ -1,5 +1,4 @@
 ---
-layout: default
 title: Dynamoose
 ---
 
@@ -8,7 +7,8 @@ title: Dynamoose
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http://mongoosejs.com/))
 
-In switching from MongoDB/Mongoose to DynamoDB, we missed the modeling provided by Mongoose. There are several great modules out there, but they didn't match our needs.  We created Dynamoose based on our usage.
+
+{% include toc %}
 
 Dynamoose uses the official [AWS SDK](https://github.com/aws/aws-sdk-js).
 
