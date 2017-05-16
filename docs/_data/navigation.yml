@@ -1,7 +1,7 @@
 # main links
 main:
-  - title: "Quick-Start Guide"
-    url: /quick-start-guide/
+  - title: "Quick-Start"
+    url: /quick-start/
   - title: "Schemas"
     url: /schemas/
   - title: "Models"
