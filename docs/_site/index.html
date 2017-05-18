@@ -1,0 +1,212 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.4.1 by Michael Rose
+  Copyright 2017 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE.txt
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin SEO -->
+
+
+
+
+
+
+
+
+
+<title>Quick-Start - Dynamoose</title>
+
+
+
+
+<meta name="description" content="An amazing website.">
+
+
+
+
+<meta name="author" content="">
+
+<meta property="og:locale" content="en">
+<meta property="og:site_name" content="Dynamoose">
+<meta property="og:title" content="Quick-Start">
+
+
+  <link rel="canonical" href="http://0.0.0.0:4000/">
+  <meta property="og:url" content="http://0.0.0.0:4000/">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- end SEO -->
+
+
+<link href="http://0.0.0.0:4000/feed.xml" type="application/atom+xml" rel="alternate" title="Dynamoose Feed">
+
+<!-- http://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://0.0.0.0:4000/assets/css/main.css">
+
+<!--[if lte IE 9]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+<meta http-equiv="cleartype" content="on">
+  </head>
+
+  <body class="layout--single">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+    <div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <a class="site-title" href="http://0.0.0.0:4000/">Dynamoose</a>
+        <ul class="visible-links">
+          
+            
+            <li class="masthead__menu-item"><a href="http://0.0.0.0:4000/">Quick-Start</a></li>
+          
+            
+            <li class="masthead__menu-item"><a href="http://0.0.0.0:4000/api">API</a></li>
+          
+        </ul>
+        <button><div class="navicon"></div></button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+    
+
+
+
+<div id="main" role="main">
+  
+
+  <article class="page" itemscope itemtype="http://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Quick-Start">
+    
+    
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 class="page__title" itemprop="headline">Quick-Start
+</h1>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        <h2 id="installation">Installation</h2>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ npm install dynamoose
+</code></pre>
+</div>
+
+<h2 id="example">Example</h2>
+
+<p>Set AWS configurations in environment variables:</p>
+
+<div class="language-sh highlighter-rouge"><pre class="highlight"><code><span class="nb">export </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="s2">"Your AWS Access Key ID"</span>
+<span class="nb">export </span><span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span><span class="s2">"Your AWS Secret Access Key"</span>
+<span class="nb">export </span><span class="nv">AWS_REGION</span><span class="o">=</span><span class="s2">"us-east-1"</span>
+</code></pre>
+</div>
+
+<p>Here’s a simple example:</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">dynamoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'dynamoose'</span><span class="p">);</span>
+
+<span class="c1">// Create cat model with default options</span>
+<span class="kd">var</span> <span class="nx">Cat</span> <span class="o">=</span> <span class="nx">dynamoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">'Cat'</span><span class="p">,</span> <span class="p">{</span> <span class="na">id</span><span class="p">:</span> <span class="nb">Number</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="nb">String</span> <span class="p">});</span>
+
+<span class="c1">// Create a new cat object</span>
+<span class="kd">var</span> <span class="nx">garfield</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Cat</span><span class="p">({</span><span class="na">id</span><span class="p">:</span> <span class="mi">666</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Garfield'</span><span class="p">});</span>
+
+<span class="c1">// Save to DynamoDB</span>
+<span class="nx">garfield</span><span class="p">.</span><span class="nx">save</span><span class="p">();</span>
+
+<span class="c1">// Lookup in DynamoDB</span>
+<span class="nx">Cat</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="mi">666</span><span class="p">)</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">badCat</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Never trust a smiling cat. - '</span> <span class="o">+</span> <span class="nx">badCat</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+      </footer>
+
+      
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+
+    <script src="http://0.0.0.0:4000/assets/js/main.min.js"></script>
+
+  </body>
+</html>

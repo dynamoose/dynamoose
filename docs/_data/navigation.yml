@@ -1,12 +1,6 @@
 # main links
 main:
   - title: "Quick-Start"
-    url: /quick-start/
-  - title: "Schemas"
-    url: /schemas/
-  - title: "Models"
-    url: /models/
-  - title: "Querys"
-    url: /querys/
-  - title: "Scans"
-    url: /scans/
+    url: /
+  - title: "API"
+    url: /api

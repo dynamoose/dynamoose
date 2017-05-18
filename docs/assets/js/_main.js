@@ -69,4 +69,31 @@ $(document).ready(function(){
     midClick: true // allow opening popup on middle mouse click. Always set it to true if you don't provide alternative source.
   });
 
+
+  /* selector */
+  // var postHeader = '.page__content > h2, .page__content > h3';
+
+  // $(postHeader).filter('[id]').each(function () {
+  //   var header      = $(this),
+  //       headerID    = header.attr('id'),
+  //       anchorClass = 'header-link',
+  //       anchorIcon  = '<i class="fa fa-link" aria-hidden="true"></i>';
+
+  //   if (headerID) {
+  //     header.append($('<a />').addClass(anchorClass).attr({ 'href': '#' + headerID, 'aria-hidden': 'true' }).html(anchorIcon));
+  //   }
+
+  //   return this;
+  // });
+
+  tocbot.init({
+    // Where to render the table of contents.
+    tocSelector: '#toc',
+    // Where to grab the headings to build the table of contents.
+    contentSelector: 'body',
+    // Which headings to grab inside of the contentSelector element.
+    headingSelector: 'h1, h2, h3',
+    collapseDepth: 0,
+  });
+
 });
