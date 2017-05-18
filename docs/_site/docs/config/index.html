@@ -1,0 +1,95 @@
+<h1 id="aws-credentials">AWS Credentials</h1>
+
+<p>There are three ways to specify AWS credentials:</p>
+
+<ul>
+  <li>.aws/credentials</li>
+  <li>Environment Variables</li>
+  <li>AWS.config</li>
+</ul>
+
+<h1 id="dynamoose-object">Dynamoose Object</h1>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">dynamoose</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">'dynamoose'</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<h2 id="dynamoosemodelname-schema-options">dynamoose.model(name, schema, [options])</h2>
+
+<p>Compiles a new model or looks up an existing one. <code class="highlighter-rouge">options</code> is optional.</p>
+
+<p>Default <code class="highlighter-rouge">options</code>:</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="p">{</span>
+  <span class="nl">create</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span> <span class="c1">// Create table in DB, if it does not exist,</span>
+  <span class="nx">update</span><span class="err">:</span> <span class="kc">false</span><span class="p">,</span> <span class="c1">// Update remote indexes if they do not match local index structure</span>
+  <span class="nx">waitForActive</span><span class="err">:</span> <span class="kc">true</span><span class="p">,</span> <span class="c1">// Wait for table to be created before trying to use it</span>
+  <span class="nx">waitForActiveTimeout</span><span class="err">:</span> <span class="mi">180000</span> <span class="c1">// wait 3 minutes for table to activate</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Basic example:</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">Cat</span> <span class="o">=</span> <span class="nx">dynamoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">'Cat'</span><span class="p">,</span> <span class="p">{</span> <span class="na">id</span><span class="p">:</span> <span class="nb">Number</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="nb">String</span> <span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="dynamooselocalurl">dynamoose.local(url)</h2>
+
+<p>Configure dynamoose to use a DynamoDB local for testing.</p>
+
+<p><code class="highlighter-rouge">url</code> defaults to ‘http://localhost:8000’</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">dynamoose</span><span class="p">.</span><span class="nx">local</span><span class="p">();</span>
+</code></pre>
+</div>
+
+<h2 id="dynamooseddb">dynamoose.ddb()</h2>
+
+<p>Configures and returns the AWS.DynamoDB object</p>
+
+<h2 id="dynamooseaws">dynamoose.AWS</h2>
+
+<p>AWS object for dynamoose.  Used to configure AWS for dynamoose.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">dynamoose</span><span class="p">.</span><span class="nx">AWS</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">update</span><span class="p">({</span>
+  <span class="na">accessKeyId</span><span class="p">:</span> <span class="s1">'AKID'</span><span class="p">,</span>
+  <span class="na">secretAccessKey</span><span class="p">:</span> <span class="s1">'SECRET'</span><span class="p">,</span>
+  <span class="na">region</span><span class="p">:</span> <span class="s1">'us-east-1'</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="dynamoosesetdefaultsoptions">dynamoose.setDefaults(options)</h2>
+
+<p>Sets the default to be used when creating a model. Can be modified on a per model by passing options to <code class="highlighter-rouge">.model()</code>.</p>
+
+<p>Default <code class="highlighter-rouge">options</code>:</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="p">{</span>
+  <span class="nl">create</span><span class="p">:</span> <span class="kc">true</span> <span class="c1">// Create table in DB if it does not exist</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>It is recommended that <code class="highlighter-rouge">create</code> be disabled for production environments.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">dynamoose</span><span class="p">.</span><span class="nx">setDefaults</span><span class="p">(</span> <span class="p">{</span> <span class="na">create</span><span class="p">:</span> <span class="kc">false</span> <span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="dynamooseschema">dynamoose.Schema</h2>
+
+<p>The dynamoose Schema class, used to create new schema definitions. For example:</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">appleSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">dynamoose</span><span class="p">.</span><span class="nx">Schema</span><span class="p">({</span>
+  <span class="na">id</span><span class="p">:</span> <span class="nb">Number</span><span class="p">,</span> 
+  <span class="na">type</span><span class="p">:</span> <span class="nb">String</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="dynamoosetable">dynamoose.Table</h2>
+
+<p>Table class</p>

@@ -1,0 +1,426 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.4.1 by Michael Rose
+  Copyright 2017 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE.txt
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin SEO -->
+
+
+
+
+
+
+
+
+
+<title>Dynamoose</title>
+
+
+
+
+<meta name="description" content="An amazing website.">
+
+
+
+
+<meta name="author" content="">
+
+<meta property="og:locale" content="en">
+<meta property="og:site_name" content="Dynamoose">
+<meta property="og:title" content="Dynamoose">
+
+
+  <link rel="canonical" href="http://0.0.0.0:4000/_docs/model/">
+  <meta property="og:url" content="http://0.0.0.0:4000/_docs/model/">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- end SEO -->
+
+
+<link href="http://0.0.0.0:4000/feed.xml" type="application/atom+xml" rel="alternate" title="Dynamoose Feed">
+
+<!-- http://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://0.0.0.0:4000/assets/css/main.css">
+
+<!--[if lte IE 9]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+<meta http-equiv="cleartype" content="on">
+  </head>
+
+  <body class="layout--default">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+    <div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <a class="site-title" href="http://0.0.0.0:4000/">Dynamoose</a>
+        <ul class="visible-links">
+          
+            
+            <li class="masthead__menu-item"><a href="http://0.0.0.0:4000/">Quick-Start</a></li>
+          
+            
+            <li class="masthead__menu-item"><a href="http://0.0.0.0:4000/api">API</a></li>
+          
+        </ul>
+        <button><div class="navicon"></div></button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+    
+<h4 id="modelpopulateoptions">Model.populate(options)</h4>
+
+<p>Populates paths from an item from the table.</p>
+
+<p>(Only promise mode yet)</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span> <span class="o">=</span> <span class="nx">dynamoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">'Dog'</span><span class="p">,</span> <span class="p">{</span>
+    <span class="na">id</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">type</span><span class="p">:</span>  <span class="nb">Number</span>
+    <span class="p">},</span>
+    <span class="na">name</span><span class="p">:</span> <span class="p">{</span>
+      <span class="na">type</span><span class="p">:</span> <span class="nb">String</span>
+    <span class="p">},</span>
+    <span class="na">parent</span><span class="p">:</span> <span class="nb">Number</span>
+  <span class="p">})</span>
+
+<span class="cm">/*
+Available dogs
+{ id: 1, name: 'Odie'}
+{ id: 2, name: 'Rex', parent: 1 }
+{ id: 3, name: 'Fox', parent: 2 }
+*/</span>
+
+<span class="nx">Dog</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">dog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">dog</span><span class="p">.</span><span class="nx">populate</span><span class="p">({</span>
+      <span class="na">path</span><span class="p">:</span> <span class="s1">'parent'</span><span class="p">,</span>
+      <span class="na">model</span><span class="p">:</span> <span class="s1">'Dog'</span><span class="p">,</span>
+      <span class="na">populate</span><span class="p">:</span> <span class="p">{</span>
+        <span class="na">path</span><span class="p">:</span> <span class="s1">'parent'</span><span class="p">,</span>
+        <span class="na">model</span><span class="p">:</span> <span class="s1">'Dog'</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">})</span>
+  <span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">dog</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">dog</span><span class="p">);</span>
+    <span class="cm">/*
+    { 
+      id: 3, 
+      name: 'Fox',
+      parent: {
+        id: 2, 
+        name: 'Rex', 
+        parent: {
+          id: 1, 
+          name: 'Odie'
+        }
+      }
+    }
+    */</span>
+  <span class="p">});</span>
+</code></pre>
+</div>
+
+<hr />
+<p>order: 3
+—</p>
+
+<h1 id="model">Model</h1>
+
+<h2 id="create-model-from-schema">Create Model From Schema</h2>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">Dog</span> <span class="o">=</span> <span class="nx">dynamoose</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">'Dog'</span><span class="p">,</span> <span class="nx">dogSchema</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<h2 id="new-modelobject">new Model(object)</h2>
+
+<p>Creates a new instance of the model. Object keys are assigned to the new model.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">odie</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Dog</span><span class="p">({</span>
+  <span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">,</span>
+  <span class="na">breed</span><span class="p">:</span> <span class="s1">'Beagle'</span><span class="p">,</span>
+  <span class="na">color</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Tan'</span><span class="p">],</span>
+  <span class="na">cartoon</span><span class="p">:</span> <span class="kc">true</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modelputoptions-callback--modelsaveoptions-callback">model.put(options, callback) &amp; model.save(options, callback)</h2>
+
+<p>Puts the item in the DynamoDB table.  Will overwrite the item.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">odie</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Ta-da!'</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">odie</span><span class="p">.</span><span class="nx">save</span><span class="p">({</span>
+    <span class="na">condition</span><span class="p">:</span> <span class="s1">'#o = :ownerId'</span><span class="p">,</span>
+    <span class="na">conditionNames</span><span class="p">:</span> <span class="p">{</span> <span class="na">o</span><span class="p">:</span> <span class="s1">'ownerId'</span> <span class="p">},</span>
+    <span class="na">conditionValues</span><span class="p">:</span> <span class="p">{</span> <span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span> <span class="p">}</span>
+  <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Ta-da!'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modelbatchputitems-options-callback">Model.batchPut(items, options, callback)</h2>
+
+<p>Puts multiple items in the table. Will overwrite existing items.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">batchPut</span><span class="p">([</span>
+  <span class="p">{</span>
+    <span class="na">ownerId</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="na">name</span><span class="p">:</span> <span class="s1">'Princes'</span><span class="p">,</span>
+    <span class="na">breed</span><span class="p">:</span> <span class="s1">'Jack Russell Terrier'</span><span class="p">,</span>
+    <span class="na">color</span><span class="p">:</span> <span class="p">[</span><span class="s1">'White'</span><span class="p">,</span> <span class="s1">'Brown'</span><span class="p">],</span>
+    <span class="na">cartoon</span><span class="p">:</span> <span class="kc">true</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="na">ownerId</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="na">name</span><span class="p">:</span> <span class="s1">'Toto'</span><span class="p">,</span>
+    <span class="na">breed</span><span class="p">:</span> <span class="s1">'Terrier'</span><span class="p">,</span>
+    <span class="na">color</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Brown'</span><span class="p">],</span>
+    <span class="na">cartoon</span><span class="p">:</span> <span class="kc">false</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">,</span>
+    <span class="na">breed</span><span class="p">:</span> <span class="s1">'Beagle'</span><span class="p">,</span>
+    <span class="na">color</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Tan'</span><span class="p">],</span>
+    <span class="na">cartoon</span><span class="p">:</span> <span class="kc">true</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="na">ownerId</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="na">name</span><span class="p">:</span> <span class="s1">'Lassie'</span><span class="p">,</span>
+    <span class="na">breed</span><span class="p">:</span> <span class="s1">'Beagle'</span><span class="p">,</span>
+    <span class="na">color</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Tan'</span><span class="p">],</span>
+    <span class="na">cartoon</span><span class="p">:</span> <span class="kc">false</span>
+  <span class="p">}],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">dogs</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Ta-da!'</span><span class="p">);</span>
+  <span class="p">});</span>
+</code></pre>
+</div>
+
+<h3 id="options">Options</h3>
+
+<p><strong>overwrite</strong>: boolean</p>
+
+<p>Overwrite existing item. Defaults to true.</p>
+
+<p><strong>condition</strong>: string</p>
+
+<p>An expression for a conditional update. See
+<a href="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html">the AWS documentation</a>
+for more information about condition expressions.</p>
+
+<p><strong>conditionNames</strong>: object</p>
+
+<p>A map of name substitutions for the condition expression.</p>
+
+<p><strong>conditionValues</strong>: object</p>
+
+<p>A map of values for the condition expression. Note that in order for
+automatic object conversion to work, the keys in this object must
+match schema attribute names.</p>
+
+<h2 id="modelcreateobject-options-callback">Model.create(object, options, callback)</h2>
+
+<p>Creates a new instance of the model and save the item in the table.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+  <span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+  <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">,</span>
+  <span class="na">breed</span><span class="p">:</span> <span class="s1">'Beagle'</span><span class="p">,</span>
+  <span class="na">color</span><span class="p">:</span> <span class="p">[</span><span class="s1">'Tan'</span><span class="p">],</span>
+  <span class="na">cartoon</span><span class="p">:</span> <span class="kc">true</span>
+<span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">odie</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Odie is a '</span> <span class="o">+</span> <span class="nx">odie</span><span class="p">.</span><span class="nx">breed</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modelgetkey-options-callback">Model.get(key, options, callback)</h2>
+
+<p>Gets an item from the table.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">get</span><span class="p">({</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">odie</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Odie is a '</span> <span class="o">+</span> <span class="nx">odie</span><span class="p">.</span><span class="nx">breed</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modelbatchgetkeys-options-callback">Model.batchGet(keys, options, callback)</h2>
+
+<p>Gets multiple items from the table.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">batchGet</span><span class="p">([{</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">},</span> <span class="p">{</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Lassie'</span><span class="p">}],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">dogs</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Retrieved two dogs: '</span> <span class="o">+</span> <span class="nx">dogs</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modeldeletekey-options-callback">Model.delete(key, options, callback)</h2>
+
+<p>Deletes an item from the table.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="k">delete</span><span class="p">({</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Bye bye Odie'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modeldeletecallback">model.delete(callback)</h2>
+
+<p>Deletes the item from the table.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">odie</span><span class="p">.</span><span class="k">delete</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Bye bye Odie'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modelbatchdeletekeys-options-callback">Model.batchDelete(keys, options, callback)</h2>
+
+<p>Deletes multiple items from the table.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">batchDelete</span><span class="p">([</span>
+  <span class="p">{</span> <span class="na">ownerId</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Princes'</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="na">ownerId</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Toto'</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="na">ownerId</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Lassie'</span><span class="p">}</span>
+<span class="p">],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Bye bye my friends'</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="modelupdatekey-update-options-callback">Model.update(key, update, options, callback)</h2>
+
+<p>Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.</p>
+
+<p><strong>$PUT</strong></p>
+
+<p>Put is the default behavior.  The two example below are identical.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">update</span><span class="p">({</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">},</span> <span class="p">{</span><span class="na">age</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Just a puppy'</span><span class="p">);</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">update</span><span class="p">({</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">},</span> <span class="p">{</span><span class="na">$PUT</span><span class="p">:</span> <span class="p">{</span><span class="na">age</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Just a puppy'</span><span class="p">);</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<p><strong>$ADD</strong></p>
+
+<p>Adds one or more attributes to the item.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">update</span><span class="p">({</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">},</span> <span class="p">{</span><span class="na">$ADD</span><span class="p">:</span> <span class="p">{</span><span class="na">age</span><span class="p">:</span> <span class="mi">1</span><span class="p">}},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Birthday boy'</span><span class="p">);</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<p><strong>$DELETE</strong></p>
+
+<p>Removes one or more attributes from an item.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">update</span><span class="p">({</span><span class="na">ownerId</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s1">'Odie'</span><span class="p">},</span> <span class="p">{</span><span class="na">$DELETE</span><span class="p">:</span> <span class="p">{</span><span class="na">age</span><span class="p">:</span> <span class="kc">null</span><span class="p">}},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span> <span class="p">}</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Too old to keep count'</span><span class="p">);</span>
+<span class="p">})</span>
+</code></pre>
+</div>
+
+<h3 id="options-1">Options</h3>
+
+<p><strong>allowEmptyArray</strong>: boolean</p>
+
+<p>If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.</p>
+
+<p><strong>createRequired</strong>: boolean</p>
+
+<p>If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.</p>
+
+<p><strong>updateTimestamps</strong>: boolean</p>
+
+<p>If true, the <code class="highlighter-rouge">timestamps</code> attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.</p>
+
+
+    <script src="http://0.0.0.0:4000/assets/js/main.min.js"></script>
+
+  </body>
+</html>

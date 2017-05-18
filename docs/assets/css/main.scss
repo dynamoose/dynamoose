@@ -5,3 +5,14 @@
 @charset "utf-8";
 
 @import "minimal-mistakes";
+
+@import "tocbot.css";
+
+a.header-link {
+  float: right;
+  color: #7a8288;
+}
+
+.sidebar {
+  overflow-y: scroll;
+}

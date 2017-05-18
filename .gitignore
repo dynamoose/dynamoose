@@ -10,3 +10,6 @@ lib-cov/
 
 # Ignore webstorm directories
 .idea/
+
+
+.bundle/

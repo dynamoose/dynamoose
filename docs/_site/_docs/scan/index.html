@@ -1,0 +1,257 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.4.1 by Michael Rose
+  Copyright 2017 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE.txt
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin SEO -->
+
+
+
+
+
+
+
+
+
+<title>Scan - Dynamoose</title>
+
+
+
+
+<meta name="description" content="An amazing website.">
+
+
+
+
+<meta name="author" content="">
+
+<meta property="og:locale" content="en">
+<meta property="og:site_name" content="Dynamoose">
+<meta property="og:title" content="Scan">
+
+
+  <link rel="canonical" href="http://0.0.0.0:4000/_docs/scan/">
+  <meta property="og:url" content="http://0.0.0.0:4000/_docs/scan/">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- end SEO -->
+
+
+<link href="http://0.0.0.0:4000/feed.xml" type="application/atom+xml" rel="alternate" title="Dynamoose Feed">
+
+<!-- http://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://0.0.0.0:4000/assets/css/main.css">
+
+<!--[if lte IE 9]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+<meta http-equiv="cleartype" content="on">
+  </head>
+
+  <body class="layout--default">
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+    <div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <a class="site-title" href="http://0.0.0.0:4000/">Dynamoose</a>
+        <ul class="visible-links">
+          
+            
+            <li class="masthead__menu-item"><a href="http://0.0.0.0:4000/">Quick-Start</a></li>
+          
+            
+            <li class="masthead__menu-item"><a href="http://0.0.0.0:4000/api">API</a></li>
+          
+        </ul>
+        <button><div class="navicon"></div></button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+    <h1 id="scan">Scan</h1>
+
+<h2 id="modelscanfilter-options-callback">Model.scan(filter, options, callback)</h2>
+
+<p>Scans a table. The optional filter parameter can either be an attribute of the table or a complete filter object. If the callback is provided, the exec command is called automatically, and the scan parameter must be a Scan object.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">scan</span><span class="p">(</span><span class="s1">'breed'</span><span class="p">).</span><span class="nx">contains</span><span class="p">(</span><span class="s1">'Terrier'</span><span class="p">).</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">dogs</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Look at all the Terriers</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">scan</span><span class="p">({</span><span class="na">breed</span><span class="p">:</span> <span class="p">{</span><span class="na">contains</span><span class="p">:</span> <span class="s1">'Terrier'</span><span class="p">}</span> <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">dogs</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Look at all the Terriers</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<p>To get all the items in a table, do not provide a filter.</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="nx">Dog</span><span class="p">.</span><span class="nx">scan</span><span class="p">().</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">dogs</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// Look at all the dogs</span>
+  <span class="k">if</span><span class="p">(</span><span class="nx">dogs</span><span class="p">.</span><span class="nx">lastKey</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// More dogs to get</span>
+    <span class="nx">Dog</span><span class="p">.</span><span class="nx">scan</span><span class="p">().</span><span class="nx">startAt</span><span class="p">(</span><span class="nx">dogs</span><span class="p">.</span><span class="nx">lastKey</span><span class="p">).</span><span class="nx">exec</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">dogs</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// Look more dogs</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre>
+</div>
+
+<h2 id="scanexeccallback">scan.exec(callback)</h2>
+
+<p>Executes a scan against a table</p>
+
+<h2 id="scanalldelay-max">scan.all([delay[, max]])</h2>
+
+<p>Recursively scan as long as lastKey exists. This function will also return a property called <code class="highlighter-rouge">timesScanned</code> indicating how many scans were completed.</p>
+
+<p><code class="highlighter-rouge">delay</code> is the time (in seconds) between recursive scans. Default: 1sec</p>
+
+<p><code class="highlighter-rouge">max</code> is the maximum number of recursive scans. Default: 0 - unlimited</p>
+
+<h2 id="scanand">scan.and()</h2>
+
+<p>For readability only. Scans us AND logic for multiple attributes.  <code class="highlighter-rouge">and()</code> does not provide any functionality and can be omitted.</p>
+
+<h2 id="scanwherefilter--scanfilterfilter">scan.where(filter) | scan.filter(filter)</h2>
+
+<p>Add additional attribute to the filter list.</p>
+
+<h2 id="scannot">scan.not()</h2>
+
+<p>Inverts the filter logic that follows.</p>
+
+<h2 id="scannull">scan.null()</h2>
+
+<p>Scan attribute for null.</p>
+
+<h2 id="scaneqvalue">scan.eq(value)</h2>
+
+<p>Attribute is equal to the value.</p>
+
+<h2 id="scanltvalue">scan.lt(value)</h2>
+
+<p>Attribute is less than the value.</p>
+
+<h2 id="scanlevalue">scan.le(value)</h2>
+
+<p>Attribute is less than or equal value.</p>
+
+<h2 id="scangevalue">scan.ge(value)</h2>
+
+<p>Attribute is greater than or equal value.</p>
+
+<h2 id="scangtvalue">scan.gt(value)</h2>
+
+<p>Attribute is greater than the value.</p>
+
+<h2 id="scancontainsvalue">scan.contains(value)</h2>
+
+<p>Attribute contains the value.</p>
+
+<h2 id="scanbeginswithvalue">scan.beginsWith(value)</h2>
+
+<p>Attribute begins with the value.</p>
+
+<h2 id="scaninvalues">scan.in(values)</h2>
+
+<p>Attribute is in values array.</p>
+
+<h2 id="scanbetweena-b">scan.between(a, b)</h2>
+
+<p>Attribute value is greater than or equal <code class="highlighter-rouge">a</code>. and less than or equal to <code class="highlighter-rouge">b</code>.</p>
+
+<h2 id="scanlimitlimit">scan.limit(limit)</h2>
+
+<p>The maximum number of items to evaluate (not necessarily the number of matching items). If DynamoDB processes the number of items up to the limit while processing the results, it stops the operation and returns the matching values up to that point, and a key in <code class="highlighter-rouge">lastKey</code> to apply in a subsequent operation, so that you can pick up where you left off. Also, if the processed data set size exceeds 1 MB before DynamoDB reaches this limit, it stops the operation and returns the matching values up to the limit, and a key in <code class="highlighter-rouge">lastKey</code> to apply in a subsequent operation to continue the operation. For more information, see Query and Scan in the Amazon DynamoDB Developer Guide.</p>
+
+<h2 id="scanstartatkey">scan.startAt(key)</h2>
+
+<p>Start scan at key. Use <code class="highlighter-rouge">lastKey</code> returned in <code class="highlighter-rouge">scan.exec()</code> callback.</p>
+
+<h2 id="scanattributesattributes">scan.attributes(attributes)</h2>
+
+<p>Set the list of attributes to return.</p>
+
+<h2 id="scancount">scan.count()</h2>
+
+<p>Return the number of matching items, rather than the matching items themselves.</p>
+
+<h2 id="scancounts">scan.counts()</h2>
+
+<p>Return the counts objects of matching items, rather than the matching items themselves:</p>
+
+<div class="language-js highlighter-rouge"><pre class="highlight"><code><span class="p">{</span>
+    <span class="s2">"count"</span><span class="err">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s2">"scannedCount"</span><span class="err">:</span> <span class="mi">1000</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>If you used a filter in the scan, then <code class="highlighter-rouge">count</code> is the number of items returned after the filter was applied, and <code class="highlighter-rouge">scannedCount</code> is the number of matching items before the filter was applied.</p>
+
+<h2 id="scanconsistent">scan.consistent()</h2>
+
+<p>Scan with consistent read.</p>
+
+
+    <script src="http://0.0.0.0:4000/assets/js/main.min.js"></script>
+
+  </body>
+</html>

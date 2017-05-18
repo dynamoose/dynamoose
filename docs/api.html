@@ -1,0 +1,10 @@
+---
+title: API
+layout: single
+sidebar: true
+---
+
+{% assign sorted_docs = site.docs | sort:"order" %}
+{% for doc in sorted_docs %}
+{{ doc.content }}
+{% endfor %}
