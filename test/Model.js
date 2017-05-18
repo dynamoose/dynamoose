@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4, Cat5;
+var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7;
 
 describe('Model', function (){
   this.timeout(15000);
@@ -121,6 +121,30 @@ describe('Model', function (){
         saveUnknown: true
       });
 
+    Cat6 = dynamoose.model('Cat6',
+      {
+        id: {
+          type:  Number
+        },
+        name: {
+          type: String
+        },
+        parent: Number
+      }
+    );
+
+    Cat7 = dynamoose.model('Cat7',
+      {
+        id: {
+          type:  Number,
+          hashKey: true
+        },
+        name: {
+          type: String
+        },
+        parent: Number
+      }
+    );
     done();
   });
 
@@ -925,6 +949,174 @@ describe('Model', function (){
         });
       });
     });
+  });
+
+  describe('Model.populate', function (){
+    before(function (done) {
+      var kittenWithParents = new Cat6({id: 1, name: 'One'});
+      kittenWithParents.save()
+        .then(function(kitten) {
+          var kittenWithParents = new Cat6({id: 2, name: 'Two', parent: kitten.id});
+          return kittenWithParents.save();
+        })
+        .then(function(kitten) {
+          var kittenWithParents = new Cat6({id: 3, name: 'Three', parent: kitten.id});
+          return kittenWithParents.save();
+        })
+        .then(function(kitten) {
+          var kittenWithParents = new Cat6({id: 4, name: 'Four', parent: kitten.id});
+          return kittenWithParents.save();
+        })
+        .then(function() {
+          var kittenWithParents = new Cat6({id: 5, name: 'Five', parent: 999});
+          return kittenWithParents.save();
+        })
+        .then(function() {
+          var kittenWithParents = new Cat7({id: 1, name: 'One'});
+          return kittenWithParents.save();
+        })
+        .then(function(kitten) {
+          var kittenWithParents = new Cat7({id: 2, name: 'Two', parent: kitten.id});
+          return kittenWithParents.save(done);
+        });
+    });
+
+    it('Should populate with one parent', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat6'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          cat.parent.id.should.eql(3);
+          cat.parent.name.should.eql('Three');
+          done();
+        });
+    });
+
+    it('Should deep populate with mutiple parent', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat6',
+            populate: {
+              path: 'parent',
+              model: 'Cat6',
+              populate: {
+                path: 'parent',
+                model: 'Cat6'  
+              }
+            }
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          var parent = cat.parent;
+          parent.id.should.eql(3);
+          parent.name.should.eql('Three');
+          parent = parent.parent;
+          parent.id.should.eql(2);
+          parent.name.should.eql('Two');
+          parent = parent.parent;
+          parent.id.should.eql(1);
+          parent.name.should.eql('One');
+          done();
+        });
+    });
+
+    it('Populating without the model definition', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent'
+          });
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
+    it('Populating without the path definition', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            model: 'Cat6'
+          });
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
+    it('Populating with the wrong reference id', function (done) {
+      Cat6.get(5)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat6'
+          });
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
+    it('Populate works with hashkey', function (done) {
+      Cat7.get(2)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat7'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          cat.parent.id.should.eql(1);
+          cat.parent.name.should.eql('One');
+          done();
+        });
+    });
+
+    it('Populate works with prefix', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'test-Cat6'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          cat.parent.id.should.eql(3);
+          cat.parent.name.should.eql('Three');
+          done();
+        });
+    });
+
+    it('Populating with the wrong model name won\'t work', function (done) {
+      Cat6.get(5)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cats6'
+          });
+        })
+        .then(function(teste, err) {
+          console.log(teste, err);
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
   });
 
   describe('Model.batchPut', function (){
