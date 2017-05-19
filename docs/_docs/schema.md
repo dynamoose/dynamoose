@@ -59,23 +59,24 @@ Attribute Types define the domain of a particular attribute. For example, a `nam
 
 The following table describes valid Attribute Types, and their translation to DynamoDB types:
 
-| Attribute Type | Resulting DynamoDB Type |
-|:--------------:|:-----------------------:|
-| String         | 'S'                     |
-| Number         | 'N'                     |
-| Boolean        | 'S'                     |
-| Date           | 'N'                     |
-| Object         | 'S'                     |
-| Array          | 'S'                     |
-| Buffer         | 'B'                     |
-| [String]       | 'SS'                    |
-| [Number]       | 'NS'                    |
-| [Boolean]      | 'SS'                    |
-| [Date]         | 'NS'                    |
-| [Object]       | 'SS'                    |
-| [Array]        | 'SS'                    |
+| Attribute Type      | Resulting DynamoDB Type |
+|:-------------------:|:-----------------------:|
+| String              | 'S'                     |
+| Number              | 'N'                     |
+| Boolean<sup>*</sup> | 'S' or 'BOOL'           |
+| Date                | 'N'                     |
+| Object<sup>*</sup>  | 'S' or 'M'              |
+| Array<sup>*</sup>   | 'S' or 'L'              |
+| Buffer              | 'B'                     |
+| [String]            | 'SS'                    |
+| [Number]            | 'NS'                    |
+| [Boolean]           | 'SS'                    |
+| [Date]              | 'NS'                    |
+| [Object]            | 'SS'                    |
+| [Array]             | 'SS'                    |
 
-_**: Use the useNativeBooleans flag to store Boolean values as 'BOOL'_
+
+<sup>*</sup> Use `useNativeBooleans` and `useDocumentTypes` to change DynamoDB type
 
 ### Attribute Definitions
 
@@ -104,11 +105,12 @@ Defines the attribute as a local or global secondary index. Index can either be 
 - _name: 'string'_ - Name of index (Default is `attribute.name + (global ? 'GlobalIndex' : 'LocalIndex')``).
 - _global: boolean_ - Set the index to be a global secondary index.  Attribute will be the hash key for the Index.
 - _rangeKey: 'string'_ - The range key for a global secondary index.
-- _project: boolean | ['string', ...]_ - Sets the attributes to be projected for the index.  `true` projects all attributes, `false` projects only the key attributes, and ['string', ...] projects the attributes listed. Default is `true`.
-- _throughput: number | {read: number, write: number}_ - Sets the throughput for the global secondary index.
-- _useNativeBooleans: boolean_ - Later versions of Dynamo added support for Boolean attributes. Set to true to add support for Boolean values that aren't stored as strings.
+- _project: boolean &#124; ['string', ...]_ - Sets the attributes to be projected for the index.  `true` projects all attributes, `false` projects only the key attributes, and ['string', ...] projects the attributes listed. Default is `true`.
+- _throughput: number &#124; {read: number, write: number}_ - Sets the throughput for the global secondary index.
+- _useNativeBooleans: boolean_ - Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `false` (i.e store as JSON string).
+- _useDocumentTypes: boolean_ - Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `false` (i.e. store as JSON string)
 
-**default**: function | value
+**default**: function &#124; value
 
 Applies a default to the attribute's value when saving, if the values is null or undefined.
 
