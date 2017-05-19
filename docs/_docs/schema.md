@@ -98,17 +98,15 @@ Sets the attribute as the table's range key.
 
 Sets the attribute as a 'required' attribute. Required attributes must not be saved as undefined or null, or an error will be thrown.
 
-**index**: boolean or object
+**index**: boolean &#124; object &#124; [objects]
 
-Defines the attribute as a local or global secondary index. Index can either be true or an index definition object. The index definition object can contain the following keys:
+Defines the attribute as a local or global secondary index. Index can either be true, an index definition object or and array of index definition objects. The array is used define multiple indexes for a single attribute. The index definition object can contain the following keys:
 
 - _name: 'string'_ - Name of index (Default is `attribute.name + (global ? 'GlobalIndex' : 'LocalIndex')``).
 - _global: boolean_ - Set the index to be a global secondary index.  Attribute will be the hash key for the Index.
 - _rangeKey: 'string'_ - The range key for a global secondary index.
 - _project: boolean &#124; ['string', ...]_ - Sets the attributes to be projected for the index.  `true` projects all attributes, `false` projects only the key attributes, and ['string', ...] projects the attributes listed. Default is `true`.
 - _throughput: number &#124; {read: number, write: number}_ - Sets the throughput for the global secondary index.
-- _useNativeBooleans: boolean_ - Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `false` (i.e store as JSON string).
-- _useDocumentTypes: boolean_ - Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `false` (i.e. store as JSON string)
 
 **default**: function &#124; value
 
@@ -164,8 +162,37 @@ Convert to uppercase when saving to DB.
 Sets the throughput of the DynamoDB table. The value can either be a number or an object with the keys `read` and `write` (for example: `{read: 5, write: 2}`). If it is a number, both read and write are configured to that number. If it is omitted, the read and write values will be set to 1.
 
 ```js
-var schema = new Schema({...}, { throughput: 5 });
-var schema = new Schema({...}, { throughput: { read: 5, write: 2 } });
+var schema = new Schema({...}, {
+  throughput: 5
+});
+var schema = new Schema({...}, {
+  throughput: { 
+    read: 5, 
+    write: 2 
+  } 
+});
+```
+
+
+**useNativeBooleans**: boolean
+
+Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `false` (i.e store as JSON string).
+
+
+```js
+var schema = new Schema({...}, {
+  useNativeBooleans: true 
+});
+```
+
+**useDocumentTypes**: boolean
+
+Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `false` (i.e. store as JSON string)
+
+```js
+var schema = new Schema({...}, {
+  useDocumentTypes: true 
+});
 ```
 
 **timestamps**: boolean | {createdAt: string, updatedAt: string}
@@ -173,13 +200,22 @@ var schema = new Schema({...}, { throughput: { read: 5, write: 2 } });
 Defines that _schema_ must contain fields to control creation and last update timestamps. If it is set to true, this fields will be createdAt for creation date and updatedAt for last update. for example:
 
 ```js
-var schema = new Schema({...}, { throughput: 5, timestamps: true});
+var schema = new Schema({...}, {
+  throughput: 5,
+  timestamps: true
+});
 ```
 
 Also it is possible to specify wich names that field will use, like in the following example:
 
 ```js
-var schema = new Schema({...}, { throughput: 5, timestamps: {createdAt: 'creationDate', updatedAt: 'lastUpdateDate'});
+var schema = new Schema({...}, {
+  throughput: 5, 
+  timestamps: {
+    createdAt: 'creationDate', 
+    updatedAt: 'lastUpdateDate'
+  }
+});
 ```
 
 **saveUnknown**: boolean
@@ -187,5 +223,7 @@ var schema = new Schema({...}, { throughput: 5, timestamps: {createdAt: 'creatio
 Specifies that attributes not defined in the _schema_ will be saved and retrieved.  This defaults to false.
 
 ```js
-var schema = new Schema({...}, { saveUnknown: true });
+var schema = new Schema({...}, {
+  saveUnknown: true 
+});
 ```
