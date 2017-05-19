@@ -9,10 +9,9 @@
 locale                   : "en"
 title                    : "Dynamoose"
 title_separator          : "-"
-name                     : "Your Name"
-description              : "An amazing website."
+description              : "Documentation for Dynamoose."
 url                      : "https://dynamoosejs.com"
-baseurl                  : "/"
+baseurl                  : "docs"
 repository               : "automategreen/dynamoose"
 atom_feed:
   path                   : # blank (default) uses feed.xml
