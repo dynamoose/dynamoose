@@ -2,7 +2,7 @@
 order: 1
 ---
 
-# AWS Credentials
+## AWS Credentials
 
 There are three ways to specify AWS credentials:
 
@@ -10,13 +10,13 @@ There are three ways to specify AWS credentials:
   - Environment Variables
   - AWS.config
 
-# Dynamoose Object
+## Dynamoose Object
 
 ```js
 var dynamoose = require('dynamoose');
 ```
 
-## dynamoose.model(name, schema, [options])
+### dynamoose.model(name, schema, [options])
 
 Compiles a new model or looks up an existing one. `options` is optional.
 
@@ -37,7 +37,7 @@ Basic example:
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
 ```
 
-## dynamoose.local(url)
+### dynamoose.local(url)
 
 Configure dynamoose to use a DynamoDB local for testing.
 
@@ -47,11 +47,11 @@ Configure dynamoose to use a DynamoDB local for testing.
 dynamoose.local();
 ```
 
-## dynamoose.ddb()
+### dynamoose.ddb()
 
 Configures and returns the AWS.DynamoDB object
 
-## dynamoose.AWS
+### dynamoose.AWS
 
 AWS object for dynamoose.  Used to configure AWS for dynamoose.
 
@@ -63,7 +63,7 @@ dynamoose.AWS.config.update({
 });
 ```
 
-## dynamoose.setDefaults(options)
+### dynamoose.setDefaults(options)
 
 Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.
 
@@ -81,7 +81,7 @@ It is recommended that `create` be disabled for production environments.
 dynamoose.setDefaults( { create: false });
 ```
 
-## dynamoose.Schema
+### dynamoose.Schema
 
 The dynamoose Schema class, used to create new schema definitions. For example:
 
@@ -92,6 +92,6 @@ var appleSchema = new dynamoose.Schema({
 });
 ```
 
-## dynamoose.Table
+### dynamoose.Table
 
 Table class
