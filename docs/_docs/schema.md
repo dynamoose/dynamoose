@@ -157,7 +157,7 @@ Convert to uppercase when saving to DB.
 
 ### Options
 
-**throughput**: number | {read: number, write: number}
+**throughput**: number &#124; {read: number, write: number}
 
 Sets the throughput of the DynamoDB table. The value can either be a number or an object with the keys `read` and `write` (for example: `{read: 5, write: 2}`). If it is a number, both read and write are configured to that number. If it is omitted, the read and write values will be set to 1.
 
@@ -195,7 +195,7 @@ var schema = new Schema({...}, {
 });
 ```
 
-**timestamps**: boolean | {createdAt: string, updatedAt: string}
+**timestamps**: boolean &#124; {createdAt: string, updatedAt: string}
 
 Defines that _schema_ must contain fields to control creation and last update timestamps. If it is set to true, this fields will be createdAt for creation date and updatedAt for last update. for example:
 
