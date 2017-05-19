@@ -71,7 +71,7 @@ $(document).ready(function(){
 
 
   /* selector */
-  var postHeader = '.page__content > h1, .page__content > h2';
+  var postHeader = '.page__content > h2, .page__content > h3';
 
   $(postHeader).filter('[id]').each(function () {
     var header      = $(this),
