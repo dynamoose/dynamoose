@@ -1,5 +1,140 @@
+---
+order: 3
+---
 
-#### Model.populate(options)
+## Model
+
+### Create Model From Schema
+
+```js
+var Dog = dynamoose.model('Dog', dogSchema);
+```
+
+### new Model(object)
+
+Creates a new instance of the model. Object keys are assigned to the new model.
+
+```js
+var odie = new Dog({
+  ownerId: 4,
+  name: 'Odie',
+  breed: 'Beagle',
+  color: ['Tan'],
+  cartoon: true
+});
+```
+
+### model.put(options, callback) & model.save(options, callback)
+
+Puts the item in the DynamoDB table.  Will overwrite the item.
+
+```js
+odie.save(function (err) {
+  if(err) { return console.log(err); }
+  console.log('Ta-da!');
+});
+
+odie.save({
+    condition: '#o = :ownerId',
+    conditionNames: { o: 'ownerId' },
+    conditionValues: { ownerId: 4 }
+  }, function (err) {
+  if(err) { return console.log(err); }
+  console.log('Ta-da!');
+});
+```
+
+### Model.batchPut(items, options, callback)
+
+Puts multiple items in the table. Will overwrite existing items.
+
+```js
+Dog.batchPut([
+  {
+    ownerId: 2,
+    name: 'Princes',
+    breed: 'Jack Russell Terrier',
+    color: ['White', 'Brown'],
+    cartoon: true
+  },
+  {
+    ownerId: 3,
+    name: 'Toto',
+    breed: 'Terrier',
+    color: ['Brown'],
+    cartoon: false
+  },
+  {
+    ownerId: 4,
+    name: 'Odie',
+    breed: 'Beagle',
+    color: ['Tan'],
+    cartoon: true
+  },
+  {
+    ownerId: 5,
+    name: 'Lassie',
+    breed: 'Beagle',
+    color: ['Tan'],
+    cartoon: false
+  }], function (err, dogs) {
+    if (err) { return console.log(err); }
+    console.log('Ta-da!');
+  });
+```
+
+#### Options
+
+**overwrite**: boolean
+
+Overwrite existing item. Defaults to true.
+
+**condition**: string
+
+An expression for a conditional update. See
+[the AWS documentation](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html)
+for more information about condition expressions.
+
+**conditionNames**: object
+
+A map of name substitutions for the condition expression.
+
+**conditionValues**: object
+
+A map of values for the condition expression. Note that in order for
+automatic object conversion to work, the keys in this object must
+match schema attribute names.
+
+### Model.create(object, options, callback)
+
+Creates a new instance of the model and save the item in the table.
+
+```js
+Dog.create({
+  ownerId: 4,
+  name: 'Odie',
+  breed: 'Beagle',
+  color: ['Tan'],
+  cartoon: true
+}, function(err, odie) {
+  if(err) { return console.log(err); }
+  console.log('Odie is a ' + odie.breed);
+});
+```
+
+### Model.get(key, options, callback)
+
+Gets an item from the table.
+
+```js
+Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
+  if(err) { return console.log(err); }
+  console.log('Odie is a ' + odie.breed);
+});
+```
+
+
+### Model.populate(options)
 
 Populates paths from an item from the table.
 
@@ -53,142 +188,8 @@ Dog.get(3)
   });
 ```
 
----
-order: 3
----
 
-# Model
-
-## Create Model From Schema
-
-```js
-var Dog = dynamoose.model('Dog', dogSchema);
-```
-
-## new Model(object)
-
-Creates a new instance of the model. Object keys are assigned to the new model.
-
-```js
-var odie = new Dog({
-  ownerId: 4,
-  name: 'Odie',
-  breed: 'Beagle',
-  color: ['Tan'],
-  cartoon: true
-});
-```
-
-## model.put(options, callback) & model.save(options, callback)
-
-Puts the item in the DynamoDB table.  Will overwrite the item.
-
-```js
-odie.save(function (err) {
-  if(err) { return console.log(err); }
-  console.log('Ta-da!');
-});
-
-odie.save({
-    condition: '#o = :ownerId',
-    conditionNames: { o: 'ownerId' },
-    conditionValues: { ownerId: 4 }
-  }, function (err) {
-  if(err) { return console.log(err); }
-  console.log('Ta-da!');
-});
-```
-
-## Model.batchPut(items, options, callback)
-
-Puts multiple items in the table. Will overwrite existing items.
-
-```js
-Dog.batchPut([
-  {
-    ownerId: 2,
-    name: 'Princes',
-    breed: 'Jack Russell Terrier',
-    color: ['White', 'Brown'],
-    cartoon: true
-  },
-  {
-    ownerId: 3,
-    name: 'Toto',
-    breed: 'Terrier',
-    color: ['Brown'],
-    cartoon: false
-  },
-  {
-    ownerId: 4,
-    name: 'Odie',
-    breed: 'Beagle',
-    color: ['Tan'],
-    cartoon: true
-  },
-  {
-    ownerId: 5,
-    name: 'Lassie',
-    breed: 'Beagle',
-    color: ['Tan'],
-    cartoon: false
-  }], function (err, dogs) {
-    if (err) { return console.log(err); }
-    console.log('Ta-da!');
-  });
-```
-
-### Options
-
-**overwrite**: boolean
-
-Overwrite existing item. Defaults to true.
-
-**condition**: string
-
-An expression for a conditional update. See
-[the AWS documentation](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html)
-for more information about condition expressions.
-
-**conditionNames**: object
-
-A map of name substitutions for the condition expression.
-
-**conditionValues**: object
-
-A map of values for the condition expression. Note that in order for
-automatic object conversion to work, the keys in this object must
-match schema attribute names.
-
-## Model.create(object, options, callback)
-
-Creates a new instance of the model and save the item in the table.
-
-```js
-Dog.create({
-  ownerId: 4,
-  name: 'Odie',
-  breed: 'Beagle',
-  color: ['Tan'],
-  cartoon: true
-}, function(err, odie) {
-  if(err) { return console.log(err); }
-  console.log('Odie is a ' + odie.breed);
-});
-```
-
-## Model.get(key, options, callback)
-
-Gets an item from the table.
-
-```js
-Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
-  if(err) { return console.log(err); }
-  console.log('Odie is a ' + odie.breed);
-});
-```
-
-## Model.batchGet(keys, options, callback)
+### Model.batchGet(keys, options, callback)
 
 Gets multiple items from the table.
 
@@ -199,7 +200,7 @@ Dog.batchGet([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], functio
 });
 ```
 
-## Model.delete(key, options, callback)
+### Model.delete(key, options, callback)
 
 Deletes an item from the table.
 
@@ -210,7 +211,7 @@ Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
 });
 ```
 
-## model.delete(callback)
+### model.delete(callback)
 
 Deletes the item from the table.
 
@@ -221,7 +222,7 @@ odie.delete(function(err) {
 });
 ```
 
-## Model.batchDelete(keys, options, callback)
+### Model.batchDelete(keys, options, callback)
 
 Deletes multiple items from the table.
 
@@ -237,7 +238,7 @@ Dog.batchDelete([
 });
 ```
 
-## Model.update(key, update, options, callback)
+### Model.update(key, update, options, callback)
 
 Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
 
@@ -281,7 +282,7 @@ Dog.update({ownerId: 4, name: 'Odie'}, {$DELETE: {age: null}}, function (err) {
 })
 ```
 
-### Options
+#### Options
 
 **allowEmptyArray**: boolean
 

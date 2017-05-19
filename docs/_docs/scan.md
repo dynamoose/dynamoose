@@ -1,9 +1,9 @@
 ---
 order: 5
 ---
-# Scan
+## Scan
 
-## Model.scan(filter, options, callback)
+### Model.scan(filter, options, callback)
 
 Scans a table. The optional filter parameter can either be an attribute of the table or a complete filter object. If the callback is provided, the exec command is called automatically, and the scan parameter must be a Scan object.
 
@@ -32,11 +32,11 @@ Dog.scan().exec(function (err, dogs) {
 });
 ```
 
-## scan.exec(callback)
+### scan.exec(callback)
 
 Executes a scan against a table
 
-## scan.all([delay[, max]])
+### scan.all([delay[, max]])
 
 Recursively scan as long as lastKey exists. This function will also return a property called `timesScanned` indicating how many scans were completed.
 
@@ -44,75 +44,75 @@ Recursively scan as long as lastKey exists. This function will also return a pro
 
 `max` is the maximum number of recursive scans. Default: 0 - unlimited
 
-## scan.and()
+### scan.and()
 
 For readability only. Scans us AND logic for multiple attributes.  `and()` does not provide any functionality and can be omitted.
 
-## scan.where(filter) | scan.filter(filter)
+### scan.where(filter) | scan.filter(filter)
 
 Add additional attribute to the filter list.
 
-## scan.not()
+### scan.not()
 
 Inverts the filter logic that follows.
 
-## scan.null()
+### scan.null()
 
 Scan attribute for null.
 
-## scan.eq(value)
+### scan.eq(value)
 
 Attribute is equal to the value.
 
-## scan.lt(value)
+### scan.lt(value)
 
 Attribute is less than the value.
 
-## scan.le(value)
+### scan.le(value)
 
 Attribute is less than or equal value.
 
-## scan.ge(value)
+### scan.ge(value)
 
 Attribute is greater than or equal value.
 
-## scan.gt(value)
+### scan.gt(value)
 
 Attribute is greater than the value.
 
-## scan.contains(value)
+### scan.contains(value)
 
 Attribute contains the value.
 
-## scan.beginsWith(value)
+### scan.beginsWith(value)
 
 Attribute begins with the value.
 
-## scan.in(values)
+### scan.in(values)
 
 Attribute is in values array.
 
-## scan.between(a, b)
+### scan.between(a, b)
 
 Attribute value is greater than or equal `a`. and less than or equal to `b`.
 
-## scan.limit(limit)
+### scan.limit(limit)
 
 The maximum number of items to evaluate (not necessarily the number of matching items). If DynamoDB processes the number of items up to the limit while processing the results, it stops the operation and returns the matching values up to that point, and a key in `lastKey` to apply in a subsequent operation, so that you can pick up where you left off. Also, if the processed data set size exceeds 1 MB before DynamoDB reaches this limit, it stops the operation and returns the matching values up to the limit, and a key in `lastKey` to apply in a subsequent operation to continue the operation. For more information, see Query and Scan in the Amazon DynamoDB Developer Guide.
 
-## scan.startAt(key)
+### scan.startAt(key)
 
 Start scan at key. Use `lastKey` returned in `scan.exec()` callback.
 
-## scan.attributes(attributes)
+### scan.attributes(attributes)
 
 Set the list of attributes to return.
 
-## scan.count()
+### scan.count()
 
 Return the number of matching items, rather than the matching items themselves.
 
-## scan.counts()
+### scan.counts()
 
 Return the counts objects of matching items, rather than the matching items themselves:
 
@@ -126,6 +126,6 @@ Return the counts objects of matching items, rather than the matching items them
 If you used a filter in the scan, then `count` is the number of items returned after the filter was applied, and `scannedCount` is the number of matching items before the filter was applied.
 
 
-## scan.consistent()
+### scan.consistent()
 
 Scan with consistent read.

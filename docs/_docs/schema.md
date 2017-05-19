@@ -1,11 +1,11 @@
 ---
 order: 2
 ---
-# Schema
+## Schema
 
 Schemas are used to define DynamoDB table attributes and their constraints.
 
-## Creating a new Schema
+### Creating a new Schema
 
 Schemas are created using `new Schema(attrDefObj, options)`. 
 
@@ -53,7 +53,7 @@ var dogSchema = new Schema({
 });
 ```
 
-## Attribute Types
+### Attribute Types
 
 Attribute Types define the domain of a particular attribute. For example, a `name` might be set to `String` or `age` to `Number`. 
 
@@ -77,7 +77,7 @@ The following table describes valid Attribute Types, and their translation to Dy
 
 _**: Use the useNativeBooleans flag to store Boolean values as 'BOOL'_
 
-## Attribute Definitions
+### Attribute Definitions
 
 Attribute definitions define constraints on a particular attribute specified in a Schema. Attribute definitions may be an object type (see [Attribute Types](#attribute-types)) or an object with the following options:
 
@@ -155,7 +155,7 @@ Convert to lowercase when saving to DB.
 
 Convert to uppercase when saving to DB.
 
-## Options
+### Options
 
 **throughput**: number | {read: number, write: number}
 
