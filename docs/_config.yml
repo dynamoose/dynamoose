@@ -11,7 +11,7 @@ title                    : "Dynamoose"
 title_separator          : "-"
 description              : "Documentation for Dynamoose."
 url                      : "https://dynamoosejs.com"
-baseurl                  : "docs"
+baseurl                  : "/dynamoose"
 repository               : "automategreen/dynamoose"
 atom_feed:
   path                   : # blank (default) uses feed.xml
