@@ -143,6 +143,14 @@ Adds a setter function that will be used to transform the value before writing t
 
 Adds a getter function that will be used to transform the value returned from the DB.
 
+**toDynamo**: function
+
+Adds a setter function that will directly set the value to the DB. This skips all type management and parsing normally provided by `options.set`.
+
+**parseDynamo**: function
+
+Adds a getter function that will be used to transform the value directly returned from the DB. This skips all type management and parsing normally provided by `options.get`.
+
 **trim**: boolean
 
 Trim whitespace from string when saving to DB.
@@ -225,5 +233,43 @@ Specifies that attributes not defined in the _schema_ will be saved and retrieve
 ```js
 var schema = new Schema({...}, {
   saveUnknown: true 
+});
+```
+
+**attributeToDynamo**: function
+
+A function that accepts `name, json, model, defaultFormatter`.
+
+This will override attribute formatting for all attributes. Whatever is returned by the function will be sent directly to the DB.
+
+```js
+var schema = new Schema({...}, {
+  attributeToDynamo: function(name, json, model, defaultFormatter) {
+    switch(name) {
+        case 'specialAttribute':
+            return specialFormatter(json);
+        default:
+            return specialFormatter(json);
+    }
+  }
+});
+```
+
+**attributeFromDynamo**: function
+
+A function that accepts `name, json, fallback`.
+
+This will override attribute parsing for all attributes. Whatever is returned by the function will be passed directly to the model instance.
+
+```js
+var schema = new Schema({...}, {
+  attributeFromDynamo: function(name, json, defaultParser) {
+    switch(name) {
+        case 'specialAttribute':
+            return specialParser(json);
+        default:
+            return defaultParser(json);
+    }
+  }
 });
 ```
