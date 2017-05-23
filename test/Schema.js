@@ -592,6 +592,144 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Schema with custom parser', function (done) {
 
+    var schema = new Schema({
+      name: String,
+      owner: String
+    }, {
+      attributeFromDynamo: function(name, value, fallback) {
+        if (name === 'owner') {
+          return 'Cat Lover: ' + value.S;
+        }
+        return fallback(value);
+      }
+    });
+
+    var Cat = dynamoose.model('Cat', schema);
+    var tim = new Cat();
+
+    tim.name = 'tommy';
+    tim.owner = 'bill';
+
+    tim.save(function() {
+      Cat.scan().exec(function(err, models) {
+        if (err) {
+          throw err;
+        }
+        var timSaved = models.pop();
+        timSaved.owner.should.eql('Cat Lover: bill');
+
+        Cat.$__.table.delete(function () {
+          delete dynamoose.models.Cat;
+          done();
+        });
+      });
+    });
+  });
+
+  it('Schema with custom formatter', function (done) {
+
+    var schema = new Schema({
+      name: String,
+      owner: String
+    }, {
+      attributeToDynamo: function(name, value, model, fallback) {
+        if (name === 'owner') {
+          return {S: 'Cat Lover: ' + value};
+        }
+        return fallback(value);
+      }
+    });
+
+    var Cat = dynamoose.model('Cat', schema);
+    var tim = new Cat();
+
+    tim.name = 'tommy';
+    tim.owner = 'bill';
+
+    tim.save(function() {
+      Cat.scan().exec(function(err, models) {
+        if (err) {
+          throw err;
+        }
+        var timSaved = models.pop();
+        timSaved.owner.should.eql('Cat Lover: bill');
+
+        Cat.$__.table.delete(function () {
+          delete dynamoose.models.Cat;
+          done();
+        });
+      });
+    });
+  });
+
+  it('Attribute with custom parser', function (done) {
+
+    var schema = new Schema({
+      name: String,
+      owner: {
+        type: String,
+        fromDynamo: function(json) {
+          return 'Cat Lover: ' + json.S;
+        }
+      }
+    });
+
+    var Cat = dynamoose.model('Cat', schema);
+    var tim = new Cat();
+
+    tim.name = 'tommy';
+    tim.owner = 'bill';
+
+    tim.save(function() {
+      Cat.scan().exec(function(err, models) {
+        if (err) {
+          throw err;
+        }
+        var timSaved = models.pop();
+        timSaved.owner.should.eql('Cat Lover: bill');
+
+        Cat.$__.table.delete(function () {
+          delete dynamoose.models.Cat;
+          done();
+        });
+      });
+    });
+  });
+
+  it('Schema with custom formatter', function (done) {
+
+    var schema = new Schema({
+      name: String,
+      owner: {
+        type: String,
+        toDynamo: function(value) {
+          return {S: 'Cat Lover: ' + value};
+        }
+      }
+    });
+
+    var Cat = dynamoose.model('Cat', schema);
+    var tim = new Cat();
+
+    tim.name = 'tommy';
+    tim.owner = 'bill';
+
+    tim.save(function() {
+      Cat.scan().exec(function(err, models) {
+        if (err) {
+          throw err;
+        }
+        var timSaved = models.pop();
+        timSaved.owner.should.eql('Cat Lover: bill');
+
+        Cat.$__.table.delete(function () {
+          delete dynamoose.models.Cat;
+          done();
+        });
+      });
+    });
+  });
 
 });
