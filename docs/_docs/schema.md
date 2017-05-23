@@ -147,7 +147,7 @@ Adds a getter function that will be used to transform the value returned from th
 
 Adds a setter function that will directly set the value to the DB. This skips all type management and parsing normally provided by `options.set`.
 
-**parseDynamo**: function
+**fromDynamo**: function
 
 Adds a getter function that will be used to transform the value directly returned from the DB. This skips all type management and parsing normally provided by `options.get`.
 
