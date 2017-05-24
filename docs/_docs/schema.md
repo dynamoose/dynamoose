@@ -273,3 +273,54 @@ var schema = new Schema({...}, {
   }
 });
 ```
+
+### Methods
+
+You can add custom methods to your Schema
+
+#### Static Methods
+
+Can be accessed from the compiled Schema, similar to how `scan()` and `query()` are called.
+`this` will refer to the commpiled schema within the definition of the function.
+
+```js
+
+// Construction:
+var ModelSchema = new Schema({...})
+
+ModelSchema.statics.getAll = function(cb){
+  this.scan().exec(cb)
+}
+
+var Model = dynamoose.model('Model', ModelSchema)
+
+// Using:
+Model.getAll(function(err, models)=>{
+    models.forEach(function(model){
+      console.log(model)
+    })
+})
+```
+
+#### Instance Methods
+
+Can be accessed from a newly created model. `this` will refer to the instace of the model within 
+the definition of the function.
+
+```js
+
+// Construction:
+var ModelSchema = new Schema({
+  name:String
+})
+
+ModelSchema.methods.setName = function(name) {
+  this.name = name
+}
+
+var Model = dynamoose.model('Model', ModelSchema)
+
+// Using:
+var batman = new Model({name: "Bruce"})
+batman.setName("Bob")
+```
