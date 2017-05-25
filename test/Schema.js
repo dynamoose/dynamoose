@@ -607,25 +607,30 @@ describe('Schema tests', function (){
     });
 
     var Cat = dynamoose.model('Cat', schema);
-    var tim = new Cat();
 
-    tim.name = 'tommy';
-    tim.owner = 'bill';
+    // Travis seems to need just a bit of extra time to create
+    setTimeout(function () {
+      var tim = new Cat();
 
-    tim.save(function() {
-      Cat.scan().exec(function(err, models) {
-        if (err) {
-          throw err;
-        }
-        var timSaved = models.pop();
-        timSaved.owner.should.eql('Cat Lover: bill');
+      tim.name = 'tommy';
+      tim.owner = 'bill';
 
-        Cat.$__.table.delete(function () {
-          delete dynamoose.models.Cat;
-          done();
+      tim.save(function() {
+        Cat.scan().exec(function(err, models) {
+          if (err) {
+            throw err;
+          }
+          var timSaved = models.pop();
+          timSaved.owner.should.eql('Cat Lover: bill');
+
+          Cat.$__.table.delete(function () {
+            delete dynamoose.models.Cat;
+            done();
+          });
         });
       });
-    });
+    }, 50);
+
   });
 
   it('Schema with custom formatter', function (done) {
@@ -643,25 +648,29 @@ describe('Schema tests', function (){
     });
 
     var Cat = dynamoose.model('Cat', schema);
-    var tim = new Cat();
 
-    tim.name = 'tommy';
-    tim.owner = 'bill';
+    // Travis seems to need just a bit of extra time to create
+    setTimeout(function () {
+      var tim = new Cat();
 
-    tim.save(function() {
-      Cat.scan().exec(function(err, models) {
-        if (err) {
-          throw err;
-        }
-        var timSaved = models.pop();
-        timSaved.owner.should.eql('Cat Lover: bill');
+      tim.name = 'tommy';
+      tim.owner = 'bill';
 
-        Cat.$__.table.delete(function () {
-          delete dynamoose.models.Cat;
-          done();
+      tim.save(function() {
+        Cat.scan().exec(function(err, models) {
+          if (err) {
+            throw err;
+          }
+          var timSaved = models.pop();
+          timSaved.owner.should.eql('Cat Lover: bill');
+
+          Cat.$__.table.delete(function () {
+            delete dynamoose.models.Cat;
+            done();
+          });
         });
       });
-    });
+    }, 50);
   });
 
   it('Attribute with custom parser', function (done) {
