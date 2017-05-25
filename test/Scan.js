@@ -681,7 +681,7 @@ describe('Scan', function (){
       }
     };
 
-    Dog.scan(filter, { useAwsRawFilter: true }).exec(function (err, dogs) {
+    Dog.scan(filter, { useRawAwsFilter: true }).exec(function (err, dogs) {
       dogs.length.should.eql(1);
       done();
     });
