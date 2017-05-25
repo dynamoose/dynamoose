@@ -52,6 +52,9 @@ describe('Scan', function (){
       },
       cartoon: {
         type: Boolean
+      },
+      details: {
+        type: Object
       }
     });
 
@@ -91,7 +94,9 @@ describe('Scan', function (){
       {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: ['Yellow']},
       {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
       {ownerId:18, name: 'Lassie', breed: 'Collie', color: ['tan', 'white']},
-      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true}]);
+      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true},
+      {ownerId:20, name: 'Hamhoo', breed: 'unknown', color: ['white'], cartoon: true, details: { timeWakeUp: '6am', timeSleep: '8pm' }},
+      {ownerId:21, name: 'Tamtoo', breed: 'unknown', color: ['white', 'red'], cartoon: true, details: { timeWakeUp: '8am', timeSleep: '8pm' }}]);
 
   });
 
@@ -667,7 +672,22 @@ describe('Scan', function (){
     });
   });
 
+  it('Scan using raw AWS filter', function (done) {
+    var Dog = dynamoose.model('Dog');
+    var filter = {
+      TableName: 'Dog',
+      FilterExpression: 'details.timeWakeUp = :timeWakeUp and cartoon = :cartoon',
+      ExpressionAttributeValues: {
+        ':timeWakeUp': '8am',
+        ':cartoon': true
+      }
+    };
 
+    Dog.scan(filter, { useAwsRawFilter: true }).exec(function (err, dogs) {
+      dogs.length.should.eql(1);
+      done();
+    });
+  });
 
 
 });
