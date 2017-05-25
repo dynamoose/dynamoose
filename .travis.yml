@@ -4,6 +4,6 @@ node_js:
   - "5"
   - "4"
   - "0.12"
-env: DEBUG=dynamoose*
+# env: DEBUG=dynamoose*
 before_script:
   - npm install -g grunt-cli
