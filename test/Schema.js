@@ -339,7 +339,7 @@ describe('Schema tests', function (){
      isAwesome: Boolean
     }, {useNativeBooleans: true});
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var fluffy = new Cat();
 
     fluffy.name = 'Fluff Johnson';
@@ -531,7 +531,7 @@ describe('Schema tests', function (){
       return name + '\'s kitten';
     });
 
-    var Cat = dynamoose.model('Cat',staticSchema);
+    var Cat = dynamoose.model('Cat' + Date.now(),staticSchema);
     var kitten = Cat.findKittenName('sue');
     kitten.should.eql('sue\'s kitten');
 
@@ -573,7 +573,7 @@ describe('Schema tests', function (){
       this._mergedname = v;
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';
@@ -606,31 +606,26 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
+    var tim = new Cat();
 
-    // Travis seems to need just a bit of extra time to create
-    setTimeout(function () {
-      var tim = new Cat();
+    tim.name = 'tommy';
+    tim.owner = 'bill';
 
-      tim.name = 'tommy';
-      tim.owner = 'bill';
+    tim.save(function() {
+      Cat.scan().exec(function(err, models) {
+        if (err) {
+          throw err;
+        }
+        var timSaved = models.pop();
+        timSaved.owner.should.eql('Cat Lover: bill');
 
-      tim.save(function() {
-        Cat.scan().exec(function(err, models) {
-          if (err) {
-            throw err;
-          }
-          var timSaved = models.pop();
-          timSaved.owner.should.eql('Cat Lover: bill');
-
-          Cat.$__.table.delete(function () {
-            delete dynamoose.models.Cat;
-            done();
-          });
+        Cat.$__.table.delete(function () {
+          delete dynamoose.models.Cat;
+          done();
         });
       });
-    }, 50);
-
+    });
   });
 
   it('Schema with custom formatter', function (done) {
@@ -647,30 +642,26 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
+    var tim = new Cat();
 
-    // Travis seems to need just a bit of extra time to create
-    setTimeout(function () {
-      var tim = new Cat();
+    tim.name = 'tommy';
+    tim.owner = 'bill';
 
-      tim.name = 'tommy';
-      tim.owner = 'bill';
+    tim.save(function() {
+      Cat.scan().exec(function(err, models) {
+        if (err) {
+          throw err;
+        }
+        var timSaved = models.pop();
+        timSaved.owner.should.eql('Cat Lover: bill');
 
-      tim.save(function() {
-        Cat.scan().exec(function(err, models) {
-          if (err) {
-            throw err;
-          }
-          var timSaved = models.pop();
-          timSaved.owner.should.eql('Cat Lover: bill');
-
-          Cat.$__.table.delete(function () {
-            delete dynamoose.models.Cat;
-            done();
-          });
+        Cat.$__.table.delete(function () {
+          delete dynamoose.models.Cat;
+          done();
         });
       });
-    }, 50);
+    });
   });
 
   it('Attribute with custom parser', function (done) {
@@ -685,7 +676,7 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';
@@ -719,7 +710,7 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';
