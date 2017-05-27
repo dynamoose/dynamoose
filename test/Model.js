@@ -12,7 +12,10 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, CatWithOwner, Owner;
+var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, CatWithOwner, Owner, ExpiringCat;
+
+var ONE_YEAR = 365*24*60*60; // 1 years in seconds
+var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
 
 describe('Model', function (){
   this.timeout(15000);
@@ -172,6 +175,15 @@ describe('Model', function (){
           rangeKey: true
         },
         phoneNumber: String
+      }
+    );
+
+    ExpiringCat = dynamoose.model('ExpiringCat',
+      {
+        name: String
+      },
+      {
+        expires: NINE_YEARS
       }
     );
     done();
@@ -875,6 +887,75 @@ describe('Model', function (){
         });
       });
     });
+
+    it('Set expires attribute on save', function (done) {
+      ExpiringCat.create({name: 'Fluffy'})
+      .then(function (fluffy) {
+        var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+        var min = max - 1;
+        should.exist(fluffy);
+        should.exist(fluffy.expires);
+        should.exist(fluffy.expires.getTime);
+
+        var expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    it('Does not set expires attribute on save if exists', function (done) {
+      ExpiringCat.create({
+        name: 'Tigger',
+        expires: new Date(Date.now() + (ONE_YEAR*1000))
+      })
+      .then(function (tigger) {
+        var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+        var min = max - 1;
+        should.exist(tigger);
+        should.exist(tigger.expires);
+        should.exist(tigger.expires.getTime);
+
+        var expiresInSec = Math.floor(tigger.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    it('Update expires attribute on save', function (done) {
+      ExpiringCat.create({
+        name: 'Leo'
+      })
+      .then(function (leo) {
+        var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+        var min = max - 1;
+        var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+
+        leo.expires = new Date(Date.now() + (ONE_YEAR* 1000));
+        return leo.save();
+      })
+      .then(function (leo) {
+        var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+        var min = max - 1;
+        var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    // it('Add expires attribute on update if missing', function (done) {
+    //
+    // });
+    //
+    // it('Does not add expires attribute on update if exists', function (done) {
+    //
+    // });
 
     it('Default puts attribute', function (done) {
       Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {

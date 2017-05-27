@@ -166,6 +166,48 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Schema with ttl default options', function (done) {
+    var schema = new Schema(
+      {
+        id: Number,
+        name: String
+      },
+      {
+        expires: 30*24*60*60 // 30 days in seconds
+      }
+    );
+
+    should.exist(schema.expires);
+    should.exist(schema.expires.ttl);
+    schema.expires.ttl.should.be.equal(30*24*60*60);
+    should.exist(schema.expires.attribute);
+    schema.expires.attribute.should.be.equal('expires');
+    done();
+  });
+
+  it('Schema with ttl options', function (done) {
+    var schema = new Schema(
+      {
+        id: Number,
+        name: String
+      },
+      {
+        expires: {
+          ttl: 30*24*60*60, // 30 days in seconds
+          attribute: 'ttl'
+        }
+      }
+    );
+
+    should.exist(schema.expires);
+    should.exist(schema.expires.ttl);
+    schema.expires.ttl.should.be.equal(30*24*60*60);
+    should.exist(schema.expires.attribute);
+    schema.expires.attribute.should.be.equal('ttl');
+    done();
+  });
+
+
   it('Schema with timestamps options', function (done) {
     var schema1 = new Schema({
       id: {
