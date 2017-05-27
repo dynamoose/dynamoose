@@ -46,10 +46,11 @@
     "travis-cov": "*"
   },
   "dependencies": {
+    "aws-sdk": "^2.58.0",
     "debug": "*",
-    "q": "~1.0.1",
     "hooks": "0.3.2",
-    "underscore": "^1.8.3",
-    "lodash": "*"
+    "lodash": "*",
+    "q": "~1.0.1",
+    "underscore": "^1.8.3"
   }
 }
