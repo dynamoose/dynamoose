@@ -169,17 +169,17 @@ Dog.get(3)
       }
     });
   })
-  then(function(dog) {
+  .then(function(dog) {
     console.log(dog);
     /*
-    { 
-      id: 3, 
+    {
+      id: 3,
       name: 'Fox',
       parent: {
-        id: 2, 
-        name: 'Rex', 
+        id: 2,
+        name: 'Rex',
         parent: {
-          id: 1, 
+          id: 1,
           name: 'Odie'
         }
       }
@@ -187,6 +187,68 @@ Dog.get(3)
     */
   });
 ```
+#### Populate with range and hash key
+
+If the object to populate has both a range and hash key, you must store both in the attribute.
+
+```js
+const CatWithOwner = dynamoose.model('CatWithOwner',
+  {
+    id: {
+      type:  Number
+    },
+    name: {
+      type: String
+    },
+    owner: {
+      name: String,
+      address: String
+    }
+  }
+);
+
+const Owner = dynamoose.model('Owner',
+  {
+    name: {
+      type: String,
+      hashKey: true
+    },
+    address: {
+      type: String,
+      rangeKey: true
+    },
+    phoneNumber: String
+  }
+);
+
+var owner = new Owner({
+  name: 'Owner',
+  address: '123 A Street',
+  phoneNumber: '2345551212'
+});
+
+var kittenWithOwner = new CatWithOwner({
+  id: 100,
+  name: 'Owned',
+  owner: {
+    name: owner.name,
+    address: owner.address
+  }
+});
+
+CatWithOwner.get(100)
+.then(function(cat) {
+  should.not.exist(cat.owner.phoneNumber);
+  return cat.populate({
+    path: 'owner',
+    model: 'Owner'
+  });
+})
+.then(function(catWithOwnerPopulated) {
+  ...
+});
+```
+
 
 
 ### Model.batchGet(keys, options, callback)

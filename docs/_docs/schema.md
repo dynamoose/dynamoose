@@ -7,7 +7,7 @@ Schemas are used to define DynamoDB table attributes and their constraints.
 
 ### Creating a new Schema
 
-Schemas are created using `new Schema(attrDefObj, options)`. 
+Schemas are created using `new Schema(attrDefObj, options)`.
 
 The first argument (`attrDefObj`) is an object containing attribute definitions. Keys of this object correspond to attributes in the resulting DynamoDB table. The values of these keys define constraints on those attributes (as well as a few handy features...). See [Attribute Definitions](#attribute-definitions) for a more thorough description.
 
@@ -55,7 +55,7 @@ var dogSchema = new Schema({
 
 ### Attribute Types
 
-Attribute Types define the domain of a particular attribute. For example, a `name` might be set to `String` or `age` to `Number`. 
+Attribute Types define the domain of a particular attribute. For example, a `name` might be set to `String` or `age` to `Number`.
 
 The following table describes valid Attribute Types, and their translation to DynamoDB types:
 
@@ -102,7 +102,7 @@ Sets the attribute as a 'required' attribute. Required attributes must not be sa
 
 Defines the attribute as a local or global secondary index. Index can either be true, an index definition object or and array of index definition objects. The array is used define multiple indexes for a single attribute. The index definition object can contain the following keys:
 
-- _name: 'string'_ - Name of index (Default is `attribute.name + (global ? 'GlobalIndex' : 'LocalIndex')``).
+- _name: 'string'_ - Name of index (Default is `attribute.name + (global ? 'GlobalIndex' : 'LocalIndex')`).
 - _global: boolean_ - Set the index to be a global secondary index.  Attribute will be the hash key for the Index.
 - _rangeKey: 'string'_ - The range key for a global secondary index.
 - _project: boolean &#124; ['string', ...]_ - Sets the attributes to be projected for the index.  `true` projects all attributes, `false` projects only the key attributes, and ['string', ...] projects the attributes listed. Default is `true`.
@@ -174,10 +174,10 @@ var schema = new Schema({...}, {
   throughput: 5
 });
 var schema = new Schema({...}, {
-  throughput: { 
-    read: 5, 
-    write: 2 
-  } 
+  throughput: {
+    read: 5,
+    write: 2
+  }
 });
 ```
 
@@ -189,7 +189,7 @@ Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `false` (i.e s
 
 ```js
 var schema = new Schema({...}, {
-  useNativeBooleans: true 
+  useNativeBooleans: true
 });
 ```
 
@@ -199,7 +199,7 @@ Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defau
 
 ```js
 var schema = new Schema({...}, {
-  useDocumentTypes: true 
+  useDocumentTypes: true
 });
 ```
 
@@ -214,14 +214,37 @@ var schema = new Schema({...}, {
 });
 ```
 
-Also it is possible to specify wich names that field will use, like in the following example:
+You can specify the names that the fields will use, like in the following example:
 
 ```js
 var schema = new Schema({...}, {
-  throughput: 5, 
+  throughput: 5,
   timestamps: {
-    createdAt: 'creationDate', 
+    createdAt: 'creationDate',
     updatedAt: 'lastUpdateDate'
+  }
+});
+```
+
+**expires**: number &#124; {ttl: number, attribute: string}
+
+Defines that _schema_ must contain and expires attribute.  This field is configured in DynamoDB as the TTL attribute.  If set to a `number`, an attribute named "expires" will be added to the schema.  The default value of the attribute will be the current time plus the expires value.  The expires value is in seconds.
+
+The attribute will be a standard javascript `Date` in the object, and will be stored as number ('N') in the DyanmoDB table. The stored number is in seconds.  [More information about DynamoDB TTL](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html)
+
+```js
+var schema = new Schema({...}, {
+  expires: 7*24*60*60 // 1 week in seconds
+});
+```
+
+You can specify the attribute name by passing an object:
+
+```js
+var schema = new Schema({...}, {
+  expires: {
+    ttl: 7*24*60*60, // 1 week in seconds
+    attribute: 'ttl' // ttl will be used as the attribute name
   }
 });
 ```
@@ -232,7 +255,7 @@ Specifies that attributes not defined in the _schema_ will be saved and retrieve
 
 ```js
 var schema = new Schema({...}, {
-  saveUnknown: true 
+  saveUnknown: true
 });
 ```
 
@@ -304,7 +327,7 @@ Model.getAll(function(err, models)=>{
 
 #### Instance Methods
 
-Can be accessed from a newly created model. `this` will refer to the instace of the model within 
+Can be accessed from a newly created model. `this` will refer to the instace of the model within
 the definition of the function.
 
 ```js

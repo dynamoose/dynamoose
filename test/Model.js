@@ -12,7 +12,10 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7;
+var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, CatWithOwner, Owner, ExpiringCat;
+
+var ONE_YEAR = 365*24*60*60; // 1 years in seconds
+var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
 
 describe('Model', function (){
   this.timeout(15000);
@@ -77,7 +80,7 @@ describe('Model', function (){
         default: 'Mittens'
       },
       owner: String,
-      age: { 
+      age: {
         type: Number,
         required: true
       }
@@ -143,6 +146,44 @@ describe('Model', function (){
           type: String
         },
         parent: Number
+      }
+    );
+
+    CatWithOwner = dynamoose.model('CatWithOwner',
+      {
+        id: {
+          type:  Number
+        },
+        name: {
+          type: String
+        },
+        owner: {
+          name: String,
+          address: String
+        }
+      }
+    );
+
+    Owner = dynamoose.model('Owner',
+      {
+        name: {
+          type: String,
+          hashKey: true
+        },
+        address: {
+          type: String,
+          rangeKey: true
+        },
+        phoneNumber: String
+      }
+    );
+
+    ExpiringCat = dynamoose.model('ExpiringCat',
+      {
+        name: String
+      },
+      {
+        expires: NINE_YEARS
       }
     );
     done();
@@ -847,6 +888,75 @@ describe('Model', function (){
       });
     });
 
+    it('Set expires attribute on save', function (done) {
+      ExpiringCat.create({name: 'Fluffy'})
+      .then(function (fluffy) {
+        var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+        var min = max - 1;
+        should.exist(fluffy);
+        should.exist(fluffy.expires);
+        should.exist(fluffy.expires.getTime);
+
+        var expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    it('Does not set expires attribute on save if exists', function (done) {
+      ExpiringCat.create({
+        name: 'Tigger',
+        expires: new Date(Date.now() + (ONE_YEAR*1000))
+      })
+      .then(function (tigger) {
+        var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+        var min = max - 1;
+        should.exist(tigger);
+        should.exist(tigger.expires);
+        should.exist(tigger.expires.getTime);
+
+        var expiresInSec = Math.floor(tigger.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    it('Update expires attribute on save', function (done) {
+      ExpiringCat.create({
+        name: 'Leo'
+      })
+      .then(function (leo) {
+        var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+        var min = max - 1;
+        var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+
+        leo.expires = new Date(Date.now() + (ONE_YEAR* 1000));
+        return leo.save();
+      })
+      .then(function (leo) {
+        var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+        var min = max - 1;
+        var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    // it('Add expires attribute on update if missing', function (done) {
+    //
+    // });
+    //
+    // it('Does not add expires attribute on update if exists', function (done) {
+    //
+    // });
+
     it('Default puts attribute', function (done) {
       Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {
         should.not.exist(err);
@@ -954,6 +1064,12 @@ describe('Model', function (){
   describe('Model.populate', function (){
     before(function (done) {
       var kittenWithParents = new Cat6({id: 1, name: 'One'});
+      var owner = new Owner({name: 'Owner', address: '123 A Street', phoneNumber: '2345551212'});
+      var kittenWithOwner = new CatWithOwner({
+        id: 100,
+        name: 'Owned',
+        owner: {name: owner.name, address: owner.address}
+      });
       kittenWithParents.save()
         .then(function(kitten) {
           var kittenWithParents = new Cat6({id: 2, name: 'Two', parent: kitten.id});
@@ -977,7 +1093,13 @@ describe('Model', function (){
         })
         .then(function(kitten) {
           var kittenWithParents = new Cat7({id: 2, name: 'Two', parent: kitten.id});
-          return kittenWithParents.save(done);
+          return kittenWithParents.save();
+        })
+        .then(function() {
+          return owner.save();
+        })
+        .then(function() {
+          kittenWithOwner.save(done);
         });
     });
 
@@ -1008,7 +1130,7 @@ describe('Model', function (){
               model: 'Cat6',
               populate: {
                 path: 'parent',
-                model: 'Cat6'  
+                model: 'Cat6'
               }
             }
           });
@@ -1024,6 +1146,24 @@ describe('Model', function (){
           parent = parent.parent;
           parent.id.should.eql(1);
           parent.name.should.eql('One');
+          done();
+        });
+    });
+
+
+    it('Should populate with range & hash key', function (done) {
+      CatWithOwner.get(100)
+        .then(function(cat) {
+          should.not.exist(cat.owner.phoneNumber);
+          return cat.populate({
+            path: 'owner',
+            model: 'test-Owner'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.owner);
+          cat.owner.name.should.eql('Owner');
+          cat.owner.phoneNumber.should.eql('2345551212');
           done();
         });
     });
@@ -1127,7 +1267,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat({id: 10+i, name: 'Tom_'+i}));
       }
-      
+
       Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1199,7 +1339,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 10+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.exist(err);
         should.not.exist(result);
@@ -1213,7 +1353,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat({id: 20+i, name: 'Tom_'+i}));
       }
-      
+
       Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1231,7 +1371,7 @@ describe('Model', function (){
           for (var i=0 ; i<10 ; ++i) {
             delete cats[i].name;
           }
-          
+
           Cat.batchGet(cats, function (err3, result3) {
             should.not.exist(err3);
             should.exist(result3);
@@ -1248,7 +1388,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1279,7 +1419,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1304,7 +1444,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat({id: 30+i, name: 'Tom_'+i}));
       }
-      
+
       Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1330,7 +1470,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1356,7 +1496,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);

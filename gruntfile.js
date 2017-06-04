@@ -61,15 +61,26 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
 
   grunt.registerTask('dynamo:start', function() {
+    var getPID = 'ps aux | grep "DynamoDBLocal.jar -port ' +
+                 DYNAMO_DB_PORT  +
+                 '" | grep -v grep | awk \'{print $2}\'';
     var done = this.async();
-    DynamoDbLocal
-        .launch(DYNAMO_DB_PORT)
-        .then(function() { done(); })
-        .catch(function(e) { done(e); });
-  });
+    require('child_process').exec(getPID, function (err, pid) {
+      if(err) {
+        return done(err);
+      }
+      if(pid) {
+        console.log('Killing DynamoDBLocal process');
+        process.kill(pid);
+      } else {
+        console.log('No DynamoDBLocal process running');
+      }
 
-  grunt.registerTask('dynamo:stop', function() {
-      DynamoDbLocal.stop(DYNAMO_DB_PORT);
+      DynamoDbLocal
+      .launch(DYNAMO_DB_PORT)
+      .then(function() { done(); })
+      .catch(function(e) { done(e); });
+    });
   });
 
   // Register the default tasks
