@@ -166,6 +166,48 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Schema with ttl default options', function (done) {
+    var schema = new Schema(
+      {
+        id: Number,
+        name: String
+      },
+      {
+        expires: 30*24*60*60 // 30 days in seconds
+      }
+    );
+
+    should.exist(schema.expires);
+    should.exist(schema.expires.ttl);
+    schema.expires.ttl.should.be.equal(30*24*60*60);
+    should.exist(schema.expires.attribute);
+    schema.expires.attribute.should.be.equal('expires');
+    done();
+  });
+
+  it('Schema with ttl options', function (done) {
+    var schema = new Schema(
+      {
+        id: Number,
+        name: String
+      },
+      {
+        expires: {
+          ttl: 30*24*60*60, // 30 days in seconds
+          attribute: 'ttl'
+        }
+      }
+    );
+
+    should.exist(schema.expires);
+    should.exist(schema.expires.ttl);
+    schema.expires.ttl.should.be.equal(30*24*60*60);
+    should.exist(schema.expires.attribute);
+    schema.expires.attribute.should.be.equal('ttl');
+    done();
+  });
+
+
   it('Schema with timestamps options', function (done) {
     var schema1 = new Schema({
       id: {
@@ -339,7 +381,7 @@ describe('Schema tests', function (){
      isAwesome: Boolean
     }, {useNativeBooleans: true});
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var fluffy = new Cat();
 
     fluffy.name = 'Fluff Johnson';
@@ -531,7 +573,7 @@ describe('Schema tests', function (){
       return name + '\'s kitten';
     });
 
-    var Cat = dynamoose.model('Cat',staticSchema);
+    var Cat = dynamoose.model('Cat' + Date.now(),staticSchema);
     var kitten = Cat.findKittenName('sue');
     kitten.should.eql('sue\'s kitten');
 
@@ -573,7 +615,7 @@ describe('Schema tests', function (){
       this._mergedname = v;
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';
@@ -606,7 +648,7 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';
@@ -642,7 +684,7 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';
@@ -676,7 +718,7 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';
@@ -710,7 +752,7 @@ describe('Schema tests', function (){
       }
     });
 
-    var Cat = dynamoose.model('Cat', schema);
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var tim = new Cat();
 
     tim.name = 'tommy';

@@ -44,6 +44,16 @@ Recursively scan as long as lastKey exists. This function will also return a pro
 
 `max` is the maximum number of recursive scans. Default: 0 - unlimited
 
+### scan.parallel(totalSegments)
+
+Preforms a parallel scan on the table.
+
+`totalSegments` is the number of parallel scans
+
+The results will be merged into a single array.  `.lastKey` will be an array of `lastKey` objects.
+
+**Warning**  this can consume a lot of capacity.
+
 ### scan.and()
 
 For readability only. Scans us AND logic for multiple attributes.  `and()` does not provide any functionality and can be omitted.
@@ -114,7 +124,7 @@ Return the number of matching items, rather than the matching items themselves.
 
 ### scan.counts()
 
-Return the counts objects of matching items, rather than the matching items themselves:
+Return the counts object of matching items, rather than the matching items themselves:
 
 ```js
 {
