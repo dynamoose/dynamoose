@@ -54,9 +54,14 @@ describe('Scan', function (){
         type: Boolean
       },
       details: {
-        type: Object
+        timeWakeUp: {
+          type: String
+        },
+        timeSleep: {
+          type: String
+        }
       }
-    });
+    }, { useDocumentTypes: true });
 
 
     function addDogs (dogs) {
@@ -673,18 +678,23 @@ describe('Scan', function (){
   it('Scan using raw AWS filter', function (done) {
     var Dog = dynamoose.model('Dog');
     var filter = {
-      TableName: 'Dog',
-      FilterExpression: 'details.timeWakeUp = :timeWakeUp and cartoon = :cartoon',
+      FilterExpression: 'details.timeWakeUp = :wakeUp',
       ExpressionAttributeValues: {
-        ':timeWakeUp': '8am',
-        ':cartoon': true
+        ':wakeUp': '8am'
       }
     };
 
-    Dog.scan(filter, { useRawAwsFilter: true }).exec(function (err, dogs) {
-      dogs.length.should.eql(1);
-      done();
-    });
+    Dog.scan(filter, { useRawAwsFilter: true }).exec()
+      .then(function(dogs) {
+        dogs.length.should.eql(1);
+        console.log(dogs);
+        done();
+      })
+      .catch(function(err) {
+        should.not.exist(err);
+        console.error(err);
+        done();
+      });
   });
 
 
