@@ -169,7 +169,7 @@ Dog.get(3)
       }
     });
   })
-  then(function(dog) {
+  .then(function(dog) {
     console.log(dog);
     /*
     {
