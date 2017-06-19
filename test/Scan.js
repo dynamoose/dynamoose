@@ -16,7 +16,7 @@ var should = require('should');
 
 
 describe('Scan', function (){
-  this.timeout(5000);
+  this.timeout(10000);
 
   before(function (done) {
 
@@ -637,6 +637,81 @@ describe('Scan', function (){
       done();
     });
   });
+
+  it('Scan.consistent', function (done) {
+    var Dog = dynamoose.model('Dog');
+    Dog.scan('ownerId').eq(2).consistent().exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(2);
+      done();
+    });
+  });
+
+  it('Scan.all', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().all().limit(5).exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(20);
+      done();
+    });
+  });
+
+  it('Scan.all(1,2)', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().all(1,2).limit(5).exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(10);
+      done();
+    });
+  });
+
+  it('Scan parallel', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().parallel(2).exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(20);
+      done();
+    });
+  });
+
+
+  it('Scan with startAt array - implied parallel', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().parallel(2).limit(2).exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(4);
+      dogs.lastKey.length.should.eql(2);
+      dogs.count.should.eql(4);
+      dogs.scannedCount.should.eql(4);
+      dogs.timesScanned.should.eql(2);
+      return Dog.scan().startAt(dogs.lastKey).exec();
+    })
+    .then(function (more) {
+      more.length.should.eql(16);
+      more.count.should.eql(16);
+      more.scannedCount.should.eql(16);
+      more.timesScanned.should.eql(2);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Scan parallel all', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan().parallel(2).limit(2).all().exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(20);
+      should.not.exist(dogs.lastKey);
+      done();
+    })
+    .catch(done);
+  });
+
 
 
 

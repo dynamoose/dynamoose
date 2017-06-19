@@ -36,19 +36,21 @@
   "author": "Brandon Goode <brandon@automategreen.com>",
   "license": "MIT",
   "devDependencies": {
-    "mocha": "*",
-    "should": "*",
+    "blanket": "1.1.5",
+    "dynamodb-local": "0.0.18",
     "grunt": "*",
     "grunt-contrib-jshint": "*",
     "grunt-mocha-test": "*",
-    "blanket": "1.1.5",
+    "mocha": "*",
+    "should": "*",
     "travis-cov": "*"
   },
   "dependencies": {
+    "aws-sdk": "^2.58.0",
     "debug": "*",
-    "aws-sdk": "^2.1.0",
-    "q": "~1.0.1",
     "hooks": "0.3.2",
+    "lodash": "*",
+    "q": "~1.0.1",
     "underscore": "^1.8.3"
   }
 }
