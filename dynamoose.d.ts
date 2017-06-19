@@ -79,7 +79,7 @@ declare module "dynamoose" {
   interface IndexDefinition {
     name?: string;
     global?: boolean;
-    rangeKey: string;
+    rangeKey?: string;
     project?: boolean | string[];
     throughput?: number | { read: number, write: number };
   }
