@@ -79,7 +79,7 @@ declare module "dynamoose" {
   interface IndexDefinition {
     name?: string;
     global?: boolean;
-    rangeKey: string;
+    rangeKey?: string;
     project?: boolean | string[];
     throughput?: number | { read: number, write: number };
   }
@@ -116,7 +116,7 @@ declare module "dynamoose" {
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
 
     // @todo missing populate support (e.g. populated path)
-    populate<T>(path: string | { path: string, model: string }): Promise<Model & T>
+    populate<T>(path: string | { path: string, model: string }): Promise<Model<ModelData> & T>
   }
 
   export interface PutOptions {
