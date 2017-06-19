@@ -10,3 +10,8 @@ lib-cov/
 
 # Ignore webstorm directories
 .idea/
+
+
+.bundle/
+docs/_site
+Gemfile.lock

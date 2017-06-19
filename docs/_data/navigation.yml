@@ -1,0 +1,6 @@
+# main links
+main:
+  - title: "Quick-Start"
+    url: /
+  - title: "API"
+    url: /api

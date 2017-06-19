@@ -12,10 +12,13 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4;
+var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, CatWithOwner, Owner, ExpiringCat;
+
+var ONE_YEAR = 365*24*60*60; // 1 years in seconds
+var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
 
 describe('Model', function (){
-  this.timeout(5000);
+  this.timeout(15000);
 
 
   before(function(done) {
@@ -77,7 +80,7 @@ describe('Model', function (){
         default: 'Mittens'
       },
       owner: String,
-      age: { 
+      age: {
         type: Number,
         required: true
       }
@@ -102,6 +105,87 @@ describe('Model', function (){
       }
     });
 
+    // Create a model with unnamed attributes
+    Cat5 = dynamoose.model('Cat5',
+      {
+        id: {
+          type:  Number,
+          validate: function (v) { return v > 0; },
+          default: 888
+        },
+        name: {
+          type: String,
+          required: true,
+          default: 'Mittens'
+        },
+        owner: String,
+      },
+      {
+        saveUnknown: true
+      });
+
+    Cat6 = dynamoose.model('Cat6',
+      {
+        id: {
+          type:  Number
+        },
+        name: {
+          type: String
+        },
+        parent: Number
+      }
+    );
+
+    Cat7 = dynamoose.model('Cat7',
+      {
+        id: {
+          type:  Number,
+          hashKey: true
+        },
+        name: {
+          type: String
+        },
+        parent: Number
+      }
+    );
+
+    CatWithOwner = dynamoose.model('CatWithOwner',
+      {
+        id: {
+          type:  Number
+        },
+        name: {
+          type: String
+        },
+        owner: {
+          name: String,
+          address: String
+        }
+      }
+    );
+
+    Owner = dynamoose.model('Owner',
+      {
+        name: {
+          type: String,
+          hashKey: true
+        },
+        address: {
+          type: String,
+          rangeKey: true
+        },
+        phoneNumber: String
+      }
+    );
+
+    ExpiringCat = dynamoose.model('ExpiringCat',
+      {
+        name: String
+      },
+      {
+        expires: NINE_YEARS
+      }
+    );
     done();
   });
 
@@ -206,6 +290,80 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.ownerId); // should be same object
     schema.rangeKey.should.equal(schema.attributes.name);
 
+  });
+
+  it('Create simple model with unnamed attributes', function (done) {
+
+
+    this.timeout(12000);
+
+
+    Cat5.should.have.property('$__');
+
+    Cat5.$__.name.should.eql('test-Cat5');
+    Cat5.$__.options.should.have.property('saveUnknown', true);
+
+    var schema = Cat5.$__.schema;
+
+    should.exist(schema);
+
+    schema.attributes.id.type.name.should.eql('number');
+    should(schema.attributes.id.isSet).not.be.ok;
+    should.exist(schema.attributes.id.default);
+    should.exist(schema.attributes.id.validator);
+    should(schema.attributes.id.required).not.be.ok;
+
+    schema.attributes.name.type.name.should.eql('string');
+    schema.attributes.name.isSet.should.not.be.ok;
+    should.exist(schema.attributes.name.default);
+    should.not.exist(schema.attributes.name.validator);
+    should(schema.attributes.name.required).be.ok;
+
+    schema.hashKey.should.equal(schema.attributes.id); // should be same object
+    should.not.exist(schema.rangeKey);
+
+    var kitten = new Cat5(
+      {
+        id: 2,
+        name: 'Fluffy',
+        owner: 'Someone',
+        unnamedInt: 1,
+        unnamedString: 'unnamed',
+      }
+    );
+
+    kitten.id.should.eql(2);
+    kitten.name.should.eql('Fluffy');
+
+    var dynamoObj = schema.toDynamo(kitten);
+
+    dynamoObj.should.eql(
+      {
+        id: { N: '2' },
+        name: { S: 'Fluffy' },
+        owner: { S: 'Someone' },
+        unnamedInt: { N: '1' },
+        unnamedString: { S: 'unnamed' },
+      });
+
+    kitten.save(done);
+
+  });
+
+  it('Get item for model with unnamed attributes', function (done) {
+
+    Cat5.get(2, function(err, model) {
+      should.not.exist(err);
+      should.exist(model);
+
+      model.should.have.property('id', 2);
+      model.should.have.property('name', 'Fluffy');
+      model.should.have.property('owner', 'Someone');
+      model.should.have.property('unnamedInt', 1);
+      model.should.have.property('unnamedString', 'unnamed');
+      model.should.have.property('$__');
+      done();
+    });
   });
 
   it('Get item for model', function (done) {
@@ -730,6 +888,75 @@ describe('Model', function (){
       });
     });
 
+    it('Set expires attribute on save', function (done) {
+      ExpiringCat.create({name: 'Fluffy'})
+      .then(function (fluffy) {
+        var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+        var min = max - 1;
+        should.exist(fluffy);
+        should.exist(fluffy.expires);
+        should.exist(fluffy.expires.getTime);
+
+        var expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    it('Does not set expires attribute on save if exists', function (done) {
+      ExpiringCat.create({
+        name: 'Tigger',
+        expires: new Date(Date.now() + (ONE_YEAR*1000))
+      })
+      .then(function (tigger) {
+        var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+        var min = max - 1;
+        should.exist(tigger);
+        should.exist(tigger.expires);
+        should.exist(tigger.expires.getTime);
+
+        var expiresInSec = Math.floor(tigger.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    it('Update expires attribute on save', function (done) {
+      ExpiringCat.create({
+        name: 'Leo'
+      })
+      .then(function (leo) {
+        var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+        var min = max - 1;
+        var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+
+        leo.expires = new Date(Date.now() + (ONE_YEAR* 1000));
+        return leo.save();
+      })
+      .then(function (leo) {
+        var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+        var min = max - 1;
+        var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        expiresInSec.should.be.within(min, max);
+        done();
+      })
+      .catch(done);
+
+    });
+
+    // it('Add expires attribute on update if missing', function (done) {
+    //
+    // });
+    //
+    // it('Does not add expires attribute on update if exists', function (done) {
+    //
+    // });
+
     it('Default puts attribute', function (done) {
       Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {
         should.not.exist(err);
@@ -834,6 +1061,204 @@ describe('Model', function (){
     });
   });
 
+  describe('Model.populate', function (){
+    before(function (done) {
+      var kittenWithParents = new Cat6({id: 1, name: 'One'});
+      var owner = new Owner({name: 'Owner', address: '123 A Street', phoneNumber: '2345551212'});
+      var kittenWithOwner = new CatWithOwner({
+        id: 100,
+        name: 'Owned',
+        owner: {name: owner.name, address: owner.address}
+      });
+      kittenWithParents.save()
+        .then(function(kitten) {
+          var kittenWithParents = new Cat6({id: 2, name: 'Two', parent: kitten.id});
+          return kittenWithParents.save();
+        })
+        .then(function(kitten) {
+          var kittenWithParents = new Cat6({id: 3, name: 'Three', parent: kitten.id});
+          return kittenWithParents.save();
+        })
+        .then(function(kitten) {
+          var kittenWithParents = new Cat6({id: 4, name: 'Four', parent: kitten.id});
+          return kittenWithParents.save();
+        })
+        .then(function() {
+          var kittenWithParents = new Cat6({id: 5, name: 'Five', parent: 999});
+          return kittenWithParents.save();
+        })
+        .then(function() {
+          var kittenWithParents = new Cat7({id: 1, name: 'One'});
+          return kittenWithParents.save();
+        })
+        .then(function(kitten) {
+          var kittenWithParents = new Cat7({id: 2, name: 'Two', parent: kitten.id});
+          return kittenWithParents.save();
+        })
+        .then(function() {
+          return owner.save();
+        })
+        .then(function() {
+          kittenWithOwner.save(done);
+        });
+    });
+
+    it('Should populate with one parent', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat6'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          cat.parent.id.should.eql(3);
+          cat.parent.name.should.eql('Three');
+          done();
+        });
+    });
+
+    it('Should deep populate with mutiple parent', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat6',
+            populate: {
+              path: 'parent',
+              model: 'Cat6',
+              populate: {
+                path: 'parent',
+                model: 'Cat6'
+              }
+            }
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          var parent = cat.parent;
+          parent.id.should.eql(3);
+          parent.name.should.eql('Three');
+          parent = parent.parent;
+          parent.id.should.eql(2);
+          parent.name.should.eql('Two');
+          parent = parent.parent;
+          parent.id.should.eql(1);
+          parent.name.should.eql('One');
+          done();
+        });
+    });
+
+
+    it('Should populate with range & hash key', function (done) {
+      CatWithOwner.get(100)
+        .then(function(cat) {
+          should.not.exist(cat.owner.phoneNumber);
+          return cat.populate({
+            path: 'owner',
+            model: 'test-Owner'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.owner);
+          cat.owner.name.should.eql('Owner');
+          cat.owner.phoneNumber.should.eql('2345551212');
+          done();
+        });
+    });
+
+    it('Populating without the model definition', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent'
+          });
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
+    it('Populating without the path definition', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            model: 'Cat6'
+          });
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
+    it('Populating with the wrong reference id', function (done) {
+      Cat6.get(5)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat6'
+          });
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
+    it('Populate works with hashkey', function (done) {
+      Cat7.get(2)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cat7'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          cat.parent.id.should.eql(1);
+          cat.parent.name.should.eql('One');
+          done();
+        });
+    });
+
+    it('Populate works with prefix', function (done) {
+      Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'test-Cat6'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          cat.parent.id.should.eql(3);
+          cat.parent.name.should.eql('Three');
+          done();
+        });
+    });
+
+    it('Populating with the wrong model name won\'t work', function (done) {
+      Cat6.get(5)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent',
+            model: 'Cats6'
+          });
+        })
+        .then(function(teste, err) {
+          console.log(teste, err);
+        })
+        .catch(function(err){
+          should.exist(err.message);
+          done();
+        });
+    });
+
+  });
+
   describe('Model.batchPut', function (){
 
     it('Put new', function (done) {
@@ -842,7 +1267,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat({id: 10+i, name: 'Tom_'+i}));
       }
-      
+
       Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -914,7 +1339,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 10+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.exist(err);
         should.not.exist(result);
@@ -928,7 +1353,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat({id: 20+i, name: 'Tom_'+i}));
       }
-      
+
       Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -946,7 +1371,7 @@ describe('Model', function (){
           for (var i=0 ; i<10 ; ++i) {
             delete cats[i].name;
           }
-          
+
           Cat.batchGet(cats, function (err3, result3) {
             should.not.exist(err3);
             should.exist(result3);
@@ -963,7 +1388,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -994,7 +1419,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1019,7 +1444,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat({id: 30+i, name: 'Tom_'+i}));
       }
-      
+
       Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1045,7 +1470,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1071,7 +1496,7 @@ describe('Model', function (){
       for (var i=0 ; i<10 ; ++i) {
         cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
-      
+
       Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
@@ -1088,5 +1513,70 @@ describe('Model', function (){
       });
     });
 
+  });
+
+  describe('Model.default', function() {
+    it('Default is set properly', function() {
+      var CatModel = dynamoose.model('CatDefault',
+          {
+              id: {
+                  type:  Number,
+                  validate: function (v) { return v > 0; }
+              },
+              name: String,
+              owner: String,
+              shouldRemainUnchanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'shouldRemainUnchanged_'+ model.name +'_'+ model.owner;
+                  }
+              },
+              shouldBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'shouldBeChanged_'+ model.name +'_'+ model.owner;
+                  }
+              },
+              shouldAlwaysBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'shouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
+                  },
+                  forceDefault: true
+              },
+              unsetShouldBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'unsetShouldBeChanged_'+ model.name +'_'+ model.owner;
+                  }
+              },
+              unsetShouldAlwaysBeChanged: {
+                  type: String,
+                  default: function(model) {
+                      return 'unsetShouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
+                  }
+              }
+          }
+      );
+
+      var cat = new CatModel({
+          id: 1111,
+          name: 'NAME_VALUE',
+          owner: 'OWNER_VALUE',
+          shouldRemainUnchanged: 'AAA',
+          shouldBeChanged: undefined,
+          shouldAlwaysBeChanged: 'BBB'
+      });
+
+      return cat
+        .save()
+        .then(function() {
+            should(cat.shouldRemainUnchanged).eql('AAA');
+            should(cat.shouldBeChanged).eql('shouldBeChanged_NAME_VALUE_OWNER_VALUE');
+            should(cat.shouldAlwaysBeChanged).eql('shouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
+            should(cat.unsetShouldBeChanged).eql('unsetShouldBeChanged_NAME_VALUE_OWNER_VALUE');
+            should(cat.unsetShouldAlwaysBeChanged).eql('unsetShouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
+        });
+    });
   });
 });
