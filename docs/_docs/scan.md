@@ -32,6 +32,29 @@ Dog.scan().exec(function (err, dogs) {
 });
 ```
 
+To use the raw AWS filter in scanning especially for nested fields scan purposes, compose the filter object and pass it in.
+
+* *The `TableName` field in raw filter is not necessary to be specified. If it is left blank, the model name will be used as default table name.*
+
+```js
+var Dog = dynamoose.model('Dog');
+// this should be composed, ref: http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
+var filter = {
+  FilterExpression: 'details.timeWakeUp = :wakeUp',
+  ExpressionAttributeValues: {
+    ':wakeUp': '8am'
+  }
+};
+
+Dog.scan(filter).exec()
+  .then(function(dogs) {
+    console.log(dogs);
+  })
+  .catch(function(err) {
+    console.error(err);
+  });
+```
+
 ### scan.exec(callback)
 
 Executes a scan against a table
