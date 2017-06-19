@@ -44,18 +44,20 @@ declare module "dynamoose" {
      * Indicating Secondary Index.
      * 'true' is means local, project all
      */
-    index?: boolean | {
-      name: string;
-      global: boolean;
-      rangeKey: string;
-      project: boolean;
-      throughput: number;
-    }
+    index?: boolean | IndexDefinition | IndexDefinition[];
     default?: (() => Type) | Type
   }
   export interface SchemaOptions {
-    throughput: boolean | { read: number, write: number };
-    timestamps: boolean | { createdAt: string, updatedAt: string };
+    throughput?: boolean | { read: number, write: number };
+    useNativeBooleans?: boolean;
+    useDocumentTypes?: boolean;
+    timestamps?: boolean | { createdAt: string, updatedAt: string };
+    expires?: number | { ttl: number, attribute: string };
+    saveUnknown?: boolean;
+
+    // @todo more strong type definition
+    attributeToDynamo: (name: string, json: any, model: any, defaultFormatter: any) => any;
+    attributeFromDynamo: (name: string, json: any, fallback: any) => any;
   }
 
   export interface SchemaAttributes {
@@ -69,6 +71,17 @@ declare module "dynamoose" {
       | SchemaAttributeDefinition<ArrayConstructor, Array<any>>
       | SchemaAttributeDefinition<any, any>
     )
+  }
+
+  /**
+   * Index
+   */
+  interface IndexDefinition {
+    name?: string;
+    global?: boolean;
+    rangeKey?: string;
+    project?: boolean | string[];
+    throughput?: number | { read: number, write: number };
   }
 
   /**
@@ -101,6 +114,9 @@ declare module "dynamoose" {
 
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
+
+    // @todo missing populate support (e.g. populated path)
+    populate<T>(path: string | { path: string, model: string }): Promise<Model<ModelData> & T>
   }
 
   export interface PutOptions {
@@ -138,8 +154,8 @@ declare module "dynamoose" {
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
     batchDelete(keys: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
 
-    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model>;
-    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model>;
+    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model, QueryResult<Model>>;
+    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model, Model>;
     scan(filter?: ScanFilter, callback?: (err: Error, results: Model[]) => void): ScanInterface<Model>;
 
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: Model[]) => void): void;
@@ -181,29 +197,31 @@ declare module "dynamoose" {
    * Query
    */
   type QueryFilter = any;
-  export interface QueryInterface<T> {
-    exec(callback?: (err: Error, result: ScanResult<T>) => void): Promise<ScanResult<T>>;
-		where(rangeKey: string): QueryInterface<T>;
-		filter(filter: string): QueryInterface<T>;
-		and(): QueryInterface<T>;
-		or(): QueryInterface<T>;
-		not(): QueryInterface<T>;
-		null(): QueryInterface<T>;
-		eq(value: any): QueryInterface<T>;
-		lt(value: any): QueryInterface<T>;
-		le(value: any): QueryInterface<T>;
-		ge(value: any): QueryInterface<T>;
-		gt(value: any): QueryInterface<T>;
-		beginsWith(value: string): QueryInterface<T>;
-		between(valueA: any, valueB: any): QueryInterface<T>;
-		contains(value: string): QueryInterface<T>;
-		in(values: any[]): QueryInterface<T>;
-		limit(limit: number): QueryInterface<T>;
-		consistent(): QueryInterface<T>;
-		descending(): QueryInterface<T>;
-		ascending(): QueryInterface<T>;
-		startAt(key: QueryKey): QueryInterface<T>;
-		attributes(attributes: string[]): QueryInterface<T>;
+  export interface QueryInterface<T, R> {
+    exec(callback?: (err: Error, result: R) => void): Promise<R>;
+		where(rangeKey: string): QueryInterface<T, R>;
+		filter(filter: string): QueryInterface<T, R>;
+		and(): QueryInterface<T, R>;
+		or(): QueryInterface<T, R>;
+		not(): QueryInterface<T, R>;
+		null(): QueryInterface<T, R>;
+		eq(value: any): QueryInterface<T, R>;
+		lt(value: any): QueryInterface<T, R>;
+		le(value: any): QueryInterface<T, R>;
+		ge(value: any): QueryInterface<T, R>;
+		gt(value: any): QueryInterface<T, R>;
+		beginsWith(value: string): QueryInterface<T, R>;
+		between(valueA: any, valueB: any): QueryInterface<T, R>;
+		contains(value: string): QueryInterface<T, R>;
+		in(values: any[]): QueryInterface<T, R>;
+		limit(limit: number): QueryInterface<T, R>;
+		consistent(): QueryInterface<T, R>;
+		descending(): QueryInterface<T, R>;
+		ascending(): QueryInterface<T, R>;
+		startAt(key: QueryKey): QueryInterface<T, R>;
+		attributes(attributes: string[]): QueryInterface<T, R>;
+    count(): QueryInterface<T, R>;
+    counts(): QueryInterface<T, R>;
   }
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
@@ -218,6 +236,10 @@ declare module "dynamoose" {
 
   export interface ScanInterface<T> {
     exec(callback?: (err: Error, result: ScanResult<T>) => void): Promise<ScanResult<T>>;
+    all(delay?: number, max?: number): ScanInterface<T>;
+    parallel(totalSegments: number): ScanInterface<T>;
+    using(indexName: string): ScanInterface<T>;
+    consistent(filter: any): ScanInterface<T>;
 		where(filter: any): ScanInterface<T>;
 		filter(filter: any): ScanInterface<T>;
 		and(): ScanInterface<T>;
@@ -236,6 +258,8 @@ declare module "dynamoose" {
 		limit(limit: number): ScanInterface<T>;
 		startAt(key: ScanKey): ScanInterface<T>;
 		attributes(value: any): ScanInterface<T>;
+    count(): ScanInterface<T>;
+    counts(): ScanInterface<T>;
   }
 
   export interface ScanResult<ModelData> extends Array<ModelData> {
