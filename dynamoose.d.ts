@@ -154,8 +154,8 @@ declare module "dynamoose" {
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
     batchDelete(keys: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
 
-    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model, Model>;
-    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model, QueryResult<Model>>;
+    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model, QueryResult<Model>>;
+    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model, Model>;
     scan(filter?: ScanFilter, callback?: (err: Error, results: Model[]) => void): ScanInterface<Model>;
 
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: Model[]) => void): void;
