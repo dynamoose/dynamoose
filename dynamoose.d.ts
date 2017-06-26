@@ -1,6 +1,9 @@
 // Custom made dynamoose declaration file.
+import * as _AWS from 'aws-sdk';
 
 declare module "dynamoose" {
+  export var AWS: typeof _AWS;
+
 	export function local(url: string): void;
 	export function model<DataSchema, KeySchema, ModelSchema extends Model<DataSchema>>(
     modelName: string,
