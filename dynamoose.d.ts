@@ -4,13 +4,13 @@ import * as _AWS from 'aws-sdk';
 declare module "dynamoose" {
   export var AWS: typeof _AWS;
 
-	export function local(url: string): void;
-	export function model<DataSchema, KeySchema, ModelSchema extends Model<DataSchema>>(
+  export function local(url: string): void;
+  export function model<DataSchema, KeySchema, ModelSchema extends Model<DataSchema>>(
     modelName: string,
     schema: Schema,
     options?: ModelOption
   ): ModelConstructor<DataSchema, KeySchema, ModelSchema>;
-	export function setDefaults(options: ModelOption): void;
+  export function setDefaults(options: ModelOption): void;
 
   export interface ModelOption {
     create?: boolean, // Create table in DB, if it does not exist,
@@ -24,12 +24,12 @@ declare module "dynamoose" {
    */
   export class Schema {
     constructor(schema: SchemaAttributes, options?: SchemaOptions);
-		method(name: string, fn: any): any;
-		parseDynamo(model: any, dynamoObj: any): any;
-		static(name: string, fn: any): any;
-		toDynamo(model: any): any;
-		virtual(name: string, options: any): any;
-		virtualpath(name: string): any;
+    method(name: string, fn: any): any;
+    parseDynamo(model: any, dynamoObj: any): any;
+    static(name: string, fn: any): any;
+    toDynamo(model: any): any;
+    virtual(name: string, options: any): any;
+    virtualpath(name: string): any;
   }
 
   export interface SchemaAttributeDefinition<Constructor, Type> {
@@ -90,25 +90,25 @@ declare module "dynamoose" {
   /**
    * Table
    */
-	export class Table {
-		constructor(name: string, schema: any, options: any, base: any);
-		create(next: any): any;
-		createIndex(attributes: any, indexSpec: any): any;
-		delete(next: any): any;
-		deleteIndex(indexname: string): any;
-		describe(next: any): any;
-		init(next: any): any;
-		update(next: any): any;
-		waitForActive(timeout: any, next: any): any;
-	}
+  export class Table {
+    constructor(name: string, schema: any, options: any, base: any);
+    create(next: any): any;
+    createIndex(attributes: any, indexSpec: any): any;
+    delete(next: any): any;
+    deleteIndex(indexname: string): any;
+    describe(next: any): any;
+    init(next: any): any;
+    update(next: any): any;
+    waitForActive(timeout: any, next: any): any;
+  }
 
   /**
    * Model
    */
   export class Model<ModelData> {
-		constructor(obj: ModelData);
-		put(options: PutOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
-		save(options: SaveOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
+    constructor(obj: ModelData);
+    put(options: PutOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
+    save(options: SaveOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
 
     delete(callback?: (err: Error) => void): Promise<undefined>;
 
@@ -202,27 +202,27 @@ declare module "dynamoose" {
   type QueryFilter = any;
   export interface QueryInterface<T, R> {
     exec(callback?: (err: Error, result: R) => void): Promise<R>;
-		where(rangeKey: string): QueryInterface<T, R>;
-		filter(filter: string): QueryInterface<T, R>;
-		and(): QueryInterface<T, R>;
-		or(): QueryInterface<T, R>;
-		not(): QueryInterface<T, R>;
-		null(): QueryInterface<T, R>;
-		eq(value: any): QueryInterface<T, R>;
-		lt(value: any): QueryInterface<T, R>;
-		le(value: any): QueryInterface<T, R>;
-		ge(value: any): QueryInterface<T, R>;
-		gt(value: any): QueryInterface<T, R>;
-		beginsWith(value: string): QueryInterface<T, R>;
-		between(valueA: any, valueB: any): QueryInterface<T, R>;
-		contains(value: string): QueryInterface<T, R>;
-		in(values: any[]): QueryInterface<T, R>;
-		limit(limit: number): QueryInterface<T, R>;
-		consistent(): QueryInterface<T, R>;
-		descending(): QueryInterface<T, R>;
-		ascending(): QueryInterface<T, R>;
-		startAt(key: QueryKey): QueryInterface<T, R>;
-		attributes(attributes: string[]): QueryInterface<T, R>;
+    where(rangeKey: string): QueryInterface<T, R>;
+    filter(filter: string): QueryInterface<T, R>;
+    and(): QueryInterface<T, R>;
+    or(): QueryInterface<T, R>;
+    not(): QueryInterface<T, R>;
+    null(): QueryInterface<T, R>;
+    eq(value: any): QueryInterface<T, R>;
+    lt(value: any): QueryInterface<T, R>;
+    le(value: any): QueryInterface<T, R>;
+    ge(value: any): QueryInterface<T, R>;
+    gt(value: any): QueryInterface<T, R>;
+    beginsWith(value: string): QueryInterface<T, R>;
+    between(valueA: any, valueB: any): QueryInterface<T, R>;
+    contains(value: string): QueryInterface<T, R>;
+    in(values: any[]): QueryInterface<T, R>;
+    limit(limit: number): QueryInterface<T, R>;
+    consistent(): QueryInterface<T, R>;
+    descending(): QueryInterface<T, R>;
+    ascending(): QueryInterface<T, R>;
+    startAt(key: QueryKey): QueryInterface<T, R>;
+    attributes(attributes: string[]): QueryInterface<T, R>;
     count(): QueryInterface<T, R>;
     counts(): QueryInterface<T, R>;
   }
@@ -243,24 +243,24 @@ declare module "dynamoose" {
     parallel(totalSegments: number): ScanInterface<T>;
     using(indexName: string): ScanInterface<T>;
     consistent(filter: any): ScanInterface<T>;
-		where(filter: any): ScanInterface<T>;
-		filter(filter: any): ScanInterface<T>;
-		and(): ScanInterface<T>;
-		not(): ScanInterface<T>;
-		null(): ScanInterface<T>;
-		eq(value: any): ScanInterface<T>;
-		lt(value: any): ScanInterface<T>;
-		le(value: any): ScanInterface<T>;
-		ge(value: any): ScanInterface<T>;
-		gt(value: any): ScanInterface<T>;
-		beginsWith(value: any): ScanInterface<T>;
-		between(valueA: any, valueB: any): ScanInterface<T>;
-		contains(value: any): ScanInterface<T>;
-		beginsWith(value: any): ScanInterface<T>;
-		in(value: any): ScanInterface<T>;
-		limit(limit: number): ScanInterface<T>;
-		startAt(key: ScanKey): ScanInterface<T>;
-		attributes(value: any): ScanInterface<T>;
+    where(filter: any): ScanInterface<T>;
+    filter(filter: any): ScanInterface<T>;
+    and(): ScanInterface<T>;
+    not(): ScanInterface<T>;
+    null(): ScanInterface<T>;
+    eq(value: any): ScanInterface<T>;
+    lt(value: any): ScanInterface<T>;
+    le(value: any): ScanInterface<T>;
+    ge(value: any): ScanInterface<T>;
+    gt(value: any): ScanInterface<T>;
+    beginsWith(value: any): ScanInterface<T>;
+    between(valueA: any, valueB: any): ScanInterface<T>;
+    contains(value: any): ScanInterface<T>;
+    beginsWith(value: any): ScanInterface<T>;
+    in(value: any): ScanInterface<T>;
+    limit(limit: number): ScanInterface<T>;
+    startAt(key: ScanKey): ScanInterface<T>;
+    attributes(value: any): ScanInterface<T>;
     count(): ScanInterface<T>;
     counts(): ScanInterface<T>;
   }
@@ -271,12 +271,12 @@ declare module "dynamoose" {
 
   type ScanKey = string;
 
-	export class VirtualType {
-		constructor(options: any, name: string);
-		applyVirtuals(model: any): void;
-		get(fn: any): any;
-		set(fn: any): any;
-	}
+  export class VirtualType {
+    constructor(options: any, name: string);
+    applyVirtuals(model: any): void;
+    get(fn: any): any;
+    set(fn: any): any;
+  }
 
   export function local(url?: string): void;
 }
