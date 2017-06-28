@@ -225,6 +225,7 @@ declare module "dynamoose" {
     attributes(attributes: string[]): QueryInterface<T, R>;
     count(): QueryInterface<T, R>;
     counts(): QueryInterface<T, R>;
+    using(indexName: string): QueryInterface<T, R>;
   }
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
@@ -241,7 +242,6 @@ declare module "dynamoose" {
     exec(callback?: (err: Error, result: ScanResult<T>) => void): Promise<ScanResult<T>>;
     all(delay?: number, max?: number): ScanInterface<T>;
     parallel(totalSegments: number): ScanInterface<T>;
-    using(indexName: string): ScanInterface<T>;
     consistent(filter: any): ScanInterface<T>;
     where(filter: any): ScanInterface<T>;
     filter(filter: any): ScanInterface<T>;
