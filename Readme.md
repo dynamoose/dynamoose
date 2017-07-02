@@ -62,3 +62,4 @@ The documentation can be found at https://dynamoosejs.com/api.
 - Create required attributes on update [#96](//github.com/automategreen/dynamoose/issues/96)
 - Add typescript typings [#123](//github.com/automategreen/dynamoose/issues/123)
 - Added .count() for Query and Scan [#101](//github.com/automategreen/dynamoose/issues/101)
+- Nested scans [#141](//github.com/automategreen/dynamoose/issues/141) [#158](//github.com/automategreen/dynamoose/issues/158)
