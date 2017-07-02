@@ -774,4 +774,27 @@ describe('Schema tests', function (){
     });
   });
 
+
+  it('Handle unknow attributes in DynamoDB', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: true
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      anObject: { a: 'attribute' }
+    });
+    done();
+  });
 });
