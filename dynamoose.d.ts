@@ -1,13 +1,16 @@
 // Custom made dynamoose declaration file.
+import * as _AWS from 'aws-sdk';
 
 declare module "dynamoose" {
-	export function local(url: string): void;
-	export function model<DataSchema, KeySchema, ModelSchema extends Model<DataSchema>>(
+  export var AWS: typeof _AWS;
+
+  export function local(url: string): void;
+  export function model<DataSchema, KeySchema, ModelSchema extends Model<DataSchema>>(
     modelName: string,
     schema: Schema,
     options?: ModelOption
   ): ModelConstructor<DataSchema, KeySchema, ModelSchema>;
-	export function setDefaults(options: ModelOption): void;
+  export function setDefaults(options: ModelOption): void;
 
   export interface ModelOption {
     create?: boolean, // Create table in DB, if it does not exist,
@@ -21,12 +24,12 @@ declare module "dynamoose" {
    */
   export class Schema {
     constructor(schema: SchemaAttributes, options?: SchemaOptions);
-		method(name: string, fn: any): any;
-		parseDynamo(model: any, dynamoObj: any): any;
-		static(name: string, fn: any): any;
-		toDynamo(model: any): any;
-		virtual(name: string, options: any): any;
-		virtualpath(name: string): any;
+    method(name: string, fn: any): any;
+    parseDynamo(model: any, dynamoObj: any): any;
+    static(name: string, fn: any): any;
+    toDynamo(model: any): any;
+    virtual(name: string, options: any): any;
+    virtualpath(name: string): any;
   }
 
   export interface SchemaAttributeDefinition<Constructor, Type> {
@@ -44,18 +47,20 @@ declare module "dynamoose" {
      * Indicating Secondary Index.
      * 'true' is means local, project all
      */
-    index?: boolean | {
-      name: string;
-      global: boolean;
-      rangeKey: string;
-      project: boolean;
-      throughput: number;
-    }
+    index?: boolean | IndexDefinition | IndexDefinition[];
     default?: (() => Type) | Type
   }
   export interface SchemaOptions {
-    throughput: boolean | { read: number, write: number };
-    timestamps: boolean | { createdAt: string, updatedAt: string };
+    throughput?: boolean | { read: number, write: number };
+    useNativeBooleans?: boolean;
+    useDocumentTypes?: boolean;
+    timestamps?: boolean | { createdAt: string, updatedAt: string };
+    expires?: number | { ttl: number, attribute: string };
+    saveUnknown?: boolean;
+
+    // @todo more strong type definition
+    attributeToDynamo: (name: string, json: any, model: any, defaultFormatter: any) => any;
+    attributeFromDynamo: (name: string, json: any, fallback: any) => any;
   }
 
   export interface SchemaAttributes {
@@ -72,27 +77,38 @@ declare module "dynamoose" {
   }
 
   /**
+   * Index
+   */
+  interface IndexDefinition {
+    name?: string;
+    global?: boolean;
+    rangeKey?: string;
+    project?: boolean | string[];
+    throughput?: number | { read: number, write: number };
+  }
+
+  /**
    * Table
    */
-	export class Table {
-		constructor(name: string, schema: any, options: any, base: any);
-		create(next: any): any;
-		createIndex(attributes: any, indexSpec: any): any;
-		delete(next: any): any;
-		deleteIndex(indexname: string): any;
-		describe(next: any): any;
-		init(next: any): any;
-		update(next: any): any;
-		waitForActive(timeout: any, next: any): any;
-	}
+  export class Table {
+    constructor(name: string, schema: any, options: any, base: any);
+    create(next: any): any;
+    createIndex(attributes: any, indexSpec: any): any;
+    delete(next: any): any;
+    deleteIndex(indexname: string): any;
+    describe(next: any): any;
+    init(next: any): any;
+    update(next: any): any;
+    waitForActive(timeout: any, next: any): any;
+  }
 
   /**
    * Model
    */
   export class Model<ModelData> {
-		constructor(obj: ModelData);
-		put(options: PutOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
-		save(options: SaveOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
+    constructor(obj: ModelData);
+    put(options: PutOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
+    save(options: SaveOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
 
     delete(callback?: (err: Error) => void): Promise<undefined>;
 
@@ -101,6 +117,9 @@ declare module "dynamoose" {
 
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
+
+    // @todo missing populate support (e.g. populated path)
+    populate<T>(path: string | { path: string, model: string }): Promise<Model<ModelData> & T>
   }
 
   export interface PutOptions {
@@ -138,8 +157,8 @@ declare module "dynamoose" {
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
     batchDelete(keys: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
 
-    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model>;
-    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model>;
+    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model, QueryResult<Model>>;
+    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model, Model>;
     scan(filter?: ScanFilter, callback?: (err: Error, results: Model[]) => void): ScanInterface<Model>;
 
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: Model[]) => void): void;
@@ -181,29 +200,31 @@ declare module "dynamoose" {
    * Query
    */
   type QueryFilter = any;
-  export interface QueryInterface<T> {
-    exec(callback?: (err: Error, result: ScanResult<T>) => void): Promise<ScanResult<T>>;
-		where(rangeKey: string): QueryInterface<T>;
-		filter(filter: string): QueryInterface<T>;
-		and(): QueryInterface<T>;
-		or(): QueryInterface<T>;
-		not(): QueryInterface<T>;
-		null(): QueryInterface<T>;
-		eq(value: any): QueryInterface<T>;
-		lt(value: any): QueryInterface<T>;
-		le(value: any): QueryInterface<T>;
-		ge(value: any): QueryInterface<T>;
-		gt(value: any): QueryInterface<T>;
-		beginsWith(value: string): QueryInterface<T>;
-		between(valueA: any, valueB: any): QueryInterface<T>;
-		contains(value: string): QueryInterface<T>;
-		in(values: any[]): QueryInterface<T>;
-		limit(limit: number): QueryInterface<T>;
-		consistent(): QueryInterface<T>;
-		descending(): QueryInterface<T>;
-		ascending(): QueryInterface<T>;
-		startAt(key: QueryKey): QueryInterface<T>;
-		attributes(attributes: string[]): QueryInterface<T>;
+  export interface QueryInterface<T, R> {
+    exec(callback?: (err: Error, result: R) => void): Promise<R>;
+    where(rangeKey: string): QueryInterface<T, R>;
+    filter(filter: string): QueryInterface<T, R>;
+    and(): QueryInterface<T, R>;
+    or(): QueryInterface<T, R>;
+    not(): QueryInterface<T, R>;
+    null(): QueryInterface<T, R>;
+    eq(value: any): QueryInterface<T, R>;
+    lt(value: any): QueryInterface<T, R>;
+    le(value: any): QueryInterface<T, R>;
+    ge(value: any): QueryInterface<T, R>;
+    gt(value: any): QueryInterface<T, R>;
+    beginsWith(value: string): QueryInterface<T, R>;
+    between(valueA: any, valueB: any): QueryInterface<T, R>;
+    contains(value: string): QueryInterface<T, R>;
+    in(values: any[]): QueryInterface<T, R>;
+    limit(limit: number): QueryInterface<T, R>;
+    consistent(): QueryInterface<T, R>;
+    descending(): QueryInterface<T, R>;
+    ascending(): QueryInterface<T, R>;
+    startAt(key: QueryKey): QueryInterface<T, R>;
+    attributes(attributes: string[]): QueryInterface<T, R>;
+    count(): QueryInterface<T, R>;
+    counts(): QueryInterface<T, R>;
   }
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
@@ -218,24 +239,30 @@ declare module "dynamoose" {
 
   export interface ScanInterface<T> {
     exec(callback?: (err: Error, result: ScanResult<T>) => void): Promise<ScanResult<T>>;
-		where(filter: any): ScanInterface<T>;
-		filter(filter: any): ScanInterface<T>;
-		and(): ScanInterface<T>;
-		not(): ScanInterface<T>;
-		null(): ScanInterface<T>;
-		eq(value: any): ScanInterface<T>;
-		lt(value: any): ScanInterface<T>;
-		le(value: any): ScanInterface<T>;
-		ge(value: any): ScanInterface<T>;
-		gt(value: any): ScanInterface<T>;
-		beginsWith(value: any): ScanInterface<T>;
-		between(valueA: any, valueB: any): ScanInterface<T>;
-		contains(value: any): ScanInterface<T>;
-		beginsWith(value: any): ScanInterface<T>;
-		in(value: any): ScanInterface<T>;
-		limit(limit: number): ScanInterface<T>;
-		startAt(key: ScanKey): ScanInterface<T>;
-		attributes(value: any): ScanInterface<T>;
+    all(delay?: number, max?: number): ScanInterface<T>;
+    parallel(totalSegments: number): ScanInterface<T>;
+    using(indexName: string): ScanInterface<T>;
+    consistent(filter: any): ScanInterface<T>;
+    where(filter: any): ScanInterface<T>;
+    filter(filter: any): ScanInterface<T>;
+    and(): ScanInterface<T>;
+    not(): ScanInterface<T>;
+    null(): ScanInterface<T>;
+    eq(value: any): ScanInterface<T>;
+    lt(value: any): ScanInterface<T>;
+    le(value: any): ScanInterface<T>;
+    ge(value: any): ScanInterface<T>;
+    gt(value: any): ScanInterface<T>;
+    beginsWith(value: any): ScanInterface<T>;
+    between(valueA: any, valueB: any): ScanInterface<T>;
+    contains(value: any): ScanInterface<T>;
+    beginsWith(value: any): ScanInterface<T>;
+    in(value: any): ScanInterface<T>;
+    limit(limit: number): ScanInterface<T>;
+    startAt(key: ScanKey): ScanInterface<T>;
+    attributes(value: any): ScanInterface<T>;
+    count(): ScanInterface<T>;
+    counts(): ScanInterface<T>;
   }
 
   export interface ScanResult<ModelData> extends Array<ModelData> {
@@ -244,12 +271,12 @@ declare module "dynamoose" {
 
   type ScanKey = string;
 
-	export class VirtualType {
-		constructor(options: any, name: string);
-		applyVirtuals(model: any): void;
-		get(fn: any): any;
-		set(fn: any): any;
-	}
+  export class VirtualType {
+    constructor(options: any, name: string);
+    applyVirtuals(model: any): void;
+    get(fn: any): any;
+    set(fn: any): any;
+  }
 
   export function local(url?: string): void;
 }

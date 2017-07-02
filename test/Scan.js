@@ -52,8 +52,16 @@ describe('Scan', function (){
       },
       cartoon: {
         type: Boolean
+      },
+      details: {
+        timeWakeUp: {
+          type: String
+        },
+        timeSleep: {
+          type: String
+        }
       }
-    });
+    }, { useDocumentTypes: true });
 
 
     function addDogs (dogs) {
@@ -87,11 +95,11 @@ describe('Scan', function (){
       {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: ['Brown']},
       {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd'},
       {ownerId:14, name: 'Benji', breed: 'unknown'},
-      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: ['White']},
+      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: ['White'], details: { timeWakeUp: '6am', timeSleep: '8pm' }},
       {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: ['Yellow']},
       {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
       {ownerId:18, name: 'Lassie', breed: 'Collie', color: ['tan', 'white']},
-      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true}]);
+      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true, details: { timeWakeUp: '8am', timeSleep: '8pm' }}]);
 
   });
 
@@ -667,6 +675,28 @@ describe('Scan', function (){
     });
   });
 
+  it('Scan using raw AWS filter', function (done) {
+    var Dog = dynamoose.model('Dog');
+    var filter = {
+      FilterExpression: 'details.timeWakeUp = :wakeUp',
+      ExpressionAttributeValues: {
+        ':wakeUp': '8am'
+      }
+    };
+
+    Dog.scan(filter, { useRawAwsFilter: true }).exec()
+      .then(function(dogs) {
+        dogs.length.should.eql(1);
+        console.log(dogs);
+        done();
+      })
+      .catch(function(err) {
+        should.not.exist(err);
+        console.error(err);
+        done();
+      });
+  });
+
   it('Scan parallel', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -711,8 +741,6 @@ describe('Scan', function (){
     })
     .catch(done);
   });
-
-
 
 
 });
