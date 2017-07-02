@@ -44,3 +44,21 @@ Cat.get(666)
 ## API Docs
 
 The documentation can be found at https://dynamoosejs.com/api.
+
+## Change log
+
+### 0.8
+
+- useNativeBooleans #55
+- saveUnknown #125
+- Support for multiple indexes defined on the hashkey attribute of the table
+- scan.all() #93 #140
+- scan.parallel d7f7f77
+- TTL support 92994f1
+- added schema parsing overrides #145
+- populate #137
+- Added consistent() to scan.  #15 #142
+- Default function enhancements #127
+- Create required attributes on update #96
+- Add typescript typings #123
+- Added .count() for Query and Scan #101
