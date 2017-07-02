@@ -46,7 +46,7 @@
     "travis-cov": "*"
   },
   "dependencies": {
-    "aws-sdk": "^2.58.0",
+    "aws-sdk": "^2.80.0",
     "debug": "*",
     "hooks": "0.3.2",
     "lodash": "*",
