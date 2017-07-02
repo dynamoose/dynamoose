@@ -38,19 +38,19 @@
   "devDependencies": {
     "blanket": "1.1.5",
     "dynamodb-local": "0.0.18",
-    "grunt": "*",
-    "grunt-contrib-jshint": "*",
-    "grunt-mocha-test": "*",
-    "mocha": "*",
-    "should": "*",
-    "travis-cov": "*"
+    "grunt": "^1.0.1",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-mocha-test": "^0.13.2",
+    "mocha": "^3.4.2",
+    "should": "^11.2.1",
+    "travis-cov": "^0.2.5"
   },
   "dependencies": {
     "aws-sdk": "^2.80.0",
-    "debug": "*",
+    "debug": "^2.6.8",
     "hooks": "0.3.2",
-    "lodash": "*",
-    "q": "~1.0.1",
+    "lodash": "^4.17.4",
+    "q": "^1.5.0",
     "underscore": "^1.8.3"
   }
 }
