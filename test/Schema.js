@@ -788,12 +788,14 @@ describe('Schema tests', function (){
       id: { N: '2' },
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' },
     });
 
     model.should.eql({
       id: 2,
       name: 'Fluffy',
-      anObject: { a: 'attribute' }
+      anObject: { a: 'attribute' },
+      numberString: 1,
     });
     done();
   });
