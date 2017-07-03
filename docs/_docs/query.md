@@ -7,6 +7,8 @@ order: 4
 
 Queries a table or index. The query parameter can either the the hash key of the table or global index or a complete query object. If the callback is provided, the exec command is called automatically, and the query parameter must be a query object.
 
+**Note:** You *must* provide an `eq` for the hash key.
+
 ```js
 Dog.query('breed').eq('Beagle').exec(function (err, dogs) {
   // Look at all the beagles
