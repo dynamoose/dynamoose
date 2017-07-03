@@ -267,6 +267,16 @@ describe('Scan', function (){
     });
   });
 
+  it('Scan with blank eq - same as null', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.scan('cartoon').eq('').exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(13);
+      done();
+    });
+  });
+
   it('Scan with not null with filter object', function (done) {
     var Dog = dynamoose.model('Dog');
 

@@ -95,7 +95,7 @@ Scan attribute for null.
 
 ### scan.eq(value)
 
-Attribute is equal to the value.
+Attribute is equal to the value.  If `null`, `undefined`, or a empty string is passed as the value, `scan.null()` is called.
 
 ### scan.lt(value)
 
