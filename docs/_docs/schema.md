@@ -133,7 +133,7 @@ Validation required before for saving.
 If validate is a function, the function is used to validate the attribute's value. The function must have the signature:
 
 ```js
-function(value) {
+function(value, model) {
   if(valid)
     return true;
   else
