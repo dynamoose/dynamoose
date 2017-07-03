@@ -45,9 +45,19 @@ Cat.get(666)
 
 The documentation can be found at https://dynamoosejs.com/api.
 
+## Roadmap
+
+### Release 0.9
+
+The goal of release 0.9 is to increase the parity with mongoose.  The main goal with be to come up with plugin system similar to that of monogoose all thought not necisary compatiable.
+
+- [ ] Plugin system
+- [ ] `Model.find` alias
+- [ ]
+
 ## Change log
 
-### 0.8
+### Release 0.8
 
 - useNativeBooleans [#55](//github.com/automategreen/dynamoose/issues/55)
 - saveUnknown [#125](//github.com/automategreen/dynamoose/issues/125)
