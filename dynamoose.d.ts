@@ -16,7 +16,8 @@ declare module "dynamoose" {
     create?: boolean, // Create table in DB, if it does not exist,
     update?: boolean, // Update remote indexes if they do not match local index structure
     waitForActive?: boolean, // Wait for table to be created before trying to us it
-    waitForActiveTimeout?: number // wait 3 minutes for table to activate
+    waitForActiveTimeout?: number, // wait 3 minutes for table to activate
+    prefix?: string, // Set table name prefix
   }
 
   /**
