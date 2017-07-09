@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, CatWithOwner, Owner, ExpiringCat;
+var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, Cat8, CatWithOwner, Owner, ExpiringCat;
 
 var ONE_YEAR = 365*24*60*60; // 1 years in seconds
 var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
@@ -146,6 +146,19 @@ describe('Model', function (){
           type: String
         },
         parent: Number
+      }
+    );
+
+    Cat8 = dynamoose.model('Cat8',
+      {
+        id: {
+          type:  Number,
+          hashKey: true
+        },
+        age: {
+          type: Number,
+          rangeKey: true
+        }
       }
     );
 
@@ -378,6 +391,19 @@ describe('Model', function (){
       model.should.have.property('$__');
       done();
     });
+  });
+
+  it('Get item for model with falsy keys', function (done) {
+    Cat8.create({id: 0, age: 0})
+      .then(function () {
+        return Cat8.get({id: 0, age: 0});
+      })
+      .then(function (falsyCat) {
+        falsyCat.should.have.property('id', 0);
+        falsyCat.should.have.property('age', 0);
+        done();
+      })
+      .catch(done);
   });
 
   it('Get item with invalid key', function (done) {
