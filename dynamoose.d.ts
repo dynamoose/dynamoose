@@ -152,7 +152,7 @@ declare module "dynamoose" {
     create(item: DataSchema, callback?: (err: Error, model: Model) => void): Promise<Model>;
 
     get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model | undefined>;
-    batchGet(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model[]>;
+    batchGet(key: KeySchema[], callback?: (err: Error, data: DataSchema) => void): Promise<Model[]>;
 
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
     batchDelete(keys: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
