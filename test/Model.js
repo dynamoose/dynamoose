@@ -596,6 +596,13 @@ describe('Model', function (){
     });
   });
 
+  it('BatchGet items when keys are empty', function (done) {
+    Cat.batchGet([], function (err, cats) {
+      cats.length.should.eql(0);
+      done();
+    });
+  });
+
   it('Static Delete', function (done) {
     Cat.delete(666, function (err) {
       should.not.exist(err);
