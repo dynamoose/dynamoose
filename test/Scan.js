@@ -706,6 +706,27 @@ describe('Scan', function (){
       });
   });
 
+  it('Raw AWS filter should return model instances', function (done) {
+    var Dog = dynamoose.model('Dog');
+    var filter = {
+      FilterExpression: 'details.timeWakeUp = :wakeUp',
+      ExpressionAttributeValues: {
+        ':wakeUp': '8am'
+      }
+    };
+
+    Dog.scan(filter, { useRawAwsFilter: true }).exec()
+      .then(function(dogs) {
+        dogs[0].should.be.instanceof(Dog);
+        done();
+      })
+      .catch(function(err) {
+        should.not.exist(err);
+        console.error(err);
+        done();
+      });
+  });
+
   it('Scan parallel', function (done) {
     var Dog = dynamoose.model('Dog');
 
