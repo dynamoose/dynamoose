@@ -60,8 +60,8 @@ declare module "dynamoose" {
     saveUnknown?: boolean;
 
     // @todo more strong type definition
-    attributeToDynamo: (name: string, json: any, model: any, defaultFormatter: any) => any;
-    attributeFromDynamo: (name: string, json: any, fallback: any) => any;
+    attributeToDynamo?: (name: string, json: any, model: any, defaultFormatter: any) => any;
+    attributeFromDynamo?: (name: string, json: any, fallback: any) => any;
   }
 
   export interface SchemaAttributes {
