@@ -141,7 +141,7 @@ function(value, model) {
 }
 ```
 
-If it is a RegExp, it is compared using `RegExp.text(value)`.
+If it is a RegExp, it is compared using `RegExp.test(value)`.
 
 If it is a value, it is compared with `===`.
 
