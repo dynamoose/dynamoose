@@ -301,15 +301,27 @@ Dog.batchDelete([
 ```
 
 ### Model.update(key, update, options, callback)
+### Model.update(keyWithUpdate, callback)
 
 Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
 
+The key can either be its own object or combined with the update object or combined with the update.
+
 **$PUT**
 
-Put is the default behavior.  The two example below are identical.
+Put is the default behavior.  The three example below are identical.
 
+*key and updated are separate*
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {age: 1}, function (err) {
+  if(err) { return console.log(err); }
+  console.log('Just a puppy');
+})
+```
+
+*key and updated are combined*
+```js
+Dog.update({ownerId: 4, name: 'Odie', age: 1}, function (err) {
   if(err) { return console.log(err); }
   console.log('Just a puppy');
 })
