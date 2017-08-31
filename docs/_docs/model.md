@@ -305,7 +305,7 @@ Dog.batchDelete([
 
 Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
 
-The key can either be its own object or combined with the update object or combined with the update.
+The key can either be its own object or combined with the update object.
 
 **$PUT**
 
