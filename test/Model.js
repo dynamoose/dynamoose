@@ -983,6 +983,47 @@ describe('Model', function (){
     //
     // });
 
+
+
+
+    it('Updated key and update together ', function (done) {
+      Cat.update({id: 999, name: 'Felix'}, function (err, data) {
+        should.not.exist(err);
+        should.exist(data);
+        data.id.should.eql(999);
+        data.name.should.equal('Felix');
+        Cat.get(999, function (err, felix){
+          should.not.exist(err);
+          should.exist(felix);
+          felix.id.should.eql(999);
+          felix.name.should.eql('Felix');
+          should.not.exist(felix.owner);
+          should.not.exist(felix.age);
+          done();
+        });
+      });
+    });
+
+    it('Updated key with range and update together ', function (done) {
+      Owner.create({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: '2345551212'})
+      .then(function (owner) {
+        owner.name.should.eql('OwnerToUpdate');
+        owner.phoneNumber.should.eql('2345551212');
+        return Owner.update({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: 'newnumber'});
+      })
+      .then(function (updatedOwner) {
+        updatedOwner.name.should.eql('OwnerToUpdate');
+        updatedOwner.phoneNumber.should.eql('newnumber');
+        return Owner.get({name: 'OwnerToUpdate', address: '123 A Street'});
+      })
+      .then(function (updatedOwner) {
+        updatedOwner.name.should.eql('OwnerToUpdate');
+        updatedOwner.phoneNumber.should.eql('newnumber');
+        done();
+      })
+      .catch(done);
+    });
+
     it('Default puts attribute', function (done) {
       Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {
         should.not.exist(err);
