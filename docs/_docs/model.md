@@ -369,3 +369,19 @@ If true, required attributes will be filled with their default values on update 
 **updateTimestamps**: boolean
 
 If true, the `timestamps` attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
+
+**condition**: string
+
+An expression for a conditional update. See
+[the AWS documentation](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html)
+for more information about condition expressions.
+
+**conditionNames**: object
+
+A map of name substitutions for the condition expression.
+
+**conditionValues**: object
+
+A map of values for the condition expression. Note that in order for
+automatic object conversion to work, the keys in this object must
+match schema attribute names.
