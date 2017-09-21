@@ -64,6 +64,12 @@ describe('Query', function (){
           global: true,
           project: ['name'] // ProjectionType: INCLUDE
         }]
+      },
+      siblings: {
+        type: 'list',
+        list: [ {
+          type: String
+        } ]
       }
     });
 
@@ -83,9 +89,9 @@ describe('Query', function (){
     }
 
     addDogs([
-      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black'},
-      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown'},
-      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown'},
+      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black', siblings: ['Quincy', 'Princes']},
+      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Princes']},
+      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Quincy']},
       {ownerId:3, name: 'Toto', breed: 'Terrier', color: 'Brown'},
       {ownerId:4, name: 'Oddie', breed: 'beagle', color: 'Tan'},
       {ownerId:5, name: 'Pluto', breed: 'unknown', color: 'Mustard'},
@@ -285,6 +291,22 @@ describe('Query', function (){
       done();
     })
     .catch(done);
+
+  });
+
+  it('Basic Query on SGI with filter contains on list', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+       .where('ownerId').eq(2)
+       .filter('siblings').contains('Quincy').exec()
+       .then(function (dogs) {
+         console.log('The dogs', dogs);
+         dogs.length.should.eql(1);
+         dogs[0].ownerId.should.eql(2);
+         done();
+       })
+       .catch(done);
 
   });
 
