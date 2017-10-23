@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, Cat8, CatWithOwner, Owner, ExpiringCat;
+var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, Cat8, CatWithOwner, Owner, ExpiringCat, CatWithGeneratedID;
 
 var ONE_YEAR = 365*24*60*60; // 1 years in seconds
 var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
@@ -199,6 +199,28 @@ describe('Model', function (){
         expires: NINE_YEARS
       }
     );
+
+    CatWithGeneratedID = dynamoose.model('CatWithGeneratedID',
+      {
+        id: {
+          type: String,
+          default: function (model) {
+            return model.owner.name + '_' + model.name;
+          },
+          validate: function (value, model) {
+            return value === model.owner.name + '_' + model.name;
+          }
+        },
+        name: {
+          type: String,
+        },
+        owner: {
+          name: String,
+          address: String
+        }
+      }
+    );
+
     done();
   });
 
@@ -630,6 +652,25 @@ describe('Model', function (){
         should.not.exist(delCat);
 
         Cat.delete(777, done);
+      });
+    });
+  });
+
+  it('Should support deletions with validators', function (done) {
+    var cat = new CatWithGeneratedID({
+        owner: {
+          name: 'Joe',
+          address: 'Somewhere'
+        },
+        name: 'Garfield',
+        id: 'Joe_Garfield'
+      });
+    cat.delete(function (err) {
+      should.not.exist(err);
+      CatWithGeneratedID.get(cat, function (err, delCat) {
+        should.not.exist(err);
+        should.not.exist(delCat);
+        done();
       });
     });
   });
