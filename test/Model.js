@@ -1356,9 +1356,6 @@ describe('Model', function (){
             model: 'Cats6'
           });
         })
-        .then(function(teste, err) {
-          // console.log(teste, err);
-        })
         .catch(function(err){
           should.exist(err.message);
           done();
