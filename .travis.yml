@@ -8,4 +8,6 @@ node_js:
   - "0.12"
 # env: DEBUG=dynamoose*
 before_script:
-  - npm install -g grunt-cli
+  - npm install -g grunt-cli nyc
+script:
+  - nyc npm test && nyc report --reporter=text-lcov | coveralls
