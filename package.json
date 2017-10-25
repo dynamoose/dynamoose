@@ -37,6 +37,7 @@
   "author": "Brandon Goode <brandon@automategreen.com>",
   "license": "MIT",
   "devDependencies": {
+    "coveralls": "^3.0.0",
     "dynamodb-local": "0.0.18",
     "grunt": "^1.0.1",
     "grunt-contrib-jshint": "^1.1.0",

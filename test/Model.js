@@ -1357,7 +1357,7 @@ describe('Model', function (){
           });
         })
         .then(function(teste, err) {
-          console.log(teste, err);
+          // console.log(teste, err);
         })
         .catch(function(err){
           should.exist(err.message);

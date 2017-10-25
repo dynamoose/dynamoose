@@ -301,7 +301,7 @@ describe('Query', function (){
        .where('ownerId').eq(2)
        .filter('siblings').contains('Quincy').exec()
        .then(function (dogs) {
-         console.log('The dogs', dogs);
+        //  console.log('The dogs', dogs);
          dogs.length.should.eql(1);
          dogs[0].ownerId.should.eql(2);
          done();
