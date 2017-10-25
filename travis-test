@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -ev
+
+if [[ $(node --version) =~ "v0.12" ]]; then
+    npm test
+else
+    nyc npm test && nyc report --reporter=text-lcov | coveralls
+fi
+
+exit 0;
