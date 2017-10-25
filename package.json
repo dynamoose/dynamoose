@@ -49,8 +49,9 @@
   "dependencies": {
     "aws-sdk": "^2.80.0",
     "debug": "^2.6.8",
+    "deep-equal": "^1.0.1",
     "hooks": "0.3.2",
-    "lodash": "^4.17.4",
+    "object-path": "^0.11.4",
     "q": "^1.5.0"
   }
 }
