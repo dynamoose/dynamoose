@@ -15,7 +15,7 @@
   "main": "index.js",
   "scripts": {
     "test": "grunt test",
-    "coverage": "grunt coverage"
+    "coverage": "nyc grunt test"
   },
   "keywords": [
     "dynamodb",
@@ -37,14 +37,13 @@
   "author": "Brandon Goode <brandon@automategreen.com>",
   "license": "MIT",
   "devDependencies": {
-    "blanket": "1.1.5",
     "dynamodb-local": "0.0.18",
     "grunt": "^1.0.1",
     "grunt-contrib-jshint": "^1.1.0",
     "grunt-mocha-test": "^0.13.2",
-    "mocha": "^2.5.3",
-    "should": "^11.2.1",
-    "travis-cov": "^0.2.5"
+    "mocha": "^3.5.3",
+    "nyc": "^11.2.1",
+    "should": "^11.2.1"
   },
   "dependencies": {
     "aws-sdk": "^2.80.0",
@@ -52,5 +51,19 @@
     "hooks": "0.3.2",
     "lodash": "^4.17.4",
     "q": "^1.5.0"
+  },
+  "nyc": {
+    "include": [
+      "lib/**/*.js"
+    ],
+    "reporter": [
+      "html",
+      "text-summary"
+    ],
+    "check-coverage": true,
+    "lines": 82,
+    "statements": 82,
+    "functions": 87,
+    "branches": 71
   }
 }
