@@ -10,4 +10,4 @@ node_js:
 before_script:
   - npm install -g grunt-cli nyc
 script:
-  - travis-test
+  - ./travis-test
