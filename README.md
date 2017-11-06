@@ -1,5 +1,6 @@
-# Dynamoose [![Build Status](https://travis-ci.org/automategreen/dynamoose.png)](https://travis-ci.org/automategreen/dynamoose) [![Coverage Status](https://coveralls.io/repos/github/automategreen/dynamoose/badge.svg?branch=master)](https://coveralls.io/github/automategreen/dynamoose?branch=master)
+# Dynamoose
 
+[![Build Status](https://travis-ci.org/automategreen/dynamoose.svg)](https://travis-ci.org/automategreen/dynamoose) [![Coverage Status](https://coveralls.io/repos/github/automategreen/dynamoose/badge.svg?branch=master)](https://coveralls.io/github/automategreen/dynamoose?branch=master)
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http://mongoosejs.com/))
 
@@ -47,7 +48,7 @@ The documentation can be found at https://dynamoosejs.com/api.
 
 ## Help Wanted!
 
-Help improve Dynamoose.  I need all the help I can get to imporve test coverage and the documentation.  If you would like to help please look at the `/test` and `/docs/_docs` folders and make a PR. 
+Help improve Dynamoose.  I need all the help I can get to imporve test coverage and the documentation.  If you would like to help please look at the `/test` and `/docs/_docs` folders and make a PR.
 
 ## Change log
 
