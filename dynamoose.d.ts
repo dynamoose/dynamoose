@@ -150,7 +150,10 @@ declare module "dynamoose" {
 
     batchPut(items: DataSchema[], options?: PutOptions, callback?: (err: Error, items: Model[]) => void): Promise<Model[]>;
     batchPut(items: DataSchema[], callback?: (err: Error, items: Model[]) => void): Promise<Model[]>;
+
+    create(item: DataSchema, options?: PutOptions, callback?: (err: Error, model: Model) => void): Promise<Model>;    
     create(item: DataSchema, callback?: (err: Error, model: Model) => void): Promise<Model>;
+    create(item: DataSchema, options?: PutOptions): Promise<Model>;        
 
     get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model | undefined>;
     batchGet(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model[]>;
