@@ -127,19 +127,19 @@ declare module "dynamoose" {
     /**
      * Overwrite existing item. Defaults to true.
      */
-    overwrite: boolean;
+    overwrite?: boolean;
     /**
      * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
      */
-    condition: string;
+    condition?: string;
     /**
     * A map of name substitutions for the condition expression.
     */
-    conditionNames: any;
+    conditionNames?: any;
     /**
     * A map of values for the condition expression. Note that in order for automatic object conversion to work, the keys in this object must match schema attribute names.
     */
-    conditionValues: any;
+    conditionValues?: any;
   }
   type SaveOptions = PutOptions;
 
