@@ -280,6 +280,4 @@ declare module "dynamoose" {
     get(fn: any): any;
     set(fn: any): any;
   }
-
-  export function local(url?: string): void;
 }
