@@ -119,9 +119,9 @@ declare module "dynamoose" {
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
 
-    // @todo missing populate support (e.g. populated path)
-    populate<T>(path: string | { path: string, model: string }): Promise<Model<ModelData> & T>
+    populate<T>(path: string | PopulateOptions ): Promise<Model<ModelData> & T>
   }
+  type PopulateOptions = { path: string, model: string, populate?: PopulateOptions }
 
   export interface PutOptions {
     /**
