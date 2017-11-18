@@ -5,11 +5,11 @@ declare module "dynamoose" {
   export var AWS: typeof _AWS;
 
   export function local(url: string): void;
-  export function model<DataSchema, KeySchema, ModelSchema extends Model<DataSchema>>(
+  export function model<DataSchema, KeySchema>(
     modelName: string,
     schema: Schema,
     options?: ModelOption
-  ): ModelConstructor<DataSchema, KeySchema, ModelSchema>;
+  ): ModelConstructor<DataSchema, KeySchema>;
   export function setDefaults(options: ModelOption): void;
 
   export interface ModelOption {
@@ -119,9 +119,9 @@ declare module "dynamoose" {
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
 
-    // @todo missing populate support (e.g. populated path)
-    populate<T>(path: string | { path: string, model: string }): Promise<Model<ModelData> & T>
+    populate<T>(path: string | PopulateOptions): Promise<Model<ModelData> & T>
   }
+  type PopulateOptions = { path: string, model: string, populate?: PopulateOptions }
 
   export interface PutOptions {
     /**
@@ -143,29 +143,31 @@ declare module "dynamoose" {
   }
   type SaveOptions = PutOptions;
 
-  export interface ModelConstructor<DataSchema, KeySchema, Model> {
-    new (value?: DataSchema): Model;
-    (value?: DataSchema): Model;
-    readonly prototype: Model;
+  export interface ModelConstructor<DataSchema, KeySchema> {
+    new(value?: DataSchema): ModelSchema<DataSchema>;
+    (value?: DataSchema): ModelSchema<DataSchema>;
+    readonly prototype: ModelSchema<DataSchema>;
 
-    batchPut(items: DataSchema[], options?: PutOptions, callback?: (err: Error, items: Model[]) => void): Promise<Model[]>;
-    batchPut(items: DataSchema[], callback?: (err: Error, items: Model[]) => void): Promise<Model[]>;
-    create(item: DataSchema, callback?: (err: Error, model: Model) => void): Promise<Model>;
+    batchPut(items: DataSchema[], options?: PutOptions, callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
+    batchPut(items: DataSchema[], callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
+    create(item: DataSchema, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
 
-    get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model | undefined>;
-    batchGet(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model[]>;
+    get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema> | undefined>;
+    batchGet(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema>[]>;
 
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
     batchDelete(keys: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
 
-    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model, QueryResult<Model>>;
-    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model, Model>;
-    scan(filter?: ScanFilter, callback?: (err: Error, results: Model[]) => void): ScanInterface<Model>;
+    query(query: QueryFilter, callback?: (err: Error, results: ModelSchema<DataSchema>[]) => void): QueryInterface<ModelSchema<DataSchema>, QueryResult<ModelSchema<DataSchema>>>;
+    queryOne(query: QueryFilter, callback?: (err: Error, results: ModelSchema<DataSchema>) => void): QueryInterface<ModelSchema<DataSchema>, ModelSchema<DataSchema>>;
+    scan(filter?: ScanFilter, callback?: (err: Error, results: ModelSchema<DataSchema>[]) => void): ScanInterface<ModelSchema<DataSchema>>;
 
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: Model[]) => void): void;
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: Model[]) => void): void;
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<Model>;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<ModelSchema<DataSchema>>;
   }
+  type ModelSchema<T> = Model<T> & T;
+
   /**
    * Update
    */
@@ -278,6 +280,4 @@ declare module "dynamoose" {
     get(fn: any): any;
     set(fn: any): any;
   }
-
-  export function local(url?: string): void;
 }
