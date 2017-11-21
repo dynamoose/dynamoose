@@ -452,8 +452,8 @@ describe('Model', function (){
             name : "puddles",
             age: 2
           }
-        }
-        ,characteristics: ['cute', 'fuzzy']
+        },
+        characteristics: ['cute', 'fuzzy']
       }
     );
 
@@ -472,8 +472,8 @@ describe('Model', function (){
             "mittens": {M: {"name": {S: "mittens"}, "age": {N: '1'}}},
             "puddles": {M: {"name": {S: "puddles"}, "age": {N: '2'}}}
           }
-        }
-        ,characteristics: {L: [{S: 'cute'}, {S: 'fuzzy'}]}
+        },
+        characteristics: {L: [{S: 'cute'}, {S: 'fuzzy'}]}
       });
 
     kitten.save(done);
