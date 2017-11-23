@@ -439,7 +439,7 @@ describe('Model', function (){
     });
   });
   
-  it('Get and Scan corrupted item', function (done) {
+  it('Get and Update corrupted item', function (done) {
     
     // create corrupted item
     var req = dynamoose.ddb().putItem({
@@ -460,9 +460,8 @@ describe('Model', function (){
       return Cat7.get(7);
     }).catch(function(err){
       should.exist(err.message);
-      return null;
     }).then(function(){
-      return Cat7.scan();
+      return Cat7.update(7, { name : 'my favorite cat'});
     }).catch(function(err){
       should.exist(err.message);
       done();
