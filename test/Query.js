@@ -352,4 +352,27 @@ describe('Query', function (){
     .catch(done);
 
   });
+
+  it('Query.all', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('ownerId').eq(20).limit(2).all().exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(4);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Query.all(1, 3)', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('ownerId').eq(20).limit(1).all(1, 3).exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(3);
+      dogs.timesScanned.should.eql(3);
+      done();
+    })
+    .catch(done);
+  });
 });
