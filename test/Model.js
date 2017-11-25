@@ -145,7 +145,8 @@ describe('Model', function (){
         name: {
           type: String
         },
-        parent: Number
+        parent: Number,
+        isHappy: Boolean
       }
     );
 
@@ -437,7 +438,36 @@ describe('Model', function (){
       done();
     });
   });
-
+  
+  it('Get and Update corrupted item', function (done) {
+    
+    // create corrupted item
+    var req = dynamoose.ddb().putItem({
+      Item: {
+       "id": {
+         N: "7"
+        }, 
+       "isHappy": {
+         // this is the data corruption
+         S: "tue"
+        }
+      }, 
+      ReturnConsumedCapacity: "TOTAL", 
+      TableName: Cat7.$__.table.name
+    });
+    
+    req.promise().then(function(){
+      return Cat7.get(7);
+    }).catch(function(err){
+      should.exist(err.message);
+    }).then(function(){
+      return Cat7.update(7, { name : 'my favorite cat'});
+    }).catch(function(err){
+      should.exist(err.message);
+      done();
+    });
+  });
+  
   it('Save existing item', function (done) {
 
     Cat.get(1, function(err, model) {
