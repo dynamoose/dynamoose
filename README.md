@@ -1,5 +1,7 @@
 # Dynamoose
 
+[![Join the chat at https://gitter.im/dynamoosejs/Lobby](https://badges.gitter.im/dynamoosejs/Lobby.svg)](https://gitter.im/dynamoosejs/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/automategreen/dynamoose.svg)](https://travis-ci.org/automategreen/dynamoose) [![Coverage Status](https://coveralls.io/repos/github/automategreen/dynamoose/badge.svg?branch=master)](https://coveralls.io/github/automategreen/dynamoose?branch=master)
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http://mongoosejs.com/))
