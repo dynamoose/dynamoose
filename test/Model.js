@@ -12,7 +12,7 @@ dynamoose.local();
 
 var should = require('should');
 
-var Cat, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, Cat8, CatWithOwner, Owner, ExpiringCat, CatWithGeneratedID;
+var Cat, Cat1, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, Cat8, CatWithOwner, Owner, ExpiringCat, CatWithGeneratedID;
 
 var ONE_YEAR = 365*24*60*60; // 1 years in seconds
 var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
@@ -52,6 +52,29 @@ describe('Model', function (){
       }
     },
     {useDocumentTypes: true});
+
+    // Create a model with unnamed attributes
+    Cat1 = dynamoose.model('Cat1',
+      {
+        id: {
+          type:  Number,
+          validate: function (v) { return v > 0; },
+          default: 888
+        },
+        name: {
+          type: String,
+          required: true,
+          default: 'Mittens'
+        },
+        owner: String
+        // children: {
+        //   type: Object
+        // }
+      },
+      {
+        useDocumentTypes: true,
+        saveUnknown: true
+      });
 
     // Create a model with a range key
     Cat2 = dynamoose.model('Cat2',
@@ -380,6 +403,78 @@ describe('Model', function (){
         owner: { S: 'Someone' },
         unnamedInt: { N: '1' },
         unnamedString: { S: 'unnamed' },
+      });
+
+    kitten.save(done);
+
+  });
+
+  it('Create complex model with unnamed attributes', function (done) {
+
+
+    this.timeout(12000);
+
+
+    Cat1.should.have.property('$__');
+
+    Cat1.$__.name.should.eql('test-Cat1');
+    Cat1.$__.options.should.have.property('saveUnknown', true);
+
+    var schema = Cat1.$__.schema;
+
+    should.exist(schema);
+
+    schema.attributes.id.type.name.should.eql('number');
+    should(schema.attributes.id.isSet).not.be.ok;
+    should.exist(schema.attributes.id.default);
+    should.exist(schema.attributes.id.validator);
+    should(schema.attributes.id.required).not.be.ok;
+
+    schema.attributes.name.type.name.should.eql('string');
+    schema.attributes.name.isSet.should.not.be.ok;
+    should.exist(schema.attributes.name.default);
+    should.not.exist(schema.attributes.name.validator);
+    should(schema.attributes.name.required).be.ok;
+
+    schema.hashKey.should.equal(schema.attributes.id); // should be same object
+    should.not.exist(schema.rangeKey);
+
+    var kitten = new Cat1(
+      {
+        id: 2,
+        name: 'Fluffy',
+        owner: 'Someone',
+        children: {
+          "mittens" : {
+            name : "mittens",
+            age: 1
+          },
+          "puddles" : {
+            name : "puddles",
+            age: 2
+          }
+        },
+        characteristics: ['cute', 'fuzzy']
+      }
+    );
+
+    kitten.id.should.eql(2);
+    kitten.name.should.eql('Fluffy');
+
+    var dynamoObj = schema.toDynamo(kitten);
+
+    dynamoObj.should.eql(
+      {
+        id: {N: '2'},
+        name: {S: 'Fluffy'},
+        owner: {S: 'Someone'},
+        children: {
+          M: {
+            "mittens": {M: {"name": {S: "mittens"}, "age": {N: '1'}}},
+            "puddles": {M: {"name": {S: "puddles"}, "age": {N: '2'}}}
+          }
+        },
+        characteristics: {L: [{S: 'cute'}, {S: 'fuzzy'}]}
       });
 
     kitten.save(done);
