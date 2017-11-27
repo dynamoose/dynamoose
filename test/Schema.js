@@ -294,6 +294,42 @@ describe('Schema tests', function (){
   });
 
 
+  it('Schema with timestamps options that are rangeKey', function () {
+    var schema = new Schema({
+      id: {
+        type: Number,
+        hashKey: true
+      },
+      started_at: {
+        type: Number,
+        rangeKey: true
+      }
+    },
+      {
+        timestamps: {
+          createdAt: 'started_at',
+          updatedAt: 'updated_at'
+        }
+      });
+
+    should.exist(schema.attributes.started_at);
+    should.exist(schema.attributes.updated_at);
+    schema.attributes.started_at.type.name.should.eql('date');
+    should.exist(schema.attributes.updated_at.default);
+    should.exist(schema.rangeKey);
+    schema.rangeKey.should.equal(schema.attributes.started_at);
+
+    //
+    // Schema timestamps validation
+    //
+    should.exist(schema.timestamps);
+    should.exist(schema.timestamps.createdAt);
+    schema.timestamps.createdAt.should.be.equal('started_at');
+    should.exist(schema.timestamps.updatedAt);
+    schema.timestamps.updatedAt.should.be.equal('updated_at');
+  });
+
+
   it('Schema with use Document Types', function (done) {
     var schema = new Schema({
       id: {
