@@ -11,240 +11,19 @@ dynamoose.AWS.config.update({
 dynamoose.local();
 
 var should = require('should');
+var CatsFixture = require('./fixtures/Cats');
 
-var Cat, Cat1, Cat2, Cat3, Cat4, Cat5, Cat6, Cat7, Cat8, CatWithOwner, Owner, ExpiringCat, CatWithGeneratedID;
+var Cats = {};
 
 var ONE_YEAR = 365*24*60*60; // 1 years in seconds
 var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
 
 describe('Model', function (){
   this.timeout(15000);
-
-
   before(function(done) {
     this.timeout(12000);
-
     dynamoose.setDefaults({ prefix: 'test-' });
-
-
-    Cat = dynamoose.model('Cat',
-    {
-      id: {
-        type:  Number,
-        validate: function (v) { return v > 0; }
-      },
-      name: String,
-      owner: String,
-      age: { type: Number },
-      vet:{
-        name: String,
-        address: String
-      },
-      ears:[{
-        name: String
-      }],
-      legs: [String],
-      more: Object,
-      array: Array,
-      validated: {
-        type: String,
-        validate: function (v) { return v === 'valid'; }
-      }
-    },
-    {useDocumentTypes: true});
-
-    // Create a model with unnamed attributes
-    Cat1 = dynamoose.model('Cat1',
-      {
-        id: {
-          type:  Number,
-          validate: function (v) { return v > 0; },
-          default: 888
-        },
-        name: {
-          type: String,
-          required: true,
-          default: 'Mittens'
-        },
-        owner: String
-        // children: {
-        //   type: Object
-        // }
-      },
-      {
-        useDocumentTypes: true,
-        saveUnknown: true
-      });
-
-    // Create a model with a range key
-    Cat2 = dynamoose.model('Cat2',
-    {
-      ownerId: {
-        type: Number,
-        hashKey: true
-      },
-      name: {
-        type: String,
-        rangeKey: true
-      }
-    });
-
-    // Create a model with required attributes
-    Cat3 = dynamoose.model('Cat3',
-    {
-      id: {
-        type:  Number,
-        validate: function (v) { return v > 0; },
-        default: 888
-      },
-      name: {
-        type: String,
-        required: true,
-        default: 'Mittens'
-      },
-      owner: String,
-      age: {
-        type: Number,
-        required: true
-      }
-    });
-
-    // Create a model with timestamps
-    Cat4 = dynamoose.model('Cat4',
-    {
-      id: {
-        type:  Number,
-        validate: function (v) { return v > 0; }
-      },
-      name: {
-        type: String,
-        default: 'Bobo'
-      }
-    },
-    {
-      timestamps: {
-        createdAt: 'myLittleCreatedAt',
-        updatedAt: 'myLittleUpdatedAt'
-      }
-    });
-
-    // Create a model with unnamed attributes
-    Cat5 = dynamoose.model('Cat5',
-      {
-        id: {
-          type:  Number,
-          validate: function (v) { return v > 0; },
-          default: 888
-        },
-        name: {
-          type: String,
-          required: true,
-          default: 'Mittens'
-        },
-        owner: String,
-      },
-      {
-        saveUnknown: true
-      });
-
-    Cat6 = dynamoose.model('Cat6',
-      {
-        id: {
-          type:  Number
-        },
-        name: {
-          type: String
-        },
-        parent: Number
-      }
-    );
-
-    Cat7 = dynamoose.model('Cat7',
-      {
-        id: {
-          type:  Number,
-          hashKey: true
-        },
-        name: {
-          type: String
-        },
-        parent: Number,
-        isHappy: Boolean
-      }
-    );
-
-    Cat8 = dynamoose.model('Cat8',
-      {
-        id: {
-          type:  Number,
-          hashKey: true
-        },
-        age: {
-          type: Number,
-          rangeKey: true
-        }
-      }
-    );
-
-    CatWithOwner = dynamoose.model('CatWithOwner',
-      {
-        id: {
-          type:  Number
-        },
-        name: {
-          type: String
-        },
-        owner: {
-          name: String,
-          address: String
-        }
-      }
-    );
-
-    Owner = dynamoose.model('Owner',
-      {
-        name: {
-          type: String,
-          hashKey: true
-        },
-        address: {
-          type: String,
-          rangeKey: true
-        },
-        phoneNumber: String
-      }
-    );
-
-    ExpiringCat = dynamoose.model('ExpiringCat',
-      {
-        name: String
-      },
-      {
-        expires: NINE_YEARS
-      }
-    );
-
-    CatWithGeneratedID = dynamoose.model('CatWithGeneratedID',
-      {
-        id: {
-          type: String,
-          default: function (model) {
-            return model.owner.name + '_' + model.name;
-          },
-          validate: function (value, model) {
-            return value === model.owner.name + '_' + model.name;
-          }
-        },
-        name: {
-          type: String,
-        },
-        owner: {
-          name: String,
-          address: String
-        }
-      }
-    );
-
+    Cats = CatsFixture(dynamoose);
     done();
   });
 
@@ -258,12 +37,12 @@ describe('Model', function (){
     this.timeout(12000);
 
 
-    Cat.should.have.property('$__');
+    Cats.Cat.should.have.property('$__');
 
-    Cat.$__.name.should.eql('test-Cat');
-    Cat.$__.options.should.have.property('create', true);
+    Cats.Cat.$__.name.should.eql('test-Cat');
+    Cats.Cat.$__.options.should.have.property('create', true);
 
-    var schema = Cat.$__.schema;
+    var schema = Cats.Cat.$__.schema;
 
     should.exist(schema);
 
@@ -282,7 +61,7 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cat(
+    var kitten = new Cats.Cat(
       {
         id: 1,
         name: 'Fluffy',
@@ -325,12 +104,12 @@ describe('Model', function (){
   it('Create simple model with range key', function () {
 
 
-    Cat2.should.have.property('$__');
+    Cats.Cat2.should.have.property('$__');
 
-    Cat2.$__.name.should.eql('test-Cat2');
-    Cat2.$__.options.should.have.property('create', true);
+    Cats.Cat2.$__.name.should.eql('test-Cat2');
+    Cats.Cat2.$__.options.should.have.property('create', true);
 
-    var schema = Cat2.$__.schema;
+    var schema = Cats.Cat2.$__.schema;
 
     should.exist(schema);
 
@@ -357,12 +136,12 @@ describe('Model', function (){
     this.timeout(12000);
 
 
-    Cat5.should.have.property('$__');
+    Cats.Cat5.should.have.property('$__');
 
-    Cat5.$__.name.should.eql('test-Cat5');
-    Cat5.$__.options.should.have.property('saveUnknown', true);
+    Cats.Cat5.$__.name.should.eql('test-Cat5');
+    Cats.Cat5.$__.options.should.have.property('saveUnknown', true);
 
-    var schema = Cat5.$__.schema;
+    var schema = Cats.Cat5.$__.schema;
 
     should.exist(schema);
 
@@ -381,7 +160,7 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cat5(
+    var kitten = new Cats.Cat5(
       {
         id: 2,
         name: 'Fluffy',
@@ -415,12 +194,12 @@ describe('Model', function (){
     this.timeout(12000);
 
 
-    Cat1.should.have.property('$__');
+    Cats.Cat1.should.have.property('$__');
 
-    Cat1.$__.name.should.eql('test-Cat1');
-    Cat1.$__.options.should.have.property('saveUnknown', true);
+    Cats.Cat1.$__.name.should.eql('test-Cat1');
+    Cats.Cat1.$__.options.should.have.property('saveUnknown', true);
 
-    var schema = Cat1.$__.schema;
+    var schema = Cats.Cat1.$__.schema;
 
     should.exist(schema);
 
@@ -439,7 +218,7 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cat1(
+    var kitten = new Cats.Cat1(
       {
         id: 2,
         name: 'Fluffy',
@@ -483,7 +262,7 @@ describe('Model', function (){
 
   it('Get item for model with unnamed attributes', function (done) {
 
-    Cat5.get(2, function(err, model) {
+    Cats.Cat5.get(2, function(err, model) {
       should.not.exist(err);
       should.exist(model);
 
@@ -499,7 +278,7 @@ describe('Model', function (){
 
   it('Get item for model', function (done) {
 
-    Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, function(err, model) {
       should.not.exist(err);
       should.exist(model);
 
@@ -512,9 +291,9 @@ describe('Model', function (){
   });
 
   it('Get item for model with falsy keys', function (done) {
-    Cat8.create({id: 0, age: 0})
+    Cats.Cat8.create({id: 0, age: 0})
       .then(function () {
-        return Cat8.get({id: 0, age: 0});
+        return Cats.Cat8.get({id: 0, age: 0});
       })
       .then(function (falsyCat) {
         falsyCat.should.have.property('id', 0);
@@ -526,7 +305,7 @@ describe('Model', function (){
 
   it('Get item with invalid key', function (done) {
 
-    Cat.get(0, function(err, model) {
+    Cats.Cat.get(0, function(err, model) {
       should.exist(err);
       err.name.should.equal('ValidationError');
       should.not.exist(model);
@@ -548,15 +327,15 @@ describe('Model', function (){
         }
       }, 
       ReturnConsumedCapacity: "TOTAL", 
-      TableName: Cat7.$__.table.name
+      TableName: Cats.Cat7.$__.table.name
     });
     
     req.promise().then(function(){
-      return Cat7.get(7);
+      return Cats.Cat7.get(7);
     }).catch(function(err){
       should.exist(err.message);
     }).then(function(){
-      return Cat7.update(7, { name : 'my favorite cat'});
+      return Cats.Cat7.update(7, { name : 'my favorite cat'});
     }).catch(function(err){
       should.exist(err.message);
       done();
@@ -565,7 +344,7 @@ describe('Model', function (){
   
   it('Save existing item', function (done) {
 
-    Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, function(err, model) {
       should.not.exist(err);
       should.exist(model);
 
@@ -578,7 +357,7 @@ describe('Model', function (){
       model.save(function (err) {
         should.not.exist(err);
 
-        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
           should.not.exist(err);
           badCat.name.should.eql('Bad Cat');
           badCat.vet.name.should.eql('Tough Vet');
@@ -591,7 +370,7 @@ describe('Model', function (){
   });
 
   it('Save existing item with a false condition', function (done) {
-    Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, function(err, model) {
       should.not.exist(err);
       should.exist(model);
 
@@ -606,7 +385,7 @@ describe('Model', function (){
         should.exist(err);
         err.code.should.eql('ConditionalCheckFailedException');
 
-        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
           should.not.exist(err);
           badCat.name.should.eql('Bad Cat');
           done();
@@ -616,7 +395,7 @@ describe('Model', function (){
   });
 
   it('Save existing item with a true condition', function (done) {
-    Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, function(err, model) {
       should.not.exist(err);
       should.exist(model);
 
@@ -630,7 +409,7 @@ describe('Model', function (){
       }, function (err) {
         should.not.exist(err);
 
-        Cat.get({id: 1}, {consistent: true}, function(err, whiskers) {
+        Cats.Cat.get({id: 1}, {consistent: true}, function(err, whiskers) {
           should.not.exist(err);
           whiskers.name.should.eql('Whiskers');
           done();
@@ -641,12 +420,12 @@ describe('Model', function (){
 
   it('Save with a pre hook', function (done) {
     var flag = false;
-    Cat.pre('save', function (next) {
+    Cats.Cat.pre('save', function (next) {
       flag = true;
       next();
     });
 
-    Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, function(err, model) {
       should.not.exist(err);
       should.exist(model);
 
@@ -657,13 +436,13 @@ describe('Model', function (){
       model.save(function (err) {
         should.not.exist(err);
 
-        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
           should.not.exist(err);
           badCat.name.should.eql('Fluffy');
           badCat.vet.name.should.eql('Nice Guy');
           flag.should.be.true;
 
-          Cat.removePre('save');
+          Cats.Cat.removePre('save');
           done();
         });
       });
@@ -671,7 +450,7 @@ describe('Model', function (){
   });
 
   it('Save existing item with an invalid attribute', function (done) {
-    Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, function(err, model) {
       should.not.exist(err);
       should.exist(model);
 
@@ -679,7 +458,7 @@ describe('Model', function (){
       model.save().catch(function(err) {
         should.exist(err);
         err.name.should.equal('ValidationError');
-        Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
           should.not.exist(err);
           badCat.name.should.eql('Fluffy');
           badCat.vet.name.should.eql('Nice Guy');
@@ -693,14 +472,14 @@ describe('Model', function (){
 
   it('Deletes item', function (done) {
 
-    var cat = new Cat({id: 1});
+    var cat = new Cats.Cat({id: 1});
 
     cat.delete(done);
   });
 
   it('Deletes item with invalid key', function (done) {
 
-    var cat = new Cat({id: 0});
+    var cat = new Cats.Cat({id: 0});
 
     cat.delete(function(err) {
       should.exist(err);
@@ -712,7 +491,7 @@ describe('Model', function (){
   it('Get missing item', function (done) {
 
 
-    Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, function(err, model) {
       should.not.exist(err);
       should.not.exist(model);
       done();
@@ -720,7 +499,7 @@ describe('Model', function (){
   });
 
   it('Static Creates new item', function (done) {
-    Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+    Cats.Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
       should.not.exist(err);
       should.exist(garfield);
       garfield.id.should.eql(666);
@@ -729,7 +508,7 @@ describe('Model', function (){
   });
 
   it('Static Creates new item with range key', function (done) {
-    Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
+    Cats.Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
       should.not.exist(err);
       should.exist(garfield);
       garfield.ownerId.should.eql(666);
@@ -738,7 +517,7 @@ describe('Model', function (){
   });
 
   it('Prevent duplicate create', function (done) {
-    Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+    Cats.Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
       should.exist(err);
       should.not.exist(garfield);
       done();
@@ -746,7 +525,7 @@ describe('Model', function (){
   });
 
   it('Prevent duplicate create with range key', function (done) {
-    Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
+    Cats.Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
       should.exist(err);
       should.not.exist(garfield);
       done();
@@ -754,7 +533,7 @@ describe('Model', function (){
   });
 
   it('Static Creates second item', function (done) {
-    Cat.create({id: 777, name: 'Catbert'}, function (err, catbert) {
+    Cats.Cat.create({id: 777, name: 'Catbert'}, function (err, catbert) {
       should.not.exist(err);
       should.exist(catbert);
       catbert.id.should.eql(777);
@@ -763,26 +542,26 @@ describe('Model', function (){
   });
 
   it('BatchGet items', function (done) {
-    Cat.batchGet([{id: 666}, {id: 777}], function (err, cats) {
+    Cats.Cat.batchGet([{id: 666}, {id: 777}], function (err, cats) {
       cats.length.should.eql(2);
       done();
     });
   });
 
   it('Static Delete', function (done) {
-    Cat.delete(666, function (err) {
+    Cats.Cat.delete(666, function (err) {
       should.not.exist(err);
-      Cat.get(666, function (err, delCat) {
+      Cats.Cat.get(666, function (err, delCat) {
         should.not.exist(err);
         should.not.exist(delCat);
 
-        Cat.delete(777, done);
+        Cats.Cat.delete(777, done);
       });
     });
   });
 
   it('Should support deletions with validators', function (done) {
-    var cat = new CatWithGeneratedID({
+    var cat = new Cats.CatWithGeneratedID({
         owner: {
           name: 'Joe',
           address: 'Somewhere'
@@ -792,7 +571,7 @@ describe('Model', function (){
       });
     cat.delete(function (err) {
       should.not.exist(err);
-      CatWithGeneratedID.get(cat, function (err, delCat) {
+      Cats.CatWithGeneratedID.get(cat, function (err, delCat) {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
@@ -801,9 +580,9 @@ describe('Model', function (){
   });
 
   it('Static Delete with range key', function (done) {
-    Cat2.delete({ ownerId: 666, name: 'Garfield' }, function (err) {
+    Cats.Cat2.delete({ ownerId: 666, name: 'Garfield' }, function (err) {
       should.not.exist(err);
-      Cat2.get({ ownerId: 666, name: 'Garfield' }, function (err, delCat) {
+      Cats.Cat2.get({ ownerId: 666, name: 'Garfield' }, function (err, delCat) {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
@@ -812,7 +591,7 @@ describe('Model', function (){
   });
 
   it('Static Creates new item', function (done) {
-    Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+    Cats.Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
       should.not.exist(err);
       should.exist(garfield);
       garfield.id.should.eql(666);
@@ -821,12 +600,12 @@ describe('Model', function (){
   });
 
   it('Static Delete with update', function (done) {
-    Cat.delete(666, { update: true }, function (err, data) {
+    Cats.Cat.delete(666, { update: true }, function (err, data) {
       should.not.exist(err);
       should.exist(data);
       data.id.should.eql(666);
       data.name.should.eql('Garfield');
-      Cat.get(666, function (err, delCat) {
+      Cats.Cat.get(666, function (err, delCat) {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
@@ -835,7 +614,7 @@ describe('Model', function (){
   });
 
   it('Static Delete with update failure', function (done) {
-    Cat.delete(666, { update: true }, function (err) {
+    Cats.Cat.delete(666, { update: true }, function (err) {
       should.exist(err);
       err.statusCode.should.eql(400);
       err.code.should.eql('ConditionalCheckFailedException');
@@ -846,18 +625,18 @@ describe('Model', function (){
 
   describe('Model.update', function (){
     before(function (done) {
-      var stray = new Cat({id: 999, name: 'Tom'});
+      var stray = new Cats.Cat({id: 999, name: 'Tom'});
       stray.save(done);
     });
 
     it('False condition', function (done) {
-      Cat.update({id: 999}, {name: 'Oliver'}, {
+      Cats.Cat.update({id: 999}, {name: 'Oliver'}, {
         condition: '#name = :name',
         conditionNames: { name: 'name' },
         conditionValues: { name: 'Muffin' }
       }, function (err) {
         should.exist(err);
-        Cat.get(999, function (err, tomcat) {
+        Cats.Cat.get(999, function (err, tomcat) {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -870,7 +649,7 @@ describe('Model', function (){
     });
 
     it('True condition', function (done) {
-      Cat.update({id: 999}, {name: 'Oliver'}, {
+      Cats.Cat.update({id: 999}, {name: 'Oliver'}, {
         condition: '#name = :name',
         conditionNames: { name: 'name' },
         conditionValues: { name: 'Tom' }
@@ -879,7 +658,7 @@ describe('Model', function (){
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Oliver');
-        Cat.get(999, function (err, oliver) {
+        Cats.Cat.get(999, function (err, oliver) {
           should.not.exist(err);
           should.exist(oliver);
           oliver.id.should.eql(999);
@@ -892,28 +671,28 @@ describe('Model', function (){
     });
 
     it("If key is null or undefined, will use defaults", function (done) {
-      Cat3.update(null, {age: 3, name: 'Furrgie'}, function (err, data) {
+      Cats.Cat3.update(null, {age: 3, name: 'Furrgie'}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(888);
         data.name.should.equal('Furrgie');
         data.age.should.equal(3);
 
-        Cat3.get(888, function (err, furrgie) {
+        Cats.Cat3.get(888, function (err, furrgie) {
           should.not.exist(err);
           should.exist(furrgie);
           furrgie.id.should.eql(888);
           furrgie.name.should.eql('Furrgie');
           data.age.should.equal(3);
 
-          Cat3.update(undefined, {age: 4}, function (err, data) {
+          Cats.Cat3.update(undefined, {age: 4}, function (err, data) {
             should.not.exist(err);
             should.exist(data);
             data.id.should.eql(888);
             data.name.should.equal('Furrgie');
             data.age.should.equal(4);
 
-            Cat3.get(888, function (err, furrgie) {
+            Cats.Cat3.get(888, function (err, furrgie) {
               should.not.exist(err);
               should.exist(furrgie);
               furrgie.id.should.eql(888);
@@ -928,7 +707,7 @@ describe('Model', function (){
     });
 
     it("If key is null or undefined and default isn't provided, will throw an error", function (done) {
-      Cat.update(null, {name: 'Oliver'}, function (err, data) {
+      Cats.Cat.update(null, {name: 'Oliver'}, function (err, data) {
         should.not.exist(data);
         should.exist(err);
         done();
@@ -936,14 +715,14 @@ describe('Model', function (){
     });
 
     it("If key is a value, will search by that value", function (done) {
-      Cat3.update(888, {age: 5}, function (err, data) {
+      Cats.Cat3.update(888, {age: 5}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(888);
         data.name.should.equal('Furrgie');
         data.age.should.equal(5);
 
-        Cat3.get(888, function (err, furrgie) {
+        Cats.Cat3.get(888, function (err, furrgie) {
           should.not.exist(err);
           should.exist(furrgie);
           furrgie.id.should.eql(888);
@@ -955,13 +734,13 @@ describe('Model', function (){
     });
 
     it("Creates an item with required attributes' defaults if createRequired is true", function (done) {
-      Cat3.update({id: 25}, {age: 3}, {createRequired: true}, function (err, data) {
+      Cats.Cat3.update({id: 25}, {age: 3}, {createRequired: true}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(25);
         data.name.should.equal('Mittens');
         data.age.should.equal(3);
-        Cat3.get(25, function (err, mittens) {
+        Cats.Cat3.get(25, function (err, mittens) {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(25);
@@ -974,10 +753,10 @@ describe('Model', function (){
     });
 
     it("Throws an error when a required attribute has no default and has not been specified in the update if createRequired is true", function (done) {
-      Cat3.update({id: 25}, {name: 'Rufflestiltskins'}, {createRequired: true}, function (err, data) {
+      Cats.Cat3.update({id: 25}, {name: 'Rufflestiltskins'}, {createRequired: true}, function (err, data) {
         should.not.exist(data);
         should.exist(err);
-        Cat3.get(25, function (err, mittens) {
+        Cats.Cat3.get(25, function (err, mittens) {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(25);
@@ -988,13 +767,13 @@ describe('Model', function (){
     });
 
     it('Adds required attributes, even when not specified, if createRequired is true', function (done) {
-      Cat3.update({id: 45}, {age: 4}, {createRequired: true}, function (err, data) {
+      Cats.Cat3.update({id: 45}, {age: 4}, {createRequired: true}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(45);
         data.name.should.equal('Mittens');
         data.age.should.equal(4);
-        Cat3.get(45, function (err, mittens) {
+        Cats.Cat3.get(45, function (err, mittens) {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(45);
@@ -1007,13 +786,13 @@ describe('Model', function (){
     });
 
     it('Does not add required attributes if createRequired is false', function (done) {
-      Cat3.update({id: 24}, {name: 'Cat-rina'}, {createRequired: false}, function (err, data) {
+      Cats.Cat3.update({id: 24}, {name: 'Cat-rina'}, {createRequired: false}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(24);
         data.name.should.equal('Cat-rina');
         should.not.exist(data.age);
-        Cat3.get(24, function (err, mittens) {
+        Cats.Cat3.get(24, function (err, mittens) {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(24);
@@ -1027,8 +806,8 @@ describe('Model', function (){
 
     it('If item did not exist and timestamps are desired, createdAt and updatedAt will both be filled in', function (done) {
       // try a delete beforehand in case the test is run more than once
-      Cat4.delete({id: 22}, function () {
-        Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+      Cats.Cat4.delete({id: 22}, function () {
+        Cats.Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
           should.not.exist(err);
           should.exist(data);
           should.exist(data.myLittleCreatedAt);
@@ -1036,7 +815,7 @@ describe('Model', function (){
           data.id.should.eql(22);
           data.name.should.equal('Twinkles');
 
-          Cat4.get(22, function (err, twinkles) {
+          Cats.Cat4.get(22, function (err, twinkles) {
             should.not.exist(err);
             should.exist(twinkles);
             twinkles.id.should.eql(22);
@@ -1051,8 +830,8 @@ describe('Model', function (){
 
     it('UpdatedAt will be updated ', function (done) {
       // try a delete beforehand in case the test is run more than once
-      Cat4.delete({id: 22}, function () {
-        Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+      Cats.Cat4.delete({id: 22}, function () {
+        Cats.Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
           should.not.exist(err);
           should.exist(data);
           data.id.should.eql(22);
@@ -1061,13 +840,13 @@ describe('Model', function (){
           should.exist(data.myLittleUpdatedAt);
 
           // now do another update
-          Cat4.update({id: 22}, {name: 'Furr-nando'}, function (err, data) {
+          Cats.Cat4.update({id: 22}, {name: 'Furr-nando'}, function (err, data) {
             should.not.exist(err);
             should.exist(data);
             data.id.should.eql(22);
             data.name.should.equal('Furr-nando');
             data.myLittleUpdatedAt.getTime().should.be.above(data.myLittleCreatedAt.getTime());
-            Cat4.get(22, function (err, furrnando) {
+            Cats.Cat4.get(22, function (err, furrnando) {
               should.not.exist(err);
               should.exist(furrnando);
               furrnando.id.should.eql(22);
@@ -1081,7 +860,7 @@ describe('Model', function (){
     });
 
     it('Set expires attribute on save', function (done) {
-      ExpiringCat.create({name: 'Fluffy'})
+      Cats.ExpiringCat.create({name: 'Fluffy'})
       .then(function (fluffy) {
         var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
         var min = max - 1;
@@ -1098,7 +877,7 @@ describe('Model', function (){
     });
 
     it('Does not set expires attribute on save if exists', function (done) {
-      ExpiringCat.create({
+      Cats.ExpiringCat.create({
         name: 'Tigger',
         expires: new Date(Date.now() + (ONE_YEAR*1000))
       })
@@ -1118,7 +897,7 @@ describe('Model', function (){
     });
 
     it('Update expires attribute on save', function (done) {
-      ExpiringCat.create({
+      Cats.ExpiringCat.create({
         name: 'Leo'
       })
       .then(function (leo) {
@@ -1153,12 +932,12 @@ describe('Model', function (){
 
 
     it('Updated key and update together ', function (done) {
-      Cat.update({id: 999, name: 'Felix'}, function (err, data) {
+      Cats.Cat.update({id: 999, name: 'Felix'}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Felix');
-        Cat.get(999, function (err, felix){
+        Cats.Cat.get(999, function (err, felix){
           should.not.exist(err);
           should.exist(felix);
           felix.id.should.eql(999);
@@ -1171,16 +950,16 @@ describe('Model', function (){
     });
 
     it('Updated key with range and update together ', function (done) {
-      Owner.create({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: '2345551212'})
+      Cats.Owner.create({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: '2345551212'})
       .then(function (owner) {
         owner.name.should.eql('OwnerToUpdate');
         owner.phoneNumber.should.eql('2345551212');
-        return Owner.update({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: 'newnumber'});
+        return Cats.Owner.update({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: 'newnumber'});
       })
       .then(function (updatedOwner) {
         updatedOwner.name.should.eql('OwnerToUpdate');
         updatedOwner.phoneNumber.should.eql('newnumber');
-        return Owner.get({name: 'OwnerToUpdate', address: '123 A Street'});
+        return Cats.Owner.get({name: 'OwnerToUpdate', address: '123 A Street'});
       })
       .then(function (updatedOwner) {
         updatedOwner.name.should.eql('OwnerToUpdate');
@@ -1191,12 +970,12 @@ describe('Model', function (){
     });
 
     it('Default puts attribute', function (done) {
-      Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {
+      Cats.Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Tom');
-        Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -1209,12 +988,12 @@ describe('Model', function (){
     });
 
     it('Manual puts attribute with removal', function (done) {
-      Cat.update({id: 999}, {$PUT: {name: null}}, function (err, data) {
+      Cats.Cat.update({id: 999}, {$PUT: {name: null}}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         should.not.exist(data.name);
-        Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -1225,12 +1004,12 @@ describe('Model', function (){
     });
 
     it('Manual puts attribute', function (done) {
-      Cat.update({id: 999}, {$PUT: {name: 'Tom', owner: 'Jerry', age: 3}}, function (err, data) {
+      Cats.Cat.update({id: 999}, {$PUT: {name: 'Tom', owner: 'Jerry', age: 3}}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.owner.should.equal('Jerry');
-        Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -1243,12 +1022,12 @@ describe('Model', function (){
     });
 
     it('Add attribute', function (done) {
-      Cat.update({id: 999}, {$ADD: {age: 1}}, function (err, data) {
+      Cats.Cat.update({id: 999}, {$ADD: {age: 1}}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.age.should.equal(4);
-        Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -1261,12 +1040,12 @@ describe('Model', function (){
     });
 
     it('Delete attribute', function (done) {
-      Cat.update({id: 999}, {$DELETE: {owner: null}}, function (err, data) {
+      Cats.Cat.update({id: 999}, {$DELETE: {owner: null}}, function (err, data) {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         should.not.exist(data.owner);
-        Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, function (err, tomcat){
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -1279,11 +1058,11 @@ describe('Model', function (){
     });
 
     it('With invalid attribute', function (done) {
-      Cat.update({id: 999}, {name: 'Oliver', validated: 'bad'}, function (err, data) {
+      Cats.Cat.update({id: 999}, {name: 'Oliver', validated: 'bad'}, function (err, data) {
         should.exist(err);
         should.not.exist(data);
         err.name.should.equal('ValidationError');
-        Cat.get(999, function (err, tomcat) {
+        Cats.Cat.get(999, function (err, tomcat) {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -1296,36 +1075,36 @@ describe('Model', function (){
 
   describe('Model.populate', function (){
     before(function (done) {
-      var kittenWithParents = new Cat6({id: 1, name: 'One'});
-      var owner = new Owner({name: 'Owner', address: '123 A Street', phoneNumber: '2345551212'});
-      var kittenWithOwner = new CatWithOwner({
+      var kittenWithParents = new Cats.Cat6({id: 1, name: 'One'});
+      var owner = new Cats.Owner({name: 'Owner', address: '123 A Street', phoneNumber: '2345551212'});
+      var kittenWithOwner = new Cats.CatWithOwner({
         id: 100,
         name: 'Owned',
         owner: {name: owner.name, address: owner.address}
       });
       kittenWithParents.save()
         .then(function(kitten) {
-          var kittenWithParents = new Cat6({id: 2, name: 'Two', parent: kitten.id});
+          var kittenWithParents = new Cats.Cat6({id: 2, name: 'Two', parent: kitten.id});
           return kittenWithParents.save();
         })
         .then(function(kitten) {
-          var kittenWithParents = new Cat6({id: 3, name: 'Three', parent: kitten.id});
+          var kittenWithParents = new Cats.Cat6({id: 3, name: 'Three', parent: kitten.id});
           return kittenWithParents.save();
         })
         .then(function(kitten) {
-          var kittenWithParents = new Cat6({id: 4, name: 'Four', parent: kitten.id});
+          var kittenWithParents = new Cats.Cat6({id: 4, name: 'Four', parent: kitten.id});
           return kittenWithParents.save();
         })
         .then(function() {
-          var kittenWithParents = new Cat6({id: 5, name: 'Five', parent: 999});
+          var kittenWithParents = new Cats.Cat6({id: 5, name: 'Five', parent: 999});
           return kittenWithParents.save();
         })
         .then(function() {
-          var kittenWithParents = new Cat7({id: 1, name: 'One'});
+          var kittenWithParents = new Cats.Cat7({id: 1, name: 'One'});
           return kittenWithParents.save();
         })
         .then(function(kitten) {
-          var kittenWithParents = new Cat7({id: 2, name: 'Two', parent: kitten.id});
+          var kittenWithParents = new Cats.Cat7({id: 2, name: 'Two', parent: kitten.id});
           return kittenWithParents.save();
         })
         .then(function() {
@@ -1337,7 +1116,7 @@ describe('Model', function (){
     });
 
     it('Should populate with one parent', function (done) {
-      Cat6.get(4)
+      Cats.Cat6.get(4)
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
@@ -1353,7 +1132,7 @@ describe('Model', function (){
     });
 
     it('Should deep populate with mutiple parent', function (done) {
-      Cat6.get(4)
+      Cats.Cat6.get(4)
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
@@ -1385,7 +1164,7 @@ describe('Model', function (){
 
 
     it('Should populate with range & hash key', function (done) {
-      CatWithOwner.get(100)
+      Cats.CatWithOwner.get(100)
         .then(function(cat) {
           should.not.exist(cat.owner.phoneNumber);
           return cat.populate({
@@ -1402,11 +1181,15 @@ describe('Model', function (){
     });
 
     it('Populating without the model definition', function (done) {
-      Cat6.get(4)
+      Cats.Cat6.get(4)
         .then(function(cat) {
           return cat.populate({
             path: 'parent'
           });
+        })
+        .then(function (cat) {
+          console.log('I tried!', cat);
+          return true;
         })
         .catch(function(err){
           should.exist(err.message);
@@ -1415,7 +1198,7 @@ describe('Model', function (){
     });
 
     it('Populating without the path definition', function (done) {
-      Cat6.get(4)
+      Cats.Cat6.get(4)
         .then(function(cat) {
           return cat.populate({
             model: 'Cat6'
@@ -1428,7 +1211,7 @@ describe('Model', function (){
     });
 
     it('Populating with the wrong reference id', function (done) {
-      Cat6.get(5)
+      Cats.Cat6.get(5)
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
@@ -1442,7 +1225,7 @@ describe('Model', function (){
     });
 
     it('Populate works with hashkey', function (done) {
-      Cat7.get(2)
+      Cats.Cat7.get(2)
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
@@ -1458,7 +1241,7 @@ describe('Model', function (){
     });
 
     it('Populate works with prefix', function (done) {
-      Cat6.get(4)
+      Cats.Cat6.get(4)
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
@@ -1474,7 +1257,7 @@ describe('Model', function (){
     });
 
     it('Populating with the wrong model name won\'t work', function (done) {
-      Cat6.get(5)
+      Cats.Cat6.get(5)
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
@@ -1495,10 +1278,10 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat({id: 10+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat({id: 10+i, name: 'Tom_'+i}));
       }
 
-      Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
@@ -1508,7 +1291,7 @@ describe('Model', function (){
           delete cats[i].name;
         }
 
-        Cat.batchGet(cats, function (err2, result2) {
+        Cats.Cat.batchGet(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
           result2.length.should.eql(cats.length);
@@ -1521,10 +1304,10 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<100 ; ++i) {
-        cats.push(new Cat({id: 100+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat({id: 100+i, name: 'Tom_'+i}));
       }
 
-      Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
@@ -1533,7 +1316,7 @@ describe('Model', function (){
           delete cats[i].name;
         }
 
-        Cat.batchGet(cats, function (err2, result2) {
+        Cats.Cat.batchGet(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
           result2.length.should.eql(cats.length);
@@ -1546,15 +1329,15 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat2({ownerId: 10+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat2({ownerId: 10+i, name: 'Tom_'+i}));
       }
 
-      Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
 
-        Cat2.batchGet(cats, function (err2, result2) {
+        Cats.Cat2.batchGet(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
           result2.length.should.eql(cats.length);
@@ -1567,10 +1350,10 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat2({ownerId: 10+i}));
+        cats.push(new Cats.Cat2({ownerId: 10+i}));
       }
 
-      Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, function (err, result) {
         should.exist(err);
         should.not.exist(result);
         done();
@@ -1581,10 +1364,10 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat({id: 20+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat({id: 20+i, name: 'Tom_'+i}));
       }
 
-      Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
 
@@ -1593,7 +1376,7 @@ describe('Model', function (){
           cat.name = 'John_' + (cat.id + 100);
         }
 
-        Cat.batchPut(cats, function (err2, result2) {
+        Cats.Cat.batchPut(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
@@ -1602,7 +1385,7 @@ describe('Model', function (){
             delete cats[i].name;
           }
 
-          Cat.batchGet(cats, function (err3, result3) {
+          Cats.Cat.batchGet(cats, function (err3, result3) {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(cats.length);
@@ -1616,10 +1399,10 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
 
-      Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
 
@@ -1628,12 +1411,12 @@ describe('Model', function (){
           cat.name = 'John_' + (cat.ownerId + 100);
         }
 
-        Cat2.batchPut(cats, function (err2, result2) {
+        Cats.Cat2.batchPut(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          Cat2.batchGet(cats, function (err3, result3) {
+          Cats.Cat2.batchGet(cats, function (err3, result3) {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(cats.length);
@@ -1647,10 +1430,10 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat2({ownerId: 20+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
 
-      Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
 
@@ -1658,7 +1441,7 @@ describe('Model', function (){
           cats[i].name = null;
         }
 
-        Cat2.batchPut(cats, function (err2, result2) {
+        Cats.Cat2.batchPut(cats, function (err2, result2) {
           should.exist(err2);
           should.not.exist(result2);
           done();
@@ -1672,19 +1455,19 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat({id: 30+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat({id: 30+i, name: 'Tom_'+i}));
       }
 
-      Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
 
-        Cat.batchDelete(cats, function (err2, result2) {
+        Cats.Cat.batchDelete(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          Cat.batchGet(cats, function (err3, result3) {
+          Cats.Cat.batchGet(cats, function (err3, result3) {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(0);
@@ -1698,19 +1481,19 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
 
-      Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
 
-        Cat2.batchDelete(cats, function (err2, result2) {
+        Cats.Cat2.batchDelete(cats, function (err2, result2) {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          Cat2.batchGet(cats, function (err3, result3) {
+          Cats.Cat2.batchGet(cats, function (err3, result3) {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(0);
@@ -1724,10 +1507,10 @@ describe('Model', function (){
       var cats = [];
 
       for (var i=0 ; i<10 ; ++i) {
-        cats.push(new Cat2({ownerId: 30+i, name: 'Tom_'+i}));
+        cats.push(new Cats.Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
 
-      Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, function (err, result) {
         should.not.exist(err);
         should.exist(result);
 
@@ -1735,7 +1518,7 @@ describe('Model', function (){
           delete cats[i].name;
         }
 
-        Cat2.batchDelete(cats, function (err2, result2) {
+        Cats.Cat2.batchDelete(cats, function (err2, result2) {
           should.exist(err2);
           should.not.exist(result2);
           done();
@@ -1747,49 +1530,7 @@ describe('Model', function (){
 
   describe('Model.default', function() {
     it('Default is set properly', function() {
-      var CatModel = dynamoose.model('CatDefault',
-          {
-              id: {
-                  type:  Number,
-                  validate: function (v) { return v > 0; }
-              },
-              name: String,
-              owner: String,
-              shouldRemainUnchanged: {
-                  type: String,
-                  default: function(model) {
-                      return 'shouldRemainUnchanged_'+ model.name +'_'+ model.owner;
-                  }
-              },
-              shouldBeChanged: {
-                  type: String,
-                  default: function(model) {
-                      return 'shouldBeChanged_'+ model.name +'_'+ model.owner;
-                  }
-              },
-              shouldAlwaysBeChanged: {
-                  type: String,
-                  default: function(model) {
-                      return 'shouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
-                  },
-                  forceDefault: true
-              },
-              unsetShouldBeChanged: {
-                  type: String,
-                  default: function(model) {
-                      return 'unsetShouldBeChanged_'+ model.name +'_'+ model.owner;
-                  }
-              },
-              unsetShouldAlwaysBeChanged: {
-                  type: String,
-                  default: function(model) {
-                      return 'unsetShouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
-                  }
-              }
-          }
-      );
-
-      var cat = new CatModel({
+      var cat = new Cats.CatModel({
           id: 1111,
           name: 'NAME_VALUE',
           owner: 'OWNER_VALUE',
