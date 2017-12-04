@@ -1180,16 +1180,12 @@ describe('Model', function (){
         });
     });
 
-    it('Populating without the model definition', function (done) {
-      Cats.Cat6.get(4)
+    it('Populating without the model definition and without ref', function (done) {
+      Cats.Cat7.get(2)
         .then(function(cat) {
           return cat.populate({
             path: 'parent'
           });
-        })
-        .then(function (cat) {
-          console.log('I tried!', cat);
-          return true;
         })
         .catch(function(err){
           should.exist(err.message);
@@ -1197,7 +1193,7 @@ describe('Model', function (){
         });
     });
 
-    it('Populating without the path definition', function (done) {
+    it('Populating with model and without the path definition', function (done) {
       Cats.Cat6.get(4)
         .then(function(cat) {
           return cat.populate({
@@ -1266,6 +1262,36 @@ describe('Model', function (){
         })
         .catch(function(err){
           should.exist(err.message);
+          done();
+        });
+    });
+
+    it('Populating with path and ref at the schema', function (done) {
+      Cats.Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate({
+            path: 'parent'
+          });
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          var parent = cat.parent;
+          parent.id.should.eql(3);
+          parent.name.should.eql('Three');
+          done();
+        });
+    });
+
+    it('Populating with string and ref at the schema', function (done) {
+      Cats.Cat6.get(4)
+        .then(function(cat) {
+          return cat.populate('parent');
+        })
+        .then(function(cat) {
+          should.exist(cat.parent);
+          var parent = cat.parent;
+          parent.id.should.eql(3);
+          parent.name.should.eql('Three');
           done();
         });
     });
