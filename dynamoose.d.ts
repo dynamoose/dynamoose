@@ -33,6 +33,10 @@ declare module "dynamoose" {
     virtualpath(name: string): any;
   }
 
+  
+  export interface RawSchemaAttributeDefinition<Constructor, Type> {
+    [key: string]: SchemaAttributeDefinition<Constructor, Type>
+  }
   export interface SchemaAttributeDefinition<Constructor, Type> {
     type: Constructor;
     validate?: (v: Type) => boolean;
@@ -74,6 +78,7 @@ declare module "dynamoose" {
       | SchemaAttributeDefinition<ObjectConstructor, Object>
       | SchemaAttributeDefinition<ArrayConstructor, Array<any>>
       | SchemaAttributeDefinition<any, any>
+      | RawSchemaAttributeDefinition<any, any>
     )
   }
 
