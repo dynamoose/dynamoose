@@ -29,6 +29,10 @@ var dogSchema = new Schema({
     rangeKey: true,
     index: true // name: nameLocalIndex, ProjectionType: ALL
   },
+  race: {
+     type: String,
+     enum: ['Golden retriever', 'Beagle']
+  },
   breed: {
     type: String,
     trim: true,
@@ -121,6 +125,10 @@ function(model) {
     return model.name +'_'+ model.category;
 }
 ```
+
+**Enum: Array of string**
+
+Force value to be one of the enumeration value.
 
 **forceDefault: boolean**
 
