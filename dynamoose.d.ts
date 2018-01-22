@@ -5,6 +5,8 @@ declare module "dynamoose" {
   export var AWS: typeof _AWS;
 
   export function local(url: string): void;
+  export function ddb(): typeof _AWS.DynamoDB;
+
   export function model<DataSchema, KeySchema>(
     modelName: string,
     schema: Schema,
