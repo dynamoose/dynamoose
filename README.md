@@ -48,7 +48,7 @@ The documentation can be found at https://dynamoosejs.com/api.
 
 ## Help Wanted!
 
-Help improve Dynamoose.  I need all the help I can get to imporve test coverage and the documentation.  If you would like to help please look at the `/test` and `/docs/_docs` folders and make a PR.
+Help improve Dynamoose.  I need all the help I can get to improve test coverage and the documentation.  If you would like to help please look at the `/test` and `/docs/_docs` folders and make a PR.
 
 ## Change log
 
