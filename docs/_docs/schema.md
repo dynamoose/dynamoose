@@ -321,8 +321,12 @@ Can be accessed from the compiled Schema, similar to how `scan()` and `query()` 
 // Construction:
 var ModelSchema = new Schema({...})
 
-ModelSchema.statics.getAll = function(cb){
-  this.scan().exec(cb)
+ModelSchema.statics.getAll = async function(cb){
+  let results = await this.scan().exec()
+  while (results.lastKey){
+      results = await this.scan().startKey(results.startKey).exec()
+  }
+  return results
 }
 
 var Model = dynamoose.model('Model', ModelSchema)
