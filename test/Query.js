@@ -370,7 +370,7 @@ describe('Query', function (){
     Dog.query('ownerId').eq(20).limit(1).all(1, 3).exec()
     .then(function (dogs) {
       dogs.length.should.eql(3);
-      dogs.timesScanned.should.eql(3);
+      dogs.timesQueried.should.eql(3);
       done();
     })
     .catch(done);
