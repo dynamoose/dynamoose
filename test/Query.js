@@ -321,6 +321,102 @@ describe('Query', function (){
     })
     .catch(done);
   });
+  
+  it('Basic Query on SGI with filter not null', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .filter('color').null().exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(0);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Basic Query on SGI with filter le', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').le(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(4);
+      dogs[dogs.length - 1].ownerId.should.eql(11);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Basic Query on SGI with filter not le', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').not().le(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(14);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Basic Query on SGI with filter ge', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').ge(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(2);
+      dogs[0].ownerId.should.eql(11);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Basic Query on SGI with filter not ge', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').not().ge(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(3);
+      dogs[0].ownerId.should.eql(5);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Basic Query on SGI with filter gt', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').gt(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(14);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Basic Query on SGI with filter not gt', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').not().gt(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(4);
+      dogs[0].ownerId.should.eql(5);
+      done();
+    })
+    .catch(done);
+  });
 
   it('Basic Query on SGI with filter not eq and not lt', function (done) {
     var Dog = dynamoose.model('Dog');
@@ -351,6 +447,46 @@ describe('Query', function (){
     })
     .catch(done);
 
+  });
+  
+  it('beginsWith() cannot follow not()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').not().contains('Brown')
+    .or()
+    .filter('name').not().beginsWith('Q')
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
+      done();
+    });
+  });  
+  
+  it('Query.count', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('ownerId').eq(20).count().all().exec()
+    .then(function (count) {
+      count.should.eql(4);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Query.counts', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .and()
+    .filter('color').not().eq('Brown')
+    .counts().all().exec()
+    .then(function (counts) {
+      counts.scannedCount.should.eql(5);
+      counts.count.should.eql(4);
+      done();
+    })
+    .catch(done);
   });
 
   it('Query.all', function (done) {
