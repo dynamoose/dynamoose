@@ -29,7 +29,7 @@ Executes the query against the table or index.
 
 Recursively query as long as lastKey exists. This function will also return a property called `timesScanned` indicating how many queries were completed.
 
-`delay` is the time (in seconds) between recursive queries. Default: 1sec
+`delay` is the time (in miliseconds) between recursive queries. Default: 1000ms (1sec)
 
 `max` is the maximum number of recursive queries. Default: 0 - unlimited
 
