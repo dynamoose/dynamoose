@@ -543,7 +543,7 @@ describe('Scan', function (){
   });
 
 
-  it.only('Scan with not between (error)', function (done) {
+  it('Scan with not between (error)', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.scan('ownerId').not().between(5, 8).exec(function (err) {
