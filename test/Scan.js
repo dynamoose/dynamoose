@@ -678,7 +678,7 @@ describe('Scan', function (){
   it('Scan.all(1,2)', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.scan().all(1,2).limit(5).exec(function (err, dogs) {
+    Dog.scan().all(1000,2).limit(5).exec(function (err, dogs) {
       should.not.exist(err);
       dogs.length.should.eql(10);
       done();
