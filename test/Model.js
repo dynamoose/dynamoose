@@ -39,6 +39,9 @@ describe('Model', function (){
 
     Cats.Cat.should.have.property('$__');
 
+    Cats.Cat.should.have.property('name');
+    Cats.Cat.name.should.eql('Model-test-Cat');
+
     Cats.Cat.$__.name.should.eql('test-Cat');
     Cats.Cat.$__.options.should.have.property('create', true);
 
@@ -103,6 +106,8 @@ describe('Model', function (){
 
   it('Create simple model with range key', function () {
 
+    Cats.Cat2.should.have.property('name');
+    Cats.Cat2.name.should.eql('Model-test-Cat2');
 
     Cats.Cat2.should.have.property('$__');
 
@@ -135,6 +140,8 @@ describe('Model', function (){
 
     this.timeout(12000);
 
+    Cats.Cat5.should.have.property('name');
+    Cats.Cat5.name.should.eql('Model-test-Cat5');
 
     Cats.Cat5.should.have.property('$__');
 
@@ -193,6 +200,8 @@ describe('Model', function (){
 
     this.timeout(12000);
 
+    Cats.Cat1.should.have.property('name');
+    Cats.Cat1.name.should.eql('Model-test-Cat1');
 
     Cats.Cat1.should.have.property('$__');
 
