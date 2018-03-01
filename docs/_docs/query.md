@@ -21,6 +21,10 @@ Dog.query({breed: {eq: 'Beagle'} }, function (err, dogs) {
 });
 ```
 
+### Model.queryOne(query, options, callback)
+
+Queries a table or index, sets [`query.limit`](#querylimitlimit) to `1`.
+
 ### query.exec(callback)
 
 Executes the query against the table or index.
