@@ -44,11 +44,11 @@ Cat.get(666)
 
 ## API Docs
 
-The documentation can be found at https://dynamoosejs.com/api.
+The documentation can be found at https://dynamoosejs.com/api. You can also find additional examples at https://dynamoosejs.com/examples.
 
 ## Help Wanted!
 
-Help improve Dynamoose.  I need all the help I can get to improve test coverage and the documentation.  If you would like to help please look at the `/test` and `/docs/_docs` folders and make a PR.
+Help improve Dynamoose.  I need all the help I can get to improve test coverage and the documentation.  If you would like to help please look at the `/test` folder to add tests to the project along with `/docs/_docs` and `/docs/_examples` folders to help write better documentation and examples for Dynamoose.  You can create a PR (pull request) to get your changes merged in.  Thank you very much!!
 
 ## Change log
 
