@@ -151,7 +151,7 @@ Adds a setter function that will be used to transform the value before writing t
 
 **get**: function
 
-Adds a getter function that will be used to transform the value returned from the DB.
+Adds a getter function that will be used to transform the value returned from the DB, fired only if there is a value returned from the DB.
 
 **toDynamo**: function
 
