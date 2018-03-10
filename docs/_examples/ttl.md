@@ -9,7 +9,7 @@ Below is a simple example of how to use DynamoDB TTL (time to live) with Dynamoo
 ```js
 'use strict';
 
-var dynamoose = require('../');
+var dynamoose = require('dynamoose');
 
 dynamoose.setDefaults({
   prefix: 'example-'

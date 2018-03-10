@@ -9,7 +9,7 @@ Below is a simple example of how to setup Dynamoose and get started quickly.
 ```js
 'use strict';
 
-var dynamoose = require('../');
+var dynamoose = require('dynamoose');
 
 
 /*
