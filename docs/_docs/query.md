@@ -29,6 +29,14 @@ Queries a table or index, sets [`query.limit`](#querylimitlimit) to `1`.
 
 Executes the query against the table or index.
 
+### query.all([delay[, max]])
+
+Recursively query as long as lastKey exists. This function will also return a property called `timesScanned` indicating how many queries were completed.
+
+`delay` is the time (in seconds) between recursive queries. Default: 1sec
+
+`max` is the maximum number of recursive queries. Default: 0 - unlimited
+
 ### query.where(rangeKey)
 
 Set the range key of the table or index to query.
