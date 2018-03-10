@@ -1,0 +1,11 @@
+---
+title: Examples
+layout: single
+sidebar: true
+permalink: /examples
+---
+
+{% assign sorted_examples = site.examples | sort:"order" %}
+{% for example in sorted_examples %}
+{{ example.content }}
+{% endfor %}
