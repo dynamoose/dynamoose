@@ -484,13 +484,11 @@ describe('Scan', function (){
   it('Scan with not beginsWith (error)', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    (function() {
-      Dog.scan('name').not().beginsWith('B').exec(function (err) {
-        should.exist(err);
-        err.code.should.eql('Invalid scan state: beginsWith() cannot follow not()');
-      });
+    Dog.scan('name').not().beginsWith('B').exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid scan state: beginsWith() cannot follow not()');
+      done();
     });
-    done();
   });
 
   it('Scan with in with filter object', function (done) {
@@ -517,13 +515,11 @@ describe('Scan', function (){
   it('Scan with not in (error)', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    (function() {
-      Dog.scan('name').not().in(['Beagle', 'Hound']).exec(function (err) {
-        should.exist(err);
-        err.code.should.eql('Invalid scan state: in() cannot follow not()');
-      });
+    Dog.scan('name').not().in(['Beagle', 'Hound']).exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid scan state: in() cannot follow not()');
+      done();
     });
-    done();
   });
 
   it('Scan with between with filter object', function (done) {
@@ -550,13 +546,11 @@ describe('Scan', function (){
   it('Scan with not between (error)', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    (function() {
-      Dog.scan('ownerId').not().between(5, 8).exec(function (err) {
-        should.exist(err);
-        err.code.should.eql('Invalid scan state: between() cannot follow not()');
-      });
+    Dog.scan('ownerId').not().between(5, 8).exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid scan state: between() cannot follow not()');
+      done();
     });
-    done();
   });
 
   it('Scan with limit', function (done) {
@@ -617,13 +611,11 @@ describe('Scan', function (){
   it('Scan with ANDed filter with filter object (error)', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    (function() {
-      Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]},function (err) {
-        should.exist(err);
-        err.code.should.eql('Invalid scan state; %s can only be used once');
-      });
+    Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]},function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid scan state; %s can only be used once');
+      done();
     });
-    done();
   });
 
   it('Scan with ANDed filter', function (done) {
