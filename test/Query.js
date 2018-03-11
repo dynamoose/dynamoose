@@ -502,6 +502,31 @@ describe('Query', function (){
     });
   });
   
+  it('Basic Query on SGI with filter in', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').in(["White and Brown", "White"])
+    .exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(3);
+      dogs[0].ownerId.should.eql(2);
+      done();
+    });
+  });
+  
+  it('in() cannot follow not()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').not().in(["White and Brown", "White"])
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: in() cannot follow not()');
+      done();
+    });
+  });
+  
   it('Query.count', function (done) {
     var Dog = dynamoose.model('Dog');
 
