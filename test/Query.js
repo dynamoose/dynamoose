@@ -70,6 +70,9 @@ describe('Query', function (){
         list: [ {
           type: String
         } ]
+      },
+      age: {
+        type: Number
       }
     });
 
@@ -89,30 +92,30 @@ describe('Query', function (){
     }
 
     addDogs([
-      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black', siblings: ['Quincy', 'Princes']},
-      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Princes']},
-      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Quincy']},
-      {ownerId:3, name: 'Toto', breed: 'Terrier', color: 'Brown'},
-      {ownerId:4, name: 'Oddie', breed: 'beagle', color: 'Tan'},
-      {ownerId:5, name: 'Pluto', breed: 'unknown', color: 'Mustard'},
-      {ownerId:6, name: 'Brian Griffin', breed: 'unknown', color: 'White'},
-      {ownerId:7, name: 'Scooby Doo', breed: 'Great Dane'},
-      {ownerId:8, name: 'Blue', breed: 'unknown', color: 'Blue'},
-      {ownerId:9, name: 'Lady', breed: ' Cocker Spaniel'},
-      {ownerId:10, name: 'Copper', breed: 'Hound'},
-      {ownerId:11, name: 'Old Yeller', breed: 'unknown', color: 'Tan'},
-      {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: 'Brown'},
-      {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd'},
-      {ownerId:14, name: 'Benji', breed: 'unknown'},
-      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: 'White'},
-      {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: 'Yellow'},
-      {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
-      {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white'},
-      {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white'},
-      {ownerId:20, name: 'Max', breed: 'Westie'},
-      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate'},
-      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate'},
-      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey'},
+      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black', siblings: ['Quincy', 'Princes'], age: 2},
+      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Princes'], age: 3},
+      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Quincy'], age: 6},
+      {ownerId:3, name: 'Toto', breed: 'Terrier', color: 'Brown', age: 1},
+      {ownerId:4, name: 'Oddie', breed: 'beagle', color: 'Tan', age: 2},
+      {ownerId:5, name: 'Pluto', breed: 'unknown', color: 'Mustard', age: 4},
+      {ownerId:6, name: 'Brian Griffin', breed: 'unknown', color: 'White', age: 5},
+      {ownerId:7, name: 'Scooby Doo', breed: 'Great Dane', age: 2},
+      {ownerId:8, name: 'Blue', breed: 'unknown', color: 'Blue', age: 1},
+      {ownerId:9, name: 'Lady', breed: ' Cocker Spaniel', age: 6},
+      {ownerId:10, name: 'Copper', breed: 'Hound', age: 8},
+      {ownerId:11, name: 'Old Yeller', breed: 'unknown', color: 'Tan', age: 1},
+      {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: 'Brown', age: 3},
+      {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd', age: 5},
+      {ownerId:14, name: 'Benji', breed: 'unknown', age: 1},
+      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: 'White', age: 2},
+      {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: 'Yellow', age: 9},
+      {ownerId:17, name: 'Beethoven', breed: 'St. Bernard', age: 3},
+      {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white', age: 4},
+      {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white', age: 6},
+      {ownerId:20, name: 'Max', breed: 'Westie', age: 7},
+      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate', age: 1},
+      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate', age: 2},
+      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey', age: 4},
     ]);
 
   });
@@ -215,6 +218,51 @@ describe('Query', function (){
       done();
     });
   });
+  
+  it('where() must follow eq()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').where("test")
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: where() must follow eq()');
+      done();
+    });
+  });  
+  
+  it('filter() must follow comparison', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').filter("test")
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: filter() must follow comparison');
+      done();
+    });
+  });
+  
+  it('eq must follow query()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').lt(5)
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: eq must follow query()');
+      done();
+    });
+  });
+
+  it('Should throw first error', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').lt(5)
+    .where().filter().compVal().beginsWith().in().between()
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: eq must follow query()');
+      done();
+    });
+  });
 
   it('Basic Query on SGI descending', function (done) {
     var Dog = dynamoose.model('Dog');
@@ -225,6 +273,17 @@ describe('Query', function (){
       dogs[0].ownerId.should.eql(15);
       done();
     });
+  });
+  
+  it('Basic Query on SGI ascending', function (done) {
+  	var Dog = dynamoose.model('Dog');
+
+  	Dog.query('breed').eq('Jack Russell Terrier').ascending().exec(function (err, dogs) {
+  	  should.not.exist(err);
+  	  dogs.length.should.eql(4);
+  	  dogs[0].ownerId.should.eql(1);
+  	  done();
+  	});
   });
 
 
@@ -462,6 +521,56 @@ describe('Query', function (){
       done();
     });
   });  
+  
+  it('Basic Query on SGI with filter between', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('age').between(5,7)
+    .exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(2);
+      done();
+    });
+  });
+  
+  it('between() cannot follow not()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('age').not().between(5,7)
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: between() cannot follow not()');
+      done();
+    });
+  });
+  
+  it('Basic Query on SGI with filter in', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').in(["White and Brown", "White"])
+    .exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(3);
+      dogs[0].ownerId.should.eql(2);
+      done();
+    });
+  });
+  
+  it('in() cannot follow not()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').not().in(["White and Brown", "White"])
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: in() cannot follow not()');
+      done();
+    });
+  });
   
   it('Query.count', function (done) {
     var Dog = dynamoose.model('Dog');
