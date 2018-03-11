@@ -252,6 +252,17 @@ describe('Query', function (){
     });
   });
 
+  it('Should throw first error', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').lt(5)
+    .where().filter().compVal().beginsWith().in().between()
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: eq must follow query()');
+      done();
+    });
+  });
 
   it('Basic Query on SGI descending', function (done) {
     var Dog = dynamoose.model('Dog');
