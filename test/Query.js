@@ -218,6 +218,40 @@ describe('Query', function (){
       done();
     });
   });
+  
+  it('where() must follow eq()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').where("test")
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: where() must follow eq()');
+      done();
+    });
+  });  
+  
+  it('filter() must follow comparison', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').filter("test")
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: filter() must follow comparison');
+      done();
+    });
+  });
+  
+  it('eq must follow query()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').lt(5)
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: eq must follow query()');
+      done();
+    });
+  });
+
 
   it('Basic Query on SGI descending', function (done) {
     var Dog = dynamoose.model('Dog');
