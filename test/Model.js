@@ -1551,6 +1551,22 @@ describe('Model', function (){
         });
       });
     });
+	
+    it('Should enable server side encryption', function(done) {
+      var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
+      Model.$__.table.describe(function(err, data) {
+        data.Table.SSEDescription.Status.should.equal("ENABLED");
+        done();
+      });
+    });
+    
+    it('Server side encryption shouldn\'t be enabled unless specified', function(done) {
+      var Model = dynamoose.model('TestTableB', { id: Number, name: String });
+      Model.$__.table.describe(function(err, data) {
+        data.Table.SSEDescription.Status.should.equal("DISABLED");
+        done();
+      });
+    });
 
   });
 
