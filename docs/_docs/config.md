@@ -27,7 +27,8 @@ Default `options`:
   create: true, // Create table in DB, if it does not exist,
   update: false, // Update remote indexes if they do not match local index structure
   waitForActive: true, // Wait for table to be created before trying to use it
-  waitForActiveTimeout: 180000 // wait 3 minutes for table to activate
+  waitForActiveTimeout: 180000, // wait 3 minutes for table to activate
+  serverSideEncryption: false // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
 }
 ```
 
@@ -35,6 +36,16 @@ Basic example:
 
 ```js
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
+```
+
+serverSideEncryption: boolean
+
+Indicates whether server-side encryption is enabled (true) or disabled (false) on the table. This boolean will be passed into the `SSESpecification.Enabled` option property when creating the table. Currently (when feature was implemented) DynamoDB doesn't support updating a table to add or remove server-side encryption, therefor this option will only be respected on creation of table, if table already exists in DynamoDB when using Dynamoose this value will be ignored.
+
+```js
+var model = dynamoose.model('Cat', {...}, {
+	serverSideEncryption: true
+});
 ```
 
 ### dynamoose.local(url)
