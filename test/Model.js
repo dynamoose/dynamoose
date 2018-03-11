@@ -623,6 +623,30 @@ describe('Model', function (){
   });
 
 
+  // See comments on PR #306 for details on why the test below is commented out
+  
+  // it('Should enable server side encryption', function(done) {
+  //   var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
+  //   setTimeout(function () {
+  //     Model.$__.table.describe(function(err, data) {
+  //       console.log(err, data);
+  //       data.Table.SSEDescription.Status.should.equal("ENABLED");
+  //       done();
+  //     });
+  //   }, 2000);
+  // });
+  
+  it('Server side encryption shouldn\'t be enabled unless specified', function(done) {
+    var Model = dynamoose.model('TestTableB', { id: Number, name: String });
+    setTimeout(function () {
+      Model.$__.table.describe(function(err, data) {
+        var works = !data.Table.SSEDescription || data.Table.SSEDescription.Status === "DISABLED";
+        works.should.be.true;
+        done();
+      });
+    }, 2000);
+  });
+
   describe('Model.update', function (){
     before(function (done) {
       var stray = new Cats.Cat({id: 999, name: 'Tom'});
@@ -1551,22 +1575,7 @@ describe('Model', function (){
         });
       });
     });
-	
-    it('Should enable server side encryption', function(done) {
-      var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
-      Model.$__.table.describe(function(err, data) {
-        data.Table.SSEDescription.Status.should.equal("ENABLED");
-        done();
-      });
-    });
     
-    it('Server side encryption shouldn\'t be enabled unless specified', function(done) {
-      var Model = dynamoose.model('TestTableB', { id: Number, name: String });
-      Model.$__.table.describe(function(err, data) {
-        data.Table.SSEDescription.Status.should.equal("DISABLED");
-        done();
-      });
-    });
 
   });
 
