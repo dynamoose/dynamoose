@@ -490,7 +490,7 @@ describe('Query', function (){
     });
   });
   
-  it.only('between() cannot follow not()', function (done) {
+  it('between() cannot follow not()', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
