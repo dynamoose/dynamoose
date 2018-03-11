@@ -226,6 +226,17 @@ describe('Query', function (){
       done();
     });
   });
+  
+  it('Basic Query on SGI ascending', function (done) {
+  	var Dog = dynamoose.model('Dog');
+
+  	Dog.query('breed').eq('Jack Russell Terrier').ascending().exec(function (err, dogs) {
+  	  should.not.exist(err);
+  	  dogs.length.should.eql(4);
+  	  dogs[0].ownerId.should.eql(1);
+  	  done();
+  	});
+  });
 
 
   it('Basic Query on SGI limit 1', function (done) {
