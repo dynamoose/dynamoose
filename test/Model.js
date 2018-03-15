@@ -1385,6 +1385,30 @@ describe('Model', function (){
         done();
       });
     });
+    
+    it('Use async await to put', function (done) {
+      var cats = [];
+
+      for (var i=0 ; i<100 ; ++i) {
+        cats.push(new Cats.Cat({id: 100+i, name: 'Tom_'+i}));
+      }
+      var asyncPut = function(){
+        done();
+      };
+      var es6code = 
+        'asyncPut = function () {'+
+          'var result = await Cats.Cat.batchPut(cats) '+
+          'should.exist(result)'+
+          'result.length.should.eql(cats.length)'+
+        '}'+
+        'asyncPut()'; 
+      eval(es6code);
+      asyncPut().catch(function(err){
+        should.not.exist(err);
+        done();
+      });
+    });
+
 
     it('Update items', function (done) {
       var cats = [];
