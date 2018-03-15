@@ -95,3 +95,13 @@ var appleSchema = new dynamoose.Schema({
 ### dynamoose.Table
 
 Table class
+
+### AWS X-Ray Support
+
+You can achieve Amazon Web Services X-Ray support using a configuration similar to the following.
+
+```js
+var AWSXRay = require('aws-xray-sdk');
+var dynamoose = require('dynamoose');
+dynamoose.AWS = AWSXRay.captureAWS(require('aws-sdk'));
+```
