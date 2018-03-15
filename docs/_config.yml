@@ -28,6 +28,7 @@ include:
   - .htaccess
   - _pages
   - _docs
+  - _examples
 exclude:
   - "*.sublime-project"
   - "*.sublime-workspace"
@@ -81,6 +82,8 @@ kramdown:
 
 collections:
   docs:
+    output: true
+  examples:
     output: true
 
 # Sass/SCSS
