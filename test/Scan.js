@@ -763,6 +763,20 @@ describe('Scan', function (){
     })
     .catch(done);
   });
+  
+  it('Should delay when working with all and limit', function (done) {
+    this.timeout(15000);
+    
+    var startTime = Date.now();
+    var Dog = dynamoose.model('Dog');
+    Dog.scan().all(1, 5).limit(1).exec(function(err, dogs) {
+      var endTime = Date.now();
+      var timeDifference = endTime - startTime;
+      dogs.length.should.eql(5);
+      timeDifference.should.be.above(4000); // first request executes immediately so we take the (delay * (number of rounds (or requests) - 1)) in MS.
+      done();
+    });
+  });
 
 
 });
