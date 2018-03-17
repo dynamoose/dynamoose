@@ -368,6 +368,96 @@ describe('Model', function (){
       });
     });
   });
+  
+  it('Save existing item without defining updating timestamps', function (done) {
+    var myCat = new Cats.Cat9({
+      id: 1,
+      name: 'Fluffy',
+      vet:{name:'theVet', address:'12 somewhere'},
+      ears:[{name:'left'}, {name:'right'}],
+      legs: ['front right', 'front left', 'back right', 'back left'],
+      more: {fovorites: {food: 'fish'}},
+      array: [{one: '1'}],
+      validated: 'valid'
+    });
+    
+    myCat.save(function(err, theSavedCat1) {
+      var expectedCreatedAt = theSavedCat1.createdAt;
+      var expectedUpdatedAt = theSavedCat1.updatedAt;
+      
+      theSavedCat1.name = "FluffyB";
+      setTimeout(function() {
+        theSavedCat1.save(function () {
+          Cats.Cat9.get(1, function(err, realCat) {
+            realCat.name.should.eql("FluffyB");
+            realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
+            realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
+            done();
+          });
+        });
+      }, 1000);
+    });
+  });
+  
+  it('Save existing item with updating timestamps', function (done) {
+    var myCat = new Cats.Cat9({
+      id: 1,
+      name: 'Fluffy',
+      vet:{name:'theVet', address:'12 somewhere'},
+      ears:[{name:'left'}, {name:'right'}],
+      legs: ['front right', 'front left', 'back right', 'back left'],
+      more: {fovorites: {food: 'fish'}},
+      array: [{one: '1'}],
+      validated: 'valid'
+    });
+    
+    myCat.save(function(err, theSavedCat1) {
+      var expectedCreatedAt = theSavedCat1.createdAt;
+      var expectedUpdatedAt = theSavedCat1.updatedAt;
+      
+      myCat.name = "FluffyB";
+      setTimeout(function() {
+        myCat.save({updateTimestamps: true}, function () {
+          Cats.Cat9.get(1, function(err, realCat) {
+            realCat.name.should.eql("FluffyB");
+            realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
+            realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
+            done();
+          });
+        });
+      }, 1000);
+    });
+  });
+  
+  it('Save existing item without updating timestamps', function (done) {
+    var myCat = new Cats.Cat9({
+      id: 1,
+      name: 'Fluffy',
+      vet:{name:'theVet', address:'12 somewhere'},
+      ears:[{name:'left'}, {name:'right'}],
+      legs: ['front right', 'front left', 'back right', 'back left'],
+      more: {fovorites: {food: 'fish'}},
+      array: [{one: '1'}],
+      validated: 'valid'
+    });
+    
+    myCat.save(function(err, theSavedCat1) {
+      var expectedCreatedAt = theSavedCat1.createdAt;
+      var expectedUpdatedAt = theSavedCat1.updatedAt;
+      
+      myCat.name = "FluffyB";
+      setTimeout(function() {
+        myCat.save({updateTimestamps: false}, function () {
+          Cats.Cat9.get(1, function(err, realCat) {
+            realCat.name.should.eql("FluffyB");
+            realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
+            realCat.updatedAt.should.eql(expectedUpdatedAt); // updatedAt should be the same as before
+            done();
+          });
+        });
+      }, 1000);
+    });
+  }); 
 
   it('Save existing item with a false condition', function (done) {
     Cats.Cat.get(1, function(err, model) {
