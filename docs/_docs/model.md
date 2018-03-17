@@ -44,6 +44,10 @@ odie.save({
 });
 ```
 
+Options:
+  - overwrite: should overwrite the existing item in DynamoDB (default: true)
+  - updateTimestamps: should update the updatedAt timestamp if exists (default: true)
+
 ### Model.batchPut(items, options, callback)
 
 Puts multiple items in the table. Will overwrite existing items.

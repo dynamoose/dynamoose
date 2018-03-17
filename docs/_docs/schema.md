@@ -271,13 +271,13 @@ var schema = new Schema({...}, {
 
 **attributeToDynamo**: function
 
-A function that accepts `name, json, model, defaultFormatter`.
+A function that accepts `name, json, model, defaultFormatter, options`.
 
 This will override attribute formatting for all attributes. Whatever is returned by the function will be sent directly to the DB.
 
 ```js
 var schema = new Schema({...}, {
-  attributeToDynamo: function(name, json, model, defaultFormatter) {
+  attributeToDynamo: function(name, json, model, defaultFormatter, options) {
     switch(name) {
         case 'specialAttribute':
             return specialFormatter(json);
