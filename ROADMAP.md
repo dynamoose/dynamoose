@@ -16,3 +16,4 @@ The main goal of 1.0 will be to improve the code and refactor to ES2015 (ES6).  
 - [ ] ES2015 updates
 - [ ] Switch to ESLint
 - [ ] Set `useNativeBooleans` and `useDocumentTypes` to default to `true`
+- [ ] [Semantic Versioning (SEMVER)](https://semver.org)
