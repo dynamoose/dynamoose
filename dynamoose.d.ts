@@ -185,10 +185,10 @@ declare module "dynamoose" {
    * Put is the default behavior.
    */
   type UpdateUpdate<DataSchema> = (
-    DataSchema
-    | { $PUT: DataSchema }
-    | { $ADD: DataSchema }
-    | { $DELETE: DataSchema }
+    Partial<DataSchema>
+    | { $PUT: Partial<DataSchema> }
+    | { $ADD: Partial<DataSchema> }
+    | { $DELETE: Partial<DataSchema> }
   );
 
   export interface UpdateOption {
