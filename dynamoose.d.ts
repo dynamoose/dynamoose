@@ -134,6 +134,10 @@ declare module "dynamoose" {
      */
     overwrite?: boolean;
     /**
+     * Whether to update the documents timestamps or not. Defaults to true.
+     */
+    updateTimestamps?: boolean;
+    /**
      * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
      */
     condition?: string;
