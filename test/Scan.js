@@ -20,7 +20,7 @@ describe('Scan', function (){
 
   before(function (done) {
 
-    dynamoose.setDefaults({ prefix: '' });
+    dynamoose.setDefaults({ prefix: '', suffix: '' });
 
     var dogSchema  = new Schema({
       ownerId: {
