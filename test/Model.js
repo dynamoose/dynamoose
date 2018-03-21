@@ -1553,6 +1553,126 @@ describe('Model', function (){
     });
 
   });
+  
+  it.only('Should allow subschemas', function (done) {
+    var schemaB = new dynamoose.Schema({
+      _id: String,
+      name: String,
+      type: String
+    }, {
+      timestamps: true
+    });
+	  var schemaA = new dynamoose.Schema({
+    	_id: String,
+    	name: String,
+      otherItem: schemaB
+    }, {
+    	timestamps: true
+    });
+    
+    var myModel = dynamoose.model('ItemB', schemaA);
+    
+    var myItemA = new myModel({
+      _id: "a",
+      name: "myItemA",
+      otherItem: {
+        _id: "otheritema",
+        name: "otherItemA",
+        type: "subitem",
+        other: "false"
+      }
+    });
+    
+    myItemA.save(function (err, item) {
+      should.not.exist(err);
+      should.exist(item);
+      item._id.should.eql("a");
+      item.name.should.eql("myItemA");
+      should.exist(item.otherItem);
+      item.otherItem._id.should.eql("otheritema");
+      item.otherItem.name.should.eql("otherItemA");
+      item.otherItem.type.should.eql("subitem");
+      should.not.exist(item.otherItem.other);
+      myModel.get("a", function(err, item) {
+        console.log(item);
+        should.not.exist(err);
+        should.exist(item);
+        item._id.should.eql("a");
+        item.name.should.eql("myItemA");
+        should.exist(item.otherItem);
+        item.otherItem._id.should.eql("otheritema");
+        item.otherItem.name.should.eql("otherItemA");
+        item.otherItem.type.should.eql("subitem");
+        should.not.exist(item.otherItem.other);
+        done();
+      });
+    });
+  });
+  
+  it.only('Should allow subschemas with arrays', function (done) {
+    var schemaB = new dynamoose.Schema({
+      _id: String,
+      name: String,
+      type: String
+    }, {
+      timestamps: true
+    });
+    var schemaA = new dynamoose.Schema({
+      _id: String,
+      name: String,
+      otherItems: [schemaB]
+    }, {
+      timestamps: true
+    });
+    
+    var myModel = dynamoose.model('Item', schemaA);
+    
+    var myItemA = new myModel({
+      _id: "a",
+      name: "myItemA",
+      otherItems: [{
+        _id: "otheritema",
+        name: "otherItemA",
+        type: "subitem"
+      },
+      {
+        _id: "otheritemb",
+        name: "otherItemB",
+        type: "subitem"
+      }]
+    });
+    
+    myItemA.save(function (err, item) {
+      should.not.exist(err);
+      should.exist(item);
+      item._id.should.eql("a");
+      item.name.should.eql("myItemA");
+      should.exist(item.otherItems);
+      item.otherItems.length.should.eql(2);
+      item.otherItems[0]._id.should.eql("otheritema");
+      item.otherItems[0].name.should.eql("otherItemA");
+      item.otherItems[0].type.should.eql("subitem");
+      item.otherItems[1]._id.should.eql("otheritemb");
+      item.otherItems[1].name.should.eql("otherItemB");
+      item.otherItems[1].type.should.eql("subitem");
+      myModel.get("a", function(err, item) {
+        console.log(item);
+        should.not.exist(err);
+        should.exist(item);
+        item._id.should.eql("a");
+        item.name.should.eql("myItemA");
+        should.exist(item.otherItems);
+        item.otherItems.length.should.eql(2);
+        item.otherItems[0]._id.should.eql("otheritema");
+        item.otherItems[0].name.should.eql("otherItemA");
+        item.otherItems[0].type.should.eql("subitem");
+        item.otherItems[1]._id.should.eql("otheritemb");
+        item.otherItems[1].name.should.eql("otherItemB");
+        item.otherItems[1].type.should.eql("subitem");
+        done();
+      });
+    });
+  });
 
   describe('Model.default', function() {
     it('Default is set properly', function() {
