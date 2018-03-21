@@ -18,6 +18,7 @@ declare module "dynamoose" {
     waitForActive?: boolean, // Wait for table to be created before trying to us it
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
+    serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
   /**
