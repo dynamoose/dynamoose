@@ -14,10 +14,11 @@ var dynamoose = require('dynamoose');
 
 // Setting our table name prefix to "example-"
 dynamoose.setDefaults({
-  prefix: 'example-'
+  prefix: 'example-',
+  suffix: ''
 });
 
-// Creating a new Dynamomoose model, with 3 attributes (id, name, and ttl), the name of our table is "example-Cat" (due to our prefix default set above)
+// Creating a new Dynamomoose model, with 3 attributes (id, name, and ttl), the name of our table is "example-Cat" (due to our prefix default set above, and our suffix being an empty string)
 var Cat = dynamoose.model('Cat', {
   id: Number,
   name: String
