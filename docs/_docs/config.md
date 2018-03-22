@@ -72,6 +72,8 @@ Default `options`:
 ```js
 {
   create: true // Create table in DB if it does not exist
+  prefix: '', // Default prefix for all DynamoDB tables
+  suffix: '' // Default suffix for all DynamoDB tables
 }
 ```
 
