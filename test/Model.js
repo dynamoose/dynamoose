@@ -22,14 +22,14 @@ describe('Model', function (){
   this.timeout(15000);
   before(function(done) {
     this.timeout(12000);
-    dynamoose.setDefaults({ prefix: 'test-' });
+    dynamoose.setDefaults({ prefix: 'test-', suffix: '-db' });
     Cats = CatsFixture(dynamoose);
     done();
   });
 
   after(function (done) {
 
-    delete dynamoose.models['test-Cat'];
+    delete dynamoose.models['test-Cat-db'];
     done();
   });
 
@@ -39,7 +39,7 @@ describe('Model', function (){
 
     Cats.Cat.should.have.property('$__');
 
-    Cats.Cat.$__.name.should.eql('test-Cat');
+    Cats.Cat.$__.name.should.eql('test-Cat-db');
     Cats.Cat.$__.options.should.have.property('create', true);
 
     var schema = Cats.Cat.$__.schema;
@@ -106,7 +106,7 @@ describe('Model', function (){
 
     Cats.Cat2.should.have.property('$__');
 
-    Cats.Cat2.$__.name.should.eql('test-Cat2');
+    Cats.Cat2.$__.name.should.eql('test-Cat2-db');
     Cats.Cat2.$__.options.should.have.property('create', true);
 
     var schema = Cats.Cat2.$__.schema;
@@ -138,7 +138,7 @@ describe('Model', function (){
 
     Cats.Cat5.should.have.property('$__');
 
-    Cats.Cat5.$__.name.should.eql('test-Cat5');
+    Cats.Cat5.$__.name.should.eql('test-Cat5-db');
     Cats.Cat5.$__.options.should.have.property('saveUnknown', true);
 
     var schema = Cats.Cat5.$__.schema;
@@ -196,7 +196,7 @@ describe('Model', function (){
 
     Cats.Cat1.should.have.property('$__');
 
-    Cats.Cat1.$__.name.should.eql('test-Cat1');
+    Cats.Cat1.$__.name.should.eql('test-Cat1-db');
     Cats.Cat1.$__.options.should.have.property('saveUnknown', true);
 
     var schema = Cats.Cat1.$__.schema;
@@ -1241,7 +1241,7 @@ describe('Model', function (){
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
-            model: 'test-Cat6'
+            model: 'test-Cat6-db'
           });
         })
         .then(function(cat) {
