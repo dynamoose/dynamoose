@@ -44,47 +44,16 @@ Cat.get(666)
 
 ## API Docs
 
-The documentation can be found at https://dynamoosejs.com/api.
+The documentation can be found at https://dynamoosejs.com/api. You can also find additional examples at https://dynamoosejs.com/examples.
 
 ## Help Wanted!
 
-Help improve Dynamoose.  I need all the help I can get to imporve test coverage and the documentation.  If you would like to help please look at the `/test` and `/docs/_docs` folders and make a PR.
+Help improve Dynamoose.  I need all the help I can get to improve test coverage and the documentation.  If you would like to help please look at the `/test` folder to add tests to the project along with `/docs/_docs` and `/docs/_examples` folders to help write better documentation and examples for Dynamoose.  You can create a PR (pull request) to get your changes merged in.  Thank you very much!!
 
-## Change log
+## ChangeLog
 
-### Release 0.8
-
-- useNativeBooleans [#55](//github.com/automategreen/dynamoose/issues/55)
-- saveUnknown [#125](//github.com/automategreen/dynamoose/issues/125)
-- Support for multiple indexes defined on the hashkey attribute of the table
-- scan.all() [#93](//github.com/automategreen/dynamoose/issues/93) [#140](//github.com/automategreen/dynamoose/issues/140)
-- scan.parallel [d7f7f77](//github.com/automategreen/dynamoose/commit/d7f7f77)
-- TTL support [92994f1](//github.com/automategreen/dynamoose/commit/92994f1)
-- added schema parsing overrides [#145](//github.com/automategreen/dynamoose/issues/145)
-- populate [#137](//github.com/automategreen/dynamoose/issues/137)
-- Added consistent() to scan.  [#15](//github.com/automategreen/dynamoose/issues/15) [#142](//github.com/automategreen/dynamoose/issues/142)
-- Default function enhancements [#127](//github.com/automategreen/dynamoose/issues/127)
-- Create required attributes on update [#96](//github.com/automategreen/dynamoose/issues/96)
-- Add typescript typings [#123](//github.com/automategreen/dynamoose/issues/123)
-- Added .count() for Query and Scan [#101](//github.com/automategreen/dynamoose/issues/101)
-- Nested scans [#141](//github.com/automategreen/dynamoose/issues/141) [#158](//github.com/automategreen/dynamoose/issues/158)
-
+The Dynamoose ChangeLog can be found in the [CHANGELOG.md](//github.com/automategreen/dynamoose/blob/master/CHANGELOG.txt) file.
 
 ## Roadmap
 
-### Release 0.9
-
-The goal of release 0.9 is to increase the parity with mongoose.  The primary purpose will be to come up with a plugin system similar to that of mongoose although not necessarily compatible.
-
-- [ ] Plugin system
-- [ ] `Model.find` alias
-- [ ] Complete `.populate` support
-
-
-### Release 1.0
-
-The main goal of 1.0 will be to improve the code and refactor to ES2015 (ES6).  In addition, `useNativeBooleans` and `useDocumentTypes`  will be toggled to make uses of "newer" DynamoDB features by default.
-
-- [ ] ES2015 updates
-- [ ] Switch to ESLint
-- [ ] Set `useNativeBooleans` and `useDocumentTypes` to default to `true`
+The Dynamoose Roadmap can be found in the [ROADMAP.md](//github.com/automategreen/dynamoose/blob/master/ROADMAP.txt) file. Help is always appreciated on these items. If you are able to help submit a PR so we can review and improve Dynamoose!
