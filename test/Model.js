@@ -1592,6 +1592,7 @@ describe('Model', function (){
       item.otherItem._id.should.eql("otheritema");
       item.otherItem.name.should.eql("otherItemA");
       item.otherItem.type.should.eql("subitem");
+      should.exist(item.otherItem.createdAt);
       should.not.exist(item.otherItem.other);
       myModel.get("a", function(err, item) {
         console.log(item);
@@ -1603,6 +1604,7 @@ describe('Model', function (){
         item.otherItem._id.should.eql("otheritema");
         item.otherItem.name.should.eql("otherItemA");
         item.otherItem.type.should.eql("subitem");
+        should.exist(item.otherItem.createdAt);
         should.not.exist(item.otherItem.other);
         done();
       });
@@ -1652,9 +1654,11 @@ describe('Model', function (){
       item.otherItems[0]._id.should.eql("otheritema");
       item.otherItems[0].name.should.eql("otherItemA");
       item.otherItems[0].type.should.eql("subitem");
+      should.exist(item.otherItems[0].createdAt);
       item.otherItems[1]._id.should.eql("otheritemb");
       item.otherItems[1].name.should.eql("otherItemB");
       item.otherItems[1].type.should.eql("subitem");
+      should.exist(item.otherItems[1].createdAt);
       myModel.get("a", function(err, item) {
         console.log(item);
         should.not.exist(err);
@@ -1666,9 +1670,11 @@ describe('Model', function (){
         item.otherItems[0]._id.should.eql("otheritema");
         item.otherItems[0].name.should.eql("otherItemA");
         item.otherItems[0].type.should.eql("subitem");
+        should.exist(item.otherItems[0].createdAt);
         item.otherItems[1]._id.should.eql("otheritemb");
         item.otherItems[1].name.should.eql("otherItemB");
         item.otherItems[1].type.should.eql("subitem");
+        should.exist(item.otherItems[1].createdAt);
         done();
       });
     });
