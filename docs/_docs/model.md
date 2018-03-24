@@ -385,3 +385,30 @@ A map of name substitutions for the condition expression.
 A map of values for the condition expression. Note that in order for
 automatic object conversion to work, the keys in this object must
 match schema attribute names.
+
+
+### Model.plugin(pluginPackage[, pluginOptions])
+
+This is how you can add plugins to be run on your model. For example you can use this function like so.
+
+```js
+var MyPlugin = require('ThePluginPackage');
+var MyPluginB = require('ThePluginPackageB');
+var Model = dynamoose.model('Puppy', {
+    id: {
+        type: Number,
+        validate: function(v) {
+            return v > 0;
+        }
+    },
+    name: String,
+    owner: String,
+    age: {
+        type: Number
+    }
+});
+Model.plugin(MyPlugin); // this plugin will always take priority over the plugin below and be run first
+Model.plugin(MyPluginB, {username: 'test', password: 'test'}); // this plugin will always take priority second and will be run after the first plugin, this plugin also passes options into the plugin
+
+module.exports = Model;
+```
