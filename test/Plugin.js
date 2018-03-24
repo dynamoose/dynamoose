@@ -164,5 +164,19 @@ describe.only('Plugin', function() {
     
     done();
   });
+  
+  it('No type passed in should catch all events emited from Dynamoose', function(done) {        
+    var counter = 0;
+    
+    Model.plugin(function(obj) {
+      obj.on(function () {
+        counter++;
+      });
+    });
+    
+    counter.should.eql(1);
+    
+    done();
+  });
 
 });
