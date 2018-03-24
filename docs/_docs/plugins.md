@@ -34,8 +34,8 @@ Adds a listener to emitted events from Dynamoose.
 
 #### Parameters accepted
 
-- `event` - Type of event you wish to listen for from Dynamoose, you can view possible options below (string) 
-- [`stage`] - Type of stage you wish you listen for from Dynamoose within the event (string) (optional)
+- [`event`] - Type of event you wish to listen for from Dynamoose, you can view possible options below, if not passed in it will catch all events (string) (optional)
+- [`stage`] - Type of stage you wish you listen for from Dynamoose within the event, if not passed in it will catch all events (string) (optional) (note: if this is passed in `event` is required)
 - `callback` - Function to be run when event is emitted from Dynamoose (function)
 	- `obj` - Object with properties and methods about event emitted from Dynamoose, you can view more details below (object)
 
@@ -79,6 +79,10 @@ Below is the default object passed into the callback object, each event might ad
 ```
 
 ### Events emitted from Dynamoose
+
+#### `*`
+
+Catch all to run listener on all events emitted from Dynamoose.
 
 #### `plugin:register`
 
