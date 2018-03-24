@@ -110,13 +110,57 @@ describe.only('Plugin', function() {
   });
   
   it('Shouldn\'t fail if no function passed into .on function', function(done) {        
-    var counter = 0;
     
     Model.plugin(function(obj) {
       obj.on("plugin:register");
     });
     
-    counter.should.eql(0);
+    done();
+  });
+  
+  it('Should pass in details into "plugin:register" on function', function(done) {            
+    Model.plugin(function(obj) {
+      obj.on("plugin:register", function (obj) {
+        should.exist(obj.event);
+        should.exist(obj.model);
+        should.exist(obj.modelName);
+        should.exist(obj.plugin);
+        should.exist(obj.plugins);
+        obj.plugins.length.should.eql(1);
+      });
+    });
+    
+    done();
+  });
+  
+  it('Plugin Options should equal empty object if not defined', function(done) {            
+    Model.plugin(function(obj) {
+      obj.on("plugin:register", function (obj) {
+        obj.event.pluginOptions.should.deep.eql({});
+      });
+    });
+    done();
+  });
+  
+  it('Plugin Options should equal object passed in', function(done) {            
+    Model.plugin(function(obj) {
+      obj.on("plugin:register", function (obj) {
+        obj.event.pluginOptions.should.deep.eql({username: 'test'});
+      });
+    }, {username: 'test'});
+    done();
+  });
+  
+  it('Type of "*" should catch all events emited from Dynamoose', function(done) {        
+    var counter = 0;
+    
+    Model.plugin(function(obj) {
+      obj.on("*", function () {
+        counter++;
+      });
+    });
+    
+    counter.should.eql(1);
     
     done();
   });
