@@ -178,5 +178,33 @@ describe.only('Plugin', function() {
     
     done();
   });
+  
+  // it('Should allow sub-plugins or registration of plugins within plugin', function(done) {        
+  //   var counter = 0;
+  // 
+  //   var pluginB = function(plugin) {
+  //     plugin.on("plugin:register", function () {
+  //       counter++;
+  //     });
+  //   };
+  // 
+  //   var pluginA = function(plugin) {
+  //     plugin.setName("Plugin A");
+  //     plugin.on("plugin:register", function (obj) {
+  //       if (obj.event.plugin.name === "Plugin A") {
+  //         console.log(obj.actions.registerPlugin);
+  //         obj.actions.registerPlugin(pluginB);
+  //       }
+  //     });
+  //   };
+  // 
+  // 
+  //   Model.plugin(pluginA);
+  // 
+  //   Model.$__.plugins.length.should.eql(2);
+  //   counter.should.eql(1);
+  // 
+  //   done();
+  // });
 
 });

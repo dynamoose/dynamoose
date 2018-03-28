@@ -75,6 +75,9 @@ Below is the default object passed into the callback object, each event might ad
 		type: _____, // the type of event that was emitted from Dynamoose (ex. "plugin:register") (string)
 		stage: _____ // the stage that was emitted from Dynamoose (ex. "pre", "post") (string)
 	}
+	actions: {
+		registerPlugin: _____ // register function to model, just a pointer to Model.plugin function (this can be useful for creating sub-plugins) (function)
+	}
 }
 ```
 
