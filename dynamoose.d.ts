@@ -5,6 +5,8 @@ declare module "dynamoose" {
   export var AWS: typeof _AWS;
 
   export function local(url: string): void;
+  export function ddb(): typeof _AWS.DynamoDB;
+
   export function model<DataSchema, KeySchema>(
     modelName: string,
     schema: Schema,
@@ -18,6 +20,7 @@ declare module "dynamoose" {
     waitForActive?: boolean, // Wait for table to be created before trying to us it
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
+    suffix?: string, // Set table name suffix
   }
 
   /**
@@ -185,10 +188,10 @@ declare module "dynamoose" {
    * Put is the default behavior.
    */
   type UpdateUpdate<DataSchema> = (
-    DataSchema
-    | { $PUT: DataSchema }
-    | { $ADD: DataSchema }
-    | { $DELETE: DataSchema }
+    Partial<DataSchema>
+    | { $PUT: Partial<DataSchema> }
+    | { $ADD: Partial<DataSchema> }
+    | { $DELETE: Partial<DataSchema> }
   );
 
   export interface UpdateOption {
