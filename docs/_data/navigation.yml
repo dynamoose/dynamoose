@@ -2,5 +2,7 @@
 main:
   - title: "Quick-Start"
     url: /
+  - title: "Examples"
+    url: /examples
   - title: "API"
     url: /api
