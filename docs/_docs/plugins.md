@@ -138,3 +138,37 @@ Dynamoose will emit this event when a scan is called on a model.
 	}
 }
 ```
+
+#### `model:get`
+
+Dynamoose will emit this event when a get is called on a model.
+
+##### Stages
+
+- `get:called` - Dynamoose will emit this stage when a get is about to start
+- `request:pre` - Dynamoose will emit this stage when a get request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when a get request response has been recieved from DynamoDB
+
+##### Additional Items Added to Object
+
+```
+{
+	event: {
+		callback: _____ // the callback function for the get command (function)
+		key: _____ // the key for the get request (object)
+		options: _____ // the options passed into the get call (object)
+		getRequest: _____ // the options passed into the get request to DynamoDB (object) (only valid on `request:pre`)
+		error: _____ // the options passed into the get call (object) (only valid on `request:post`)
+		data: _____ // the options passed into the get call (object) (only valid on `request:post`)
+
+	}
+	action: {
+		updateCallback: _____ // function to update callback that is called (fn: function)
+		updateKey: _____ // function to update key that is sent to DynamoDB (key: string)
+		updateOptions: _____ // function to update options for the get call (options: object)
+		updateGetRequest: _____ // function to update request options for the get call (options: object) (only valid on `request:pre`)
+		updateError: _____ // function to update error received from DynamoDB (options: object) (only valid on `request:post`)
+		updateData: _____ // function to update data received from DynamoDB (options: object) (only valid on `request:post`)
+	}
+}
+```
