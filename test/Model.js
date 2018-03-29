@@ -1601,7 +1601,7 @@ describe('Model', function (){
   it('Model.getTableReq', function() {
     Cats.Cat.getTableReq().AttributeDefinitions.should.exist;
     Cats.Cat.getTableReq().TableName.should.exist;
-    Cats.Cat.getTableReq().TableName.should.equal('test-Cat');
+    Cats.Cat.getTableReq().TableName.should.equal('test-Cat-db');
     Cats.Cat.getTableReq().KeySchema.should.exist;
     Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
   });
