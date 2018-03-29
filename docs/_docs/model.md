@@ -385,3 +385,17 @@ A map of name substitutions for the condition expression.
 A map of values for the condition expression. Note that in order for
 automatic object conversion to work, the keys in this object must
 match schema attribute names.
+
+### Model.getTableReq()
+
+The function will return the object used to create the table with AWS. You can use this to create the table manually, for things like the Serverless deployment toolkit, or just to peak behind the scenes and see what Dynamoose is doing to create the table.
+
+```js
+Dog.getTableReq();
+//  {
+//    AttributeDefinitions: attrDefs,
+//    TableName: name,
+//    KeySchema: keySchema,
+//    ProvisionedThroughput: provThroughput
+//  }
+```
