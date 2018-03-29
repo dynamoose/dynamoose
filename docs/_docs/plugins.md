@@ -106,3 +106,35 @@ Dynamoose will emit this event when a new plugin is registered to a model.
 	}
 }
 ```
+
+#### `model:scan`
+
+Dynamoose will emit this event when a scan is called on a model.
+
+##### Stages
+
+- `scan:called` - Dynamoose will emit this stage when a scan is about to start
+- `exec:start` - Dynamoose will emit this stage when an exec is called
+- `request:pre` - Dynamoose will emit this stage when an scan request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when an scan request response has been received from DynamoDB
+
+##### Additional Items Added to Object
+
+```
+{
+	event: {
+		scan: _____, // scan instance (object, Scan instance)
+		callback: _____ // the function that was passed into the scan exec function (function) (only valid on `exec:start`)
+		scanReq: _____ // the scan request object that will be sent to DynamoDB (object) (only valid on `request:pre`)
+		data: _____ // the scan data object that was received from DynamoDB (object) (only valid on `request:post`)
+		error: _____ // the scan error object that was received from DynamoDB (object) (only valid on `request:post`)
+
+	}
+	action: {
+		updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `exec:start`)
+		updateScanReq: _____ // function to update scan request object that is sent to DynamoDB (reqObj: object) (only valid on `request:pre`)
+		updateData: _____ // function to update data that was received from DynamoDB scan before proceeding (dataObj: object) (only valid on `request:post`)
+		updateError: _____ // function to update error that was received from DynamoDB scan before proceeding (errorObj: object) (only valid on `request:post`)
+	}
+}
+```
