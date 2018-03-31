@@ -172,3 +172,35 @@ Dynamoose will emit this event when a get is called on a model.
 	}
 }
 ```
+
+#### `model:query`
+
+Dynamoose will emit this event when a query is called on a model.
+
+##### Stages
+
+- `query:called` - Dynamoose will emit this stage when a query is about to start
+- `exec:start` - Dynamoose will emit this stage when an exec is called
+- `request:pre` - Dynamoose will emit this stage when an query request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when an query request response has been received from DynamoDB
+
+##### Additional Items Added to Object
+
+```
+{
+	event: {
+		query: _____, // query instance (object, Query instance)
+		callback: _____ // the function that was passed into the query exec function (function) (only valid on `exec:start`)
+		queryReq: _____ // the query request object that will be sent to DynamoDB (object) (only valid on `request:pre`)
+		data: _____ // the query data object that was received from DynamoDB (object) (only valid on `request:post`)
+		error: _____ // the query error object that was received from DynamoDB (object) (only valid on `request:post`)
+
+	}
+	action: {
+		updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `exec:start`)
+		updateQueryReq: _____ // function to update query request object that is sent to DynamoDB (reqObj: object) (only valid on `request:pre`)
+		updateData: _____ // function to update data that was received from DynamoDB query before proceeding (dataObj: object) (only valid on `request:post`)
+		updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
+	}
+}
+```
