@@ -204,5 +204,101 @@ describe('Plugin', function() {
   
     done();
   });
+  
+  it('Should work with model:scan', function(done) {        
+  	var counter = 0;
+    
+  	var pluginA = function(plugin) {
+  	  plugin.setName("Plugin A");
+  	  plugin.on("model:scan", function () {
+  		    counter++;
+  	  });
+  	};
+    
+    
+  	Model.plugin(pluginA);
+    
+    Model.scan({}).exec(function() {
+      Model.$__.plugins.length.should.eql(1);
+      counter.should.eql(4);
+      
+      done();
+    });
+  	
+  });
+  
+  it('Should work with model:query', function(done) {        
+    var counter = 0;
+    
+    var pluginA = function(plugin) {
+      plugin.setName("Plugin A");
+      plugin.on("model:query", function () {
+        counter++;
+      });
+    };
+    
+    
+    Model.plugin(pluginA);
+    
+    Model.query("id").eq(1).exec(function() {
+      Model.$__.plugins.length.should.eql(1);
+      counter.should.eql(4);
+      
+      done();
+    });
+    
+  });
+  
+  it('Should work with model:get', function(done) {        
+    var counter = 0;
+    
+    var pluginA = function(plugin) {
+      plugin.setName("Plugin A");
+      plugin.on("model:get", function () {
+          counter++;
+      });
+    };
+    
+    
+    Model.plugin(pluginA);
+    
+    Model.get("", function() {
+      Model.$__.plugins.length.should.eql(1);
+      counter.should.eql(3);
+      
+      done();
+    });
+    
+  });
+  
+  it('Should work with model:put', function(done) {        
+    var counter = 0;
+    
+    var pluginA = function(plugin) {
+      plugin.setName("Plugin A");
+      plugin.on("model:put", function () {
+          counter++;
+      });
+    };
+    
+    
+    Model.plugin(pluginA);
+    
+    var myItem = new Model(
+      {
+        id: 1,
+        name: "Lucky",
+        owner: "Bob",
+        age: 2
+      }
+    );
+    myItem.save(function() {
+      Model.$__.plugins.length.should.eql(1);
+      counter.should.eql(3);
+      
+      done();
+    });
+    
+  });
 
 });
