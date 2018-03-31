@@ -7,7 +7,7 @@ dynamoose.local();
 
 var should = require('should');
 
-describe.only('Plugin', function() {
+describe('Plugin', function() {
 	var Model = dynamoose.model('Puppy', {
     id: {
       type: Number,
