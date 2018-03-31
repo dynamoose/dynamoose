@@ -87,6 +87,21 @@ Below is the default object passed into the callback object, each event might ad
 
 Catch all to run listener on all events emitted from Dynamoose.
 
+#### `plugin`
+
+Dynamoose will emit this event when your plugin is registered to a model.
+
+##### Stages
+
+- `init` - Dynamoose will emit this stage when your plugin **has been** registered to a model
+
+##### Additional Items Added to Object
+
+```
+{
+}
+```
+
 #### `plugin:register`
 
 Dynamoose will emit this event when a new plugin is registered to a model.
