@@ -196,8 +196,8 @@ Dynamoose will emit this event when a query is called on a model.
 
 - `query:called` - Dynamoose will emit this stage when a query is about to start
 - `exec:start` - Dynamoose will emit this stage when an exec is called
-- `request:pre` - Dynamoose will emit this stage when an query request is about to be made to DynamoDB
-- `request:post` - Dynamoose will emit this stage when an query request response has been received from DynamoDB
+- `request:pre` - Dynamoose will emit this stage when a query request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when a query request response has been received from DynamoDB
 
 ##### Additional Items Added to Object
 
@@ -215,6 +215,35 @@ Dynamoose will emit this event when a query is called on a model.
 		updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `exec:start`)
 		updateQueryReq: _____ // function to update query request object that is sent to DynamoDB (reqObj: object) (only valid on `request:pre`)
 		updateData: _____ // function to update data that was received from DynamoDB query before proceeding (dataObj: object) (only valid on `request:post`)
+		updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
+	}
+}
+```
+
+#### `model:put`
+
+Dynamoose will emit this event when a put is called on a model.
+
+##### Stages
+
+- `put:called` - Dynamoose will emit this stage when a put is about to start
+- `request:pre` - Dynamoose will emit this stage when a put request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when a put request response has been received from DynamoDB
+
+##### Additional Items Added to Object
+
+```
+{
+	event: {
+		options: _____, // options passed to put (object) (warning: in some cases this can be the callback function in the `put:called` stage)
+		callback: _____, // callback passed to put (function) (warning: in some cases this can be the null if options is not passed in) (only valid on `put:called`)
+		item: _____ // item that will be/has been saved to DynamoDB (function) (only valid on `request:*`)
+		error: _____ // the error object that was received from DynamoDB (object) (only valid on `request:post`)
+	}
+	action: {
+		updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `put:called`)
+		updateOptions: _____ // function to update options object (reqObj: object) (only valid on `put:called`)
+		updateItem: _____ // function to update data that will be sent to DynamoDB (dataObj: object) (only valid on `request:pre`)
 		updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
 	}
 }
