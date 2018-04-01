@@ -1554,7 +1554,7 @@ describe('Model', function (){
 
   });
   
-  it.only('Should allow subschemas', function (done) {
+  it('Should allow subschemas', function (done) {
     var schemaB = new dynamoose.Schema({
       _id: String,
       name: String,
@@ -1611,7 +1611,7 @@ describe('Model', function (){
     });
   });
   
-  it.only('Should allow subschemas with arrays', function (done) {
+  it('Should allow subschemas with arrays', function (done) {
     var schemaB = new dynamoose.Schema({
       _id: String,
       name: String,
@@ -1683,7 +1683,7 @@ describe('Model', function (){
     });
   });
   
-  it.only('Should allow nested schemas', function (done) {
+  it('Should allow nested schemas', function (done) {
     var schemaA = new dynamoose.Schema({
       _id: String,
       name: String,
@@ -1735,7 +1735,7 @@ describe('Model', function (){
     });
   });
   
-  it.only('Should allow nested schemas with arrays', function (done) {
+  it('Should allow nested schemas with arrays', function (done) {
     var schemaA = new dynamoose.Schema({
       _id: String,
       name: String,
