@@ -126,9 +126,9 @@ function(model) {
 }
 ```
 
-**Enum: Array of string**
+**enum: Array of strings**
 
-Force value to be one of the enumeration value.
+Force value to be one of the enumeration values.
 
 **forceDefault: boolean**
 
