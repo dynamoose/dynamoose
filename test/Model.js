@@ -112,7 +112,7 @@ describe('Model', function (){
     Cats.Cat2.should.have.property('name');
     // Older node doesn't support Function.name changes
     if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
-      Cats.Cat2.name.should.eql('Model-test-Cat2');
+      Cats.Cat2.name.should.eql('Model-test-Cat2-db');
     }
 
     Cats.Cat2.should.have.property('$__');
@@ -149,7 +149,7 @@ describe('Model', function (){
     Cats.Cat5.should.have.property('name');
     // Older node doesn't support Function.name changes
     if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
-      Cats.Cat5.name.should.eql('Model-test-Cat5');
+      Cats.Cat5.name.should.eql('Model-test-Cat5-db');
     }
 
     Cats.Cat5.should.have.property('$__');
@@ -212,7 +212,7 @@ describe('Model', function (){
     Cats.Cat1.should.have.property('name');
     // Older node doesn't support Function.name changes
     if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
-      Cats.Cat1.name.should.eql('Model-test-Cat1');
+      Cats.Cat1.name.should.eql('Model-test-Cat1-db');
     }
 
     Cats.Cat1.should.have.property('$__');
@@ -646,16 +646,10 @@ describe('Model', function (){
 
   // See comments on PR #306 for details on why the test below is commented out
   
-  // it('Should enable server side encryption', function(done) {
-  //   var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
-  //   setTimeout(function () {
-  //     Model.$__.table.describe(function(err, data) {
-  //       console.log(err, data);
-  //       data.Table.SSEDescription.Status.should.equal("ENABLED");
-  //       done();
-  //     });
-  //   }, 2000);
-  // });
+  it('Should enable server side encryption', function() {
+    var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
+    Model.getTableReq().SSESpecification.Enabled.should.be.true;
+  });
   
   it('Server side encryption shouldn\'t be enabled unless specified', function(done) {
     var Model = dynamoose.model('TestTableB', { id: Number, name: String });
