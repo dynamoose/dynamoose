@@ -811,7 +811,7 @@ describe('Schema tests', function (){
   });
 
 
-  it('Handle unknow attributes in DynamoDB', function (done) {
+  it('Handle unknown attributes in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
      id: Number
