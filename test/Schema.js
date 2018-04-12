@@ -835,4 +835,28 @@ describe('Schema tests', function (){
     });
     done();
   });
+  
+  it('Handle unknown attributes as array in DynamoDB', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: ["name", "numberString"]
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' }
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      numberString: 1
+    });
+    done();
+  });
 });
