@@ -811,7 +811,7 @@ describe('Schema tests', function (){
   });
 
 
-  it('Handle unknow attributes in DynamoDB', function (done) {
+  it('Handle unknown attributes in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
      id: Number
@@ -833,6 +833,95 @@ describe('Schema tests', function (){
       anObject: { a: 'attribute' },
       numberString: 1,
     });
+    done();
+  });
+
+  it('parses document types when saveUnknown=false and useDocumentTypes=true', function (done) {
+
+    var schema = new Schema({
+      id: Number,
+      mapAttrib: {
+        aString: String,
+        aNumber: Number,
+      },
+      listAttrib: {
+        type: 'list',
+        list: [String],
+      },
+    }, {
+      useDocumentTypes: true,
+    });
+
+    var model = {};
+    schema.parseDynamo(model, {
+      id: { N: '2' },
+      mapAttrib: {
+        M: {
+          aString: { S: 'Fluffy' },
+          aNumber: { N: '5' },
+        },
+      },
+      listAttrib: {
+        L: [
+          { S: 'v1' },
+          { S: 'v2' },
+        ],
+      },
+    });
+
+    model.should.eql({
+      id: 2,
+      mapAttrib: {
+        aString: 'Fluffy',
+        aNumber: 5,
+      },
+      listAttrib: [
+        'v1',
+        'v2',
+      ],
+    });
+
+    done();
+  });
+
+  it('parses document types when saveUnknown=true and useDocumentTypes=true', function (done) {
+
+    var schema = new Schema({
+      id: Number,
+    }, {
+      useDocumentTypes: true,
+      saveUnknown: true,
+    });
+
+    var model = {};
+    schema.parseDynamo(model, {
+      id: { N: '2' },
+      mapAttrib: {
+        M: {
+          aString: { S: 'Fluffy' },
+          aNumber: { N: '5' },
+        },
+      },
+      listAttrib: {
+        L: [
+          { S: 'v1' },
+          { S: 'v2' },
+        ],
+      },
+    });
+
+    model.should.eql({
+      id: 2,
+      mapAttrib: {
+        aString: 'Fluffy',
+        aNumber: 5,
+      },
+      listAttrib: [
+        'v1',
+        'v2',
+      ],
+    });
+
     done();
   });
 });
