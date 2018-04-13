@@ -836,7 +836,7 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('parses document types when saveUnknown=false and useDocumentTypes=true', function (done) {
+  it('Parses document types when saveUnknown=false and useDocumentTypes=true', function (done) {
 
     var schema = new Schema({
       id: Number,
@@ -850,6 +850,7 @@ describe('Schema tests', function (){
       },
     }, {
       useDocumentTypes: true,
+      saveUnknown: false,
     });
 
     var model = {};
@@ -884,7 +885,7 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('parses document types when saveUnknown=true and useDocumentTypes=true', function (done) {
+  it('Parses document types when saveUnknown=true and useDocumentTypes=true', function (done) {
 
     var schema = new Schema({
       id: Number,
