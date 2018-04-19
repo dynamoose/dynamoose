@@ -1,5 +1,7 @@
 # Dynamoose Roadmap
 
+This is the proposed roadmap for Dynamoose. If you have ideas for how to improve the library please submit GitHub issues. Please keep in mind all content below is not finalized and is subject to change at any time.
+
 ### Release 0.9
 
 The goal of release 0.9 is to increase the parity with mongoose. The primary purpose will be to come up with a plugin system similar to that of mongoose although not necessarily compatible.
