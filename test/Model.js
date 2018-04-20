@@ -106,6 +106,10 @@ describe('Model', function (){
 
 
   });
+  
+  it('Should fail', function() {
+    throw "ERROR";
+  });
 
   it('Create simple model with range key', function () {
 
