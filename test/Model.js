@@ -1574,6 +1574,59 @@ describe('Model', function (){
     });
 
   });
+  
+  it('Should allow multiple indexes and query correctly', function (done) {
+    var schema = new dynamoose.Schema({
+    	id: {
+    		type: String,
+    		hashKey: true,
+    		required: true
+    	},
+    	orgId: {
+    		type: String,
+    		index: [{
+    			global    : true,
+    			name      : 'OrganizationCreateAtIndex',
+    			rangeKey  : 'createdAt',
+    			throughput: 1
+    	  }, {
+    			global    : true,
+    			name      : 'OrganizationExpectedArriveAtIndex',
+    			rangeKey  : 'expectedArriveAt',
+    			throughput: 1
+    	  }],		
+    	  required: true,
+    	},
+      expectedArriveAt: Date
+    },{
+    	throughput: 1,
+    	timestamps: true
+    });
+    var Log = dynamoose.model('Log-1', schema);
+    
+    var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
+    log1.save(function() {
+      Log.query('orgId').eq("org1")
+      .where('expectedArriveAt').lt( new Date() )
+      .exec()
+      .then(function(res){
+        res.length.should.eql(1);
+        Log.query('orgId').eq("org1")
+        .where('createdAt').lt( new Date() )
+        .exec()
+        .then(function(res){
+          res.length.should.eql(1);
+          done();
+        })
+        .catch(function(e){
+          done(e);
+        });
+      })
+      .catch(function(e){
+      	done(e);
+      });
+    });
+  });
 
   describe('Model.default', function() {
     it('Default is set properly', function() {
