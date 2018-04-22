@@ -62,9 +62,9 @@
       "text-summary"
     ],
     "check-coverage": true,
-    "lines": 82,
-    "statements": 82,
-    "functions": 87,
-    "branches": 71
+    "lines": 50,
+    "statements": 50,
+    "functions": 50,
+    "branches": 50
   }
 }
