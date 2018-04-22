@@ -52,8 +52,8 @@ Help improve Dynamoose.  I need all the help I can get to improve test coverage 
 
 ## ChangeLog
 
-The Dynamoose ChangeLog can be found in the [CHANGELOG.md](//github.com/automategreen/dynamoose/blob/master/CHANGELOG.txt) file.
+The Dynamoose ChangeLog can be found in the [CHANGELOG.md](//github.com/automategreen/dynamoose/blob/master/CHANGELOG.md) file.
 
 ## Roadmap
 
-The Dynamoose Roadmap can be found in the [ROADMAP.md](//github.com/automategreen/dynamoose/blob/master/ROADMAP.txt) file. Help is always appreciated on these items. If you are able to help submit a PR so we can review and improve Dynamoose!
+The Dynamoose Roadmap can be found in the [ROADMAP.md](//github.com/automategreen/dynamoose/blob/master/ROADMAP.md) file. Help is always appreciated on these items. If you are able to help submit a PR so we can review and improve Dynamoose!
