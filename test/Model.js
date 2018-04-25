@@ -204,6 +204,66 @@ describe('Model', function (){
 
   });
 
+  it('Saves unnamed attribute value that is an object with dynamoose attribute properties', function (done) {
+    var schema = Cats.Cat1.$__.schema;
+
+    var kitten = new Cats.Cat1(
+      {
+        id: 2,
+        name: 'Fluffy',
+        unnamedObjAttr: {
+          prop1: 'value1',
+          prop2: 'value2',
+          type: 'type',
+          hashKey: 'hashKey',
+          rangeKey: 'rangeKey',
+          required: 'required',
+          index: 'index',
+          default: 'default',
+          forDefault: 'forDefault',
+          validate: 'validate',
+          set: 'set',
+          get: 'get',
+          toDynamo: 'toDynamo',
+          fromDynamo: 'fromDynamo',
+          trim: 'trim',
+          lowercase: 'lowercase',
+          uppercase: 'uppercase',
+        },
+      }
+    );
+
+    var dynamoObj = schema.toDynamo(kitten);
+
+    dynamoObj.should.eql(
+      {
+        id:  {N: '2'},
+        name: {S: 'Fluffy'},
+        unnamedObjAttr: {
+          M: {
+            prop1: {S: 'value1'},
+            prop2: {S: 'value2'},
+            type: {S: 'type'},
+            hashKey: {S: 'hashKey'},
+            rangeKey: {S: 'rangeKey'},
+            required: {S: 'required'},
+            index: {S: 'index'},
+            default: {S: 'default'},
+            forDefault: {S: 'forDefault'},
+            validate: {S: 'validate'},
+            set: {S: 'set'},
+            get: {S: 'get'},
+            toDynamo: {S: 'toDynamo'},
+            fromDynamo: {S: 'fromDynamo'},
+            trim: {S: 'trim'},
+            lowercase: {S: 'lowercase'},
+            uppercase: {S: 'uppercase'},
+          },
+        },
+      });
+    kitten.save(done);
+  });
+
   it('Create complex model with unnamed attributes', function (done) {
 
 
