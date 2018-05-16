@@ -9,7 +9,7 @@ declare module "dynamoose" {
 
   export function model<DataSchema, KeySchema>(
     modelName: string,
-    schema: Schema,
+    schema: Schema | SchemaAttributes,
     options?: ModelOption
   ): ModelConstructor<DataSchema, KeySchema>;
   export function setDefaults(options: ModelOption): void;
