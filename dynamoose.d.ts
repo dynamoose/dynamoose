@@ -38,7 +38,8 @@ declare module "dynamoose" {
 
   
   export interface RawSchemaAttributeDefinition<Constructor, Type> {
-    [key: string]: SchemaAttributeDefinition<Constructor, Type>
+    [key: string]: SchemaAttributeDefinition<Constructor, Type> 
+      | RawSchemaAttributeDefinition<Constructor, Type>;
   }
   export interface SchemaAttributeDefinition<Constructor, Type> {
     type: Constructor;
