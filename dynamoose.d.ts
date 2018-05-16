@@ -256,7 +256,7 @@ declare module "dynamoose" {
     all(delay?: number, max?: number): ScanInterface<T>;
     parallel(totalSegments: number): ScanInterface<T>;
     using(indexName: string): ScanInterface<T>;
-    consistent(filter: any): ScanInterface<T>;
+    consistent(filter?: any): ScanInterface<T>;
     where(filter: any): ScanInterface<T>;
     filter(filter: any): ScanInterface<T>;
     and(): ScanInterface<T>;
