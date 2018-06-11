@@ -40,7 +40,7 @@ var Cat = dynamoose.model('Cat', { id: Number, name: String });
 
 serverSideEncryption: boolean
 
-Indicates whether server-side encryption is enabled (true) or disabled (false) on the table. This boolean will be passed into the `SSESpecification.Enabled` option property when creating the table. Currently (when feature was implemented) DynamoDB doesn't support updating a table to add or remove server-side encryption, therefor this option will only be respected on creation of table, if table already exists in DynamoDB when using Dynamoose this value will be ignored.
+Indicates whether server-side encryption is enabled (true) or disabled (false) on the table. This boolean will be passed into the `SSESpecification.Enabled` option property when creating the table. Currently (when feature was implemented) DynamoDB doesn't support updating a table to add or remove server-side encryption, therefore this option will only be respected on creation of table, if table already exists in DynamoDB when using Dynamoose this value will be ignored.
 
 ```js
 var model = dynamoose.model('Cat', {...}, {
