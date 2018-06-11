@@ -182,7 +182,17 @@ describe('Model', function (){
         name: 'Fluffy',
         owner: 'Someone',
         unnamedInt: 1,
+        unnamedInt0: 0,
+        unnamedBooleanFalse: false,
+        unnamedBooleanTrue: true,
         unnamedString: 'unnamed',
+
+        // Attributes with empty values. DynamoDB won't store empty values
+        // so the return value of toDynamo() should exclude these attributes.
+        unnamedUndefined: undefined,
+        unnamedNull: null,
+        unnamedEmptyString: '',
+        unnamedNumberNaN: NaN,
       }
     );
 
@@ -197,6 +207,9 @@ describe('Model', function (){
         name: { S: 'Fluffy' },
         owner: { S: 'Someone' },
         unnamedInt: { N: '1' },
+        unnamedInt0: { N: '0' },
+        unnamedBooleanFalse: { S: 'false' },
+        unnamedBooleanTrue: { S: 'true' },
         unnamedString: { S: 'unnamed' },
       });
 
