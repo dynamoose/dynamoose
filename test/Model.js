@@ -528,6 +528,15 @@ describe('Model', function (){
     });
   });
 
+  it('Static Creates new item with unknown fields', function (done) {
+    Cats.Cat1.create({ id: 666, name: 'Garfield', bool: false }, function (err, garfield) {
+      should.not.exist(err);
+      should.exist(garfield);
+      garfield.bool.should.eql(false);
+      done();
+    });
+  });
+
   it('Static Creates new item with range key', function (done) {
     Cats.Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
       should.not.exist(err);
