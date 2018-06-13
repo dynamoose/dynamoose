@@ -292,6 +292,14 @@ odie.delete(function(err) {
 });
 ```
 
+### model.originalItem()
+
+This function returns the last item that was saved/received from DynamoDB. This can be useful to view the changes made since the last DynamoDB save/received that your application made for a given document. This function will return a JSON object that represents the original item.
+
+```js
+odie.originalItem(); // {ownerId: 4, name: 'Odie'}
+```
+
 ### Model.batchDelete(keys, options, callback)
 
 Deletes multiple items from the table.

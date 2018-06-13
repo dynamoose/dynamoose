@@ -1787,6 +1787,30 @@ describe('Model', function (){
     Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
   });
   
+  it('Should allow for originalItem function on models', function(done) {
+    var item = {
+      id: 2222,
+      name: 'NAME_VALUE',
+      owner: 'OWNER_VALUE'
+    };
+	  
+    var cat = new Cats.Cat(item);
+    cat.originalItem().should.eql(item);
+    cat.save(function(err, newCat) {
+      newCat.originalItem().should.eql(item);
+      newCat.name = 'NAME_VALUE_2';
+      newCat.originalItem().should.eql(item);
+      newCat.name.should.eql('NAME_VALUE_2');
+      Cats.Cat.get(2222, function(err, newCatB) {
+        newCatB.originalItem().should.eql(item);
+        newCatB.name = 'NAME_VALUE_2';
+        newCatB.originalItem().should.eql(item);
+        newCatB.name.should.eql('NAME_VALUE_2');
+        done();
+      });
+    });
+  });
+  
   it('Get invalid JSON from DynamoDB', function(done) {    
     var schema = {
       id: {
