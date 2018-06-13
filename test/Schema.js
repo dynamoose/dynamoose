@@ -3,6 +3,8 @@
 //var util = require('util');
 
 var dynamoose = require('../');
+var errors = require('../lib/errors');
+
 dynamoose.AWS.config.update({
   accessKeyId: 'AKID',
   secretAccessKey: 'SECRET',
@@ -14,7 +16,6 @@ dynamoose.local();
 var Schema = dynamoose.Schema;
 
 var should = require('should');
-
 
 describe('Schema tests', function (){
   this.timeout(10000);
@@ -42,7 +43,7 @@ describe('Schema tests', function (){
     };
 
     var schema = new Schema(schemaObj);
-
+  
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
     should.not.exist(schema.attributes.id.default);
@@ -951,6 +952,99 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Enum Should be set in schema attributes object', function (done) {
+     var enumData = ['Golden retriever', 'Beagle'];
+    var schema = new Schema({
+      race: {
+         type: String,
+         enum: enumData
+      }
+    });
+
+   schema.attributes.race.options.should.have.property('enum');
+   schema.attributes.race.options.enum.should.deepEqual(enumData);
+   done();
+  });
+
+  it('Enum Should throw error when using different value', function (done) {
+    var schema = new Schema({
+      race: {
+         type: String,
+         enum: ['Golden retriever', 'Beagle']
+      }
+    });
+
+    var Dog = dynamoose.model('Dog' + Date.now(), schema);
+    var oscar = new Dog();
+
+    oscar.race = 'Persian';
+
+    oscar.save(function(err) {
+      err.should.be.instanceof(Error);
+      err.should.be.instanceof(errors.ValidationError);
+      done();
+    });
+  });
+
+  it('Enum Should not throw an error if value is empty', function (done) {
+    var schema = new Schema({
+      name: {
+         type: String,
+         required: true,
+         hashKey: true
+      },
+      race: {
+         type: String,
+         enum: ['Golden retriever', 'Beagle']
+      },
+      weight: {
+         type: Number
+      }
+    });
+
+    var Dog = dynamoose.model('Dog' + Date.now(), schema);
+    var oscar = new Dog();
+
+    oscar.name = 'oscar';
+    oscar.weight = 100;
+
+    oscar.save(function(err) {
+      should(err).be.null();
+
+      Dog.$__.table.delete(function () {
+        delete dynamoose.models.Dog;
+        done();
+      });
+    });
+  });
+
+  it('Enum Should save new instance of model with a good value', function (done) {
+
+    var enumData = ['Golden retriever', 'Beagle'];
+    var choosedRace = enumData[0];
+
+    var schema = new Schema({
+      race: {
+         type: String,
+         enum: enumData
+      }
+    });
+
+    var Dog = dynamoose.model('Dog' + Date.now(), schema);
+    var oscar = new Dog();
+
+    oscar.race = choosedRace;
+
+    oscar.save(function(err, savedDog) {
+      should(err).be.null();
+      savedDog.race.should.equal(choosedRace);
+
+      Dog.$__.table.delete(function () {
+        delete dynamoose.models.Dog;
+        done();
+      });
+    });
+  });
   it('Handle unknown attributes as array in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
@@ -974,5 +1068,4 @@ describe('Schema tests', function (){
     });
     done();
   });
-
 });
