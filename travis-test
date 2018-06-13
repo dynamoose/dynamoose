@@ -8,4 +8,4 @@ else
     nyc npm test && nyc report --reporter=text-lcov | coveralls
 fi
 
-exit 0;
+# exit 0;
