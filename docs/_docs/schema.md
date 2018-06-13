@@ -29,6 +29,10 @@ var dogSchema = new Schema({
     rangeKey: true,
     index: true // name: nameLocalIndex, ProjectionType: ALL
   },
+  race: {
+     type: String,
+     enum: ['Golden retriever', 'Beagle']
+  },
   breed: {
     type: String,
     trim: true,
@@ -121,6 +125,10 @@ function(model) {
     return model.name +'_'+ model.category;
 }
 ```
+
+**enum: Array of strings**
+
+Force value to be one of the enumeration values.
 
 **forceDefault: boolean**
 
@@ -259,7 +267,7 @@ var schema = new Schema({...}, {
 });
 ```
 
-**saveUnknown**: boolean
+**saveUnknown**: boolean or array
 
 Specifies that attributes not defined in the _schema_ will be saved and retrieved.  This defaults to false.
 
@@ -269,15 +277,23 @@ var schema = new Schema({...}, {
 });
 ```
 
+If an array is passed in, only attributes that are in the array passed in will be saved and retrieved.
+
+```js
+var schema = new Schema({...}, {
+  saveUnknown: ['name', 'age'] // only `name` and `age` unknown attributes will be saved and retrieved from DynamoDB
+});
+```
+
 **attributeToDynamo**: function
 
-A function that accepts `name, json, model, defaultFormatter`.
+A function that accepts `name, json, model, defaultFormatter, options`.
 
 This will override attribute formatting for all attributes. Whatever is returned by the function will be sent directly to the DB.
 
 ```js
 var schema = new Schema({...}, {
-  attributeToDynamo: function(name, json, model, defaultFormatter) {
+  attributeToDynamo: function(name, json, model, defaultFormatter, options) {
     switch(name) {
         case 'specialAttribute':
             return specialFormatter(json);

@@ -44,6 +44,10 @@ odie.save({
 });
 ```
 
+Options:
+  - overwrite: should overwrite the existing item in DynamoDB (default: true)
+  - updateTimestamps: should update the updatedAt timestamp if exists (default: true)
+
 ### Model.batchPut(items, options, callback)
 
 Puts multiple items in the table. Will overwrite existing items.
@@ -262,7 +266,7 @@ Dog.batchGet([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], functio
 });
 ```
 
-### Model.delete(key, options, callback)
+### Model.delete(key, [options, ]callback)
 
 Deletes an item from the table.
 
@@ -273,15 +277,27 @@ Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
 });
 ```
 
-### model.delete(callback)
+`options` parameters:
 
-Deletes the item from the table.
+- `update` (boolean): Will return the object deleted (default: false), if set to false and no object was deleted this function will fail silently.
+
+### model.delete([options, ]callback)
+
+Deletes the item from the table. The `options` parameter is optional, and should be a object type if passed in. The `callback` parameter is the function that will be called once the item has been deleted from the table. The `error` and `item` (if `update` is set to true) will be passed in as parameters to the callback function. The options object accepts the same parameters as described above in `Model.delete`.
 
 ```js
 odie.delete(function(err) {
   if(err) { return console.log(err); }
   console.log('Bye bye Odie');
 });
+```
+
+### model.originalItem()
+
+This function returns the last item that was saved/received from DynamoDB. This can be useful to view the changes made since the last DynamoDB save/received that your application made for a given document. This function will return a JSON object that represents the original item.
+
+```js
+odie.originalItem(); // {ownerId: 4, name: 'Odie'}
 ```
 
 ### Model.batchDelete(keys, options, callback)
