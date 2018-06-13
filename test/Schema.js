@@ -1068,7 +1068,7 @@ describe('Schema tests', function (){
     });
     done();
   });
-  
+
   it('Correctly inherits the properties from a loaded class', function () {
 
     function CatClass() {
@@ -1078,6 +1078,8 @@ describe('Schema tests', function (){
     CatClass.staticMethod = function() {
       return 'static method';
     };
+
+    CatClass.staticProp = false;
 
     Object.defineProperty(CatClass.prototype, 'getterTestName', {
       get: function() {
@@ -1103,6 +1105,7 @@ describe('Schema tests', function (){
     var tim = new Cat({ first: 'Tim', last: 'Jones' });
 
     Cat.should.have.property('staticMethod');
+    Cat.should.not.have.property('staticProp');
     Cat.should.not.have.property('getterTestName');
     Cat.should.not.have.property('firstNameFn');
     Cat.staticMethod.should.be.type('function');
@@ -1116,5 +1119,14 @@ describe('Schema tests', function (){
     tim.getterTestName.should.eql('Tom Jones');
     tim.firstNameFn.should.be.type('function');
     should(tim.firstNameFn()).eql('Tom');
+
+    var vSchema = new Schema({ first: String, last: String });
+    vSchema.loadClass(CatClass, true);
+
+    var VCat = dynamoose.model('Cat' + Date.now(), vSchema);
+    var jim = new VCat({ first: 'Jim', last: 'Jones' });
+
+    VCat.should.not.have.property('staticMethod');
+    jim.should.not.have.property('firstNameFn');
   });
 });
