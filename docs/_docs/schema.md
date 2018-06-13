@@ -159,7 +159,7 @@ Adds a setter function that will be used to transform the value before writing t
 
 **get**: function
 
-Adds a getter function that will be used to transform the value returned from the DB.
+Adds a getter function that will be used to transform the value returned from the DB, fired only if there is a value returned from the DB.
 
 **toDynamo**: function
 
@@ -185,7 +185,7 @@ Convert to uppercase when saving to DB.
 
 **throughput**: number &#124; {read: number, write: number}
 
-Sets the throughput of the DynamoDB table. The value can either be a number or an object with the keys `read` and `write` (for example: `{read: 5, write: 2}`). If it is a number, both read and write are configured to that number. If it is omitted, the read and write values will be set to 1.
+Sets the throughput of the DynamoDB table on creation. The value can either be a number or an object with the keys `read` and `write` (for example: `{read: 5, write: 2}`). If it is a number, both read and write are configured to that number. If it is omitted, the read and write values will be set to 1. Throughput will only be respected on table creation, and will not update the throughput of an existing table.
 
 ```js
 var schema = new Schema({...}, {
@@ -267,13 +267,21 @@ var schema = new Schema({...}, {
 });
 ```
 
-**saveUnknown**: boolean
+**saveUnknown**: boolean or array
 
 Specifies that attributes not defined in the _schema_ will be saved and retrieved.  This defaults to false.
 
 ```js
 var schema = new Schema({...}, {
   saveUnknown: true
+});
+```
+
+If an array is passed in, only attributes that are in the array passed in will be saved and retrieved.
+
+```js
+var schema = new Schema({...}, {
+  saveUnknown: ['name', 'age'] // only `name` and `age` unknown attributes will be saved and retrieved from DynamoDB
 });
 ```
 
@@ -329,8 +337,12 @@ Can be accessed from the compiled Schema, similar to how `scan()` and `query()` 
 // Construction:
 var ModelSchema = new Schema({...})
 
-ModelSchema.statics.getAll = function(cb){
-  this.scan().exec(cb)
+ModelSchema.statics.getAll = async function(cb){
+  let results = await this.scan().exec()
+  while (results.lastKey){
+      results = await this.scan().startKey(results.startKey).exec()
+  }
+  return results
 }
 
 var Model = dynamoose.model('Model', ModelSchema)

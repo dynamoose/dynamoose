@@ -22,14 +22,14 @@ describe('Model', function (){
   this.timeout(15000);
   before(function(done) {
     this.timeout(12000);
-    dynamoose.setDefaults({ prefix: 'test-' });
+    dynamoose.setDefaults({ prefix: 'test-', suffix: '-db' });
     Cats = CatsFixture(dynamoose);
     done();
   });
 
   after(function (done) {
 
-    delete dynamoose.models['test-Cat'];
+    delete dynamoose.models['test-Cat-db'];
     done();
   });
 
@@ -39,7 +39,13 @@ describe('Model', function (){
 
     Cats.Cat.should.have.property('$__');
 
-    Cats.Cat.$__.name.should.eql('test-Cat');
+    Cats.Cat.should.have.property('name');
+    // Older node doesn't support Function.name changes
+    if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
+      Cats.Cat.name.should.eql('Model-test-Cat-db');
+    }
+
+    Cats.Cat.$__.name.should.eql('test-Cat-db');
     Cats.Cat.$__.options.should.have.property('create', true);
 
     var schema = Cats.Cat.$__.schema;
@@ -103,10 +109,15 @@ describe('Model', function (){
 
   it('Create simple model with range key', function () {
 
+    Cats.Cat2.should.have.property('name');
+    // Older node doesn't support Function.name changes
+    if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
+      Cats.Cat2.name.should.eql('Model-test-Cat2-db');
+    }
 
     Cats.Cat2.should.have.property('$__');
 
-    Cats.Cat2.$__.name.should.eql('test-Cat2');
+    Cats.Cat2.$__.name.should.eql('test-Cat2-db');
     Cats.Cat2.$__.options.should.have.property('create', true);
 
     var schema = Cats.Cat2.$__.schema;
@@ -135,10 +146,15 @@ describe('Model', function (){
 
     this.timeout(12000);
 
+    Cats.Cat5.should.have.property('name');
+    // Older node doesn't support Function.name changes
+    if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
+      Cats.Cat5.name.should.eql('Model-test-Cat5-db');
+    }
 
     Cats.Cat5.should.have.property('$__');
 
-    Cats.Cat5.$__.name.should.eql('test-Cat5');
+    Cats.Cat5.$__.name.should.eql('test-Cat5-db');
     Cats.Cat5.$__.options.should.have.property('saveUnknown', true);
 
     var schema = Cats.Cat5.$__.schema;
@@ -166,7 +182,17 @@ describe('Model', function (){
         name: 'Fluffy',
         owner: 'Someone',
         unnamedInt: 1,
+        unnamedInt0: 0,
+        unnamedBooleanFalse: false,
+        unnamedBooleanTrue: true,
         unnamedString: 'unnamed',
+
+        // Attributes with empty values. DynamoDB won't store empty values
+        // so the return value of toDynamo() should exclude these attributes.
+        unnamedUndefined: undefined,
+        unnamedNull: null,
+        unnamedEmptyString: '',
+        unnamedNumberNaN: NaN,
       }
     );
 
@@ -181,6 +207,9 @@ describe('Model', function (){
         name: { S: 'Fluffy' },
         owner: { S: 'Someone' },
         unnamedInt: { N: '1' },
+        unnamedInt0: { N: '0' },
+        unnamedBooleanFalse: { S: 'false' },
+        unnamedBooleanTrue: { S: 'true' },
         unnamedString: { S: 'unnamed' },
       });
 
@@ -193,10 +222,15 @@ describe('Model', function (){
 
     this.timeout(12000);
 
+    Cats.Cat1.should.have.property('name');
+    // Older node doesn't support Function.name changes
+    if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
+      Cats.Cat1.name.should.eql('Model-test-Cat1-db');
+    }
 
     Cats.Cat1.should.have.property('$__');
 
-    Cats.Cat1.$__.name.should.eql('test-Cat1');
+    Cats.Cat1.$__.name.should.eql('test-Cat1-db');
     Cats.Cat1.$__.options.should.have.property('saveUnknown', true);
 
     var schema = Cats.Cat1.$__.schema;
@@ -1071,6 +1105,65 @@ describe('Model', function (){
         });
       });
     });
+
+    it("Update returns all new values using default returnValues option", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns updated new values using 'UPDATED_NEW'", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_NEW'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.not.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns all new values using 'ALL_NEW'", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_NEW'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns old updated values using 'UPDATED_OLD'", function () {
+      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_OLD'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Oliver');
+          data.should.not.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns old values using 'ALL_OLD'", function () {
+      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_OLD'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Oliver');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns should not return any values using 'none' option", function () {
+      return Cats.Cat.create({id: '680', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'NONE'}).then(function(data){
+          should.not.exist(data);
+        });
+      });
+    });
+
   });
 
   describe('Model.populate', function (){
@@ -1241,7 +1334,7 @@ describe('Model', function (){
         .then(function(cat) {
           return cat.populate({
             path: 'parent',
-            model: 'test-Cat6'
+            model: 'test-Cat6-db'
           });
         })
         .then(function(cat) {
@@ -1575,5 +1668,13 @@ describe('Model', function (){
             should(cat.unsetShouldAlwaysBeChanged).eql('unsetShouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
         });
     });
+  });
+
+  it('Model.getTableReq', function() {
+    Cats.Cat.getTableReq().AttributeDefinitions.should.exist;
+    Cats.Cat.getTableReq().TableName.should.exist;
+    Cats.Cat.getTableReq().TableName.should.equal('test-Cat-db');
+    Cats.Cat.getTableReq().KeySchema.should.exist;
+    Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
   });
 });

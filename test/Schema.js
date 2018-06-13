@@ -636,6 +636,32 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Schema with bound static methods', function (done) {
+
+    dynamoose.setDefaults({ prefix: '' });
+
+    var staticSchema = new Schema({
+     name: String
+    });
+
+    staticSchema.static('getKittensNamePunctuation', function (){
+      return '!';
+    });
+
+    staticSchema.static('findKittenName', function (name){
+      // Inside a static method "this" refers to the Model
+      return name + '\'s kitten' + this.getKittensNamePunctuation();
+    });
+
+    var Cat = dynamoose.model('Cat' + Date.now(), staticSchema);
+    var kittenOwners = ['Sue', 'Janice'];
+    var kittens = kittenOwners.map(Cat.findKittenName);
+
+    kittens.should.eql(['Sue\'s kitten!', 'Janice\'s kitten!']);
+
+    done();
+  });
+
 
   it('Schema with added virtual methods', function (done) {
 
@@ -811,8 +837,97 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Parses document types when saveUnknown=false and useDocumentTypes=true', function (done) {
 
-  it('Handle unknow attributes in DynamoDB', function (done) {
+    var schema = new Schema({
+      id: Number,
+      mapAttrib: {
+        aString: String,
+        aNumber: Number,
+      },
+      listAttrib: {
+        type: 'list',
+        list: [String],
+      },
+    }, {
+      useDocumentTypes: true,
+      saveUnknown: false,
+    });
+
+    var model = {};
+    schema.parseDynamo(model, {
+      id: { N: '2' },
+      mapAttrib: {
+        M: {
+          aString: { S: 'Fluffy' },
+          aNumber: { N: '5' },
+        },
+      },
+      listAttrib: {
+        L: [
+          { S: 'v1' },
+          { S: 'v2' },
+        ],
+      },
+    });
+
+    model.should.eql({
+      id: 2,
+      mapAttrib: {
+        aString: 'Fluffy',
+        aNumber: 5,
+      },
+      listAttrib: [
+        'v1',
+        'v2',
+      ],
+    });
+
+    done();
+  });
+
+  it('Parses document types when saveUnknown=true and useDocumentTypes=true', function (done) {
+
+    var schema = new Schema({
+      id: Number,
+    }, {
+      useDocumentTypes: true,
+      saveUnknown: true,
+    });
+
+    var model = {};
+    schema.parseDynamo(model, {
+      id: { N: '2' },
+      mapAttrib: {
+        M: {
+          aString: { S: 'Fluffy' },
+          aNumber: { N: '5' },
+        },
+      },
+      listAttrib: {
+        L: [
+          { S: 'v1' },
+          { S: 'v2' },
+        ],
+      },
+    });
+
+    model.should.eql({
+      id: 2,
+      mapAttrib: {
+        aString: 'Fluffy',
+        aNumber: 5,
+      },
+      listAttrib: [
+        'v1',
+        'v2',
+      ],
+    });
+
+    done();
+  });
+
+  it('Handle unknown attributes in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
      id: Number
@@ -929,5 +1044,28 @@ describe('Schema tests', function (){
         done();
       });
     });
+  });
+  it('Handle unknown attributes as array in DynamoDB', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: ["name", "numberString"]
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' }
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      numberString: 1
+    });
+    done();
   });
 });
