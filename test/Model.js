@@ -1105,6 +1105,65 @@ describe('Model', function (){
         });
       });
     });
+
+    it("Update returns all new values using default returnValues option", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns updated new values using 'UPDATED_NEW'", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_NEW'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.not.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns all new values using 'ALL_NEW'", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_NEW'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns old updated values using 'UPDATED_OLD'", function () {
+      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_OLD'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Oliver');
+          data.should.not.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns old values using 'ALL_OLD'", function () {
+      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_OLD'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Oliver');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns should not return any values using 'none' option", function () {
+      return Cats.Cat.create({id: '680', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'NONE'}).then(function(data){
+          should.not.exist(data);
+        });
+      });
+    });
+
   });
 
   describe('Model.populate', function (){
