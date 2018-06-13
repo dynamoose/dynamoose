@@ -6,6 +6,7 @@ declare module "dynamoose" {
 
   export function local(url: string): void;
   export function ddb(): _AWS.DynamoDB;
+  export function setDocumentClient(documentClient: _AWS.DynamoDB.DocumentClient): void;
 
   export function model<DataSchema, KeySchema>(
     modelName: string,
