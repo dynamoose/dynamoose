@@ -6,6 +6,7 @@ declare module "dynamoose" {
 
   export function local(url: string): void;
   export function ddb(): _AWS.DynamoDB;
+  export function setDocumentClient(documentClient: _AWS.DynamoDB.DocumentClient): void;
 
   export function model<DataSchema, KeySchema>(
     modelName: string,
@@ -21,6 +22,7 @@ declare module "dynamoose" {
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
     suffix?: string, // Set table name suffix
+    serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
   /**
@@ -127,6 +129,8 @@ declare module "dynamoose" {
 
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
+	
+    originalItem(): object;
 
     populate<T>(path: string | PopulateOptions): Promise<Model<ModelData> & T>
   }
@@ -137,6 +141,10 @@ declare module "dynamoose" {
      * Overwrite existing item. Defaults to true.
      */
     overwrite?: boolean;
+    /**
+     * Whether to update the documents timestamps or not. Defaults to true.
+     */
+    updateTimestamps?: boolean;
     /**
      * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
      */
