@@ -267,6 +267,32 @@ module.exports = function(dynamoose){
   }
 );
 
+	var Cat9 = dynamoose.model('Cat9',
+	{
+	  id: {
+		type:  Number,
+		validate: function (v) { return v > 0; }
+	  },
+	  name: String,
+	  owner: String,
+	  age: { type: Number },
+	  vet:{
+		name: String,
+		address: String
+	  },
+	  ears:[{
+		name: String
+	  }],
+	  legs: [String],
+	  more: Object,
+	  array: Array,
+	  validated: {
+		type: String,
+		validate: function (v) { return v === 'valid'; }
+	  }
+	},
+	{useDocumentTypes: true, timestamps: true});
+
   return {
     Cat: Cat,
     Cat1: Cat1,
@@ -277,6 +303,7 @@ module.exports = function(dynamoose){
     Cat6: Cat6,
     Cat7: Cat7,
     Cat8: Cat8,
+    Cat9: Cat9,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,

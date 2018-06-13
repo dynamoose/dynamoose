@@ -670,7 +670,7 @@ describe('Scan', function (){
   it('Scan.all(1,2)', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.scan().all(1,2).limit(5).exec(function (err, dogs) {
+    Dog.scan().all(1000,2).limit(5).exec(function (err, dogs) {
       should.not.exist(err);
       dogs.length.should.eql(10);
       done();
@@ -689,6 +689,28 @@ describe('Scan', function (){
     Dog.scan(filter, { useRawAwsFilter: true }).exec()
       .then(function(dogs) {
         dogs.length.should.eql(1);
+        done();
+      })
+      .catch(function(err) {
+        should.not.exist(err);
+        console.error(err);
+        done();
+      });
+  });
+  
+  it('Scan using raw AWS filter and select count', function (done) {
+    var Dog = dynamoose.model('Dog');
+    var filter = {
+      FilterExpression: 'details.timeWakeUp = :wakeUp',
+      ExpressionAttributeValues: {
+        ':wakeUp': '8am'
+      },
+      Select: 'COUNT'
+    };
+
+    Dog.scan(filter, { useRawAwsFilter: true }).exec()
+      .then(function(counts) {
+        counts.count.should.eql(1);
         done();
       })
       .catch(function(err) {
