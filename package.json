@@ -9,7 +9,6 @@
     "url": "https://github.com/dynamoosejs/dynamoose"
   },
   "bugs": {
-    "email": "support@automategreen.com",
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "main": "index.js",
@@ -34,7 +33,7 @@
     "nosql",
     "db"
   ],
-  "author": "Brandon Goode <brandon@automategreen.com>",
+  "author": "Brandon Goode",
   "license": "MIT",
   "devDependencies": {
     "coveralls": "^3.0.0",
