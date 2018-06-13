@@ -1786,4 +1786,37 @@ describe('Model', function (){
     Cats.Cat.getTableReq().KeySchema.should.exist;
     Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
   });
+  
+  it('Get invalid JSON from DynamoDB', function(done) {    
+    var schema = {
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; }
+      },
+      name: {
+        type: Number
+      }
+    };
+    
+    var Cat = dynamoose.model('Cat9', schema);
+    
+    Cat.get(5, function() {
+      Cat.$__.base.ddb().putItem({
+        Item: {
+          id: {N: "5"},
+          name: {S: "HELLO"},
+        },
+        TableName: "test-Cat9-db"
+      }, function() {
+        Cat.get(5, function(err, cat) {
+          should.not.exist(cat);
+          should.exist(err);
+          err.name.should.eql('ParseError');
+          err.message.should.eql('Attribute "name" of type "N" has an invalid value of "HELLO"');
+          done();
+        });
+      });
+    });
+    
+  });
 });
