@@ -47,7 +47,7 @@
     "should": "^11.2.1"
   },
   "dependencies": {
-    "aws-sdk": "^2.80.0",
+    "aws-sdk": "^2.207.0",
     "debug": "^2.6.8",
     "hooks": "0.3.2",
     "lodash": "^4.17.4",
