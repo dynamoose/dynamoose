@@ -1,6 +1,6 @@
 # Dynamoose
 
-[![Join the chat at https://gitter.im/dynamoosejs/Lobby](https://badges.gitter.im/dynamoosejs/Lobby.svg)](https://gitter.im/dynamoosejs/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/automategreen/dynamoose.svg)](https://travis-ci.org/automategreen/dynamoose) [![Coverage Status](https://coveralls.io/repos/github/automategreen/dynamoose/badge.svg?branch=master)](https://coveralls.io/github/automategreen/dynamoose?branch=master)
+[![Join the chat at https://gitter.im/dynamoosejs/Lobby](https://badges.gitter.im/dynamoosejs/Lobby.svg)](https://gitter.im/dynamoosejs/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/dynamoosejs/dynamoose.svg)](https://travis-ci.org/dynamoosejs/dynamoose) [![Coverage Status](https://coveralls.io/repos/github/dynamoosejs/dynamoose/badge.svg?branch=master)](https://coveralls.io/github/dynamoosejs/dynamoose?branch=master)
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http://mongoosejs.com/))
 
@@ -52,8 +52,8 @@ Help improve Dynamoose.  I need all the help I can get to improve test coverage 
 
 ## ChangeLog
 
-The Dynamoose ChangeLog can be found in the [CHANGELOG.md](//github.com/automategreen/dynamoose/blob/master/CHANGELOG.md) file.
+The Dynamoose ChangeLog can be found in the [CHANGELOG.md](//github.com/dynamoosejs/dynamoose/blob/master/CHANGELOG.md) file.
 
 ## Roadmap
 
-The Dynamoose Roadmap can be found in the [ROADMAP.md](//github.com/automategreen/dynamoose/blob/master/ROADMAP.md) file. Help is always appreciated on these items. If you are able to help submit a PR so we can review and improve Dynamoose!
+The Dynamoose Roadmap can be found in the [ROADMAP.md](//github.com/dynamoosejs/dynamoose/blob/master/ROADMAP.md) file. Help is always appreciated on these items. If you are able to help submit a PR so we can review and improve Dynamoose!
