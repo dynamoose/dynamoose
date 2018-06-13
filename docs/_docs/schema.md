@@ -259,13 +259,21 @@ var schema = new Schema({...}, {
 });
 ```
 
-**saveUnknown**: boolean
+**saveUnknown**: boolean or array
 
 Specifies that attributes not defined in the _schema_ will be saved and retrieved.  This defaults to false.
 
 ```js
 var schema = new Schema({...}, {
   saveUnknown: true
+});
+```
+
+If an array is passed in, only attributes that are in the array passed in will be saved and retrieved.
+
+```js
+var schema = new Schema({...}, {
+  saveUnknown: ['name', 'age'] // only `name` and `age` unknown attributes will be saved and retrieved from DynamoDB
 });
 ```
 
