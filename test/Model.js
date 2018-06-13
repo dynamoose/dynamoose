@@ -182,7 +182,17 @@ describe('Model', function (){
         name: 'Fluffy',
         owner: 'Someone',
         unnamedInt: 1,
+        unnamedInt0: 0,
+        unnamedBooleanFalse: false,
+        unnamedBooleanTrue: true,
         unnamedString: 'unnamed',
+
+        // Attributes with empty values. DynamoDB won't store empty values
+        // so the return value of toDynamo() should exclude these attributes.
+        unnamedUndefined: undefined,
+        unnamedNull: null,
+        unnamedEmptyString: '',
+        unnamedNumberNaN: NaN,
       }
     );
 
@@ -197,6 +207,9 @@ describe('Model', function (){
         name: { S: 'Fluffy' },
         owner: { S: 'Someone' },
         unnamedInt: { N: '1' },
+        unnamedInt0: { N: '0' },
+        unnamedBooleanFalse: { S: 'false' },
+        unnamedBooleanTrue: { S: 'true' },
         unnamedString: { S: 'unnamed' },
       });
 
@@ -389,6 +402,96 @@ describe('Model', function (){
       });
     });
   });
+  
+  it('Save existing item without defining updating timestamps', function (done) {
+    var myCat = new Cats.Cat9({
+      id: 1,
+      name: 'Fluffy',
+      vet:{name:'theVet', address:'12 somewhere'},
+      ears:[{name:'left'}, {name:'right'}],
+      legs: ['front right', 'front left', 'back right', 'back left'],
+      more: {fovorites: {food: 'fish'}},
+      array: [{one: '1'}],
+      validated: 'valid'
+    });
+    
+    myCat.save(function(err, theSavedCat1) {
+      var expectedCreatedAt = theSavedCat1.createdAt;
+      var expectedUpdatedAt = theSavedCat1.updatedAt;
+      
+      theSavedCat1.name = "FluffyB";
+      setTimeout(function() {
+        theSavedCat1.save(function () {
+          Cats.Cat9.get(1, function(err, realCat) {
+            realCat.name.should.eql("FluffyB");
+            realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
+            realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
+            done();
+          });
+        });
+      }, 1000);
+    });
+  });
+  
+  it('Save existing item with updating timestamps', function (done) {
+    var myCat = new Cats.Cat9({
+      id: 1,
+      name: 'Fluffy',
+      vet:{name:'theVet', address:'12 somewhere'},
+      ears:[{name:'left'}, {name:'right'}],
+      legs: ['front right', 'front left', 'back right', 'back left'],
+      more: {fovorites: {food: 'fish'}},
+      array: [{one: '1'}],
+      validated: 'valid'
+    });
+    
+    myCat.save(function(err, theSavedCat1) {
+      var expectedCreatedAt = theSavedCat1.createdAt;
+      var expectedUpdatedAt = theSavedCat1.updatedAt;
+      
+      myCat.name = "FluffyB";
+      setTimeout(function() {
+        myCat.save({updateTimestamps: true}, function () {
+          Cats.Cat9.get(1, function(err, realCat) {
+            realCat.name.should.eql("FluffyB");
+            realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
+            realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
+            done();
+          });
+        });
+      }, 1000);
+    });
+  });
+  
+  it('Save existing item without updating timestamps', function (done) {
+    var myCat = new Cats.Cat9({
+      id: 1,
+      name: 'Fluffy',
+      vet:{name:'theVet', address:'12 somewhere'},
+      ears:[{name:'left'}, {name:'right'}],
+      legs: ['front right', 'front left', 'back right', 'back left'],
+      more: {fovorites: {food: 'fish'}},
+      array: [{one: '1'}],
+      validated: 'valid'
+    });
+    
+    myCat.save(function(err, theSavedCat1) {
+      var expectedCreatedAt = theSavedCat1.createdAt;
+      var expectedUpdatedAt = theSavedCat1.updatedAt;
+      
+      myCat.name = "FluffyB";
+      setTimeout(function() {
+        myCat.save({updateTimestamps: false}, function () {
+          Cats.Cat9.get(1, function(err, realCat) {
+            realCat.name.should.eql("FluffyB");
+            realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
+            realCat.updatedAt.should.eql(expectedUpdatedAt); // updatedAt should be the same as before
+            done();
+          });
+        });
+      }, 1000);
+    });
+  }); 
 
   it('Save existing item with a false condition', function (done) {
     Cats.Cat.get(1, function(err, model) {
@@ -643,6 +746,24 @@ describe('Model', function (){
     });
   });
 
+
+  // See comments on PR #306 for details on why the test below is commented out
+  
+  it('Should enable server side encryption', function() {
+    var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
+    Model.getTableReq().SSESpecification.Enabled.should.be.true;
+  });
+  
+  it('Server side encryption shouldn\'t be enabled unless specified', function(done) {
+    var Model = dynamoose.model('TestTableB', { id: Number, name: String });
+    setTimeout(function () {
+      Model.$__.table.describe(function(err, data) {
+        var works = !data.Table.SSEDescription || data.Table.SSEDescription.Status === "DISABLED";
+        works.should.be.true;
+        done();
+      });
+    }, 2000);
+  });
 
   describe('Model.update', function (){
     before(function (done) {
@@ -1092,6 +1213,65 @@ describe('Model', function (){
         });
       });
     });
+
+    it("Update returns all new values using default returnValues option", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns updated new values using 'UPDATED_NEW'", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_NEW'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.not.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns all new values using 'ALL_NEW'", function () {
+      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_NEW'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Tom');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns old updated values using 'UPDATED_OLD'", function () {
+      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_OLD'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Oliver');
+          data.should.not.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns old values using 'ALL_OLD'", function () {
+      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_OLD'}).then(function(data){
+          should.exist(data);
+          data.name.should.equal('Oliver');
+          data.should.have.property('id');
+        });
+      });
+    });
+
+    it("Update returns should not return any values using 'none' option", function () {
+      return Cats.Cat.create({id: '680', name: 'Oliver'}, {overwrite: true}).then(function(old){
+        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'NONE'}).then(function(data){
+          should.not.exist(data);
+        });
+      });
+    });
+
   });
 
   describe('Model.populate', function (){
@@ -1572,6 +1752,7 @@ describe('Model', function (){
         });
       });
     });
+    
 
   });
 
@@ -1630,4 +1811,36 @@ describe('Model', function (){
     });
   });
   
+  it('Get invalid JSON from DynamoDB', function(done) {    
+    var schema = {
+      id: {
+        type:  Number,
+        validate: function (v) { return v > 0; }
+      },
+      name: {
+        type: Number
+      }
+    };
+    
+    var Cat = dynamoose.model('Cat9', schema);
+    
+    Cat.get(5, function() {
+      Cat.$__.base.ddb().putItem({
+        Item: {
+          id: {N: "5"},
+          name: {S: "HELLO"},
+        },
+        TableName: "test-Cat9-db"
+      }, function() {
+        Cat.get(5, function(err, cat) {
+          should.not.exist(cat);
+          should.exist(err);
+          err.name.should.eql('ParseError');
+          err.message.should.eql('Attribute "name" of type "N" has an invalid value of "HELLO"');
+          done();
+        });
+      });
+    });
+    
+  });
 });

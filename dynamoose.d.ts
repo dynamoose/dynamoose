@@ -5,11 +5,12 @@ declare module "dynamoose" {
   export var AWS: typeof _AWS;
 
   export function local(url: string): void;
-  export function ddb(): typeof _AWS.DynamoDB;
+  export function ddb(): _AWS.DynamoDB;
+  export function setDocumentClient(documentClient: _AWS.DynamoDB.DocumentClient): void;
 
   export function model<DataSchema, KeySchema>(
     modelName: string,
-    schema: Schema,
+    schema: Schema | SchemaAttributes,
     options?: ModelOption
   ): ModelConstructor<DataSchema, KeySchema>;
   export function setDefaults(options: ModelOption): void;
@@ -21,6 +22,7 @@ declare module "dynamoose" {
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
     suffix?: string, // Set table name suffix
+    serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
   /**
@@ -38,7 +40,8 @@ declare module "dynamoose" {
 
   
   export interface RawSchemaAttributeDefinition<Constructor, Type> {
-    [key: string]: SchemaAttributeDefinition<Constructor, Type>
+    [key: string]: SchemaAttributeDefinition<Constructor, Type> 
+      | RawSchemaAttributeDefinition<Constructor, Type>;
   }
   export interface SchemaAttributeDefinition<Constructor, Type> {
     type: Constructor;
@@ -139,6 +142,10 @@ declare module "dynamoose" {
      */
     overwrite?: boolean;
     /**
+     * Whether to update the documents timestamps or not. Defaults to true.
+     */
+    updateTimestamps?: boolean;
+    /**
      * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
      */
     condition?: string;
@@ -166,10 +173,10 @@ declare module "dynamoose" {
     create(item: DataSchema, options?: PutOptions): Promise<ModelSchema<DataSchema>>;        
 
     get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema> | undefined>;
-    batchGet(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema>[]>;
+    batchGet(key: KeySchema[], callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema>[]>;
 
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
-    batchDelete(keys: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
+    batchDelete(keys: KeySchema[], callback?: (err: Error) => void): Promise<undefined>;
 
     query(query: QueryFilter, callback?: (err: Error, results: ModelSchema<DataSchema>[]) => void): QueryInterface<ModelSchema<DataSchema>, QueryResult<ModelSchema<DataSchema>>>;
     queryOne(query: QueryFilter, callback?: (err: Error, results: ModelSchema<DataSchema>) => void): QueryInterface<ModelSchema<DataSchema>, ModelSchema<DataSchema>>;
@@ -258,7 +265,7 @@ declare module "dynamoose" {
     all(delay?: number, max?: number): ScanInterface<T>;
     parallel(totalSegments: number): ScanInterface<T>;
     using(indexName: string): ScanInterface<T>;
-    consistent(filter: any): ScanInterface<T>;
+    consistent(filter?: any): ScanInterface<T>;
     where(filter: any): ScanInterface<T>;
     filter(filter: any): ScanInterface<T>;
     and(): ScanInterface<T>;
