@@ -635,6 +635,32 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Schema with bound static methods', function (done) {
+
+    dynamoose.setDefaults({ prefix: '' });
+
+    var staticSchema = new Schema({
+     name: String
+    });
+
+    staticSchema.static('getKittensNamePunctuation', function (){
+      return '!';
+    });
+
+    staticSchema.static('findKittenName', function (name){
+      // Inside a static method "this" refers to the Model
+      return name + '\'s kitten' + this.getKittensNamePunctuation();
+    });
+
+    var Cat = dynamoose.model('Cat' + Date.now(), staticSchema);
+    var kittenOwners = ['Sue', 'Janice'];
+    var kittens = kittenOwners.map(Cat.findKittenName);
+
+    kittens.should.eql(['Sue\'s kitten!', 'Janice\'s kitten!']);
+
+    done();
+  });
+
 
   it('Schema with added virtual methods', function (done) {
 
