@@ -107,3 +107,7 @@ var AWSXRay = require('aws-xray-sdk');
 var dynamoose = require('dynamoose');
 dynamoose.AWS = AWSXRay.captureAWS(require('aws-sdk'));
 ```
+
+### dynamoose.setDocumentClient(documentClient)
+
+Sets the document client for DynamoDB. This can be used to integrate with Amazon Web Services DAX.
