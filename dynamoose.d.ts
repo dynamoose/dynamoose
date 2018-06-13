@@ -22,6 +22,7 @@ declare module "dynamoose" {
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
     suffix?: string, // Set table name suffix
+    serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
   /**
