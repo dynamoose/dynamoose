@@ -43,7 +43,7 @@ describe('Schema tests', function (){
     };
 
     var schema = new Schema(schemaObj);
-  
+
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
     should.not.exist(schema.attributes.id.default);

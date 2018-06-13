@@ -346,24 +346,24 @@ describe('Model', function (){
       done();
     });
   });
-  
+
   it('Get and Update corrupted item', function (done) {
-    
+
     // create corrupted item
     var req = dynamoose.ddb().putItem({
       Item: {
        "id": {
          N: "7"
-        }, 
+        },
        "isHappy": {
          // this is the data corruption
          S: "tue"
         }
-      }, 
-      ReturnConsumedCapacity: "TOTAL", 
+      },
+      ReturnConsumedCapacity: "TOTAL",
       TableName: Cats.Cat7.$__.table.name
     });
-    
+
     req.promise().then(function(){
       return Cats.Cat7.get(7);
     }).catch(function(err){
@@ -375,7 +375,7 @@ describe('Model', function (){
       done();
     });
   });
-  
+
   it('Save existing item', function (done) {
 
     Cats.Cat.get(1, function(err, model) {
@@ -402,7 +402,7 @@ describe('Model', function (){
       });
     });
   });
-  
+
   it('Save existing item without defining updating timestamps', function (done) {
     var myCat = new Cats.Cat9({
       id: 1,
@@ -414,11 +414,11 @@ describe('Model', function (){
       array: [{one: '1'}],
       validated: 'valid'
     });
-    
+
     myCat.save(function(err, theSavedCat1) {
       var expectedCreatedAt = theSavedCat1.createdAt;
       var expectedUpdatedAt = theSavedCat1.updatedAt;
-      
+
       theSavedCat1.name = "FluffyB";
       setTimeout(function() {
         theSavedCat1.save(function () {
@@ -432,7 +432,7 @@ describe('Model', function (){
       }, 1000);
     });
   });
-  
+
   it('Save existing item with updating timestamps', function (done) {
     var myCat = new Cats.Cat9({
       id: 1,
@@ -444,11 +444,11 @@ describe('Model', function (){
       array: [{one: '1'}],
       validated: 'valid'
     });
-    
+
     myCat.save(function(err, theSavedCat1) {
       var expectedCreatedAt = theSavedCat1.createdAt;
       var expectedUpdatedAt = theSavedCat1.updatedAt;
-      
+
       myCat.name = "FluffyB";
       setTimeout(function() {
         myCat.save({updateTimestamps: true}, function () {
@@ -462,7 +462,7 @@ describe('Model', function (){
       }, 1000);
     });
   });
-  
+
   it('Save existing item without updating timestamps', function (done) {
     var myCat = new Cats.Cat9({
       id: 1,
@@ -474,11 +474,11 @@ describe('Model', function (){
       array: [{one: '1'}],
       validated: 'valid'
     });
-    
+
     myCat.save(function(err, theSavedCat1) {
       var expectedCreatedAt = theSavedCat1.createdAt;
       var expectedUpdatedAt = theSavedCat1.updatedAt;
-      
+
       myCat.name = "FluffyB";
       setTimeout(function() {
         myCat.save({updateTimestamps: false}, function () {
@@ -491,7 +491,7 @@ describe('Model', function (){
         });
       }, 1000);
     });
-  }); 
+  });
 
   it('Save existing item with a false condition', function (done) {
     Cats.Cat.get(1, function(err, model) {
@@ -748,12 +748,12 @@ describe('Model', function (){
 
 
   // See comments on PR #306 for details on why the test below is commented out
-  
+
   it('Should enable server side encryption', function() {
     var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
     Model.getTableReq().SSESpecification.Enabled.should.be.true;
   });
-  
+
   it('Server side encryption shouldn\'t be enabled unless specified', function(done) {
     var Model = dynamoose.model('TestTableB', { id: Number, name: String });
     setTimeout(function () {
@@ -1752,7 +1752,7 @@ describe('Model', function (){
         });
       });
     });
-    
+
 
   });
 
@@ -1786,14 +1786,14 @@ describe('Model', function (){
     Cats.Cat.getTableReq().KeySchema.should.exist;
     Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
   });
-  
+
   it('Should allow for originalItem function on models', function(done) {
     var item = {
       id: 2222,
       name: 'NAME_VALUE',
       owner: 'OWNER_VALUE'
     };
-	  
+
     var cat = new Cats.Cat(item);
     cat.originalItem().should.eql(item);
     cat.save(function(err, newCat) {
@@ -1810,37 +1810,5 @@ describe('Model', function (){
       });
     });
   });
-  
-  it('Get invalid JSON from DynamoDB', function(done) {    
-    var schema = {
-      id: {
-        type:  Number,
-        validate: function (v) { return v > 0; }
-      },
-      name: {
-        type: Number
-      }
-    };
-    
-    var Cat = dynamoose.model('Cat9', schema);
-    
-    Cat.get(5, function() {
-      Cat.$__.base.ddb().putItem({
-        Item: {
-          id: {N: "5"},
-          name: {S: "HELLO"},
-        },
-        TableName: "test-Cat9-db"
-      }, function() {
-        Cat.get(5, function(err, cat) {
-          should.not.exist(cat);
-          should.exist(err);
-          err.name.should.eql('ParseError');
-          err.message.should.eql('Attribute "name" of type "N" has an invalid value of "HELLO"');
-          done();
-        });
-      });
-    });
-    
-  });
+
 });
