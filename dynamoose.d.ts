@@ -36,7 +36,7 @@ declare module "dynamoose" {
     toDynamo(model: any): any;
     virtual(name: string, options: any): any;
     virtualpath(name: string): any;
-    loadClass(model: any, virtualsOnly?: boolean): void;
+    loadClass(model: any, virtualsOnly?: boolean): any;
   }
 
   
