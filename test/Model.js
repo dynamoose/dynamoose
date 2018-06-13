@@ -112,7 +112,7 @@ describe('Model', function (){
     Cats.Cat2.should.have.property('name');
     // Older node doesn't support Function.name changes
     if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
-      Cats.Cat2.name.should.eql('Model-test-Cat2');
+      Cats.Cat2.name.should.eql('Model-test-Cat2-db');
     }
 
     Cats.Cat2.should.have.property('$__');
@@ -149,7 +149,7 @@ describe('Model', function (){
     Cats.Cat5.should.have.property('name');
     // Older node doesn't support Function.name changes
     if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
-      Cats.Cat5.name.should.eql('Model-test-Cat5');
+      Cats.Cat5.name.should.eql('Model-test-Cat5-db');
     }
 
     Cats.Cat5.should.have.property('$__');
@@ -182,7 +182,17 @@ describe('Model', function (){
         name: 'Fluffy',
         owner: 'Someone',
         unnamedInt: 1,
+        unnamedInt0: 0,
+        unnamedBooleanFalse: false,
+        unnamedBooleanTrue: true,
         unnamedString: 'unnamed',
+
+        // Attributes with empty values. DynamoDB won't store empty values
+        // so the return value of toDynamo() should exclude these attributes.
+        unnamedUndefined: undefined,
+        unnamedNull: null,
+        unnamedEmptyString: '',
+        unnamedNumberNaN: NaN,
       }
     );
 
@@ -197,6 +207,9 @@ describe('Model', function (){
         name: { S: 'Fluffy' },
         owner: { S: 'Someone' },
         unnamedInt: { N: '1' },
+        unnamedInt0: { N: '0' },
+        unnamedBooleanFalse: { S: 'false' },
+        unnamedBooleanTrue: { S: 'true' },
         unnamedString: { S: 'unnamed' },
       });
 
@@ -212,7 +225,7 @@ describe('Model', function (){
     Cats.Cat1.should.have.property('name');
     // Older node doesn't support Function.name changes
     if (Object.getOwnPropertyDescriptor(Function, 'name').configurable) {
-      Cats.Cat1.name.should.eql('Model-test-Cat1');
+      Cats.Cat1.name.should.eql('Model-test-Cat1-db');
     }
 
     Cats.Cat1.should.have.property('$__');
