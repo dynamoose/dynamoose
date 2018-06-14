@@ -697,7 +697,7 @@ describe('Scan', function (){
         done();
       });
   });
-  
+
   it('Scan using raw AWS filter and select count', function (done) {
     var Dog = dynamoose.model('Dog');
     var filter = {
@@ -785,13 +785,13 @@ describe('Scan', function (){
     })
     .catch(done);
   });
-  
+
   it('Should delay when working with all and limit', function (done) {
     this.timeout(15000);
-    
+
     var startTime = Date.now();
     var Dog = dynamoose.model('Dog');
-    Dog.scan().all(1, 5).limit(1).exec(function(err, dogs) {
+    Dog.scan().all(1000, 5).limit(1).exec(function(err, dogs) {
       var endTime = Date.now();
       var timeDifference = endTime - startTime;
       dogs.length.should.eql(5);
