@@ -208,8 +208,8 @@ describe('Model', function (){
         owner: { S: 'Someone' },
         unnamedInt: { N: '1' },
         unnamedInt0: { N: '0' },
-        unnamedBooleanFalse: { S: 'false' },
-        unnamedBooleanTrue: { S: 'true' },
+        unnamedBooleanFalse: { BOOL: false },
+        unnamedBooleanTrue: { BOOL: true },
         unnamedString: { S: 'unnamed' },
       });
 
