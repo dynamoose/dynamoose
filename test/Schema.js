@@ -551,6 +551,59 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Schema useDocumentTypes and useNativeBooleans should default to false', function (done) {
+  	var schema = new Schema({
+  	  id: {
+    		type: Number,
+    		validate: function(v) { return v > 0; },
+    		rangeKey: true
+  	  },
+  	  breed: {
+    		type: String,
+    		hashKey: true
+  	  },
+  	  aObject: {
+    		type: 'Object',
+    		default: { state: 'alive' }
+  	  },
+  	  anotherObject: Object,
+  	  aArray: Array,
+  	  aMap: {
+    		mapId: Number,
+    		mapName: String,
+    		anotherMap:{
+    		  m1:String,
+    		}
+  	  },
+  	  aList:[
+    		{
+    		  listMapId: Number,
+    		  listMapName: String
+    		}
+  	  ],
+  	  anotherMap: {
+    		type: 'map',
+    		map: {
+    		  mapId: {type: Number, required:true },
+    		  mapName: {type: String, required:true }
+    		}
+  	  },
+  	  anotherList: {
+    		type: 'list',
+    		list: [
+    		  {
+    			listMapId: {type: Number, default: 1},
+    			listMapName: {type: String, default:"SomeName"}
+    		  }
+    		]
+  	  }
+  	});
+
+  	schema.useDocumentTypes.should.eql(false);
+  	schema.useNativeBooleans.should.eql(false);
+  	done();
+  });
+
 
   it('Schema with added instance methods', function (done) {
 
