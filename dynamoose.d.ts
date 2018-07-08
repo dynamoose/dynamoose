@@ -38,9 +38,9 @@ declare module "dynamoose" {
     virtualpath(name: string): any;
   }
 
-  
+
   export interface RawSchemaAttributeDefinition<Constructor, Type> {
-    [key: string]: SchemaAttributeDefinition<Constructor, Type> 
+    [key: string]: SchemaAttributeDefinition<Constructor, Type>
       | RawSchemaAttributeDefinition<Constructor, Type>;
   }
   export interface SchemaAttributeDefinition<Constructor, Type> {
@@ -129,7 +129,7 @@ declare module "dynamoose" {
 
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
-	
+
     originalItem(): object;
 
     populate<T>(path: string | PopulateOptions): Promise<Model<ModelData> & T>
@@ -138,7 +138,7 @@ declare module "dynamoose" {
 
   export interface PutOptions {
     /**
-     * Overwrite existing item. Defaults to true.
+     * Overwrite existing item. Defaults to true for `model.put` and false for `Model.create`.
      */
     overwrite?: boolean;
     /**
@@ -168,9 +168,9 @@ declare module "dynamoose" {
     batchPut(items: DataSchema[], options?: PutOptions, callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
     batchPut(items: DataSchema[], callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
 
-    create(item: DataSchema, options?: PutOptions, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;    
+    create(item: DataSchema, options?: PutOptions, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
     create(item: DataSchema, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
-    create(item: DataSchema, options?: PutOptions): Promise<ModelSchema<DataSchema>>;        
+    create(item: DataSchema, options?: PutOptions): Promise<ModelSchema<DataSchema>>;
 
     get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema> | undefined>;
     batchGet(key: KeySchema[], callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema>[]>;
