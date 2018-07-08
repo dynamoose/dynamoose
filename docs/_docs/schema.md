@@ -202,7 +202,7 @@ var schema = new Schema({...}, {
 
 **useNativeBooleans**: boolean
 
-Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `false` (i.e store as JSON string).
+Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `true` (i.e store as DynamoDB boolean).
 
 
 ```js
@@ -213,7 +213,7 @@ var schema = new Schema({...}, {
 
 **useDocumentTypes**: boolean
 
-Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `false` (i.e. store as JSON string)
+Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `true` (i.e. store as DynamoDB maps and lists).
 
 ```js
 var schema = new Schema({...}, {
