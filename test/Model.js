@@ -672,6 +672,20 @@ describe('Model', function (){
     });
   });
 
+  it('BatchGet items for model with falsy keys', function (done) {
+    Cats.Cat8.create({id: 1, age: 0})
+      .then(function () {
+        return Cats.Cat8.batchGet([{id: 1, age: 0}]);
+      })
+      .then(function (cats) {
+        cats.length.should.eql(1);
+        cats[0].should.have.property('id', 1);
+        cats[0].should.have.property('age', 0);
+        done();
+      })
+      .catch(done);
+  });
+
   it('Static Delete', function (done) {
     Cats.Cat.delete(666, function (err) {
       should.not.exist(err);
