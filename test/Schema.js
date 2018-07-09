@@ -910,6 +910,7 @@ describe('Schema tests', function (){
           { S: 'v2' },
         ],
       },
+      stringNumber: { S: '1' },
     });
 
     model.should.eql({
@@ -922,6 +923,7 @@ describe('Schema tests', function (){
         'v1',
         'v2',
       ],
+      stringNumber: 1
     });
 
     done();
