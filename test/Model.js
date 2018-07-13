@@ -1286,6 +1286,14 @@ describe('Model', function (){
       });
     });
 
+    it("Update model using timestamps with name and createdAt as key", function () {
+      return Cats.Cat10.create({name: 'Fluffy', age: 1}, {overwrite: true}).then(function (old) {
+        return Cats.Cat10.update({name: old.name, createdAt: old.createdAt}, {age: 2}).then(function(data) {
+          data.age.should.equal(2);
+        });
+      });
+    });
+
   });
 
   describe('Model.populate', function (){

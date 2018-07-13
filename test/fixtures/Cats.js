@@ -3,7 +3,7 @@
 module.exports = function(dynamoose){
   var ONE_YEAR = 365*24*60*60; // 1 years in seconds
   var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
-  
+
   var Cat = dynamoose.model('Cat',
   {
     id: {
@@ -293,6 +293,22 @@ module.exports = function(dynamoose){
 	},
 	{useDocumentTypes: true, timestamps: true});
 
+  // Create a model using a timestamp attribute as a range key
+  var Cat10 = dynamoose.model('Cat10',
+  {
+    name: {
+      type: String,
+      hashKey: true
+    },
+    createdAt: {
+      type: Number,
+      rangeKey: true
+    },
+    age: {
+      type: Number
+    }
+  }, { timestamps: true });
+
   return {
     Cat: Cat,
     Cat1: Cat1,
@@ -304,6 +320,7 @@ module.exports = function(dynamoose){
     Cat7: Cat7,
     Cat8: Cat8,
     Cat9: Cat9,
+    Cat10: Cat10,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
