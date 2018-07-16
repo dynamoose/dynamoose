@@ -18,10 +18,6 @@ var Cats = {};
 var ONE_YEAR = 365*24*60*60; // 1 years in seconds
 var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
 
-var imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
-imageData.should.not.eql(Buffer.from(imageData.toString())); // The binary value should not be UTF-8 string for test.
-
-
 describe('Model', function (){
   this.timeout(15000);
   before(function(done) {
@@ -78,7 +74,6 @@ describe('Model', function (){
         vet:{name:'theVet', address:'12 somewhere'},
         ears:[{name:'left'}, {name:'right'}],
         legs: ['front right', 'front left', 'back right', 'back left'],
-        profileImage: imageData,
         more: {fovorites: {food: 'fish'}},
         array: [{one: '1'}],
         validated: 'valid'
@@ -102,7 +97,6 @@ describe('Model', function (){
         name: { S: 'Fluffy' },
         vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
         legs: { SS: ['front right', 'front left', 'back right', 'back left']},
-        profileImage: { B: imageData },
         more: { S: '{"fovorites":{"food":"fish"}}' },
         array: { S: '[{"one":"1"}]' },
         validated: { S: 'valid' }
@@ -325,7 +319,6 @@ describe('Model', function (){
       model.should.have.property('id', 1);
       model.should.have.property('name', 'Fluffy');
       model.should.have.property('vet', { address: '12 somewhere', name: 'theVet' });
-      model.should.have.property('profileImage', imageData);
       model.should.have.property('$__');
       done();
     });
@@ -1827,6 +1820,30 @@ describe('Model', function (){
         newCatB.name = 'NAME_VALUE_2';
         newCatB.originalItem().should.eql(item);
         newCatB.name.should.eql('NAME_VALUE_2');
+        done();
+      });
+    });
+  });
+
+  it('Should store/load binary data safely', function(done) {
+    var imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
+
+    imageData.should.not.eql(Buffer.from(imageData.toString())); // The binary value should not be UTF-8 string for test.
+
+    var item = {
+      id: 3333,
+      name: 'NAME_VALUE',
+      owner: 'OWNER_VALUE',
+      profileImage: imageData
+    };
+
+    var cat = new Cats.Cat(item);
+    cat.save(function(err) {
+      should.not.exist(err);
+      Cats.Cat.get(3333, function(err, newCatB) {
+        should.not.exist(err);
+        should.exist(newCatB);
+        newCatB.should.have.property('profileImage', imageData);
         done();
       });
     });
