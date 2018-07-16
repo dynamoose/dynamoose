@@ -1286,9 +1286,17 @@ describe('Model', function (){
       });
     });
 
-    it("Update model using timestamps with name and createdAt as key", function () {
+    it("Update model using timestamp field 'createdAt' as rangeKey", function () {
       return Cats.Cat10.create({name: 'Fluffy', age: 1}, {overwrite: true}).then(function (old) {
         return Cats.Cat10.update({name: old.name, createdAt: old.createdAt}, {age: 2}).then(function(data) {
+          data.age.should.equal(2);
+        });
+      });
+    });
+
+    it("Update model with non-timestamp field as rangeKey", function () {
+      return Cats.Cat11.create({name: 'Fluffy', serial: Date.now(), age: 1}, {overwrite: true}).then(function (old) {
+        return Cats.Cat11.update({name: old.name, serial: old.serial}, {age: 2}).then(function(data) {
           data.age.should.equal(2);
         });
       });

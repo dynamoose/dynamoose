@@ -309,6 +309,21 @@ module.exports = function(dynamoose){
     }
   }, { timestamps: true });
 
+  var Cat11 = dynamoose.model('Cat11',
+  {
+    name: {
+      type: String,
+      hashKey: true
+    },
+    serial: {
+      type: Number,
+      rangeKey: true
+    },
+    age: {
+      type: Number
+    }
+  }, { timestamps: true });
+
   return {
     Cat: Cat,
     Cat1: Cat1,
@@ -321,6 +336,7 @@ module.exports = function(dynamoose){
     Cat8: Cat8,
     Cat9: Cat9,
     Cat10: Cat10,
+    Cat11: Cat11,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
