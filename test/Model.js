@@ -1825,4 +1825,28 @@ describe('Model', function (){
     });
   });
 
+  it('Should store/load binary data safely', function(done) {
+    var imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
+
+    imageData.should.not.eql(Buffer.from(imageData.toString())); // The binary value should not be UTF-8 string for test.
+
+    var item = {
+      id: 3333,
+      name: 'NAME_VALUE',
+      owner: 'OWNER_VALUE',
+      profileImage: imageData
+    };
+
+    var cat = new Cats.Cat(item);
+    cat.save(function(err) {
+      should.not.exist(err);
+      Cats.Cat.get(3333, function(err, newCatB) {
+        should.not.exist(err);
+        should.exist(newCatB);
+        newCatB.should.have.property('profileImage', imageData);
+        done();
+      });
+    });
+  });
+
 });
