@@ -21,6 +21,7 @@ module.exports = function(dynamoose){
       name: String
     }],
     legs: [String],
+    profileImage: Buffer,
     more: Object,
     array: Array,
     validated: {
