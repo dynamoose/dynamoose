@@ -1005,6 +1005,33 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Handle unknown attributes in DynamoDB when document types are set to false', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: true,
+      useDocumentTypes: false,
+      useNativeBooleans: false
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' },
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      anObject: { a: 'attribute' },
+      numberString: 1,
+    });
+    done();
+  });
+
   it('Enum Should be set in schema attributes object', function (done) {
      var enumData = ['Golden retriever', 'Beagle'];
     var schema = new Schema({
@@ -1104,6 +1131,32 @@ describe('Schema tests', function (){
      id: Number
      }, {
       saveUnknown: ["name", "numberString"]
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' }
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      numberString: 1
+    });
+    done();
+  });
+
+  it('Handle unknown attributes as array in DynamoDB when document types are set to false', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: ["name", "numberString"],
+      useDocumentTypes: false,
+      useNativeBooleans: false
     });
 
     var model = {};
