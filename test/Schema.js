@@ -66,9 +66,9 @@ describe('Schema tests', function (){
 
     schema.attributes.aArray.type.name.should.eql('array');
 
-    schema.attributes.aMap.type.name.should.eql('object');
+    schema.attributes.aMap.type.name.should.eql('map');
 
-    schema.attributes.aList.type.name.should.eql('array');
+    schema.attributes.aList.type.name.should.eql('list');
 
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
@@ -154,9 +154,9 @@ describe('Schema tests', function (){
     schema.attributes.aObject.type.name.should.eql('object');
     should.exist(schema.attributes.aObject.default);
 
-    schema.attributes.aMap.type.name.should.eql('object');
+    schema.attributes.aMap.type.name.should.eql('map');
 
-    schema.attributes.aList.type.name.should.eql('array');
+    schema.attributes.aList.type.name.should.eql('list');
 
     schema.hashKey.should.equal(schema.attributes.breed); // should be same object
     schema.rangeKey.should.equal(schema.attributes.id);
@@ -549,6 +549,59 @@ describe('Schema tests', function (){
     schema.throughput.write.should.equal(1);
 
     done();
+  });
+
+  it('Schema useDocumentTypes and useNativeBooleans should default to true', function (done) {
+  	var schema = new Schema({
+  	  id: {
+    		type: Number,
+    		validate: function(v) { return v > 0; },
+    		rangeKey: true
+  	  },
+  	  breed: {
+    		type: String,
+    		hashKey: true
+  	  },
+  	  aObject: {
+    		type: 'Object',
+    		default: { state: 'alive' }
+  	  },
+  	  anotherObject: Object,
+  	  aArray: Array,
+  	  aMap: {
+    		mapId: Number,
+    		mapName: String,
+    		anotherMap:{
+    		  m1:String,
+    		}
+  	  },
+  	  aList:[
+    		{
+    		  listMapId: Number,
+    		  listMapName: String
+    		}
+  	  ],
+  	  anotherMap: {
+    		type: 'map',
+    		map: {
+    		  mapId: {type: Number, required:true },
+    		  mapName: {type: String, required:true }
+    		}
+  	  },
+  	  anotherList: {
+    		type: 'list',
+    		list: [
+    		  {
+    			listMapId: {type: Number, default: 1},
+    			listMapName: {type: String, default:"SomeName"}
+    		  }
+    		]
+  	  }
+  	});
+
+  	schema.useDocumentTypes.should.eql(true);
+  	schema.useNativeBooleans.should.eql(true);
+  	done();
   });
 
 
