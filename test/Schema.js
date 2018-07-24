@@ -994,6 +994,11 @@ describe('Schema tests', function (){
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
       numberString: { S: '1' },
+      anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]' },
+      anObjectB: { M: {"a":{"S": "attribute"}} },
+      anArrayB: { L: [{N:'2'},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
+      aBoolean: { S: "true" },
+      aBooleanB: { BOOL: true },
     });
 
     model.should.eql({
@@ -1001,6 +1006,13 @@ describe('Schema tests', function (){
       name: 'Fluffy',
       anObject: { a: 'attribute' },
       numberString: 1,
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArray: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      anObjectB: { a: 'attribute' },
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArrayB: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      aBoolean: true,
+      aBooleanB: true
     });
     done();
   });
@@ -1021,6 +1033,11 @@ describe('Schema tests', function (){
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
       numberString: { S: '1' },
+      anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]'},
+      anObjectB: { M: {"a":{"S": "attribute"}} },
+      anArrayB: { L: [{N:'2'},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}]},
+      aBoolean: { S: "true" },
+      aBooleanB: { BOOL: true },
     });
 
     model.should.eql({
@@ -1028,6 +1045,13 @@ describe('Schema tests', function (){
       name: 'Fluffy',
       anObject: { a: 'attribute' },
       numberString: 1,
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArray: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      anObjectB: { a: 'attribute' },
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArrayB: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      aBoolean: true,
+      aBooleanB: true
     });
     done();
   });
