@@ -779,6 +779,17 @@ describe('Model', function (){
     }, 2000);
   });
 
+  it('Makes model class available inside schema methods', function() {
+    Object.keys(dynamoose.models).should.containEql('test-CatWithMethods-db');
+
+    var cat = new Cats.CatWithMethods({id: 1, name: 'Sir Pounce'});
+
+    cat.getModel.should.throw(Error);
+
+    var modelClass = cat.getModel('test-CatWithMethods-db');
+    modelClass.should.equal(Cats.CatWithMethods);
+  });
+
   describe('Model.update', function (){
     before(function (done) {
       var stray = new Cats.Cat({id: 999, name: 'Tom'});
