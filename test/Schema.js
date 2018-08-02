@@ -331,6 +331,45 @@ describe('Schema tests', function (){
   });
 
 
+  it('Schema with timestamps options with custom type and default function', function () {
+    var fakeTimeStamp = new Date().toLocaleString();
+    var schema = new Schema({
+      id: {
+        type: Number,
+        hashKey: true
+      }
+    },
+      {
+        timestamps: {
+          createdAt: 'createdAt',
+          updatedAt: 'updatedAt',
+          type: String,
+          default: function() {
+            return fakeTimeStamp;
+          }
+        }
+      });
+
+    should.exist(schema.attributes.createdAt);
+    should.exist(schema.attributes.updatedAt);
+    schema.attributes.createdAt.type.name.should.eql('string');
+    schema.attributes.updatedAt.type.name.should.eql('string');
+    should.exist(schema.attributes.createdAt.default);
+    should.exist(schema.attributes.updatedAt.default);
+    (schema.attributes.createdAt.default()).should.be.equal(fakeTimeStamp);
+    (schema.attributes.updatedAt.default()).should.be.equal(fakeTimeStamp);
+
+    //
+    // Schema timestamps validation
+    //
+    should.exist(schema.timestamps);
+    should.exist(schema.timestamps.createdAt);
+    schema.timestamps.createdAt.should.be.equal('createdAt');
+    should.exist(schema.timestamps.updatedAt);
+    schema.timestamps.updatedAt.should.be.equal('updatedAt');
+  });
+
+
   it('Schema with use Document Types', function (done) {
     var schema = new Schema({
       id: {

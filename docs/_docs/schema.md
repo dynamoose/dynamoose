@@ -239,7 +239,11 @@ var schema = new Schema({...}, {
   throughput: 5,
   timestamps: {
     createdAt: 'creationDate',
-    updatedAt: 'lastUpdateDate'
+    updatedAt: 'lastUpdateDate',
+    type: String, // default: Number for Date.now
+    default: function(){
+      return new Date().toLocaleString();
+    }
   }
 });
 ```
