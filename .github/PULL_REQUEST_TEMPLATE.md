@@ -57,6 +57,11 @@
 - [ ] No
 
 
+### Are all the tests currently passing on this PR? (select 1):
+- [ ] Yes
+- [ ] No
+
+
 ### Other:
 - [ ] I have searched through the GitHub pull requests to ensure this PR has not already been submitted
 - [ ] I have updated the Dynamoose documentation (if required) given the changes I made
