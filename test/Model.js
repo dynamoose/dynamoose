@@ -1297,6 +1297,19 @@ describe('Model', function (){
       });
     });
 
+    it('Update with saveUnknown enabled', function (done) {
+      Cats.Cat1.create({id: 982, name: 'Oliver'}, function(err, old){
+        should.not.exist(err);
+        Cats.Cat1.update({id: old.id}, {otherProperty: 'Testing123'}, function(err, data){
+          should.not.exist(err);
+          should.exist(data);
+          data.should.have.property('otherProperty');
+          data.otherProperty.should.eql('Testing123');
+          done();
+        })
+      });
+    });
+
   });
 
   describe('Model.populate', function (){
