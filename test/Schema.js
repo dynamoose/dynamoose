@@ -22,19 +22,19 @@ describe('Schema tests', function (){
 
   it('Simple schema', function (done) {
     var schemaObj = {
-     id: Number,
-     name: String,
-     children: [Number],
-     aObject: Object,
-     aArray: Array,
-     aMap: {
+      id: Number,
+      name: String,
+      children: [Number],
+      aObject: Object,
+      aArray: Array,
+      aMap: {
         mapId: Number,
         mapName: String,
         anotherMap:{
           m1:String,
         }
-     },
-     aList:[
+      },
+      aList:[
         {
           listMapId: Number,
           listMapName: String
@@ -306,12 +306,12 @@ describe('Schema tests', function (){
         rangeKey: true
       }
     },
-      {
-        timestamps: {
-          createdAt: 'started_at',
-          updatedAt: 'updated_at'
-        }
-      });
+    {
+      timestamps: {
+        createdAt: 'started_at',
+        updatedAt: 'updated_at'
+      }
+    });
 
     should.exist(schema.attributes.started_at);
     should.exist(schema.attributes.updated_at);
@@ -414,8 +414,8 @@ describe('Schema tests', function (){
 
   it('Schema with use Native Booleans', function (done) {
     var schema = new Schema({
-     name: String,
-     isAwesome: Boolean
+      name: String,
+      isAwesome: Boolean
     }, {useNativeBooleans: true});
 
     var Cat = dynamoose.model('Cat' + Date.now(), schema);
@@ -557,7 +557,7 @@ describe('Schema tests', function (){
     dynamoose.setDefaults({ prefix: '' });
 
     var schema = new Schema({
-     id: Number
+      id: Number
     });
 
     schema.method('meow', function() {
@@ -603,7 +603,7 @@ describe('Schema tests', function (){
     dynamoose.setDefaults({ prefix: '' });
 
     var staticSchema = new Schema({
-     name: String
+      name: String
     });
 
     staticSchema.static('findKittenName', function (name){
@@ -641,7 +641,7 @@ describe('Schema tests', function (){
     dynamoose.setDefaults({ prefix: '' });
 
     var staticSchema = new Schema({
-     name: String
+      name: String
     });
 
     staticSchema.static('getKittensNamePunctuation', function (){
@@ -666,8 +666,8 @@ describe('Schema tests', function (){
   it('Schema with added virtual methods', function (done) {
 
     var schema = new Schema({
-     name: String,
-     owner: String
+      name: String,
+      owner: String
     });
 
     schema.virtual('mergedname').get(function () {
@@ -930,8 +930,8 @@ describe('Schema tests', function (){
   it('Handle unknown attributes in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
-     id: Number
-     }, {
+      id: Number
+    }, {
       saveUnknown: true
     });
 
@@ -953,24 +953,24 @@ describe('Schema tests', function (){
   });
 
   it('Enum Should be set in schema attributes object', function (done) {
-     var enumData = ['Golden retriever', 'Beagle'];
+    var enumData = ['Golden retriever', 'Beagle'];
     var schema = new Schema({
       race: {
-         type: String,
-         enum: enumData
+        type: String,
+        enum: enumData
       }
     });
 
-   schema.attributes.race.options.should.have.property('enum');
-   schema.attributes.race.options.enum.should.deepEqual(enumData);
-   done();
+    schema.attributes.race.options.should.have.property('enum');
+    schema.attributes.race.options.enum.should.deepEqual(enumData);
+    done();
   });
 
   it('Enum Should throw error when using different value', function (done) {
     var schema = new Schema({
       race: {
-         type: String,
-         enum: ['Golden retriever', 'Beagle']
+        type: String,
+        enum: ['Golden retriever', 'Beagle']
       }
     });
 
@@ -989,16 +989,16 @@ describe('Schema tests', function (){
   it('Enum Should not throw an error if value is empty', function (done) {
     var schema = new Schema({
       name: {
-         type: String,
-         required: true,
-         hashKey: true
+        type: String,
+        required: true,
+        hashKey: true
       },
       race: {
-         type: String,
-         enum: ['Golden retriever', 'Beagle']
+        type: String,
+        enum: ['Golden retriever', 'Beagle']
       },
       weight: {
-         type: Number
+        type: Number
       }
     });
 
@@ -1025,8 +1025,8 @@ describe('Schema tests', function (){
 
     var schema = new Schema({
       race: {
-         type: String,
-         enum: enumData
+        type: String,
+        enum: enumData
       }
     });
 
@@ -1048,8 +1048,8 @@ describe('Schema tests', function (){
   it('Handle unknown attributes as array in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
-     id: Number
-     }, {
+      id: Number
+    }, {
       saveUnknown: ["name", "numberString"]
     });
 
