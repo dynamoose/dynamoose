@@ -20,11 +20,11 @@ describe('General tests', function (){
 
   it('dynamoose.setDocumentClient should be a function', function () {
     should.exist(dynamoose.setDocumentClient);
-	  (typeof dynamoose.setDocumentClient).should.eql('function');
+    (typeof dynamoose.setDocumentClient).should.eql('function');
   });
 
   it('dynamoose.setDocumentClient should set', function () {
-	  var client = dynamoose.dynamoDocumentClient;
+    var client = dynamoose.dynamoDocumentClient;
     dynamoose.setDocumentClient("test");
     dynamoose.dynamoDocumentClient.should.eql("test");
     dynamoose.setDocumentClient(client);

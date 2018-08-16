@@ -40,8 +40,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('dynamo:start', function() {
     var getPID = 'ps aux | grep "DynamoDBLocal.jar -port ' +
-                 DYNAMO_DB_PORT  +
-                 '" | grep -v grep | awk \'{print $2}\'';
+    DYNAMO_DB_PORT  +
+    '" | grep -v grep | awk \'{print $2}\'';
     var done = this.async();
     require('child_process').exec(getPID, function (err, pid) {
       if(err) {
