@@ -3,8 +3,8 @@ node_js:
   - "10"
   - "9"
   - "8"
-  # env: DEBUG=dynamoose*
-  before_script:
-    - npm install -g grunt-cli nyc
-    script:
-      - ./travis-test
+# env: DEBUG=dynamoose*
+before_script:
+  - npm install -g grunt-cli nyc
+script:
+  - ./travis-test
