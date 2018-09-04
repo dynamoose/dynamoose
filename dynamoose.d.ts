@@ -252,7 +252,7 @@ declare module "dynamoose" {
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
   }
-  type QueryKey = string;
+  type QueryKey = any;
 
 
   /**
@@ -292,7 +292,7 @@ declare module "dynamoose" {
     lastKey?: ScanKey;
   }
 
-  type ScanKey = string;
+  type ScanKey = any;
 
   export class VirtualType {
     constructor(options: any, name: string);
