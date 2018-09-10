@@ -46,6 +46,7 @@ odie.save({
 
 Options:
   - overwrite: should overwrite the existing item in DynamoDB (default: true)
+  - updateExpires: should update the expires timestamp if exists (default: false)
   - updateTimestamps: should update the updatedAt timestamp if exists (default: true)
 
 ### Model.batchPut(items, options, callback)
@@ -385,6 +386,10 @@ If true, required attributes will be filled with their default values on update 
 **updateTimestamps**: boolean
 
 If true, the `timestamps` attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
+
+**updateExpires**: boolean
+
+If true, the `expires` attributes will be updated. Will not do anything if expires attribute were not specified. Defaults to false.
 
 **condition**: string
 
