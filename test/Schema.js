@@ -3,6 +3,8 @@
 //var util = require('util');
 
 var dynamoose = require('../');
+var errors = require('../lib/errors');
+
 dynamoose.AWS.config.update({
   accessKeyId: 'AKID',
   secretAccessKey: 'SECRET',
@@ -15,25 +17,24 @@ var Schema = dynamoose.Schema;
 
 var should = require('should');
 
-
 describe('Schema tests', function (){
   this.timeout(10000);
 
   it('Simple schema', function (done) {
     var schemaObj = {
-     id: Number,
-     name: String,
-     children: [Number],
-     aObject: Object,
-     aArray: Array,
-     aMap: {
+      id: Number,
+      name: String,
+      children: [Number],
+      aObject: Object,
+      aArray: Array,
+      aMap: {
         mapId: Number,
         mapName: String,
         anotherMap:{
           m1:String,
         }
-     },
-     aList:[
+      },
+      aList:[
         {
           listMapId: Number,
           listMapName: String
@@ -305,12 +306,12 @@ describe('Schema tests', function (){
         rangeKey: true
       }
     },
-      {
-        timestamps: {
-          createdAt: 'started_at',
-          updatedAt: 'updated_at'
-        }
-      });
+    {
+      timestamps: {
+        createdAt: 'started_at',
+        updatedAt: 'updated_at'
+      }
+    });
 
     should.exist(schema.attributes.started_at);
     should.exist(schema.attributes.updated_at);
@@ -413,8 +414,8 @@ describe('Schema tests', function (){
 
   it('Schema with use Native Booleans', function (done) {
     var schema = new Schema({
-     name: String,
-     isAwesome: Boolean
+      name: String,
+      isAwesome: Boolean
     }, {useNativeBooleans: true});
 
     var Cat = dynamoose.model('Cat' + Date.now(), schema);
@@ -556,7 +557,7 @@ describe('Schema tests', function (){
     dynamoose.setDefaults({ prefix: '' });
 
     var schema = new Schema({
-     id: Number
+      id: Number
     });
 
     schema.method('meow', function() {
@@ -602,7 +603,7 @@ describe('Schema tests', function (){
     dynamoose.setDefaults({ prefix: '' });
 
     var staticSchema = new Schema({
-     name: String
+      name: String
     });
 
     staticSchema.static('findKittenName', function (name){
@@ -635,12 +636,38 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Schema with bound static methods', function (done) {
+
+    dynamoose.setDefaults({ prefix: '' });
+
+    var staticSchema = new Schema({
+      name: String
+    });
+
+    staticSchema.static('getKittensNamePunctuation', function (){
+      return '!';
+    });
+
+    staticSchema.static('findKittenName', function (name){
+      // Inside a static method "this" refers to the Model
+      return name + '\'s kitten' + this.getKittensNamePunctuation();
+    });
+
+    var Cat = dynamoose.model('Cat' + Date.now(), staticSchema);
+    var kittenOwners = ['Sue', 'Janice'];
+    var kittens = kittenOwners.map(Cat.findKittenName);
+
+    kittens.should.eql(['Sue\'s kitten!', 'Janice\'s kitten!']);
+
+    done();
+  });
+
 
   it('Schema with added virtual methods', function (done) {
 
     var schema = new Schema({
-     name: String,
-     owner: String
+      name: String,
+      owner: String
     });
 
     schema.virtual('mergedname').get(function () {
@@ -810,12 +837,101 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Parses document types when saveUnknown=false and useDocumentTypes=true', function (done) {
 
-  it('Handle unknow attributes in DynamoDB', function (done) {
+    var schema = new Schema({
+      id: Number,
+      mapAttrib: {
+        aString: String,
+        aNumber: Number,
+      },
+      listAttrib: {
+        type: 'list',
+        list: [String],
+      },
+    }, {
+      useDocumentTypes: true,
+      saveUnknown: false,
+    });
+
+    var model = {};
+    schema.parseDynamo(model, {
+      id: { N: '2' },
+      mapAttrib: {
+        M: {
+          aString: { S: 'Fluffy' },
+          aNumber: { N: '5' },
+        },
+      },
+      listAttrib: {
+        L: [
+          { S: 'v1' },
+          { S: 'v2' },
+        ],
+      },
+    });
+
+    model.should.eql({
+      id: 2,
+      mapAttrib: {
+        aString: 'Fluffy',
+        aNumber: 5,
+      },
+      listAttrib: [
+        'v1',
+        'v2',
+      ],
+    });
+
+    done();
+  });
+
+  it('Parses document types when saveUnknown=true and useDocumentTypes=true', function (done) {
+
+    var schema = new Schema({
+      id: Number,
+    }, {
+      useDocumentTypes: true,
+      saveUnknown: true,
+    });
+
+    var model = {};
+    schema.parseDynamo(model, {
+      id: { N: '2' },
+      mapAttrib: {
+        M: {
+          aString: { S: 'Fluffy' },
+          aNumber: { N: '5' },
+        },
+      },
+      listAttrib: {
+        L: [
+          { S: 'v1' },
+          { S: 'v2' },
+        ],
+      },
+    });
+
+    model.should.eql({
+      id: 2,
+      mapAttrib: {
+        aString: 'Fluffy',
+        aNumber: 5,
+      },
+      listAttrib: [
+        'v1',
+        'v2',
+      ],
+    });
+
+    done();
+  });
+
+  it('Handle unknown attributes in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
-     id: Number
-     }, {
+      id: Number
+    }, {
       saveUnknown: true
     });
 
@@ -832,6 +948,123 @@ describe('Schema tests', function (){
       name: 'Fluffy',
       anObject: { a: 'attribute' },
       numberString: 1,
+    });
+    done();
+  });
+
+  it('Enum Should be set in schema attributes object', function (done) {
+    var enumData = ['Golden retriever', 'Beagle'];
+    var schema = new Schema({
+      race: {
+        type: String,
+        enum: enumData
+      }
+    });
+
+    schema.attributes.race.options.should.have.property('enum');
+    schema.attributes.race.options.enum.should.deepEqual(enumData);
+    done();
+  });
+
+  it('Enum Should throw error when using different value', function (done) {
+    var schema = new Schema({
+      race: {
+        type: String,
+        enum: ['Golden retriever', 'Beagle']
+      }
+    });
+
+    var Dog = dynamoose.model('Dog' + Date.now(), schema);
+    var oscar = new Dog();
+
+    oscar.race = 'Persian';
+
+    oscar.save(function(err) {
+      err.should.be.instanceof(Error);
+      err.should.be.instanceof(errors.ValidationError);
+      done();
+    });
+  });
+
+  it('Enum Should not throw an error if value is empty', function (done) {
+    var schema = new Schema({
+      name: {
+        type: String,
+        required: true,
+        hashKey: true
+      },
+      race: {
+        type: String,
+        enum: ['Golden retriever', 'Beagle']
+      },
+      weight: {
+        type: Number
+      }
+    });
+
+    var Dog = dynamoose.model('Dog' + Date.now(), schema);
+    var oscar = new Dog();
+
+    oscar.name = 'oscar';
+    oscar.weight = 100;
+
+    oscar.save(function(err) {
+      should(err).be.null();
+
+      Dog.$__.table.delete(function () {
+        delete dynamoose.models.Dog;
+        done();
+      });
+    });
+  });
+
+  it('Enum Should save new instance of model with a good value', function (done) {
+
+    var enumData = ['Golden retriever', 'Beagle'];
+    var choosedRace = enumData[0];
+
+    var schema = new Schema({
+      race: {
+        type: String,
+        enum: enumData
+      }
+    });
+
+    var Dog = dynamoose.model('Dog' + Date.now(), schema);
+    var oscar = new Dog();
+
+    oscar.race = choosedRace;
+
+    oscar.save(function(err, savedDog) {
+      should(err).be.null();
+      savedDog.race.should.equal(choosedRace);
+
+      Dog.$__.table.delete(function () {
+        delete dynamoose.models.Dog;
+        done();
+      });
+    });
+  });
+  it('Handle unknown attributes as array in DynamoDB', function (done) {
+
+    var unknownSchema = new Schema({
+      id: Number
+    }, {
+      saveUnknown: ["name", "numberString"]
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' }
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      numberString: 1
     });
     done();
   });

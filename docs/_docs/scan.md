@@ -63,7 +63,7 @@ Executes a scan against a table
 
 Recursively scan as long as lastKey exists. This function will also return a property called `timesScanned` indicating how many scans were completed.
 
-`delay` is the time (in seconds) between recursive scans. Default: 1sec
+`delay` is the time (in miliseconds) between recursive scans. Default: 1000ms (1sec)
 
 `max` is the maximum number of recursive scans. Default: 0 - unlimited
 
