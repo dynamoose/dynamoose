@@ -1113,10 +1113,13 @@ describe('Model', function (){
               return leo.save();
             })
             .then(function () {
-              Cats.ExpiringCat.get("Leo").then(function (leo) {
+              Cats.ExpiringCat.get("Leo", function (err, leo) {
+                if (err) {
+                  return done(err);
+                }
                 should.exist(leo);
                 done();
-              }).catch(done);
+              });
             })
             .catch(done);
           });
