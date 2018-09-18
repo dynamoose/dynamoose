@@ -21,6 +21,7 @@ module.exports = function(dynamoose){
       name: String
     }],
     legs: [String],
+    profileImage: Buffer,
     more: Object,
     array: Array,
     validated: {
@@ -267,6 +268,41 @@ module.exports = function(dynamoose){
   }
 );
 
+	var Cat9 = dynamoose.model('Cat9',
+	{
+	  id: {
+		type:  Number,
+		validate: function (v) { return v > 0; }
+	  },
+	  name: String,
+	  owner: String,
+	  age: { type: Number },
+	  vet:{
+		name: String,
+		address: String
+	  },
+	  ears:[{
+		name: String
+	  }],
+	  legs: [String],
+	  more: Object,
+	  array: Array,
+	  validated: {
+		type: String,
+		validate: function (v) { return v === 'valid'; }
+	  }
+	},
+	{useDocumentTypes: true, timestamps: true});
+
+  var CatWithMethodsSchema = new dynamoose.Schema({
+    id: Number,
+    name: String
+  });
+  CatWithMethodsSchema.method('getModel', function (modelName) {
+    return this.model(modelName);
+  });
+  var CatWithMethods = dynamoose.model('CatWithMethods', CatWithMethodsSchema);
+
   return {
     Cat: Cat,
     Cat1: Cat1,
@@ -277,10 +313,12 @@ module.exports = function(dynamoose){
     Cat6: Cat6,
     Cat7: Cat7,
     Cat8: Cat8,
+    Cat9: Cat9,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
     CatWithGeneratedID: CatWithGeneratedID,
+    CatWithMethods: CatWithMethods,
     CatModel: CatModel
   };
 };
