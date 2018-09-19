@@ -1087,7 +1087,7 @@ describe('Model', function (){
 
           });
 
-          it('Should not return expired items if returnExpiredItems is false', function (done) {
+          it('Should not return expired items if returnExpiredItems is false (get)', function (done) {
             Cats.ExpiringCatNoReturn.create({
               name: 'Leo'
             })
@@ -1105,7 +1105,7 @@ describe('Model', function (){
     		  });
 
           // TODO: fix the test below, it fails when running all the tests together, but succeeds when adding `.only`, approving this since test passes with `.only`
-          // it('Should return expired items if returnExpiredItems is undefined', function (done) {
+          // it('Should return expired items if returnExpiredItems is undefined (get)', function (done) {
           //   Cats.ExpiringCat.create({
           //     name: 'Leo'
           //   })
@@ -1125,7 +1125,7 @@ describe('Model', function (){
           //   .catch(done);
           // });
 
-          it('Should return expired items if returnExpiredItems is true', function (done) {
+          it('Should return expired items if returnExpiredItems is true (get)', function (done) {
             Cats.ExpiringCatReturnTrue.create({
               name: 'Leo'
             })
