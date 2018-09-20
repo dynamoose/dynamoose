@@ -66,7 +66,7 @@ declare module "dynamoose" {
     useNativeBooleans?: boolean;
     useDocumentTypes?: boolean;
     timestamps?: boolean | { createdAt: string, updatedAt: string };
-    expires?: number | { ttl: number, attribute: string };
+    expires?: number | { ttl: number, attribute: string, returnExpiredItems: boolean };
     saveUnknown?: boolean;
 
     // @todo more strong type definition

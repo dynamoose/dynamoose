@@ -3,7 +3,7 @@
 module.exports = function(dynamoose){
   var ONE_YEAR = 365*24*60*60; // 1 years in seconds
   var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
-  
+
   var Cat = dynamoose.model('Cat',
   {
     id: {
@@ -205,6 +205,32 @@ module.exports = function(dynamoose){
     }
   );
 
+  var ExpiringCatNoReturn = dynamoose.model('ExpiringCatNoReturn',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: false
+      }
+    }
+  );
+
+  var ExpiringCatReturnTrue = dynamoose.model('ExpiringCatReturnTrue',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: true
+      }
+    }
+  );
+
   var CatWithGeneratedID = dynamoose.model('CatWithGeneratedID',
     {
       id: {
@@ -317,6 +343,8 @@ module.exports = function(dynamoose){
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
+    ExpiringCatNoReturn: ExpiringCatNoReturn,
+    ExpiringCatReturnTrue: ExpiringCatReturnTrue,
     CatWithGeneratedID: CatWithGeneratedID,
     CatWithMethods: CatWithMethods,
     CatModel: CatModel
