@@ -122,7 +122,7 @@ describe('Schema tests', function (){
           }
         ]
       }
-    }, {throughput: {read: 10, write: 2}});
+    }, {throughput: {read: 10, write: 2}, useDocumentTypes: false, useNativeBooleans: false});
 
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
@@ -154,9 +154,9 @@ describe('Schema tests', function (){
     schema.attributes.aObject.type.name.should.eql('object');
     should.exist(schema.attributes.aObject.default);
 
-    schema.attributes.aMap.type.name.should.eql('map');
+    schema.attributes.aMap.type.name.should.eql('object');
 
-    schema.attributes.aList.type.name.should.eql('list');
+    schema.attributes.aList.type.name.should.eql('array');
 
     schema.hashKey.should.equal(schema.attributes.breed); // should be same object
     schema.rangeKey.should.equal(schema.attributes.id);
