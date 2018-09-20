@@ -244,7 +244,7 @@ var schema = new Schema({...}, {
 });
 ```
 
-**expires**: number &#124; {ttl: number, attribute: string}
+**expires**: number &#124; {ttl: number, attribute: string, returnExpiredItems: boolean}
 
 Defines that _schema_ must contain and expires attribute.  This field is configured in DynamoDB as the TTL attribute.  If set to a `number`, an attribute named "expires" will be added to the schema.  The default value of the attribute will be the current time plus the expires value.  The expires value is in seconds.
 
@@ -262,7 +262,8 @@ You can specify the attribute name by passing an object:
 var schema = new Schema({...}, {
   expires: {
     ttl: 7*24*60*60, // 1 week in seconds
-    attribute: 'ttl' // ttl will be used as the attribute name
+    attribute: 'ttl', // ttl will be used as the attribute name
+    returnExpiredItems: true // if expired items will be returned or not (default: true)
   }
 });
 ```
