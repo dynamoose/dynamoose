@@ -1089,14 +1089,14 @@ describe('Model', function (){
 
           it('Should not return expired items if returnExpiredItems is false (get)', function (done) {
             Cats.ExpiringCatNoReturn.create({
-              name: 'Leo'
+              name: 'Leo1'
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
               return leo.save();
             })
             .then(function () {
-              Cats.ExpiringCatNoReturn.get("Leo").then(function (leo) {
+              Cats.ExpiringCatNoReturn.get("Leo1").then(function (leo) {
                 should.not.exist(leo);
                 done();
               }).catch(done);
@@ -1104,37 +1104,33 @@ describe('Model', function (){
             .catch(done);
           });
 
-          // TODO: fix the test below, it fails when running all the tests together, but succeeds when adding `.only`, approving this since test passes with `.only`
-          // it('Should return expired items if returnExpiredItems is undefined (get)', function (done) {
-          //   Cats.ExpiringCat.create({
-          //     name: 'Leo'
-          //   })
-          //   .then(function (leo) {
-          //     leo.expires = new Date(Date.now() - 5000);
-          //     return leo.save();
-          //   })
-          //   .then(function () {
-          //     Cats.ExpiringCat.get("Leo", function (err, leo) {
-          //       if (err) {
-          //         return done(err);
-          //       }
-          //       should.exist(leo);
-          //       done();
-          //     });
-          //   })
-          //   .catch(done);
-          // });
-
-          it('Should return expired items if returnExpiredItems is true (get)', function (done) {
-            Cats.ExpiringCatReturnTrue.create({
-              name: 'Leo'
+          it('Should return expired items if returnExpiredItems is undefined (get)', function (done) {
+            Cats.ExpiringCat.create({
+              name: 'Leo1'
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
               return leo.save();
             })
             .then(function () {
-              Cats.ExpiringCatReturnTrue.get("Leo").then(function (leo) {
+              Cats.ExpiringCat.get("Leo1").then(function (leo) {
+                should.exist(leo);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
+          it('Should return expired items if returnExpiredItems is true (get)', function (done) {
+            Cats.ExpiringCatReturnTrue.create({
+              name: 'Leo1'
+            })
+            .then(function (leo) {
+              leo.expires = new Date(Date.now() - 5000);
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatReturnTrue.get("Leo1").then(function (leo) {
                 should.exist(leo);
                 done();
               }).catch(done);
