@@ -3,7 +3,7 @@
 module.exports = function(dynamoose){
   var ONE_YEAR = 365*24*60*60; // 1 years in seconds
   var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
-  
+
   var Cat = dynamoose.model('Cat',
   {
     id: {
@@ -27,8 +27,7 @@ module.exports = function(dynamoose){
       type: String,
       validate: function (v) { return v === 'valid'; }
     }
-  },
-  {useDocumentTypes: true});
+  });
 
   // Create a model with unnamed attributes
   var Cat1 = dynamoose.model('Cat1',
@@ -49,7 +48,6 @@ module.exports = function(dynamoose){
       // }
     },
     {
-      useDocumentTypes: true,
       saveUnknown: true
     });
 
@@ -291,7 +289,7 @@ module.exports = function(dynamoose){
 		validate: function (v) { return v === 'valid'; }
 	  }
 	},
-	{useDocumentTypes: true, timestamps: true});
+	{timestamps: true});
 
   return {
     Cat: Cat,
