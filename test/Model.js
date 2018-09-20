@@ -1102,7 +1102,7 @@ describe('Model', function (){
               }).catch(done);
             })
             .catch(done);
-    		  });
+          });
 
           // TODO: fix the test below, it fails when running all the tests together, but succeeds when adding `.only`, approving this since test passes with `.only`
           // it('Should return expired items if returnExpiredItems is undefined (get)', function (done) {
