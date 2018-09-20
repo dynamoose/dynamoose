@@ -149,7 +149,8 @@ module.exports = function(dynamoose){
       },
       parent: Number,
       isHappy: Boolean
-    }
+    },
+    {useDocumentTypes: false, useNativeBooleans: false}
   );
 
   var Cat8 = dynamoose.model('Cat8',

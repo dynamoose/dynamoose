@@ -208,8 +208,8 @@ describe('Model', function (){
           owner: { S: 'Someone' },
           unnamedInt: { N: '1' },
           unnamedInt0: { N: '0' },
-          unnamedBooleanFalse: { S: 'false' },
-          unnamedBooleanTrue: { S: 'true' },
+          unnamedBooleanFalse: { BOOL: false },
+          unnamedBooleanTrue: { BOOL: true },
           unnamedString: { S: 'unnamed' },
         });
 
@@ -292,21 +292,7 @@ describe('Model', function (){
 
           kitten.save(done);
 
-<<<<<<< HEAD
-    dynamoObj.should.eql(
-      {
-        id: { N: '2' },
-        name: { S: 'Fluffy' },
-        owner: { S: 'Someone' },
-        unnamedInt: { N: '1' },
-        unnamedInt0: { N: '0' },
-        unnamedBooleanFalse: { BOOL: false },
-        unnamedBooleanTrue: { BOOL: true },
-        unnamedString: { S: 'unnamed' },
-      });
-=======
         });
->>>>>>> master
 
         it('Get item for model with unnamed attributes', function (done) {
 
