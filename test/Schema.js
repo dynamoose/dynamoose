@@ -377,7 +377,7 @@ describe('Schema tests', function (){
           }
         ]
       }
-    }, {useDocumentTypes: true});
+    });
 
     schema.useDocumentTypes.should.be.ok;
 
@@ -416,7 +416,7 @@ describe('Schema tests', function (){
     var schema = new Schema({
      name: String,
      isAwesome: Boolean
-    }, {useNativeBooleans: true});
+    });
 
     var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var fluffy = new Cat();
@@ -903,8 +903,7 @@ describe('Schema tests', function (){
         list: [String],
       },
     }, {
-      useDocumentTypes: true,
-      saveUnknown: false,
+      saveUnknown: false
     });
 
     var model = {};
@@ -944,8 +943,7 @@ describe('Schema tests', function (){
     var schema = new Schema({
       id: Number,
     }, {
-      useDocumentTypes: true,
-      saveUnknown: true,
+      saveUnknown: true
     });
 
     var model = {};
