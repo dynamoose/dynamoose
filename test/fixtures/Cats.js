@@ -28,8 +28,7 @@ module.exports = function(dynamoose){
       type: String,
       validate: function (v) { return v === 'valid'; }
     }
-  },
-  {useDocumentTypes: true});
+  });
 
   // Create a model with unnamed attributes
   var Cat1 = dynamoose.model('Cat1',
@@ -50,7 +49,6 @@ module.exports = function(dynamoose){
       // }
     },
     {
-      useDocumentTypes: true,
       saveUnknown: true
     });
 
@@ -318,7 +316,7 @@ module.exports = function(dynamoose){
 		validate: function (v) { return v === 'valid'; }
 	  }
 	},
-	{useDocumentTypes: true, timestamps: true});
+	{timestamps: true});
 
   var CatWithMethodsSchema = new dynamoose.Schema({
     id: Number,
