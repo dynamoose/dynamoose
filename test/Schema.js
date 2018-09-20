@@ -66,9 +66,9 @@ describe('Schema tests', function (){
 
     schema.attributes.aArray.type.name.should.eql('array');
 
-    schema.attributes.aMap.type.name.should.eql('object');
+    schema.attributes.aMap.type.name.should.eql('map');
 
-    schema.attributes.aList.type.name.should.eql('array');
+    schema.attributes.aList.type.name.should.eql('list');
 
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
@@ -122,7 +122,7 @@ describe('Schema tests', function (){
           }
         ]
       }
-    }, {throughput: {read: 10, write: 2}});
+    }, {throughput: {read: 10, write: 2}, useDocumentTypes: false, useNativeBooleans: false});
 
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
@@ -377,7 +377,7 @@ describe('Schema tests', function (){
           }
         ]
       }
-    }, {useDocumentTypes: true});
+    });
 
     schema.useDocumentTypes.should.be.ok;
 
@@ -414,9 +414,9 @@ describe('Schema tests', function (){
 
   it('Schema with use Native Booleans', function (done) {
     var schema = new Schema({
-      name: String,
-      isAwesome: Boolean
-    }, {useNativeBooleans: true});
+     name: String,
+     isAwesome: Boolean
+    });
 
     var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var fluffy = new Cat();
@@ -549,6 +549,59 @@ describe('Schema tests', function (){
     schema.throughput.write.should.equal(1);
 
     done();
+  });
+
+  it('Schema useDocumentTypes and useNativeBooleans should default to true', function (done) {
+  	var schema = new Schema({
+  	  id: {
+    		type: Number,
+    		validate: function(v) { return v > 0; },
+    		rangeKey: true
+  	  },
+  	  breed: {
+    		type: String,
+    		hashKey: true
+  	  },
+  	  aObject: {
+    		type: 'Object',
+    		default: { state: 'alive' }
+  	  },
+  	  anotherObject: Object,
+  	  aArray: Array,
+  	  aMap: {
+    		mapId: Number,
+    		mapName: String,
+    		anotherMap:{
+    		  m1:String,
+    		}
+  	  },
+  	  aList:[
+    		{
+    		  listMapId: Number,
+    		  listMapName: String
+    		}
+  	  ],
+  	  anotherMap: {
+    		type: 'map',
+    		map: {
+    		  mapId: {type: Number, required:true },
+    		  mapName: {type: String, required:true }
+    		}
+  	  },
+  	  anotherList: {
+    		type: 'list',
+    		list: [
+    		  {
+    			listMapId: {type: Number, default: 1},
+    			listMapName: {type: String, default:"SomeName"}
+    		  }
+    		]
+  	  }
+  	});
+
+  	schema.useDocumentTypes.should.eql(true);
+  	schema.useNativeBooleans.should.eql(true);
+  	done();
   });
 
 
@@ -850,8 +903,7 @@ describe('Schema tests', function (){
         list: [String],
       },
     }, {
-      useDocumentTypes: true,
-      saveUnknown: false,
+      saveUnknown: false
     });
 
     var model = {};
@@ -891,8 +943,7 @@ describe('Schema tests', function (){
     var schema = new Schema({
       id: Number,
     }, {
-      useDocumentTypes: true,
-      saveUnknown: true,
+      saveUnknown: true
     });
 
     var model = {};
@@ -941,6 +992,11 @@ describe('Schema tests', function (){
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
       numberString: { S: '1' },
+      anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]' },
+      anObjectB: { M: {"a":{"S": "attribute"}} },
+      anArrayB: { L: [{N:'2'},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
+      aBoolean: { S: "true" },
+      aBooleanB: { BOOL: true },
     });
 
     model.should.eql({
@@ -948,6 +1004,52 @@ describe('Schema tests', function (){
       name: 'Fluffy',
       anObject: { a: 'attribute' },
       numberString: 1,
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArray: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      anObjectB: { a: 'attribute' },
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArrayB: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      aBoolean: true,
+      aBooleanB: true
+    });
+    done();
+  });
+
+  it('Handle unknown attributes in DynamoDB when document types are set to false', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: true,
+      useDocumentTypes: false,
+      useNativeBooleans: false
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' },
+      anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]'},
+      anObjectB: { M: {"a":{"S": "attribute"}} },
+      anArrayB: { L: [{N:'2'},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}]},
+      aBoolean: { S: "true" },
+      aBooleanB: { BOOL: true },
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      anObject: { a: 'attribute' },
+      numberString: 1,
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArray: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      anObjectB: { a: 'attribute' },
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArrayB: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      aBoolean: true,
+      aBooleanB: true
     });
     done();
   });
@@ -1051,6 +1153,32 @@ describe('Schema tests', function (){
       id: Number
     }, {
       saveUnknown: ["name", "numberString"]
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' }
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      numberString: 1
+    });
+    done();
+  });
+
+  it('Handle unknown attributes as array in DynamoDB when document types are set to false', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: ["name", "numberString"],
+      useDocumentTypes: false,
+      useNativeBooleans: false
     });
 
     var model = {};
