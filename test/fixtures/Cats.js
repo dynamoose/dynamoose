@@ -206,16 +206,16 @@ module.exports = function(dynamoose){
   );
 
   var ExpiringCatNoReturn = dynamoose.model('ExpiringCatNoReturn',
-  	{
-  	  name: String
-  	},
-  	{
-  	  expires: {
+    {
+      name: String
+    },
+    {
+      expires: {
         ttl: NINE_YEARS,
         attribute: 'expires',
         returnExpiredItems: false
       }
-  	}
+    }
   );
 
   var ExpiringCatReturnTrue = dynamoose.model('ExpiringCatReturnTrue',
