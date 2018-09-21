@@ -493,6 +493,64 @@ describe('Model', function (){
           });
         });
 
+
+        it('Save existing item with updating expires', function (done) {
+          var myCat = new Cats.Cat10({
+            id: 1,
+            name: 'Fluffy',
+            vet:{name:'theVet', address:'12 somewhere'},
+            ears:[{name:'left'}, {name:'right'}],
+            legs: ['front right', 'front left', 'back right', 'back left'],
+            more: {fovorites: {food: 'fish'}},
+            array: [{one: '1'}],
+            validated: 'valid'
+          });
+
+          myCat.save(function(err, theSavedCat1) {
+            var expectedExpires = theSavedCat1.expires;
+
+            myCat.name = "FluffyB";
+            setTimeout(function() {
+              myCat.save({updateExpires: true}, function () {
+                Cats.Cat10.get(1, function(err, realCat) {
+                  realCat.name.should.eql("FluffyB");
+                  realCat.expires.should.not.eql(expectedExpires); // expires should be different than before
+                  done();
+                });
+              });
+            }, 1000);
+          });
+        });
+
+
+        it('Save existing item without updating expires', function (done) {
+          var myCat = new Cats.Cat10({
+            id: 1,
+            name: 'Fluffy',
+            vet:{name:'theVet', address:'12 somewhere'},
+            ears:[{name:'left'}, {name:'right'}],
+            legs: ['front right', 'front left', 'back right', 'back left'],
+            more: {fovorites: {food: 'fish'}},
+            array: [{one: '1'}],
+            validated: 'valid'
+          });
+
+          myCat.save(function(err, theSavedCat1) {
+            var expectedExpires = theSavedCat1.expires;
+
+            myCat.name = "FluffyB";
+            setTimeout(function() {
+              myCat.save({updateExpires: false}, function () {
+                Cats.Cat10.get(1, function(err, realCat) {
+                  realCat.name.should.eql("FluffyB");
+                  realCat.expires.should.eql(expectedExpires); // expires should be different than before
+                  done();
+                });
+              });
+            }, 1000);
+          });
+        });
+
         it('Save existing item with a false condition', function (done) {
           Cats.Cat.get(1, function(err, model) {
             should.not.exist(err);
