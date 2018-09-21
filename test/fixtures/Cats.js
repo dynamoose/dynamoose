@@ -268,31 +268,72 @@ module.exports = function(dynamoose){
   }
 );
 
-	var Cat9 = dynamoose.model('Cat9',
-	{
-	  id: {
-		type:  Number,
-		validate: function (v) { return v > 0; }
-	  },
-	  name: String,
-	  owner: String,
-	  age: { type: Number },
-	  vet:{
-		name: String,
-		address: String
-	  },
-	  ears:[{
-		name: String
-	  }],
-	  legs: [String],
-	  more: Object,
-	  array: Array,
-	  validated: {
-		type: String,
-		validate: function (v) { return v === 'valid'; }
-	  }
-	},
-	{useDocumentTypes: true, timestamps: true});
+var Cat9 = dynamoose.model('Cat9', {
+    id: {
+        type: Number,
+        validate: function(v) {
+            return v > 0;
+        }
+    },
+    name: String,
+    owner: String,
+    age: {
+        type: Number
+    },
+    vet: {
+        name: String,
+        address: String
+    },
+    ears: [{
+        name: String
+    }],
+    legs: [String],
+    more: Object,
+    array: Array,
+    validated: {
+        type: String,
+        validate: function(v) {
+            return v === 'valid';
+        }
+    }
+}, {
+    useDocumentTypes: true,
+    timestamps: true
+});
+
+var Cat10 = dynamoose.model('Cat10', {
+    id: {
+        type: Number,
+        validate: function(v) {
+            return v > 0;
+        }
+    },
+    name: String,
+    owner: String,
+    age: {
+        type: Number
+    },
+    vet: {
+        name: String,
+        address: String
+    },
+    ears: [{
+        name: String
+    }],
+    legs: [String],
+    more: Object,
+    array: Array,
+    validated: {
+        type: String,
+        validate: function(v) {
+            return v === 'valid';
+        }
+    }
+}, {
+    useDocumentTypes: true,
+    expires: 100000
+});
+
 
   var CatWithMethodsSchema = new dynamoose.Schema({
     id: Number,
@@ -314,8 +355,9 @@ module.exports = function(dynamoose){
     Cat7: Cat7,
     Cat8: Cat8,
     Cat9: Cat9,
-    CatWithOwner: CatWithOwner,
+    Cat10: Cat10,
     Owner: Owner,
+    CatWithOwner: CatWithOwner,
     ExpiringCat: ExpiringCat,
     CatWithGeneratedID: CatWithGeneratedID,
     CatWithMethods: CatWithMethods,
