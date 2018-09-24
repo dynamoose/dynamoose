@@ -331,7 +331,7 @@ var Cat10 = dynamoose.model('Cat10', {
     }
 }, {
     useDocumentTypes: true,
-    expires: 100000
+    expires: NINE_YEARS
 });
 
 
