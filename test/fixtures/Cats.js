@@ -28,8 +28,7 @@ module.exports = function(dynamoose){
       type: String,
       validate: function (v) { return v === 'valid'; }
     }
-  },
-  {useDocumentTypes: true});
+  });
 
   // Create a model with unnamed attributes
   var Cat1 = dynamoose.model('Cat1',
@@ -50,7 +49,6 @@ module.exports = function(dynamoose){
       // }
     },
     {
-      useDocumentTypes: true,
       saveUnknown: true
     });
 
@@ -151,7 +149,8 @@ module.exports = function(dynamoose){
       },
       parent: Number,
       isHappy: Boolean
-    }
+    },
+    {useDocumentTypes: false, useNativeBooleans: false}
   );
 
   var Cat8 = dynamoose.model('Cat8',
@@ -318,7 +317,17 @@ module.exports = function(dynamoose){
 		validate: function (v) { return v === 'valid'; }
 	  }
 	},
-	{useDocumentTypes: true, timestamps: true});
+	{timestamps: true});
+
+  var Cat10 = dynamoose.model('Cat10', {
+	  id: {
+  		type:  Number,
+  		hashKey: true
+	  },
+	  isHappy: Boolean,
+    parents: Array,
+    details: Object
+	}, {useDocumentTypes: false, useNativeBooleans: false});
 
   var CatWithMethodsSchema = new dynamoose.Schema({
     id: Number,
@@ -340,6 +349,7 @@ module.exports = function(dynamoose){
     Cat7: Cat7,
     Cat8: Cat8,
     Cat9: Cat9,
+    Cat10: Cat10,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,

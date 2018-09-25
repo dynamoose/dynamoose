@@ -208,13 +208,61 @@ describe('Model', function (){
           owner: { S: 'Someone' },
           unnamedInt: { N: '1' },
           unnamedInt0: { N: '0' },
-          unnamedBooleanFalse: { S: 'false' },
-          unnamedBooleanTrue: { S: 'true' },
+          unnamedBooleanFalse: { BOOL: false },
+          unnamedBooleanTrue: { BOOL: true },
           unnamedString: { S: 'unnamed' },
         });
 
         kitten.save(done);
 
+      });
+
+      it('Should support useDocumentTypes and useNativeBooleans being false', function(done) {
+      	this.timeout(12000);
+
+      	var kitten = new Cats.Cat10({
+      		id: 2,
+      		isHappy: true,
+      		parents: ["Max", "Leah"],
+      		details: {
+      			playful: true,
+      			thirsty: false,
+      			tired: false
+      		}
+      	});
+
+      	kitten.id.should.eql(2);
+      	kitten.isHappy.should.eql(true);
+      	kitten.parents.should.eql(["Max", "Leah"]);
+      	kitten.details.should.eql({
+      		playful: true,
+      		thirsty: false,
+      		tired: false
+      	});
+
+      	kitten.save(function(err, kitten) {
+      		kitten.id.should.eql(2);
+      		kitten.isHappy.should.eql(true);
+      		kitten.parents.should.eql(["Max", "Leah"]);
+      		kitten.details.should.eql({
+      			playful: true,
+      			thirsty: false,
+      			tired: false
+      		});
+
+      		Cats.Cat10.get(2, function(err, kitten) {
+      			kitten.id.should.eql(2);
+      			kitten.isHappy.should.eql(true);
+      			kitten.parents.should.eql(["Max", "Leah"]);
+      			kitten.details.should.eql({
+      				playful: true,
+      				thirsty: false,
+      				tired: false
+      			});
+
+      			done();
+      		});
+      	});
       });
 
       it('Create complex model with unnamed attributes', function (done) {
