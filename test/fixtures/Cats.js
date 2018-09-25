@@ -166,6 +166,16 @@ module.exports = function(dynamoose){
     }
   );
 
+  var Cat9 = dynamoose.model('Cat9', {
+	  id: {
+  		type:  Number,
+  		hashKey: true
+	  },
+	  isHappy: Boolean,
+    parents: Array,
+    details: Object
+	}, {useDocumentTypes: false, useNativeBooleans: false});
+
   var CatWithOwner = dynamoose.model('CatWithOwner',
     {
       id: {
