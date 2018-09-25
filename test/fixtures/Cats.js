@@ -349,7 +349,7 @@ module.exports = function(dynamoose){
     Cat7: Cat7,
     Cat8: Cat8,
     Cat9: Cat9,
-    Cat10: Cat10
+    Cat10: Cat10,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
