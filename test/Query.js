@@ -621,3 +621,126 @@ describe('Query', function (){
     .catch(done);
   });
 });
+
+describe('Query updatedAt', function(){
+  this.timeout(10000);
+
+  before(function (done) {
+
+    dynamoose.setDefaults({ prefix: '' });
+
+    var recordSchema = new Schema({
+      recordID: {
+        type: String,
+        hashKey: true
+      },
+      tableID: {
+        type: String,
+        required: true,
+        index: {
+          global: true,
+          rangeKey: 'updatedAt'
+        }
+      }
+    }, {
+      timestamps: true
+    });
+
+    var Record = dynamoose.model('Record', recordSchema);
+
+    function adddRecords (records) {
+      if (records.length <= 0) {
+        return done();
+      }
+
+      var record = new Record(records.pop());
+      record.save(function (err) {
+        if (err) {
+          return done(err);
+        }
+        adddRecords(records);
+      });
+    }
+
+    adddRecords([
+      {recordID: 'ca4cba8c-d7e7-4845-b554-cb8ee6859642', tableID: '78d650c5-9b7f-404e-9873-03068f06b51d'},
+      {recordID: '534d980b-3cf5-455d-9a79-b31e68db4bca', tableID: '78d650c5-9b7f-404e-9873-03068f06b51d'},
+      {recordID: 'c00a9bfb-3450-4356-b94e-94c02887e649', tableID: '78d650c5-9b7f-404e-9873-03068f06b51d'},
+      {recordID: '1a2415c6-d3cc-412d-a945-bb1ef398c7f7', tableID: '78d650c5-9b7f-404e-9873-03068f06b51d'},
+      {recordID: 'd2d1512f-627e-4199-9eb2-2ad52ebe07fd', tableID: '78d650c5-9b7f-404e-9873-03068f06b51d'},
+    ]);
+  });
+
+  after(function (done) {
+    var Record = dynamoose.model('Record');
+
+    Record.$__.table.delete(function (err) {
+      if (err) {
+        done(err);
+      }
+      delete dynamoose.models.Record;
+      done();
+    });
+  });
+
+  it('Query range key', function (done) {
+    var Record = dynamoose.model('Record');
+
+    Record.scan().exec(function (err, records) {
+      if (err) {
+        return done(err);
+      }
+
+      var sorted = records.sort( function(a, b) {
+        return a.updatedAt < b.updatedAt;
+      });
+
+      var startTime = sorted[3].updatedAt;
+      var EndTime = sorted[1].updatedAt;
+
+      Record.query('tableID').eq('78d650c5-9b7f-404e-9873-03068f06b51d')
+        .where('updatedAt').between(startTime, EndTime)
+        .exec( function(err, records) {
+          if (err) {
+            return done(err);
+          }
+
+          // Should get the middle 3 records
+          should.equal(records.count, 3);
+          done();
+        });
+    });
+  });
+
+  it('Update updatedAt attribute', function (done) {
+    var Record = dynamoose.model('Record');
+
+    Record.scan().limit(1).exec(function(err, records) {
+      if (err) {
+        return done(err);
+      }
+
+      var record = records[0];
+      var initialUpdatedAt = record.updatedAt;
+
+      record.tableID = '2777a8b7-58ba-4ad1-8f72-fdba14623277';
+      record.save(function (err) {
+        if (err) {
+          return done(err);
+        }
+
+        Record.query('recordID').eq(record.recordID).exec( function(err, newRecords) {
+          if (err) {
+            return done(err);
+          }
+
+          var newRecord = newRecords[0];
+          (newRecord.updatedAt > initialUpdatedAt).should.be.true();
+
+          done();
+        });
+      });
+    });
+  });
+
+});
