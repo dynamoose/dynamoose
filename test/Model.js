@@ -220,7 +220,7 @@ describe('Model', function (){
       it('Should support useDocumentTypes and useNativeBooleans being false', function(done) {
       	this.timeout(12000);
 
-      	var kitten = new Cats.Cat9({
+      	var kitten = new Cats.Cat10({
       		id: 2,
       		isHappy: true,
       		parents: ["Max", "Leah"],
@@ -250,7 +250,7 @@ describe('Model', function (){
       			tired: false
       		});
 
-      		Cats.Cat9.get(2, function(err, kitten) {
+      		Cats.Cat10.get(2, function(err, kitten) {
       			kitten.id.should.eql(2);
       			kitten.isHappy.should.eql(true);
       			kitten.parents.should.eql(["Max", "Leah"]);
