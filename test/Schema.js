@@ -988,13 +988,13 @@ describe('Schema tests', function (){
 
     var model = {};
     unknownSchema.parseDynamo(model, {
-      id: { N: '2' },
+      id: { N: 2 },
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
       numberString: { S: '1' },
       anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]' },
-      anObjectB: { M: {"a":{"S": "attribute"}} },
-      anArrayB: { L: [{N:'2'},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
+      anObjectB: { M: {"a":{S: "attribute"}} },
+      anArrayB: { L: [{N : 1}, {N : 2}, {N : 3}]},// can't handle dissimilar items list {M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
       aBoolean: { S: "true" },
       aBooleanB: { BOOL: true },
     });
@@ -1002,14 +1002,14 @@ describe('Schema tests', function (){
     model.should.eql({
       id: 2,
       name: 'Fluffy',
-      anObject: { a: 'attribute' },
-      numberString: 1,
+      anObject: '{"a":"attribute"}',
+      numberString: '1',
       // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
-      anArray: [2, {'test2': '5', 'test': '1'}, 'value1'],
+      anArray: '[2,{"test2": "5","test": "1"},"value1"]',
       anObjectB: { a: 'attribute' },
       // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
-      anArrayB: [2, {'test2': '5', 'test': '1'}, 'value1'],
-      aBoolean: true,
+      anArrayB: [1, 2, 3],
+      aBoolean: 'true',
       aBooleanB: true
     });
     done();
@@ -1026,31 +1026,25 @@ describe('Schema tests', function (){
     });
 
     var model = {};
-    unknownSchema.parseDynamo(model, {
-      id: { N: '2' },
-      name: { S: 'Fluffy' },
-      anObject: { S: '{"a":"attribute"}' },
-      numberString: { S: '1' },
-      anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]'},
-      anObjectB: { M: {"a":{"S": "attribute"}} },
-      anArrayB: { L: [{N:'2'},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}]},
-      aBoolean: { S: "true" },
-      aBooleanB: { BOOL: true },
-    });
 
-    model.should.eql({
-      id: 2,
-      name: 'Fluffy',
-      anObject: { a: 'attribute' },
-      numberString: 1,
-      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
-      anArray: [2, {'test2': '5', 'test': '1'}, 'value1'],
-      anObjectB: { a: 'attribute' },
-      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
-      anArrayB: [2, {'test2': '5', 'test': '1'}, 'value1'],
-      aBoolean: true,
-      aBooleanB: true
-    });
+    try {
+      unknownSchema.parseDynamo(model, {
+        id: { N: 2 },
+        name: { S: 'Fluffy' },
+        anObject: { S: '{"a":"attribute"}' },
+        numberString: { S: '1' },
+        anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]'},
+        anObjectB: { M: {"a":{S: "attribute"}} },
+        anArrayB: { L: [{N:2},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: 'value1'}]},
+        aBoolean: { S: "true" },
+        aBooleanB: { BOOL: true },
+      });
+    } catch(err) {
+      // M and L aren't supported with document types are set to false
+      err.should.be.instanceof(Error);
+      err.should.be.instanceof(errors.ParseError);
+    }
+
     done();
   });
 
@@ -1166,7 +1160,7 @@ describe('Schema tests', function (){
     model.should.eql({
       id: 2,
       name: 'Fluffy',
-      numberString: 1
+      numberString: '1'
     });
     done();
   });
@@ -1192,7 +1186,7 @@ describe('Schema tests', function (){
     model.should.eql({
       id: 2,
       name: 'Fluffy',
-      numberString: 1
+      numberString: '1'
     });
     done();
   });

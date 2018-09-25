@@ -149,7 +149,8 @@ module.exports = function(dynamoose){
       },
       parent: Number,
       isHappy: Boolean
-    }
+    },
+    {useDocumentTypes: false, useNativeBooleans: false}
   );
 
   var Cat8 = dynamoose.model('Cat8',
@@ -200,6 +201,32 @@ module.exports = function(dynamoose){
     },
     {
       expires: NINE_YEARS
+    }
+  );
+
+  var ExpiringCatNoReturn = dynamoose.model('ExpiringCatNoReturn',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: false
+      }
+    }
+  );
+
+  var ExpiringCatReturnTrue = dynamoose.model('ExpiringCatReturnTrue',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: true
+      }
     }
   );
 
@@ -315,6 +342,8 @@ module.exports = function(dynamoose){
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
+    ExpiringCatNoReturn: ExpiringCatNoReturn,
+    ExpiringCatReturnTrue: ExpiringCatReturnTrue,
     CatWithGeneratedID: CatWithGeneratedID,
     CatWithMethods: CatWithMethods,
     CatModel: CatModel
