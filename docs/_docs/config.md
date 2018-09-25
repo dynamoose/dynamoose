@@ -27,7 +27,12 @@ Default `options`:
   create: true, // Create table in DB, if it does not exist,
   update: false, // Update remote indexes if they do not match local index structure
   waitForActive: true, // Wait for table to be created before trying to use it
-  waitForActiveTimeout: 180000 // wait 3 minutes for table to activate
+  waitForActiveTimeout: 180000, // wait 3 minutes for table to activate
+  streamOptions: { // sets table stream options
+    enabled: false, // sets if stream is enabled on the table
+    type: undefined // sets the stream type (NEW_IMAGE | OLD_IMAGE | NEW_AND_OLD_IMAGES | KEYS_ONLY) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html#DDB-Type-StreamSpecification-StreamViewType)
+  },
+  serverSideEncryption: false // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
 }
 ```
 
@@ -35,6 +40,25 @@ Basic example:
 
 ```js
 var Cat = dynamoose.model('Cat', { id: Number, name: String });
+```
+
+streamOptions: object (optional)
+
+Indicates whether stream is enabled or disabled on the table and dictates which type of stream the table should have. This is passed into into the `StreamSpecification` option property when creating the table.
+
+
+serverSideEncryption: boolean
+
+Indicates whether server-side encryption is enabled (true) or disabled (false) on the table. This boolean will be passed into the `SSESpecification.Enabled` option property when creating the table. Currently (when feature was implemented) DynamoDB doesn't support updating a table to add or remove server-side encryption, therefore this option will only be respected on creation of table, if table already exists in DynamoDB when using Dynamoose this value will be ignored.
+
+```js
+var model = dynamoose.model('Cat', {...}, {
+	streamOptions: {
+      enabled: true,
+      type: "NEW_AND_OLD_IMAGES"
+    },
+	serverSideEncryption: true
+});
 ```
 
 ### dynamoose.local(url)
@@ -107,3 +131,7 @@ var AWSXRay = require('aws-xray-sdk');
 var dynamoose = require('dynamoose');
 dynamoose.AWS = AWSXRay.captureAWS(require('aws-sdk'));
 ```
+
+### dynamoose.setDocumentClient(documentClient)
+
+Sets the document client for DynamoDB. This can be used to integrate with Amazon Web Services DAX.
