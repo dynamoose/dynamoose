@@ -2114,6 +2114,7 @@ describe('Model', function (){
           var imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
 
           imageData.should.not.eql(Buffer.from(imageData.toString())); // The binary value should not be UTF-8 string for test.
+  
 
           var item = {
             id: 3333,
