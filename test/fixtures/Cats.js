@@ -166,16 +166,6 @@ module.exports = function(dynamoose){
     }
   );
 
-  var Cat9 = dynamoose.model('Cat9', {
-	  id: {
-  		type:  Number,
-  		hashKey: true
-	  },
-	  isHappy: Boolean,
-    parents: Array,
-    details: Object
-	}, {useDocumentTypes: false, useNativeBooleans: false});
-
   var CatWithOwner = dynamoose.model('CatWithOwner',
     {
       id: {
@@ -329,6 +319,16 @@ module.exports = function(dynamoose){
 	},
 	{timestamps: true});
 
+  var Cat10 = dynamoose.model('Cat10', {
+	  id: {
+  		type:  Number,
+  		hashKey: true
+	  },
+	  isHappy: Boolean,
+    parents: Array,
+    details: Object
+	}, {useDocumentTypes: false, useNativeBooleans: false});
+
   var CatWithMethodsSchema = new dynamoose.Schema({
     id: Number,
     name: String
@@ -349,6 +349,7 @@ module.exports = function(dynamoose){
     Cat7: Cat7,
     Cat8: Cat8,
     Cat9: Cat9,
+    Cat10: Cat10
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
