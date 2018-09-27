@@ -87,6 +87,24 @@ dynamoose.AWS.config.update({
 });
 ```
 
+### dynamoose.setDDB
+
+Function to set the DynamoDB object that Dynamoose uses.
+
+```js
+var AWS = require('aws-sdk');
+var dynamoDB = new AWS.dynamoDB();
+dynamoose.setDDB(dynamoDB);
+```
+
+### dynamoose.revertDDB
+
+Function to revert the DynamoDB object that Dynamoose uses to the default.
+
+```js
+dynamoose.revertDDB();
+```
+
 ### dynamoose.setDefaults(options)
 
 Sets the default to be used when creating a model. Can be modified on a per model by passing options to `.model()`.
