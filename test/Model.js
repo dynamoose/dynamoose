@@ -543,7 +543,7 @@ describe('Model', function (){
 
 
         it('Save existing item with updating expires', function (done) {
-          var myCat = new Cats.Cat10({
+          var myCat = new Cats.Cat11({
             id: 1,
             name: 'Fluffy',
             vet:{name:'theVet', address:'12 somewhere'},
@@ -560,7 +560,7 @@ describe('Model', function (){
             myCat.name = "FluffyB";
             setTimeout(function() {
               myCat.save({updateExpires: true}, function () {
-                Cats.Cat10.get(1, function(err, realCat) {
+                Cats.Cat11.get(1, function(err, realCat) {
                   realCat.name.should.eql("FluffyB");
                   realCat.expires.should.not.eql(expectedExpires); // expires should be different than before
                   done();
@@ -572,7 +572,7 @@ describe('Model', function (){
 
 
         it('Save existing item without updating expires', function (done) {
-          var myCat = new Cats.Cat10({
+          var myCat = new Cats.Cat11({
             id: 2,
             name: 'Fluffy',
             vet:{name:'theVet', address:'12 somewhere'},
@@ -589,7 +589,7 @@ describe('Model', function (){
             myCat.name = "FluffyB";
             setTimeout(function() {
               myCat.save({updateExpires: false}, function () {
-                Cats.Cat10.get(2, function(err, realCat) {
+                Cats.Cat11.get(2, function(err, realCat) {
                   realCat.name.should.eql("FluffyB");
                   realCat.expires.should.eql(expectedExpires); // expires should be the same as before
                   done();
@@ -601,7 +601,7 @@ describe('Model', function (){
 
 
         it('Save existing item without updating expires (default)', function (done) {
-          var myCat = new Cats.Cat10({
+          var myCat = new Cats.Cat11({
             id: 3,
             name: 'Fluffy',
             vet:{name:'theVet', address:'12 somewhere'},
@@ -618,7 +618,7 @@ describe('Model', function (){
             myCat.name = "FluffyB";
             setTimeout(function() {
               myCat.save(function () {
-                Cats.Cat10.get(3, function(err, realCat) {
+                Cats.Cat11.get(3, function(err, realCat) {
                   realCat.name.should.eql("FluffyB");
                   realCat.expires.should.eql(expectedExpires); // expires should be the same as before
                   done();
