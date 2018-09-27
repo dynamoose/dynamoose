@@ -14,6 +14,8 @@ declare module "dynamoose" {
     options?: ModelOption
   ): ModelConstructor<DataSchema, KeySchema>;
   export function setDefaults(options: ModelOption): void;
+  export function setDDB(ddb: _AWS.DynamoDB): void;
+  export function revertDDB(): void;
 
   export interface ModelOption {
     create?: boolean, // Create table in DB, if it does not exist,
