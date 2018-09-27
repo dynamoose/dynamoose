@@ -3,7 +3,7 @@
 module.exports = function(dynamoose){
   var ONE_YEAR = 365*24*60*60; // 1 years in seconds
   var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
-  
+
   var Cat = dynamoose.model('Cat',
   {
     id: {
@@ -28,8 +28,7 @@ module.exports = function(dynamoose){
       type: String,
       validate: function (v) { return v === 'valid'; }
     }
-  },
-  {useDocumentTypes: true});
+  });
 
   // Create a model with unnamed attributes
   var Cat1 = dynamoose.model('Cat1',
@@ -50,7 +49,6 @@ module.exports = function(dynamoose){
       // }
     },
     {
-      useDocumentTypes: true,
       saveUnknown: true
     });
 
@@ -151,7 +149,8 @@ module.exports = function(dynamoose){
       },
       parent: Number,
       isHappy: Boolean
-    }
+    },
+    {useDocumentTypes: false, useNativeBooleans: false}
   );
 
   var Cat8 = dynamoose.model('Cat8',
@@ -202,6 +201,32 @@ module.exports = function(dynamoose){
     },
     {
       expires: NINE_YEARS
+    }
+  );
+
+  var ExpiringCatNoReturn = dynamoose.model('ExpiringCatNoReturn',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: false
+      }
+    }
+  );
+
+  var ExpiringCatReturnTrue = dynamoose.model('ExpiringCatReturnTrue',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: true
+      }
     }
   );
 
@@ -268,40 +293,43 @@ module.exports = function(dynamoose){
   }
 );
 
-var Cat9 = dynamoose.model('Cat9', {
-    id: {
-        type: Number,
-        validate: function(v) {
-            return v > 0;
-        }
-    },
-    name: String,
-    owner: String,
-    age: {
-        type: Number
-    },
-    vet: {
-        name: String,
-        address: String
-    },
-    ears: [{
-        name: String
-    }],
-    legs: [String],
-    more: Object,
-    array: Array,
-    validated: {
-        type: String,
-        validate: function(v) {
-            return v === 'valid';
-        }
-    }
-}, {
-    useDocumentTypes: true,
-    timestamps: true
-});
+	var Cat9 = dynamoose.model('Cat9',
+	{
+	  id: {
+		type:  Number,
+		validate: function (v) { return v > 0; }
+	  },
+	  name: String,
+	  owner: String,
+	  age: { type: Number },
+	  vet:{
+		name: String,
+		address: String
+	  },
+	  ears:[{
+		name: String
+	  }],
+	  legs: [String],
+	  more: Object,
+	  array: Array,
+	  validated: {
+		type: String,
+		validate: function (v) { return v === 'valid'; }
+	  }
+	},
+	{timestamps: true});
 
-var Cat10 = dynamoose.model('Cat10', {
+  var Cat10 = dynamoose.model('Cat10', {
+	  id: {
+  		type:  Number,
+  		hashKey: true
+	  },
+	  isHappy: Boolean,
+    parents: Array,
+    details: Object
+	}, {useDocumentTypes: false, useNativeBooleans: false});
+
+  var Cat11 = dynamoose.model('Cat11', {
     id: {
         type: Number,
         validate: function(v) {
@@ -329,11 +357,10 @@ var Cat10 = dynamoose.model('Cat10', {
             return v === 'valid';
         }
     }
-}, {
+  }, {
     useDocumentTypes: true,
     expires: NINE_YEARS
-});
-
+  });
 
   var CatWithMethodsSchema = new dynamoose.Schema({
     id: Number,
@@ -356,9 +383,12 @@ var Cat10 = dynamoose.model('Cat10', {
     Cat8: Cat8,
     Cat9: Cat9,
     Cat10: Cat10,
-    Owner: Owner,
+    Cat11: Cat11,
     CatWithOwner: CatWithOwner,
+    Owner: Owner,
     ExpiringCat: ExpiringCat,
+    ExpiringCatNoReturn: ExpiringCatNoReturn,
+    ExpiringCatReturnTrue: ExpiringCatReturnTrue,
     CatWithGeneratedID: CatWithGeneratedID,
     CatWithMethods: CatWithMethods,
     CatModel: CatModel
