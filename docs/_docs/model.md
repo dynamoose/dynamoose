@@ -44,6 +44,10 @@ odie.save({
 });
 ```
 
+Options:
+  - overwrite: should overwrite the existing item in DynamoDB (default: true)
+  - updateTimestamps: should update the updatedAt timestamp if exists (default: true)
+
 ### Model.batchPut(items, options, callback)
 
 Puts multiple items in the table. Will overwrite existing items.
@@ -262,7 +266,7 @@ Dog.batchGet([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], functio
 });
 ```
 
-### Model.delete(key, options, callback)
+### Model.delete(key, [options, ]callback)
 
 Deletes an item from the table.
 
@@ -273,15 +277,27 @@ Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
 });
 ```
 
-### model.delete(callback)
+`options` parameters:
 
-Deletes the item from the table.
+- `update` (boolean): Will return the object deleted (default: false), if set to false and no object was deleted this function will fail silently.
+
+### model.delete([options, ]callback)
+
+Deletes the item from the table. The `options` parameter is optional, and should be a object type if passed in. The `callback` parameter is the function that will be called once the item has been deleted from the table. The `error` and `item` (if `update` is set to true) will be passed in as parameters to the callback function. The options object accepts the same parameters as described above in `Model.delete`.
 
 ```js
 odie.delete(function(err) {
   if(err) { return console.log(err); }
   console.log('Bye bye Odie');
 });
+```
+
+### model.originalItem()
+
+This function returns the last item that was saved/received from DynamoDB. This can be useful to view the changes made since the last DynamoDB save/received that your application made for a given document. This function will return a JSON object that represents the original item.
+
+```js
+odie.originalItem(); // {ownerId: 4, name: 'Odie'}
 ```
 
 ### Model.batchDelete(keys, options, callback)
@@ -385,6 +401,18 @@ A map of name substitutions for the condition expression.
 A map of values for the condition expression. Note that in order for
 automatic object conversion to work, the keys in this object must
 match schema attribute names.
+
+**returnValues**: string
+
+From [the AWS documentation](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
+Use ReturnValues if you want to get the item attributes as they appear before or after they are updated. For UpdateItem, the valid values are:
+
+- NONE - If ReturnValues is not specified, or if its value is NONE, then nothing is returned. (This setting is the default for ReturnValues.)
+- ALL_OLD - Returns all of the attributes of the item, as they appeared before the UpdateItem operation.
+- UPDATED_OLD - Returns only the updated attributes, as they appeared before the UpdateItem operation.
+- ALL_NEW - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
+- UPDATED_NEW - Returns only the updated attributes, as they appear after the UpdateItem operation.
+
 
 ### Model.getTableReq()
 
