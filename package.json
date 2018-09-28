@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "typings": "./dynamoose.d.ts",
-  "homepage": "https://github.com/automategreen/dynamoose",
+  "homepage": "https://github.com/dynamoosejs/dynamoose",
   "repository": {
     "type": "git",
-    "url": "https://github.com/automategreen/dynamoose"
+    "url": "https://github.com/dynamoosejs/dynamoose"
   },
   "bugs": {
-    "email": "support@automategreen.com",
-    "url": "https://github.com/automategreen/dynamoose/issues"
+    "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "main": "index.js",
   "scripts": {
@@ -34,24 +33,28 @@
     "nosql",
     "db"
   ],
-  "author": "Brandon Goode <brandon@automategreen.com>",
+  "author": "Brandon Goode",
   "license": "MIT",
   "devDependencies": {
     "coveralls": "^3.0.0",
     "dynamodb-local": "0.0.18",
-    "grunt": "^1.0.1",
+    "grunt": "^1.0.3",
     "grunt-contrib-jshint": "^1.1.0",
     "grunt-mocha-test": "^0.13.2",
-    "mocha": "^3.5.3",
-    "nyc": "^11.2.1",
+    "mocha": "^5.2.0",
+    "nyc": "^13.0.1",
     "should": "^11.2.1"
   },
   "dependencies": {
-    "aws-sdk": "^2.80.0",
+    "aws-sdk": "^2.207.0",
     "debug": "^2.6.8",
+    "deep-equal": "^1.0.1",
     "hooks": "0.3.2",
-    "lodash": "^4.17.4",
+    "object-path": "^0.11.4",
     "q": "^1.5.0"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   },
   "nyc": {
     "include": [
