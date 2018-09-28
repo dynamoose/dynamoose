@@ -1306,7 +1306,40 @@ describe('Model', function (){
           data.should.have.property('otherProperty');
           data.otherProperty.should.eql('Testing123');
           done();
-        })
+        });
+      });
+    });
+
+    it('Update $ADD with saveUnknown enabled', function (done) {
+      Cats.Cat1.create({id: 986, name: 'Oliver', mathy: 1}, function(err, old){
+        should.not.exist(err);
+        old.should.have.property('mathy');
+        old.mathy.should.eql(1);
+        Cats.Cat1.update({id: old.id}, {$ADD: {mathy: 4}}, function(err, data){
+          should.not.exist(err);
+          should.exist(data);
+          data.should.have.property('mathy');
+          data.mathy.should.eql(5);
+          done();
+        });
+      });
+    });
+
+    it('Update $DELETE with saveUnknown enabled', function (done) {
+      Cats.Cat1.create({id: 984, name: 'Oliver'}, function(err, old){
+        should.not.exist(err);
+        Cats.Cat1.update({id: old.id}, {otherProperty: 'Testing123'}, function(err, data){
+          should.not.exist(err);
+          should.exist(data);
+          data.should.have.property('otherProperty');
+          data.otherProperty.should.eql('Testing123');
+          Cats.Cat1.update({id: old.id}, { $DELETE: {otherProperty: 'Testing123'} }, function(err, data) {
+            should.not.exist(err);
+            should.exist(data);
+            data.should.not.have.property('otherProperty');
+            done();
+          });
+        });
       });
     });
 
