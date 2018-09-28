@@ -14,6 +14,8 @@ declare module "dynamoose" {
     options?: ModelOption
   ): ModelConstructor<DataSchema, KeySchema>;
   export function setDefaults(options: ModelOption): void;
+  export function setDDB(ddb: _AWS.DynamoDB): void;
+  export function revertDDB(): void;
 
   export interface ModelOption {
     create?: boolean, // Create table in DB, if it does not exist,
@@ -26,8 +28,8 @@ declare module "dynamoose" {
   }
 
   /**
-   * Schema
-   */
+  * Schema
+  */
   export class Schema {
     constructor(schema: SchemaAttributes, options?: SchemaOptions);
     method(name: string, fn: any): any;
@@ -41,7 +43,7 @@ declare module "dynamoose" {
 
   export interface RawSchemaAttributeDefinition<Constructor, Type> {
     [key: string]: SchemaAttributeDefinition<Constructor, Type>
-      | RawSchemaAttributeDefinition<Constructor, Type>;
+    | RawSchemaAttributeDefinition<Constructor, Type>;
   }
   export interface SchemaAttributeDefinition<Constructor, Type> {
     type: Constructor;
@@ -55,9 +57,9 @@ declare module "dynamoose" {
     lowercase?: boolean;
     uppercase?: boolean;
     /**
-     * Indicating Secondary Index.
-     * 'true' is means local, project all
-     */
+    * Indicating Secondary Index.
+    * 'true' is means local, project all
+    */
     index?: boolean | IndexDefinition | IndexDefinition[];
     default?: (() => Type) | Type
   }
@@ -66,7 +68,7 @@ declare module "dynamoose" {
     useNativeBooleans?: boolean;
     useDocumentTypes?: boolean;
     timestamps?: boolean | { createdAt: string, updatedAt: string };
-    expires?: number | { ttl: number, attribute: string };
+    expires?: number | { ttl: number, attribute: string, returnExpiredItems: boolean };
     saveUnknown?: boolean;
 
     // @todo more strong type definition
@@ -89,8 +91,8 @@ declare module "dynamoose" {
   }
 
   /**
-   * Index
-   */
+  * Index
+  */
   interface IndexDefinition {
     name?: string;
     global?: boolean;
@@ -100,8 +102,8 @@ declare module "dynamoose" {
   }
 
   /**
-   * Table
-   */
+  * Table
+  */
   export class Table {
     constructor(name: string, schema: any, options: any, base: any);
     create(next: any): any;
@@ -115,8 +117,8 @@ declare module "dynamoose" {
   }
 
   /**
-   * Model
-   */
+  * Model
+  */
   export class Model<ModelData> {
     constructor(obj: ModelData);
     put(options: PutOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
@@ -138,16 +140,16 @@ declare module "dynamoose" {
 
   export interface PutOptions {
     /**
-     * Overwrite existing item. Defaults to true for `model.put` and false for `Model.create`.
-     */
+    * Overwrite existing item. Defaults to true for `model.put` and false for `Model.create`.
+    */
     overwrite?: boolean;
     /**
-     * Whether to update the documents timestamps or not. Defaults to true.
-     */
+    * Whether to update the documents timestamps or not. Defaults to true.
+    */
     updateTimestamps?: boolean;
     /**
-     * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
-     */
+    * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
+    */
     condition?: string;
     /**
     * A map of name substitutions for the condition expression.
@@ -189,13 +191,13 @@ declare module "dynamoose" {
   type ModelSchema<T> = Model<T> & T;
 
   /**
-   * Update
-   */
+  * Update
+  */
 
   /**
-   * Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
-   * Put is the default behavior.
-   */
+  * Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
+  * Put is the default behavior.
+  */
   type UpdateUpdate<DataSchema> = (
     Partial<DataSchema>
     | { $PUT: Partial<DataSchema> }
@@ -205,23 +207,23 @@ declare module "dynamoose" {
 
   export interface UpdateOption {
     /**
-     * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
-     */
+    * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
+    */
     allowEmptyArray: boolean;
     /**
-     * If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
-     */
+    * If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
+    */
     createRequired: boolean;
     /**
-     * If true, the timestamps attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
-     */
+    * If true, the timestamps attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
+    */
     updateTimestamps: boolean;
   }
 
 
   /**
-   * Query
-   */
+  * Query
+  */
   type QueryFilter = any;
   export interface QueryInterface<T, R> {
     exec(callback?: (err: Error, result: R) => void): Promise<R>;
@@ -252,12 +254,12 @@ declare module "dynamoose" {
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
   }
-  type QueryKey = string;
+  type QueryKey = any;
 
 
   /**
-   * Scan
-   */
+  * Scan
+  */
   type ScanFilter = string | any;
 
   export interface ScanInterface<T> {
@@ -292,7 +294,7 @@ declare module "dynamoose" {
     lastKey?: ScanKey;
   }
 
-  type ScanKey = string;
+  type ScanKey = any;
 
   export class VirtualType {
     constructor(options: any, name: string);
