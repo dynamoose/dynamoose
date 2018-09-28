@@ -22,19 +22,19 @@ describe('Schema tests', function (){
 
   it('Simple schema', function (done) {
     var schemaObj = {
-     id: Number,
-     name: String,
-     children: [Number],
-     aObject: Object,
-     aArray: Array,
-     aMap: {
+      id: Number,
+      name: String,
+      children: [Number],
+      aObject: Object,
+      aArray: Array,
+      aMap: {
         mapId: Number,
         mapName: String,
         anotherMap:{
           m1:String,
         }
-     },
-     aList:[
+      },
+      aList:[
         {
           listMapId: Number,
           listMapName: String
@@ -66,9 +66,9 @@ describe('Schema tests', function (){
 
     schema.attributes.aArray.type.name.should.eql('array');
 
-    schema.attributes.aMap.type.name.should.eql('object');
+    schema.attributes.aMap.type.name.should.eql('map');
 
-    schema.attributes.aList.type.name.should.eql('array');
+    schema.attributes.aList.type.name.should.eql('list');
 
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
@@ -122,7 +122,7 @@ describe('Schema tests', function (){
           }
         ]
       }
-    }, {throughput: {read: 10, write: 2}});
+    }, {throughput: {read: 10, write: 2}, useDocumentTypes: false, useNativeBooleans: false});
 
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
@@ -306,12 +306,12 @@ describe('Schema tests', function (){
         rangeKey: true
       }
     },
-      {
-        timestamps: {
-          createdAt: 'started_at',
-          updatedAt: 'updated_at'
-        }
-      });
+    {
+      timestamps: {
+        createdAt: 'started_at',
+        updatedAt: 'updated_at'
+      }
+    });
 
     should.exist(schema.attributes.started_at);
     should.exist(schema.attributes.updated_at);
@@ -377,7 +377,7 @@ describe('Schema tests', function (){
           }
         ]
       }
-    }, {useDocumentTypes: true});
+    });
 
     schema.useDocumentTypes.should.be.ok;
 
@@ -416,7 +416,7 @@ describe('Schema tests', function (){
     var schema = new Schema({
      name: String,
      isAwesome: Boolean
-    }, {useNativeBooleans: true});
+    });
 
     var Cat = dynamoose.model('Cat' + Date.now(), schema);
     var fluffy = new Cat();
@@ -551,13 +551,66 @@ describe('Schema tests', function (){
     done();
   });
 
+  it('Schema useDocumentTypes and useNativeBooleans should default to true', function (done) {
+  	var schema = new Schema({
+  	  id: {
+    		type: Number,
+    		validate: function(v) { return v > 0; },
+    		rangeKey: true
+  	  },
+  	  breed: {
+    		type: String,
+    		hashKey: true
+  	  },
+  	  aObject: {
+    		type: 'Object',
+    		default: { state: 'alive' }
+  	  },
+  	  anotherObject: Object,
+  	  aArray: Array,
+  	  aMap: {
+    		mapId: Number,
+    		mapName: String,
+    		anotherMap:{
+    		  m1:String,
+    		}
+  	  },
+  	  aList:[
+    		{
+    		  listMapId: Number,
+    		  listMapName: String
+    		}
+  	  ],
+  	  anotherMap: {
+    		type: 'map',
+    		map: {
+    		  mapId: {type: Number, required:true },
+    		  mapName: {type: String, required:true }
+    		}
+  	  },
+  	  anotherList: {
+    		type: 'list',
+    		list: [
+    		  {
+    			listMapId: {type: Number, default: 1},
+    			listMapName: {type: String, default:"SomeName"}
+    		  }
+    		]
+  	  }
+  	});
+
+  	schema.useDocumentTypes.should.eql(true);
+  	schema.useNativeBooleans.should.eql(true);
+  	done();
+  });
+
 
   it('Schema with added instance methods', function (done) {
 
     dynamoose.setDefaults({ prefix: '' });
 
     var schema = new Schema({
-     id: Number
+      id: Number
     });
 
     schema.method('meow', function() {
@@ -603,7 +656,7 @@ describe('Schema tests', function (){
     dynamoose.setDefaults({ prefix: '' });
 
     var staticSchema = new Schema({
-     name: String
+      name: String
     });
 
     staticSchema.static('findKittenName', function (name){
@@ -641,7 +694,7 @@ describe('Schema tests', function (){
     dynamoose.setDefaults({ prefix: '' });
 
     var staticSchema = new Schema({
-     name: String
+      name: String
     });
 
     staticSchema.static('getKittensNamePunctuation', function (){
@@ -666,8 +719,8 @@ describe('Schema tests', function (){
   it('Schema with added virtual methods', function (done) {
 
     var schema = new Schema({
-     name: String,
-     owner: String
+      name: String,
+      owner: String
     });
 
     schema.virtual('mergedname').get(function () {
@@ -850,8 +903,7 @@ describe('Schema tests', function (){
         list: [String],
       },
     }, {
-      useDocumentTypes: true,
-      saveUnknown: false,
+      saveUnknown: false
     });
 
     var model = {};
@@ -891,8 +943,7 @@ describe('Schema tests', function (){
     var schema = new Schema({
       id: Number,
     }, {
-      useDocumentTypes: true,
-      saveUnknown: true,
+      saveUnknown: true
     });
 
     var model = {};
@@ -930,47 +981,92 @@ describe('Schema tests', function (){
   it('Handle unknown attributes in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
-     id: Number
-     }, {
+      id: Number
+    }, {
       saveUnknown: true
     });
 
     var model = {};
     unknownSchema.parseDynamo(model, {
-      id: { N: '2' },
+      id: { N: 2 },
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
       numberString: { S: '1' },
+      anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]' },
+      anObjectB: { M: {"a":{S: "attribute"}} },
+      anArrayB: { L: [{N : 1}, {N : 2}, {N : 3}]},// can't handle dissimilar items list {M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
+      aBoolean: { S: "true" },
+      aBooleanB: { BOOL: true },
     });
 
     model.should.eql({
       id: 2,
       name: 'Fluffy',
-      anObject: { a: 'attribute' },
-      numberString: 1,
+      anObject: '{"a":"attribute"}',
+      numberString: '1',
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArray: '[2,{"test2": "5","test": "1"},"value1"]',
+      anObjectB: { a: 'attribute' },
+      // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
+      anArrayB: [1, 2, 3],
+      aBoolean: 'true',
+      aBooleanB: true
     });
     done();
   });
 
+  it('Handle unknown attributes in DynamoDB when document types are set to false', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: true,
+      useDocumentTypes: false,
+      useNativeBooleans: false
+    });
+
+    var model = {};
+
+    try {
+      unknownSchema.parseDynamo(model, {
+        id: { N: 2 },
+        name: { S: 'Fluffy' },
+        anObject: { S: '{"a":"attribute"}' },
+        numberString: { S: '1' },
+        anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]'},
+        anObjectB: { M: {"a":{S: "attribute"}} },
+        anArrayB: { L: [{N:2},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: 'value1'}]},
+        aBoolean: { S: "true" },
+        aBooleanB: { BOOL: true },
+      });
+    } catch(err) {
+      // M and L aren't supported with document types are set to false
+      err.should.be.instanceof(Error);
+      err.should.be.instanceof(errors.ParseError);
+    }
+
+    done();
+  });
+
   it('Enum Should be set in schema attributes object', function (done) {
-     var enumData = ['Golden retriever', 'Beagle'];
+    var enumData = ['Golden retriever', 'Beagle'];
     var schema = new Schema({
       race: {
-         type: String,
-         enum: enumData
+        type: String,
+        enum: enumData
       }
     });
 
-   schema.attributes.race.options.should.have.property('enum');
-   schema.attributes.race.options.enum.should.deepEqual(enumData);
-   done();
+    schema.attributes.race.options.should.have.property('enum');
+    schema.attributes.race.options.enum.should.deepEqual(enumData);
+    done();
   });
 
   it('Enum Should throw error when using different value', function (done) {
     var schema = new Schema({
       race: {
-         type: String,
-         enum: ['Golden retriever', 'Beagle']
+        type: String,
+        enum: ['Golden retriever', 'Beagle']
       }
     });
 
@@ -989,16 +1085,16 @@ describe('Schema tests', function (){
   it('Enum Should not throw an error if value is empty', function (done) {
     var schema = new Schema({
       name: {
-         type: String,
-         required: true,
-         hashKey: true
+        type: String,
+        required: true,
+        hashKey: true
       },
       race: {
-         type: String,
-         enum: ['Golden retriever', 'Beagle']
+        type: String,
+        enum: ['Golden retriever', 'Beagle']
       },
       weight: {
-         type: Number
+        type: Number
       }
     });
 
@@ -1025,8 +1121,8 @@ describe('Schema tests', function (){
 
     var schema = new Schema({
       race: {
-         type: String,
-         enum: enumData
+        type: String,
+        enum: enumData
       }
     });
 
@@ -1048,8 +1144,8 @@ describe('Schema tests', function (){
   it('Handle unknown attributes as array in DynamoDB', function (done) {
 
     var unknownSchema = new Schema({
-     id: Number
-     }, {
+      id: Number
+    }, {
       saveUnknown: ["name", "numberString"]
     });
 
@@ -1064,7 +1160,33 @@ describe('Schema tests', function (){
     model.should.eql({
       id: 2,
       name: 'Fluffy',
-      numberString: 1
+      numberString: '1'
+    });
+    done();
+  });
+
+  it('Handle unknown attributes as array in DynamoDB when document types are set to false', function (done) {
+
+    var unknownSchema = new Schema({
+     id: Number
+     }, {
+      saveUnknown: ["name", "numberString"],
+      useDocumentTypes: false,
+      useNativeBooleans: false
+    });
+
+    var model = {};
+    unknownSchema.parseDynamo(model, {
+      id: { N: '2' },
+      name: { S: 'Fluffy' },
+      anObject: { S: '{"a":"attribute"}' },
+      numberString: { S: '1' }
+    });
+
+    model.should.eql({
+      id: 2,
+      name: 'Fluffy',
+      numberString: '1'
     });
     done();
   });
