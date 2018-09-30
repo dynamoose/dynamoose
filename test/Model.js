@@ -1295,8 +1295,8 @@ describe('Model', function (){
     });
 
     it("Update model with non-timestamp field as rangeKey", function () {
-      return Cats.Cat11.create({name: 'Fluffy', serial: Date.now(), age: 1}, {overwrite: true}).then(function (old) {
-        return Cats.Cat11.update({name: old.name, serial: old.serial}, {age: 2}).then(function(data) {
+      return Cats.Cat13.create({name: 'Fluffy', serial: Date.now(), age: 1}, {overwrite: true}).then(function (old) {
+        return Cats.Cat13.update({name: old.name, serial: old.serial}, {age: 2}).then(function(data) {
           data.age.should.equal(2);
         });
       });

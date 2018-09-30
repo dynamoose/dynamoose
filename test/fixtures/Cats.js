@@ -294,7 +294,7 @@ module.exports = function(dynamoose){
 	{useDocumentTypes: true, timestamps: true});
 
   // Create a model using a timestamp attribute as a range key
-  var Cat10 = dynamoose.model('Cat10',
+  var Cat12 = dynamoose.model('Cat12',
   {
     name: {
       type: String,
@@ -309,7 +309,7 @@ module.exports = function(dynamoose){
     }
   }, { timestamps: true });
 
-  var Cat11 = dynamoose.model('Cat11',
+  var Cat13 = dynamoose.model('Cat13',
   {
     name: {
       type: String,
@@ -335,8 +335,8 @@ module.exports = function(dynamoose){
     Cat7: Cat7,
     Cat8: Cat8,
     Cat9: Cat9,
-    Cat10: Cat10,
-    Cat11: Cat11,
+    Cat12: Cat12,
+    Cat13: Cat13,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
