@@ -74,7 +74,7 @@ describe('Model', function (){
         vet:{name:'theVet', address:'12 somewhere'},
         ears:[{name:'left'}, {name:'right'}],
         legs: ['front right', 'front left', 'back right', 'back left'],
-        more: {fovorites: {food: 'fish'}},
+        more: {favorites: {food: 'fish'}},
         array: [{one: '1'}],
         validated: 'valid'
       }
@@ -97,7 +97,7 @@ describe('Model', function (){
         name: { S: 'Fluffy' },
         vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
         legs: { SS: ['front right', 'front left', 'back right', 'back left']},
-        more: { S: '{"fovorites":{"food":"fish"}}' },
+        more: { S: '{"favorites":{"food":"fish"}}' },
         array: { S: '[{"one":"1"}]' },
         validated: { S: 'valid' }
       });
@@ -458,7 +458,7 @@ describe('Model', function (){
             vet:{name:'theVet', address:'12 somewhere'},
             ears:[{name:'left'}, {name:'right'}],
             legs: ['front right', 'front left', 'back right', 'back left'],
-            more: {fovorites: {food: 'fish'}},
+            more: {favorites: {food: 'fish'}},
             array: [{one: '1'}],
             validated: 'valid'
           });
@@ -488,7 +488,7 @@ describe('Model', function (){
             vet:{name:'theVet', address:'12 somewhere'},
             ears:[{name:'left'}, {name:'right'}],
             legs: ['front right', 'front left', 'back right', 'back left'],
-            more: {fovorites: {food: 'fish'}},
+            more: {favorites: {food: 'fish'}},
             array: [{one: '1'}],
             validated: 'valid'
           });
@@ -518,7 +518,7 @@ describe('Model', function (){
             vet:{name:'theVet', address:'12 somewhere'},
             ears:[{name:'left'}, {name:'right'}],
             legs: ['front right', 'front left', 'back right', 'back left'],
-            more: {fovorites: {food: 'fish'}},
+            more: {favorites: {food: 'fish'}},
             array: [{one: '1'}],
             validated: 'valid'
           });
@@ -534,6 +534,93 @@ describe('Model', function (){
                   realCat.name.should.eql("FluffyB");
                   realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
                   realCat.updatedAt.should.eql(expectedUpdatedAt); // updatedAt should be the same as before
+                  done();
+                });
+              });
+            }, 1000);
+          });
+        });
+
+
+        it('Save existing item with updating expires', function (done) {
+          var myCat = new Cats.Cat11({
+            id: 1,
+            name: 'Fluffy',
+            vet:{name:'theVet', address:'12 somewhere'},
+            ears:[{name:'left'}, {name:'right'}],
+            legs: ['front right', 'front left', 'back right', 'back left'],
+            more: {favorites: {food: 'fish'}},
+            array: [{one: '1'}],
+            validated: 'valid'
+          });
+
+          myCat.save(function(err, theSavedCat1) {
+            var expectedExpires = theSavedCat1.expires;
+
+            myCat.name = "FluffyB";
+            setTimeout(function() {
+              myCat.save({updateExpires: true}, function () {
+                Cats.Cat11.get(1, function(err, realCat) {
+                  realCat.name.should.eql("FluffyB");
+                  realCat.expires.should.not.eql(expectedExpires); // expires should be different than before
+                  done();
+                });
+              });
+            }, 1000);
+          });
+        });
+
+
+        it('Save existing item without updating expires', function (done) {
+          var myCat = new Cats.Cat11({
+            id: 2,
+            name: 'Fluffy',
+            vet:{name:'theVet', address:'12 somewhere'},
+            ears:[{name:'left'}, {name:'right'}],
+            legs: ['front right', 'front left', 'back right', 'back left'],
+            more: {favorites: {food: 'fish'}},
+            array: [{one: '1'}],
+            validated: 'valid'
+          });
+
+          myCat.save(function(err, theSavedCat1) {
+            var expectedExpires = theSavedCat1.expires;
+
+            myCat.name = "FluffyB";
+            setTimeout(function() {
+              myCat.save({updateExpires: false}, function () {
+                Cats.Cat11.get(2, function(err, realCat) {
+                  realCat.name.should.eql("FluffyB");
+                  realCat.expires.should.eql(expectedExpires); // expires should be the same as before
+                  done();
+                });
+              });
+            }, 1000);
+          });
+        });
+
+
+        it('Save existing item without updating expires (default)', function (done) {
+          var myCat = new Cats.Cat11({
+            id: 3,
+            name: 'Fluffy',
+            vet:{name:'theVet', address:'12 somewhere'},
+            ears:[{name:'left'}, {name:'right'}],
+            legs: ['front right', 'front left', 'back right', 'back left'],
+            more: {favorites: {food: 'fish'}},
+            array: [{one: '1'}],
+            validated: 'valid'
+          });
+
+          myCat.save(function(err, theSavedCat1) {
+            var expectedExpires = theSavedCat1.expires;
+
+            myCat.name = "FluffyB";
+            setTimeout(function() {
+              myCat.save(function () {
+                Cats.Cat11.get(3, function(err, realCat) {
+                  realCat.name.should.eql("FluffyB");
+                  realCat.expires.should.eql(expectedExpires); // expires should be the same as before
                   done();
                 });
               });
@@ -1072,6 +1159,36 @@ describe('Model', function (){
                 });
               });
             });
+          });
+
+          it('Expires will be updated ', function (done) {
+            Cats.ExpiringCat.create({name: 'Fluffy2'})
+            .then(function (fluffy) {
+              var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+              var min = max - 1;
+              should.exist(fluffy);
+              should.exist(fluffy.expires);
+              should.exist(fluffy.expires.getTime);
+
+              var expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
+              expiresInSec.should.be.within(min, max);
+
+
+              setTimeout(function() {
+                Cats.ExpiringCat.update({name: 'Fluffy2'}, {name: 'Twinkles'}, { updateExpires: true }, function (err, fluffy) {
+                  should.not.exist(err);
+                  should.exist(fluffy);
+                  should.exist(fluffy.expires);
+                  should.exist(fluffy.expires.getTime);
+                  
+                  var expiresInSec2 = Math.floor(fluffy.expires.getTime() / 1000);
+                  expiresInSec2.should.be.above(expiresInSec);
+
+                  done();
+                });
+              }, 1000);
+            })
+            .catch(done);
           });
 
           it('Set expires attribute on save', function (done) {
