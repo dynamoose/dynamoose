@@ -148,6 +148,10 @@ declare module "dynamoose" {
     */
     updateTimestamps?: boolean;
     /**
+    * Whether to update the documents expires or not. Defaults to false.
+    */
+    updateExpires?: boolean;
+    /**
     * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
     */
     condition?: string;

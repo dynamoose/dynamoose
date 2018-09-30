@@ -329,6 +329,39 @@ module.exports = function(dynamoose){
     details: Object
 	}, {useDocumentTypes: false, useNativeBooleans: false});
 
+  var Cat11 = dynamoose.model('Cat11', {
+    id: {
+        type: Number,
+        validate: function(v) {
+            return v > 0;
+        }
+    },
+    name: String,
+    owner: String,
+    age: {
+        type: Number
+    },
+    vet: {
+        name: String,
+        address: String
+    },
+    ears: [{
+        name: String
+    }],
+    legs: [String],
+    more: Object,
+    array: Array,
+    validated: {
+        type: String,
+        validate: function(v) {
+            return v === 'valid';
+        }
+    }
+  }, {
+    useDocumentTypes: true,
+    expires: NINE_YEARS
+  });
+
   var CatWithMethodsSchema = new dynamoose.Schema({
     id: Number,
     name: String
@@ -350,6 +383,7 @@ module.exports = function(dynamoose){
     Cat8: Cat8,
     Cat9: Cat9,
     Cat10: Cat10,
+    Cat11: Cat11,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
