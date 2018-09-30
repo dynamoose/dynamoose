@@ -378,14 +378,16 @@ module.exports = function(dynamoose){
       type: String,
       hashKey: true
     },
-    createdAt: {
-      type: Number,
-      rangeKey: true
-    },
     age: {
       type: Number
     }
-  }, { timestamps: true });
+  }, { timestamps: {
+	  createdAt: {
+		  name: "createdAt",
+		  rangeKey: true
+	  },
+	  updatedAt: "updatedAt"
+  } });
 
   var Cat13 = dynamoose.model('Cat13',
   {
