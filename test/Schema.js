@@ -1190,4 +1190,65 @@ describe('Schema tests', function (){
     });
     done();
   });
+
+  it('Correctly inherits the properties from a loaded class', function () {
+
+    function CatClass() {
+
+    }
+
+    CatClass.staticMethod = function() {
+      return 'static method';
+    };
+
+    CatClass.staticProp = false;
+
+    Object.defineProperty(CatClass.prototype, 'getterTestName', {
+      get: function() {
+        return this.first + ' ' + this.last;
+      },
+      set: function(name) {
+        var nameParts = name.split(' ');
+        this.first = nameParts[0];
+        this.last = nameParts[1];
+      },
+    });
+
+    Object.defineProperty(CatClass.prototype, 'firstNameFn', {
+      value: function() {
+        return this.first;
+      },
+    });
+
+    var schema = new Schema({ first: String, last: String });
+    schema.loadClass(CatClass);
+
+    var Cat = dynamoose.model('Cat' + Date.now(), schema);
+    var tim = new Cat({ first: 'Tim', last: 'Jones' });
+
+    Cat.should.have.property('staticMethod');
+    Cat.should.not.have.property('staticProp');
+    Cat.should.not.have.property('getterTestName');
+    Cat.should.not.have.property('firstNameFn');
+    Cat.staticMethod.should.be.type('function');
+    should(Cat.staticMethod()).eql('static method');
+
+    tim.should.not.have.property('staticMethod');
+    tim.should.have.property('getterTestName');
+    tim.should.have.property('firstNameFn');
+    tim.getterTestName.should.eql('Tim Jones');
+    tim.getterTestName = 'Tom Jones';
+    tim.getterTestName.should.eql('Tom Jones');
+    tim.firstNameFn.should.be.type('function');
+    should(tim.firstNameFn()).eql('Tom');
+
+    var vSchema = new Schema({ first: String, last: String });
+    vSchema.loadClass(CatClass, true);
+
+    var VCat = dynamoose.model('Cat' + Date.now(), vSchema);
+    var jim = new VCat({ first: 'Jim', last: 'Jones' });
+
+    VCat.should.not.have.property('staticMethod');
+    jim.should.not.have.property('firstNameFn');
+  });
 });
