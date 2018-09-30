@@ -1161,6 +1161,36 @@ describe('Model', function (){
             });
           });
 
+          it('Expires will be updated ', function (done) {
+            Cats.ExpiringCat.create({name: 'Fluffy2'})
+            .then(function (fluffy) {
+              var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+              var min = max - 1;
+              should.exist(fluffy);
+              should.exist(fluffy.expires);
+              should.exist(fluffy.expires.getTime);
+
+              var expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
+              expiresInSec.should.be.within(min, max);
+
+
+              setTimeout(function() {
+                Cats.ExpiringCat.update({name: 'Fluffy2'}, {name: 'Twinkles'}, { updateExpires: true }, function (err, fluffy) {
+                  should.not.exist(err);
+                  should.exist(fluffy);
+                  should.exist(fluffy.expires);
+                  should.exist(fluffy.expires.getTime);
+                  
+                  var expiresInSec2 = Math.floor(fluffy.expires.getTime() / 1000);
+                  expiresInSec2.should.be.above(expiresInSec);
+
+                  done();
+                });
+              }, 1000);
+            })
+            .catch(done);
+          });
+
           it('Set expires attribute on save', function (done) {
             Cats.ExpiringCat.create({name: 'Fluffy'})
             .then(function (fluffy) {
