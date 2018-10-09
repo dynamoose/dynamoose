@@ -280,17 +280,8 @@ describe('Model', function (){
 
     		myCat.save(function(err, theSavedCat1) {
           Cats.Cat12.get(1, function (err, item) {
-            item.should.eql({
-              id: 1,
-              objectA: {
-                location: "San Jose",
-                age: 5
-              },
-              objectB: {
-                location: "San Jose",
-                age: 5
-              }
-            })
+            item.should.eql(myCat);
+            done();
           });
     		});
   	  });
@@ -310,17 +301,8 @@ describe('Model', function (){
 
         myCat.save(function(err, theSavedCat1) {
           Cats.Cat13.get(1, function (err, item) {
-            item.should.eql({
-              id: 1,
-              objectA: {
-                location: "San Jose",
-                age: 5
-              },
-              objectB: {
-                location: "San Jose",
-                age: 5
-              }
-            })
+            item.should.eql(myCat);
+            done();
           });
         });
       });
