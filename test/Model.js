@@ -265,6 +265,66 @@ describe('Model', function (){
       	});
       });
 
+  	  it('Should work with saveUnknown for map', function (done) {
+    		var myCat = new Cats.Cat12({
+    		  id: 1,
+          objectA: {
+            location: "San Jose",
+            age: 5
+          },
+          objectB: {
+            location: "San Jose",
+            age: 5
+          }
+    		});
+
+    		myCat.save(function(err, theSavedCat1) {
+          Cats.Cat12.get(1, function (err, item) {
+            item.should.eql({
+              id: 1,
+              objectA: {
+                location: "San Jose",
+                age: 5
+              },
+              objectB: {
+                location: "San Jose",
+                age: 5
+              }
+            })
+          });
+    		});
+  	  });
+
+      it('Should work with saveUnknown for object', function (done) {
+        var myCat = new Cats.Cat13({
+          id: 1,
+          objectA: {
+            location: "San Jose",
+            age: 5
+          },
+          objectB: {
+            location: "San Jose",
+            age: 5
+          }
+        });
+
+        myCat.save(function(err, theSavedCat1) {
+          Cats.Cat13.get(1, function (err, item) {
+            item.should.eql({
+              id: 1,
+              objectA: {
+                location: "San Jose",
+                age: 5
+              },
+              objectB: {
+                location: "San Jose",
+                age: 5
+              }
+            })
+          });
+        });
+      });
+
       it('Create complex model with unnamed attributes', function (done) {
 
 
@@ -1180,7 +1240,7 @@ describe('Model', function (){
                   should.exist(fluffy);
                   should.exist(fluffy.expires);
                   should.exist(fluffy.expires.getTime);
-                  
+
                   var expiresInSec2 = Math.floor(fluffy.expires.getTime() / 1000);
                   expiresInSec2.should.be.above(expiresInSec);
 
@@ -2277,7 +2337,7 @@ describe('Model', function (){
           var imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
 
           imageData.should.not.eql(Buffer.from(imageData.toString())); // The binary value should not be UTF-8 string for test.
-  
+
 
           var item = {
             id: 3333,
