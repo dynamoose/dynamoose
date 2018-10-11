@@ -4,14 +4,15 @@ thumbs.db
 node_modules/
 .settings
 .session.vim
-coverage.html
-lib-cov/
 .vscode
 
 # Ignore webstorm directories
 .idea/
 
-
 .bundle/
 docs/_site
 Gemfile.lock
+
+.nyc_output
+coverage
+coverage.html

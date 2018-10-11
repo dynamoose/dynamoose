@@ -1,11 +1,10 @@
 language: node_js
 node_js:
+  - "10"
+  - "9"
   - "8"
-  - "7"
-  - "6"
-  - "5"
-  - "4"
-  - "0.12"
 # env: DEBUG=dynamoose*
 before_script:
-  - npm install -g grunt-cli
+  - npm install -g grunt-cli nyc
+script:
+  - ./travis-test

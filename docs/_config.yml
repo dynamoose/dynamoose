@@ -12,7 +12,7 @@ title_separator          : "-"
 description              : "Documentation for Dynamoose."
 url                      : "https://dynamoosejs.com"
 baseurl                  :
-repository               : "automategreen/dynamoose"
+repository               : "dynamoosejs/dynamoose"
 atom_feed:
   path                   : # blank (default) uses feed.xml
 
@@ -28,6 +28,7 @@ include:
   - .htaccess
   - _pages
   - _docs
+  - _examples
 exclude:
   - "*.sublime-project"
   - "*.sublime-workspace"
@@ -81,6 +82,8 @@ kramdown:
 
 collections:
   docs:
+    output: true
+  examples:
     output: true
 
 # Sass/SCSS
