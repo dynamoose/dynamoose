@@ -5,12 +5,17 @@ declare module "dynamoose" {
   export var AWS: typeof _AWS;
 
   export function local(url: string): void;
-  export function model<DataSchema, KeySchema, ModelSchema extends Model<DataSchema>>(
+  export function ddb(): _AWS.DynamoDB;
+  export function setDocumentClient(documentClient: _AWS.DynamoDB.DocumentClient): void;
+
+  export function model<DataSchema, KeySchema>(
     modelName: string,
-    schema: Schema,
+    schema: Schema | SchemaAttributes,
     options?: ModelOption
-  ): ModelConstructor<DataSchema, KeySchema, ModelSchema>;
+  ): ModelConstructor<DataSchema, KeySchema>;
   export function setDefaults(options: ModelOption): void;
+  export function setDDB(ddb: _AWS.DynamoDB): void;
+  export function revertDDB(): void;
 
   export interface ModelOption {
     create?: boolean, // Create table in DB, if it does not exist,
@@ -18,11 +23,13 @@ declare module "dynamoose" {
     waitForActive?: boolean, // Wait for table to be created before trying to us it
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
+    suffix?: string, // Set table name suffix
+    serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
   /**
-   * Schema
-   */
+  * Schema
+  */
   export class Schema {
     constructor(schema: SchemaAttributes, options?: SchemaOptions);
     method(name: string, fn: any): any;
@@ -33,6 +40,11 @@ declare module "dynamoose" {
     virtualpath(name: string): any;
   }
 
+
+  export interface RawSchemaAttributeDefinition<Constructor, Type> {
+    [key: string]: SchemaAttributeDefinition<Constructor, Type>
+    | RawSchemaAttributeDefinition<Constructor, Type>;
+  }
   export interface SchemaAttributeDefinition<Constructor, Type> {
     type: Constructor;
     validate?: (v: Type) => boolean;
@@ -45,9 +57,9 @@ declare module "dynamoose" {
     lowercase?: boolean;
     uppercase?: boolean;
     /**
-     * Indicating Secondary Index.
-     * 'true' is means local, project all
-     */
+    * Indicating Secondary Index.
+    * 'true' is means local, project all
+    */
     index?: boolean | IndexDefinition | IndexDefinition[];
     default?: (() => Type) | Type
   }
@@ -56,7 +68,7 @@ declare module "dynamoose" {
     useNativeBooleans?: boolean;
     useDocumentTypes?: boolean;
     timestamps?: boolean | { createdAt: string, updatedAt: string };
-    expires?: number | { ttl: number, attribute: string };
+    expires?: number | { ttl: number, attribute: string, returnExpiredItems: boolean };
     saveUnknown?: boolean;
 
     // @todo more strong type definition
@@ -74,12 +86,13 @@ declare module "dynamoose" {
       | SchemaAttributeDefinition<ObjectConstructor, Object>
       | SchemaAttributeDefinition<ArrayConstructor, Array<any>>
       | SchemaAttributeDefinition<any, any>
+      | RawSchemaAttributeDefinition<any, any>
     )
   }
 
   /**
-   * Index
-   */
+  * Index
+  */
   interface IndexDefinition {
     name?: string;
     global?: boolean;
@@ -89,8 +102,8 @@ declare module "dynamoose" {
   }
 
   /**
-   * Table
-   */
+  * Table
+  */
   export class Table {
     constructor(name: string, schema: any, options: any, base: any);
     create(next: any): any;
@@ -104,8 +117,8 @@ declare module "dynamoose" {
   }
 
   /**
-   * Model
-   */
+  * Model
+  */
   export class Model<ModelData> {
     constructor(obj: ModelData);
     put(options: PutOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
@@ -119,87 +132,102 @@ declare module "dynamoose" {
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
 
-    // @todo missing populate support (e.g. populated path)
-    populate<T>(path: string | { path: string, model: string }): Promise<Model<ModelData> & T>
+    originalItem(): object;
+
+    populate<T>(path: string | PopulateOptions): Promise<Model<ModelData> & T>
   }
+  type PopulateOptions = { path: string, model: string, populate?: PopulateOptions }
 
   export interface PutOptions {
     /**
-     * Overwrite existing item. Defaults to true.
-     */
-    overwrite: boolean;
+    * Overwrite existing item. Defaults to true for `model.put` and false for `Model.create`.
+    */
+    overwrite?: boolean;
     /**
-     * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
-     */
-    condition: string;
+    * Whether to update the documents timestamps or not. Defaults to true.
+    */
+    updateTimestamps?: boolean;
+    /**
+    * Whether to update the documents expires or not. Defaults to false.
+    */
+    updateExpires?: boolean;
+    /**
+    * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
+    */
+    condition?: string;
     /**
     * A map of name substitutions for the condition expression.
     */
-    conditionNames: any;
+    conditionNames?: any;
     /**
     * A map of values for the condition expression. Note that in order for automatic object conversion to work, the keys in this object must match schema attribute names.
     */
-    conditionValues: any;
+    conditionValues?: any;
   }
   type SaveOptions = PutOptions;
 
-  export interface ModelConstructor<DataSchema, KeySchema, Model> {
-    new (value?: DataSchema): Model;
-    (value?: DataSchema): Model;
-    readonly prototype: Model;
+  export interface ModelConstructor<DataSchema, KeySchema> {
+    new(value?: DataSchema): ModelSchema<DataSchema>;
+    (value?: DataSchema): ModelSchema<DataSchema>;
+    readonly prototype: ModelSchema<DataSchema>;
 
-    batchPut(items: DataSchema[], options?: PutOptions, callback?: (err: Error, items: Model[]) => void): Promise<Model[]>;
-    batchPut(items: DataSchema[], callback?: (err: Error, items: Model[]) => void): Promise<Model[]>;
-    create(item: DataSchema, callback?: (err: Error, model: Model) => void): Promise<Model>;
+    batchPut(items: DataSchema[], options?: PutOptions, callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
+    batchPut(items: DataSchema[], callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
 
-    get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model | undefined>;
-    batchGet(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<Model[]>;
+    create(item: DataSchema, options?: PutOptions, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
+    create(item: DataSchema, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
+    create(item: DataSchema, options?: PutOptions): Promise<ModelSchema<DataSchema>>;
+
+    get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema> | undefined>;
+    batchGet(key: KeySchema[], callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema>[]>;
 
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
-    batchDelete(keys: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
+    batchDelete(keys: KeySchema[], callback?: (err: Error) => void): Promise<undefined>;
 
-    query(query: QueryFilter, callback?: (err: Error, results: Model[]) => void): QueryInterface<Model, QueryResult<Model>>;
-    queryOne(query: QueryFilter, callback?: (err: Error, results: Model) => void): QueryInterface<Model, Model>;
-    scan(filter?: ScanFilter, callback?: (err: Error, results: Model[]) => void): ScanInterface<Model>;
+    query(query: QueryFilter, callback?: (err: Error, results: ModelSchema<DataSchema>[]) => void): QueryInterface<ModelSchema<DataSchema>, QueryResult<ModelSchema<DataSchema>>>;
+    queryOne(query: QueryFilter, callback?: (err: Error, results: ModelSchema<DataSchema>) => void): QueryInterface<ModelSchema<DataSchema>, ModelSchema<DataSchema>>;
+    scan(filter?: ScanFilter, callback?: (err: Error, results: ModelSchema<DataSchema>[]) => void): ScanInterface<ModelSchema<DataSchema>>;
 
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: Model[]) => void): void;
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: Model[]) => void): void;
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<Model>;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<ModelSchema<DataSchema>>;
   }
-  /**
-   * Update
-   */
+  type ModelSchema<T> = Model<T> & T;
 
   /**
-   * Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
-   * Put is the default behavior.
-   */
+  * Update
+  */
+
+  /**
+  * Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
+  * Put is the default behavior.
+  */
   type UpdateUpdate<DataSchema> = (
-    DataSchema
-    | { $PUT: DataSchema }
-    | { $ADD: DataSchema }
-    | { $DELETE: DataSchema }
+    Partial<DataSchema>
+    | { $PUT: Partial<DataSchema> }
+    | { $ADD: Partial<DataSchema> }
+    | { $DELETE: Partial<DataSchema> }
   );
 
   export interface UpdateOption {
     /**
-     * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
-     */
+    * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
+    */
     allowEmptyArray: boolean;
     /**
-     * If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
-     */
+    * If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
+    */
     createRequired: boolean;
     /**
-     * If true, the timestamps attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
-     */
+    * If true, the timestamps attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
+    */
     updateTimestamps: boolean;
   }
 
 
   /**
-   * Query
-   */
+  * Query
+  */
   type QueryFilter = any;
   export interface QueryInterface<T, R> {
     exec(callback?: (err: Error, result: R) => void): Promise<R>;
@@ -230,12 +258,12 @@ declare module "dynamoose" {
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
   }
-  type QueryKey = string;
+  type QueryKey = any;
 
 
   /**
-   * Scan
-   */
+  * Scan
+  */
   type ScanFilter = string | any;
 
   export interface ScanInterface<T> {
@@ -243,7 +271,7 @@ declare module "dynamoose" {
     all(delay?: number, max?: number): ScanInterface<T>;
     parallel(totalSegments: number): ScanInterface<T>;
     using(indexName: string): ScanInterface<T>;
-    consistent(filter: any): ScanInterface<T>;
+    consistent(filter?: any): ScanInterface<T>;
     where(filter: any): ScanInterface<T>;
     filter(filter: any): ScanInterface<T>;
     and(): ScanInterface<T>;
@@ -270,7 +298,7 @@ declare module "dynamoose" {
     lastKey?: ScanKey;
   }
 
-  type ScanKey = string;
+  type ScanKey = any;
 
   export class VirtualType {
     constructor(options: any, name: string);
@@ -278,6 +306,4 @@ declare module "dynamoose" {
     get(fn: any): any;
     set(fn: any): any;
   }
-
-  export function local(url?: string): void;
 }

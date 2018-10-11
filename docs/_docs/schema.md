@@ -29,6 +29,10 @@ var dogSchema = new Schema({
     rangeKey: true,
     index: true // name: nameLocalIndex, ProjectionType: ALL
   },
+  race: {
+     type: String,
+     enum: ['Golden retriever', 'Beagle']
+  },
   breed: {
     type: String,
     trim: true,
@@ -122,6 +126,10 @@ function(model) {
 }
 ```
 
+**enum: Array of strings**
+
+Force value to be one of the enumeration values.
+
 **forceDefault: boolean**
 
 (default: false) Will force the default value to always be applied to the attribute event if it already set. This is good for populating data that will be used as sort or secondary indexes.
@@ -141,7 +149,7 @@ function(value, model) {
 }
 ```
 
-If it is a RegExp, it is compared using `RegExp.text(value)`.
+If it is a RegExp, it is compared using `RegExp.test(value)`.
 
 If it is a value, it is compared with `===`.
 
@@ -151,7 +159,7 @@ Adds a setter function that will be used to transform the value before writing t
 
 **get**: function
 
-Adds a getter function that will be used to transform the value returned from the DB.
+Adds a getter function that will be used to transform the value returned from the DB, fired only if there is a value returned from the DB.
 
 **toDynamo**: function
 
@@ -177,7 +185,7 @@ Convert to uppercase when saving to DB.
 
 **throughput**: number &#124; {read: number, write: number}
 
-Sets the throughput of the DynamoDB table. The value can either be a number or an object with the keys `read` and `write` (for example: `{read: 5, write: 2}`). If it is a number, both read and write are configured to that number. If it is omitted, the read and write values will be set to 1.
+Sets the throughput of the DynamoDB table on creation. The value can either be a number or an object with the keys `read` and `write` (for example: `{read: 5, write: 2}`). If it is a number, both read and write are configured to that number. If it is omitted, the read and write values will be set to 1. Throughput will only be respected on table creation, and will not update the throughput of an existing table.
 
 ```js
 var schema = new Schema({...}, {
@@ -194,7 +202,7 @@ var schema = new Schema({...}, {
 
 **useNativeBooleans**: boolean
 
-Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `false` (i.e store as JSON string).
+Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `true` (i.e store as DynamoDB boolean).
 
 
 ```js
@@ -205,7 +213,7 @@ var schema = new Schema({...}, {
 
 **useDocumentTypes**: boolean
 
-Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `false` (i.e. store as JSON string)
+Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `true` (i.e. store as DynamoDB maps and lists).
 
 ```js
 var schema = new Schema({...}, {
@@ -236,7 +244,7 @@ var schema = new Schema({...}, {
 });
 ```
 
-**expires**: number &#124; {ttl: number, attribute: string}
+**expires**: number &#124; {ttl: number, attribute: string, returnExpiredItems: boolean}
 
 Defines that _schema_ must contain and expires attribute.  This field is configured in DynamoDB as the TTL attribute.  If set to a `number`, an attribute named "expires" will be added to the schema.  The default value of the attribute will be the current time plus the expires value.  The expires value is in seconds.
 
@@ -254,12 +262,13 @@ You can specify the attribute name by passing an object:
 var schema = new Schema({...}, {
   expires: {
     ttl: 7*24*60*60, // 1 week in seconds
-    attribute: 'ttl' // ttl will be used as the attribute name
+    attribute: 'ttl', // ttl will be used as the attribute name
+    returnExpiredItems: true // if expired items will be returned or not (default: true)
   }
 });
 ```
 
-**saveUnknown**: boolean
+**saveUnknown**: boolean or array
 
 Specifies that attributes not defined in the _schema_ will be saved and retrieved.  This defaults to false.
 
@@ -269,15 +278,23 @@ var schema = new Schema({...}, {
 });
 ```
 
+If an array is passed in, only attributes that are in the array passed in will be saved and retrieved.
+
+```js
+var schema = new Schema({...}, {
+  saveUnknown: ['name', 'age'] // only `name` and `age` unknown attributes will be saved and retrieved from DynamoDB
+});
+```
+
 **attributeToDynamo**: function
 
-A function that accepts `name, json, model, defaultFormatter`.
+A function that accepts `name, json, model, defaultFormatter, options`.
 
 This will override attribute formatting for all attributes. Whatever is returned by the function will be sent directly to the DB.
 
 ```js
 var schema = new Schema({...}, {
-  attributeToDynamo: function(name, json, model, defaultFormatter) {
+  attributeToDynamo: function(name, json, model, defaultFormatter, options) {
     switch(name) {
         case 'specialAttribute':
             return specialFormatter(json);
@@ -309,7 +326,41 @@ var schema = new Schema({...}, {
 
 ### Methods
 
-You can add custom methods to your Schema
+You can add custom methods to your Schema. Model methods can be accessed via `this.model(modelName)`.
+
+```js
+var Schema = dynamoose.Schema;
+
+var dogSchema = new Schema({
+  ownerId: {
+    type: Number,
+    validate: function(v) { return v > 0; },
+    hashKey: true
+  },
+  name: {
+    type: String,
+    rangeKey: true,
+    index: true // name: nameLocalIndex, ProjectionType: ALL
+  },
+  friends: {
+    type: [String],
+    default: [],
+  }
+});
+
+dogSchema.method('becomeFriends', function (otherDog) {
+  this.friends = this.friends || [];
+  otherDog.friends = otherDog.friends || [];
+  this.friends.push(otherDog.name);
+  otherDog.friends.push(this.name);
+  this.model('Dog').batchPut([this, otherDog]);
+});
+
+var Dog = dynamoose.model('Dog', dogSchema);
+var dog1 = new Dog({ ownerId: 137, name: 'Snuffles' });
+var dog2 = new Dog({ ownerId: 138, name: 'Bill'});
+dog1.becomeFriends(dog2);
+```
 
 #### Static Methods
 
@@ -321,8 +372,12 @@ Can be accessed from the compiled Schema, similar to how `scan()` and `query()` 
 // Construction:
 var ModelSchema = new Schema({...})
 
-ModelSchema.statics.getAll = function(cb){
-  this.scan().exec(cb)
+ModelSchema.statics.getAll = async function(cb){
+  let results = await this.scan().exec()
+  while (results.lastKey){
+      results = await this.scan().startKey(results.startKey).exec()
+  }
+  return results
 }
 
 var Model = dynamoose.model('Model', ModelSchema)

@@ -20,7 +20,7 @@ describe('Query', function (){
 
   before(function (done) {
 
-    dynamoose.setDefaults({ prefix: '' });
+    dynamoose.setDefaults({ prefix: '', suffix: '' });
 
     var dogSchema  = new Schema({
       ownerId: {
@@ -64,6 +64,15 @@ describe('Query', function (){
           global: true,
           project: ['name'] // ProjectionType: INCLUDE
         }]
+      },
+      siblings: {
+        type: 'list',
+        list: [ {
+          type: String
+        } ]
+      },
+      age: {
+        type: Number
       }
     });
 
@@ -83,30 +92,30 @@ describe('Query', function (){
     }
 
     addDogs([
-      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black'},
-      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown'},
-      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown'},
-      {ownerId:3, name: 'Toto', breed: 'Terrier', color: 'Brown'},
-      {ownerId:4, name: 'Oddie', breed: 'beagle', color: 'Tan'},
-      {ownerId:5, name: 'Pluto', breed: 'unknown', color: 'Mustard'},
-      {ownerId:6, name: 'Brian Griffin', breed: 'unknown', color: 'White'},
-      {ownerId:7, name: 'Scooby Doo', breed: 'Great Dane'},
-      {ownerId:8, name: 'Blue', breed: 'unknown', color: 'Blue'},
-      {ownerId:9, name: 'Lady', breed: ' Cocker Spaniel'},
-      {ownerId:10, name: 'Copper', breed: 'Hound'},
-      {ownerId:11, name: 'Old Yeller', breed: 'unknown', color: 'Tan'},
-      {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: 'Brown'},
-      {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd'},
-      {ownerId:14, name: 'Benji', breed: 'unknown'},
-      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: 'White'},
-      {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: 'Yellow'},
-      {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
-      {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white'},
-      {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white'},
-      {ownerId:20, name: 'Max', breed: 'Westie'},
-      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate'},
-      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate'},
-      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey'},
+      {ownerId:1, name: 'Foxy Lady', breed: 'Jack Russell Terrier', color: 'White, Brown and Black', siblings: ['Quincy', 'Princes'], age: 2},
+      {ownerId:2, name: 'Quincy', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Princes'], age: 3},
+      {ownerId:2, name: 'Princes', breed: 'Jack Russell Terrier', color: 'White and Brown', siblings: ['Foxy Lady', 'Quincy'], age: 6},
+      {ownerId:3, name: 'Toto', breed: 'Terrier', color: 'Brown', age: 1},
+      {ownerId:4, name: 'Oddie', breed: 'beagle', color: 'Tan', age: 2},
+      {ownerId:5, name: 'Pluto', breed: 'unknown', color: 'Mustard', age: 4},
+      {ownerId:6, name: 'Brian Griffin', breed: 'unknown', color: 'White', age: 5},
+      {ownerId:7, name: 'Scooby Doo', breed: 'Great Dane', age: 2},
+      {ownerId:8, name: 'Blue', breed: 'unknown', color: 'Blue', age: 1},
+      {ownerId:9, name: 'Lady', breed: ' Cocker Spaniel', age: 6},
+      {ownerId:10, name: 'Copper', breed: 'Hound', age: 8},
+      {ownerId:11, name: 'Old Yeller', breed: 'unknown', color: 'Tan', age: 1},
+      {ownerId:12, name: 'Hooch', breed: 'Dogue de Bordeaux', color: 'Brown', age: 3},
+      {ownerId:13, name: 'Rin Tin Tin', breed: 'German Shepherd', age: 5},
+      {ownerId:14, name: 'Benji', breed: 'unknown', age: 1},
+      {ownerId:15, name: 'Wishbone', breed: 'Jack Russell Terrier', color: 'White', age: 2},
+      {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: 'Yellow', age: 9},
+      {ownerId:17, name: 'Beethoven', breed: 'St. Bernard', age: 3},
+      {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white', age: 4},
+      {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white', age: 6},
+      {ownerId:20, name: 'Max', breed: 'Westie', age: 7},
+      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate', age: 1},
+      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate', age: 2},
+      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey', age: 4},
     ]);
 
   });
@@ -210,6 +219,51 @@ describe('Query', function (){
     });
   });
 
+  it('where() must follow eq()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').where("test")
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: where() must follow eq()');
+      done();
+    });
+  });
+
+  it('filter() must follow comparison', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').filter("test")
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: filter() must follow comparison');
+      done();
+    });
+  });
+
+  it('eq must follow query()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').lt(5)
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: eq must follow query()');
+      done();
+    });
+  });
+
+  it('Should throw first error', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').lt(5)
+    .where().filter().compVal().beginsWith().in().between()
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: eq must follow query()');
+      done();
+    });
+  });
+
   it('Basic Query on SGI descending', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -217,6 +271,17 @@ describe('Query', function (){
       should.not.exist(err);
       dogs.length.should.eql(4);
       dogs[0].ownerId.should.eql(15);
+      done();
+    });
+  });
+
+  it('Basic Query on SGI ascending', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier').ascending().exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(4);
+      dogs[0].ownerId.should.eql(1);
       done();
     });
   });
@@ -238,8 +303,8 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     var startKey = { breed: { S: 'Jack Russell Terrier' },
-     ownerId: { N: '1' },
-     name: { S: 'Foxy Lady' } };
+    ownerId: { N: '1' },
+    name: { S: 'Foxy Lady' } };
 
     Dog.query('breed').eq('Jack Russell Terrier').startAt(startKey).limit(1).exec(function (err, dogs) {
       should.not.exist(err);
@@ -288,6 +353,22 @@ describe('Query', function (){
 
   });
 
+  it('Basic Query on SGI with filter contains on list', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .where('ownerId').eq(2)
+    .filter('siblings').contains('Quincy').exec()
+    .then(function (dogs) {
+      //  console.log('The dogs', dogs);
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(2);
+      done();
+    })
+    .catch(done);
+
+  });
+
   it('Basic Query on SGI with filter null', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -295,6 +376,102 @@ describe('Query', function (){
     .filter('color').not().null().exec()
     .then(function (dogs) {
       dogs.length.should.eql(5);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Basic Query on SGI with filter not null', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .filter('color').null().exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(0);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Basic Query on SGI with filter le', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').le(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(4);
+      dogs[dogs.length - 1].ownerId.should.eql(11);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Basic Query on SGI with filter not le', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').not().le(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(14);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Basic Query on SGI with filter ge', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').ge(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(2);
+      dogs[0].ownerId.should.eql(11);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Basic Query on SGI with filter not ge', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').not().ge(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(3);
+      dogs[0].ownerId.should.eql(5);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Basic Query on SGI with filter gt', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').gt(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(14);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Basic Query on SGI with filter not gt', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .where('ownerId').not().gt(11)
+    .exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(4);
+      dogs[0].ownerId.should.eql(5);
       done();
     })
     .catch(done);
@@ -329,5 +506,224 @@ describe('Query', function (){
     })
     .catch(done);
 
+  });
+
+  it('beginsWith() cannot follow not()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').not().contains('Brown')
+    .or()
+    .filter('name').not().beginsWith('Q')
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
+      done();
+    });
+  });
+
+  it('Basic Query on SGI with filter between', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('age').between(5,7)
+    .exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(2);
+      done();
+    });
+  });
+
+  it('between() cannot follow not()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('age').not().between(5,7)
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: between() cannot follow not()');
+      done();
+    });
+  });
+
+  it('Basic Query on SGI with filter in', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').in(["White and Brown", "White"])
+    .exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(3);
+      dogs[0].ownerId.should.eql(2);
+      done();
+    });
+  });
+
+  it('in() cannot follow not()', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier')
+    .filter('color').not().in(["White and Brown", "White"])
+    .exec(function (err) {
+      should.exist(err.message);
+      err.message.should.eql('Invalid Query state: in() cannot follow not()');
+      done();
+    });
+  });
+
+  it('Query.count', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('ownerId').eq(20).count().all().exec()
+    .then(function (count) {
+      count.should.eql(4);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Query.counts', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('unknown')
+    .and()
+    .filter('color').not().eq('Brown')
+    .counts().all().exec()
+    .then(function (counts) {
+      counts.scannedCount.should.eql(5);
+      counts.count.should.eql(4);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Query.all', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('ownerId').eq(20).limit(2).all().exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(4);
+      done();
+    })
+    .catch(done);
+  });
+
+  it('Query.all(1, 3)', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('ownerId').eq(20).limit(1).all(1000, 3).exec()
+    .then(function (dogs) {
+      dogs.length.should.eql(3);
+      dogs.timesQueried.should.eql(3);
+      done();
+    })
+    .catch(done);
+  });
+  
+  it('Should allow multiple indexes and query correctly', function (done) {
+  	var schema = new dynamoose.Schema({
+  	  id: {
+  		  type: String,
+  		  hashKey: true,
+  		  required: true
+  	  },
+  	  orgId: {
+  		  type: String,
+  		  index: [{
+  			  global    : true,
+  			  name      : 'OrganizationCreateAtIndex',
+  			  rangeKey  : 'createdAt',
+  			  throughput: 1
+  		}, {
+  			  global    : true,
+  			  name      : 'OrganizationExpectedArriveAtIndex',
+  			  rangeKey  : 'expectedArriveAt',
+  			  throughput: 1
+  		}],		
+  		required: true,
+  	  },
+  	  expectedArriveAt: Date
+  	},{
+  	  throughput: 1,
+  	  timestamps: true
+  	});
+  	var Log = dynamoose.model('Log-1', schema);
+  	
+  	var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
+  	log1.save(function() {
+  	  Log.query('orgId').eq("org1")
+  	  .where('expectedArriveAt').lt( new Date() )
+  	  .exec()
+  	  .then(function(res){
+    		res.length.should.eql(1);
+    		Log.query('orgId').eq("org1")
+    		.where('createdAt').lt( new Date() )
+    		.exec()
+    		.then(function(res){
+    		  res.length.should.eql(1);
+    		  done();
+    		})
+    		.catch(function(e){
+    		  done(e);
+    		});
+    	})
+    	.catch(function(e){
+    	  done(e);
+    	});
+  	});
+  });
+
+  it('Should allow multiple local indexes and query correctly', function (done) {
+    var schema = new dynamoose.Schema({
+      id: {
+        type: String,
+        hashKey: true,
+        required: true
+      },
+      orgId: {
+        type: String,
+        index: [{
+          global    : false,
+          name      : 'OrganizationCreateAtIndex',
+          rangeKey  : 'createdAt',
+          throughput: 1
+      }, {
+          global    : false,
+          name      : 'OrganizationExpectedArriveAtIndex',
+          rangeKey  : 'expectedArriveAt',
+          throughput: 1
+      }],
+      required: true,
+      },
+      expectedArriveAt: Date
+    },{
+      throughput: 1,
+      timestamps: true
+    });
+    var Log = dynamoose.model('Log-1', schema);
+
+    var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
+    log1.save(function() {
+      Log.query('orgId').eq("org1")
+      .where('expectedArriveAt').lt( new Date() )
+      .exec()
+      .then(function(res){
+        res.length.should.eql(1);
+        Log.query('orgId').eq("org1")
+        .where('createdAt').lt( new Date() )
+        .exec()
+        .then(function(res){
+          res.length.should.eql(1);
+          done();
+        })
+        .catch(function(e){
+          done(e);
+        });
+      })
+      .catch(function(e){
+        done(e);
+      });
+    });
   });
 });
