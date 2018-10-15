@@ -50,6 +50,10 @@ describe('Query', function (){
           throughput: 5 // read and write are both 5
         }
       },
+      origin: {
+        type: String,
+        index: true // name: originLocalIndex, ProjectionType: ALL
+      },
       name: {
         type: String,
         rangeKey: true,
@@ -112,10 +116,10 @@ describe('Query', function (){
       {ownerId:17, name: 'Beethoven', breed: 'St. Bernard', age: 3},
       {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white', age: 4},
       {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white', age: 6},
-      {ownerId:20, name: 'Max', breed: 'Westie', age: 7},
-      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate', age: 1},
-      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate', age: 2},
-      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey', age: 4},
+      {ownerId:20, name: 'Max', breed: 'Westie', age: 7, origin: 'Scotland'},
+      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate', age: 1, origin: 'Great Britain'},
+      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate', age: 2,  origin: 'Germany'},
+      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey', age: 4, origin: 'France'},
     ]);
 
   });
@@ -209,10 +213,10 @@ describe('Query', function (){
     });
   });
 
-  it('Query with Local Global Index as range', function (done) {
+  it('Query with Secondary Local Index as range', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.query('ownerId').eq(2).where('color').beginsWith('White').exec(function (err, dogs) {
+    Dog.query('ownerId').eq(20).where('origin').beginsWith('G').exec(function (err, dogs) {
       should.not.exist(err);
       dogs.length.should.eql(2);
       done();
