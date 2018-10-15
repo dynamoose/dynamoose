@@ -1,5 +1,19 @@
 # Dynamoose ChangeLog
 
+## Version 1.0.1
+
+Dynamoose version 1.0.1 comes with some minor bug fixes to solve problems with Dynamoose version 1.0.0. We are actively monitoring the [GitHub Issues](https://github.com/dynamoosejs/dynamoose/issues) and will continue to work to provide bug fixes as fast as possible. Please create a [GitHub Issue](https://github.com/dynamoosejs/dynamoose/issues) or [contact me](https://charlie.fish/contact) if you are having problems and we will work to address it as fast as possible.
+
+### Bug Fixes
+
+- **[Fix saveUnknown throwing errors when value where falsy](https://github.com/automategreen/dynamoose/pull/442)** #442
+
+### Documentation
+
+- **[Fix model update add documentation](https://github.com/automategreen/dynamoose/pull/438)** #438
+
+---
+
 ## Version 1.0.0
 
 Dynamoose version 1.0.0 is here. This is a **massive** release, and will also be the first official breaking update to Dynamoose. You can view the details about the release below.
