@@ -678,56 +678,50 @@ describe('Query', function (){
   	});
   });
 
-  it('Should allow multiple local indexes and query correctly', function (done) {
+  it('Should allow multiple local indexes and query correctly', async function () {
     var schema = new dynamoose.Schema({
       id: {
         type: String,
         hashKey: true,
-        required: true
       },
       orgId: {
         type: String,
-        index: [{
-          global    : false,
-          name      : 'OrganizationCreateAtIndex',
-          rangeKey  : 'createdAt',
-          throughput: 1
-      }, {
-          global    : false,
-          name      : 'OrganizationExpectedArriveAtIndex',
-          rangeKey  : 'expectedArriveAt',
-          throughput: 1
-      }],
-      required: true,
+        rangeKey: true,
       },
-      expectedArriveAt: Date
+      updatedAt: {
+        type: Date,
+        index: {
+          global: false,
+          name  : 'OrganizationUpdatedAtIndex'
+        }
+      },
+      expectedArriveAt: {
+        type: Date,
+        index: {
+          global: false,
+          name  : 'OrganizationExpectedArriveAtIndex'
+        }
+      }
     },{
       throughput: 1,
       timestamps: true
     });
-    var Log = dynamoose.model('Log-1', schema);
+    var Log = dynamoose.model('Log-2', schema);
 
     var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
-    log1.save(function() {
-      Log.query('orgId').eq("org1")
+    var log2 = new Log({id: "test1", orgId: "org2", expectedArriveAt: Date.now()});
+
+    await log1.save();
+    await log2.save();
+
+    var res = await Log.query('id').eq("test1")
       .where('expectedArriveAt').lt( new Date() )
       .exec()
-      .then(function(res){
-        res.length.should.eql(1);
-        Log.query('orgId').eq("org1")
-        .where('createdAt').lt( new Date() )
-        .exec()
-        .then(function(res){
-          res.length.should.eql(1);
-          done();
-        })
-        .catch(function(e){
-          done(e);
-        });
-      })
-      .catch(function(e){
-        done(e);
-      });
-    });
+    res.length.should.eql(2);
+    
+    var res2 = await Log.query('id').eq("test1")
+      .where('updatedAt').le( log1.createdAt.getTime() )
+      .exec();
+    res2.length.should.eql(1);
   });
 });
