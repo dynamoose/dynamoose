@@ -94,6 +94,14 @@ Dog.batchPut([
 
 Overwrite existing item. Defaults to true.
 
+**updateExpires**: boolean
+
+Update the `expires` timestamp if exists. Defaults to false.
+
+**updateTimestamps**: boolean
+
+Should update the `updatedAt` timestamp if exists. Defaults to true.
+
 **condition**: string
 
 An expression for a conditional update. See

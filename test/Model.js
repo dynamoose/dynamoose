@@ -2137,6 +2137,309 @@ describe('Model', function (){
               });
             });
           });
+
+          it('Update without updateTimestamps (default)', function (done) {
+            var cats = [];
+
+            for (var i=0 ; i<10 ; ++i) {
+              cats.push(new Cats.Cat4({id: i+1, name: 'Tom_'+i}));
+            }
+
+            Cats.Cat4.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var timestamps = {};
+              for (var i=0 ; i<10 ; ++i) {
+                cats[i].name = 'John_'+i;
+                Object.assign(timestamps, { [cats[i].id]: new Date(cats[i].myLittleUpdatedAt) });
+              }
+
+              setTimeout(function() {
+                Cats.Cat4.batchPut(cats, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+                  Cats.Cat4.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+
+                    result3.forEach(cat => cat.myLittleUpdatedAt.should.eql(timestamps[cat.id])); 
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
+
+          it('Update with updateTimestamps set to false', function (done) {
+            var cats = [];
+
+            for (var i=0 ; i<10 ; ++i) {
+              cats.push(new Cats.Cat4({id: i+1, name: 'Tom_'+i}));
+            }
+
+            Cats.Cat4.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var timestamps = {};
+              for (var i=0 ; i<10 ; ++i) {
+                cats[i].name = 'John_'+i;
+                Object.assign(timestamps, { [cats[i].id]: new Date(cats[i].myLittleUpdatedAt) });
+              }
+
+              setTimeout(function() {
+                Cats.Cat4.batchPut(cats, { updateTimestamps: false }, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+  
+                  Cats.Cat4.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+
+                    result3.forEach(cat => cat.myLittleUpdatedAt.should.eql(timestamps[cat.id]));  
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
+
+          it('Update with updateTimestamps set to true', function (done) {
+            var cats = [];
+
+            for (var i=0 ; i<10 ; ++i) {
+              cats.push(new Cats.Cat4({id: i+1, name: 'Tom_'+i}));
+            }
+
+            Cats.Cat4.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var timestamps = {};
+              for (var i=0 ; i<10 ; ++i) {
+                cats[i].name = 'John_'+i;
+                Object.assign(timestamps, { [cats[i].id]: new Date(cats[i].myLittleUpdatedAt) });
+              }
+
+              setTimeout(function() {
+                Cats.Cat4.batchPut(cats, { updateTimestamps: true }, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+  
+                  Cats.Cat4.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+  
+                    result3.forEach(cat => cat.myLittleUpdatedAt.should.not.eql(timestamps[cat.id]));  
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
+
+          it('Update without updateExpires (default)', function (done) {
+            var cats = [
+              new Cats.Cat11({
+                id: 1,
+                name: 'Crookshanks',
+                vet:{name:'theVet', address:'Diagon Alley'},
+                ears:[{name:'left'}, {name:'right'}],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: {favorites: {food: 'fish'}},
+                array: [{one: '1'}],
+                validated: 'valid'
+              }),
+              new Cats.Cat11({
+                id: 2,
+                name: 'Behemoth',
+                vet:{name:'Mikhail Bulgakov', address:'Moscow'},
+                ears:[{name:'left'}, {name:'right'}],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: {favorites: {drink: 'pure alcohol'}},
+                array: [{one: '1'}],
+                validated: 'valid'
+              })
+            ];
+
+            Cats.Cat11.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var originalExpires;
+              Cats.Cat11.batchGet(cats, function (err3, result3) {
+                should.not.exist(err3);
+                should.exist(result3);
+                result3.length.should.eql(cats.length);
+
+                originalExpires = result3.reduce(
+                  (acc, cat) => Object.assign(acc, { [cat.id]: cat.expires }),
+                  {}
+                );
+              });
+
+              cats.forEach(cat => cat.array.push({two: '2'}));
+
+              setTimeout(function() {
+                Cats.Cat11.batchPut(cats, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+  
+                  Cats.Cat11.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+  
+                    result3.forEach((cat) => {
+                      cat.array.length.should.eql(2);
+                      cat.expires.should.eql(originalExpires[cat.id]);
+                    })
+  
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
+
+          it('Update with updateExpires set to false', function (done) {
+            var cats = [
+              new Cats.Cat11({
+                id: 1,
+                name: 'Crookshanks',
+                vet:{name:'theVet', address:'Diagon Alley'},
+                ears:[{name:'left'}, {name:'right'}],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: {favorites: {food: 'fish'}},
+                array: [{one: '1'}],
+                validated: 'valid'
+              }),
+              new Cats.Cat11({
+                id: 2,
+                name: 'Behemoth',
+                vet:{name:'Mikhail Bulgakov', address:'Moscow'},
+                ears:[{name:'left'}, {name:'right'}],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: {favorites: {drink: 'pure alcohol'}},
+                array: [{one: '1'}],
+                validated: 'valid'
+              })
+            ];
+
+            Cats.Cat11.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var originalExpires;
+              Cats.Cat11.batchGet(cats, function (err3, result3) {
+                should.not.exist(err3);
+                should.exist(result3);
+                result3.length.should.eql(cats.length);
+
+                originalExpires = result3.reduce(
+                  (acc, cat) => Object.assign(acc, { [cat.id]: cat.expires }),
+                  {}
+                );
+              });
+
+              cats.forEach(cat => cat.array.push({two: '2'}));
+
+              setTimeout(function() {
+                Cats.Cat11.batchPut(cats, { updateExpires: false }, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+  
+                  Cats.Cat11.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+  
+                    result3.forEach((cat) => {
+                      cat.array.length.should.eql(2);
+                      cat.expires.should.eql(originalExpires[cat.id]);
+                    })
+  
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
+
+          it('Update with updateExpires set to true', function (done) {
+            var cats = [
+              new Cats.Cat11({
+                id: 1,
+                name: 'Crookshanks',
+                vet:{name:'theVet', address:'Diagon Alley'},
+                ears:[{name:'left'}, {name:'right'}],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: {favorites: {food: 'fish'}},
+                array: [{one: '1'}],
+                validated: 'valid'
+              }),
+              new Cats.Cat11({
+                id: 2,
+                name: 'Behemoth',
+                vet:{name:'Mikhail Bulgakov', address:'Moscow'},
+                ears:[{name:'left'}, {name:'right'}],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: {favorites: {drink: 'pure alcohol'}},
+                array: [{one: '1'}],
+                validated: 'valid'
+              })
+            ];
+
+            Cats.Cat11.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var originalExpires;
+              Cats.Cat11.batchGet(cats, function (err3, result3) {
+                should.not.exist(err3);
+                should.exist(result3);
+                result3.length.should.eql(cats.length);
+
+                originalExpires = result3.reduce(
+                  (acc, cat) => Object.assign(acc, { [cat.id]: cat.expires }),
+                  {}
+                );
+              });
+
+              cats.forEach(cat => cat.array.push({two: '2'}));
+
+              setTimeout(function() {
+                Cats.Cat11.batchPut(cats, { updateExpires: true }, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+  
+                  Cats.Cat11.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+  
+                    result3.forEach((cat) => {
+                      cat.array.length.should.eql(2);
+                      cat.expires.should.not.eql(originalExpires[cat.id]);
+                    })
+  
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
         });
 
         describe('Model.batchDelete', function (){
