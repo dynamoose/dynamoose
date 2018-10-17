@@ -2137,6 +2137,114 @@ describe('Model', function (){
               });
             });
           });
+
+          it('Update without updateTimestamps (default)', function (done) {
+            var cats = [];
+
+            for (var i=0 ; i<10 ; ++i) {
+              cats.push(new Cats.Cat4({id: i+1, name: 'Tom_'+i}));
+            }
+
+            Cats.Cat4.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var timestamps = {};
+              for (var i=0 ; i<10 ; ++i) {
+                cats[i].name = 'John_'+i;
+                Object.assign(timestamps, { [cats[i].id]: new Date(cats[i].myLittleUpdatedAt) });
+              }
+
+              setTimeout(function() {
+                Cats.Cat4.batchPut(cats, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+                  Cats.Cat4.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+
+                    result3.forEach(cat => cat.myLittleUpdatedAt.should.eql(timestamps[cat.id])); 
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
+
+          it('Update with updateTimestamps set to false', function (done) {
+            var cats = [];
+
+            for (var i=0 ; i<10 ; ++i) {
+              cats.push(new Cats.Cat4({id: i+1, name: 'Tom_'+i}));
+            }
+
+            Cats.Cat4.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var timestamps = {};
+              for (var i=0 ; i<10 ; ++i) {
+                cats[i].name = 'John_'+i;
+                Object.assign(timestamps, { [cats[i].id]: new Date(cats[i].myLittleUpdatedAt) });
+              }
+
+              setTimeout(function() {
+                Cats.Cat4.batchPut(cats, { updateTimestamps: false }, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+  
+                  Cats.Cat4.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+
+                    result3.forEach(cat => cat.myLittleUpdatedAt.should.eql(timestamps[cat.id]));  
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
+
+          it('Update with updateTimestamps set to true', function (done) {
+            var cats = [];
+
+            for (var i=0 ; i<10 ; ++i) {
+              cats.push(new Cats.Cat4({id: i+1, name: 'Tom_'+i}));
+            }
+
+            Cats.Cat4.batchPut(cats, function (err, result) {
+              should.not.exist(err);
+              should.exist(result);
+
+              var timestamps = {};
+              for (var i=0 ; i<10 ; ++i) {
+                cats[i].name = 'John_'+i;
+                Object.assign(timestamps, { [cats[i].id]: new Date(cats[i].myLittleUpdatedAt) });
+              }
+
+              setTimeout(function() {
+                Cats.Cat4.batchPut(cats, { updateTimestamps: true }, function (err2, result2) {
+                  should.not.exist(err2);
+                  should.exist(result2);
+                  Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+  
+                  Cats.Cat4.batchGet(cats, function (err3, result3) {
+                    should.not.exist(err3);
+                    should.exist(result3);
+                    result3.length.should.eql(cats.length);
+  
+                    result3.forEach(cat => cat.myLittleUpdatedAt.should.not.eql(timestamps[cat.id]));  
+                    done();
+                  });
+                });
+              }, 1000);
+            });
+          });
         });
 
         describe('Model.batchDelete', function (){
