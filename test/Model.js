@@ -2137,6 +2137,240 @@ describe('Model', function (){
               });
             });
           });
+
+          it('Update without updateTimestamps (default)', async function () {
+            const cats = [...Array(10)]
+              .map((_, i) => new Cats.Cat4({ id: i + 1, name: 'Tom_' + i }));
+
+            const result = await Cats.Cat4.batchPut(cats);
+            should.exist(result);
+
+            const timestamps = {};
+            cats.forEach((cat, i) => {
+              const { id, myLittleUpdatedAt } = cat;
+              cat.name = 'John_' + i;
+              timestamps[id] = new Date(myLittleUpdatedAt);
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result2 = await Cats.Cat4.batchPut(cats);
+            should.exist(result2);
+            Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+            const updatedCats = await Cats.Cat4.batchGet(cats);
+            should.exist(updatedCats);
+            updatedCats.length.should.eql(cats.length);
+            updatedCats.forEach(cat => {
+              cat.myLittleUpdatedAt.should.eql(timestamps[cat.id]);
+            });
+          });
+
+          it('Update with updateTimestamps set to false', async function () {
+            const cats = [...Array(10)]
+              .map((_, i) => new Cats.Cat4({ id: i + 1, name: 'Tom_' + i }));
+
+            const result = await Cats.Cat4.batchPut(cats);
+            should.exist(result);
+
+            const timestamps = {};
+            cats.forEach((cat, i) => {
+              const { id, myLittleUpdatedAt } = cat;
+              cat.name = 'John_' + i;
+              timestamps[id] = new Date(myLittleUpdatedAt);
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result2 = await Cats.Cat4.batchPut(cats, { updateTimestamps: false });
+            should.exist(result2);
+            Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+            const updatedCats = await Cats.Cat4.batchGet(cats);
+            should.exist(updatedCats);
+            updatedCats.length.should.eql(cats.length);
+            updatedCats.forEach(cat => {
+              cat.myLittleUpdatedAt.should.eql(timestamps[cat.id]);
+            });
+          });
+
+          it('Update with updateTimestamps set to true', async function () {
+            const cats = [...Array(10)]
+              .map((_, i) => new Cats.Cat4({ id: i + 1, name: 'Tom_' + i }));
+
+            const result = await Cats.Cat4.batchPut(cats);
+            should.exist(result);
+
+            const timestamps = {};
+            cats.forEach((cat, i) => {
+              const { id, myLittleUpdatedAt } = cat;
+              cat.name = 'John_' + i;
+              timestamps[id] = new Date(myLittleUpdatedAt);
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result2 = await Cats.Cat4.batchPut(cats, { updateTimestamps: true });
+            should.exist(result2);
+            Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+            const updatedCats = await Cats.Cat4.batchGet(cats);
+            should.exist(updatedCats);
+            updatedCats.length.should.eql(cats.length);
+            updatedCats.forEach(cat => {
+              cat.myLittleUpdatedAt.should.be.greaterThan(timestamps[cat.id]);
+            });
+          });
+
+          it('Update without updateExpires (default)', async function () {
+            const cats = [
+              new Cats.Cat11({
+                id: 1,
+                name: 'Crookshanks',
+                vet: { name: 'theVet', address: 'Diagon Alley' },
+                ears: [{ name: 'left' }, { name: 'right' }],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: { favorites: { food: 'fish' } },
+                array: [{ one: '1' }],
+                validated: 'valid'
+              }),
+              new Cats.Cat11({
+                id: 2,
+                name: 'Behemoth',
+                vet: { name:'Mikhail Bulgakov', address:'Moscow' },
+                ears: [{ name: 'left' }, { name: 'right' }],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: { favorites: { drink: 'pure alcohol' } },
+                array: [{ one: '1' }],
+                validated: 'valid'
+              })
+            ];
+
+            const result = await Cats.Cat11.batchPut(cats);
+            should.exist(result);
+
+            const savedCats = await Cats.Cat11.batchGet(cats);
+            should.exist(savedCats);
+            savedCats.length.should.eql(cats.length);
+
+            const originalExpires = {};
+            savedCats.forEach(cat => {
+              cat.array.push({ two: '2' });
+              originalExpires[cat.id] = cat.expires;
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result2 = await Cats.Cat11.batchPut(savedCats);
+            should.exist(result2);
+            Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+            const updatedCats = await Cats.Cat11.batchGet(cats);
+            should.exist(updatedCats);
+            updatedCats.length.should.eql(cats.length);
+            updatedCats.forEach((cat) => {
+              cat.array.length.should.eql(2);
+              cat.expires.should.eql(originalExpires[cat.id]);
+            });
+          });
+
+          it('Update with updateExpires set to false', async function () {
+            const cats = [
+              new Cats.Cat11({
+                id: 1,
+                name: 'Crookshanks',
+                vet: { name: 'theVet', address: 'Diagon Alley' },
+                ears: [{ name: 'left' }, { name: 'right' }],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: { favorites: { food: 'fish' } },
+                array: [{ one: '1' }],
+                validated: 'valid'
+              }),
+              new Cats.Cat11({
+                id: 2,
+                name: 'Behemoth',
+                vet: { name:'Mikhail Bulgakov', address:'Moscow' },
+                ears: [{ name: 'left' }, { name: 'right' }],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: { favorites: { drink: 'pure alcohol' } },
+                array: [{ one: '1' }],
+                validated: 'valid'
+              })
+            ];
+
+            const result = await Cats.Cat11.batchPut(cats);
+            should.exist(result);
+
+            const savedCats = await Cats.Cat11.batchGet(cats);
+            should.exist(savedCats);
+            savedCats.length.should.eql(cats.length);
+
+            const originalExpires = {};
+            savedCats.forEach(cat => {
+              cat.array.push({ two: '2' });
+              originalExpires[cat.id] = cat.expires;
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result2 = await Cats.Cat11.batchPut(savedCats, { updateExpires: false });
+            should.exist(result2);
+            Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+            const updatedCats = await Cats.Cat11.batchGet(cats);
+            should.exist(updatedCats);
+            updatedCats.length.should.eql(cats.length);
+            updatedCats.forEach((cat) => {
+              cat.array.length.should.eql(2);
+              cat.expires.should.eql(originalExpires[cat.id]);
+            });
+          });
+
+          it('Update with updateExpires set to true', async function () {
+            const cats = [
+              new Cats.Cat11({
+                id: 1,
+                name: 'Crookshanks',
+                vet: { name: 'theVet', address: 'Diagon Alley' },
+                ears: [{ name: 'left' }, { name: 'right' }],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: { favorites: { food: 'fish' } },
+                array: [{ one: '1' }],
+                validated: 'valid'
+              }),
+              new Cats.Cat11({
+                id: 2,
+                name: 'Behemoth',
+                vet: { name:'Mikhail Bulgakov', address:'Moscow' },
+                ears: [{ name: 'left' }, { name: 'right' }],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: { favorites: { drink: 'pure alcohol' } },
+                array: [{ one: '1' }],
+                validated: 'valid'
+              })
+            ];
+
+            const result = await Cats.Cat11.batchPut(cats);
+            should.exist(result);
+
+            const savedCats = await Cats.Cat11.batchGet(cats);
+            should.exist(savedCats);
+            savedCats.length.should.eql(cats.length);
+
+            const originalExpires = {};
+            savedCats.forEach(cat => {
+              cat.array.push({ two: '2' });
+              originalExpires[cat.id] = cat.expires;
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result2 = await Cats.Cat11.batchPut(savedCats, { updateExpires: true });
+            should.exist(result2);
+            Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
+
+            const updatedCats = await Cats.Cat11.batchGet(cats);
+            should.exist(updatedCats);
+            updatedCats.length.should.eql(cats.length);
+            updatedCats.forEach((cat) => {
+              cat.array.length.should.eql(2);
+              cat.expires.should.be.greaterThan(originalExpires[cat.id]);
+            });
+          });
         });
 
         describe('Model.batchDelete', function (){
