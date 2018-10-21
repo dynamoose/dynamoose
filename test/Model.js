@@ -1180,7 +1180,7 @@ describe('Model', function (){
                   should.exist(fluffy);
                   should.exist(fluffy.expires);
                   should.exist(fluffy.expires.getTime);
-                  
+
                   var expiresInSec2 = Math.floor(fluffy.expires.getTime() / 1000);
                   expiresInSec2.should.be.above(expiresInSec);
 
@@ -1252,9 +1252,24 @@ describe('Model', function (){
 
           });
 
+          it('Should not have an expires property if TTL is set to null', function (done) {
+            Cats.ExpiringCatNull.create({
+              name: 'Leo12'
+            })
+            .then(function () {
+              Cats.ExpiringCatNull.get("Leo12").then(function (leo) {
+                should.exist(leo);
+                should.not.exist(leo.expires);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
           it('Should not return expired items if returnExpiredItems is false (get)', function (done) {
             Cats.ExpiringCatNoReturn.create({
-              name: 'Leo1'
+              name: 'Leo1',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1269,16 +1284,55 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is false and expires is null (get)', function (done) {
+            Cats.ExpiringCatNoReturn.create({
+              name: 'Leo11',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNoReturn.get("Leo11").then(function (leo) {
+                should.not.exist(leo.expires);
+                should.exist(leo);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
           it('Should return expired items if returnExpiredItems is undefined (get)', function (done) {
-            Cats.ExpiringCat.create({
-              name: 'Leo1'
+            Cats.ExpiringCatNull.create({
+              name: 'Leo1',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
               return leo.save();
             })
             .then(function () {
-              Cats.ExpiringCat.get("Leo1").then(function (leo) {
+              Cats.ExpiringCatNull.get("Leo1").then(function (leo) {
+                should.exist(leo);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
+          it('Should return expired items if returnExpiredItems is undefined and expires is null (get)', function (done) {
+            Cats.ExpiringCatNull.create({
+              name: 'Leo11',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNull.get("Leo11").then(function (leo) {
+                should.not.exist(leo.expires);
                 should.exist(leo);
                 done();
               }).catch(done);
@@ -1288,7 +1342,8 @@ describe('Model', function (){
 
           it('Should return expired items if returnExpiredItems is true (get)', function (done) {
             Cats.ExpiringCatReturnTrue.create({
-              name: 'Leo1'
+              name: 'Leo1',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1303,10 +1358,30 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is true and expires is null (get)', function (done) {
+            Cats.ExpiringCatReturnTrue.create({
+              name: 'Leo11',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatReturnTrue.get("Leo11").then(function (leo) {
+                should.not.exist(leo.expires);
+                should.exist(leo);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
 
           it('Should not return expired items if returnExpiredItems is false (batchGet)', function (done) {
             Cats.ExpiringCatNoReturn.create({
-              name: 'Leo2'
+              name: 'Leo2',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1321,17 +1396,56 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is false and expires is null (batchGet)', function (done) {
+            Cats.ExpiringCatNoReturn.create({
+              name: 'Leo22',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNoReturn.batchGet(["Leo22"]).then(function (leo) {
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
           it('Should return expired items if returnExpiredItems is undefined (batchGet)', function (done) {
-            Cats.ExpiringCat.create({
-              name: 'Leo2'
+            Cats.ExpiringCatNull.create({
+              name: 'Leo2',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
               return leo.save();
             })
             .then(function () {
-              Cats.ExpiringCat.batchGet(["Leo2"]).then(function (leo) {
+              Cats.ExpiringCatNull.batchGet(["Leo2"]).then(function (leo) {
                 leo.length.should.eql(1);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
+          it('Should return expired items if returnExpiredItems is undefined and expires is null (batchGet)', function (done) {
+            Cats.ExpiringCatNull.create({
+              name: 'Leo22',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNull.batchGet(["Leo22"]).then(function (leo) {
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
                 done();
               }).catch(done);
             })
@@ -1340,7 +1454,8 @@ describe('Model', function (){
 
           it('Should return expired items if returnExpiredItems is true (batchGet)', function (done) {
             Cats.ExpiringCatReturnTrue.create({
-              name: 'Leo2'
+              name: 'Leo2',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1355,11 +1470,31 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is true and expires is null (batchGet)', function (done) {
+            Cats.ExpiringCatReturnTrue.create({
+              name: 'Leo22',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatReturnTrue.batchGet(["Leo22"]).then(function (leo) {
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
+                done();
+              }).catch(done);
+            })
+            .catch(done);
+          });
+
 
 
           it('Should not return expired items if returnExpiredItems is false (scan)', function (done) {
             Cats.ExpiringCatNoReturn.create({
-              name: 'Leo3'
+              name: 'Leo3',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1377,16 +1512,39 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is false and expires is null (scan)', function (done) {
+            Cats.ExpiringCatNoReturn.create({
+              name: 'Leo33',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNoReturn.scan({name: 'Leo33'}, function (err, leo) {
+                if (err) {
+                  done(err);
+                }
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
+                done();
+              });
+            })
+            .catch(done);
+          });
+
           it('Should return expired items if returnExpiredItems is undefined (scan)', function (done) {
-            Cats.ExpiringCat.create({
-              name: 'Leo3'
+            Cats.ExpiringCatNull.create({
+              name: 'Leo3',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
               return leo.save();
             })
             .then(function () {
-              Cats.ExpiringCat.scan({name: 'Leo3'}, function (err, leo) {
+              Cats.ExpiringCatNull.scan({name: 'Leo3'}, function (err, leo) {
                 if (err) {
                   done(err);
                 }
@@ -1397,9 +1555,32 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is undefined and expires is null (scan)', function (done) {
+            Cats.ExpiringCatNull.create({
+              name: 'Leo33',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNull.scan({name: 'Leo33'}, function (err, leo) {
+                if (err) {
+                  done(err);
+                }
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
+                done();
+              });
+            })
+            .catch(done);
+          });
+
           it('Should return expired items if returnExpiredItems is true (scan)', function (done) {
             Cats.ExpiringCatReturnTrue.create({
-              name: 'Leo3'
+              name: 'Leo3',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1417,9 +1598,32 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is true and expires is null (scan)', function (done) {
+            Cats.ExpiringCatReturnTrue.create({
+              name: 'Leo33',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatReturnTrue.scan({name: 'Leo33'}, function (err, leo) {
+                if (err) {
+                  done(err);
+                }
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
+                done();
+              });
+            })
+            .catch(done);
+          });
+
           it('Should not return expired items if returnExpiredItems is false (query)', function (done) {
             Cats.ExpiringCatNoReturn.create({
-              name: 'Leo4'
+              name: 'Leo4',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1437,16 +1641,39 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is false and expires is null (query)', function (done) {
+            Cats.ExpiringCatNoReturn.create({
+              name: 'Leo44',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNoReturn.query({name: 'Leo44'}, function (err, leo) {
+                if (err) {
+                  done(err);
+                }
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
+                done();
+              });
+            })
+            .catch(done);
+          });
+
           it('Should return expired items if returnExpiredItems is undefined (query)', function (done) {
-            Cats.ExpiringCat.create({
-              name: 'Leo4'
+            Cats.ExpiringCatNull.create({
+              name: 'Leo4',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
               return leo.save();
             })
             .then(function () {
-              Cats.ExpiringCat.query({name: 'Leo4'}, function (err, leo) {
+              Cats.ExpiringCatNull.query({name: 'Leo4'}, function (err, leo) {
                 if (err) {
                   done(err);
                 }
@@ -1457,9 +1684,32 @@ describe('Model', function (){
             .catch(done);
           });
 
+          it('Should return expired items if returnExpiredItems is undefined and expires is null (query)', function (done) {
+            Cats.ExpiringCatNull.create({
+              name: 'Leo44',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatNull.query({name: 'Leo44'}, function (err, leo) {
+                if (err) {
+                  done(err);
+                }
+                leo.length.should.eql(1);
+                should.not.exist(leo[0].expires);
+                done();
+              });
+            })
+            .catch(done);
+          });
+
           it('Should return expired items if returnExpiredItems is true (query)', function (done) {
             Cats.ExpiringCatReturnTrue.create({
-              name: 'Leo4'
+              name: 'Leo4',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
             })
             .then(function (leo) {
               leo.expires = new Date(Date.now() - 5000);
@@ -1471,6 +1721,30 @@ describe('Model', function (){
                   done(err);
                 }
                 leo.length.should.eql(1);
+                done();
+              });
+            })
+            .catch(done);
+          });
+
+          it('Should return expired items if returnExpiredItems is true and expires is null (query)', function (done) {
+            Cats.ExpiringCatReturnTrue.create({
+              name: 'Leo44',
+              expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+            })
+            .then(function (leo) {
+              leo.expires = null;
+              console.log(leo);
+              return leo.save();
+            })
+            .then(function () {
+              Cats.ExpiringCatReturnTrue.query({name: 'Leo44'}, function (err, leo) {
+                if (err) {
+                  done(err);
+                }
+                leo.length.should.eql(1);
+                console.log(leo);
+                should.not.exist(leo[0].expires);
                 done();
               });
             })
@@ -2511,7 +2785,7 @@ describe('Model', function (){
           var imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
 
           imageData.should.not.eql(Buffer.from(imageData.toString())); // The binary value should not be UTF-8 string for test.
-  
+
 
           var item = {
             id: 3333,
