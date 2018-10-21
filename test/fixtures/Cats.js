@@ -204,6 +204,21 @@ module.exports = function(dynamoose){
     }
   );
 
+  var ExpiringCatNull = dynamoose.model('ExpiringCatNull',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        defaultExpires: function() {
+          return null;
+        }
+      }
+    }
+  );
+
   var ExpiringCatNoReturn = dynamoose.model('ExpiringCatNoReturn',
     {
       name: String
@@ -212,7 +227,10 @@ module.exports = function(dynamoose){
       expires: {
         ttl: NINE_YEARS,
         attribute: 'expires',
-        returnExpiredItems: false
+        returnExpiredItems: false,
+        defaultExpires: function() {
+          return null;
+        }
       }
     }
   );
@@ -225,7 +243,10 @@ module.exports = function(dynamoose){
       expires: {
         ttl: NINE_YEARS,
         attribute: 'expires',
-        returnExpiredItems: true
+        returnExpiredItems: true,
+        defaultExpires: function() {
+          return null;
+        }
       }
     }
   );
@@ -387,6 +408,7 @@ module.exports = function(dynamoose){
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
+    ExpiringCatNull: ExpiringCatNull,
     ExpiringCatNoReturn: ExpiringCatNoReturn,
     ExpiringCatReturnTrue: ExpiringCatReturnTrue,
     CatWithGeneratedID: CatWithGeneratedID,
