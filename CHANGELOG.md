@@ -1,5 +1,20 @@
 # Dynamoose ChangeLog
 
+## Version 1.1.0
+
+Dynamoose version 1.1.0 has a few improvements for debugging Dynamoose as well as a few new features.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- **[Update batchPut to work with timestamps](https://github.com/automategreen/dynamoose/pull/449)** #449 
+- **[Adding expires defaultExpires function](https://github.com/automategreen/dynamoose/pull/452)** #452 
+- **[Make debugging index creation dramatically easier](https://github.com/automategreen/dynamoose/pull/440)** #440 
+- **[Adding debug messages for setDDB and revertDDB](https://github.com/dynamoosejs/dynamoose/pull/451)** #451 
+
+---
+
 ## Version 1.0.1
 
 Dynamoose version 1.0.1 comes with some minor bug fixes to solve problems with Dynamoose version 1.0.0. We are actively monitoring the [GitHub Issues](https://github.com/dynamoosejs/dynamoose/issues) and will continue to work to provide bug fixes as fast as possible. Please create a [GitHub Issue](https://github.com/dynamoosejs/dynamoose/issues) or [contact me](https://charlie.fish/contact) if you are having problems and we will work to address it as fast as possible.
