@@ -50,6 +50,10 @@ describe('Query', function (){
           throughput: 5 // read and write are both 5
         }
       },
+      origin: {
+        type: String,
+        index: true // name: originLocalIndex, ProjectionType: ALL
+      },
       name: {
         type: String,
         rangeKey: true,
@@ -112,10 +116,10 @@ describe('Query', function (){
       {ownerId:17, name: 'Beethoven', breed: 'St. Bernard', age: 3},
       {ownerId:18, name: 'Lassie', breed: 'Collie', color: 'tan and white', age: 4},
       {ownerId:19, name: 'Snoopy', breed: 'beagle', color: 'black and white', age: 6},
-      {ownerId:20, name: 'Max', breed: 'Westie', age: 7},
-      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate', age: 1},
-      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate', age: 2},
-      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey', age: 4},
+      {ownerId:20, name: 'Max', breed: 'Westie', age: 7, origin: 'Scotland'},
+      {ownerId:20, name: 'Gigi', breed: 'Spaniel', color: 'Chocolate', age: 1, origin: 'Great Britain'},
+      {ownerId:20, name: 'Mimo', breed: 'Boxer', color: 'Chocolate', age: 2,  origin: 'Germany'},
+      {ownerId:20, name: 'Bepo', breed: 'French Bulldog', color: 'Grey', age: 4, origin: 'France'},
     ]);
 
   });
@@ -209,16 +213,16 @@ describe('Query', function (){
     });
   });
 
-  it('Query with Local Global Index as range', function (done) {
+  it('Query with Secondary Local Index as range', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.query('ownerId').eq(2).where('color').beginsWith('White').exec(function (err, dogs) {
+    Dog.query('ownerId').eq(20).where('origin').beginsWith('G').exec(function (err, dogs) {
       should.not.exist(err);
       dogs.length.should.eql(2);
       done();
     });
   });
-  
+
   it('where() must follow eq()', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -228,8 +232,8 @@ describe('Query', function (){
       err.message.should.eql('Invalid Query state: where() must follow eq()');
       done();
     });
-  });  
-  
+  });
+
   it('filter() must follow comparison', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -240,7 +244,7 @@ describe('Query', function (){
       done();
     });
   });
-  
+
   it('eq must follow query()', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -274,16 +278,16 @@ describe('Query', function (){
       done();
     });
   });
-  
-  it('Basic Query on SGI ascending', function (done) {
-  	var Dog = dynamoose.model('Dog');
 
-  	Dog.query('breed').eq('Jack Russell Terrier').ascending().exec(function (err, dogs) {
-  	  should.not.exist(err);
-  	  dogs.length.should.eql(4);
-  	  dogs[0].ownerId.should.eql(1);
-  	  done();
-  	});
+  it('Basic Query on SGI ascending', function (done) {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query('breed').eq('Jack Russell Terrier').ascending().exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(4);
+      dogs[0].ownerId.should.eql(1);
+      done();
+    });
   });
 
 
@@ -303,8 +307,8 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     var startKey = { breed: { S: 'Jack Russell Terrier' },
-     ownerId: { N: '1' },
-     name: { S: 'Foxy Lady' } };
+    ownerId: { N: '1' },
+    name: { S: 'Foxy Lady' } };
 
     Dog.query('breed').eq('Jack Russell Terrier').startAt(startKey).limit(1).exec(function (err, dogs) {
       should.not.exist(err);
@@ -357,15 +361,15 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-       .where('ownerId').eq(2)
-       .filter('siblings').contains('Quincy').exec()
-       .then(function (dogs) {
-        //  console.log('The dogs', dogs);
-         dogs.length.should.eql(1);
-         dogs[0].ownerId.should.eql(2);
-         done();
-       })
-       .catch(done);
+    .where('ownerId').eq(2)
+    .filter('siblings').contains('Quincy').exec()
+    .then(function (dogs) {
+      //  console.log('The dogs', dogs);
+      dogs.length.should.eql(1);
+      dogs[0].ownerId.should.eql(2);
+      done();
+    })
+    .catch(done);
 
   });
 
@@ -380,7 +384,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Basic Query on SGI with filter not null', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -392,7 +396,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Basic Query on SGI with filter le', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -406,7 +410,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Basic Query on SGI with filter not le', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -420,7 +424,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Basic Query on SGI with filter ge', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -434,7 +438,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Basic Query on SGI with filter not ge', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -448,7 +452,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Basic Query on SGI with filter gt', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -462,7 +466,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Basic Query on SGI with filter not gt', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -507,7 +511,7 @@ describe('Query', function (){
     .catch(done);
 
   });
-  
+
   it('beginsWith() cannot follow not()', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -520,8 +524,8 @@ describe('Query', function (){
       err.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
       done();
     });
-  });  
-  
+  });
+
   it('Basic Query on SGI with filter between', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -534,7 +538,7 @@ describe('Query', function (){
       done();
     });
   });
-  
+
   it('between() cannot follow not()', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -546,7 +550,7 @@ describe('Query', function (){
       done();
     });
   });
-  
+
   it('Basic Query on SGI with filter in', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -559,7 +563,7 @@ describe('Query', function (){
       done();
     });
   });
-  
+
   it('in() cannot follow not()', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -571,7 +575,7 @@ describe('Query', function (){
       done();
     });
   });
-  
+
   it('Query.count', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -582,7 +586,7 @@ describe('Query', function (){
     })
     .catch(done);
   });
-  
+
   it('Query.counts', function (done) {
     var Dog = dynamoose.model('Dog');
 
@@ -612,12 +616,112 @@ describe('Query', function (){
   it('Query.all(1, 3)', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.query('ownerId').eq(20).limit(1).all(1, 3).exec()
+    Dog.query('ownerId').eq(20).limit(1).all(1000, 3).exec()
     .then(function (dogs) {
       dogs.length.should.eql(3);
       dogs.timesQueried.should.eql(3);
       done();
     })
     .catch(done);
+  });
+  
+  it('Should allow multiple indexes and query correctly', function (done) {
+  	var schema = new dynamoose.Schema({
+  	  id: {
+  		  type: String,
+  		  hashKey: true,
+  		  required: true
+  	  },
+  	  orgId: {
+  		  type: String,
+  		  index: [{
+  			  global    : true,
+  			  name      : 'OrganizationCreateAtIndex',
+  			  rangeKey  : 'createdAt',
+  			  throughput: 1
+  		}, {
+  			  global    : true,
+  			  name      : 'OrganizationExpectedArriveAtIndex',
+  			  rangeKey  : 'expectedArriveAt',
+  			  throughput: 1
+  		}],		
+  		required: true,
+  	  },
+  	  expectedArriveAt: Date
+  	},{
+  	  throughput: 1,
+  	  timestamps: true
+  	});
+  	var Log = dynamoose.model('Log-1', schema);
+  	
+  	var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
+  	log1.save(function() {
+  	  Log.query('orgId').eq("org1")
+  	  .where('expectedArriveAt').lt( new Date() )
+  	  .exec()
+  	  .then(function(res){
+    		res.length.should.eql(1);
+    		Log.query('orgId').eq("org1")
+    		.where('createdAt').lt( new Date() )
+    		.exec()
+    		.then(function(res){
+    		  res.length.should.eql(1);
+    		  done();
+    		})
+    		.catch(function(e){
+    		  done(e);
+    		});
+    	})
+    	.catch(function(e){
+    	  done(e);
+    	});
+  	});
+  });
+
+  it('Should allow multiple local indexes and query correctly', async function () {
+    var schema = new dynamoose.Schema({
+      id: {
+        type: String,
+        hashKey: true,
+      },
+      orgId: {
+        type: String,
+        rangeKey: true,
+      },
+      updatedAt: {
+        type: Date,
+        index: {
+          global: false,
+          name  : 'OrganizationUpdatedAtIndex'
+        }
+      },
+      expectedArriveAt: {
+        type: Date,
+        index: {
+          global: false,
+          name  : 'OrganizationExpectedArriveAtIndex'
+        }
+      }
+    },{
+      throughput: 1,
+      timestamps: true
+    });
+    var Log = dynamoose.model('Log-2', schema);
+
+    var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
+    var log2 = new Log({id: "test1", orgId: "org2", expectedArriveAt: Date.now()});
+
+    await log1.save();
+    await log2.save();
+
+    var res = await Log.query('id').eq("test1")
+      .where('expectedArriveAt').lt( new Date() )
+      .exec()
+    res.length.should.eql(2);
+    
+    var res2 = await Log.query('id').eq("test1")
+      .where('updatedAt').le( log1.createdAt.getTime() )
+      .exec();
+    res2.length.should.eql(1);
   });
 });

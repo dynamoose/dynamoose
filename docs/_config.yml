@@ -12,7 +12,7 @@ title_separator          : "-"
 description              : "Documentation for Dynamoose."
 url                      : "https://dynamoosejs.com"
 baseurl                  :
-repository               : "automategreen/dynamoose"
+repository               : "dynamoosejs/dynamoose"
 atom_feed:
   path                   : # blank (default) uses feed.xml
 

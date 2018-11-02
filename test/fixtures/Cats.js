@@ -3,7 +3,7 @@
 module.exports = function(dynamoose){
   var ONE_YEAR = 365*24*60*60; // 1 years in seconds
   var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
-  
+
   var Cat = dynamoose.model('Cat',
   {
     id: {
@@ -21,14 +21,14 @@ module.exports = function(dynamoose){
       name: String
     }],
     legs: [String],
+    profileImage: Buffer,
     more: Object,
     array: Array,
     validated: {
       type: String,
       validate: function (v) { return v === 'valid'; }
     }
-  },
-  {useDocumentTypes: true});
+  });
 
   // Create a model with unnamed attributes
   var Cat1 = dynamoose.model('Cat1',
@@ -49,7 +49,6 @@ module.exports = function(dynamoose){
       // }
     },
     {
-      useDocumentTypes: true,
       saveUnknown: true
     });
 
@@ -150,7 +149,8 @@ module.exports = function(dynamoose){
       },
       parent: Number,
       isHappy: Boolean
-    }
+    },
+    {useDocumentTypes: false, useNativeBooleans: false}
   );
 
   var Cat8 = dynamoose.model('Cat8',
@@ -201,6 +201,53 @@ module.exports = function(dynamoose){
     },
     {
       expires: NINE_YEARS
+    }
+  );
+
+  var ExpiringCatNull = dynamoose.model('ExpiringCatNull',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        defaultExpires: function() {
+          return null;
+        }
+      }
+    }
+  );
+
+  var ExpiringCatNoReturn = dynamoose.model('ExpiringCatNoReturn',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: false,
+        defaultExpires: function() {
+          return null;
+        }
+      }
+    }
+  );
+
+  var ExpiringCatReturnTrue = dynamoose.model('ExpiringCatReturnTrue',
+    {
+      name: String
+    },
+    {
+      expires: {
+        ttl: NINE_YEARS,
+        attribute: 'expires',
+        returnExpiredItems: true,
+        defaultExpires: function() {
+          return null;
+        }
+      }
     }
   );
 
@@ -267,6 +314,84 @@ module.exports = function(dynamoose){
   }
 );
 
+	var Cat9 = dynamoose.model('Cat9',
+	{
+	  id: {
+		type:  Number,
+		validate: function (v) { return v > 0; }
+	  },
+	  name: String,
+	  owner: String,
+	  age: { type: Number },
+	  vet:{
+		name: String,
+		address: String
+	  },
+	  ears:[{
+		name: String
+	  }],
+	  legs: [String],
+	  more: Object,
+	  array: Array,
+	  validated: {
+		type: String,
+		validate: function (v) { return v === 'valid'; }
+	  }
+	},
+	{timestamps: true});
+
+  var Cat10 = dynamoose.model('Cat10', {
+	  id: {
+  		type:  Number,
+  		hashKey: true
+	  },
+	  isHappy: Boolean,
+    parents: Array,
+    details: Object
+	}, {useDocumentTypes: false, useNativeBooleans: false});
+
+  var Cat11 = dynamoose.model('Cat11', {
+    id: {
+        type: Number,
+        validate: function(v) {
+            return v > 0;
+        }
+    },
+    name: String,
+    owner: String,
+    age: {
+        type: Number
+    },
+    vet: {
+        name: String,
+        address: String
+    },
+    ears: [{
+        name: String
+    }],
+    legs: [String],
+    more: Object,
+    array: Array,
+    validated: {
+        type: String,
+        validate: function(v) {
+            return v === 'valid';
+        }
+    }
+  }, {
+    useDocumentTypes: true,
+    expires: NINE_YEARS
+  });
+
+  var CatWithMethodsSchema = new dynamoose.Schema({
+    id: Number,
+    name: String
+  });
+  CatWithMethodsSchema.method('getModel', function (modelName) {
+    return this.model(modelName);
+  });
+  var CatWithMethods = dynamoose.model('CatWithMethods', CatWithMethodsSchema);
+
   return {
     Cat: Cat,
     Cat1: Cat1,
@@ -277,10 +402,17 @@ module.exports = function(dynamoose){
     Cat6: Cat6,
     Cat7: Cat7,
     Cat8: Cat8,
+    Cat9: Cat9,
+    Cat10: Cat10,
+    Cat11: Cat11,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
+    ExpiringCatNull: ExpiringCatNull,
+    ExpiringCatNoReturn: ExpiringCatNoReturn,
+    ExpiringCatReturnTrue: ExpiringCatReturnTrue,
     CatWithGeneratedID: CatWithGeneratedID,
+    CatWithMethods: CatWithMethods,
     CatModel: CatModel
   };
 };
