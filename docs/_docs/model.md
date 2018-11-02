@@ -443,6 +443,8 @@ Dog.getTableReq();
 
 ### Model.plugin(pluginPackage[, pluginOptions])
 
+**WARNING: PLUGINS IS CURRENTLY IN BETA. THIS FUNCTIONALITY MIGHT CHANGE AT ANYTIME WITHOUT WARNING. DO NOT CONSIDER THIS FEATURE TO BE STABLE.**
+
 This is how you can add plugins to be run on your model. For example you can use this function like so.
 
 ```js
