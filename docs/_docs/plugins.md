@@ -2,7 +2,9 @@
 order: 6
 ---
 
-## Plugins
+## Plugins (BETA)
+
+**WARNING: PLUGINS IS CURRENTLY IN BETA. THIS FUNCTIONALITY MIGHT CHANGE AT ANYTIME WITHOUT WARNING. DO NOT CONSIDER THIS FEATURE TO BE STABLE.**
 
 Please view the `Model.plugin` documentation for how to use plugins in your own models. This documentation will be going over how to create plugins from scratch.
 
@@ -16,7 +18,7 @@ Set the name of the plugin.
 
 #### Parameters accepted
 
-- `name` - Name of plugin (string) 
+- `name` - Name of plugin (string)
 
 
 ### plugin.setDescription
@@ -25,7 +27,7 @@ Set the description of the plugin.
 
 #### Parameters accepted
 
-- `description` - Description of plugin (string) 
+- `description` - Description of plugin (string)
 
 
 ### plugin.on
