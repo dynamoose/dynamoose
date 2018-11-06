@@ -1734,7 +1734,7 @@ describe('Model', function (){
             })
             .then(function (leo) {
               leo.expires = null;
-              // console.log(leo);
+              console.log(leo);
               return leo.save();
             })
             .then(function () {
@@ -1743,7 +1743,7 @@ describe('Model', function (){
                   done(err);
                 }
                 leo.length.should.eql(1);
-                // console.log(leo);
+                console.log(leo);
                 should.not.exist(leo[0].expires);
                 done();
               });
