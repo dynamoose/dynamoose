@@ -1216,6 +1216,19 @@ describe('Schema tests', function (){
       err.should.be.instanceof(Error);
       err.should.be.instanceof(errors.SchemaError);
     }
+
+    try {
+      var schema = new Schema({
+        race: {
+          type: 'list',
+          list: []
+        }
+      });
+    } catch (err) {
+      err.should.be.instanceof(Error);
+      err.should.be.instanceof(errors.SchemaError);
+    }
+
     done();
 
   });
