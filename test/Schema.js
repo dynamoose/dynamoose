@@ -1190,4 +1190,33 @@ describe('Schema tests', function (){
     });
     done();
   });
+
+  it('Should throw error when type is map but no map is provided', function (done) {
+    try {
+      var schema = new Schema({
+        race: {
+          type: 'map',
+        }
+      });
+    } catch (err) {
+      err.should.be.instanceof(Error);
+      err.should.be.instanceof(errors.SchemaError);
+    }
+    done();
+  });
+
+  it('Should throw error when type is list but no list is provided', function (done) {
+    try {
+      var schema = new Schema({
+        race: {
+          type: 'list',
+        }
+      });
+    } catch (err) {
+      err.should.be.instanceof(Error);
+      err.should.be.instanceof(errors.SchemaError);
+    }
+    done();
+
+  });
 });
