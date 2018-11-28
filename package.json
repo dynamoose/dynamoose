@@ -37,17 +37,17 @@
   "license": "MIT",
   "devDependencies": {
     "coveralls": "^3.0.0",
-    "dynamodb-local": "0.0.18",
+    "dynamodb-local": "0.0.22",
     "grunt": "^1.0.3",
-    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-jshint": "^2.0.0",
     "grunt-mocha-test": "^0.13.2",
     "mocha": "^5.2.0",
-    "nyc": "^13.0.1",
-    "should": "^11.2.1"
+    "nyc": "^13.1.0",
+    "should": "^13.2.3"
   },
   "dependencies": {
-    "aws-sdk": "^2.207.0",
-    "debug": "^2.6.8",
+    "aws-sdk": "^2.364.0",
+    "debug": "^4.1.0",
     "deep-equal": "^1.0.1",
     "hooks": "0.3.2",
     "object-path": "^0.11.4",
