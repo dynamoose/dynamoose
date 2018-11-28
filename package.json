@@ -31,7 +31,12 @@
     "query",
     "scan",
     "nosql",
-    "db"
+    "db",
+    "nosql",
+    "store",
+    "document store",
+    "table",
+    "json"
   ],
   "author": "Brandon Goode",
   "license": "MIT",
