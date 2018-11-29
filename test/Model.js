@@ -2757,8 +2757,7 @@ describe('Model', function (){
           Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
         });
 
-        // The following 2 tests are skipped because DynamoDB Local currently throws an error when BillingMode is passed in (these should be unskipped when DynamoDB Local adds support for BillingMode, along with the code to make them work in Table.js)
-    		it.skip('Should have BillingMode set to PROVISIONED when creating table, and no throughput defined', function() {
+    		it('Should have BillingMode set to PROVISIONED when creating table, and no throughput defined', function() {
           var BillModeSchema1 = new dynamoose.Schema({
             id: Number,
             name: String
@@ -2767,7 +2766,7 @@ describe('Model', function (){
 
     		  BillModeModel1.getTableReq().BillingMode.should.eql("PROVISIONED");
     		});
-        it.skip('Should have BillingMode set to PROVISIONED when creating table, and throughput defined', function() {
+        it('Should have BillingMode set to PROVISIONED when creating table, and throughput defined', function() {
           var BillModeSchema2 = new dynamoose.Schema({
             id: Number,
             name: String
