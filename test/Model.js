@@ -424,6 +424,17 @@ describe('Model', function (){
           });
         });
 
+        it('Get returnRequest option', function (done) {
+          Cats.Cat.get(1, {returnRequest: true}, function(err, request) {
+            should.not.exist(err);
+            should.exist(request);
+
+            request.TableName.should.eql("test-Cat-db");
+            request.Key.should.eql({id: {N: '1'}});
+            done();
+          });
+        });
+
         it('Save existing item', function (done) {
 
           Cats.Cat.get(1, function(err, model) {
