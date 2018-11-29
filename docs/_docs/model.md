@@ -295,6 +295,7 @@ Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
 `options` parameters:
 
 - `update` (boolean): Will return the object deleted (default: false), if set to false and no object was deleted this function will fail silently.
+- `returnRequest` (boolean): Will resolve with the request object instead of making the request (default: false)
 
 ### model.delete([options, ]callback)
 

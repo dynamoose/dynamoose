@@ -772,6 +772,20 @@ describe('Model', function (){
           });
         });
 
+        it('Delete returnRequest option', function (done) {
+          var cat = new Cats.Cat({id: 1});
+
+          cat.delete({returnRequest: true}, function (err, request) {
+            should.not.exist(err);
+            request.should.exist;
+
+            request.TableName.should.eql("test-Cat-db");
+            request.Key.should.eql({id: {N: '1'}});
+
+            done();
+          });
+        });
+
         it('Get missing item', function (done) {
 
 
