@@ -434,6 +434,19 @@ Use ReturnValues if you want to get the item attributes as they appear before or
 - UPDATED_NEW - Returns only the updated attributes, as they appear after the UpdateItem operation.
 
 
+### Model.transaction
+
+This object has the following methods that you can call.
+
+- `Model.transaction.get`
+- `Model.transaction.create`
+- `Model.transaction.delete`
+- `Model.transaction.update`
+
+You can pass in the same parameters into each method that you do for the normal (non-transaction) methods.
+
+These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
+
 ### Model.getTableReq()
 
 The function will return the object used to create the table with AWS. You can use this to create the table manually, for things like the Serverless deployment toolkit, or just to peak behind the scenes and see what Dynamoose is doing to create the table.
