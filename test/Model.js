@@ -2878,4 +2878,99 @@ describe('Model', function (){
           });
         });
 
+    		describe('Model.transaction', function() {
+          it('Model.transaction should exist and be an object', function() {
+            should.exist(Cats.Cat.transaction);
+            Cats.Cat.transaction.should.be.instanceof(Object);
+          });
+
+          describe('Model.transaction.get', () => {
+            it('Model.transaction.get should work', function(done) {
+              Cats.Cat.transaction.get("1").then(function(result) {
+                should.exist(result);
+                should.exist(result.Get);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.get should work with options', function(done) {
+              Cats.Cat.transaction.get("1", {consistent: true}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Get);
+
+                result.Get.ConsistentRead.should.be.true;
+                done();
+              }).catch(done);
+            });
+          });
+          describe('Model.transaction.delete', () => {
+            it('Model.transaction.delete should work', function(done) {
+              Cats.Cat.transaction.delete("1").then(function(result) {
+                should.exist(result);
+                should.exist(result.Delete);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.delete should work with options', function(done) {
+              Cats.Cat.transaction.delete("1", {update: true}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Delete);
+
+                result.Delete.ReturnValues.should.eql("ALL_OLD");
+                done();
+              }).catch(done);
+            });
+          });
+          describe('Model.transaction.create', () => {
+            it('Model.transaction.create should work', function(done) {
+              Cats.Cat.transaction.create({id: 1}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Put);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.create should work with options', function(done) {
+              Cats.Cat.transaction.create({id: 1}, {overwrite: true}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Put);
+
+                should.not.exist(result.Put.ConditionExpression);
+                done();
+              }).catch(done);
+            });
+          });
+          describe('Model.transaction.update', () => {
+            it('Model.transaction.update should work if combined', function(done) {
+              Cats.Cat.transaction.update({id: 1, name: "Bob"}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Update);
+                should.exist(result.Update.TableName);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.update should work if seperate', function(done) {
+              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Update);
+                should.exist(result.Update.TableName);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.update should work with options seperate', function(done) {
+              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}, {returnValues: "testing123"}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Update);
+                should.exist(result.Update.TableName);
+
+                result.Update.ReturnValues.should.eql("testing123");
+                done();
+              }).catch(done);
+            });
+          });
+
+    		});
       });
