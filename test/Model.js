@@ -2757,15 +2757,15 @@ describe('Model', function (){
           Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
         });
 
-    		it('Should have BillingMode set to PROVISIONED when creating table, and no throughput defined', function() {
+        it('Should have BillingMode set to PROVISIONED when creating table, and no throughput defined', function() {
           var BillModeSchema1 = new dynamoose.Schema({
             id: Number,
             name: String
           });
           var BillModeModel1 = dynamoose.model('BillModeModel1', BillModeSchema1);
 
-    		  BillModeModel1.getTableReq().BillingMode.should.eql("PROVISIONED");
-    		});
+          BillModeModel1.getTableReq().BillingMode.should.eql("PROVISIONED");
+        });
         it('Should have BillingMode set to PROVISIONED when creating table, and throughput defined', function() {
           var BillModeSchema2 = new dynamoose.Schema({
             id: Number,
