@@ -48,6 +48,7 @@ Options:
   - overwrite: should overwrite the existing item in DynamoDB (default: true)
   - updateExpires: should update the expires timestamp if exists (default: false)
   - updateTimestamps: should update the updatedAt timestamp if exists (default: true)
+  - returnRequest: should not make request to DynamoDB and resolve with request (default: false)
 
 ### Model.batchPut(items, options, callback)
 
@@ -134,6 +135,9 @@ Dog.create({
   console.log('Odie is a ' + odie.breed);
 });
 ```
+
+You can set `options.returnRequest` to true, to resolve the get request instead of making the request.
+
 
 ### Model.get(key, options, callback)
 
