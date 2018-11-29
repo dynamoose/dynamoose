@@ -51,7 +51,7 @@
     "should": "^13.2.3"
   },
   "dependencies": {
-    "aws-sdk": "^2.364.0",
+    "aws-sdk": "^2.367.0",
     "debug": "^4.1.0",
     "deep-equal": "^1.0.1",
     "hooks": "0.3.2",
