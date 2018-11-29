@@ -2757,6 +2757,53 @@ describe('Model', function (){
           Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
         });
 
+        // The following 2 tests are skipped because DynamoDB Local currently throws an error when BillingMode is passed in (these should be unskipped when DynamoDB Local adds support for BillingMode, along with the code to make them work in Table.js)
+    		it.skip('Should have BillingMode set to PROVISIONED when creating table, and no throughput defined', function() {
+          var BillModeSchema1 = new dynamoose.Schema({
+            id: Number,
+            name: String
+          });
+          var BillModeModel1 = dynamoose.model('BillModeModel1', BillModeSchema1);
+
+    		  BillModeModel1.getTableReq().BillingMode.should.eql("PROVISIONED");
+    		});
+        it.skip('Should have BillingMode set to PROVISIONED when creating table, and throughput defined', function() {
+          var BillModeSchema2 = new dynamoose.Schema({
+            id: Number,
+            name: String
+          }, {throughput: {
+            write: 10,
+            read: 10
+          }});
+          var BillModeModel2 = dynamoose.model('BillModeModel2', BillModeSchema2);
+
+          BillModeModel2.getTableReq().BillingMode.should.eql("PROVISIONED");
+        });
+
+        it('Should have BillingMode set to PAY_PER_REQUEST when creating table, and throughput is ON_DEMAND', function() {
+          var BillModeSchema3 = new dynamoose.Schema({
+            id: Number,
+            name: String
+          }, {throughput: "ON_DEMAND"});
+          var BillModeModel3 = dynamoose.model('BillModeModel3', BillModeSchema3, {create: false});
+
+          BillModeModel3.getTableReq().BillingMode.should.eql("PAY_PER_REQUEST");
+        });
+
+        it('Should have correct throughput set when set', function() {
+          var BillModeSchema4 = new dynamoose.Schema({
+            id: Number,
+            name: String
+          }, {throughput: {
+            write: 10,
+            read: 10
+          }});
+          var BillModeModel4 = dynamoose.model('BillModeModel4', BillModeSchema4, {create: false});
+
+          BillModeModel4.getTableReq().ProvisionedThroughput.ReadCapacityUnits.should.eql(10);
+          BillModeModel4.getTableReq().ProvisionedThroughput.WriteCapacityUnits.should.eql(10);
+        });
+
         it('Should allow for originalItem function on models', function(done) {
           var item = {
             id: 2222,
