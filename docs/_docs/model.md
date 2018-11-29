@@ -146,6 +146,8 @@ Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
 });
 ```
 
+You can set `options.returnRequest` to true, to resolve the get request instead of making the request.
+
 
 ### Model.populate(options)
 
