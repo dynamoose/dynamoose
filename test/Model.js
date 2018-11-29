@@ -217,6 +217,20 @@ describe('Model', function (){
 
       });
 
+    it('Create returnRequest option', function (done) {
+      Cats.ExpiringCat.create({
+        name: 'Leo'
+      }, {returnRequest: true})
+      .then(function (request) {
+        request.should.exist;
+
+        request.TableName.should.eql("test-ExpiringCat-db");
+        request.Item.name.should.eql({S: "Leo"});
+        done();
+      })
+      .catch(done);
+    });
+
       it('Should support useDocumentTypes and useNativeBooleans being false', function(done) {
       	this.timeout(12000);
 
@@ -1263,6 +1277,29 @@ describe('Model', function (){
 
           });
 
+          it('Save returnRequest option', function (done) {
+            Cats.ExpiringCat.create({
+              name: 'Leo'
+            })
+            .then(function (leo) {
+              var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+              var min = max - 1;
+              var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+              expiresInSec.should.be.within(min, max);
+
+              leo.expires = new Date(Date.now() + (ONE_YEAR* 1000));
+              return leo.save({returnRequest: true});
+            })
+            .then(function (request) {
+              request.should.exist;
+
+              request.TableName.should.eql("test-ExpiringCat-db");
+              request.Item.name.should.eql({S: "Leo"});
+              done();
+            })
+            .catch(done);
+          });
+
           it('Should not have an expires property if TTL is set to null', function (done) {
             Cats.ExpiringCatNull.create({
               name: 'Leo12'
@@ -2019,6 +2056,16 @@ describe('Model', function (){
             });
           });
 
+          it('Update returnRequest option', function (done) {
+            Cats.Cat.update({id: 999}, {name: 'Oliver'}, {returnRequest: true}, function(err, request) {
+              should.not.exist(err);
+              should.exist(request);
+
+              request.TableName.should.eql("test-Cat-db");
+              request.Key.should.eql({id: {N: '999'}});
+              done();
+            });
+          });
         });
 
         describe('Model.populate', function (){
