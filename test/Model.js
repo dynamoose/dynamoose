@@ -1293,7 +1293,7 @@ describe('Model', function (){
 
           it('Save returnRequest option', function (done) {
             Cats.ExpiringCat.create({
-              name: 'Leo'
+              name: 'Leo5'
             })
             .then(function (leo) {
               var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
@@ -1308,7 +1308,7 @@ describe('Model', function (){
               request.should.exist;
 
               request.TableName.should.eql("test-ExpiringCat-db");
-              request.Item.name.should.eql({S: "Leo"});
+              request.Item.name.should.eql({S: "Leo5"});
               done();
             })
             .catch(done);
