@@ -440,3 +440,31 @@ Dog.getTableReq();
 //    ProvisionedThroughput: provThroughput
 //  }
 ```
+
+### Model.plugin(pluginPackage[, pluginOptions])
+
+**WARNING: PLUGINS IS CURRENTLY IN BETA. THIS FUNCTIONALITY MIGHT CHANGE AT ANYTIME WITHOUT WARNING. DO NOT CONSIDER THIS FEATURE TO BE STABLE.**
+
+This is how you can add plugins to be run on your model. For example you can use this function like so.
+
+```js
+var MyPlugin = require('ThePluginPackage');
+var MyPluginB = require('ThePluginPackageB');
+var Model = dynamoose.model('Puppy', {
+    id: {
+        type: Number,
+        validate: function(v) {
+            return v > 0;
+        }
+    },
+    name: String,
+    owner: String,
+    age: {
+        type: Number
+    }
+});
+Model.plugin(MyPlugin); // this plugin will always take priority over the plugin below and be run first
+Model.plugin(MyPluginB, {username: 'test', password: 'test'}); // this plugin will always take priority second and will be run after the first plugin, this plugin also passes options into the plugin
+
+module.exports = Model;
+```
