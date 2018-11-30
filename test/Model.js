@@ -3043,6 +3043,23 @@ describe('Model', function (){
             });
           });
 
+          it('Should Properly work with read transactions', function(done) {
+            return Cats.Cat.batchPut([
+              new Cats.Cat({id: '680', name: 'Oliver'}),
+              new Cats.Cat({id: '780', name: 'Whiskers'})
+            ], function (err, result) {
+              return dynamoose.transaction([
+                Cats.Cat.transaction.get(680),
+                Cats.Cat.transaction.get(780),
+              ]).then(function(result) {
+                console.log(result);
+                should.exist(result);
+
+                done();
+              }).catch(done);
+            });
+          });
+
           it('Should respond with no data', function(done) {
             dynamoose.transaction([
               Cats.Cat.transaction.create({id: 10000}),
