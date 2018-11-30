@@ -2961,12 +2961,12 @@ describe('Model', function (){
               }).catch(done);
             });
             it('Model.transaction.update should work with options seperate', function(done) {
-              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}, {returnValues: "testing123"}).then(function(result) {
+              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}, {condition: 'attribute_not_exists(name)'}).then(function(result) {
                 should.exist(result);
                 should.exist(result.Update);
                 should.exist(result.Update.TableName);
 
-                result.Update.ReturnValues.should.eql("testing123");
+                result.Update.ConditionExpression.should.equal('attribute_not_exists(name)');
                 done();
               }).catch(done);
             });
@@ -3043,11 +3043,33 @@ describe('Model', function (){
             });
           });
 
+          it('Should Properly work with read transactions', function(done) {
+            return Cats.Cat.batchPut([
+              new Cats.Cat({id: '680', name: 'Oliver'}),
+              new Cats.Cat({id: '780', name: 'Whiskers'})
+            ], function (err, result) {
+              return dynamoose.transaction([
+                Cats.Cat.transaction.get(680),
+                Cats.Cat.transaction.get(780),
+              ]).then(function(result) {
+                should.exist(result);
+                result.length.should.equal(2);
+                result[0].should.be.instanceof(Cats.Cat);
+                result[1].should.be.instanceof(Cats.Cat);
+                result[0].id.should.equal(680);
+                result[1].id.should.equal(780);
+
+                done();
+              }).catch(done);
+            });
+          });
+
           it('Should respond with no data', function(done) {
             dynamoose.transaction([
               Cats.Cat.transaction.create({id: 10000}),
               Cats.Cat3.transaction.update({id: 1, name: "Sara"}),
-              Cats.Cat.transaction.delete({id: 10000})
+              // @TODO: use 10000 as in the first transaction. Currenly local mock requires us to use unique IDs.
+              Cats.Cat.transaction.delete({id: 10001})
             ]).then(function(result) {
               should.not.exist(result);
 
