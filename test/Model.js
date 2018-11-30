@@ -3052,8 +3052,12 @@ describe('Model', function (){
                 Cats.Cat.transaction.get(680),
                 Cats.Cat.transaction.get(780),
               ]).then(function(result) {
-                console.log(result);
                 should.exist(result);
+                result.length.should.equal(2);
+                result[0].should.be.instanceof(Cats.Cat);
+                result[1].should.be.instanceof(Cats.Cat);
+                result[0].id.should.equal(680);
+                result[1].id.should.equal(780);
 
                 done();
               }).catch(done);
