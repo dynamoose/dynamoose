@@ -32,7 +32,7 @@ Set the description of the plugin.
 
 ### plugin.on
 
-Adds a listener to emitted events from Dynamoose.
+Adds a listener to emitted events from Dynamoose. You can return a promise in the `callback` method that you pass in, and when it is called, Dynamoose will `await` for your promise to complete before continuing. Your promise must `resolve` and not `reject`. You can resolve an object with the property `resolve` or `reject` to return or reject with that result to the end user. At that point Dynamoose will take no further action. This can be useful if you want to handle more of the interaction with the user.
 
 #### Parameters accepted
 
@@ -54,9 +54,18 @@ module.exports = function(plugin, options) {
 	plugin.on('scan', 'preRequest', function(obj) { // this will handle only preRequest stages on the scan type
 		console.log("About to make request to DynamoDB");
 	});
-	plugin.on('scan', 'postRequest', function(obj) { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on (NOT SURE IF WE WILL SUPPORT THIS)
+	plugin.on('scan', 'postRequest', function(obj) { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
 		return new Promise(function(resolve, reject) {
-			resolve();
+			resolve({
+				resolve: "Hello World" // "Hello World" will be passed back to the promise/callback of the Dynamoose scan call
+			});
+		});
+	});
+	plugin.on('query', 'postRequest', function(obj) { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
+		return new Promise(function(resolve, reject) {
+			resolve({
+				reject: "My Error" // "My Error" will be passed back to the promise/callback of the Dynamoose scan call as an error (not successful)
+			});
 		});
 	});
 	return plugin;
