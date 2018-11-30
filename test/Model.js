@@ -2973,4 +2973,20 @@ describe('Model', function (){
           });
 
     		});
+
+        describe('Transactions', function () {
+          it('Should return correct value', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 10000}),
+              Cats.Cat2.transaction.update({ownerId: 1, name: "Sara"})
+            ], {returnRequest: true}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Put":{"TableName":"test-Cat-db","Item":{"id":{"N":"10000"}},"ConditionExpression":"attribute_not_exists(id)"}},{"Update":{"TableName":"test-Cat2-db","Key":{"ownerId":{"N":"1"},"name":{"S":"Sara"}},"ReturnValues":"ALL_NEW"}}]});
+
+              done();
+            }).catch(done);
+          });
+        });
       });
