@@ -2961,10 +2961,12 @@ describe('Model', function (){
               }).catch(done);
             });
             it('Model.transaction.update should work with options seperate', function(done) {
-              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}).then(function(result) {
+              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}, {condition: 'attribute_not_exists(name)'}).then(function(result) {
                 should.exist(result);
                 should.exist(result.Update);
                 should.exist(result.Update.TableName);
+
+                result.Update.ConditionExpression.should.equal('attribute_not_exists(name)');
                 done();
               }).catch(done);
             });
