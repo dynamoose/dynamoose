@@ -183,9 +183,11 @@ Convert to uppercase when saving to DB.
 
 ### Options
 
-**throughput**: number &#124; {read: number, write: number}
+**throughput**: number | string &#124; {read: number, write: number}
 
 Sets the throughput of the DynamoDB table on creation. The value can either be a number or an object with the keys `read` and `write` (for example: `{read: 5, write: 2}`). If it is a number, both read and write are configured to that number. If it is omitted, the read and write values will be set to 1. Throughput will only be respected on table creation, and will not update the throughput of an existing table.
+
+If this property is set to `"ON_DEMAND"` the table will be created using PAY_PER_REQUEST BillingMode.
 
 ```js
 var schema = new Schema({...}, {
