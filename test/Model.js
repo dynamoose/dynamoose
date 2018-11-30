@@ -2975,7 +2975,7 @@ describe('Model', function (){
     		});
 
         describe('Transactions', function () {
-          it('Should return correct value', function(done) {
+          it('Should return correct request object', function(done) {
             dynamoose.transaction([
               Cats.Cat.transaction.create({id: 10000}),
               Cats.Cat2.transaction.update({ownerId: 1, name: "Sara"})
@@ -2987,6 +2987,60 @@ describe('Model', function (){
 
               done();
             }).catch(done);
+          });
+
+          it('Should return correct request object when all items are get', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.get(10000),
+              Cats.Cat4.transaction.get(10000),
+            ], {returnRequest: true}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Get":{"TableName":"test-Cat-db","Key":{"id":{"N":"10000"}}}},{"Get":{"TableName":"test-Cat4-db","Key":{"id":{"N":"10000"}}}}]});
+
+              done();
+            }).catch(done);
+          });
+
+          it('Should return correct request object when setting type to write', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 10000}),
+              Cats.Cat2.transaction.update({ownerId: 1, name: "Sara"})
+            ], {returnRequest: true, type: "write"}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Put":{"TableName":"test-Cat-db","Item":{"id":{"N":"10000"}},"ConditionExpression":"attribute_not_exists(id)"}},{"Update":{"TableName":"test-Cat2-db","Key":{"ownerId":{"N":"1"},"name":{"S":"Sara"}},"ReturnValues":"ALL_NEW"}}]});
+
+              done();
+            }).catch(done);
+          });
+
+          it('Should return correct request object when setting type to get', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 10000}),
+              Cats.Cat2.transaction.update({ownerId: 1, name: "Sara"})
+            ], {returnRequest: true, type: "get"}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Put":{"TableName":"test-Cat-db","Item":{"id":{"N":"10000"}},"ConditionExpression":"attribute_not_exists(id)"}},{"Update":{"TableName":"test-Cat2-db","Key":{"ownerId":{"N":"1"},"name":{"S":"Sara"}},"ReturnValues":"ALL_NEW"}}]});
+
+              done();
+            }).catch(done);
+          });
+
+          it('Should throw if invalid type passed in', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.get(10000),
+              Cats.Cat4.transaction.get(10000),
+            ], {returnRequest: true, type: "other"}).then(function () {
+
+            }).catch(function (error) {
+              should.exist(error);
+              done();
+            });
           });
         });
       });
