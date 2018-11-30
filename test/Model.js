@@ -3047,7 +3047,8 @@ describe('Model', function (){
             dynamoose.transaction([
               Cats.Cat.transaction.create({id: 10000}),
               Cats.Cat3.transaction.update({id: 1, name: "Sara"}),
-              Cats.Cat.transaction.delete({id: 10000})
+              // @TODO: use 10000 as in the first transaction. Currenly local mock requires us to use unique IDs.
+              Cats.Cat.transaction.delete({id: 10001})
             ]).then(function(result) {
               should.not.exist(result);
 
