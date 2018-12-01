@@ -153,3 +153,24 @@ dynamoose.AWS = AWSXRay.captureAWS(require('aws-sdk'));
 ### dynamoose.setDocumentClient(documentClient)
 
 Sets the document client for DynamoDB. This can be used to integrate with Amazon Web Services DAX.
+
+### dynamoose.transaction(items[, options][, cb])
+
+Allows you to run DynamoDB transactions. Accepts an array as the `items` parameter. Every item in the `items` array must use the `Model.transaction` methods.
+
+```js
+dynamoose.transaction([
+  User.transaction.update({id: "user1"}, {$ADD: {balance: -100}}),
+  Charge.transaction.create({userid: "user1", product: "product1", amount: 100, status: "successful"}),
+  Product.transaction.update({id: "product1"}, {$ADD: {inventory: -1}}),
+  Credit.transaction.delete({id: "credit1"})
+]).then(function (result) {
+  console.log(result);
+}).catch(function (err) {
+  console.error(err);
+});
+```
+
+`options` properties:
+
+- `type` (string): The type of transaction Dynamoose will run. Can either be "get", or "write". By default if all of your items are of type "get", it will default to "get", otherwise, will default to "write".

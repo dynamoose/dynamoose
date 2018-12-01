@@ -217,6 +217,20 @@ describe('Model', function (){
 
       });
 
+    it('Create returnRequest option', function (done) {
+      Cats.ExpiringCat.create({
+        name: 'Leo'
+      }, {returnRequest: true})
+      .then(function (request) {
+        request.should.exist;
+
+        request.TableName.should.eql("test-ExpiringCat-db");
+        request.Item.name.should.eql({S: "Leo"});
+        done();
+      })
+      .catch(done);
+    });
+
       it('Should support useDocumentTypes and useNativeBooleans being false', function(done) {
       	this.timeout(12000);
 
@@ -420,6 +434,17 @@ describe('Model', function (){
             return Cats.Cat7.update(7, { name : 'my favorite cat'});
           }).catch(function(err){
             should.exist(err.message);
+            done();
+          });
+        });
+
+        it('Get returnRequest option', function (done) {
+          Cats.Cat.get(1, {returnRequest: true}, function(err, request) {
+            should.not.exist(err);
+            should.exist(request);
+
+            request.TableName.should.eql("test-Cat-db");
+            request.Key.should.eql({id: {N: '1'}});
             done();
           });
         });
@@ -743,6 +768,20 @@ describe('Model', function (){
           cat.delete(function(err) {
             should.exist(err);
             err.name.should.equal('ValidationError');
+            done();
+          });
+        });
+
+        it('Delete returnRequest option', function (done) {
+          var cat = new Cats.Cat({id: 1});
+
+          cat.delete({returnRequest: true}, function (err, request) {
+            should.not.exist(err);
+            request.should.exist;
+
+            request.TableName.should.eql("test-Cat-db");
+            request.Key.should.eql({id: {N: '1'}});
+
             done();
           });
         });
@@ -1250,6 +1289,29 @@ describe('Model', function (){
             })
             .catch(done);
 
+          });
+
+          it('Save returnRequest option', function (done) {
+            Cats.ExpiringCat.create({
+              name: 'Leo5'
+            })
+            .then(function (leo) {
+              var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+              var min = max - 1;
+              var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+              expiresInSec.should.be.within(min, max);
+
+              leo.expires = new Date(Date.now() + (ONE_YEAR* 1000));
+              return leo.save({returnRequest: true});
+            })
+            .then(function (request) {
+              request.should.exist;
+
+              request.TableName.should.eql("test-ExpiringCat-db");
+              request.Item.name.should.eql({S: "Leo5"});
+              done();
+            })
+            .catch(done);
           });
 
           it('Should not have an expires property if TTL is set to null', function (done) {
@@ -2008,6 +2070,16 @@ describe('Model', function (){
             });
           });
 
+          it('Update returnRequest option', function (done) {
+            Cats.Cat.update({id: 999}, {name: 'Oliver'}, {returnRequest: true}, function(err, request) {
+              should.not.exist(err);
+              should.exist(request);
+
+              request.TableName.should.eql("test-Cat-db");
+              request.Key.should.eql({id: {N: '999'}});
+              done();
+            });
+          });
         });
 
         describe('Model.populate', function (){
@@ -2852,4 +2924,204 @@ describe('Model', function (){
           });
         });
 
+    		describe('Model.transaction', function() {
+          it('Model.transaction should exist and be an object', function() {
+            should.exist(Cats.Cat.transaction);
+            Cats.Cat.transaction.should.be.instanceof(Object);
+          });
+
+          describe('Model.transaction.get', () => {
+            it('Model.transaction.get should work', function(done) {
+              Cats.Cat.transaction.get("1").then(function(result) {
+                should.exist(result);
+                should.exist(result.Get);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.get should work with options', function(done) {
+              Cats.Cat.transaction.get("1", {consistent: true}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Get);
+
+                result.Get.ConsistentRead.should.be.true;
+                done();
+              }).catch(done);
+            });
+          });
+          describe('Model.transaction.delete', () => {
+            it('Model.transaction.delete should work', function(done) {
+              Cats.Cat.transaction.delete("1").then(function(result) {
+                should.exist(result);
+                should.exist(result.Delete);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.delete should work with options', function(done) {
+              Cats.Cat.transaction.delete("1", {update: true}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Delete);
+
+                result.Delete.ReturnValues.should.eql("ALL_OLD");
+                done();
+              }).catch(done);
+            });
+          });
+          describe('Model.transaction.create', () => {
+            it('Model.transaction.create should work', function(done) {
+              Cats.Cat.transaction.create({id: 1}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Put);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.create should work with options', function(done) {
+              Cats.Cat.transaction.create({id: 1}, {overwrite: true}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Put);
+
+                should.not.exist(result.Put.ConditionExpression);
+                done();
+              }).catch(done);
+            });
+          });
+          describe('Model.transaction.update', () => {
+            it('Model.transaction.update should work if combined', function(done) {
+              Cats.Cat.transaction.update({id: 1, name: "Bob"}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Update);
+                should.exist(result.Update.TableName);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.update should work if seperate', function(done) {
+              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Update);
+                should.exist(result.Update.TableName);
+
+                done();
+              }).catch(done);
+            });
+            it('Model.transaction.update should work with options seperate', function(done) {
+              Cats.Cat.transaction.update({id: 1}, {name: "Bob"}, {condition: 'attribute_not_exists(name)'}).then(function(result) {
+                should.exist(result);
+                should.exist(result.Update);
+                should.exist(result.Update.TableName);
+
+                result.Update.ConditionExpression.should.equal('attribute_not_exists(name)');
+                done();
+              }).catch(done);
+            });
+          });
+
+    		});
+
+        describe('Transactions', function () {
+          it('Should return correct request object', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 10000}),
+              Cats.Cat2.transaction.update({ownerId: 1, name: "Sara"})
+            ], {returnRequest: true}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Put":{"TableName":"test-Cat-db","Item":{"id":{"N":"10000"}},"ConditionExpression":"attribute_not_exists(id)"}},{"Update":{"TableName":"test-Cat2-db","Key":{"ownerId":{"N":"1"},"name":{"S":"Sara"}}}}]});
+
+              done();
+            }).catch(done);
+          });
+
+          it('Should return correct request object when all items are get', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.get(10000),
+              Cats.Cat4.transaction.get(10000),
+            ], {returnRequest: true}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Get":{"TableName":"test-Cat-db","Key":{"id":{"N":"10000"}}}},{"Get":{"TableName":"test-Cat4-db","Key":{"id":{"N":"10000"}}}}]});
+
+              done();
+            }).catch(done);
+          });
+
+          it('Should return correct request object when setting type to write', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 10000}),
+              Cats.Cat2.transaction.update({ownerId: 1, name: "Sara"})
+            ], {returnRequest: true, type: "write"}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Put":{"TableName":"test-Cat-db","Item":{"id":{"N":"10000"}},"ConditionExpression":"attribute_not_exists(id)"}},{"Update":{"TableName":"test-Cat2-db","Key":{"ownerId":{"N":"1"},"name":{"S":"Sara"}}}}]});
+
+              done();
+            }).catch(done);
+          });
+
+          it('Should return correct request object when setting type to get', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 10000}),
+              Cats.Cat2.transaction.update({ownerId: 1, name: "Sara"})
+            ], {returnRequest: true, type: "get"}).then(function(request) {
+              should.exist(request);
+              should.exist(request.TransactItems);
+
+              request.should.eql({"TransactItems":[{"Put":{"TableName":"test-Cat-db","Item":{"id":{"N":"10000"}},"ConditionExpression":"attribute_not_exists(id)"}},{"Update":{"TableName":"test-Cat2-db","Key":{"ownerId":{"N":"1"},"name":{"S":"Sara"}}}}]});
+
+              done();
+            }).catch(done);
+          });
+
+          it('Should throw if invalid type passed in', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.get(10000),
+              Cats.Cat4.transaction.get(10000),
+            ], {returnRequest: true, type: "other"}).then(function () {
+
+            }).catch(function (error) {
+              should.exist(error);
+              done();
+            });
+          });
+
+          it('Should Properly work with read transactions', function(done) {
+            return Cats.Cat.batchPut([
+              new Cats.Cat({id: '680', name: 'Oliver'}),
+              new Cats.Cat({id: '780', name: 'Whiskers'})
+            ], function (err, result) {
+              return dynamoose.transaction([
+                Cats.Cat.transaction.get(680),
+                Cats.Cat.transaction.get(780),
+              ]).then(function(result) {
+                should.exist(result);
+                result.length.should.equal(2);
+                result[0].should.be.instanceof(Cats.Cat);
+                result[1].should.be.instanceof(Cats.Cat);
+                result[0].id.should.equal(680);
+                result[1].id.should.equal(780);
+
+                done();
+              }).catch(done);
+            });
+          });
+
+          it('Should respond with no data', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 10000}),
+              Cats.Cat3.transaction.update({id: 1, name: "Sara"}),
+              // @TODO: use 10000 as in the first transaction. Currenly local mock requires us to use unique IDs.
+              Cats.Cat.transaction.delete({id: 10001})
+            ]).then(function(result) {
+              should.not.exist(result);
+
+              done();
+            }).catch(done);
+          });
+
+        });
       });
