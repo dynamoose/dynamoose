@@ -41,22 +41,22 @@
   "author": "Brandon Goode",
   "license": "MIT",
   "devDependencies": {
-    "coveralls": "3.0.0",
-    "dynamodb-local": "0.0.22",
+    "coveralls": "3.0.2",
+    "dynamodb-local": "0.0.23",
     "grunt": "1.0.3",
     "grunt-contrib-jshint": "2.0.0",
-    "grunt-mocha-test": "0.13.2",
+    "grunt-mocha-test": "0.13.3",
     "mocha": "5.2.0",
     "nyc": "13.1.0",
     "should": "13.2.3"
   },
   "dependencies": {
-    "aws-sdk": "2.367.0",
+    "aws-sdk": "2.368.0",
     "debug": "4.1.0",
     "deep-equal": "1.0.1",
     "hooks": "0.3.2",
     "object-path": "0.11.4",
-    "q": "1.5.0"
+    "q": "1.5.1"
   },
   "engines": {
     "node": ">=8.0.0"
