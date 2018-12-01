@@ -1,5 +1,34 @@
 # Dynamoose ChangeLog
 
+## Version 1.2.0
+
+AWS reInvent 2018 has wrapped up, and this release includes support for all of the DynamoDB goodies announced. This version also includes beta support for plugins! Plugin support has the potential to have breaking changes in the future with no warning, so please be aware of that when using the system. Please give feedback on plugins by creating issues on the Dynamoose repository.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Major New Features
+
+- **[DynamoDB Transaction Support](https://github.com/dynamoosejs/dynamoose/pull/472)** #472
+- **[DynamoDB On-Demand Support](https://github.com/dynamoosejs/dynamoose/pull/471)** #471
+- **[Plugins - BETA](https://github.com/dynamoosejs/dynamoose/pull/325)** #325
+
+### General
+
+- **[ES6 Template Literals](https://github.com/dynamoosejs/dynamoose/pull/465)** #465
+
+### Bug Fixes
+
+- **[Return LastKey when using RAW Scan](https://github.com/dynamoosejs/dynamoose/pull/475)** #475
+- **[Sorting index project array before comparing](https://github.com/dynamoosejs/dynamoose/pull/455)** #455
+
+### Other
+
+- **[Adding Node.js version 11 to Travis CI test suite](https://github.com/dynamoosejs/dynamoose/pull/468)** #468
+- **[Adding more NPM Keywords](https://github.com/dynamoosejs/dynamoose/pull/469)** #469
+- **[Updating NPM Dependencies](https://github.com/dynamoosejs/dynamoose/pull/466)** #466 #473
+
+---
+
 ## Version 1.1.0
 
 Dynamoose version 1.1.0 has a few improvements for debugging Dynamoose as well as a few new features.
@@ -8,10 +37,10 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 
 ### General
 
-- **[Update batchPut to work with timestamps](https://github.com/automategreen/dynamoose/pull/449)** #449 
-- **[Adding expires defaultExpires function](https://github.com/automategreen/dynamoose/pull/452)** #452 
-- **[Make debugging index creation dramatically easier](https://github.com/automategreen/dynamoose/pull/440)** #440 
-- **[Adding debug messages for setDDB and revertDDB](https://github.com/dynamoosejs/dynamoose/pull/451)** #451 
+- **[Update batchPut to work with timestamps](https://github.com/automategreen/dynamoose/pull/449)** #449
+- **[Adding expires defaultExpires function](https://github.com/automategreen/dynamoose/pull/452)** #452
+- **[Make debugging index creation dramatically easier](https://github.com/automategreen/dynamoose/pull/440)** #440
+- **[Adding debug messages for setDDB and revertDDB](https://github.com/dynamoosejs/dynamoose/pull/451)** #451
 
 ---
 
