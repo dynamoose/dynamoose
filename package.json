@@ -12,6 +12,11 @@
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "main": "index.js",
+  "files": [
+    "index.js",
+    "dynamoose.d.ts",
+    "lib/*"
+  ],
   "scripts": {
     "test": "grunt test",
     "coverage": "nyc grunt test"
