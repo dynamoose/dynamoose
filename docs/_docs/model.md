@@ -48,6 +48,7 @@ Options:
   - overwrite: should overwrite the existing item in DynamoDB (default: true)
   - updateExpires: should update the expires timestamp if exists (default: false)
   - updateTimestamps: should update the updatedAt timestamp if exists (default: true)
+  - returnRequest: should not make request to DynamoDB and resolve with request (default: false)
 
 ### Model.batchPut(items, options, callback)
 
@@ -135,6 +136,9 @@ Dog.create({
 });
 ```
 
+You can set `options.returnRequest` to true, to resolve the get request instead of making the request.
+
+
 ### Model.get(key, options, callback)
 
 Gets an item from the table.
@@ -145,6 +149,8 @@ Dog.get({ownerId: 4, name: 'Odie'}, function(err, odie) {
   console.log('Odie is a ' + odie.breed);
 });
 ```
+
+You can set `options.returnRequest` to true, to resolve the get request instead of making the request.
 
 
 ### Model.populate(options)
@@ -289,6 +295,7 @@ Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
 `options` parameters:
 
 - `update` (boolean): Will return the object deleted (default: false), if set to false and no object was deleted this function will fail silently.
+- `returnRequest` (boolean): Will resolve with the request object instead of making the request (default: false)
 
 ### model.delete([options, ]callback)
 
@@ -426,6 +433,19 @@ Use ReturnValues if you want to get the item attributes as they appear before or
 - ALL_NEW - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
 - UPDATED_NEW - Returns only the updated attributes, as they appear after the UpdateItem operation.
 
+
+### Model.transaction
+
+This object has the following methods that you can call.
+
+- `Model.transaction.get`
+- `Model.transaction.create`
+- `Model.transaction.delete`
+- `Model.transaction.update`
+
+You can pass in the same parameters into each method that you do for the normal (non-transaction) methods.
+
+These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
 
 ### Model.getTableReq()
 
