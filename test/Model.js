@@ -3123,5 +3123,29 @@ describe('Model', function (){
             }).catch(done);
           });
 
+          it('Should throw if RAW item object passed in, and table doesn\'t exist in Dynamoose', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 30000}),
+              Cats.Cat3.transaction.update({id: 1, name: "Sara"}),
+              // @TODO: use 10000 as in the first transaction. Currenly local mock requires us to use unique IDs.
+              Cats.Cat.transaction.delete({id: 30001}),
+              {
+                Delete: {
+                  Key: {
+                    id: {
+                      S: 'helloworld'
+                    }
+                  },
+                  TableName: 'MyOtherTable'
+                }
+              }
+            ]).then(function () {
+            }).catch(function (error) {
+              should.exist(error);
+              error.message.should.eql("MyOtherTable is not a registered model. You can only use registered Dynamoose models when using a RAW transaction object.")
+              done();
+            });
+          });
+
         });
       });
