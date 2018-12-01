@@ -698,6 +698,24 @@ describe('Scan', function (){
       });
     });
 
+    it('Scan using raw AWS filter should work with lastKey', function (done) {
+      var Dog = dynamoose.model('Dog');
+      var filter = {
+        FilterExpression: 'ownerId > :ownerIdB',
+        ExpressionAttributeValues: {
+          ':ownerIdB': 1
+        },
+        Limit: 2
+      };
+
+      Dog.scan(filter, { useRawAwsFilter: true }).exec(function (err, dogs) {
+        should.not.exist(err);
+        should.exist(dogs.lastKey);
+
+        done();
+      });
+    });
+
     it('Scan using raw AWS filter and select count', function (done) {
       var Dog = dynamoose.model('Dog');
       var filter = {
