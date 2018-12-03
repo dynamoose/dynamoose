@@ -724,4 +724,75 @@ describe('Query', function (){
       .exec();
     res2.length.should.eql(1);
   });
+
+  it('Should work for passing object into query', (done) => {
+    var Dog = dynamoose.model('Dog');
+
+    Dog.query({ownerId: {eq: 2}}).exec(function (err, dogs) {
+      should.not.exist(err);
+      dogs.length.should.eql(2);
+      done();
+    });
+  });
+
+  it('Should work for passing object into query with filter', (done) => {
+    var Dog2 = dynamoose.model('Dog2', new dynamoose.Schema({
+      id: Number,
+      name: String,
+      color: {
+        type: String,
+        index: {
+          global: true,
+          name: 'ColorIndex',
+          project: true
+        }
+      },
+      age: Number
+    }));
+    const dogs = [
+      {id: 1, name: "Bailey", color: "Brown", age: 5},
+      {id: 2, name: "Max", color: "Brown", age: 1},
+      {id: 3, name: "Toby", color: "Black", age: 1},
+      {id: 4, name: "Lucy", color: "Golden", age: 5}
+    ];
+    Promise.all(dogs.map(dog => Dog2.create(dog))).then(() => {
+      Dog2.query({color: {eq: "Brown"}, age: {gt: 2}}).exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(1);
+        dogs[0].id.should.eql(1);
+        done();
+      })
+      .catch(done);
+    });
+  });
+
+  it('Should work for passing object into query with filters', (done) => {
+    var Dog3 = dynamoose.model('Dog3', new dynamoose.Schema({
+      id: Number,
+      name: String,
+      color: {
+        type: String,
+        index: {
+          global: true,
+          name: 'ColorIndex',
+          project: true
+        }
+      },
+      age: Number
+    }));
+    const dogs = [
+      {id: 1, name: "Bailey", color: "Brown", age: 5},
+      {id: 2, name: "Max", color: "Brown", age: 1},
+      {id: 3, name: "Toby", color: "Black", age: 1},
+      {id: 4, name: "Lucy", color: "Golden", age: 5}
+    ];
+    Promise.all(dogs.map(dog => Dog3.create(dog))).then(() => {
+      Dog3.query({color: {eq: "Brown"}, age: {gt: 2}, name: {eq: "Max"}}).exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(0);
+        done();
+      })
+      .catch(done);
+    });
+  });
 });
