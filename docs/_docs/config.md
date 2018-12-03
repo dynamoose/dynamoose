@@ -156,20 +156,32 @@ Sets the document client for DynamoDB. This can be used to integrate with Amazon
 
 ### dynamoose.transaction(items[, options][, cb])
 
-Allows you to run DynamoDB transactions. Accepts an array as the `items` parameter. Every item in the `items` array must use the `Model.transaction` methods.
+Allows you to run DynamoDB transactions. Accepts an array as the `items` parameter. You can pass in a RAW DynamoDB transaction object, or use the Dynamoose `Model.transaction` helper methods.
 
 ```js
 dynamoose.transaction([
   User.transaction.update({id: "user1"}, {$ADD: {balance: -100}}),
   Charge.transaction.create({userid: "user1", product: "product1", amount: 100, status: "successful"}),
   Product.transaction.update({id: "product1"}, {$ADD: {inventory: -1}}),
-  Credit.transaction.delete({id: "credit1"})
+  Credit.transaction.delete({id: "credit1"}),
+  {
+    Delete: {
+      Key: {
+        id: {
+          S: 'helloworld'
+        }
+      },
+      TableName: 'MyOtherTable'
+    }
+  }
 ]).then(function (result) {
   console.log(result);
 }).catch(function (err) {
   console.error(err);
 });
 ```
+
+If you use a custom RAW DynamoDB transaction object, you must have created a corresponding model in Dynamoose.
 
 `options` properties:
 
