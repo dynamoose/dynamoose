@@ -134,7 +134,7 @@ Force value to be one of the enumeration values.
 
 (default: false) Will force the default value to always be applied to the attribute event if it already set. This is good for populating data that will be used as sort or secondary indexes.
 
-**validate**: function, regular expression, or value
+**validate**: function, regular expression, object, or value
 
 Validation required before for saving.
 
@@ -149,9 +149,39 @@ function(value, model) {
 }
 ```
 
+You can also pass in a function that returns a promise, or an async function:
+
+```js
+async function(v) {
+  const result = await networkRequest(v);
+  if (result.value === "true") {
+    return true;
+  } else {
+    return false;
+  }
+}
+```
+
 If it is a RegExp, it is compared using `RegExp.test(value)`.
 
 If it is a value, it is compared with `===`.
+
+If an object is passed in it must have a validator property that is a function. You can set the `isAsync` property to true, to enable callback functionality. If you are using promises, `isAsync` is not required. For example:
+
+```js
+{
+  isAsync: true,
+  validator: function(v, cb) {
+    setTimeout(function() {
+      var phoneRegex = /\d{3}-\d{3}-\d{4}/;
+      var msg = v + ' is not a valid phone number!';
+      // First argument is a boolean, whether validator succeeded
+      // 2nd argument is an optional error message override
+      cb(phoneRegex.test(v), msg);
+    }, 5);
+  },
+}
+```
 
 **set**: function
 

@@ -33,7 +33,7 @@ describe('Model', function (){
     done();
   });
 
-  it('Create simple model', function (done) {
+  it('Create simple model', async function () {
     this.timeout(12000);
 
 
@@ -83,29 +83,59 @@ describe('Model', function (){
     kitten.id.should.eql(1);
     kitten.name.should.eql('Fluffy');
 
-    var dynamoObj = schema.toDynamo(kitten);
+    var dynamoObj = await schema.toDynamo(kitten);
 
-    dynamoObj.should.eql(
-      {
-        ears: {
-          L: [
-            { M: { name: { S: 'left' } } },
-            { M: { name: { S: 'right' } } }
-          ]
-        },
-        id: { N: '1' },
-        name: { S: 'Fluffy' },
-        vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
-        legs: { SS: ['front right', 'front left', 'back right', 'back left']},
-        more: { S: '{"favorites":{"food":"fish"}}' },
-        array: { S: '[{"one":"1"}]' },
-        validated: { S: 'valid' }
-      });
-
-      kitten.save(done);
-
-
+    dynamoObj.should.eql({
+      ears: {
+        L: [
+          { M: { name: { S: 'left' } } },
+          { M: { name: { S: 'right' } } }
+        ]
+      },
+      id: { N: '1' },
+      name: { S: 'Fluffy' },
+      vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
+      legs: { SS: ['front right', 'front left', 'back right', 'back left']},
+      more: { S: '{"favorites":{"food":"fish"}}' },
+      array: { S: '[{"one":"1"}]' },
+      validated: { S: 'valid' }
     });
+
+    await kitten.save();
+
+  });
+
+  it('Should support async validate', async function () {
+    this.timeout(12000);
+
+    const Wolf1 = dynamoose.model('Wolf1', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        validate: function (val) {
+          return new Promise(function(resolve, reject) {
+            setTimeout(() => resolve(val.length >= 5), 1000);
+          });
+        }
+      }
+    }));
+
+    let error;
+    try {
+      await Wolf1.create({id: 1, name: "Rob"});
+    } catch (e) {
+      error = e;
+    }
+    should.exist(error);
+    error = null;
+
+    try {
+      await Wolf1.create({id: 2, name: "Smith"});
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+  });
 
     it('Create simple model with range key', function () {
 
@@ -141,9 +171,7 @@ describe('Model', function (){
 
     });
 
-    it('Create simple model with unnamed attributes', function (done) {
-
-
+    it('Create simple model with unnamed attributes', async function () {
       this.timeout(12000);
 
       Cats.Cat5.should.have.property('name');
@@ -199,23 +227,22 @@ describe('Model', function (){
       kitten.id.should.eql(2);
       kitten.name.should.eql('Fluffy');
 
-      var dynamoObj = schema.toDynamo(kitten);
+      var dynamoObj = await schema.toDynamo(kitten);
 
-      dynamoObj.should.eql(
-        {
-          id: { N: '2' },
-          name: { S: 'Fluffy' },
-          owner: { S: 'Someone' },
-          unnamedInt: { N: '1' },
-          unnamedInt0: { N: '0' },
-          unnamedBooleanFalse: { BOOL: false },
-          unnamedBooleanTrue: { BOOL: true },
-          unnamedString: { S: 'unnamed' },
-        });
-
-        kitten.save(done);
-
+      dynamoObj.should.eql({
+        id: { N: '2' },
+        name: { S: 'Fluffy' },
+        owner: { S: 'Someone' },
+        unnamedInt: { N: '1' },
+        unnamedInt0: { N: '0' },
+        unnamedBooleanFalse: { BOOL: false },
+        unnamedBooleanTrue: { BOOL: true },
+        unnamedString: { S: 'unnamed' },
       });
+
+      await kitten.save();
+
+    });
 
     it('Create returnRequest option', function (done) {
       Cats.ExpiringCat.create({
@@ -279,9 +306,7 @@ describe('Model', function (){
       	});
       });
 
-      it('Create complex model with unnamed attributes', function (done) {
-
-
+      it('Create complex model with unnamed attributes', async function () {
         this.timeout(12000);
 
         Cats.Cat1.should.have.property('name');
@@ -336,25 +361,24 @@ describe('Model', function (){
         kitten.id.should.eql(2);
         kitten.name.should.eql('Fluffy');
 
-        var dynamoObj = schema.toDynamo(kitten);
+        var dynamoObj = await schema.toDynamo(kitten);
 
-        dynamoObj.should.eql(
-          {
-            id: {N: '2'},
-            name: {S: 'Fluffy'},
-            owner: {S: 'Someone'},
-            children: {
-              M: {
-                "mittens": {M: {"name": {S: "mittens"}, "age": {N: '1'}}},
-                "puddles": {M: {"name": {S: "puddles"}, "age": {N: '2'}}}
-              }
-            },
-            characteristics: {L: [{S: 'cute'}, {S: 'fuzzy'}]}
-          });
-
-          kitten.save(done);
-
+        dynamoObj.should.eql({
+          id: {N: '2'},
+          name: {S: 'Fluffy'},
+          owner: {S: 'Someone'},
+          children: {
+            M: {
+              "mittens": {M: {"name": {S: "mittens"}, "age": {N: '1'}}},
+              "puddles": {M: {"name": {S: "puddles"}, "age": {N: '2'}}}
+            }
+          },
+          characteristics: {L: [{S: 'cute'}, {S: 'fuzzy'}]}
         });
+
+        await kitten.save();
+
+      });
 
         it('Get item for model with unnamed attributes', function (done) {
 
@@ -3090,7 +3114,7 @@ describe('Model', function (){
           });
 
           it('Should Properly work with read transactions', function(done) {
-            return Cats.Cat.batchPut([
+            Cats.Cat.batchPut([
               new Cats.Cat({id: '680', name: 'Oliver'}),
               new Cats.Cat({id: '780', name: 'Whiskers'})
             ], function (err, result) {
