@@ -3128,9 +3128,6 @@ describe('Model', function (){
               Cats.Cat.transaction.create({id: 30000}),
               Cats.Cat3.transaction.update({id: 1, name: "Sara"}),
               // @TODO: use 10000 as in the first transaction. Currenly local mock requires us to use unique IDs.
-                condition: "attribute_not_exists(owner)"
-              }),
-              // @TODO: use 20000 as in the first transaction. Currenly local mock requires us to use unique IDs.
               Cats.Cat.transaction.delete({id: 30001}),
               {
                 Delete: {
