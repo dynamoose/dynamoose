@@ -1,5 +1,7 @@
 # Dynamoose Roadmap
 
+**This roadmap has not been updated in a while. Please take it with a grain of salt.**
+
 This is the proposed roadmap for Dynamoose. If you have ideas for how to improve the library please submit GitHub issues. Please keep in mind all content below is not finalized and is subject to change at any time.
 
 
@@ -7,7 +9,7 @@ This is the proposed roadmap for Dynamoose. If you have ideas for how to improve
 
 The main goal of version 1.1 will be to finish the plugin system for Dynamoose. Other less important goals include more ES6 (ES2015) updates as well as adding a `Model.find` alias.
 
-- [ ] Plugin system
+- [x] Plugin system
 - [ ] ES2015 updates
 - [ ] `Model.find` alias
 
@@ -18,5 +20,5 @@ The main goal of 1.0.x will be to improve the community support of Dynamoose. Th
 - [ ] Better documentation
 - [ ] Redesigned website
 - [ ] Improved tests
-- [ ] GitHub issue/PR templates
+- [x] GitHub issue/PR templates
 - [ ] Contribution guidelines
