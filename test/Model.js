@@ -146,9 +146,10 @@ describe('Model', function (){
         type: String,
         validate: {
           isAsync: true,
-          validator: function (val, model, cb) {
+          validator: function (val, cb) {
             setTimeout(() => cb(val.length >= 5), 1000);
-          }
+          },
+          disableModelParameter: true
         }
       }
     }));
