@@ -280,7 +280,7 @@ describe('Model', function (){
   it('Should support async default', async function () {
     this.timeout(12000);
 
-    const Wolf5 = dynamoose.model('Wolf5', new dynamoose.Schema({
+    const Wolf7 = dynamoose.model('Wolf7', new dynamoose.Schema({
       id: Number,
       name: {
         type: String,
@@ -294,8 +294,8 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf5.create({id: 1});
-      res = await Wolf5.get(1);
+      await Wolf7.create({id: 1});
+      res = await Wolf7.get(1);
     } catch (e) {
       error = e;
     }
