@@ -234,9 +234,33 @@ You can also pass in an object that defines extra settings and allows for callba
 
 Adds a setter function that will directly set the value to the DB. This skips all type management and parsing normally provided by `options.set`.
 
+Your function may also be an async function with await statements in it, or return a promise. For example:
+
+```js
+function(val) {
+    return new Promise(resolve => {
+        setTimeout(function() {
+            resolve({S: "My custom value"});
+        }, 1000);
+    });
+}
+```
+
 **fromDynamo**: function
 
 Adds a getter function that will be used to transform the value directly returned from the DB. This skips all type management and parsing normally provided by `options.get`.
+
+Your function may also be an async function with await statements in it, or return a promise. For example:
+
+```js
+function(val) {
+    return new Promise(resolve => {
+        setTimeout(function() {
+            resolve("My custom value");
+        }, 1000);
+    });
+}
+```
 
 **trim**: boolean
 
