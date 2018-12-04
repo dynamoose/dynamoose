@@ -303,6 +303,58 @@ describe('Model', function (){
     res.id.should.eql(1);
     res.name.should.eql("Hello World");
   });
+  it('Should support async toDynamo', async function () {
+    this.timeout(12000);
+
+    const Wolf8 = dynamoose.model('Wolf8', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        toDynamo: function (val) {
+          return new Promise(function(resolve, reject) {
+            setTimeout(() => resolve({S: "Hello World"}), 1000);
+          });
+        }
+      }
+    }));
+
+    let error, res;
+    try {
+      await Wolf8.create({id: 1, name: "test"});
+      res = await Wolf8.get(1);
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql("Hello World");
+  });
+  it('Should support async fromDynamo', async function () {
+    this.timeout(12000);
+
+    const Wolf9 = dynamoose.model('Wolf9', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        fromDynamo: function (val) {
+          return new Promise(function(resolve, reject) {
+            setTimeout(() => resolve("Hello World"), 1000);
+          });
+        }
+      }
+    }));
+
+    let error, res;
+    try {
+      await Wolf9.create({id: 1, name: "test"});
+      res = await Wolf9.get(1);
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql("Hello World");
+  });
 
     it('Create simple model with range key', function () {
 
