@@ -890,7 +890,7 @@ describe('Schema tests', function (){
     });
   });
 
-  it('Parses document types when saveUnknown=false and useDocumentTypes=true', function (done) {
+  it('Parses document types when saveUnknown=false and useDocumentTypes=true', async function () {
 
     var schema = new Schema({
       id: Number,
@@ -907,7 +907,7 @@ describe('Schema tests', function (){
     });
 
     var model = {};
-    schema.parseDynamo(model, {
+    await schema.parseDynamo(model, {
       id: { N: '2' },
       mapAttrib: {
         M: {
@@ -934,11 +934,9 @@ describe('Schema tests', function (){
         'v2',
       ],
     });
-
-    done();
   });
 
-  it('Parses document types when saveUnknown=true and useDocumentTypes=true', function (done) {
+  it('Parses document types when saveUnknown=true and useDocumentTypes=true', async function () {
 
     var schema = new Schema({
       id: Number,
@@ -947,7 +945,7 @@ describe('Schema tests', function (){
     });
 
     var model = {};
-    schema.parseDynamo(model, {
+    await schema.parseDynamo(model, {
       id: { N: '2' },
       mapAttrib: {
         M: {
@@ -974,11 +972,9 @@ describe('Schema tests', function (){
         'v2',
       ],
     });
-
-    done();
   });
 
-  it('Handle unknown attributes in DynamoDB', function (done) {
+  it('Handle unknown attributes in DynamoDB', async function () {
 
     var unknownSchema = new Schema({
       id: Number
@@ -987,7 +983,7 @@ describe('Schema tests', function (){
     });
 
     var model = {};
-    unknownSchema.parseDynamo(model, {
+    await unknownSchema.parseDynamo(model, {
       id: { N: 2 },
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
@@ -1012,10 +1008,9 @@ describe('Schema tests', function (){
       aBoolean: 'true',
       aBooleanB: true
     });
-    done();
   });
 
-  it('Handle unknown attributes in DynamoDB when document types are set to false', function (done) {
+  it('Handle unknown attributes in DynamoDB when document types are set to false', async function () {
 
     var unknownSchema = new Schema({
      id: Number
@@ -1028,7 +1023,7 @@ describe('Schema tests', function (){
     var model = {};
 
     try {
-      unknownSchema.parseDynamo(model, {
+      await unknownSchema.parseDynamo(model, {
         id: { N: 2 },
         name: { S: 'Fluffy' },
         anObject: { S: '{"a":"attribute"}' },
@@ -1044,8 +1039,6 @@ describe('Schema tests', function (){
       err.should.be.instanceof(Error);
       err.should.be.instanceof(errors.ParseError);
     }
-
-    done();
   });
 
   it('Enum Should be set in schema attributes object', function (done) {
@@ -1141,7 +1134,7 @@ describe('Schema tests', function (){
       });
     });
   });
-  it('Handle unknown attributes as array in DynamoDB', function (done) {
+  it('Handle unknown attributes as array in DynamoDB', async function () {
 
     var unknownSchema = new Schema({
       id: Number
@@ -1150,7 +1143,7 @@ describe('Schema tests', function (){
     });
 
     var model = {};
-    unknownSchema.parseDynamo(model, {
+    await unknownSchema.parseDynamo(model, {
       id: { N: '2' },
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
@@ -1162,10 +1155,9 @@ describe('Schema tests', function (){
       name: 'Fluffy',
       numberString: '1'
     });
-    done();
   });
 
-  it('Handle unknown attributes as array in DynamoDB when document types are set to false', function (done) {
+  it('Handle unknown attributes as array in DynamoDB when document types are set to false', async function () {
 
     var unknownSchema = new Schema({
      id: Number
@@ -1176,7 +1168,7 @@ describe('Schema tests', function (){
     });
 
     var model = {};
-    unknownSchema.parseDynamo(model, {
+    await unknownSchema.parseDynamo(model, {
       id: { N: '2' },
       name: { S: 'Fluffy' },
       anObject: { S: '{"a":"attribute"}' },
@@ -1188,6 +1180,5 @@ describe('Schema tests', function (){
       name: 'Fluffy',
       numberString: '1'
     });
-    done();
   });
 });

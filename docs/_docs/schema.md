@@ -201,9 +201,22 @@ You can also pass in an object that defines extra settings and allows for callba
 }
 ```
 
-**get**: function
+**get**: function | object
 
-Adds a getter function that will be used to transform the value returned from the DB, fired only if there is a value returned from the DB.
+Adds a getter function that will be used to transform the value returned from the DB, fired only if there is a value returned from the DB. You can pass in a standard function that returns the new result, an async function that uses await syntax in it, or a function that returns a promise.
+
+You can also pass in an object that defines extra settings and allows for callback based async get. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  get: function(v, cb) {
+    setTimeout(function() {
+      cb("My item: " + v, msg);
+    }, 5);
+  }
+}
+```
 
 **toDynamo**: function
 
