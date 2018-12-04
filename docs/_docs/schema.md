@@ -126,6 +126,18 @@ function(model) {
 }
 ```
 
+Your function may also be an async function with await statements in it, or return a promise. For example:
+
+```js
+function(model) {
+    return new Promise(resolve => {
+        setTimeout(function() {
+            resolve("My default value");
+        }, 1000);
+    });
+}
+```
+
 **enum: Array of strings**
 
 Force value to be one of the enumeration values.

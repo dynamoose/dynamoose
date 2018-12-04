@@ -277,6 +277,32 @@ describe('Model', function (){
     res.id.should.eql(1);
     res.name.should.eql("RobHello World");
   });
+  it('Should support async default', async function () {
+    this.timeout(12000);
+
+    const Wolf5 = dynamoose.model('Wolf5', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        default: function (val) {
+          return new Promise(function(resolve, reject) {
+            setTimeout(() => resolve("Hello World"), 1000);
+          });
+        }
+      }
+    }));
+
+    let error, res;
+    try {
+      await Wolf5.create({id: 1});
+      res = await Wolf5.get(1);
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql("Hello World");
+  });
 
     it('Create simple model with range key', function () {
 
