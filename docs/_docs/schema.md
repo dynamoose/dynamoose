@@ -170,8 +170,8 @@ If an object is passed in it must have a validator property that is a function. 
 
 ```js
 {
-  isAsync: true,
-  validator: function(v, cb) {
+  isAsync: true, // default: false
+  validator: function(v, model, cb) {
     setTimeout(function() {
       var phoneRegex = /\d{3}-\d{3}-\d{4}/;
       var msg = v + ' is not a valid phone number!';
@@ -180,6 +180,7 @@ If an object is passed in it must have a validator property that is a function. 
       cb(phoneRegex.test(v), msg);
     }, 5);
   },
+  disableModelParameter: false // default: false, if enabled will only pass in value and callback, and not the model
 }
 ```
 
