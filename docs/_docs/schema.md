@@ -184,9 +184,22 @@ If an object is passed in it must have a validator property that is a function. 
 }
 ```
 
-**set**: function
+**set**: function | object
 
-Adds a setter function that will be used to transform the value before writing to the DB.
+Adds a setter function that will be used to transform the value before writing to the DB. You can pass in a standard function that returns the new result, an async function that uses await syntax in it, or a function that returns a promise.
+
+You can also pass in an object that defines extra settings and allows for callback based async set. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  set: function(v, cb) {
+    setTimeout(function() {
+      cb("My item: " + v, msg);
+    }, 5);
+  }
+}
+```
 
 **get**: function
 
