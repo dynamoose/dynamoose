@@ -136,7 +136,6 @@ describe('Model', function (){
     }
     should.not.exist(error);
   });
-
   it('Should support async validate with async function', async function () {
     this.timeout(12000);
 
@@ -169,6 +168,60 @@ describe('Model', function (){
       error = e;
     }
     should.not.exist(error);
+  });
+  it('Should support async set', async function () {
+    this.timeout(12000);
+
+    const Wolf3 = dynamoose.model('Wolf3', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        set: function (val) {
+          return new Promise(function(resolve, reject) {
+            setTimeout(() => resolve(val + "Hello World"), 1000);
+          });
+        }
+      }
+    }));
+
+    let error, res;
+    try {
+      await Wolf3.create({id: 1, name: "Rob"});
+      res = await Wolf3.get(1);
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql("RobHello World");
+  });
+  it('Should support async set with async function', async function () {
+    this.timeout(12000);
+
+    const Wolf4 = dynamoose.model('Wolf4', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        set: {
+          isAsync: true,
+          set: function (val, cb) {
+            setTimeout(() => cb(val + "Hello World"), 1000);
+          }
+        }
+      }
+    }));
+
+    let error, res;
+    try {
+      await Wolf4.create({id: 1, name: "Rob"});
+      res = await Wolf4.get(1);
+    } catch (e) {
+      console.error(e);
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql("RobHello World");
   });
 
     it('Create simple model with range key', function () {
