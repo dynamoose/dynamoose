@@ -137,6 +137,39 @@ describe('Model', function (){
     should.not.exist(error);
   });
 
+  it('Should support async validate with async function', async function () {
+    this.timeout(12000);
+
+    const Wolf2 = dynamoose.model('Wolf2', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        validate: {
+          isAsync: true,
+          validator: function (val, model, cb) {
+            setTimeout(() => cb(val.length >= 5), 1000);
+          }
+        }
+      }
+    }));
+
+    let error;
+    try {
+      await Wolf2.create({id: 1, name: "Rob"});
+    } catch (e) {
+      error = e;
+    }
+    should.exist(error);
+    error = null;
+
+    try {
+      await Wolf2.create({id: 2, name: "Smith"});
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+  });
+
     it('Create simple model with range key', function () {
 
       Cats.Cat2.should.have.property('name');
