@@ -205,6 +205,20 @@ Dog.get(3)
     }
     */
   });
+
+
+Dog.scan().exec()
+  .then(function(dogs) {
+    return Promise.all(dogs.map(function(dog) {
+      return dog.populate({
+        path: 'parent',
+        model: 'Dog'
+      });
+    }));
+  })
+  .then(function(dogs) {
+    console.log(dogs);
+  });
 ```
 #### Populate with range and hash key
 
