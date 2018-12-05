@@ -3,15 +3,96 @@
     <head>
         <meta charset="utf-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Dynamoose | Examples</title>
+        <title>Dynamoose | Quick-start</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" type="text/css" media="screen" href="examples.css" />
+        <link href="https://fonts.googleapis.com/css?family=Raleway:400,500" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" media="screen" href="example.css" />
+
         <script src="examples.js"></script>
+        <script src="https://embed.runkit.com" data-element-id="my-element"></script>
     </head>
 
     <body>
 
+        <div id="header">
+            <p id="logo">Dynamoose</p>
+            <ul id="nav">
+                <li><a href="index.html">Quick-start</a></li>
+                <li><a href="examples.html">Examples</a></li>
+                <li><a href="api.html">API Docs</a></li>
+            </ul>
+        </div>
 
+        <div id="examples">
+            <p id="section-title">Using dynamoose</p>
+            <p id="section-subtitle">Get started with dynanoose with these simple examples</p>
+
+            <div id="examples-section">
+                <div class="eg-card" id="starters-card">
+                    <img src="assets/db.png" alt="db" class="eg-img">
+                    <p class="eg-title">Starters</p>
+                </div>
+
+                <div class="eg-card" id="ttl-card">
+                    <img src="assets/ttl.png" alt="db" class="eg-img">
+                    <p class="eg-title">TTL</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="code-box">
+            <!-- <div id="my-element">
+                'use strict';
+
+                // Requiring the Dynamoose NPM package
+                var dynamoose = require('dynamoose');
+                
+                // To configure Dynamose you can either:
+                /*
+                Set environment variables
+                
+                export AWS_ACCESS_KEY_ID="Your AWS Access Key ID"
+                export AWS_SECRET_ACCESS_KEY="Your AWS Secret Access Key"
+                export AWS_REGION="us-east-1"
+                */
+                // OR configure the AWS object
+                /*
+                dynamoose.AWS.config.update({
+                    accessKeyId: 'AKID',
+                    secretAccessKey: 'SECRET',
+                    region: 'us-east-1'
+                });
+                */
+                // OR use an AWS IAM role assigned to an AWS resource
+                
+                // To use a local DynamoDB setup you can use the following line
+                // dynamoose.local(); // This will set the server to "http://localhost:8000" (default)
+                // dynamoose.local("http://localhost:1234") // This will set the server to "http://localhost:1234"
+                
+                
+                // This will create a Dynamoose model "Cat" (which is basically like a DynamoDB table), it will allow for 2 properties in the schema, `id` (number) and `name` (string)
+                var Cat = dynamoose.model('Cat', { id: Number, name: String });
+                
+                // This will create a new instance of our "Cat" model, with the `id` as 666, and `name` as 'Garfield'
+                var garfield = new Cat({id: 666, name: 'Garfield'});
+                
+                // This will save our new object to DynamoDB (remember this happens asynchronously, so you need to be sure to wait before trying to access the object)
+                garfield.save();
+                
+                // This will preform an DynamoDB get on the "Cat" model/table get the object with the `id` = 666 and return a promise with the returned object.
+                Cat.get(666)
+                .then(function (badCat) {
+                    console.log('Never trust a smiling cat. - ' + badCat.name);
+                });                                                
+            </div> -->
+        </div>
+
+        <div id="footer">
+            <a href="https://github.com/dynamoosejs/dynamoose" target="blank_"><i id="social" class="fab fa-github"></i></a>
+            <p>Made with <i class="fas fa-heart"></i> by <span>Dynamoose</span></p>
+        </div>
         
     </body>
 </html>
