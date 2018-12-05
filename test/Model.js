@@ -3147,5 +3147,20 @@ describe('Model', function (){
             });
           });
 
+          it('Should work with conditionCheck', function(done) {
+            dynamoose.transaction([
+              Cats.Cat.transaction.create({id: 20000}),
+              Cats.Cat3.transaction.update({id: 1, name: "Sara"}),
+              Cats.Cat5.transaction.conditionCheck(5, {
+                condition: "attribute_not_exists(owner)"
+              }),
+              // @TODO: use 20000 as in the first transaction. Currenly local mock requires us to use unique IDs.
+              Cats.Cat.transaction.delete({id: 20001})
+            ]).then(function(result) {
+              should.not.exist(result);
+
+              done();
+            }).catch(done);
+          });
         });
       });
