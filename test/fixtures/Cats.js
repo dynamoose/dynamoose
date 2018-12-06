@@ -392,6 +392,14 @@ module.exports = function(dynamoose){
   });
   var CatWithMethods = dynamoose.model('CatWithMethods', CatWithMethodsSchema);
 
+  var Cat12 = dynamoose.model('Cat12', {
+    id: Number,
+    name: {
+      type: String,
+      required: true
+    }
+  });
+
   return {
     Cat: Cat,
     Cat1: Cat1,
@@ -405,6 +413,7 @@ module.exports = function(dynamoose){
     Cat9: Cat9,
     Cat10: Cat10,
     Cat11: Cat11,
+    Cat12: Cat12,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,

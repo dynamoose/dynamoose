@@ -1011,6 +1011,16 @@ describe('Model', function (){
             });
           });
 
+          it("Should not update if setting required property to empty string", function(done) {
+            Cats.Cat12.create({id: 1234, name: "Sara"}).then(function() {
+              Cats.Cat12.update({id: 1234}, {name: ""}).then(function(cat) {
+                done("Should not allow setting a required propety to empty string");
+              }).catch(function() {
+                done();
+              })
+            });
+          });
+
           it("If key is null or undefined, will use defaults", function (done) {
             Cats.Cat3.update(null, {age: 3, name: 'Furrgie'}, function (err, data) {
               should.not.exist(err);
