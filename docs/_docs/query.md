@@ -141,3 +141,11 @@ Return the counts object of matching items, rather than the matching items thems
 ```
 
 If you used a filter in the request, then `count` is the number of items returned after the filter was applied, and `scannedCount` is the number of matching items before the filter was applied.
+
+### query.using(index)
+
+You can manually specify which index to use by adding the `query.using` method to your query chain. The string you pass into the `query.using` method must match the name of an index on your table. This method is **not** required, by default Dynamoose will try to figure out which index to use based on your schema.
+
+```js
+Dog.query('ownerId').using('BreedRangeIndex').eq(20).where('breed').beginsWith('Sp')
+```
