@@ -122,12 +122,7 @@ a {
     width: 100%;
     min-height: 200px;
     height: auto;
-}
-
-#my-element {
-    position: relative;
-    width: 80%;
-    margin: 20px 50px;
+    background-color: #f9fbfc;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------ */

@@ -198,8 +198,7 @@ a {
     border-radius: 7px;
 }
 
-.eg-container .eg-container-code p {
-    line-height: 27px;
+.eg-container .eg-container-code {
     padding-left: 20px;
     color: #9da1a5;
     font-family: Roboto Mono, monospace;
