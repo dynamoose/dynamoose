@@ -57,17 +57,11 @@ a {
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#examples {
-    width: 100%;
-    /* min-height: 400px; */
-    height: auto;
-}
-
 #section-title {
     font-weight: bold;
     font-size: 35px;
     color: #2d3436;
-    padding: 30px 50px 10px 50px;
+    padding: 30px 50px 5px 50px;
 }
 
 #section-subtitle {
@@ -76,53 +70,27 @@ a {
     color: #8395a7;
 }
 
-#examples #examples-section {
-    width: auto;
-    height: auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    margin: 0 30px 0 30px;
-    flex-wrap: wrap;
-}
-
-.eg-card {
-    width: 200px;
-    height: 250px;
-    border-radius: 7px;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-    margin: 10px 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-}
-
-.eg-card .eg-img {
-    margin: 0 auto;
-    height: 60%;
-}
-
-.eg-card .eg-title {
-    font-weight: bold;
-    font-size: 22px;
-    text-align: center;
-    color: #2d3436;
-}
-
-.eg-card:hover {
-    transform: scale(1.05);
-    opacity: 0.75;
-    cursor: pointer;
-    transition: 0.5s;
-}
-
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#code-box {
-    width: 100%;
-    min-height: 200px;
+#gist-title {
+    padding: 20px 0 5px 50px;
+    font-size: 22px;
+    color: #38458a;
+    font-weight: bold;
+}
+
+#gist-desc {
+    font-size: 16px;
+    color: #8395a7;
+    padding: 5px 50px;
+}
+
+.gist {
+    width: 90% !important;
     height: auto;
     background-color: #f9fbfc;
+    margin: 10px auto;
+    /* text-align: center; */
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
