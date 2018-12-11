@@ -196,6 +196,8 @@ If an object is passed in it must have a validator property that is a function. 
 }
 ```
 
+The property name `validate` is also an alias for `validator`. The property name `validator` will take priority if both are passed in.
+
 **set**: function | object
 
 Adds a setter function that will be used to transform the value before writing to the DB. You can pass in a standard function that returns the new result, an async function that uses await syntax in it, or a function that returns a promise.
