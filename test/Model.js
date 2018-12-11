@@ -329,6 +329,33 @@ describe('Model', function (){
     res.id.should.eql(1);
     res.name.should.eql("Hello World");
   });
+  it('Should support async fromDynamo with async function', async function () {
+    this.timeout(12000);
+
+    const Wolf11 = dynamoose.model('Wolf11', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        toDynamo: {
+          isAsync: true,
+          toDynamo: function (val, cb) {
+            setTimeout(() => cb({S: "Hello World"}), 1000);
+          }
+        }
+      }
+    }));
+
+    let error, res;
+    try {
+      await Wolf11.create({id: 1, name: "test"});
+      res = await Wolf11.get(1);
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql("Hello World");
+  });
   it('Should support async fromDynamo', async function () {
     this.timeout(12000);
 
@@ -348,6 +375,33 @@ describe('Model', function (){
     try {
       await Wolf9.create({id: 1, name: "test"});
       res = await Wolf9.get(1);
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql("Hello World");
+  });
+  it('Should support async fromDynamo with async function', async function () {
+    this.timeout(12000);
+
+    const Wolf10 = dynamoose.model('Wolf10', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+        fromDynamo: {
+          isAsync: true,
+          fromDynamo: function (val, cb) {
+            setTimeout(() => cb("Hello World"), 1000);
+          }
+        }
+      }
+    }));
+
+    let error, res;
+    try {
+      await Wolf10.create({id: 1, name: "test"});
+      res = await Wolf10.get(1);
     } catch (e) {
       error = e;
     }

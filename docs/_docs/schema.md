@@ -230,7 +230,7 @@ You can also pass in an object that defines extra settings and allows for callba
 }
 ```
 
-**toDynamo**: function
+**toDynamo**: function | object
 
 Adds a setter function that will directly set the value to the DB. This skips all type management and parsing normally provided by `options.set`.
 
@@ -246,7 +246,20 @@ function(val) {
 }
 ```
 
-**fromDynamo**: function
+If an object is passed in it must have a toDynamo property that is a function. You can set the `isAsync` property to true, to enable callback functionality. If you are using promises, `isAsync` is not required. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  toDynamo: function(v, cb) {
+    setTimeout(function() {
+      cb({S: "My custom value"});
+    }, 5);
+  }
+}
+```
+
+**fromDynamo**: function | object
 
 Adds a getter function that will be used to transform the value directly returned from the DB. This skips all type management and parsing normally provided by `options.get`.
 
@@ -259,6 +272,19 @@ function(val) {
             resolve("My custom value");
         }, 1000);
     });
+}
+```
+
+If an object is passed in it must have a fromDynamo property that is a function. You can set the `isAsync` property to true, to enable callback functionality. If you are using promises, `isAsync` is not required. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  fromDynamo: function(v, cb) {
+    setTimeout(function() {
+      cb({S: "My custom value"});
+    }, 5);
+  }
 }
 ```
 
