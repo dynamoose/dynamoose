@@ -205,6 +205,20 @@ Dog.get(3)
     }
     */
   });
+
+
+Dog.scan().exec()
+  .then(function(dogs) {
+    return Promise.all(dogs.map(function(dog) {
+      return dog.populate({
+        path: 'parent',
+        model: 'Dog'
+      });
+    }));
+  })
+  .then(function(dogs) {
+    console.log(dogs);
+  });
 ```
 #### Populate with range and hash key
 
@@ -442,10 +456,47 @@ This object has the following methods that you can call.
 - `Model.transaction.create`
 - `Model.transaction.delete`
 - `Model.transaction.update`
+- `Model.transaction.conditionCheck`
 
 You can pass in the same parameters into each method that you do for the normal (non-transaction) methods.
 
 These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
+
+
+### Model.transaction.conditionCheck(key, options)
+
+This method allows you to run a conditionCheck when running a DynamoDB transaction.
+
+Example:
+
+```js
+Model.transaction.conditionCheck("credit1", {
+  condition: "amount > :request",
+  conditionNames: {
+    request: "request"
+  },
+  conditionValues: {
+    request: 100
+  }
+})
+```
+
+#### Options
+
+**condition**: string
+
+An expression for a conditional update. See [the AWS documentation](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html) for more information about condition expressions.
+
+**conditionNames**: object
+
+A map of name substitutions for the condition expression.
+
+**conditionValues**: object
+
+A map of values for the condition expression. Note that in order for
+automatic object conversion to work, the keys in this object must
+match schema attribute names.
+
 
 ### Model.getTableReq()
 
