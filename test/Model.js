@@ -2875,6 +2875,30 @@ describe('Model', function (){
           BillModeModel4.getTableReq().ProvisionedThroughput.WriteCapacityUnits.should.eql(10);
         });
 
+        it('Should not have throughput on Global Secondary Index if Model throughput is ON_DEMAND', function() {
+          var BillModeSchema5 = new dynamoose.Schema({
+            id: Number,
+            name: { type: String, index: { global: true } }
+          }, {throughput: "ON_DEMAND"});
+          var BillModeModel5 = dynamoose.model('BillModeModel5', BillModeSchema5, {create: false});
+
+          should.not.exist(BillModeModel5.getTableReq().GlobalSecondaryIndexes[0].ProvisionedThroughput);
+        });
+
+        it('Should have correct throughput on Global Secondary Index if Model throughput is set', function() {
+          var BillModeSchema6 = new dynamoose.Schema({
+            id: Number,
+            name: { type: String, index: { global: true, throughput: { write: 5, read: 5 } } }
+          }, {throughput: {
+            write: 10,
+            read: 10
+          }});
+          var BillModeModel6 = dynamoose.model('BillModeModel6', BillModeSchema6, {create: false});
+
+          BillModeModel6.getTableReq().GlobalSecondaryIndexes[0].ProvisionedThroughput.ReadCapacityUnits.should.eql(5);
+          BillModeModel6.getTableReq().GlobalSecondaryIndexes[0].ProvisionedThroughput.WriteCapacityUnits.should.eql(5);
+        });
+
         it('Should allow for originalItem function on models', function(done) {
           var item = {
             id: 2222,
