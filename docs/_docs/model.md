@@ -349,7 +349,7 @@ Dog.batchDelete([
 ### Model.update(key, update, options, callback)
 ### Model.update(keyWithUpdate, callback)
 
-Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
+Updates an existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
 
 The key can either be its own object or combined with the update object.
 
