@@ -126,6 +126,18 @@ function(model) {
 }
 ```
 
+Your function may also be an async function with await statements in it, or return a promise. For example:
+
+```js
+function(model) {
+    return new Promise(resolve => {
+        setTimeout(function() {
+            resolve("My default value");
+        }, 1000);
+    });
+}
+```
+
 **enum: Array of strings**
 
 Force value to be one of the enumeration values.
@@ -134,7 +146,7 @@ Force value to be one of the enumeration values.
 
 (default: false) Will force the default value to always be applied to the attribute event if it already set. This is good for populating data that will be used as sort or secondary indexes.
 
-**validate**: function, regular expression, or value
+**validate**: function, regular expression, object, or value
 
 Validation required before for saving.
 
@@ -149,25 +161,134 @@ function(value, model) {
 }
 ```
 
+You can also pass in a function that returns a promise, or an async function:
+
+```js
+async function(v) {
+  const result = await networkRequest(v);
+  if (result.value === "true") {
+    return true;
+  } else {
+    return false;
+  }
+}
+```
+
 If it is a RegExp, it is compared using `RegExp.test(value)`.
 
 If it is a value, it is compared with `===`.
 
-**set**: function
+If an object is passed in it must have a validator property that is a function. You can set the `isAsync` property to true, to enable callback functionality. If you are using promises, `isAsync` is not required. For example:
 
-Adds a setter function that will be used to transform the value before writing to the DB.
+```js
+{
+  isAsync: true, // default: false
+  validator: function(v, model, cb) {
+    setTimeout(function() {
+      var phoneRegex = /\d{3}-\d{3}-\d{4}/;
+      var msg = v + ' is not a valid phone number!';
+      // First argument is a boolean, whether validator succeeded
+      // 2nd argument is an optional error message override
+      cb(phoneRegex.test(v), msg);
+    }, 5);
+  },
+  disableModelParameter: false // default: false, if enabled will only pass in value and callback, and not the model
+}
+```
 
-**get**: function
+The property name `validate` is also an alias for `validator`. The property name `validator` will take priority if both are passed in.
 
-Adds a getter function that will be used to transform the value returned from the DB, fired only if there is a value returned from the DB.
+**set**: function | object
 
-**toDynamo**: function
+Adds a setter function that will be used to transform the value before writing to the DB. You can pass in a standard function that returns the new result, an async function that uses await syntax in it, or a function that returns a promise.
+
+You can also pass in an object that defines extra settings and allows for callback based async set. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  set: function(v, cb) {
+    setTimeout(function() {
+      cb("My item: " + v, msg);
+    }, 5);
+  }
+}
+```
+
+**get**: function | object
+
+Adds a getter function that will be used to transform the value returned from the DB, fired only if there is a value returned from the DB. You can pass in a standard function that returns the new result, an async function that uses await syntax in it, or a function that returns a promise.
+
+You can also pass in an object that defines extra settings and allows for callback based async get. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  get: function(v, cb) {
+    setTimeout(function() {
+      cb("My item: " + v, msg);
+    }, 5);
+  }
+}
+```
+
+**toDynamo**: function | object
 
 Adds a setter function that will directly set the value to the DB. This skips all type management and parsing normally provided by `options.set`.
 
-**fromDynamo**: function
+Your function may also be an async function with await statements in it, or return a promise. For example:
+
+```js
+function(val) {
+    return new Promise(resolve => {
+        setTimeout(function() {
+            resolve({S: "My custom value"});
+        }, 1000);
+    });
+}
+```
+
+If an object is passed in it must have a toDynamo property that is a function. You can set the `isAsync` property to true, to enable callback functionality. If you are using promises, `isAsync` is not required. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  toDynamo: function(v, cb) {
+    setTimeout(function() {
+      cb({S: "My custom value"});
+    }, 5);
+  }
+}
+```
+
+**fromDynamo**: function | object
 
 Adds a getter function that will be used to transform the value directly returned from the DB. This skips all type management and parsing normally provided by `options.get`.
+
+Your function may also be an async function with await statements in it, or return a promise. For example:
+
+```js
+function(val) {
+    return new Promise(resolve => {
+        setTimeout(function() {
+            resolve("My custom value");
+        }, 1000);
+    });
+}
+```
+
+If an object is passed in it must have a fromDynamo property that is a function. You can set the `isAsync` property to true, to enable callback functionality. If you are using promises, `isAsync` is not required. For example:
+
+```js
+{
+  isAsync: true, // default: false
+  fromDynamo: function(v, cb) {
+    setTimeout(function() {
+      cb({S: "My custom value"});
+    }, 5);
+  }
+}
+```
 
 **trim**: boolean
 
