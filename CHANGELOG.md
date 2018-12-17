@@ -1,5 +1,38 @@
 # Dynamoose ChangeLog
 
+## Version 1.3.0
+
+Dynamoose Version 1.3.0 finishes implementation of some important features (DynamoDB transaction support, and pay per request billing mode), improves the overall stability of the project (reduces NPM package size, bug fixes, throwing more errors), along many more improvements.
+
+Please comment or contact me if you have any questions about this release.
+
+### General
+
+- **[RAW DynamoDB Transaction Item Support](https://github.com/dynamoosejs/dynamoose/pull/486)** #486
+- **[Model.transaction.conditionCheck](https://github.com/dynamoosejs/dynamoose/pull/485)** #485
+- **[Async Schema Methods](https://github.com/dynamoosejs/dynamoose/pull/492)** #492
+- **[Reducing Size of NPM Package](https://github.com/dynamoosejs/dynamoose/pull/484)** #484
+- **[Raise error if list or map not provided](https://github.com/dynamoosejs/dynamoose/pull/443)** #443
+
+### Bug Fixes
+
+- **[Fix support for PAY_PER_REQUEST BillingMode when Model includes Global Secondary Indexes](https://github.com/dynamoosejs/dynamoose/pull/504)** #504
+- **[Fixing problem where if primary key starts with underscore Model.create doesn’t work](https://github.com/dynamoosejs/dynamoose/pull/502)** #502
+
+### Other
+
+- **[Pin & Update Dependency Versions](https://github.com/dynamoosejs/dynamoose/pull/487)** #487
+- **[Creating release notes template](https://github.com/dynamoosejs/dynamoose/pull/482)** #482
+- **[Project Cleanup](https://github.com/dynamoosejs/dynamoose/pull/483)** #483
+
+### Documentation
+
+- **[Adding documentation for query.using method](https://github.com/dynamoosejs/dynamoose/pull/489)** #489
+- **[Adding documentation for populating an array of items](https://github.com/dynamoosejs/dynamoose/pull/493)** #493
+- **[Fixes a typo in Model.update documentation](https://github.com/dynamoosejs/dynamoose/pull/506)** #506
+
+---
+
 ## Version 1.2.0
 
 AWS reInvent 2018 has wrapped up, and this release includes support for all of the DynamoDB goodies announced. This version also includes beta support for plugins! Plugin support has the potential to have breaking changes in the future with no warning, so please be aware of that when using the system. Please give feedback on plugins by creating issues on the Dynamoose repository.
