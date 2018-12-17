@@ -1152,6 +1152,14 @@ describe('Model', function (){
           });
         });
 
+        it('Should allow for primary key being `_id` while creating', function (done) {
+          Cats.Cat12.create({_id: 666, name: 'Garfield'}, function (err, garfield) {
+            should.not.exist(err);
+            should.exist(garfield);
+            done();
+          });
+        });
+
         it('Prevent duplicate create with range key', function (done) {
           Cats.Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
             should.exist(err);
