@@ -1041,6 +1041,28 @@ describe('Schema tests', function (){
     }
   });
 
+  it('Throws a useful error when parsing a record that does not match the schema', async function () {
+
+    const schema = new Schema({
+      topLevel: {
+        nestedField: Boolean,
+      }
+     });
+
+    var model = {};
+
+    try {
+      await schema.parseDynamo(model, {
+        topLevel: {
+          nestedField: 'This is a string',
+        }
+      });
+    } catch(err) {
+      err.should.be.instanceof(errors.ParseError);
+      err.message.should.match(/Attribute "nestedField" of type "BOOL" has an invalid value of "This is a string"/)
+    }
+  });
+
   it('Enum Should be set in schema attributes object', function (done) {
     var enumData = ['Golden retriever', 'Beagle'];
     var schema = new Schema({
