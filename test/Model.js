@@ -3055,6 +3055,28 @@ describe('Model', function (){
               cat.expires.should.be.greaterThan(originalExpires[cat.id]);
             });
           });
+
+          it('Works with multiple Array globals', async function () {
+            const catsUsingOriginalArrayGlobal = [
+              new Cats.Cat11({
+                id: 1,
+                name: 'Crookshanks',
+                vet: { name: 'theVet', address: 'Diagon Alley' },
+                ears: [{ name: 'left' }, { name: 'right' }],
+                legs: ['front right', 'front left', 'back right', 'back left'],
+                more: { favorites: { food: 'fish' } },
+                array: [{ one: '1' }],
+                validated: 'valid'
+              }),
+            ];
+            const arrayPrototypeClone = {};
+            for (const method of Object.getOwnPropertyNames(Array.prototype)) {
+              arrayPrototypeClone[method] = Array.prototype[method];
+            }
+            catsUsingOriginalArrayGlobal.__proto__ = arrayPrototypeClone;
+
+            const result = await Cats.Cat11.batchPut(catsUsingOriginalArrayGlobal);
+          });
         });
 
         describe('Model.batchDelete', function (){
