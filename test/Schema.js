@@ -940,6 +940,7 @@ describe('Schema tests', function (){
 
     var schema = new Schema({
       id: Number,
+      anotherMap: Map,
     }, {
       saveUnknown: true
     });
@@ -952,6 +953,11 @@ describe('Schema tests', function (){
           aString: { S: 'Fluffy' },
           aNumber: { N: '5' },
         },
+      },
+      anotherMap: {
+        M: {
+          aNestedAttribute: { S: 'I am a nested attribute' }
+        }
       },
       listAttrib: {
         L: [
@@ -966,6 +972,9 @@ describe('Schema tests', function (){
       mapAttrib: {
         aString: 'Fluffy',
         aNumber: 5,
+      },
+      anotherMap: {
+        aNestedAttribute: 'I am a nested attribute'
       },
       listAttrib: [
         'v1',
