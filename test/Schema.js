@@ -953,6 +953,18 @@ describe('Schema tests', function (){
           aNumber: { N: '5' },
         },
       },
+      stringSet: {
+        SS: [
+          'String1',
+          'String2',
+        ],
+      },
+      numberSet: {
+        NS: [
+          1,
+          2
+        ],
+      },
       listAttrib: {
         L: [
           { S: 'v1' },
@@ -967,6 +979,74 @@ describe('Schema tests', function (){
         aString: 'Fluffy',
         aNumber: 5,
       },
+      stringSet: [
+        'String1',
+        'String2',
+      ],
+      numberSet: [
+        1,
+        2,
+      ],
+      listAttrib: [
+        'v1',
+        'v2',
+      ],
+    });
+  });
+
+  it('Parses known sets as sets, not arrays, when saveUnknown=true', async function () {
+
+    var schema = new Schema({
+      id: Number,
+      stringSet: [String],
+      numberSet: [Number],
+    }, {
+      saveUnknown: true
+    });
+
+    var model = {};
+    await schema.parseDynamo(model, {
+      id: { N: '2' },
+      mapAttrib: {
+        M: {
+          aString: { S: 'Fluffy' },
+          aNumber: { N: '5' },
+        },
+      },
+      stringSet: {
+        SS: [
+          'String1',
+          'String2',
+        ],
+      },
+      numberSet: {
+        NS: [
+          1,
+          2
+        ],
+      },
+      listAttrib: {
+        L: [
+          { S: 'v1' },
+          { S: 'v2' },
+        ],
+      },
+    });
+
+    model.should.eql({
+      id: 2,
+      mapAttrib: {
+        aString: 'Fluffy',
+        aNumber: 5,
+      },
+      stringSet: [
+        'String1',
+        'String2',
+      ],
+      numberSet: [
+        1,
+        2,
+      ],
       listAttrib: [
         'v1',
         'v2',
