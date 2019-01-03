@@ -47,7 +47,7 @@ declare module "dynamoose" {
   }
   export interface SchemaAttributeDefinition<Constructor, Type> {
     type: Constructor;
-    validate?: (v: Type) => boolean;
+    validate?: (v: Type) => boolean | Promise<boolean>;
     hashKey?: boolean;
     rangeKey?: boolean;
     required?: boolean;
