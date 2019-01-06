@@ -819,4 +819,49 @@ describe('Scan', function (){
     });
 
 
+    it('Should not set timestamps', async function () {
+      this.timeout(15000);
+
+      const Lion = dynamoose.model('Lion1', {
+        id: {
+          type: String,
+          hashKey: true,
+          trim: true,
+        },
+      }, {
+        timestamps: {
+          createdAt: 'created_at',
+          updatedAt: 'updated_at',
+        },
+      });
+
+      for (let i = 0; i < 10; i++) {
+        const record = {
+          id: `${i}`,
+        };
+
+        await new Lion(record).save();
+      }
+
+      // scan all records
+      const allRecords = await Lion.scan().all(0).exec();
+      allRecords.length.should.eql(10);
+
+      // filter by created_at
+      const tenMinAgo = new Date().getTime() - 10 * 60 * 1000;
+      const createdFilter = {
+        created_at: { gt: tenMinAgo },
+      }
+      const createdFilterRecords = await Lion.scan(createdFilter).all(0).exec();
+      createdFilterRecords.length.should.eql(10);
+
+      // filter by updated_at
+      const updatedFilter = {
+        updated_at: { gt: tenMinAgo },
+      }
+      const updatedFilterRecords = await Lion.scan(updatedFilter).all(0).exec();
+      updatedFilterRecords.length.should.eql(10);
+    });
+
+
   });
