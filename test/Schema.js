@@ -1213,6 +1213,46 @@ describe('Schema tests', function (){
     });
   });
 
+
+  it('Errors when encountering an unknown attribute if errorUnknown is set to true', async function () {
+    const schema = new Schema({
+      knownAttribute: String,
+     }, {
+       errorUnknown: true,
+    });
+
+    let err;
+    const model = {['$__']: {
+      name: 'OnlyKnownAttributesModel'
+    }};
+    try {
+      await schema.parseDynamo(model, {
+        knownAttribute: { S: 'I am known to the schema. Everything is groovy.' },
+        unknownAttribute: { S: 'I am but a stranger to the schema. I should cause an error.' }
+      });
+    } catch (e) {
+      err = e;
+    }
+
+    err.should.be.instanceof(errors.ParseError);
+    err = undefined;
+
+    try {
+      await schema.parseDynamo(model, {
+        knownAttribute: { S: 'I am known to the schema. Everything is groovy.' },
+        myMap: {
+          M: {
+            nestedUnknownAttribute: { S: 'I too am a stranger. Will the schema be able to find me down here?' }
+          }
+        }
+      });
+    } catch (e) {
+      err = e;
+    }
+
+    err.should.be.instanceof(errors.ParseError);
+  });
+
   it('Should throw error when type is map but no map is provided', function (done) {
     let err;
     try {
