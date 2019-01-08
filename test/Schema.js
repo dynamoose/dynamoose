@@ -940,6 +940,7 @@ describe('Schema tests', function (){
 
     var schema = new Schema({
       id: Number,
+      anotherMap: Map,
     }, {
       saveUnknown: true
     });
@@ -952,6 +953,11 @@ describe('Schema tests', function (){
           aString: { S: 'Fluffy' },
           aNumber: { N: '5' },
         },
+      },
+      anotherMap: {
+        M: {
+          aNestedAttribute: { S: 'I am a nested attribute' }
+        }
       },
       stringSet: {
         SS: [
@@ -978,6 +984,9 @@ describe('Schema tests', function (){
       mapAttrib: {
         aString: 'Fluffy',
         aNumber: 5,
+      },
+      anotherMap: {
+        aNestedAttribute: 'I am a nested attribute'
       },
       stringSet: [
         'String1',
@@ -1118,6 +1127,28 @@ describe('Schema tests', function (){
       // M and L aren't supported with document types are set to false
       err.should.be.instanceof(Error);
       err.should.be.instanceof(errors.ParseError);
+    }
+  });
+
+  it('Throws a useful error when parsing a record that does not match the schema', async function () {
+
+    const schema = new Schema({
+      topLevel: {
+        nestedField: Boolean,
+      }
+     });
+
+    var model = {};
+
+    try {
+      await schema.parseDynamo(model, {
+        topLevel: {
+          nestedField: 'This is a string',
+        }
+      });
+    } catch(err) {
+      err.should.be.instanceof(errors.ParseError);
+      err.message.should.match(/Attribute "nestedField" of type "BOOL" has an invalid value of "This is a string"/)
     }
   });
 
