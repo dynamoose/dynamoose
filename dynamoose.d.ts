@@ -64,7 +64,7 @@ declare module "dynamoose" {
     default?: (() => Type) | Type
   }
   export interface SchemaOptions {
-    throughput?: boolean | { read: number, write: number };
+    throughput?: boolean | { read: number, write: number } | "ON_DEMAND";
     useNativeBooleans?: boolean;
     useDocumentTypes?: boolean;
     timestamps?: boolean | { createdAt: string, updatedAt: string };
