@@ -441,10 +441,10 @@ match schema attribute names.
 From [the AWS documentation](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
 Use ReturnValues if you want to get the item attributes as they appear before or after they are updated. For UpdateItem, the valid values are:
 
-- NONE - If ReturnValues is not specified, or if its value is NONE, then nothing is returned. (This setting is the default for ReturnValues.)
+- NONE - If ReturnValues is not specified, or if its value is NONE, then nothing is returned. (This setting is DynamoDB's default.)
 - ALL_OLD - Returns all of the attributes of the item, as they appeared before the UpdateItem operation.
 - UPDATED_OLD - Returns only the updated attributes, as they appeared before the UpdateItem operation.
-- ALL_NEW - Returns all of the attributes of the item, as they appear after the UpdateItem operation.
+- ALL_NEW - Returns all of the attributes of the item, as they appear after the UpdateItem operation. (This setting is Dynamoose's default.)
 - UPDATED_NEW - Returns only the updated attributes, as they appear after the UpdateItem operation.
 
 
