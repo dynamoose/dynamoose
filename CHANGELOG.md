@@ -1,5 +1,29 @@
 # Dynamoose ChangeLog
 
+## Version 1.3.1
+
+Just a simple bug fix release!
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- **[Make saveUnknown work recursively](https://github.com/dynamoosejs/dynamoose/pull/522)** #522
+- **[Always use Array.isArray to check if array](https://github.com/dynamoosejs/dynamoose/pull/521)** #521
+- **[Fix error logging for data/schema mismatch](https://github.com/dynamoosejs/dynamoose/pull/518)** #518
+- **[Changing to not update timestamps when scaning or querying with filter](https://github.com/dynamoosejs/dynamoose/pull/510)** #510
+
+### Documentation
+
+- **[dynamoose.d.ts allow validate property on schema to return promise as well as raw boolean](https://github.com/dynamoosejs/dynamoose/pull/520)** #520
+- **[update typescript typings to allow `ON_DEMAND` throughput in SchemaOptions](https://github.com/dynamoosejs/dynamoose/pull/530)** #530
+
+### Other
+
+- **[Add error when not missing hash key for Model.get](https://github.com/dynamoosejs/dynamoose/pull/524)** #524 
+
+---
+
 ## Version 1.3.0
 
 Dynamoose Version 1.3.0 finishes implementation of some important features (DynamoDB transaction support, and pay per request billing mode), improves the overall stability of the project (reduces NPM package size, bug fixes, throwing more errors), along many more improvements.
