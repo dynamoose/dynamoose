@@ -956,9 +956,11 @@ describe('Schema tests', function (){
       },
       anotherMap: {
         M: {
-          aNestedAttribute: { S: 'I am a nested attribute' }
+          aNestedAttribute: { S: 'I am a nested unknown sub-attribute of a known top-level attribute' },
+          weHaveTheSameName: { S: 'I should be independent of the top-level field with the same name' },
         }
       },
+      weHaveTheSameName: { N: 123 },
       listAttrib: {
         L: [
           { S: 'v1' },
@@ -974,8 +976,10 @@ describe('Schema tests', function (){
         aNumber: 5,
       },
       anotherMap: {
-        aNestedAttribute: 'I am a nested attribute'
+        aNestedAttribute: 'I am a nested unknown sub-attribute of a known top-level attribute',
+        weHaveTheSameName: 'I should be independent of the top-level field with the same name'
       },
+      weHaveTheSameName: 123,
       listAttrib: [
         'v1',
         'v2',
@@ -1216,6 +1220,14 @@ describe('Schema tests', function (){
 
   it('Errors when encountering an unknown attribute if errorUnknown is set to true', async function () {
     const schema = new Schema({
+      myHashKey: {
+        hashKey: true,
+        type: String,
+      },
+      myRangeKey: {
+        rangeKey: true,
+        type: String,
+      },
       knownAttribute: String,
      }, {
        errorUnknown: true,
@@ -1227,6 +1239,8 @@ describe('Schema tests', function (){
     }};
     try {
       await schema.parseDynamo(model, {
+        myHashKey: 'I am the hash key',
+        myRangeKey: 'I am the range key',
         knownAttribute: { S: 'I am known to the schema. Everything is groovy.' },
         unknownAttribute: { S: 'I am but a stranger to the schema. I should cause an error.' }
       });
@@ -1235,10 +1249,35 @@ describe('Schema tests', function (){
     }
 
     err.should.be.instanceof(errors.ParseError);
-    err = undefined;
+    err.message.should.equal('Unknown top-level attribute unknownAttribute on model OnlyKnownAttributesModel with hash-key "I am the hash key" and range-key "I am the range key" and value: {"S":"I am but a stranger to the schema. I should cause an error."}');
+  });
+
+
+  it('Errors when encountering an unknown nested attribute if errorUnknown is set to true', async function () {
+    const schema = new Schema({
+      myHashKey: {
+        hashKey: true,
+        type: String,
+      },
+      myRangeKey: {
+        rangeKey: true,
+        type: String,
+      },
+      knownAttribute: String,
+      myMap: Map,
+     }, {
+       errorUnknown: true,
+    });
+
+    let err;
+    const model = {['$__']: {
+      name: 'OnlyKnownAttributesModel'
+    }};
 
     try {
       await schema.parseDynamo(model, {
+        myHashKey: 'I am the hash key',
+        myRangeKey: 'I am the range key',
         knownAttribute: { S: 'I am known to the schema. Everything is groovy.' },
         myMap: {
           M: {
@@ -1251,6 +1290,7 @@ describe('Schema tests', function (){
     }
 
     err.should.be.instanceof(errors.ParseError);
+    err.message.should.match(/Unknown nested attribute nestedUnknownAttribute with value: {"S":"I too am a stranger. Will the schema be able to find me down here\?"}/);
   });
 
   it('Should throw error when type is map but no map is provided', function (done) {
