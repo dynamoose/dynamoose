@@ -401,6 +401,13 @@ module.exports = function(dynamoose){
   });
   var CatWithMethods = dynamoose.model('CatWithMethods', CatWithMethodsSchema);
 
+  const ReturnValuesNoneCat = dynamoose.model('ReturnValuesNoneCat', {
+    id: Number,
+    name: String,
+  },{
+    defaultReturnValues: 'NONE',
+  })
+
   return {
     Cat: Cat,
     Cat1: Cat1,
@@ -423,6 +430,7 @@ module.exports = function(dynamoose){
     ExpiringCatReturnTrue: ExpiringCatReturnTrue,
     CatWithGeneratedID: CatWithGeneratedID,
     CatWithMethods: CatWithMethods,
-    CatModel: CatModel
+    CatModel: CatModel,
+    ReturnValuesNoneCat,
   };
 };
