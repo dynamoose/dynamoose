@@ -412,6 +412,16 @@ var schema = new Schema({...}, {
 });
 ```
 
+**errorUnknown**: boolean
+
+Specifies that any attributes not defined in the _schema_ will throw an error if encountered while parsing records from DynamoDB. This defaults to false.
+
+```js
+var schema = new Schema({...}, {
+  errorUnknown: true
+});
+```
+
 **attributeToDynamo**: function
 
 A function that accepts `name, json, model, defaultFormatter, options`.
