@@ -2314,6 +2314,14 @@ describe('Model', function (){
             });
           });
 
+          it("Update respects global defaultReturnValues option", function () {
+            return Cats.ReturnValuesNoneCat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
+              return Cats.ReturnValuesNoneCat.update({id: old.id}, {name: 'Tom'}).then(function(data){
+                should.not.exist(data);
+              });
+            });
+          });
+
           it("Update returns updated new values using 'UPDATED_NEW'", function () {
             return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
               return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_NEW'}).then(function(data){
