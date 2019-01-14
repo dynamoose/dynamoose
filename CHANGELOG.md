@@ -1,5 +1,18 @@
 # Dynamoose ChangeLog
 
+## Version 1.4.0
+
+This version adds some more options to the model and schema options objects.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- **[errorUnknown](https://github.com/dynamoosejs/dynamoose/pull/531)** #531
+- **[defaultReturnValues](https://github.com/dynamoosejs/dynamoose/pull/533)** #533
+
+---
+
 ## Version 1.3.1
 
 Just a simple bug fix release!
@@ -20,7 +33,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 
 ### Other
 
-- **[Add error when not missing hash key for Model.get](https://github.com/dynamoosejs/dynamoose/pull/524)** #524 
+- **[Add error when not missing hash key for Model.get](https://github.com/dynamoosejs/dynamoose/pull/524)** #524
 
 ---
 
