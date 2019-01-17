@@ -17,10 +17,12 @@ declare module "dynamoose" {
   export function setDDB(ddb: _AWS.DynamoDB): void;
   export function revertDDB(): void;
   export function transaction<DataSchema, KeySchema>(
-    items: Array<Promise<ModelSchema<DataSchema>>
+    items: Array<
+      Promise<ModelSchema<DataSchema>>
       | _AWS.DynamoDB.TransactWriteItem
-      | _AWS.DynamoDB.TransactGetItem>, 
-    options?: TransactionOptions, 
+      | _AWS.DynamoDB.TransactGetItem
+    >,
+    options?: TransactionOptions,
     next?: any
   ): Promise<Array<ModelSchema<DataSchema>>>
   export interface TransactionOptions {
