@@ -18,7 +18,7 @@ declare module "dynamoose" {
   export function revertDDB(): void;
   export function transaction<DataSchema, KeySchema>(items: Array<Promise<ModelSchema<DataSchema>>>, options?: TransactionOptions, next?: any): Promise<Array<ModelSchema<DataSchema>>>
   export interface TransactionOptions {
-    type: string
+    type: 'get' | 'write'
   }
 
   export interface ModelOption {
