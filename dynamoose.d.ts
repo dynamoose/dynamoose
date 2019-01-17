@@ -16,6 +16,7 @@ declare module "dynamoose" {
   export function setDefaults(options: ModelOption): void;
   export function setDDB(ddb: _AWS.DynamoDB): void;
   export function revertDDB(): void;
+  export function transaction<DataSchema, KeySchema>(items: Array<Promise<ModelSchema<DataSchema>>>, options?: any, next?: any): Promise<Array<ModelSchema<DataSchema>>>
 
   export interface ModelOption {
     create?: boolean, // Create table in DB, if it does not exist,
@@ -191,6 +192,8 @@ declare module "dynamoose" {
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<ModelSchema<DataSchema>>;
+
+    transaction: ModelConstructor<DataSchema, KeySchema>
   }
   type ModelSchema<T> = Model<T> & T;
 
