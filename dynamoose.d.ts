@@ -23,8 +23,11 @@ declare module "dynamoose" {
       | _AWS.DynamoDB.TransactGetItem
     >,
     options?: TransactionOptions,
-    next?: any
-  ): Promise<Array<ModelSchema<DataSchema>>>
+    next?: (err: Error, data: TransactionReturnData<DataSchema>) => void
+  ): Promise<TransactionReturnData<DataSchema>>
+  export interface TransactionReturnData<DataSchema> {
+    TransactItems: Array<ModelSchema<DataSchema>>
+  }
   export interface TransactionOptions {
     type: 'get' | 'write'
   }
