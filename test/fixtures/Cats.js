@@ -392,6 +392,29 @@ module.exports = function(dynamoose){
     name: String
   });
 
+  var Cat13 = dynamoose.model('Cat13',
+  {
+    id: {
+      type:  Number,
+      validate: function (v) { return v > 0; }
+    },
+    items: {
+      type: "list",
+      list: [
+        {
+          name: {
+            type: String,
+            required: true
+          },
+          amount: {
+            type: Number,
+            required: true
+          }
+        }
+      ]
+    }
+  });
+
   var CatWithMethodsSchema = new dynamoose.Schema({
     id: Number,
     name: String
@@ -422,6 +445,7 @@ module.exports = function(dynamoose){
     Cat10: Cat10,
     Cat11: Cat11,
     Cat12: Cat12,
+    Cat13: Cat13,
     CatWithOwner: CatWithOwner,
     Owner: Owner,
     ExpiringCat: ExpiringCat,
