@@ -2271,6 +2271,23 @@ describe('Model', function (){
             });
           });
 
+          it('Add attribute to list', function (done) {
+            Cats.Cat13.create({id: 1000, items: [{name: "item 2", amount: 25}]}, function () {
+              Cats.Cat13.update({id: 1000}, {$ADD: {items: [{name: "item 1", amount: 50}]}}, function (err, data) {
+                should.not.exist(err);
+                should.exist(data);
+                data.id.should.eql(1000);
+                data.items.should.eql([{name: "item 2", amount: 25}, {name: "item 1", amount: 50}]);
+                Cats.Cat13.get(1000, function (err, cat){
+                  should.not.exist(err);
+                  should.exist(cat);
+                  cat.id.should.eql(1000);
+                  cat.items.should.eql([{name: "item 2", amount: 25}, {name: "item 1", amount: 50}]);
+                  done();
+                });
+              });
+            });
+          });
           it('Delete attribute', function (done) {
             Cats.Cat.update({id: 999}, {$DELETE: {owner: null}}, function (err, data) {
               should.not.exist(err);
