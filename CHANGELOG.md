@@ -1,5 +1,17 @@
 # Dynamoose ChangeLog
 
+## Version 1.5.0
+
+This release adds support for `list_append` when adding elements to a list using the `Model.update` method.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- **[Adding support for list_append](https://github.com/dynamoosejs/dynamoose/pull/544)** #544 
+
+---
+
 ## Version 1.4.0
 
 This version adds some more options to the model and schema options objects.
