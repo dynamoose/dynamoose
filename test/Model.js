@@ -2277,8 +2277,6 @@ describe('Model', function (){
                 should.not.exist(err);
                 should.exist(data);
                 data.id.should.eql(1000);
-                console.log(data.items);
-                console.log([{name: "item 2", amount: 25}, {name: "item 1", amount: 50}]);
                 data.items.should.eql([{name: "item 2", amount: 25}, {name: "item 1", amount: 50}]);
                 Cats.Cat13.get(1000, function (err, cat){
                   should.not.exist(err);
