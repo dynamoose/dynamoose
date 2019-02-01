@@ -936,6 +936,61 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Parses document types when using raw AWS filter', async function () {
+    const schema = new Schema({
+      number: {
+        type: Number
+      },
+      arrOne: {
+        type: Array,
+        default: []
+      },
+      string: String,
+      arrTwo: {
+        type: Array,
+        default: []
+      },
+      arrThree: {
+        type: Array,
+        default: []
+      },
+      arrFour: {
+        type: Array,
+        default: []
+      },
+      active: {
+        type: Boolean
+      }
+    });
+
+    const item = {
+      number: 1548396987163,
+      arrOne: '[]',
+      string: 'randomString',
+      arrTwo: '[]',
+      arrThree: '[]',
+      arrFour: '[]',
+      active: true
+    };
+
+    (typeof item.arrOne).should.eql('string');
+
+    const model = {};
+    await schema.parseDynamo(model, item);
+
+    model.should.eql({
+      number: 1548396987163,
+      arrOne: [],
+      string: 'randomString',
+      arrTwo: [],
+      arrThree: [],
+      arrFour: [],
+      active: true
+    });
+
+    Array.isArray(model.arrOne).should.eql(true);
+  });
+
   it('Parses document types when saveUnknown=true and useDocumentTypes=true', async function () {
 
     var schema = new Schema({
