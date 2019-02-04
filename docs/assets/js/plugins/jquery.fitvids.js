@@ -1,4 +1,3 @@
-/*jshint browser:true */
 /*!
 * FitVids 1.1
 *
