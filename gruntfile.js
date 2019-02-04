@@ -36,9 +36,9 @@ module.exports = function(grunt) {
       }
 
       DynamoDbLocal
-      .launch(DYNAMO_DB_PORT)
-      .then(function() { done(); })
-      .catch(function(e) { done(e); });
+        .launch(DYNAMO_DB_PORT)
+        .then(function() { done(); })
+        .catch(function(e) { done(e); });
     });
   });
 

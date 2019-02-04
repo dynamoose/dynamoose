@@ -1,5 +1,4 @@
-
-var regexFuncName = /^Function ([^(]+)\(/i;
+const regexFuncName = /^Function ([^(]+)\(/i;
 
 
 console.log('typeof Object: ' + typeof Object);
