@@ -98,8 +98,9 @@ describe('Scan', function (){
       {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: ['Yellow']},
       {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
       {ownerId:18, name: 'Lassie', breed: 'Collie', color: ['tan', 'white']},
-      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true, details: { timeWakeUp: '8am', timeSleep: '8pm' }}]);
-    });
+      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true, details: { timeWakeUp: '8am', timeSleep: '8pm' }}
+    ]);
+  });
 
   after(function (done) {
     var Dog = dynamoose.model('Dog');
@@ -688,7 +689,6 @@ describe('Scan', function (){
       })
       .catch(function(err) {
         should.not.exist(err);
-        console.error(err);
         done();
       });
   });
@@ -728,7 +728,6 @@ describe('Scan', function (){
       })
       .catch(function(err) {
         should.not.exist(err);
-        console.error(err);
         done();
       });
   });
@@ -749,7 +748,6 @@ describe('Scan', function (){
       })
       .catch(function(err) {
         should.not.exist(err);
-        console.error(err);
         done();
       });
   });

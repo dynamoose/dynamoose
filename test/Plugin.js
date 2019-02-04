@@ -206,17 +206,17 @@ describe('Plugin', function() {
   });
 
   it('Should work with model:scan', function(done) {
-  	var counter = 0;
+    var counter = 0;
 
-  	var pluginA = function(plugin) {
-  	  plugin.setName('Plugin A');
-  	  plugin.on('model:scan', function () {
-  		    counter++;
-  	  });
-  	};
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:scan', function () {
+        counter++;
+      });
+    };
 
 
-  	Model.plugin(pluginA);
+    Model.plugin(pluginA);
 
     Model.scan({}).exec(function() {
       Model.$__.plugins.length.should.eql(1);
@@ -232,7 +232,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:scan', 'request:pre', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);
@@ -256,7 +256,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:scan', 'request:post', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);
@@ -302,7 +302,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:query', 'request:pre', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);
@@ -326,7 +326,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:query', 'request:post', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);
@@ -372,7 +372,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:get', 'request:pre', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);
@@ -396,7 +396,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:get', 'request:post', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);
@@ -450,7 +450,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:put', 'request:pre', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);
@@ -482,7 +482,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:put', 'request:post', function () {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
           }, 500);

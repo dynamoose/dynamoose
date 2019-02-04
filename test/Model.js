@@ -113,7 +113,7 @@ describe('Model', function (){
       name: {
         type: String,
         validate: function (val) {
-          return new Promise(function(resolve, reject) {
+          return new Promise(function(resolve) {
             setTimeout(() => resolve(val.length >= 5), 1000);
           });
         }
@@ -210,7 +210,7 @@ describe('Model', function (){
       name: {
         type: String,
         set: function (val) {
-          return new Promise(function(resolve, reject) {
+          return new Promise(function(resolve) {
             setTimeout(() => resolve(val + 'Hello World'), 1000);
           });
         }
@@ -249,7 +249,6 @@ describe('Model', function (){
       await Wolf4.create({id: 1, name: 'Rob'});
       res = await Wolf4.get(1);
     } catch (e) {
-      console.error(e);
       error = e;
     }
     should.not.exist(error);
@@ -264,7 +263,7 @@ describe('Model', function (){
       name: {
         type: String,
         get: function (val) {
-          return new Promise(function(resolve, reject) {
+          return new Promise(function(resolve) {
             setTimeout(() => resolve(val + 'Hello World'), 1000);
           });
         }
@@ -303,7 +302,6 @@ describe('Model', function (){
       await Wolf6.create({id: 1, name: 'Rob'});
       res = await Wolf6.get(1);
     } catch (e) {
-      console.error(e);
       error = e;
     }
     should.not.exist(error);
@@ -317,8 +315,8 @@ describe('Model', function (){
       id: Number,
       name: {
         type: String,
-        default: function (val) {
-          return new Promise(function(resolve, reject) {
+        default: function () {
+          return new Promise(function(resolve) {
             setTimeout(() => resolve('Hello World'), 1000);
           });
         }
@@ -343,8 +341,8 @@ describe('Model', function (){
       id: Number,
       name: {
         type: String,
-        toDynamo: function (val) {
-          return new Promise(function(resolve, reject) {
+        toDynamo: function () {
+          return new Promise(function(resolve) {
             setTimeout(() => resolve({S: 'Hello World'}), 1000);
           });
         }
@@ -396,8 +394,8 @@ describe('Model', function (){
       id: Number,
       name: {
         type: String,
-        fromDynamo: function (val) {
-          return new Promise(function(resolve, reject) {
+        fromDynamo: function () {
+          return new Promise(function(resolve) {
             setTimeout(() => resolve('Hello World'), 1000);
           });
         }
@@ -551,9 +549,7 @@ describe('Model', function (){
   });
 
   it('Create returnRequest option', function (done) {
-    Cats.ExpiringCat.create({
-      name: 'Leo'
-    }, {returnRequest: true})
+    Cats.ExpiringCat.create({name: 'Leo'}, {returnRequest: true})
       .then(function (request) {
         request.should.exist;
 
@@ -565,51 +561,51 @@ describe('Model', function (){
   });
 
   it('Should support useDocumentTypes and useNativeBooleans being false', function(done) {
-      	this.timeout(12000);
+    this.timeout(12000);
 
-      	var kitten = new Cats.Cat10({
-      		id: 2,
-      		isHappy: true,
-      		parents: ['Max', 'Leah'],
-      		details: {
-      			playful: true,
-      			thirsty: false,
-      			tired: false
-      		}
-      	});
+    var kitten = new Cats.Cat10({
+      id: 2,
+      isHappy: true,
+      parents: ['Max', 'Leah'],
+      details: {
+        playful: true,
+        thirsty: false,
+        tired: false
+      }
+    });
 
-      	kitten.id.should.eql(2);
-      	kitten.isHappy.should.eql(true);
-      	kitten.parents.should.eql(['Max', 'Leah']);
-      	kitten.details.should.eql({
-      		playful: true,
-      		thirsty: false,
-      		tired: false
-      	});
+    kitten.id.should.eql(2);
+    kitten.isHappy.should.eql(true);
+    kitten.parents.should.eql(['Max', 'Leah']);
+    kitten.details.should.eql({
+      playful: true,
+      thirsty: false,
+      tired: false
+    });
 
-      	kitten.save(function(err, kitten) {
-      		kitten.id.should.eql(2);
-      		kitten.isHappy.should.eql(true);
-      		kitten.parents.should.eql(['Max', 'Leah']);
-      		kitten.details.should.eql({
-      			playful: true,
-      			thirsty: false,
-      			tired: false
-      		});
+    kitten.save(function(err, kitten) {
+      kitten.id.should.eql(2);
+      kitten.isHappy.should.eql(true);
+      kitten.parents.should.eql(['Max', 'Leah']);
+      kitten.details.should.eql({
+        playful: true,
+        thirsty: false,
+        tired: false
+      });
 
-      		Cats.Cat10.get(2, function(err, kitten) {
-      			kitten.id.should.eql(2);
-      			kitten.isHappy.should.eql(true);
-      			kitten.parents.should.eql(['Max', 'Leah']);
-      			kitten.details.should.eql({
-      				playful: true,
-      				thirsty: false,
-      				tired: false
-      			});
+      Cats.Cat10.get(2, function(err, kitten) {
+        kitten.id.should.eql(2);
+        kitten.isHappy.should.eql(true);
+        kitten.parents.should.eql(['Max', 'Leah']);
+        kitten.details.should.eql({
+          playful: true,
+          thirsty: false,
+          tired: false
+        });
 
-      			done();
-      		});
-      	});
+        done();
+      });
+    });
   });
 
   it('Create complex model with unnamed attributes', async function () {
@@ -2134,7 +2130,6 @@ describe('Model', function (){
       })
         .then(function (leo) {
           leo.expires = null;
-          console.log(leo);
           return leo.save();
         })
         .then(function () {
@@ -2143,7 +2138,6 @@ describe('Model', function (){
               done(err);
             }
             leo.length.should.eql(1);
-            console.log(leo);
             should.not.exist(leo[0].expires);
             done();
           });
@@ -3100,7 +3094,7 @@ describe('Model', function (){
       }
       catsUsingOriginalArrayGlobal.__proto__ = arrayPrototypeClone;
 
-      const result = await Cats.Cat11.batchPut(catsUsingOriginalArrayGlobal);
+      await Cats.Cat11.batchPut(catsUsingOriginalArrayGlobal);
     });
   });
 
@@ -3333,7 +3327,7 @@ describe('Model', function (){
     });
   });
 
-    		describe('Model.transaction', function() {
+  describe('Model.transaction', function() {
     it('Model.transaction should exist and be an object', function() {
       should.exist(Cats.Cat.transaction);
       Cats.Cat.transaction.should.be.instanceof(Object);
@@ -3426,8 +3420,7 @@ describe('Model', function (){
         }).catch(done);
       });
     });
-
-    		});
+  });
 
   describe('Transactions', function () {
     it('Should return correct request object', function(done) {
@@ -3502,7 +3495,7 @@ describe('Model', function (){
       Cats.Cat.batchPut([
         new Cats.Cat({id: '680', name: 'Oliver'}),
         new Cats.Cat({id: '780', name: 'Whiskers'})
-      ], function (err, result) {
+      ], function () {
         return dynamoose.transaction([
           Cats.Cat.transaction.get(680),
           Cats.Cat.transaction.get(780),

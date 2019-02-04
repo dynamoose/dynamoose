@@ -30,11 +30,11 @@ describe('Schema tests', function (){
       aMap: {
         mapId: Number,
         mapName: String,
-        anotherMap:{
+        anotherMap: {
           m1:String,
         }
       },
-      aList:[
+      aList: [
         {
           listMapId: Number,
           listMapName: String
@@ -552,56 +552,56 @@ describe('Schema tests', function (){
   });
 
   it('Schema useDocumentTypes and useNativeBooleans should default to true', function (done) {
-  	var schema = new Schema({
-  	  id: {
-    		type: Number,
-    		validate: function(v) { return v > 0; },
-    		rangeKey: true
-  	  },
-  	  breed: {
-    		type: String,
-    		hashKey: true
-  	  },
-  	  aObject: {
-    		type: 'Object',
-    		default: { state: 'alive' }
-  	  },
-  	  anotherObject: Object,
-  	  aArray: Array,
-  	  aMap: {
-    		mapId: Number,
-    		mapName: String,
-    		anotherMap:{
-    		  m1:String,
-    		}
-  	  },
-  	  aList:[
-    		{
-    		  listMapId: Number,
-    		  listMapName: String
-    		}
-  	  ],
-  	  anotherMap: {
-    		type: 'map',
-    		map: {
-    		  mapId: {type: Number, required:true },
-    		  mapName: {type: String, required:true }
-    		}
-  	  },
-  	  anotherList: {
-    		type: 'list',
-    		list: [
-    		  {
-    			listMapId: {type: Number, default: 1},
-    			listMapName: {type: String, default:'SomeName'}
-    		  }
-    		]
-  	  }
-  	});
+    var schema = new Schema({
+      id: {
+        type: Number,
+        validate: function(v) { return v > 0; },
+        rangeKey: true
+      },
+      breed: {
+        type: String,
+        hashKey: true
+      },
+      aObject: {
+        type: 'Object',
+        default: { state: 'alive' }
+      },
+      anotherObject: Object,
+      aArray: Array,
+      aMap: {
+        mapId: Number,
+        mapName: String,
+        anotherMap:{
+          m1:String,
+        }
+      },
+      aList:[
+        {
+          listMapId: Number,
+          listMapName: String
+        }
+      ],
+      anotherMap: {
+        type: 'map',
+        map: {
+          mapId: {type: Number, required:true },
+          mapName: {type: String, required:true }
+        }
+      },
+      anotherList: {
+        type: 'list',
+        list: [
+          {
+            listMapId: {type: Number, default: 1},
+            listMapName: {type: String, default:'SomeName'}
+          }
+        ]
+      }
+    });
 
-  	schema.useDocumentTypes.should.eql(true);
-  	schema.useNativeBooleans.should.eql(true);
-  	done();
+    schema.useDocumentTypes.should.eql(true);
+    schema.useNativeBooleans.should.eql(true);
+    done();
   });
 
 
@@ -1296,7 +1296,7 @@ describe('Schema tests', function (){
   it('Should throw error when type is map but no map is provided', function (done) {
     let err;
     try {
-      var schema = new Schema({
+      new Schema({
         race: {
           type: 'map',
         }
@@ -1313,7 +1313,7 @@ describe('Schema tests', function (){
   it('Should throw error when type is list but no list is provided', function (done) {
     let err;
     try {
-      var schema = new Schema({
+      new Schema({
         race: {
           type: 'list',
         }
@@ -1326,7 +1326,7 @@ describe('Schema tests', function (){
 
     err = undefined;
     try {
-      var schema = new Schema({
+      new Schema({
         race: {
           type: 'list',
           list: []
