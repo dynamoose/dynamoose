@@ -9,11 +9,11 @@ Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http:
 
 ### Installation
 
-    $ npm install dynamoose
+    $ npm i dynamoose
 
 ### Example
 
-Set AWS configurations in enviroment varable:
+Set AWS configurations in environment variables:
 
 ```sh
 export AWS_ACCESS_KEY_ID="Your AWS Access Key ID"
@@ -24,21 +24,26 @@ export AWS_REGION="us-east-1"
 Here's a simple example:
 
 ```js
-var dynamoose = require('dynamoose');
+const dynamoose = require('dynamoose');
 
 // Create cat model with default options
-var Cat = dynamoose.model('Cat', { id: Number, name: String });
+const Cat = dynamoose.model('Cat', {
+  id: Number,
+  name: String
+});
 
 // Create a new cat object
-var garfield = new Cat({id: 666, name: 'Garfield'});
+const garfield = new Cat({
+  id: 666,
+  name: 'Garfield'
+});
 
 // Save to DynamoDB
-garfield.save();
+garfield.save(); // Returns a promise that resolves when save has completed
 
 // Lookup in DynamoDB
-Cat.get(666)
-.then(function (badCat) {
-  console.log('Never trust a smiling cat. - ' + badCat.name);
+Cat.get(666).then((badCat) => {
+  console.log(`Never trust a smiling cat. - ${badCat.name}`);
 });
 ```
 
@@ -46,13 +51,9 @@ Cat.get(666)
 
 The documentation can be found at https://dynamoosejs.com/api. You can also find additional examples at https://dynamoosejs.com/examples.
 
-## Help Wanted!
+## Changelog
 
-Help improve Dynamoose.  I need all the help I can get to improve test coverage and the documentation.  If you would like to help please look at the `/test` folder to add tests to the project along with `/docs/_docs` and `/docs/_examples` folders to help write better documentation and examples for Dynamoose.  You can create a PR (pull request) to get your changes merged in.  Thank you very much!!
-
-## ChangeLog
-
-The Dynamoose ChangeLog can be found in the [CHANGELOG.md](//github.com/dynamoosejs/dynamoose/blob/master/CHANGELOG.md) file.
+The Dynamoose Changelog can be found in the [CHANGELOG.md](//github.com/dynamoosejs/dynamoose/blob/master/CHANGELOG.md) file.
 
 ## Roadmap
 

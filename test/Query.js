@@ -223,49 +223,64 @@ describe('Query', function (){
     });
   });
 
-  it('where() must follow eq()', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('where() must follow eq()', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').where('test')
-      .exec(function (err) {
-        should.exist(err.message);
-        err.message.should.eql('Invalid Query state: where() must follow eq()');
-        done();
-      });
+    let error;
+    try {
+      await Dog.query('breed').where('test').exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid Query state: where() must follow eq()');
   });
 
-  it('filter() must follow comparison', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('filter() must follow comparison', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').filter('test')
-      .exec(function (err) {
-        should.exist(err.message);
-        err.message.should.eql('Invalid Query state: filter() must follow comparison');
-        done();
-      });
+    let error;
+    try {
+      await Dog.query('breed').filter('test').exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid Query state: filter() must follow comparison');
   });
 
-  it('eq must follow query()', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('eq must follow query()', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').lt(5)
-      .exec(function (err) {
-        should.exist(err.message);
-        err.message.should.eql('Invalid Query state: eq must follow query()');
-        done();
-      });
+    let error;
+    try {
+      await Dog.query('breed').lt(5).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid Query state: eq must follow query()');
   });
 
-  it('Should throw first error', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Should throw first error', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').lt(5)
-      .where().filter().compVal().beginsWith().in().between()
-      .exec(function (err) {
-        should.exist(err.message);
-        err.message.should.eql('Invalid Query state: eq must follow query()');
-        done();
-      });
+    let error;
+    try {
+      await Dog.query('breed').lt(5).where().filter().compVal().beginsWith().in().between().exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid Query state: eq must follow query()');
   });
 
   it('Basic Query on SGI descending', function (done) {
@@ -512,18 +527,19 @@ describe('Query', function (){
 
   });
 
-  it('beginsWith() cannot follow not()', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('beginsWith() cannot follow not()', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .filter('color').not().contains('Brown')
-      .or()
-      .filter('name').not().beginsWith('Q')
-      .exec(function (err) {
-        should.exist(err.message);
-        err.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
-        done();
-      });
+    let error;
+    try {
+      await Dog.query('breed').eq('Jack Russell Terrier').filter('color').not().contains('Brown').or().filter('name').not().beginsWith('Q').exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
   });
 
   it('Basic Query on SGI with filter between', function (done) {
@@ -539,16 +555,19 @@ describe('Query', function (){
       });
   });
 
-  it('between() cannot follow not()', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('between() cannot follow not()', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .filter('age').not().between(5,7)
-      .exec(function (err) {
-        should.exist(err.message);
-        err.message.should.eql('Invalid Query state: between() cannot follow not()');
-        done();
-      });
+    let error;
+    try {
+      await Dog.query('breed').eq('Jack Russell Terrier').filter('age').not().between(5,7).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid Query state: between() cannot follow not()');
   });
 
   it('Basic Query on SGI with filter in', function (done) {
@@ -564,16 +583,19 @@ describe('Query', function (){
       });
   });
 
-  it('in() cannot follow not()', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('in() cannot follow not()', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .filter('color').not().in(['White and Brown', 'White'])
-      .exec(function (err) {
-        should.exist(err.message);
-        err.message.should.eql('Invalid Query state: in() cannot follow not()');
-        done();
-      });
+    let error;
+    try {
+      await Dog.query('breed').eq('Jack Russell Terrier').filter('color').not().in(['White and Brown', 'White']).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid Query state: in() cannot follow not()');
   });
 
   it('Query.count', function (done) {
