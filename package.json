@@ -55,8 +55,8 @@
     "should": "13.2.3"
   },
   "dependencies": {
-    "aws-sdk": "2.370.0",
-    "debug": "4.1.0",
+    "aws-sdk": "2.395.0",
+    "debug": "4.1.1",
     "deep-equal": "1.0.1",
     "hooks": "0.3.2",
     "object-path": "0.11.4",
