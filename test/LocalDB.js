@@ -24,5 +24,5 @@ describe('Local DB tests', function () {
     dynamoDB = dynamoose.ddb();
 
     should.equal(dynamoDB.endpoint.href, expectURL);
-   });
+  });
 });

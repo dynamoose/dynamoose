@@ -226,46 +226,46 @@ describe('Query', function (){
   it('where() must follow eq()', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').where("test")
-    .exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid Query state: where() must follow eq()');
-      done();
-    });
+    Dog.query('breed').where('test')
+      .exec(function (err) {
+        should.exist(err.message);
+        err.message.should.eql('Invalid Query state: where() must follow eq()');
+        done();
+      });
   });
 
   it('filter() must follow comparison', function (done) {
     var Dog = dynamoose.model('Dog');
 
-    Dog.query('breed').filter("test")
-    .exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid Query state: filter() must follow comparison');
-      done();
-    });
+    Dog.query('breed').filter('test')
+      .exec(function (err) {
+        should.exist(err.message);
+        err.message.should.eql('Invalid Query state: filter() must follow comparison');
+        done();
+      });
   });
 
   it('eq must follow query()', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').lt(5)
-    .exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid Query state: eq must follow query()');
-      done();
-    });
+      .exec(function (err) {
+        should.exist(err.message);
+        err.message.should.eql('Invalid Query state: eq must follow query()');
+        done();
+      });
   });
 
   it('Should throw first error', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').lt(5)
-    .where().filter().compVal().beginsWith().in().between()
-    .exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid Query state: eq must follow query()');
-      done();
-    });
+      .where().filter().compVal().beginsWith().in().between()
+      .exec(function (err) {
+        should.exist(err.message);
+        err.message.should.eql('Invalid Query state: eq must follow query()');
+        done();
+      });
   });
 
   it('Basic Query on SGI descending', function (done) {
@@ -307,8 +307,8 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     var startKey = { breed: { S: 'Jack Russell Terrier' },
-    ownerId: { N: '1' },
-    name: { S: 'Foxy Lady' } };
+      ownerId: { N: '1' },
+      name: { S: 'Foxy Lady' } };
 
     Dog.query('breed').eq('Jack Russell Terrier').startAt(startKey).limit(1).exec(function (err, dogs) {
       should.not.exist(err);
@@ -346,14 +346,14 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .where('ownerId').eq(1)
-    .filter('color').contains('Black').exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(1);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').eq(1)
+      .filter('color').contains('Black').exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(1);
+        done();
+      })
+      .catch(done);
 
   });
 
@@ -361,15 +361,15 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .where('ownerId').eq(2)
-    .filter('siblings').contains('Quincy').exec()
-    .then(function (dogs) {
+      .where('ownerId').eq(2)
+      .filter('siblings').contains('Quincy').exec()
+      .then(function (dogs) {
       //  console.log('The dogs', dogs);
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(2);
-      done();
-    })
-    .catch(done);
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(2);
+        done();
+      })
+      .catch(done);
 
   });
 
@@ -377,138 +377,138 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .filter('color').not().null().exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(5);
-      done();
-    })
-    .catch(done);
+      .filter('color').not().null().exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(5);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter not null', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .filter('color').null().exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(0);
-      done();
-    })
-    .catch(done);
+      .filter('color').null().exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(0);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter le', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .where('ownerId').le(11)
-    .exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(4);
-      dogs[dogs.length - 1].ownerId.should.eql(11);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').le(11)
+      .exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(4);
+        dogs[dogs.length - 1].ownerId.should.eql(11);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter not le', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .where('ownerId').not().le(11)
-    .exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(14);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').not().le(11)
+      .exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(14);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter ge', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .where('ownerId').ge(11)
-    .exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(2);
-      dogs[0].ownerId.should.eql(11);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').ge(11)
+      .exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(2);
+        dogs[0].ownerId.should.eql(11);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter not ge', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .where('ownerId').not().ge(11)
-    .exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(3);
-      dogs[0].ownerId.should.eql(5);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').not().ge(11)
+      .exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(3);
+        dogs[0].ownerId.should.eql(5);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter gt', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .where('ownerId').gt(11)
-    .exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(14);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').gt(11)
+      .exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(14);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter not gt', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .where('ownerId').not().gt(11)
-    .exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(4);
-      dogs[0].ownerId.should.eql(5);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').not().gt(11)
+      .exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(4);
+        dogs[0].ownerId.should.eql(5);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter not eq and not lt', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .where('ownerId').not().lt(10)
-    .and()
-    .filter('color').not().eq('Brown')
-    .exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(11);
-      done();
-    })
-    .catch(done);
+      .where('ownerId').not().lt(10)
+      .and()
+      .filter('color').not().eq('Brown')
+      .exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(11);
+        done();
+      })
+      .catch(done);
   });
 
   it('Basic Query on SGI with filter not contains or beginsWith', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .filter('color').not().contains('Brown')
-    .or()
-    .filter('name').beginsWith('Q').exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(2);
-      done();
-    })
-    .catch(done);
+      .filter('color').not().contains('Brown')
+      .or()
+      .filter('name').beginsWith('Q').exec()
+      .then(function (dogs) {
+        dogs.length.should.eql(2);
+        done();
+      })
+      .catch(done);
 
   });
 
@@ -516,166 +516,166 @@ describe('Query', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .filter('color').not().contains('Brown')
-    .or()
-    .filter('name').not().beginsWith('Q')
-    .exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
-      done();
-    });
+      .filter('color').not().contains('Brown')
+      .or()
+      .filter('name').not().beginsWith('Q')
+      .exec(function (err) {
+        should.exist(err.message);
+        err.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
+        done();
+      });
   });
 
   it('Basic Query on SGI with filter between', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .filter('age').between(5,7)
-    .exec(function (err, dogs) {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(2);
-      done();
-    });
+      .filter('age').between(5,7)
+      .exec(function (err, dogs) {
+        should.not.exist(err);
+        dogs.length.should.eql(1);
+        dogs[0].ownerId.should.eql(2);
+        done();
+      });
   });
 
   it('between() cannot follow not()', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .filter('age').not().between(5,7)
-    .exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid Query state: between() cannot follow not()');
-      done();
-    });
+      .filter('age').not().between(5,7)
+      .exec(function (err) {
+        should.exist(err.message);
+        err.message.should.eql('Invalid Query state: between() cannot follow not()');
+        done();
+      });
   });
 
   it('Basic Query on SGI with filter in', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .filter('color').in(["White and Brown", "White"])
-    .exec(function (err, dogs) {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      dogs[0].ownerId.should.eql(2);
-      done();
-    });
+      .filter('color').in(['White and Brown', 'White'])
+      .exec(function (err, dogs) {
+        should.not.exist(err);
+        dogs.length.should.eql(3);
+        dogs[0].ownerId.should.eql(2);
+        done();
+      });
   });
 
   it('in() cannot follow not()', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('Jack Russell Terrier')
-    .filter('color').not().in(["White and Brown", "White"])
-    .exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid Query state: in() cannot follow not()');
-      done();
-    });
+      .filter('color').not().in(['White and Brown', 'White'])
+      .exec(function (err) {
+        should.exist(err.message);
+        err.message.should.eql('Invalid Query state: in() cannot follow not()');
+        done();
+      });
   });
 
   it('Query.count', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('ownerId').eq(20).count().all().exec()
-    .then(function (count) {
-      count.should.eql(4);
-      done();
-    })
-    .catch(done);
+      .then(function (count) {
+        count.should.eql(4);
+        done();
+      })
+      .catch(done);
   });
 
   it('Query.counts', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('breed').eq('unknown')
-    .and()
-    .filter('color').not().eq('Brown')
-    .counts().all().exec()
-    .then(function (counts) {
-      counts.scannedCount.should.eql(5);
-      counts.count.should.eql(4);
-      done();
-    })
-    .catch(done);
+      .and()
+      .filter('color').not().eq('Brown')
+      .counts().all().exec()
+      .then(function (counts) {
+        counts.scannedCount.should.eql(5);
+        counts.count.should.eql(4);
+        done();
+      })
+      .catch(done);
   });
 
   it('Query.all', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('ownerId').eq(20).limit(2).all().exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(4);
-      done();
-    })
-    .catch(done);
+      .then(function (dogs) {
+        dogs.length.should.eql(4);
+        done();
+      })
+      .catch(done);
   });
 
   it('Query.all(1, 3)', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.query('ownerId').eq(20).limit(1).all(1000, 3).exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(3);
-      dogs.timesQueried.should.eql(3);
-      done();
-    })
-    .catch(done);
+      .then(function (dogs) {
+        dogs.length.should.eql(3);
+        dogs.timesQueried.should.eql(3);
+        done();
+      })
+      .catch(done);
   });
-  
+
   it('Should allow multiple indexes and query correctly', function (done) {
-  	var schema = new dynamoose.Schema({
-  	  id: {
-  		  type: String,
-  		  hashKey: true,
-  		  required: true
-  	  },
-  	  orgId: {
-  		  type: String,
-  		  index: [{
-  			  global    : true,
-  			  name      : 'OrganizationCreateAtIndex',
-  			  rangeKey  : 'createdAt',
-  			  throughput: 1
-  		}, {
-  			  global    : true,
-  			  name      : 'OrganizationExpectedArriveAtIndex',
-  			  rangeKey  : 'expectedArriveAt',
-  			  throughput: 1
-  		}],		
-  		required: true,
-  	  },
-  	  expectedArriveAt: Date
-  	},{
-  	  throughput: 1,
-  	  timestamps: true
-  	});
-  	var Log = dynamoose.model('Log-1', schema);
-  	
-  	var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
-  	log1.save(function() {
-  	  Log.query('orgId').eq("org1")
-  	  .where('expectedArriveAt').lt( new Date() )
-  	  .exec()
-  	  .then(function(res){
-    		res.length.should.eql(1);
-    		Log.query('orgId').eq("org1")
-    		.where('createdAt').lt( new Date() )
-    		.exec()
-    		.then(function(res){
-    		  res.length.should.eql(1);
-    		  done();
-    		})
-    		.catch(function(e){
-    		  done(e);
-    		});
-    	})
-    	.catch(function(e){
-    	  done(e);
-    	});
-  	});
+    var schema = new dynamoose.Schema({
+      id: {
+        type: String,
+        hashKey: true,
+        required: true
+      },
+      orgId: {
+        type: String,
+        index: [{
+          global    : true,
+          name      : 'OrganizationCreateAtIndex',
+          rangeKey  : 'createdAt',
+          throughput: 1
+        }, {
+          global    : true,
+          name      : 'OrganizationExpectedArriveAtIndex',
+          rangeKey  : 'expectedArriveAt',
+          throughput: 1
+        }],
+        required: true,
+      },
+      expectedArriveAt: Date
+    },{
+      throughput: 1,
+      timestamps: true
+    });
+    var Log = dynamoose.model('Log-1', schema);
+
+    var log1 = new Log({id: 'test1', orgId: 'org1', expectedArriveAt: Date.now()});
+    log1.save(function() {
+      Log.query('orgId').eq('org1')
+        .where('expectedArriveAt').lt( new Date() )
+        .exec()
+        .then(function(res){
+          res.length.should.eql(1);
+          Log.query('orgId').eq('org1')
+            .where('createdAt').lt( new Date() )
+            .exec()
+            .then(function(res){
+              res.length.should.eql(1);
+              done();
+            })
+            .catch(function(e){
+              done(e);
+            });
+        })
+        .catch(function(e){
+          done(e);
+        });
+    });
   });
 
   it('Should allow multiple local indexes and query correctly', async function () {
@@ -708,18 +708,18 @@ describe('Query', function (){
     });
     var Log = dynamoose.model('Log-2', schema);
 
-    var log1 = new Log({id: "test1", orgId: "org1", expectedArriveAt: Date.now()});
-    var log2 = new Log({id: "test1", orgId: "org2", expectedArriveAt: Date.now()});
+    var log1 = new Log({id: 'test1', orgId: 'org1', expectedArriveAt: Date.now()});
+    var log2 = new Log({id: 'test1', orgId: 'org2', expectedArriveAt: Date.now()});
 
     await log1.save();
     await log2.save();
 
-    var res = await Log.query('id').eq("test1")
+    var res = await Log.query('id').eq('test1')
       .where('expectedArriveAt').lt( new Date() )
-      .exec()
+      .exec();
     res.length.should.eql(2);
-    
-    var res2 = await Log.query('id').eq("test1")
+
+    var res2 = await Log.query('id').eq('test1')
       .where('updatedAt').le( log1.createdAt.getTime() )
       .exec();
     res2.length.should.eql(1);
