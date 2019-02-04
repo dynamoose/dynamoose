@@ -16,6 +16,21 @@ declare module "dynamoose" {
   export function setDefaults(options: ModelOption): void;
   export function setDDB(ddb: _AWS.DynamoDB): void;
   export function revertDDB(): void;
+  export function transaction<DataSchema, KeySchema>(
+    items: Array<
+      Promise<ModelSchema<DataSchema>>
+      | _AWS.DynamoDB.TransactWriteItem
+      | _AWS.DynamoDB.TransactGetItem
+    >,
+    options?: TransactionOptions,
+    next?: (err: Error, data: TransactionReturnData<DataSchema>) => void
+  ): Promise<TransactionReturnData<DataSchema>>
+  export interface TransactionReturnData<DataSchema> {
+    TransactItems: Array<ModelSchema<DataSchema>>
+  }
+  export interface TransactionOptions {
+    type: 'get' | 'write'
+  }
 
   export interface ModelOption {
     create?: boolean, // Create table in DB, if it does not exist,
@@ -198,6 +213,8 @@ declare module "dynamoose" {
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<ModelSchema<DataSchema>>;
+
+    transaction: ModelTransactionConstructor<DataSchema, KeySchema>
   }
   type ModelSchema<T> = Model<T> & T;
 
@@ -312,5 +329,33 @@ declare module "dynamoose" {
     applyVirtuals(model: any): void;
     get(fn: any): any;
     set(fn: any): any;
+  }
+
+  /**
+   * Transaction
+   */
+  export interface ModelTransactionConstructor<DataSchema, KeySchema> {
+    new(value?: DataSchema): ModelSchema<DataSchema>;
+    (value?: DataSchema): ModelSchema<DataSchema>;
+    readonly prototype: ModelSchema<DataSchema>;
+
+    create(item: DataSchema, options?: PutOptions, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
+    create(item: DataSchema, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
+    create(item: DataSchema, options?: PutOptions): Promise<ModelSchema<DataSchema>>;
+
+    get(key: KeySchema, callback?: (err: Error, data: DataSchema) => void): Promise<ModelSchema<DataSchema> | undefined>;
+
+    delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
+
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<ModelSchema<DataSchema>>;
+
+    conditionCheck(key: KeySchema, options?: ConditionOptions): void
+  }
+  export interface ConditionOptions {
+    condition: string,
+    conditionNames: object,
+    conditionValues: object,
   }
 }
