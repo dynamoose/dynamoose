@@ -25,8 +25,8 @@ describe('General tests', function (){
 
   it('dynamoose.setDocumentClient should set', function () {
     var client = dynamoose.dynamoDocumentClient;
-    dynamoose.setDocumentClient("test");
-    dynamoose.dynamoDocumentClient.should.eql("test");
+    dynamoose.setDocumentClient('test');
+    dynamoose.dynamoDocumentClient.should.eql('test');
     dynamoose.setDocumentClient(client);
   });
 

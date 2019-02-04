@@ -87,6 +87,13 @@ declare module "dynamoose" {
       | SchemaAttributeDefinition<ArrayConstructor, Array<any>>
       | SchemaAttributeDefinition<any, any>
       | RawSchemaAttributeDefinition<any, any>
+      | NumberConstructor
+      | [NumberConstructor]
+      | DateConstructor
+      | StringConstructor
+      | [StringConstructor]
+      | ObjectConstructor
+      | ArrayConstructor
     )
   }
 

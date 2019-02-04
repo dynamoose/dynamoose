@@ -30,11 +30,11 @@ describe('Schema tests', function (){
       aMap: {
         mapId: Number,
         mapName: String,
-        anotherMap:{
+        anotherMap: {
           m1:String,
         }
       },
-      aList:[
+      aList: [
         {
           listMapId: Number,
           listMapName: String
@@ -118,7 +118,7 @@ describe('Schema tests', function (){
         list: [
           {
             listMapId: {type: Number, default: 1},
-            listMapName: {type: String, default:"SomeName"}
+            listMapName: {type: String, default:'SomeName'}
           }
         ]
       }
@@ -373,7 +373,7 @@ describe('Schema tests', function (){
         list: [
           {
             listMapId: {type: Number, default: 1},
-            listMapName: {type: String, default:"SomeName"}
+            listMapName: {type: String, default:'SomeName'}
           }
         ]
       }
@@ -414,8 +414,8 @@ describe('Schema tests', function (){
 
   it('Schema with use Native Booleans', function (done) {
     var schema = new Schema({
-     name: String,
-     isAwesome: Boolean
+      name: String,
+      isAwesome: Boolean
     });
 
     var Cat = dynamoose.model('Cat' + Date.now(), schema);
@@ -552,56 +552,56 @@ describe('Schema tests', function (){
   });
 
   it('Schema useDocumentTypes and useNativeBooleans should default to true', function (done) {
-  	var schema = new Schema({
-  	  id: {
-    		type: Number,
-    		validate: function(v) { return v > 0; },
-    		rangeKey: true
-  	  },
-  	  breed: {
-    		type: String,
-    		hashKey: true
-  	  },
-  	  aObject: {
-    		type: 'Object',
-    		default: { state: 'alive' }
-  	  },
-  	  anotherObject: Object,
-  	  aArray: Array,
-  	  aMap: {
-    		mapId: Number,
-    		mapName: String,
-    		anotherMap:{
-    		  m1:String,
-    		}
-  	  },
-  	  aList:[
-    		{
-    		  listMapId: Number,
-    		  listMapName: String
-    		}
-  	  ],
-  	  anotherMap: {
-    		type: 'map',
-    		map: {
-    		  mapId: {type: Number, required:true },
-    		  mapName: {type: String, required:true }
-    		}
-  	  },
-  	  anotherList: {
-    		type: 'list',
-    		list: [
-    		  {
-    			listMapId: {type: Number, default: 1},
-    			listMapName: {type: String, default:"SomeName"}
-    		  }
-    		]
-  	  }
-  	});
+    var schema = new Schema({
+      id: {
+        type: Number,
+        validate: function(v) { return v > 0; },
+        rangeKey: true
+      },
+      breed: {
+        type: String,
+        hashKey: true
+      },
+      aObject: {
+        type: 'Object',
+        default: { state: 'alive' }
+      },
+      anotherObject: Object,
+      aArray: Array,
+      aMap: {
+        mapId: Number,
+        mapName: String,
+        anotherMap:{
+          m1:String,
+        }
+      },
+      aList:[
+        {
+          listMapId: Number,
+          listMapName: String
+        }
+      ],
+      anotherMap: {
+        type: 'map',
+        map: {
+          mapId: {type: Number, required:true },
+          mapName: {type: String, required:true }
+        }
+      },
+      anotherList: {
+        type: 'list',
+        list: [
+          {
+            listMapId: {type: Number, default: 1},
+            listMapName: {type: String, default:'SomeName'}
+          }
+        ]
+      }
+    });
 
-  	schema.useDocumentTypes.should.eql(true);
-  	schema.useNativeBooleans.should.eql(true);
-  	done();
+    schema.useDocumentTypes.should.eql(true);
+    schema.useNativeBooleans.should.eql(true);
+    done();
   });
 
 
@@ -1002,9 +1002,9 @@ describe('Schema tests', function (){
       anObject: { S: '{"a":"attribute"}' },
       numberString: { S: '1' },
       anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]' },
-      anObjectB: { M: {"a":{S: "attribute"}} },
+      anObjectB: { M: {'a':{S: 'attribute'}} },
       anArrayB: { L: [{N : 1}, {N : 2}, {N : 3}]},// can't handle dissimilar items list {M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
-      aBoolean: { S: "true" },
+      aBoolean: { S: 'true' },
       aBooleanB: { BOOL: true },
     });
 
@@ -1026,8 +1026,8 @@ describe('Schema tests', function (){
   it('Handle unknown attributes in DynamoDB when document types are set to false', async function () {
 
     var unknownSchema = new Schema({
-     id: Number
-     }, {
+      id: Number
+    }, {
       saveUnknown: true,
       useDocumentTypes: false,
       useNativeBooleans: false
@@ -1042,9 +1042,9 @@ describe('Schema tests', function (){
         anObject: { S: '{"a":"attribute"}' },
         numberString: { S: '1' },
         anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]'},
-        anObjectB: { M: {"a":{S: "attribute"}} },
+        anObjectB: { M: {'a':{S: 'attribute'}} },
         anArrayB: { L: [{N:2},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: 'value1'}]},
-        aBoolean: { S: "true" },
+        aBoolean: { S: 'true' },
         aBooleanB: { BOOL: true },
       });
     } catch(err) {
@@ -1060,7 +1060,7 @@ describe('Schema tests', function (){
       topLevel: {
         nestedField: Boolean,
       }
-     });
+    });
 
     var model = {};
 
@@ -1072,7 +1072,7 @@ describe('Schema tests', function (){
       });
     } catch(err) {
       err.should.be.instanceof(errors.ParseError);
-      err.message.should.match(/Attribute "nestedField" of type "BOOL" has an invalid value of "This is a string"/)
+      err.message.should.match(/Attribute "nestedField" of type "BOOL" has an invalid value of "This is a string"/);
     }
   });
 
@@ -1174,7 +1174,7 @@ describe('Schema tests', function (){
     var unknownSchema = new Schema({
       id: Number
     }, {
-      saveUnknown: ["name", "numberString"]
+      saveUnknown: ['name', 'numberString']
     });
 
     var model = {};
@@ -1195,9 +1195,9 @@ describe('Schema tests', function (){
   it('Handle unknown attributes as array in DynamoDB when document types are set to false', async function () {
 
     var unknownSchema = new Schema({
-     id: Number
-     }, {
-      saveUnknown: ["name", "numberString"],
+      id: Number
+    }, {
+      saveUnknown: ['name', 'numberString'],
       useDocumentTypes: false,
       useNativeBooleans: false
     });
@@ -1229,8 +1229,8 @@ describe('Schema tests', function (){
         type: String,
       },
       knownAttribute: String,
-     }, {
-       errorUnknown: true,
+    }, {
+      errorUnknown: true,
     });
 
     let err;
@@ -1265,8 +1265,8 @@ describe('Schema tests', function (){
       },
       knownAttribute: String,
       myMap: Map,
-     }, {
-       errorUnknown: true,
+    }, {
+      errorUnknown: true,
     });
 
     let err;
@@ -1296,7 +1296,7 @@ describe('Schema tests', function (){
   it('Should throw error when type is map but no map is provided', function (done) {
     let err;
     try {
-      var schema = new Schema({
+      new Schema({
         race: {
           type: 'map',
         }
@@ -1313,7 +1313,7 @@ describe('Schema tests', function (){
   it('Should throw error when type is list but no list is provided', function (done) {
     let err;
     try {
-      var schema = new Schema({
+      new Schema({
         race: {
           type: 'list',
         }
@@ -1326,14 +1326,14 @@ describe('Schema tests', function (){
 
     err = undefined;
     try {
-      var schema = new Schema({
+      new Schema({
         race: {
           type: 'list',
           list: []
         }
       });
     } catch (e) {
-      err = e
+      err = e;
     }
 
     err.should.be.instanceof(Error);
