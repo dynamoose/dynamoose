@@ -477,45 +477,63 @@ describe('Scan', function (){
     });
   });
 
-  it('Scan with not beginsWith (error)', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with not beginsWith (error)', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan('name').not().beginsWith('B').exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid scan state: beginsWith() cannot follow not()');
-      done();
-    });
+    let error;
+    try {
+      await Dog.scan('name').not().beginsWith('B').exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid scan state: beginsWith() cannot follow not()');
   });
 
-  it('Scan with in with filter object', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with in with filter object', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan({'breed': {in: ['Beagle', 'Hound']}},function (err, dogs) {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      done();
-    });
+    let error, res;
+    try {
+      res = await Dog.scan({'breed': {in: ['Beagle', 'Hound']}}).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.not.exist(error);
+    res.length.should.eql(3);
   });
 
-  it('Scan with in', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with in', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan('breed').in(['Beagle', 'Hound']).exec(function (err, dogs) {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      done();
-    });
+    let error, res;
+    try {
+      res = await Dog.scan('breed').in(['Beagle', 'Hound']).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.not.exist(error);
+    res.length.should.eql(3);
   });
 
 
-  it('Scan with not in (error)', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with not in (error)', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan('name').not().in(['Beagle', 'Hound']).exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid scan state: in() cannot follow not()');
-      done();
-    });
+    let error;
+    try {
+      await Dog.scan('name').not().in(['Beagle', 'Hound']).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid scan state: in() cannot follow not()');
   });
 
   it('Scan with between with filter object', function (done) {
@@ -539,24 +557,33 @@ describe('Scan', function (){
   });
 
 
-  it('Scan with not between (error)', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with not between (error)', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan('ownerId').not().between(5, 8).exec(function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid scan state: between() cannot follow not()');
-      done();
-    });
+    let error;
+    try {
+      await Dog.scan('ownerId').not().between(5, 8).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid scan state: between() cannot follow not()');
   });
 
-  it('Scan with limit', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with limit', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan().limit(5).exec(function (err, dogs) {
-      should.not.exist(err);
-      dogs.length.should.eql(5);
-      done();
-    });
+    let error, res;
+    try {
+      res = await Dog.scan().limit(5).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.not.exist(error);
+    res.length.should.eql(5);
   });
 
   it('Scan with startAt key', function (done) {
@@ -571,17 +598,21 @@ describe('Scan', function (){
     });
   });
 
-  it('Scan with limit', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with limit', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan().attributes(['name', 'breed']).exec(function (err, dogs) {
-      should.not.exist(err);
-      dogs[0].should.not.have.property('ownerId');
-      dogs[0].should.not.have.property('color');
-      dogs[0].should.have.property('name');
-      dogs[0].should.have.property('breed');
-      done();
-    });
+    let error, res;
+    try {
+      res = await Dog.scan().attributes(['name', 'breed']).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.not.exist(error);
+    res[0].should.not.have.property('ownerId');
+    res[0].should.not.have.property('color');
+    res[0].should.have.property('name');
+    res[0].should.have.property('breed');
   });
 
   it('Scan with ANDed filters (default)', function (done) {
@@ -604,24 +635,33 @@ describe('Scan', function (){
     });
   });
 
-  it('Scan with ANDed filter with filter object (error)', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with ANDed filter with filter object (error)', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]},function (err) {
-      should.exist(err.message);
-      err.message.should.eql('Invalid scan state; %s can only be used once');
-      done();
-    });
+    let error, res;
+    try {
+      res = await Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]}).exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.exist(error);
+    should.exist(error.message);
+    error.message.should.eql('Invalid scan state; %s can only be used once');
   });
 
-  it('Scan with ANDed filter', function (done) {
-    var Dog = dynamoose.model('Dog');
+  it('Scan with ANDed filter', async function () {
+    const Dog = dynamoose.model('Dog');
 
-    Dog.scan().and().filter('breed').eq('unknown').filter('name').eq('Benji').exec(function (err, dogs) {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
+    let error, res;
+    try {
+      res = await Dog.scan().and().filter('breed').eq('unknown').filter('name').eq('Benji').exec();
+    } catch (e) {
+      error = e;
+    }
+
+    should.not.exist(error);
+    res.length.should.eql(1);
   });
 
   it('Scan with ORed filter with filter object', function (done) {
