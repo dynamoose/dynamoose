@@ -638,9 +638,9 @@ describe('Scan', function (){
   it('Scan with ANDed filter with filter object (error)', async function () {
     const Dog = dynamoose.model('Dog');
 
-    let error, res;
+    let error;
     try {
-      res = await Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]}).exec();
+      await Dog.scan({and:[{'breed': {eq: 'unknown'}},{'breed':{eq:'Benji'}}]}).exec();
     } catch (e) {
       error = e;
     }
