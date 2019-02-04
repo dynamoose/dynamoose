@@ -7,10 +7,8 @@ order: 1
 Below is a simple example of how to setup Dynamoose and get started quickly.
 
 ```js
-'use strict';
-
 // Requiring the Dynamoose NPM package
-var dynamoose = require('dynamoose');
+const dynamoose = require('dynamoose');
 
 // To configure Dynamose you can either:
 /*
@@ -36,17 +34,16 @@ dynamoose.AWS.config.update({
 
 
 // This will create a Dynamoose model "Cat" (which is basically like a DynamoDB table), it will allow for 2 properties in the schema, `id` (number) and `name` (string)
-var Cat = dynamoose.model('Cat', { id: Number, name: String });
+const Cat = dynamoose.model('Cat', {id: Number, name: String});
 
 // This will create a new instance of our "Cat" model, with the `id` as 666, and `name` as 'Garfield'
-var garfield = new Cat({id: 666, name: 'Garfield'});
+const garfield = new Cat({id: 666, name: 'Garfield'});
 
 // This will save our new object to DynamoDB (remember this happens asynchronously, so you need to be sure to wait before trying to access the object)
 garfield.save();
 
 // This will preform an DynamoDB get on the "Cat" model/table get the object with the `id` = 666 and return a promise with the returned object.
-Cat.get(666)
-.then(function (badCat) {
+Cat.get(666).then((badCat) => {
   console.log('Never trust a smiling cat. - ' + badCat.name);
 });
 ```

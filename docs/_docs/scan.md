@@ -73,13 +73,13 @@ Preforms a parallel scan on the table.
 
 `totalSegments` is the number of parallel scans
 
-The results will be merged into a single array.  `.lastKey` will be an array of `lastKey` objects.
+The results will be merged into a single array. `.lastKey` will be an array of `lastKey` objects.
 
 **Warning**  this can consume a lot of capacity.
 
 ### scan.and()
 
-For readability only. Scans us AND logic for multiple attributes.  `and()` does not provide any functionality and can be omitted.
+For readability only. Scans us AND logic for multiple attributes. `and()` does not provide any functionality and can be omitted.
 
 ### scan.where(filter) | scan.filter(filter)
 
@@ -95,7 +95,7 @@ Scan attribute for null.
 
 ### scan.eq(value)
 
-Attribute is equal to the value.  If `null`, `undefined`, or a empty string is passed as the value, `scan.null()` is called.
+Attribute is equal to the value. If `null`, `undefined`, or a empty string is passed as the value, `scan.null()` is called.
 
 ### scan.lt(value)
 
