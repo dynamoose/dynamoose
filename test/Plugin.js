@@ -8,7 +8,7 @@ dynamoose.local();
 var should = require('should');
 
 describe('Plugin', function() {
-	var Model = dynamoose.model('Puppy', {
+  var Model = dynamoose.model('Puppy', {
     id: {
       type: Number,
       validate: function(v) {
@@ -23,26 +23,26 @@ describe('Plugin', function() {
   }, {useDocumentTypes: true});
 
 
-	this.timeout(15000);
-	before(function(done) {
-		this.timeout(12000);
-		dynamoose.setDefaults({prefix: 'test-'});
+  this.timeout(15000);
+  before(function(done) {
+    this.timeout(12000);
+    dynamoose.setDefaults({prefix: 'test-'});
 
-		done();
-	});
+    done();
+  });
 
-	beforeEach(function(done) {
-		Model.clearAllPlugins();
-		done();
-	});
+  beforeEach(function(done) {
+    Model.clearAllPlugins();
+    done();
+  });
 
-	after(function(done) {
+  after(function(done) {
 
-		delete dynamoose.models['test-Cat'];
-		done();
-	});
+    delete dynamoose.models['test-Cat'];
+    done();
+  });
 
-	it('Should create simple plugin', function(done) {
+  it('Should create simple plugin', function(done) {
     Model.$__.plugins.length.should.eql(0);
 
     Model.plugin(function(obj) {
@@ -54,7 +54,7 @@ describe('Plugin', function() {
     Model.$__.plugins.length.should.eql(1);
 
     done();
-	});
+  });
 
   it('Should delete all plugins after calling Model.clearAllPlugins()', function(done) {
     Model.$__.plugins.length.should.eql(0);
@@ -78,7 +78,7 @@ describe('Plugin', function() {
     var counter = 0;
 
     Model.plugin(function(obj) {
-      obj.on("plugin:register", function() {
+      obj.on('plugin:register', function() {
         counter++;
       });
     });
@@ -92,7 +92,7 @@ describe('Plugin', function() {
     var counter = 0;
 
     Model.plugin(function(obj) {
-      obj.on("plugin:register", function() {
+      obj.on('plugin:register', function() {
         counter++;
       });
     });
@@ -100,7 +100,7 @@ describe('Plugin', function() {
     counter.should.eql(1); // plugin 1 post
 
     Model.plugin(function(obj) {
-      obj.on("plugin:register", function() {
+      obj.on('plugin:register', function() {
       });
     });
 
@@ -112,7 +112,7 @@ describe('Plugin', function() {
   it('Shouldn\'t fail if no function passed into .on function', function(done) {
 
     Model.plugin(function(obj) {
-      obj.on("plugin:register");
+      obj.on('plugin:register');
     });
 
     done();
@@ -120,7 +120,7 @@ describe('Plugin', function() {
 
   it('Should pass in details into "plugin:register" on function', function(done) {
     Model.plugin(function(obj) {
-      obj.on("plugin:register", function (obj) {
+      obj.on('plugin:register', function (obj) {
         should.exist(obj.event);
         should.exist(obj.model);
         should.exist(obj.modelName);
@@ -135,7 +135,7 @@ describe('Plugin', function() {
 
   it('Plugin Options should equal empty object if not defined', function(done) {
     Model.plugin(function(obj) {
-      obj.on("plugin:register", function (obj) {
+      obj.on('plugin:register', function (obj) {
         obj.event.pluginOptions.should.deep.eql({});
       });
     });
@@ -144,7 +144,7 @@ describe('Plugin', function() {
 
   it('Plugin Options should equal object passed in', function(done) {
     Model.plugin(function(obj) {
-      obj.on("plugin:register", function (obj) {
+      obj.on('plugin:register', function (obj) {
         obj.event.pluginOptions.should.deep.eql({username: 'test'});
       });
     }, {username: 'test'});
@@ -155,7 +155,7 @@ describe('Plugin', function() {
     var counter = 0;
 
     Model.plugin(function(obj) {
-      obj.on("*", function () {
+      obj.on('*', function () {
         counter++;
       });
     });
@@ -183,15 +183,15 @@ describe('Plugin', function() {
     var counter = 0;
 
     var pluginB = function(plugin) {
-      plugin.setName("Plugin B");
-      plugin.on("plugin", "init", function () {
+      plugin.setName('Plugin B');
+      plugin.on('plugin', 'init', function () {
         counter++;
       });
     };
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("plugin", "init", function (obj) {
+      plugin.setName('Plugin A');
+      plugin.on('plugin', 'init', function (obj) {
         obj.actions.registerPlugin(pluginB);
       });
     };
@@ -209,8 +209,8 @@ describe('Plugin', function() {
   	var counter = 0;
 
   	var pluginA = function(plugin) {
-  	  plugin.setName("Plugin A");
-  	  plugin.on("model:scan", function () {
+  	  plugin.setName('Plugin A');
+  	  plugin.on('model:scan', function () {
   		    counter++;
   	  });
   	};
@@ -229,49 +229,49 @@ describe('Plugin', function() {
 
   it('Should not continue for with model:scan request:pre', function(done) {
 
-      var pluginA = function(plugin) {
-        plugin.setName("Plugin A");
-        plugin.on("model:scan", "request:pre", function () {
-          return new Promise(function(resolve, reject) {
-            setTimeout(() => {
-              resolve({resolve: "Test"})
-            }, 500);
-          });
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:scan', 'request:pre', function () {
+        return new Promise(function(resolve, reject) {
+          setTimeout(() => {
+            resolve({resolve: 'Test'});
+          }, 500);
         });
-      };
-
-
-      Model.plugin(pluginA);
-
-      Model.scan({}).exec(function(err, result) {
-        result.should.eql("Test");
-
-        done();
       });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.scan({}).exec(function(err, result) {
+      result.should.eql('Test');
+
+      done();
+    });
 
   });
 
   it('Should not continue for with model:scan request:post', function(done) {
 
-      var pluginA = function(plugin) {
-        plugin.setName("Plugin A");
-        plugin.on("model:scan", "request:post", function () {
-          return new Promise(function(resolve, reject) {
-            setTimeout(() => {
-              resolve({resolve: "Test"})
-            }, 500);
-          });
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:scan', 'request:post', function () {
+        return new Promise(function(resolve, reject) {
+          setTimeout(() => {
+            resolve({resolve: 'Test'});
+          }, 500);
         });
-      };
-
-
-      Model.plugin(pluginA);
-
-      Model.scan({}).exec(function(err, result) {
-        result.should.eql("Test");
-
-        done();
       });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.scan({}).exec(function(err, result) {
+      result.should.eql('Test');
+
+      done();
+    });
 
   });
 
@@ -279,8 +279,8 @@ describe('Plugin', function() {
     var counter = 0;
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:query", function () {
+      plugin.setName('Plugin A');
+      plugin.on('model:query', function () {
         counter++;
       });
     };
@@ -288,7 +288,7 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.query("id").eq(1).exec(function() {
+    Model.query('id').eq(1).exec(function() {
       Model.$__.plugins.length.should.eql(1);
       counter.should.eql(4);
 
@@ -300,11 +300,11 @@ describe('Plugin', function() {
   it('Should not continue for with model:query request:pre', function(done) {
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:query", "request:pre", function () {
+      plugin.setName('Plugin A');
+      plugin.on('model:query', 'request:pre', function () {
         return new Promise(function(resolve, reject) {
           setTimeout(() => {
-            resolve({resolve: "Test"})
+            resolve({resolve: 'Test'});
           }, 500);
         });
       });
@@ -313,8 +313,8 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.query("id").eq(1).exec(function(err, result) {
-      result.should.eql("Test");
+    Model.query('id').eq(1).exec(function(err, result) {
+      result.should.eql('Test');
 
       done();
     });
@@ -324,11 +324,11 @@ describe('Plugin', function() {
   it('Should not continue for with model:query request:post', function(done) {
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:query", "request:post", function () {
+      plugin.setName('Plugin A');
+      plugin.on('model:query', 'request:post', function () {
         return new Promise(function(resolve, reject) {
           setTimeout(() => {
-            resolve({resolve: "Test"})
+            resolve({resolve: 'Test'});
           }, 500);
         });
       });
@@ -337,8 +337,8 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.query("id").eq(1).exec(function(err, result) {
-      result.should.eql("Test");
+    Model.query('id').eq(1).exec(function(err, result) {
+      result.should.eql('Test');
 
       done();
     });
@@ -349,16 +349,16 @@ describe('Plugin', function() {
     var counter = 0;
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:get", function () {
-          counter++;
+      plugin.setName('Plugin A');
+      plugin.on('model:get', function () {
+        counter++;
       });
     };
 
 
     Model.plugin(pluginA);
 
-    Model.get("", function() {
+    Model.get('', function() {
       Model.$__.plugins.length.should.eql(1);
       counter.should.eql(3);
 
@@ -370,11 +370,11 @@ describe('Plugin', function() {
   it('Should not continue for model:get request:pre', function(done) {
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:get", "request:pre", function () {
+      plugin.setName('Plugin A');
+      plugin.on('model:get', 'request:pre', function () {
         return new Promise(function(resolve, reject) {
           setTimeout(() => {
-            resolve({resolve: "Test"})
+            resolve({resolve: 'Test'});
           }, 500);
         });
       });
@@ -383,8 +383,8 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.get("", function(err, result) {
-      result.should.eql("Test")
+    Model.get('', function(err, result) {
+      result.should.eql('Test');
 
       done();
     });
@@ -394,11 +394,11 @@ describe('Plugin', function() {
   it('Should not continue for model:get request:post', function(done) {
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:get", "request:post", function () {
+      plugin.setName('Plugin A');
+      plugin.on('model:get', 'request:post', function () {
         return new Promise(function(resolve, reject) {
           setTimeout(() => {
-            resolve({resolve: "Test"})
+            resolve({resolve: 'Test'});
           }, 500);
         });
       });
@@ -407,8 +407,8 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.get("", function(err, result) {
-      result.should.eql("Test")
+    Model.get('', function(err, result) {
+      result.should.eql('Test');
 
       done();
     });
@@ -419,9 +419,9 @@ describe('Plugin', function() {
     var counter = 0;
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:put", function () {
-          counter++;
+      plugin.setName('Plugin A');
+      plugin.on('model:put', function () {
+        counter++;
       });
     };
 
@@ -431,8 +431,8 @@ describe('Plugin', function() {
     var myItem = new Model(
       {
         id: 1,
-        name: "Lucky",
-        owner: "Bob",
+        name: 'Lucky',
+        owner: 'Bob',
         age: 2
       }
     );
@@ -448,11 +448,11 @@ describe('Plugin', function() {
   it('Should not continue for model:put request:pre', function(done) {
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:put", "request:pre", function () {
+      plugin.setName('Plugin A');
+      plugin.on('model:put', 'request:pre', function () {
         return new Promise(function(resolve, reject) {
           setTimeout(() => {
-            resolve({resolve: "Test"})
+            resolve({resolve: 'Test'});
           }, 500);
         });
       });
@@ -464,13 +464,13 @@ describe('Plugin', function() {
     var myItem = new Model(
       {
         id: 1,
-        name: "Lucky",
-        owner: "Bob",
+        name: 'Lucky',
+        owner: 'Bob',
         age: 2
       }
     );
     myItem.save(function(err, result) {
-      result.should.eql("Test");
+      result.should.eql('Test');
 
       done();
     });
@@ -480,11 +480,11 @@ describe('Plugin', function() {
   it('Should not continue for model:put request:post', function(done) {
 
     var pluginA = function(plugin) {
-      plugin.setName("Plugin A");
-      plugin.on("model:put", "request:post", function () {
+      plugin.setName('Plugin A');
+      plugin.on('model:put', 'request:post', function () {
         return new Promise(function(resolve, reject) {
           setTimeout(() => {
-            resolve({resolve: "Test"})
+            resolve({resolve: 'Test'});
           }, 500);
         });
       });
@@ -496,13 +496,13 @@ describe('Plugin', function() {
     var myItem = new Model(
       {
         id: 1,
-        name: "Lucky",
-        owner: "Bob",
+        name: 'Lucky',
+        owner: 'Bob',
         age: 2
       }
     );
     myItem.save(function(err, result) {
-      result.should.eql("Test");
+      result.should.eql('Test');
 
       done();
     });

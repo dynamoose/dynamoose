@@ -98,7 +98,7 @@ describe('Scan', function (){
       {ownerId:16, name: 'Marley', breed: 'Labrador Retriever', color: ['Yellow']},
       {ownerId:17, name: 'Beethoven', breed: 'St. Bernard'},
       {ownerId:18, name: 'Lassie', breed: 'Collie', color: ['tan', 'white']},
-      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true, details: { timeWakeUp: '8am', timeSleep: '8pm' }}])
+      {ownerId:19, name: 'Snoopy', breed: 'Beagle', color: ['black', 'white'], cartoon: true, details: { timeWakeUp: '8am', timeSleep: '8pm' }}]);
     });
 
   after(function (done) {
@@ -682,15 +682,15 @@ describe('Scan', function (){
     };
 
     Dog.scan(filter, { useRawAwsFilter: true }).exec()
-    .then(function(dogs) {
-      dogs.length.should.eql(1);
-      done();
-    })
-    .catch(function(err) {
-      should.not.exist(err);
-      console.error(err);
-      done();
-    });
+      .then(function(dogs) {
+        dogs.length.should.eql(1);
+        done();
+      })
+      .catch(function(err) {
+        should.not.exist(err);
+        console.error(err);
+        done();
+      });
   });
 
   it('Scan using raw AWS filter should work with lastKey', function (done) {
@@ -722,15 +722,15 @@ describe('Scan', function (){
     };
 
     Dog.scan(filter, { useRawAwsFilter: true }).exec()
-    .then(function(counts) {
-      counts.count.should.eql(1);
-      done();
-    })
-    .catch(function(err) {
-      should.not.exist(err);
-      console.error(err);
-      done();
-    });
+      .then(function(counts) {
+        counts.count.should.eql(1);
+        done();
+      })
+      .catch(function(err) {
+        should.not.exist(err);
+        console.error(err);
+        done();
+      });
   });
 
   it('Raw AWS filter should return model instances', function (done) {
@@ -743,15 +743,15 @@ describe('Scan', function (){
     };
 
     Dog.scan(filter, { useRawAwsFilter: true }).exec()
-    .then(function(dogs) {
-      dogs[0].should.be.instanceof(Dog);
-      done();
-    })
-    .catch(function(err) {
-      should.not.exist(err);
-      console.error(err);
-      done();
-    });
+      .then(function(dogs) {
+        dogs[0].should.be.instanceof(Dog);
+        done();
+      })
+      .catch(function(err) {
+        should.not.exist(err);
+        console.error(err);
+        done();
+      });
   });
 
   it('Scan parallel', function (done) {
@@ -769,34 +769,34 @@ describe('Scan', function (){
     var Dog = dynamoose.model('Dog');
 
     Dog.scan().parallel(2).limit(2).exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(4);
-      dogs.lastKey.length.should.eql(2);
-      dogs.count.should.eql(4);
-      dogs.scannedCount.should.eql(4);
-      dogs.timesScanned.should.eql(2);
-      return Dog.scan().startAt(dogs.lastKey).exec();
-    })
-    .then(function (more) {
-      more.length.should.eql(16);
-      more.count.should.eql(16);
-      more.scannedCount.should.eql(16);
-      more.timesScanned.should.eql(2);
-      done();
-    })
-    .catch(done);
+      .then(function (dogs) {
+        dogs.length.should.eql(4);
+        dogs.lastKey.length.should.eql(2);
+        dogs.count.should.eql(4);
+        dogs.scannedCount.should.eql(4);
+        dogs.timesScanned.should.eql(2);
+        return Dog.scan().startAt(dogs.lastKey).exec();
+      })
+      .then(function (more) {
+        more.length.should.eql(16);
+        more.count.should.eql(16);
+        more.scannedCount.should.eql(16);
+        more.timesScanned.should.eql(2);
+        done();
+      })
+      .catch(done);
   });
 
   it('Scan parallel all', function (done) {
     var Dog = dynamoose.model('Dog');
 
     Dog.scan().parallel(2).limit(2).all().exec()
-    .then(function (dogs) {
-      dogs.length.should.eql(20);
-      should.not.exist(dogs.lastKey);
-      done();
-    })
-    .catch(done);
+      .then(function (dogs) {
+        dogs.length.should.eql(20);
+        should.not.exist(dogs.lastKey);
+        done();
+      })
+      .catch(done);
   });
 
   it('Should delay when working with all and limit', function (done) {
@@ -846,14 +846,14 @@ describe('Scan', function (){
     const tenMinAgo = new Date().getTime() - 10 * 60 * 1000;
     const createdFilter = {
       created_at: { gt: tenMinAgo },
-    }
+    };
     const createdFilterRecords = await Lion.scan(createdFilter).all(0).exec();
     createdFilterRecords.length.should.eql(10);
 
     // filter by updated_at
     const updatedFilter = {
       updated_at: { gt: tenMinAgo },
-    }
+    };
     const updatedFilterRecords = await Lion.scan(updatedFilter).all(0).exec();
     updatedFilterRecords.length.should.eql(10);
   });
