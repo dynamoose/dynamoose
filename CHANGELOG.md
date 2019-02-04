@@ -1,4 +1,4 @@
-# Dynamoose ChangeLog
+# Dynamoose Changelog
 
 ## Version 1.5.0
 
@@ -8,7 +8,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 
 ### General
 
-- **[Adding support for list_append](https://github.com/dynamoosejs/dynamoose/pull/544)** #544 
+- **[Adding support for list_append](https://github.com/dynamoosejs/dynamoose/pull/544)** #544
 
 ---
 

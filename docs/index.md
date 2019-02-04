@@ -6,7 +6,7 @@ layout: single
 
 ## Installation
 
-    $ npm install dynamoose
+    $ npm i dynamoose
 
 ## Example
 
@@ -21,25 +21,25 @@ export AWS_REGION="us-east-1"
 Here's a simple example:
 
 ```js
-var dynamoose = require('dynamoose');
+const dynamoose = require('dynamoose');
 
 // Create cat model with default options
-var Cat = dynamoose.model('Cat', { id: Number, name: String });
+const Cat = dynamoose.model('Cat', {
+  id: Number,
+  name: String
+});
 
 // Create a new cat object
-var garfield = new Cat({id: 666, name: 'Garfield'});
+const garfield = new Cat({
+  id: 666,
+  name: 'Garfield'
+});
 
 // Save to DynamoDB
-garfield.save();
+garfield.save(); // Returns a promise that resolves when save has completed
 
 // Lookup in DynamoDB
-Cat.get(666)
-.then(function (badCat) {
-  console.log('Never trust a smiling cat. - ' + badCat.name);
+Cat.get(666).then((badCat) => {
+  console.log(`Never trust a smiling cat. - ${badCat.name}`);
 });
 ```
-
-
-
-
-
