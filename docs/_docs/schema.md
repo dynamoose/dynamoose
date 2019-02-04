@@ -107,9 +107,9 @@ Sets the attribute as a 'required' attribute. Required attributes must not be sa
 Defines the attribute as a local or global secondary index. Index can either be true, an index definition object or and array of index definition objects. The array is used define multiple indexes for a single attribute. The index definition object can contain the following keys:
 
 - _name: 'string'_ - Name of index (Default is `attribute.name + (global ? 'GlobalIndex' : 'LocalIndex')`).
-- _global: boolean_ - Set the index to be a global secondary index.  Attribute will be the hash key for the Index.
+- _global: boolean_ - Set the index to be a global secondary index. Attribute will be the hash key for the Index.
 - _rangeKey: 'string'_ - The range key for a global secondary index.
-- _project: boolean &#124; ['string', ...]_ - Sets the attributes to be projected for the index.  `true` projects all attributes, `false` projects only the key attributes, and ['string', ...] projects the attributes listed. Default is `true`.
+- _project: boolean &#124; ['string', ...]_ - Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and ['string', ...] projects the attributes listed. Default is `true`.
 - _throughput: number &#124; {read: number, write: number}_ - Sets the throughput for the global secondary index.
 
 **default**: function &#124; value
@@ -195,6 +195,8 @@ If an object is passed in it must have a validator property that is a function. 
   disableModelParameter: false // default: false, if enabled will only pass in value and callback, and not the model
 }
 ```
+
+**Running any Dynamoose method that calls the `validate` method indirectly from within the `validate` method will cause an infinate loop.**
 
 The property name `validate` is also an alias for `validator`. The property name `validator` will take priority if both are passed in.
 
@@ -325,7 +327,7 @@ var schema = new Schema({...}, {
 
 **useNativeBooleans**: boolean
 
-Store Boolean values as Boolean ('BOOL') in DynamoDB.  Default to `true` (i.e store as DynamoDB boolean).
+Store Boolean values as Boolean ('BOOL') in DynamoDB. Default to `true` (i.e store as DynamoDB boolean).
 
 
 ```js
@@ -336,7 +338,7 @@ var schema = new Schema({...}, {
 
 **useDocumentTypes**: boolean
 
-Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB.  Defaults to `true` (i.e. store as DynamoDB maps and lists).
+Store Objects and Arrays as Maps ('M') and Lists ('L') types in DynamoDB. Defaults to `true` (i.e. store as DynamoDB maps and lists).
 
 ```js
 var schema = new Schema({...}, {
@@ -369,9 +371,9 @@ var schema = new Schema({...}, {
 
 **expires**: number &#124; {ttl: number, attribute: string, returnExpiredItems: boolean, defaultExpires: function}
 
-Defines that _schema_ must contain an expires attribute.  This field is configured in DynamoDB as the TTL attribute.  If set to a `number`, an attribute named "expires" will be added to the schema.  The default value of the attribute will be the current time plus the expires value, unless an optional defaultExpires property is passed in.  The expires value is in seconds.
+Defines that _schema_ must contain an expires attribute. This field is configured in DynamoDB as the TTL attribute. If set to a `number`, an attribute named "expires" will be added to the schema. The default value of the attribute will be the current time plus the expires value, unless an optional defaultExpires property is passed in. The expires value is in seconds.
 
-The attribute will be a standard javascript `Date` in the object, and will be stored as number ('N') in the DyanmoDB table. The stored number is in seconds.  [More information about DynamoDB TTL](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html)
+The attribute will be a standard javascript `Date` in the object, and will be stored as number ('N') in the DyanmoDB table. The stored number is in seconds. [More information about DynamoDB TTL](http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html)
 
 ```js
 var schema = new Schema({...}, {
@@ -396,7 +398,7 @@ var schema = new Schema({...}, {
 
 **saveUnknown**: boolean or array
 
-Specifies that attributes not defined in the _schema_ will be saved and retrieved.  This defaults to false.
+Specifies that attributes not defined in the _schema_ will be saved and retrieved. This defaults to false.
 
 ```js
 var schema = new Schema({...}, {
@@ -432,10 +434,10 @@ This will override attribute formatting for all attributes. Whatever is returned
 var schema = new Schema({...}, {
   attributeToDynamo: function(name, json, model, defaultFormatter, options) {
     switch(name) {
-        case 'specialAttribute':
-            return specialFormatter(json);
-        default:
-            return specialFormatter(json);
+      case 'specialAttribute':
+        return specialFormatter(json);
+      default:
+        return specialFormatter(json);
     }
   }
 });
@@ -451,10 +453,10 @@ This will override attribute parsing for all attributes. Whatever is returned by
 var schema = new Schema({...}, {
   attributeFromDynamo: function(name, json, defaultParser) {
     switch(name) {
-        case 'specialAttribute':
-            return specialParser(json);
-        default:
-            return defaultParser(json);
+      case 'specialAttribute':
+        return specialParser(json);
+      default:
+        return defaultParser(json);
     }
   }
 });
@@ -493,8 +495,8 @@ dogSchema.method('becomeFriends', function (otherDog) {
 });
 
 var Dog = dynamoose.model('Dog', dogSchema);
-var dog1 = new Dog({ ownerId: 137, name: 'Snuffles' });
-var dog2 = new Dog({ ownerId: 138, name: 'Bill'});
+var dog1 = new Dog({ownerId: 137, name: 'Snuffles'});
+var dog2 = new Dog({ownerId: 138, name: 'Bill'});
 dog1.becomeFriends(dog2);
 ```
 
@@ -504,26 +506,25 @@ Can be accessed from the compiled Schema, similar to how `scan()` and `query()` 
 `this` will refer to the compiled schema within the definition of the function.
 
 ```js
-
 // Construction:
 var ModelSchema = new Schema({...})
 
-ModelSchema.statics.getAll = async function(cb){
-  let results = await this.scan().exec()
-  while (results.lastKey){
-      results = await this.scan().startKey(results.startKey).exec()
+ModelSchema.statics.getAll = async function (cb) {
+  let results = await this.scan().exec();
+  while (results.lastKey) {
+    results = await this.scan().startKey(results.startKey).exec();
   }
-  return results
+  return results;
 }
 
-var Model = dynamoose.model('Model', ModelSchema)
+const Model = dynamoose.model('Model', ModelSchema)
 
 // Using:
-Model.getAll(function(err, models)=>{
-    models.forEach(function(model){
-      console.log(model)
-    })
-})
+Model.getAll((err, models) => {
+  models.forEach((model) => {
+    console.log(model)
+  });
+});
 ```
 
 #### Instance Methods
@@ -532,19 +533,18 @@ Can be accessed from a newly created model. `this` will refer to the instace of 
 the definition of the function.
 
 ```js
-
 // Construction:
-var ModelSchema = new Schema({
-  name:String
-})
+const ModelSchema = new Schema({
+  name: String
+});
 
-ModelSchema.methods.setName = function(name) {
+ModelSchema.methods.setName = function (name) {
   this.name = name
-}
+};
 
-var Model = dynamoose.model('Model', ModelSchema)
+const Model = dynamoose.model('Model', ModelSchema);
 
 // Using:
-var batman = new Model({name: "Bruce"})
-batman.setName("Bob")
+const batman = new Model({name: "Bruce"});
+batman.setName("Bob");
 ```

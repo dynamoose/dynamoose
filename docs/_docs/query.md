@@ -5,7 +5,7 @@ order: 4
 
 ### Model.query(query, options, callback)
 
-Queries a table or index. The query parameter can either the the hash key of the table or global index or a complete query object. If the callback is provided, the exec command is called automatically, and the query parameter must be a query object.
+Queries a table or index. The query parameter can either be the hash key of the table or global index or a complete query object. If the callback is provided, the exec command is called automatically, and the query parameter must be a query object.
 
 **Note:** You *must* provide an `eq` for the hash key.
 
@@ -16,7 +16,7 @@ Dog.query('breed').eq('Beagle').exec(function (err, dogs) {
 ```
 
 ```js
-Dog.query({breed: {eq: 'Beagle'} }, function (err, dogs) {
+Dog.query({breed: {eq: 'Beagle'}}, function (err, dogs) {
   // Look at all the beagles
 });
 ```
@@ -87,7 +87,7 @@ Range key or filter begins with value
 
 ### query.between(a, b)
 
-Range key or filter is greater than or equal `a`. and less than or equal to `b`.
+Range key or filter is greater than or equal `a`, and less than or equal to `b`.
 
 ### query.contains(value)
 
@@ -144,7 +144,7 @@ If you used a filter in the request, then `count` is the number of items returne
 
 ### query.using(index)
 
-You can manually specify which index to use by adding the `query.using` method to your query chain. The string you pass into the `query.using` method must match the name of an index on your table. This method is **not** required, by default Dynamoose will try to figure out which index to use based on your schema.
+You can manually specify which index to use by adding the `query.using` method to your query chain. The string you pass into the `query.using` method must match the name of an index on your table. This method is not required, by default Dynamoose will try to figure out which index to use based on your schema.
 
 ```js
 Dog.query('ownerId').using('BreedRangeIndex').eq(20).where('breed').beginsWith('Sp')

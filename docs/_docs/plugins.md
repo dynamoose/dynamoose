@@ -45,26 +45,26 @@ Adds a listener to emitted events from Dynamoose. You can return a promise in th
 ### Example Plugin Implementation
 
 ```js
-module.exports = function(plugin, options) {
-	plugin.setName("My Plugin"); // required
-	plugin.setDescription(""); // optional
-	plugin.on('init', function() { // this will handle all stages related to init
-		console.log("Plugin registered");
+module.exports = (plugin, options) => {
+	plugin.setName('My Plugin'); // required
+	plugin.setDescription(''); // optional
+	plugin.on('init', () => { // this will handle all stages related to init
+		console.log('Plugin registered');
 	});
-	plugin.on('scan', 'preRequest', function(obj) { // this will handle only preRequest stages on the scan type
-		console.log("About to make request to DynamoDB");
+	plugin.on('scan', 'preRequest', (obj) => { // this will handle only preRequest stages on the scan type
+		console.log('About to make request to DynamoDB');
 	});
-	plugin.on('scan', 'postRequest', function(obj) { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
-		return new Promise(function(resolve, reject) {
+	plugin.on('scan', 'postRequest', (obj) => { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
+		return new Promise((resolve) => {
 			resolve({
-				resolve: "Hello World" // "Hello World" will be passed back to the promise/callback of the Dynamoose scan call
+				resolve: 'Hello World' // 'Hello World' will be passed back to the promise/callback of the Dynamoose scan call
 			});
 		});
 	});
-	plugin.on('query', 'postRequest', function(obj) { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
-		return new Promise(function(resolve, reject) {
+	plugin.on('query', 'postRequest', (obj) => { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
+		return new Promise((resolve) => {
 			resolve({
-				reject: "My Error" // "My Error" will be passed back to the promise/callback of the Dynamoose scan call as an error (not successful)
+				reject: 'My Error' // 'My Error' will be passed back to the promise/callback of the Dynamoose scan call as an error (not successful)
 			});
 		});
 	});

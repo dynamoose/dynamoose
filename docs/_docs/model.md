@@ -7,7 +7,7 @@ order: 3
 ### Create Model From Schema
 
 ```js
-var Dog = dynamoose.model('Dog', dogSchema);
+const Dog = dynamoose.model('Dog', dogSchema);
 ```
 
 ### new Model(object)
@@ -15,7 +15,7 @@ var Dog = dynamoose.model('Dog', dogSchema);
 Creates a new instance of the model. Object keys are assigned to the new model.
 
 ```js
-var odie = new Dog({
+const odie = new Dog({
   ownerId: 4,
   name: 'Odie',
   breed: 'Beagle',
@@ -26,20 +26,26 @@ var odie = new Dog({
 
 ### model.put(options, callback) & model.save(options, callback)
 
-Puts the item in the DynamoDB table.  Will overwrite the item.
+Puts the item in the DynamoDB table. Will overwrite the item.
 
 ```js
 odie.save(function (err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Ta-da!');
 });
 
 odie.save({
-    condition: '#o = :ownerId',
-    conditionNames: { o: 'ownerId' },
-    conditionValues: { ownerId: 4 }
-  }, function (err) {
-  if(err) { return console.log(err); }
+  condition: '#o = :ownerId',
+  conditionNames: { o: 'ownerId' },
+  conditionValues: { ownerId: 4 }
+}, function (err) {
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Ta-da!');
 });
 ```
@@ -83,10 +89,14 @@ Dog.batchPut([
     breed: 'Beagle',
     color: ['Tan'],
     cartoon: false
-  }], function (err, dogs) {
-    if (err) { return console.log(err); }
-    console.log('Ta-da!');
-  });
+  }
+], function (err, dogs) {
+  if (err) {
+    return console.log(err);
+  }
+
+  console.log('Ta-da!');
+});
 ```
 
 #### Options
@@ -290,7 +300,10 @@ Gets multiple items from the table.
 
 ```js
 Dog.batchGet([{ownerId: 4, name: 'Odie'}, {ownerId: 5, name: 'Lassie'}], function (err, dogs) {
-  if (err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Retrieved two dogs: ' + dogs);
 });
 ```
@@ -301,7 +314,10 @@ Deletes an item from the table.
 
 ```js
 Dog.delete({ownerId: 4, name: 'Odie'}, function(err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Bye bye Odie');
 });
 ```
@@ -317,7 +333,10 @@ Deletes the item from the table. The `options` parameter is optional, and should
 
 ```js
 odie.delete(function(err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Bye bye Odie');
 });
 ```
@@ -341,7 +360,10 @@ Dog.batchDelete([
   { ownerId: 4, name: 'Odie' },
   { ownerId: 5, name: 'Lassie'}
 ], function (err) {
-  if (err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Bye bye my friends');
 });
 ```
@@ -355,12 +377,15 @@ The key can either be its own object or combined with the update object.
 
 **$PUT**
 
-Put is the default behavior.  The three example below are identical.
+Put is the default behavior. The three example below are identical.
 
 *key and updated are separate*
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {age: 1}, function (err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Just a puppy');
 })
 ```
@@ -368,14 +393,20 @@ Dog.update({ownerId: 4, name: 'Odie'}, {age: 1}, function (err) {
 *key and updated are combined*
 ```js
 Dog.update({ownerId: 4, name: 'Odie', age: 1}, function (err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Just a puppy');
 })
 ```
 
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {$PUT: {age: 1}}, function (err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Just a puppy');
 })
 ```
@@ -386,7 +417,10 @@ Adds one or more attributes to the item. These attributes must be of the number 
 
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {$ADD: {age: 1}}, function (err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Birthday boy is one year older');
 })
 ```
@@ -397,7 +431,10 @@ Removes one or more attributes from an item.
 
 ```js
 Dog.update({ownerId: 4, name: 'Odie'}, {$DELETE: {age: null}}, function (err) {
-  if(err) { return console.log(err); }
+  if (err) {
+    return console.log(err);
+  }
+
   console.log('Too old to keep count');
 })
 ```
@@ -444,7 +481,7 @@ Use ReturnValues if you want to get the item attributes as they appear before or
 - NONE - If ReturnValues is not specified, or if its value is NONE, then nothing is returned. (This setting is DynamoDB's default.)
 - ALL_OLD - Returns all of the attributes of the item, as they appeared before the UpdateItem operation.
 - UPDATED_OLD - Returns only the updated attributes, as they appeared before the UpdateItem operation.
-- ALL_NEW - Returns all of the attributes of the item, as they appear after the UpdateItem operation. (This setting is Dynamoose's default.)
+- ALL_NEW - Returns all of the attributes of the item, as they appear after the UpdateItem operation. (This setting is the Dynamoose default.)
 - UPDATED_NEW - Returns only the updated attributes, as they appear after the UpdateItem operation.
 
 
@@ -519,9 +556,9 @@ Dog.getTableReq();
 This is how you can add plugins to be run on your model. For example you can use this function like so.
 
 ```js
-var MyPlugin = require('ThePluginPackage');
-var MyPluginB = require('ThePluginPackageB');
-var Model = dynamoose.model('Puppy', {
+const MyPlugin = require('ThePluginPackage');
+const MyPluginB = require('ThePluginPackageB');
+const Model = dynamoose.model('Puppy', {
     id: {
         type: Number,
         validate: function(v) {
