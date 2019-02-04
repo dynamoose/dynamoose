@@ -3,27 +3,9 @@
 var DynamoDbLocal = require('dynamodb-local');
 var DYNAMO_DB_PORT = 8000;
 
-module.exports = function(grunt) {
+module.exports = (grunt) => {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    // jshint: {
-    //   app: {
-    //     src: ['gruntfile.js', 'index.js', 'lib/**/*.js'],
-    //     options: {
-    //       node: true,
-    //       jshintrc: '.jshintrc',
-    //       'esversion': 6
-    //     }
-    //   },
-    //   test: {
-    //     src: ['test/**/*.js' ],
-    //     options: {
-    //       node: true,
-    //       jshintrc: 'test/.jshintrc',
-    //       'esversion': 6
-    //     }
-    //   }
-    // },
     mochaTest: {
       test: {
         options: {
@@ -35,15 +17,12 @@ module.exports = function(grunt) {
   });
 
   // Load libs
-  // grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-mocha-test');
 
-  grunt.registerTask('dynamo:start', function() {
-    var getPID = 'ps aux | grep "DynamoDBLocal.jar -port ' +
-    DYNAMO_DB_PORT  +
-    '" | grep -v grep | awk \'{print $2}\'';
-    var done = this.async();
-    require('child_process').exec(getPID, function (err, pid) {
+  grunt.registerTask('dynamo:start', function () {
+    const getPID = `ps aux | grep "DynamoDBLocal.jar -port ${DYNAMO_DB_PORT}" | grep -v grep | awk '{print $2}'`;
+    const done = this.async();
+    require('child_process').exec(getPID, (err, pid) => {
       if(err) {
         return done(err);
       }
@@ -56,8 +35,8 @@ module.exports = function(grunt) {
 
       DynamoDbLocal
         .launch(DYNAMO_DB_PORT)
-        .then(function() { done(); })
-        .catch(function(e) { done(e); });
+        .then(done)
+        .catch(done);
     });
   });
 
