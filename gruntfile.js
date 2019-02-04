@@ -12,7 +12,7 @@ module.exports = function(grunt) {
     //     options: {
     //       node: true,
     //       jshintrc: '.jshintrc',
-		//       'esversion': 6
+    //       'esversion': 6
     //     }
     //   },
     //   test: {
@@ -20,7 +20,7 @@ module.exports = function(grunt) {
     //     options: {
     //       node: true,
     //       jshintrc: 'test/.jshintrc',
-		//       'esversion': 6
+    //       'esversion': 6
     //     }
     //   }
     // },
@@ -55,9 +55,9 @@ module.exports = function(grunt) {
       }
 
       DynamoDbLocal
-      .launch(DYNAMO_DB_PORT)
-      .then(function() { done(); })
-      .catch(function(e) { done(e); });
+        .launch(DYNAMO_DB_PORT)
+        .then(function() { done(); })
+        .catch(function(e) { done(e); });
     });
   });
 
