@@ -7,10 +7,8 @@ order: 2
 Below is a simple example of how to use DynamoDB TTL (time to live) with Dynamoose.
 
 ```js
-'use strict';
-
 // Requiring the Dynamoose NPM package
-var dynamoose = require('dynamoose');
+const dynamoose = require('dynamoose');
 
 // Setting our table name prefix to "example-"
 dynamoose.setDefaults({
@@ -19,7 +17,7 @@ dynamoose.setDefaults({
 });
 
 // Creating a new Dynamomoose model, with 3 attributes (id, name, and ttl), the name of our table is "example-Cat" (due to our prefix default set above, and our suffix being an empty string)
-var Cat = dynamoose.model('Cat', {
+const Cat = dynamoose.model('Cat', {
   id: Number,
   name: String
 }, {
@@ -32,15 +30,13 @@ var Cat = dynamoose.model('Cat', {
 });
 
 // Creating a new instance of our "Cat" model
-var garfield = new Cat({id: 1, name: 'Fluffy'});
+const garfield = new Cat({id: 1, name: 'Fluffy'});
 
 // Saving our new cat to DynamoDB
-garfield.save()
-.then(function () {
+garfield.save().then(function () {
   // Getting our cat from DynamoDB after it has completed saving
   return Cat.get(1);
-})
-.then(function (fluffy) {
+}).then(function (fluffy) {
   // After getting our cat from DynamoDB we print the object that we received from DynamoDB
   console.log(JSON.stringify(fluffy, null, ' '));
   /*
