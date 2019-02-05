@@ -3522,6 +3522,7 @@ describe('Model', function (){
           Cats.Cat.transaction.delete({id: 10000})
         ]);
       } catch (e) {
+        console.error(e);
       }
 
       should.not.exist(result);
@@ -3567,6 +3568,7 @@ describe('Model', function (){
           Cats.Cat.transaction.delete({id: 20000})
         ]);
       } catch (e) {
+        console.error(e);
       }
 
       should.not.exist(result);
