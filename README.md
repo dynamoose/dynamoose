@@ -59,14 +59,32 @@ The Dynamoose Changelog can be found in the [CHANGELOG.md](//github.com/dynamoos
 
 The Dynamoose Roadmap can be found in the [ROADMAP.md](//github.com/dynamoosejs/dynamoose/blob/master/ROADMAP.md) file. Help is always appreciated on these items. If you are able to help submit a PR so we can review and improve Dynamoose!
 
-## Development
+## Development Scripts
 
 Dynamoose has a few helpers for local development. These are included in the scripts section of our `package.json`.
 
-## npm test
+### npm test
 
-This will run all of our tests via grunt. This spins up a local DynamoDB Local instance, runs Mocha, and closes the DynamoDB Local instance at completion.
+This will run all of our tests via a node script. This spins up a local DynamoDB Local instance, runs Mocha, and closes the DynamoDB Local instance at completion.
 
-## npm run lint
+### npm run test:debug
+
+Same as above, but launched with `--inspect`. This will allow you to place debugger statements for working in the tests.
+
+### npm run test:debug:brk
+
+Same as above, but launched with `--inspect-brk`. This will allow you to place debugger statements for working in the tests, and not initialize the tests until you manually start it.
+
+### npm run lint
 
 This will run our lint configuration against all of our source files and alert you to any issues.
+
+### npm run ci
+
+This will run our lint, test, and coverage scripts. This is exactly what travis runs, if you'd like to verify prior to commit.
+
+### husky
+
+This is a helper for commit sanity. This will run our lint prior to commit, and full ci prior to push.
+
+
