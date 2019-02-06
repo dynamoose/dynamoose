@@ -58,3 +58,15 @@ The Dynamoose Changelog can be found in the [CHANGELOG.md](//github.com/dynamoos
 ## Roadmap
 
 The Dynamoose Roadmap can be found in the [ROADMAP.md](//github.com/dynamoosejs/dynamoose/blob/master/ROADMAP.md) file. Help is always appreciated on these items. If you are able to help submit a PR so we can review and improve Dynamoose!
+
+## Development
+
+Dynamoose has a few helpers for local development. These are included in the scripts section of our `package.json`.
+
+## npm test
+
+This will run all of our tests via grunt. This spins up a local DynamoDB Local instance, runs Mocha, and closes the DynamoDB Local instance at completion.
+
+## npm run lint
+
+This will run our lint configuration against all of our source files and alert you to any issues.
