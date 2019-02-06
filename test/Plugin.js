@@ -267,7 +267,7 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.scan({}).exec(function(err, result) {
+    Model.scan({}).exec(function(err) {
       err.should.eql('Test');
 
       done();
@@ -315,7 +315,7 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.scan({}).exec(function(err, result) {
+    Model.scan({}).exec(function(err) {
       err.should.eql('Test');
 
       done();
@@ -385,7 +385,7 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.query('id').eq(1).exec(function(err, result) {
+    Model.query('id').eq(1).exec(function(err) {
       err.should.eql('Test');
 
       done();
@@ -433,7 +433,7 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.query('id').eq(1).exec(function(err, result) {
+    Model.query('id').eq(1).exec(function(err) {
       err.should.eql('Test');
 
       done();
@@ -503,7 +503,7 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.get('', function(err, result) {
+    Model.get('', function(err) {
       err.should.eql('Test');
 
       done();
@@ -551,7 +551,7 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.get('', function(err, result) {
+    Model.get('', function(err) {
       err.should.eql('Test');
 
       done();
@@ -645,7 +645,7 @@ describe('Plugin', function() {
         age: 2
       }
     );
-    myItem.save(function(err, result) {
+    myItem.save(function(err) {
       err.should.eql('Test');
 
       done();
@@ -709,7 +709,7 @@ describe('Plugin', function() {
         age: 2
       }
     );
-    myItem.save(function(err, result) {
+    myItem.save(function(err) {
       err.should.eql('Test');
 
       done();

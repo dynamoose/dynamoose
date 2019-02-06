@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "test": "grunt test",
+    "lint": "eslint .",
     "coverage": "nyc grunt test"
   },
   "keywords": [
@@ -48,6 +49,7 @@
   "devDependencies": {
     "coveralls": "3.0.2",
     "dynamodb-local": "0.0.24",
+    "eslint": "5.13.0",
     "grunt": "1.0.3",
     "grunt-mocha-test": "0.13.3",
     "mocha": "5.2.0",
