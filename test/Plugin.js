@@ -227,7 +227,7 @@ describe('Plugin', function() {
 
   });
 
-  it('Should not continue for with model:scan request:pre', function(done) {
+  it('Should continue for with model:scan request:pre', function(done) {
 
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
@@ -251,7 +251,31 @@ describe('Plugin', function() {
 
   });
 
-  it('Should not continue for with model:scan request:post', function(done) {
+  it('Should not continue for with model:scan request:pre', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:scan', 'request:pre', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({reject: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.scan({}).exec(function(err) {
+      err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should continue for with model:scan request:post', function(done) {
 
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
@@ -269,6 +293,30 @@ describe('Plugin', function() {
 
     Model.scan({}).exec(function(err, result) {
       result.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should continue for with model:scan request:post', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:scan', 'request:post', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({reject: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.scan({}).exec(function(err) {
+      err.should.eql('Test');
 
       done();
     });
@@ -297,11 +345,59 @@ describe('Plugin', function() {
 
   });
 
+  it('Should continue for with model:query request:pre', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:query', 'request:pre', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({resolve: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.query('id').eq(1).exec(function(err, result) {
+      result.should.eql('Test');
+
+      done();
+    });
+
+  });
+
   it('Should not continue for with model:query request:pre', function(done) {
 
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:query', 'request:pre', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({reject: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.query('id').eq(1).exec(function(err) {
+      err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should continue for with model:query request:post', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:query', 'request:post', function () {
         return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
@@ -328,7 +424,7 @@ describe('Plugin', function() {
       plugin.on('model:query', 'request:post', function () {
         return new Promise(function(resolve) {
           setTimeout(() => {
-            resolve({resolve: 'Test'});
+            resolve({reject: 'Test'});
           }, 500);
         });
       });
@@ -337,8 +433,8 @@ describe('Plugin', function() {
 
     Model.plugin(pluginA);
 
-    Model.query('id').eq(1).exec(function(err, result) {
-      result.should.eql('Test');
+    Model.query('id').eq(1).exec(function(err) {
+      err.should.eql('Test');
 
       done();
     });
@@ -367,7 +463,7 @@ describe('Plugin', function() {
 
   });
 
-  it('Should not continue for model:get request:pre', function(done) {
+  it('Should continue for model:get request:pre', function(done) {
 
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
@@ -391,7 +487,31 @@ describe('Plugin', function() {
 
   });
 
-  it('Should not continue for model:get request:post', function(done) {
+  it('Should not continue for model:get request:pre', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:get', 'request:pre', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({reject: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.get('', function(err) {
+      err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should continue for model:get request:post', function(done) {
 
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
@@ -409,6 +529,30 @@ describe('Plugin', function() {
 
     Model.get('', function(err, result) {
       result.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should continue for model:get request:post', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:get', 'request:post', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({reject: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    Model.get('', function(err) {
+      err.should.eql('Test');
 
       done();
     });
@@ -445,11 +589,75 @@ describe('Plugin', function() {
 
   });
 
-  it('Should not continue for model:put request:pre', function(done) {
+  it('Should continue for model:put request:pre', function(done) {
 
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:put', 'request:pre', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({resolve: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    var myItem = new Model(
+      {
+        id: 1,
+        name: 'Lucky',
+        owner: 'Bob',
+        age: 2
+      }
+    );
+    myItem.save(function(err, result) {
+      result.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should not continue for model:put request:pre on adding a model', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:put', 'request:pre', function () {
+        return new Promise(function(resolve) {
+          setTimeout(() => {
+            resolve({reject: 'Test'});
+          }, 500);
+        });
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    var myItem = new Model(
+      {
+        id: 1,
+        name: 'Lucky',
+        owner: 'Bob',
+        age: 2
+      }
+    );
+    myItem.save(function(err) {
+      err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should continue for model:put request:post', function(done) {
+
+    var pluginA = function(plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:put', 'request:post', function () {
         return new Promise(function(resolve) {
           setTimeout(() => {
             resolve({resolve: 'Test'});
@@ -484,7 +692,7 @@ describe('Plugin', function() {
       plugin.on('model:put', 'request:post', function () {
         return new Promise(function(resolve) {
           setTimeout(() => {
-            resolve({resolve: 'Test'});
+            resolve({reject: 'Test'});
           }, 500);
         });
       });
@@ -501,8 +709,8 @@ describe('Plugin', function() {
         age: 2
       }
     );
-    myItem.save(function(err, result) {
-      result.should.eql('Test');
+    myItem.save(function(err) {
+      err.should.eql('Test');
 
       done();
     });
