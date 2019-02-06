@@ -18,9 +18,12 @@
     "lib/*"
   ],
   "scripts": {
-    "test": "grunt test",
+    "test": "node mocha.js",
+    "test:debug": "node --inspect mocha.js",
+    "test:debug:brk": "node --inspect-brk mocha.js",
     "lint": "eslint .",
-    "coverage": "nyc grunt test"
+    "coverage": "nyc npm test",
+    "ci": "npm run lint && npm run coverage"
   },
   "keywords": [
     "dynamodb",
@@ -50,8 +53,6 @@
     "coveralls": "3.0.2",
     "dynamodb-local": "0.0.24",
     "eslint": "5.13.0",
-    "grunt": "1.0.3",
-    "grunt-mocha-test": "0.13.3",
     "mocha": "5.2.0",
     "nyc": "13.1.0",
     "should": "13.2.3"
@@ -76,9 +77,9 @@
       "text-summary"
     ],
     "check-coverage": true,
-    "lines": 50,
-    "statements": 50,
-    "functions": 50,
-    "branches": 50
+    "lines": 80,
+    "statements": 80,
+    "functions": 80,
+    "branches": 80
   }
 }
