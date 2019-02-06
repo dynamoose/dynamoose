@@ -1,5 +1,17 @@
 # Dynamoose Changelog
 
+## Version 1.5.2
+
+This is a minor bug fix for Plugins, and also adds some other improvements for plugins and other parts of the app.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- **[Plugin shouldContinue Fix & Other Improvements](https://github.com/dynamoosejs/dynamoose/pull/564)** #564
+
+---
+
 ## Version 1.5.1
 
 This is a minor release with documentation and project improvements.
@@ -18,7 +30,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 - **[Project Improvements](https://github.com/dynamoosejs/dynamoose/pull/558)** #558
 - **[Updating issue template with warning about not filling out fields](https://github.com/dynamoosejs/dynamoose/pull/538)** #538
 - **[Updating Dependencies](https://github.com/dynamoosejs/dynamoose/pull/562)** #562
-- **[Refactor transactions tests to use DynamoDB Local tests](https://github.com/dynamoosejs/dynamoose/pull/563)** #563 
+- **[Refactor transactions tests to use DynamoDB Local tests](https://github.com/dynamoosejs/dynamoose/pull/563)** #563
 
 ---
 
