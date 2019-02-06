@@ -65,7 +65,7 @@ Dynamoose has a few helpers for local development. These are included in the scr
 
 ## npm test
 
-This will run all of our tests via grunt. This spins up a local Dynamo instance, runs mocha, and closes the Dynamo instance at completion.
+This will run all of our tests via grunt. This spins up a local DynamoDB Local instance, runs Mocha, and closes the DynamoDB Local instance at completion.
 
 ## npm run lint
 
