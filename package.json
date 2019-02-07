@@ -23,7 +23,7 @@
     "test:debug:brk": "node --inspect-brk node_modules/.bin/mocha test/",
     "lint": "eslint .",
     "coverage": "nyc npm test",
-    "push-check": "npm run lint && npm run coverage"
+    "ci": "npm run lint && npm run coverage"
   },
   "keywords": [
     "dynamodb",
@@ -86,7 +86,7 @@
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint",
-      "pre-push": "npm run push-check"
+      "pre-push": "npm run ci"
     }
   }
 }
