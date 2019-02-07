@@ -2,5 +2,4 @@
 
 set -ev
 npm install
-npm run lint
-nyc npm test && nyc report --reporter=text-lcov | coveralls
+npm run coveralls
