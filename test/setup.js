@@ -12,7 +12,8 @@ const startUpAndReturnDynamo = async () => {
 
 let dynamoDb;
 
-before(async () => {
+before(async function() {
+  this.timeout(30000);
   dynamoDb = await startUpAndReturnDynamo();
 });
 
