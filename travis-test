@@ -2,4 +2,4 @@
 
 set -ev
 npm install
-npm run ci
+npm run coveralls
