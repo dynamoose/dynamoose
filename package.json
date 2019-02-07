@@ -18,9 +18,13 @@
     "lib/*"
   ],
   "scripts": {
-    "test": "grunt test",
+    "test": "mocha",
+    "test:debug": "mocha --inspect",
+    "test:debug:brk": "mocha --inspect-brk",
     "lint": "eslint .",
-    "coverage": "nyc grunt test"
+    "coverage": "nyc npm test",
+    "ci": "npm run lint && npm run coverage",
+    "coveralls-ci": "npm run ci && nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
     "dynamodb",
@@ -50,8 +54,7 @@
     "coveralls": "3.0.2",
     "dynamodb-local": "0.0.24",
     "eslint": "5.13.0",
-    "grunt": "1.0.3",
-    "grunt-mocha-test": "0.13.3",
+    "husky": "1.3.1",
     "mocha": "5.2.0",
     "nyc": "13.1.0",
     "should": "13.2.3"
@@ -76,9 +79,15 @@
       "text-summary"
     ],
     "check-coverage": true,
-    "lines": 50,
-    "statements": 50,
-    "functions": 50,
-    "branches": 50
+    "lines": 80,
+    "statements": 80,
+    "functions": 80,
+    "branches": 80
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint",
+      "pre-push": "npm run ci"
+    }
   }
 }
