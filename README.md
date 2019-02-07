@@ -82,9 +82,3 @@ This will run our lint configuration against all of our source files and alert y
 ### npm run ci
 
 This will run our lint, test, and coverage scripts. This is exactly what travis runs, if you'd like to verify prior to commit.
-
-### husky
-
-This is a helper for commit sanity. This will run our lint prior to commit, and full ci prior to push.
-
-
