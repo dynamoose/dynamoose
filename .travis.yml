@@ -5,7 +5,5 @@ node_js:
   - "9"
   - "8"
 # env: DEBUG=dynamoose*
-before_script:
-  - npm install -g grunt-cli nyc eslint
 script:
   - ./travis-test
