@@ -18,9 +18,9 @@
     "lib/*"
   ],
   "scripts": {
-    "test": "mocha test/",
-    "test:debug": "mocha --inspect test/",
-    "test:debug:brk": "mocha --inspect-brk test/",
+    "test": "mocha",
+    "test:debug": "mocha --inspect",
+    "test:debug:brk": "mocha --inspect-brk",
     "lint": "eslint .",
     "coverage": "nyc npm test",
     "ci": "npm run lint && npm run coverage",
