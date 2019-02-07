@@ -18,12 +18,13 @@
     "lib/*"
   ],
   "scripts": {
-    "test": "node mocha.js",
-    "test:debug": "node --inspect mocha.js",
-    "test:debug:brk": "node --inspect-brk mocha.js",
+    "test": "mocha test/",
+    "test:debug": "node --inspect node_modules/.bin/mocha test/",
+    "test:debug:brk": "node --inspect-brk node_modules/.bin/mocha test/",
     "lint": "eslint .",
     "coverage": "nyc npm test",
-    "ci": "npm run lint && npm run coverage"
+    "ci": "npm run lint && npm run coverage",
+    "coveralls": "npm run ci && nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
     "dynamodb",
