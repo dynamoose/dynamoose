@@ -18,7 +18,7 @@ Dynamoose has a few helpers for local development. These are included in the scr
 
 This will run `git-cz`, a helper for creating a commit that semantic release can interpret.
 
-### npm run commit:lint
+### npm run lint:commit
 
 This will run our lint configuration against your commit to let you know if it's correct.
 
