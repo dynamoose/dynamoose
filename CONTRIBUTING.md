@@ -14,6 +14,14 @@ This will get you ready to develop.
 
 Dynamoose has a few helpers for local development. These are included in the scripts section of our `package.json`.
 
+### npm run commit
+
+This will run `git-cz`, a helper for creating a commit that semantic release can interpret.
+
+### npm run commit:lint
+
+This will run our lint configuration against your commit to let you know if it's correct.
+
 ### npm test
 
 This will run all of our tests via a node script. This spins up a local DynamoDB Local instance, runs Mocha, and closes the DynamoDB Local instance at completion.
@@ -34,17 +42,13 @@ This will run our lint configuration against all of our source files and alert y
 
 This will run our lint, test, and coverage scripts. This is exactly what travis runs, if you'd like to verify prior to commit.
 
-### npm run commit
-
-This will run `git-cz`, a helper for creating a commit that semantic release can interpret.
-
 ## Getting A PR Merged
 
 We have a few requirements for getting a PR merged. They are:
 
   1. Must pass our `eslint`
   2. Must have test coverage not decrease
-  3. A well formatted commit message
+  3. A [well formatted commit message](#npm-run-commit)
   4. An approved review
 
 ### husky
