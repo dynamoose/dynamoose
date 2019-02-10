@@ -72,6 +72,8 @@
     "should": "13.2.3"
   },
   "dependencies": {
+    "@semantic-release/commit-analyzer": "^6.1.0",
+    "@semantic-release/release-notes-generator": "^7.1.4",
     "aws-sdk": "2.395.0",
     "debug": "4.1.1",
     "deep-equal": "1.0.1",
