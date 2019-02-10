@@ -1,3 +1,9 @@
+---
+title: Quick-Start
+permalinks: /
+layout: single
+---
+
 ## Installation
 
     $ npm i dynamoose
