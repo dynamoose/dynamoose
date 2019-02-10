@@ -1,0 +1,909 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-3.3.0">
+    
+    
+      
+        <title>Config - DynamooseJS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.572ca0f0.css">
+      
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.962652e9.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/default.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/override.css">
+    
+    
+      
+    
+    
+  </head>
+  
+    <body dir="ltr">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#aws-credentials" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="DynamooseJS" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            
+              <span class="md-header-nav__topic">
+                DynamooseJS
+              </span>
+              <span class="md-header-nav__topic">
+                Config
+              </span>
+            
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          
+            <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+            
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+          
+        
+      </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="DynamooseJS" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    DynamooseJS
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+    
+    <label class="md-nav__link" for="nav-2">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/simple/" title="Simple" class="md-nav__link">
+      Simple
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/ttl/" title="TTL" class="md-nav__link">
+      TTL
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+    
+    <label class="md-nav__link" for="nav-3">
+      API
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-3">
+        API
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Config
+      </label>
+    
+    <a href="./" title="Config" class="md-nav__link md-nav__link--active">
+      Config
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#aws-credentials" title="AWS Credentials" class="md-nav__link">
+    AWS Credentials
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamoose-object" title="Dynamoose Object" class="md-nav__link">
+    Dynamoose Object
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosemodelname-schema-options" title="dynamoose.model(name, schema[, options])" class="md-nav__link">
+    dynamoose.model(name, schema[, options])
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooselocalurl" title="dynamoose.local(url)" class="md-nav__link">
+    dynamoose.local(url)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooseddb" title="dynamoose.ddb()" class="md-nav__link">
+    dynamoose.ddb()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooseaws" title="dynamoose.AWS" class="md-nav__link">
+    dynamoose.AWS
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosesetddb" title="dynamoose.setDDB" class="md-nav__link">
+    dynamoose.setDDB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooserevertddb" title="dynamoose.revertDDB" class="md-nav__link">
+    dynamoose.revertDDB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosesetdefaultsoptions" title="dynamoose.setDefaults(options)" class="md-nav__link">
+    dynamoose.setDefaults(options)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooseschema" title="dynamoose.Schema" class="md-nav__link">
+    dynamoose.Schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosetable" title="dynamoose.Table" class="md-nav__link">
+    dynamoose.Table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-x-ray-support" title="AWS X-Ray Support" class="md-nav__link">
+    AWS X-Ray Support
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosesetdocumentclientdocumentclient" title="dynamoose.setDocumentClient(documentClient)" class="md-nav__link">
+    dynamoose.setDocumentClient(documentClient)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosetransactionitems-options-cb" title="dynamoose.transaction(items[, options][, cb])" class="md-nav__link">
+    dynamoose.transaction(items[, options][, cb])
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../model/" title="Model" class="md-nav__link">
+      Model
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../plugins/" title="Plugins" class="md-nav__link">
+      Plugins
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../query/" title="Query" class="md-nav__link">
+      Query
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../scan/" title="Scan" class="md-nav__link">
+      Scan
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../schema/" title="Schema" class="md-nav__link">
+      Schema
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+    
+    <label class="md-nav__link" for="nav-4">
+      Library
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-4">
+        Library
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/Plugin/" title="Plugin" class="md-nav__link">
+      Plugin
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/VirtualType/" title="VirtualType" class="md-nav__link">
+      VirtualType
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#aws-credentials" title="AWS Credentials" class="md-nav__link">
+    AWS Credentials
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamoose-object" title="Dynamoose Object" class="md-nav__link">
+    Dynamoose Object
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosemodelname-schema-options" title="dynamoose.model(name, schema[, options])" class="md-nav__link">
+    dynamoose.model(name, schema[, options])
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooselocalurl" title="dynamoose.local(url)" class="md-nav__link">
+    dynamoose.local(url)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooseddb" title="dynamoose.ddb()" class="md-nav__link">
+    dynamoose.ddb()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooseaws" title="dynamoose.AWS" class="md-nav__link">
+    dynamoose.AWS
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosesetddb" title="dynamoose.setDDB" class="md-nav__link">
+    dynamoose.setDDB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooserevertddb" title="dynamoose.revertDDB" class="md-nav__link">
+    dynamoose.revertDDB
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosesetdefaultsoptions" title="dynamoose.setDefaults(options)" class="md-nav__link">
+    dynamoose.setDefaults(options)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamooseschema" title="dynamoose.Schema" class="md-nav__link">
+    dynamoose.Schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosetable" title="dynamoose.Table" class="md-nav__link">
+    dynamoose.Table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-x-ray-support" title="AWS X-Ray Support" class="md-nav__link">
+    AWS X-Ray Support
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosesetdocumentclientdocumentclient" title="dynamoose.setDocumentClient(documentClient)" class="md-nav__link">
+    dynamoose.setDocumentClient(documentClient)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamoosetransactionitems-options-cb" title="dynamoose.transaction(items[, options][, cb])" class="md-nav__link">
+    dynamoose.transaction(items[, options][, cb])
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>Config</h1>
+                
+                <h2 id="aws-credentials">AWS Credentials</h2>
+<p>There are three ways to specify AWS credentials:</p>
+<ul>
+<li>.aws/credentials</li>
+<li>Environment Variables</li>
+<li>AWS.config</li>
+</ul>
+<h2 id="dynamoose-object">Dynamoose Object</h2>
+<pre><code class="js">const dynamoose = require('dynamoose');
+</code></pre>
+
+<h3 id="dynamoosemodelname-schema-options">dynamoose.model(name, schema[, options])</h3>
+<p>Compiles a new model or looks up an existing one. <code>options</code> is optional.</p>
+<p>Default <code>options</code>:</p>
+<pre><code class="js">{
+  create: true, // Create table in DB, if it does not exist
+  update: false, // Update remote indexes if they do not match local index structure
+  waitForActive: true, // Wait for table to be created before trying to use it
+  waitForActiveTimeout: 180000, // wait 3 minutes for table to activate
+  streamOptions: { // sets table stream options
+    enabled: false, // sets if stream is enabled on the table
+    type: undefined // sets the stream type (NEW_IMAGE | OLD_IMAGE | NEW_AND_OLD_IMAGES | KEYS_ONLY) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html#DDB-Type-StreamSpecification-StreamViewType)
+  },
+  serverSideEncryption: false, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: false)
+  defaultReturnValues: 'ALL_NEW' // sets ReturnValues for the UpdateItem operation (NONE | ALL_OLD | UPDATED_OLD | ALL_NEW | UPDATED_NEW) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
+}
+</code></pre>
+
+<p>Basic example:</p>
+<pre><code class="js">const Cat = dynamoose.model('Cat', {
+  id: Number,
+  name: String
+});
+</code></pre>
+
+<p>streamOptions: object (optional)</p>
+<p>Indicates whether stream is enabled or disabled on the table and dictates which type of stream the table should have. This is passed into into the <code>StreamSpecification</code> option property when creating the table.</p>
+<p>serverSideEncryption: boolean</p>
+<p>Indicates whether server-side encryption is enabled (true) or disabled (false) on the table. This boolean will be passed into the <code>SSESpecification.Enabled</code> option property when creating the table. Currently (when feature was implemented) DynamoDB doesn't support updating a table to add or remove server-side encryption, therefore this option will only be respected on creation of table, if table already exists in DynamoDB when using Dynamoose this value will be ignored.</p>
+<pre><code class="js">const model = dynamoose.model('Cat', {...}, {
+  streamOptions: {
+    enabled: true,
+    type: &quot;NEW_AND_OLD_IMAGES&quot;
+  },
+  serverSideEncryption: true
+});
+</code></pre>
+
+<h3 id="dynamooselocalurl">dynamoose.local(url)</h3>
+<p>Configure Dynamoose to use a DynamoDB local for testing. <code>url</code> defaults to 'http://localhost:8000'.</p>
+<pre><code class="js">dynamoose.local();
+</code></pre>
+
+<pre><code class="js">dynamoose.local('http://localhost:1234');
+</code></pre>
+
+<h3 id="dynamooseddb">dynamoose.ddb()</h3>
+<p>Configures and returns the AWS.DynamoDB object.</p>
+<h3 id="dynamooseaws">dynamoose.AWS</h3>
+<p>AWS object for Dynamoose. Used to configure AWS for Dynamoose.</p>
+<pre><code class="js">dynamoose.AWS.config.update({
+  accessKeyId: 'AKID',
+  secretAccessKey: 'SECRET',
+  region: 'us-east-1'
+});
+</code></pre>
+
+<h3 id="dynamoosesetddb">dynamoose.setDDB</h3>
+<p>Function to set the DynamoDB object that Dynamoose uses.</p>
+<pre><code class="js">const AWS = require('aws-sdk');
+const dynamoDB = new AWS.dynamoDB();
+dynamoose.setDDB(dynamoDB);
+</code></pre>
+
+<h3 id="dynamooserevertddb">dynamoose.revertDDB</h3>
+<p>Function to revert the DynamoDB object that Dynamoose uses to the default.</p>
+<pre><code class="js">dynamoose.revertDDB();
+</code></pre>
+
+<h3 id="dynamoosesetdefaultsoptions">dynamoose.setDefaults(options)</h3>
+<p>Sets the default to be used when creating a model. Can be modified on a per model by passing options to <code>.model()</code>.</p>
+<p>Default <code>options</code>:</p>
+<pre><code class="js">{
+  create: true // Create table in DB if it does not exist
+  prefix: '', // Default prefix for all DynamoDB tables
+  suffix: '' // Default suffix for all DynamoDB tables
+}
+</code></pre>
+
+<p>It is recommended that <code>create</code> be disabled for production environments.</p>
+<pre><code class="js">dynamoose.setDefaults({create: false});
+</code></pre>
+
+<h3 id="dynamooseschema">dynamoose.Schema</h3>
+<p>The Dynamoose Schema class, used to create new schema definitions. For example:</p>
+<pre><code class="js">const appleSchema = new dynamoose.Schema({
+  id: Number,
+  type: String
+});
+</code></pre>
+
+<h3 id="dynamoosetable">dynamoose.Table</h3>
+<p>Table class</p>
+<h3 id="aws-x-ray-support">AWS X-Ray Support</h3>
+<p>You can achieve Amazon Web Services X-Ray support using a configuration similar to the following.</p>
+<pre><code class="js">const AWSXRay = require('aws-xray-sdk');
+const dynamoose = require('dynamoose');
+dynamoose.AWS = AWSXRay.captureAWS(require('aws-sdk'));
+</code></pre>
+
+<h3 id="dynamoosesetdocumentclientdocumentclient">dynamoose.setDocumentClient(documentClient)</h3>
+<p>Sets the document client for DynamoDB. This can be used to integrate with Amazon Web Services DAX.</p>
+<h3 id="dynamoosetransactionitems-options-cb">dynamoose.transaction(items[, options][, cb])</h3>
+<p>Allows you to run DynamoDB transactions. Accepts an array as the <code>items</code> parameter. You can pass in a RAW DynamoDB transaction object, or use the Dynamoose <code>Model.transaction</code> helper methods.</p>
+<pre><code class="js">dynamoose.transaction([
+  User.transaction.update({id: &quot;user1&quot;}, {$ADD: {balance: -100}}),
+  Charge.transaction.create({userid: &quot;user1&quot;, product: &quot;product1&quot;, amount: 100, status: &quot;successful&quot;}),
+  Product.transaction.update({id: &quot;product1&quot;}, {$ADD: {inventory: -1}}),
+  Credit.transaction.delete({id: &quot;credit1&quot;}),
+  {
+    Delete: {
+      Key: {
+        id: {
+          S: 'helloworld'
+        }
+      },
+      TableName: 'MyOtherTable'
+    }
+  }
+]).then(function (result) {
+  console.log(result);
+}).catch(function (err) {
+  console.error(err);
+});
+</code></pre>
+
+<p>If you use a custom RAW DynamoDB transaction object, you must have created a corresponding model in Dynamoose.</p>
+<p><code>options</code> properties:</p>
+<ul>
+<li><code>type</code> (string): The type of transaction Dynamoose will run. Can either be "get", or "write". By default if all of your items are of type "get", it will default to "get", otherwise, will default to "write".</li>
+</ul>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../about/" title="About This Section" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                About This Section
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../model/" title="Model" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Model
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+        
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.a353778b.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+        <script src="../../javascripts/highlight.js"></script>
+      
+        <script src="../../javascripts/init.js"></script>
+      
+    
+  </body>
+</html>

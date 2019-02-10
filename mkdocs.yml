@@ -1,0 +1,26 @@
+site_name: DynamooseJS
+extra_css:
+  - 'stylesheets/default.css'
+  - 'stylesheets/override.css'
+extra_javascript:
+  - 'javascripts/highlight.js'
+  - 'javascripts/init.js'
+nav:
+    - Home: index.md
+    - Examples:
+        - About This Section: examples/about.md
+        - Simple: examples/simple.md
+        - TTL: examples/ttl.md
+    - API:
+        - About This Section: api/about.md
+        - Config: api/config.md
+        - Model: api/model.md
+        - Plugins: api/plugins.md
+        - Query: api/query.md
+        - Scan: api/scan.md
+        - Schema: api/schema.md
+    - Library:
+        - About This Section: lib/about.md
+        - lib/Plugin.md
+        - lib/VirtualType.md
+theme: material
