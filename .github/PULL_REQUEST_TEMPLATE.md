@@ -34,30 +34,7 @@
 ### Other information:
 
 
-
-
-### Type (select 1):
-- [ ] Bug fix
-- [ ] Feature implementation
-- [ ] Documentation improvement
-- [ ] Testing improvement
-<!-- If you select the option below, please replace `---` below with the issue number of the GitHub issue raised, and the user who asked you to submit a broken test -->
-- [ ] Test added to report bug (GitHub issue #--- @---)
-- [ ] Something not listed here
-
-
-### Is this a breaking change? (select 1):
-- [ ] 🚨 YES 🚨
-- [ ] No
-- [ ] I'm not sure
-
-
 ### Is this ready to be merged into Dynamoose? (select 1):
-- [ ] Yes
-- [ ] No
-
-
-### Are all the tests currently passing on this PR? (select 1):
 - [ ] Yes
 - [ ] No
 

@@ -3,3 +3,4 @@
 set -ev
 npm install
 npm run coveralls-ci
+npm run sem-rel
