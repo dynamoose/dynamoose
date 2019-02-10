@@ -1,0 +1,1046 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-3.3.0">
+    
+    
+      
+        <title>Query - DynamooseJS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.572ca0f0.css">
+      
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.962652e9.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/default.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/override.css">
+    
+    
+      
+    
+    
+  </head>
+  
+    <body dir="ltr">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#modelqueryquery-options-callback" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="DynamooseJS" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            
+              <span class="md-header-nav__topic">
+                DynamooseJS
+              </span>
+              <span class="md-header-nav__topic">
+                Query
+              </span>
+            
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          
+            <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+            
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+          
+        
+      </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="DynamooseJS" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    DynamooseJS
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+    
+    <label class="md-nav__link" for="nav-2">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/simple/" title="Simple" class="md-nav__link">
+      Simple
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/ttl/" title="TTL" class="md-nav__link">
+      TTL
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+    
+    <label class="md-nav__link" for="nav-3">
+      API
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-3">
+        API
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../config/" title="Config" class="md-nav__link">
+      Config
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../model/" title="Model" class="md-nav__link">
+      Model
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../plugins/" title="Plugins" class="md-nav__link">
+      Plugins
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Query
+      </label>
+    
+    <a href="./" title="Query" class="md-nav__link md-nav__link--active">
+      Query
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#modelqueryquery-options-callback" title="Model.query(query, options, callback)" class="md-nav__link">
+    Model.query(query, options, callback)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelqueryonequery-options-callback" title="Model.queryOne(query, options, callback)" class="md-nav__link">
+    Model.queryOne(query, options, callback)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryexeccallback" title="query.exec(callback)" class="md-nav__link">
+    query.exec(callback)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryalldelay-max" title="query.all([delay[, max]])" class="md-nav__link">
+    query.all([delay[, max]])
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querywhererangekey" title="query.where(rangeKey)" class="md-nav__link">
+    query.where(rangeKey)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryfilterfilter" title="query.filter(filter)" class="md-nav__link">
+    query.filter(filter)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryand" title="query.and()" class="md-nav__link">
+    query.and()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryor" title="query.or()" class="md-nav__link">
+    query.or()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querynot" title="query.not()" class="md-nav__link">
+    query.not()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querynull" title="query.null()" class="md-nav__link">
+    query.null()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryeqvalue" title="query.eq(value)" class="md-nav__link">
+    query.eq(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryltvalue" title="query.lt(value)" class="md-nav__link">
+    query.lt(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querylevalue" title="query.le(value)" class="md-nav__link">
+    query.le(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querygevalue" title="query.ge(value)" class="md-nav__link">
+    query.ge(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querygtvalue" title="query.gt(value)" class="md-nav__link">
+    query.gt(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querybeginswithvalue" title="query.beginsWith(value)" class="md-nav__link">
+    query.beginsWith(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querybetweena-b" title="query.between(a, b)" class="md-nav__link">
+    query.between(a, b)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querycontainsvalue" title="query.contains(value)" class="md-nav__link">
+    query.contains(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querybeginswithvalue_1" title="query.beginsWith(value)" class="md-nav__link">
+    query.beginsWith(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryinvalues" title="query.in(values)" class="md-nav__link">
+    query.in(values)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querylimitlimit" title="query.limit(limit)" class="md-nav__link">
+    query.limit(limit)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryconsistent" title="query.consistent()" class="md-nav__link">
+    query.consistent()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querydescending" title="query.descending()" class="md-nav__link">
+    query.descending()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryascending" title="query.ascending()" class="md-nav__link">
+    query.ascending()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querystartatkey" title="query.startAt(key)" class="md-nav__link">
+    query.startAt(key)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryattributesattributes" title="query.attributes(attributes)" class="md-nav__link">
+    query.attributes(attributes)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querycount" title="query.count()" class="md-nav__link">
+    query.count()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querycounts" title="query.counts()" class="md-nav__link">
+    query.counts()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryusingindex" title="query.using(index)" class="md-nav__link">
+    query.using(index)
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../scan/" title="Scan" class="md-nav__link">
+      Scan
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../schema/" title="Schema" class="md-nav__link">
+      Schema
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+    
+    <label class="md-nav__link" for="nav-4">
+      Library
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-4">
+        Library
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/Plugin/" title="Plugin" class="md-nav__link">
+      Plugin
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/VirtualType/" title="VirtualType" class="md-nav__link">
+      VirtualType
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#modelqueryquery-options-callback" title="Model.query(query, options, callback)" class="md-nav__link">
+    Model.query(query, options, callback)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelqueryonequery-options-callback" title="Model.queryOne(query, options, callback)" class="md-nav__link">
+    Model.queryOne(query, options, callback)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryexeccallback" title="query.exec(callback)" class="md-nav__link">
+    query.exec(callback)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryalldelay-max" title="query.all([delay[, max]])" class="md-nav__link">
+    query.all([delay[, max]])
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querywhererangekey" title="query.where(rangeKey)" class="md-nav__link">
+    query.where(rangeKey)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryfilterfilter" title="query.filter(filter)" class="md-nav__link">
+    query.filter(filter)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryand" title="query.and()" class="md-nav__link">
+    query.and()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryor" title="query.or()" class="md-nav__link">
+    query.or()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querynot" title="query.not()" class="md-nav__link">
+    query.not()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querynull" title="query.null()" class="md-nav__link">
+    query.null()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryeqvalue" title="query.eq(value)" class="md-nav__link">
+    query.eq(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryltvalue" title="query.lt(value)" class="md-nav__link">
+    query.lt(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querylevalue" title="query.le(value)" class="md-nav__link">
+    query.le(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querygevalue" title="query.ge(value)" class="md-nav__link">
+    query.ge(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querygtvalue" title="query.gt(value)" class="md-nav__link">
+    query.gt(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querybeginswithvalue" title="query.beginsWith(value)" class="md-nav__link">
+    query.beginsWith(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querybetweena-b" title="query.between(a, b)" class="md-nav__link">
+    query.between(a, b)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querycontainsvalue" title="query.contains(value)" class="md-nav__link">
+    query.contains(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querybeginswithvalue_1" title="query.beginsWith(value)" class="md-nav__link">
+    query.beginsWith(value)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryinvalues" title="query.in(values)" class="md-nav__link">
+    query.in(values)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querylimitlimit" title="query.limit(limit)" class="md-nav__link">
+    query.limit(limit)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryconsistent" title="query.consistent()" class="md-nav__link">
+    query.consistent()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querydescending" title="query.descending()" class="md-nav__link">
+    query.descending()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryascending" title="query.ascending()" class="md-nav__link">
+    query.ascending()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querystartatkey" title="query.startAt(key)" class="md-nav__link">
+    query.startAt(key)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryattributesattributes" title="query.attributes(attributes)" class="md-nav__link">
+    query.attributes(attributes)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querycount" title="query.count()" class="md-nav__link">
+    query.count()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querycounts" title="query.counts()" class="md-nav__link">
+    query.counts()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#queryusingindex" title="query.using(index)" class="md-nav__link">
+    query.using(index)
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>Query</h1>
+                
+                <h3 id="modelqueryquery-options-callback">Model.query(query, options, callback)</h3>
+<p>Queries a table or index. The query parameter can either be the hash key of the table or global index or a complete query object. If the callback is provided, the exec command is called automatically, and the query parameter must be a query object.</p>
+<p><strong>Note:</strong> You <em>must</em> provide an <code>eq</code> for the hash key.</p>
+<pre><code class="js">Dog.query('breed').eq('Beagle').exec(function (err, dogs) {
+  // Look at all the beagles
+});
+</code></pre>
+
+<pre><code class="js">Dog.query({breed: {eq: 'Beagle'}}, function (err, dogs) {
+  // Look at all the beagles
+});
+</code></pre>
+
+<h3 id="modelqueryonequery-options-callback">Model.queryOne(query, options, callback)</h3>
+<p>Queries a table or index, sets <a href="#querylimitlimit"><code>query.limit</code></a> to <code>1</code>.</p>
+<h3 id="queryexeccallback">query.exec(callback)</h3>
+<p>Executes the query against the table or index.</p>
+<h3 id="queryalldelay-max">query.all([delay[, max]])</h3>
+<p>Recursively query as long as lastKey exists. This function will also return a property called <code>timesQueried</code> indicating how many queries were completed.</p>
+<p><code>delay</code> is the time (in miliseconds) between recursive queries. Default: 1000ms (1sec)</p>
+<p><code>max</code> is the maximum number of recursive queries. Default: 0 - unlimited</p>
+<h3 id="querywhererangekey">query.where(rangeKey)</h3>
+<p>Set the range key of the table or index to query.</p>
+<h3 id="queryfilterfilter">query.filter(filter)</h3>
+<p>Set the attribute on which to filter.</p>
+<h3 id="queryand">query.and()</h3>
+<p>Use add logic for filters.</p>
+<h3 id="queryor">query.or()</h3>
+<p>Use or logic for filters.</p>
+<h3 id="querynot">query.not()</h3>
+<p>Inverts the filter logic that follows.</p>
+<h3 id="querynull">query.null()</h3>
+<p>Filter attribute for null.</p>
+<h3 id="queryeqvalue">query.eq(value)</h3>
+<p>Hash, range key, or filter must equal the value provided. This is the only comparison option allowed for a hash key.</p>
+<h3 id="queryltvalue">query.lt(value)</h3>
+<p>Range key or filter less than the value.</p>
+<h3 id="querylevalue">query.le(value)</h3>
+<p>Range key or filter less than or equal value.</p>
+<h3 id="querygevalue">query.ge(value)</h3>
+<p>Range key or filter greater than or equal value.</p>
+<h3 id="querygtvalue">query.gt(value)</h3>
+<p>Range key or filter greater than the value.</p>
+<h3 id="querybeginswithvalue">query.beginsWith(value)</h3>
+<p>Range key or filter begins with value</p>
+<h3 id="querybetweena-b">query.between(a, b)</h3>
+<p>Range key or filter is greater than or equal <code>a</code>, and less than or equal to <code>b</code>.</p>
+<h3 id="querycontainsvalue">query.contains(value)</h3>
+<p>Filter contains the value.</p>
+<h3 id="querybeginswithvalue_1">query.beginsWith(value)</h3>
+<p>Filter begins with the value.</p>
+<h3 id="queryinvalues">query.in(values)</h3>
+<p>Filter is in values array.</p>
+<h3 id="querylimitlimit">query.limit(limit)</h3>
+<p>The maximum number of items to evaluate (not necessarily the number of matching items). If DynamoDB processes the number of items up to the limit while processing the results, it stops the operation and returns the matching values up to that point, and a key in <code>lastKey</code> to apply in a subsequent operation, so that you can pick up where you left off. Also, if the processed data set size exceeds 1 MB before DynamoDB reaches this limit, it stops the operation and returns the matching values up to the limit, and a key in <code>lastKey</code> to apply in a subsequent operation to continue the operation. For more information, see Query and Scan in the Amazon DynamoDB Developer Guide.</p>
+<h3 id="queryconsistent">query.consistent()</h3>
+<p>Query with consistent read.</p>
+<h3 id="querydescending">query.descending()</h3>
+<p>Sort in descending order.</p>
+<h3 id="queryascending">query.ascending()</h3>
+<p>Sort in ascending order (default).</p>
+<h3 id="querystartatkey">query.startAt(key)</h3>
+<p>Start query at key. Use <code>lastKey</code> returned in query.exec() callback.</p>
+<h3 id="queryattributesattributes">query.attributes(attributes)</h3>
+<p>Set the list of attributes to return.</p>
+<h3 id="querycount">query.count()</h3>
+<p>Return the number of matching items, rather than the matching items themselves.</p>
+<h3 id="querycounts">query.counts()</h3>
+<p>Return the counts object of matching items, rather than the matching items themselves:</p>
+<pre><code class="js">{
+    &quot;count&quot;: 2,
+    &quot;scannedCount&quot;: 1000
+}
+</code></pre>
+
+<p>If you used a filter in the request, then <code>count</code> is the number of items returned after the filter was applied, and <code>scannedCount</code> is the number of matching items before the filter was applied.</p>
+<h3 id="queryusingindex">query.using(index)</h3>
+<p>You can manually specify which index to use by adding the <code>query.using</code> method to your query chain. The string you pass into the <code>query.using</code> method must match the name of an index on your table. This method is not required, by default Dynamoose will try to figure out which index to use based on your schema.</p>
+<pre><code class="js">Dog.query('ownerId').using('BreedRangeIndex').eq(20).where('breed').beginsWith('Sp')
+</code></pre>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../plugins/" title="Plugins" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Plugins
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../scan/" title="Scan" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Scan
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+        
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.a353778b.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+        <script src="../../javascripts/highlight.js"></script>
+      
+        <script src="../../javascripts/init.js"></script>
+      
+    
+  </body>
+</html>
