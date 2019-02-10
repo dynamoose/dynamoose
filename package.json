@@ -98,9 +98,8 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "npm run lint:commit",
       "pre-commit": "npm run lint",
-      "pre-push": "npm run ci"
+      "pre-push": "npm run lint:commit && npm run ci"
     }
   },
   "config": {
