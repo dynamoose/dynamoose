@@ -6,3 +6,14 @@ node_js:
 - '8'
 script:
 - "./travis-test"
+jobs:
+  include:
+    # Define the release stage that runs semantic-release
+    - stage: release
+      node_js: lts/*
+      # Advanced: optionally overwrite your default `script` step to skip the tests
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script:
+          - ./travis-deploy
