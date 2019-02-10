@@ -1,0 +1,1325 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-3.3.0">
+    
+    
+      
+        <title>Plugins - DynamooseJS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.572ca0f0.css">
+      
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.962652e9.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/default.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/override.css">
+    
+    
+      
+    
+    
+  </head>
+  
+    <body dir="ltr">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#plugins-beta" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="DynamooseJS" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            
+              <span class="md-header-nav__topic">
+                DynamooseJS
+              </span>
+              <span class="md-header-nav__topic">
+                Plugins
+              </span>
+            
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          
+            <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+            
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+          
+        
+      </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="DynamooseJS" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    DynamooseJS
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+    
+    <label class="md-nav__link" for="nav-2">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-2">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/simple/" title="Simple" class="md-nav__link">
+      Simple
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../examples/ttl/" title="TTL" class="md-nav__link">
+      TTL
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+    
+    <label class="md-nav__link" for="nav-3">
+      API
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-3">
+        API
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../config/" title="Config" class="md-nav__link">
+      Config
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../model/" title="Model" class="md-nav__link">
+      Model
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Plugins
+      </label>
+    
+    <a href="./" title="Plugins" class="md-nav__link md-nav__link--active">
+      Plugins
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#plugins-beta" title="Plugins (BETA)" class="md-nav__link">
+    Plugins (BETA)
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview" title="Overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginsetname" title="plugin.setName" class="md-nav__link">
+    plugin.setName
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-accepted" title="Parameters accepted" class="md-nav__link">
+    Parameters accepted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginsetdescription" title="plugin.setDescription" class="md-nav__link">
+    plugin.setDescription
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-accepted_1" title="Parameters accepted" class="md-nav__link">
+    Parameters accepted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginon" title="plugin.on" class="md-nav__link">
+    plugin.on
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-accepted_2" title="Parameters accepted" class="md-nav__link">
+    Parameters accepted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-plugin-implementation" title="Example Plugin Implementation" class="md-nav__link">
+    Example Plugin Implementation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#items-passed-into-on-callback-object" title="Items Passed Into .on callback object" class="md-nav__link">
+    Items Passed Into .on callback object
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#events-emitted-from-dynamoose" title="Events emitted from Dynamoose" class="md-nav__link">
+    Events emitted from Dynamoose
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" title="*" class="md-nav__link">
+    *
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin" title="plugin" class="md-nav__link">
+    plugin
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginregister" title="plugin:register" class="md-nav__link">
+    plugin:register
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_1" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_1" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelscan" title="model:scan" class="md-nav__link">
+    model:scan
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_2" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_2" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelget" title="model:get" class="md-nav__link">
+    model:get
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_3" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_3" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelquery" title="model:query" class="md-nav__link">
+    model:query
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_4" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_4" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelput" title="model:put" class="md-nav__link">
+    model:put
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_5" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_5" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../query/" title="Query" class="md-nav__link">
+      Query
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../scan/" title="Scan" class="md-nav__link">
+      Scan
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../schema/" title="Schema" class="md-nav__link">
+      Schema
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4">
+    
+    <label class="md-nav__link" for="nav-4">
+      Library
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-4">
+        Library
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/about/" title="About This Section" class="md-nav__link">
+      About This Section
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/Plugin/" title="Plugin" class="md-nav__link">
+      Plugin
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../../lib/VirtualType/" title="VirtualType" class="md-nav__link">
+      VirtualType
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#plugins-beta" title="Plugins (BETA)" class="md-nav__link">
+    Plugins (BETA)
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview" title="Overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginsetname" title="plugin.setName" class="md-nav__link">
+    plugin.setName
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-accepted" title="Parameters accepted" class="md-nav__link">
+    Parameters accepted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginsetdescription" title="plugin.setDescription" class="md-nav__link">
+    plugin.setDescription
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-accepted_1" title="Parameters accepted" class="md-nav__link">
+    Parameters accepted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginon" title="plugin.on" class="md-nav__link">
+    plugin.on
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parameters-accepted_2" title="Parameters accepted" class="md-nav__link">
+    Parameters accepted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-plugin-implementation" title="Example Plugin Implementation" class="md-nav__link">
+    Example Plugin Implementation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#items-passed-into-on-callback-object" title="Items Passed Into .on callback object" class="md-nav__link">
+    Items Passed Into .on callback object
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#events-emitted-from-dynamoose" title="Events emitted from Dynamoose" class="md-nav__link">
+    Events emitted from Dynamoose
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" title="*" class="md-nav__link">
+    *
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin" title="plugin" class="md-nav__link">
+    plugin
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluginregister" title="plugin:register" class="md-nav__link">
+    plugin:register
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_1" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_1" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelscan" title="model:scan" class="md-nav__link">
+    model:scan
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_2" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_2" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelget" title="model:get" class="md-nav__link">
+    model:get
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_3" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_3" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelquery" title="model:query" class="md-nav__link">
+    model:query
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_4" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_4" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modelput" title="model:put" class="md-nav__link">
+    model:put
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages_5" title="Stages" class="md-nav__link">
+    Stages
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-items-added-to-object_5" title="Additional Items Added to Object" class="md-nav__link">
+    Additional Items Added to Object
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>Plugins</h1>
+                
+                <h2 id="plugins-beta">Plugins (BETA)</h2>
+<p><strong>WARNING: PLUGINS IS CURRENTLY IN BETA. THIS FUNCTIONALITY MIGHT CHANGE AT ANYTIME WITHOUT WARNING. DO NOT CONSIDER THIS FEATURE TO BE STABLE.</strong></p>
+<p>Please view the <code>Model.plugin</code> documentation for how to use plugins in your own models. This documentation will be going over how to create plugins from scratch.</p>
+<h3 id="overview">Overview</h3>
+<p>All plugins will export a function. Dynamoose will pass in 2 parameters into that function. <code>plugin</code> and <code>options</code>. <code>options</code> is the object that was passed into <code>Model.plugin</code>. <code>plugin</code> properties are defined below.</p>
+<h3 id="pluginsetname">plugin.setName</h3>
+<p>Set the name of the plugin.</p>
+<h4 id="parameters-accepted">Parameters accepted</h4>
+<ul>
+<li><code>name</code> - Name of plugin (string)</li>
+</ul>
+<h3 id="pluginsetdescription">plugin.setDescription</h3>
+<p>Set the description of the plugin.</p>
+<h4 id="parameters-accepted_1">Parameters accepted</h4>
+<ul>
+<li><code>description</code> - Description of plugin (string)</li>
+</ul>
+<h3 id="pluginon">plugin.on</h3>
+<p>Adds a listener to emitted events from Dynamoose. You can return a promise in the <code>callback</code> method that you pass in, and when it is called, Dynamoose will <code>await</code> for your promise to complete before continuing. Your promise must <code>resolve</code> and not <code>reject</code>. You can resolve an object with the property <code>resolve</code> or <code>reject</code> to return or reject with that result to the end user. At that point Dynamoose will take no further action. This can be useful if you want to handle more of the interaction with the user.</p>
+<h4 id="parameters-accepted_2">Parameters accepted</h4>
+<ul>
+<li>[<code>event</code>] - Type of event you wish to listen for from Dynamoose, you can view possible options below, if not passed in it will catch all events (string) (optional)</li>
+<li>[<code>stage</code>] - Type of stage you wish you listen for from Dynamoose within the event, if not passed in it will catch all events (string) (optional) (note: if this is passed in <code>event</code> is required)</li>
+<li><code>callback</code> - Function to be run when event is emitted from Dynamoose (function)<ul>
+<li><code>obj</code> - Object with properties and methods about event emitted from Dynamoose, you can view more details below (object)</li>
+</ul>
+</li>
+</ul>
+<h3 id="example-plugin-implementation">Example Plugin Implementation</h3>
+<pre><code class="js">module.exports = (plugin, options) =&gt; {
+    plugin.setName('My Plugin'); // required
+    plugin.setDescription(''); // optional
+    plugin.on('init', () =&gt; { // this will handle all stages related to init
+        console.log('Plugin registered');
+    });
+    plugin.on('scan', 'preRequest', (obj) =&gt; { // this will handle only preRequest stages on the scan type
+        console.log('About to make request to DynamoDB');
+    });
+    plugin.on('scan', 'postRequest', (obj) =&gt; { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
+        return new Promise((resolve) =&gt; {
+            resolve({
+                resolve: 'Hello World' // 'Hello World' will be passed back to the promise/callback of the Dynamoose scan call
+            });
+        });
+    });
+    plugin.on('query', 'postRequest', (obj) =&gt; { // this will handle only postRequest stages on the scan type, and will wait for promise to resolve before moving on
+        return new Promise((resolve) =&gt; {
+            resolve({
+                reject: 'My Error' // 'My Error' will be passed back to the promise/callback of the Dynamoose scan call as an error (not successful)
+            });
+        });
+    });
+    return plugin;
+}
+</code></pre>
+
+<h3 id="items-passed-into-on-callback-object">Items Passed Into .on callback object</h3>
+<p>Below is the default object passed into the callback object, each event might add more properties and methods to this object.</p>
+<pre><code>{
+    model: _____, // the model instance (object)
+    modelName: _____, // the model name (string)
+    plugins: _____, // array of plugins registered to model (array)
+    plugin: _____, // the plugin that is being called (object)
+    event: {
+        type: _____, // the type of event that was emitted from Dynamoose (ex. &quot;plugin:register&quot;) (string)
+        stage: _____ // the stage that was emitted from Dynamoose (ex. &quot;pre&quot;, &quot;post&quot;) (string)
+    }
+    actions: {
+        registerPlugin: _____ // register function to model, just a pointer to Model.plugin function (this can be useful for creating sub-plugins) (function)
+    }
+}
+</code></pre>
+
+<h3 id="events-emitted-from-dynamoose">Events emitted from Dynamoose</h3>
+<h4 id="_1"><code>*</code></h4>
+<p>Catch all to run listener on all events emitted from Dynamoose.</p>
+<h4 id="plugin"><code>plugin</code></h4>
+<p>Dynamoose will emit this event when your plugin is registered to a model.</p>
+<h5 id="stages">Stages</h5>
+<ul>
+<li><code>init</code> - Dynamoose will emit this stage when your plugin <strong>has been</strong> registered to a model</li>
+</ul>
+<h5 id="additional-items-added-to-object">Additional Items Added to Object</h5>
+<pre><code>{
+}
+</code></pre>
+
+<h4 id="pluginregister"><code>plugin:register</code></h4>
+<p>Dynamoose will emit this event when a new plugin is registered to a model.</p>
+<h5 id="stages_1">Stages</h5>
+<ul>
+<li><code>pre</code> - Dynamoose will emit this stage when a new plugin <strong>is about to be</strong> registered to a model</li>
+<li><code>post</code> - Dynamoose will emit this stage when a new plugin <strong>has been</strong> registered to a model (remember: if you are listening for this stage within your plugin, this will be called after your plugin is registered, so almost instantly after it gets registered to a model)</li>
+</ul>
+<h5 id="additional-items-added-to-object_1">Additional Items Added to Object</h5>
+<pre><code>{
+    event: {
+        plugin: _____, // plugin package that is going to/has been registered (function)
+        pluginOptions: _____ // options that were passed into plugin registration (object)
+    }
+}
+</code></pre>
+
+<h4 id="modelscan"><code>model:scan</code></h4>
+<p>Dynamoose will emit this event when a scan is called on a model.</p>
+<h5 id="stages_2">Stages</h5>
+<ul>
+<li><code>scan:called</code> - Dynamoose will emit this stage when a scan is about to start</li>
+<li><code>exec:start</code> - Dynamoose will emit this stage when an exec is called</li>
+<li><code>request:pre</code> - Dynamoose will emit this stage when an scan request is about to be made to DynamoDB</li>
+<li><code>request:post</code> - Dynamoose will emit this stage when an scan request response has been received from DynamoDB</li>
+</ul>
+<h5 id="additional-items-added-to-object_2">Additional Items Added to Object</h5>
+<pre><code>{
+    event: {
+        scan: _____, // scan instance (object, Scan instance)
+        callback: _____ // the function that was passed into the scan exec function (function) (only valid on `exec:start`)
+        scanReq: _____ // the scan request object that will be sent to DynamoDB (object) (only valid on `request:pre`)
+        data: _____ // the scan data object that was received from DynamoDB (object) (only valid on `request:post`)
+        error: _____ // the scan error object that was received from DynamoDB (object) (only valid on `request:post`)
+
+    }
+    action: {
+        updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `exec:start`)
+        updateScanReq: _____ // function to update scan request object that is sent to DynamoDB (reqObj: object) (only valid on `request:pre`)
+        updateData: _____ // function to update data that was received from DynamoDB scan before proceeding (dataObj: object) (only valid on `request:post`)
+        updateError: _____ // function to update error that was received from DynamoDB scan before proceeding (errorObj: object) (only valid on `request:post`)
+    }
+}
+</code></pre>
+
+<h4 id="modelget"><code>model:get</code></h4>
+<p>Dynamoose will emit this event when a get is called on a model.</p>
+<h5 id="stages_3">Stages</h5>
+<ul>
+<li><code>get:called</code> - Dynamoose will emit this stage when a get is about to start</li>
+<li><code>request:pre</code> - Dynamoose will emit this stage when a get request is about to be made to DynamoDB</li>
+<li><code>request:post</code> - Dynamoose will emit this stage when a get request response has been recieved from DynamoDB</li>
+</ul>
+<h5 id="additional-items-added-to-object_3">Additional Items Added to Object</h5>
+<pre><code>{
+    event: {
+        callback: _____ // the callback function for the get command (function)
+        key: _____ // the key for the get request (object)
+        options: _____ // the options passed into the get call (object)
+        getRequest: _____ // the options passed into the get request to DynamoDB (object) (only valid on `request:pre`)
+        error: _____ // the options passed into the get call (object) (only valid on `request:post`)
+        data: _____ // the options passed into the get call (object) (only valid on `request:post`)
+
+    }
+    action: {
+        updateCallback: _____ // function to update callback that is called (fn: function)
+        updateKey: _____ // function to update key that is sent to DynamoDB (key: string)
+        updateOptions: _____ // function to update options for the get call (options: object)
+        updateGetRequest: _____ // function to update request options for the get call (options: object) (only valid on `request:pre`)
+        updateError: _____ // function to update error received from DynamoDB (options: object) (only valid on `request:post`)
+        updateData: _____ // function to update data received from DynamoDB (options: object) (only valid on `request:post`)
+    }
+}
+</code></pre>
+
+<h4 id="modelquery"><code>model:query</code></h4>
+<p>Dynamoose will emit this event when a query is called on a model.</p>
+<h5 id="stages_4">Stages</h5>
+<ul>
+<li><code>query:called</code> - Dynamoose will emit this stage when a query is about to start</li>
+<li><code>exec:start</code> - Dynamoose will emit this stage when an exec is called</li>
+<li><code>request:pre</code> - Dynamoose will emit this stage when a query request is about to be made to DynamoDB</li>
+<li><code>request:post</code> - Dynamoose will emit this stage when a query request response has been received from DynamoDB</li>
+</ul>
+<h5 id="additional-items-added-to-object_4">Additional Items Added to Object</h5>
+<pre><code>{
+    event: {
+        query: _____, // query instance (object, Query instance)
+        callback: _____ // the function that was passed into the query exec function (function) (only valid on `exec:start`)
+        queryReq: _____ // the query request object that will be sent to DynamoDB (object) (only valid on `request:pre`)
+        data: _____ // the query data object that was received from DynamoDB (object) (only valid on `request:post`)
+        error: _____ // the query error object that was received from DynamoDB (object) (only valid on `request:post`)
+
+    }
+    action: {
+        updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `exec:start`)
+        updateQueryReq: _____ // function to update query request object that is sent to DynamoDB (reqObj: object) (only valid on `request:pre`)
+        updateData: _____ // function to update data that was received from DynamoDB query before proceeding (dataObj: object) (only valid on `request:post`)
+        updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
+    }
+}
+</code></pre>
+
+<h4 id="modelput"><code>model:put</code></h4>
+<p>Dynamoose will emit this event when a put is called on a model.</p>
+<h5 id="stages_5">Stages</h5>
+<ul>
+<li><code>put:called</code> - Dynamoose will emit this stage when a put is about to start</li>
+<li><code>request:pre</code> - Dynamoose will emit this stage when a put request is about to be made to DynamoDB</li>
+<li><code>request:post</code> - Dynamoose will emit this stage when a put request response has been received from DynamoDB</li>
+</ul>
+<h5 id="additional-items-added-to-object_5">Additional Items Added to Object</h5>
+<pre><code>{
+    event: {
+        options: _____, // options passed to put (object) (warning: in some cases this can be the callback function in the `put:called` stage)
+        callback: _____, // callback passed to put (function) (warning: in some cases this can be the null if options is not passed in) (only valid on `put:called`)
+        item: _____ // item that will be/has been saved to DynamoDB (function) (only valid on `request:*`)
+        error: _____ // the error object that was received from DynamoDB (object) (only valid on `request:post`)
+    }
+    action: {
+        updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `put:called`)
+        updateOptions: _____ // function to update options object (reqObj: object) (only valid on `put:called`)
+        updateItem: _____ // function to update data that will be sent to DynamoDB (dataObj: object) (only valid on `request:pre`)
+        updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
+    }
+}
+</code></pre>
+                
+                  
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../model/" title="Model" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Model
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../query/" title="Query" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Query
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+        
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.a353778b.js"></script>
+      
+      <script>app.initialize({version:"1.0.4",url:{base:"../.."}})</script>
+      
+        <script src="../../javascripts/highlight.js"></script>
+      
+        <script src="../../javascripts/init.js"></script>
+      
+    
+  </body>
+</html>
