@@ -12,7 +12,7 @@ dynamoose.local();
 const should = require('should');
 
 
-describe('General tests', () => {
+describe('General tests', function () {
   this.timeout(10000);
 
   it('dynamoose.setDocumentClient should be a function', () => {
