@@ -169,6 +169,20 @@ describe('Model', function (){
     }
     should.not.exist(error);
   });
+  it('Should support schema option updates via constructor', async function () {
+    this.timeout(12000);
+
+    const Wolf3 = dynamoose.model('Wolf3', new dynamoose.Schema({
+      id: Number,
+      name: {
+        type: String,
+      },
+      friends: Map,
+    }), {saveUnknown: ['friends'],});
+    const builtWolf = new Wolf3({id:420, name:'name-test', friends: {matt: 'best'}});
+    const persistedWolf = await builtWolf.save();
+    persistedWolf.friends.matt.should.eql('best');
+  });
   it('Should support async validate with async function as validate.validate', async function () {
     this.timeout(12000);
 
