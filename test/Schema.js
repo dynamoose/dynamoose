@@ -987,6 +987,47 @@ describe('Schema tests', function (){
     });
   });
 
+  it('Parses document types to DynamoDB with nested maps within maps when saveUnknown=true and useDocumentTypes=true', async function () {
+
+    var schema = new Schema({
+      id: Number,
+      anotherMap: Map,
+    }, {
+      saveUnknown: true
+    });
+
+    var model = {
+      id: 2,
+      anotherMap: {
+        test1: {
+          name: 'Bob'
+        },
+        test2: {
+          name: 'Smith'
+        }
+      }
+    };
+    const result = await schema.toDynamo(model);
+
+    result.should.eql({
+      id: { N: '2' },
+      anotherMap: {
+        M: {
+          test1: {
+            M: {
+              name: { S: 'Bob' },
+            }
+          },
+          test2: {
+            M: {
+              name: { S: 'Smith' },
+            }
+          }
+        }
+      }
+    });
+  });
+
   it('Handle unknown attributes in DynamoDB', async function () {
 
     var unknownSchema = new Schema({
