@@ -431,46 +431,44 @@
                   <h1>Simple</h1>
                 
                 <p>Below is a simple example of how to setup Dynamoose and get started quickly.</p>
-<pre><code class="js">// Requiring the Dynamoose NPM package
+<script src="https://embed.runkit.com" data-element-id="simple-example"></script>
+
+<div id="simple-example">
 const dynamoose = require('dynamoose');
+const dynalite = require('dynalite');
 
-// To configure Dynamose you can either:
-/*
-Set environment variables
+const startUpAndReturnDynamo = async () => {
+  const dynaliteServer = dynalite();
+  await dynaliteServer.listen(8000);
+  return dynaliteServer;
+};
 
-export AWS_ACCESS_KEY_ID=&quot;Your AWS Access Key ID&quot;
-export AWS_SECRET_ACCESS_KEY=&quot;Your AWS Secret Access Key&quot;
-export AWS_REGION=&quot;us-east-1&quot;
-*/
-// OR configure the AWS object
-/*
-dynamoose.AWS.config.update({
-  accessKeyId: 'AKID',
-  secretAccessKey: 'SECRET',
-  region: 'us-east-1'
-});
-*/
-// OR use an AWS IAM role assigned to an AWS resource
+const createDynamooseInstance = () => {
+    dynamoose.AWS.config.update({
+      accessKeyId: 'AKID',
+      secretAccessKey: 'SECRET',
+      region: 'us-east-1'
+    });
+    dynamoose.local(); // This defaults to "http://localhost:8000"
+}
 
-// To use a local DynamoDB setup you can use the following line
-// dynamoose.local(); // This will set the server to &quot;http://localhost:8000&quot; (default)
-// dynamoose.local(&quot;http://localhost:1234&quot;) // This will set the server to &quot;http://localhost:1234&quot;
+const createAndGetCat = async () => {
+    const Cat = dynamoose.model('Cat', {id: Number, name: String});
+    const garfield = new Cat({id: 666, name: 'Garfield'});
+    await garfield.save();
+    const badCat = await Cat.get(666);
+    return badCat;
+}
 
+const bootStrap = async () => {
+    await startUpAndReturnDynamo();
+    createDynamooseInstance();
+    const badCat = await createAndGetCat();
+    console.log('Never trust a smiling cat. - ' + badCat.name);
+}
 
-// This will create a Dynamoose model &quot;Cat&quot; (which is basically like a DynamoDB table), it will allow for 2 properties in the schema, `id` (number) and `name` (string)
-const Cat = dynamoose.model('Cat', {id: Number, name: String});
-
-// This will create a new instance of our &quot;Cat&quot; model, with the `id` as 666, and `name` as 'Garfield'
-const garfield = new Cat({id: 666, name: 'Garfield'});
-
-// This will save our new object to DynamoDB (remember this happens asynchronously, so you need to be sure to wait before trying to access the object)
-garfield.save();
-
-// This will preform an DynamoDB get on the &quot;Cat&quot; model/table get the object with the `id` = 666 and return a promise with the returned object.
-Cat.get(666).then((badCat) =&gt; {
-  console.log('Never trust a smiling cat. - ' + badCat.name);
-});
-</code></pre>
+bootStrap();
+</div>
                 
                   
                 
