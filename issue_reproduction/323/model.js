@@ -1,7 +1,29 @@
-const {
-    initialize
-} = require('./index')
 const shortId = require('shortid');
+const dynamoose = require('../../lib');
+const dynalite = require('dynalite');
+
+let serverRef
+
+const startUpAndReturnDynamo = async () => {
+    const dynaliteServer = dynalite();
+    await dynaliteServer.listen(8000);
+    serverRef = dynaliteServer;
+};
+
+const createDynamooseInstance = () => {
+    dynamoose.AWS.config.update({
+      accessKeyId: 'AKID',
+      secretAccessKey: 'SECRET',
+      region: 'us-east-1'
+    });
+    dynamoose.local(); // This defaults to "http://localhost:8000"
+    return dynamoose
+}
+
+const initialize = async () => {
+    await startUpAndReturnDynamo()
+    return createDynamooseInstance()
+}
 
 const buildModel = async () => {
     let dynamooseRef = await initialize()
@@ -53,22 +75,31 @@ const buildModel = async () => {
         }
     });
 
-    try {
-        const adUrlModel = new Model({
-            title: '123',
-            type: 'cats',
-            userId: 123,
-            customerId: 123,
-            campaignId: 123,
-            mobile: {
-                "123" : '123'
-            }
-        });
-        const results = await adUrlModel.save();
-        console.log(JSON.stringify(results, null, 2))
-    } catch(e) {
-
-    }
+    const adUrlModel = new Model({
+        title: '123',
+        type: 'cats',
+        userId: 123,
+        customerId: 123,
+        campaignId: 123,
+        mobile: {
+            "123" : '123'
+        }
+    });
+    const results = await adUrlModel.save();
+    console.log(JSON.stringify(results, null, 2))
+    await Model.create({
+        title: '1234',
+        type: 'cats4',
+        userId: 1234,
+        customerId: 1234,
+        campaignId: 1234,
+        mobile: {
+            "1234" : '1234'
+        }
+    })
+    let allModels = await Model.scan({}).exec()
+    console.log(JSON.stringify(allModels, null, 2))
+    await serverRef.close()
 }
 
 buildModel()
