@@ -172,14 +172,14 @@ describe('Model', function (){
   it('Should support schema option updates via constructor', async function () {
     this.timeout(12000);
 
-    const Wolf3 = dynamoose.model('Wolf3', new dynamoose.Schema({
+    const Wolf4 = dynamoose.model('Wolf4', new dynamoose.Schema({
       id: Number,
       name: {
         type: String,
       },
       friends: Map,
     }), {saveUnknown: ['friends'],});
-    const builtWolf = new Wolf3({id:420, name:'name-test', friends: {matt: 'best'}});
+    const builtWolf = new Wolf4({id:420, name:'name-test', friends: {matt: 'best'}});
     const persistedWolf = await builtWolf.save();
     persistedWolf.friends.matt.should.eql('best');
   });
