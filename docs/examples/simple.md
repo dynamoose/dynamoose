@@ -2,7 +2,7 @@ Below is a simple example of how to setup Dynamoose and get started quickly.
 
 <script src="https://embed.runkit.com" data-element-id="simple-example"></script>
 
-<div id="simple-example">
+<div id="simple-example" class="runkit-frame">
 const dynamoose = require('dynamoose');
 const dynalite = require('dynalite');
 

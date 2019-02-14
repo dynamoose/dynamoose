@@ -1,0 +1,5 @@
+.runkit-frame {
+  width: calc(122rem - 40rem);
+  position: relative;
+  max-width: 120vw;
+}
