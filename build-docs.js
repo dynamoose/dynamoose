@@ -1,4 +1,4 @@
-const jsdoc2md = require('jsdoc-to-markdown')
+const jsdoc2md = require('jsdoc-to-markdown');
 const fs = require('fs')
 const glob = require('glob')
 glob('lib/**/*.js', {}, (err, files) => {
