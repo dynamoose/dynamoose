@@ -2,7 +2,7 @@ Below is a simple example of how to use DynamoDB TTL (time to live) with Dynamoo
 
 <script src="https://embed.runkit.com" data-element-id="ttl-example"></script>
 
-<div id="ttl-example">
+<div id="ttl-example" class="runkit-frame">
 const dynamoose = require('dynamoose');
 const dynalite = require('dynalite');
 

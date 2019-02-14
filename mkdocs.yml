@@ -1,4 +1,6 @@
 site_name: DynamooseJS
+repo_name: dynamoosejs/dynamoose
+repo_url: https://github.com/dynamoosejs/dynamoose
 extra_css:
   - 'stylesheets/default.css'
   - 'stylesheets/override.css'
@@ -19,8 +21,4 @@ nav:
         - Query: api/query.md
         - Scan: api/scan.md
         - Schema: api/schema.md
-    - Library:
-        - About This Section: lib/about.md
-        - lib/Plugin.md
-        - lib/VirtualType.md
 theme: material
