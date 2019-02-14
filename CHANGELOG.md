@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+## [1.6.2](https://github.com/dynamoosejs/dynamoose/compare/v1.6.1...v1.6.2) (2019-02-13)
+
+
+### Bug Fixes
+
+* **saveunknown:** fixing saveunknown toDynamo for maps ([873a6ed](https://github.com/dynamoosejs/dynamoose/commit/873a6ed)), closes [#323](https://github.com/dynamoosejs/dynamoose/issues/323)
+
 ## Version 1.5.2
 
 This is a minor bug fix for Plugins, and also adds some other improvements for plugins and other parts of the app.
