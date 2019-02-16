@@ -906,7 +906,6 @@ describe('Model', function (){
     });
   });
 
-
   it('Save existing item with updating expires', function (done) {
     var myCat = new Cats.Cat11({
       id: 1,
