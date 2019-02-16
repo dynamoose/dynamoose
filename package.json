@@ -21,7 +21,7 @@
     "test": "mocha",
     "test:debug": "mocha --inspect",
     "test:debug:brk": "mocha --inspect-brk",
-    "lint": "eslint lib/ test/ index.js",
+    "lint": "eslint .",
     "coverage": "nyc npm test",
     "commit": "git-cz",
     "sem-rel": "semantic-release",
