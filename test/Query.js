@@ -10,7 +10,7 @@ dynamoose.AWS.config.update({
 
 dynamoose.local();
 
-const Schema = dynamoose.Schema;
+const {Schema} = dynamoose;
 
 const should = require('should');
 

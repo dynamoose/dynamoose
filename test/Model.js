@@ -48,7 +48,7 @@ describe('Model', function () {
     Cats.Cat.$__.name.should.eql('test-Cat-db');
     Cats.Cat.$__.options.should.have.property('create', true);
 
-    const schema = Cats.Cat.$__.schema;
+    const {schema} = Cats.Cat.$__;
 
     should.exist(schema);
 
@@ -454,7 +454,7 @@ describe('Model', function () {
     Cats.Cat2.$__.name.should.eql('test-Cat2-db');
     Cats.Cat2.$__.options.should.have.property('create', true);
 
-    const schema = Cats.Cat2.$__.schema;
+    const {schema} = Cats.Cat2.$__;
 
     should.exist(schema);
 
@@ -489,7 +489,7 @@ describe('Model', function () {
     Cats.Cat5.$__.name.should.eql('test-Cat5-db');
     Cats.Cat5.$__.options.should.have.property('saveUnknown', true);
 
-    const schema = Cats.Cat5.$__.schema;
+    const {schema} = Cats.Cat5.$__;
 
     should.exist(schema);
 
@@ -622,7 +622,7 @@ describe('Model', function () {
     Cats.Cat1.$__.name.should.eql('test-Cat1-db');
     Cats.Cat1.$__.options.should.have.property('saveUnknown', true);
 
-    const schema = Cats.Cat1.$__.schema;
+    const {schema} = Cats.Cat1.$__;
 
     should.exist(schema);
 
@@ -2470,13 +2470,13 @@ describe('Model', function () {
         }))
         .then((cat) => {
           should.exist(cat.parent);
-          let parent = cat.parent;
+          let {parent} = cat;
           parent.id.should.eql(3);
           parent.name.should.eql('Three');
-          parent = parent.parent;
+          ({parent} = parent);
           parent.id.should.eql(2);
           parent.name.should.eql('Two');
-          parent = parent.parent;
+          ({parent} = parent);
           parent.id.should.eql(1);
           parent.name.should.eql('One');
           done();
@@ -2582,7 +2582,7 @@ describe('Model', function () {
         }))
         .then((cat) => {
           should.exist(cat.parent);
-          const parent = cat.parent;
+          const {parent} = cat;
           parent.id.should.eql(3);
           parent.name.should.eql('Three');
           done();
@@ -2594,7 +2594,7 @@ describe('Model', function () {
         .then((cat) => cat.populate('parent'))
         .then((cat) => {
           should.exist(cat.parent);
-          const parent = cat.parent;
+          const {parent} = cat;
           parent.id.should.eql(3);
           parent.name.should.eql('Three');
           done();
