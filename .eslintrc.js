@@ -62,7 +62,6 @@ module.exports = {
     'multiline-ternary': 'off',
     'no-continue': 'off',
     'no-ternary': 'off',
-    'require-atomic-updates': 'off',
     'func-style': 'off',
     'no-warning-comments': 'off',
     'object-property-newline': 'off',
