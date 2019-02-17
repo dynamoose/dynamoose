@@ -24,6 +24,7 @@ module.exports = {
       'error',
       'always'
     ],
+    'spaced-comment': ['error', 'always', {'exceptions': ['!']}],
     'no-console': 'off',
     'one-var': 'off',
     'padded-blocks': 'off',
@@ -33,7 +34,6 @@ module.exports = {
     'no-magic-numbers': 'off',
     'no-underscore-dangle': 'off',
     'camelcase': 'off',
-    'sort-keys': 'off',
     'line-comment-position': 'off',
     'no-inline-comments': 'off',
     'id-length': ['error', {'min': 1}],
@@ -47,16 +47,11 @@ module.exports = {
     'no-mixed-operators': 'off',
     'new-cap': 'off',
     'no-param-reassign': 'off',
-    'no-undefined': 'off',
     'consistent-this': 'off',
     'no-unused-expressions': 'off',
-    'no-await-in-loop': 'off',
     'no-invalid-this': 'off',
-    'consistent-return': 'off',
     'no-empty-function': 'off',
     'handle-callback-err': 'off',
-    'no-shadow': 'off',
-    'guard-for-in': 'off',
     'multiline-ternary': 'off',
     'no-continue': 'off',
     'no-ternary': 'off',
@@ -69,9 +64,16 @@ module.exports = {
     'capitalized-comments': 'off',
     'function-paren-newline': 'off',
     'no-use-before-define': 'off',
-    'spaced-comment': ['error', 'always', {'exceptions': ['!']}],
     'brace-style': ['error', '1tbs', {'allowSingleLine': true}],
     'dot-location': 'off',
-    'one-var-declaration-per-line': 'off'
+    'one-var-declaration-per-line': 'off',
+
+    // Higher priority to enable
+    'no-shadow': 'off',
+    'no-await-in-loop': 'off',
+    'guard-for-in': 'off',
+    'no-undefined': 'off',
+    'consistent-return': 'off',
+    'sort-keys': 'off'
   }
 };
