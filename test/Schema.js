@@ -1333,9 +1333,9 @@ describe('Schema tests', function () {
   });
 
   it('Should throw error when type is map but no map is provided', (done) => {
-    let err;
+    let err, result;
     try {
-      new Schema({
+      result = new Schema({
         'race': {
           'type': 'map'
         }
@@ -1345,14 +1345,15 @@ describe('Schema tests', function () {
     }
     err.should.be.instanceof(Error);
     err.should.be.instanceof(errors.SchemaError);
+    should.not.exist(result);
 
     done();
   });
 
   it('Should throw error when type is list but no list is provided', (done) => {
-    let err;
+    let err, result;
     try {
-      new Schema({
+      result = new Schema({
         'race': {
           'type': 'list'
         }
@@ -1362,10 +1363,12 @@ describe('Schema tests', function () {
     }
     err.should.be.instanceof(Error);
     err.should.be.instanceof(errors.SchemaError);
+    should.not.exist(result);
 
     err = undefined;
+    result = undefined;
     try {
-      new Schema({
+      result = new Schema({
         'race': {
           'type': 'list',
           'list': []
@@ -1377,6 +1380,7 @@ describe('Schema tests', function () {
 
     err.should.be.instanceof(Error);
     err.should.be.instanceof(errors.SchemaError);
+    should.not.exist(result);
 
     done();
 

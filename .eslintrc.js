@@ -50,7 +50,6 @@ module.exports = {
     'no-param-reassign': 'off',
     'no-undefined': 'off',
     'consistent-this': 'off',
-    'no-new': 'off',
     'no-unused-expressions': 'off',
     'no-await-in-loop': 'off',
     'no-invalid-this': 'off',
