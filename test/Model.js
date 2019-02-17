@@ -3031,7 +3031,7 @@ describe('Model', function () {
       for (const method of Object.getOwnPropertyNames(Array.prototype)) {
         arrayPrototypeClone[method] = Array.prototype[method];
       }
-      catsUsingOriginalArrayGlobal.__proto__ = arrayPrototypeClone;
+      Object.setPrototypeOf(catsUsingOriginalArrayGlobal, arrayPrototypeClone);
 
       await Cats.Cat11.batchPut(catsUsingOriginalArrayGlobal);
     });
