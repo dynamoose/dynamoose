@@ -35,7 +35,6 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'camelcase': 'off',
     'sort-keys': 'off',
-    'sort-vars': 'off',
     'line-comment-position': 'off',
     'no-inline-comments': 'off',
     'id-length': ['error', {'min': 1}],
