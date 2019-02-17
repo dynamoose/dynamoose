@@ -1,6 +1,6 @@
 {
   "name": "dynamoose",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "typings": "./dynamoose.d.ts",
   "homepage": "https://dynamoosejs.com",
@@ -56,6 +56,8 @@
   "devDependencies": {
     "@commitlint/cli": "7.5.1",
     "@commitlint/config-conventional": "7.5.0",
+    "@semantic-release/commit-analyzer": "6.1.0",
+    "@semantic-release/release-notes-generator": "7.1.4",
     "@semantic-release/changelog": "3.0.2",
     "@semantic-release/git": "7.0.8",
     "@semantic-release/github": "5.2.10",
