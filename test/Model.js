@@ -2669,7 +2669,7 @@ describe('Model', function (){
     it('Put new', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat({id: 10+i, name: 'Tom_'+i}));
       }
 
@@ -2678,7 +2678,7 @@ describe('Model', function (){
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
 
-        for (var i=0 ; i<10 ; ++i) {
+        for (var i=0 ; i<10 ; i += 1) {
 
           delete cats[i].name;
         }
@@ -2695,7 +2695,7 @@ describe('Model', function (){
     it('Put lots of new items', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<100 ; ++i) {
+      for (var i=0 ; i<100 ; i += 1) {
         cats.push(new Cats.Cat({id: 100+i, name: 'Tom_'+i}));
       }
 
@@ -2704,7 +2704,7 @@ describe('Model', function (){
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
 
-        for (var i=0 ; i<100 ; ++i) {
+        for (var i=0 ; i<100 ; i += 1) {
           delete cats[i].name;
         }
 
@@ -2720,7 +2720,7 @@ describe('Model', function (){
     it('Put new with range key', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat2({ownerId: 10+i, name: 'Tom_'+i}));
       }
 
@@ -2741,7 +2741,7 @@ describe('Model', function (){
     it('Put new without range key', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat2({ownerId: 10+i}));
       }
 
@@ -2755,7 +2755,7 @@ describe('Model', function (){
     it('Update items', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat({id: 20+i, name: 'Tom_'+i}));
       }
 
@@ -2763,7 +2763,7 @@ describe('Model', function (){
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; ++i) {
+        for (var i=0 ; i<10 ; i += 1) {
           var cat = cats[i];
           cat.name = 'John_' + (cat.id + 100);
         }
@@ -2773,7 +2773,7 @@ describe('Model', function (){
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          for (var i=0 ; i<10 ; ++i) {
+          for (var i=0 ; i<10 ; i += 1) {
             delete cats[i].name;
           }
 
@@ -2790,7 +2790,7 @@ describe('Model', function (){
     it('Update with range key', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
 
@@ -2798,7 +2798,7 @@ describe('Model', function (){
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; ++i) {
+        for (var i=0 ; i<10 ; i += 1) {
           var cat = cats[i];
           cat.name = 'John_' + (cat.ownerId + 100);
         }
@@ -2821,7 +2821,7 @@ describe('Model', function (){
     it('Update without range key', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat2({ownerId: 20+i, name: 'Tom_'+i}));
       }
 
@@ -2829,7 +2829,7 @@ describe('Model', function (){
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; ++i) {
+        for (var i=0 ; i<10 ; i += 1) {
           cats[i].name = null;
         }
 
@@ -3102,7 +3102,7 @@ describe('Model', function (){
     it('Simple delete', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat({id: 30+i, name: 'Tom_'+i}));
       }
 
@@ -3128,7 +3128,7 @@ describe('Model', function (){
     it('Delete with range key', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
 
@@ -3154,7 +3154,7 @@ describe('Model', function (){
     it('Delete without range key', function (done) {
       var cats = [];
 
-      for (var i=0 ; i<10 ; ++i) {
+      for (var i=0 ; i<10 ; i += 1) {
         cats.push(new Cats.Cat2({ownerId: 30+i, name: 'Tom_'+i}));
       }
 
@@ -3162,7 +3162,7 @@ describe('Model', function (){
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; ++i) {
+        for (var i=0 ; i<10 ; i += 1) {
           delete cats[i].name;
         }
 
