@@ -57,7 +57,6 @@ module.exports = {
     'consistent-return': 'off',
     'no-empty-function': 'off',
     'handle-callback-err': 'off',
-    'no-proto': 'off',
     'no-shadow': 'off',
     'guard-for-in': 'off',
     'multiline-ternary': 'off',
