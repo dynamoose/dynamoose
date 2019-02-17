@@ -1,33 +1,33 @@
 'use strict';
 
 
-var dynamoose = require('../');
+const dynamoose = require('../');
 dynamoose.AWS.config.update({
-  accessKeyId: 'AKID',
-  secretAccessKey: 'SECRET',
-  region: 'us-east-1'
+  'accessKeyId': 'AKID',
+  'secretAccessKey': 'SECRET',
+  'region': 'us-east-1'
 });
 
 dynamoose.local();
 
-var should = require('should');
-var CatsFixture = require('./fixtures/Cats');
+const should = require('should');
+const CatsFixture = require('./fixtures/Cats');
 
-var Cats = {};
+let Cats = {};
 
-var ONE_YEAR = 365*24*60*60; // 1 years in seconds
-var NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
+const ONE_YEAR = 365 * 24 * 60 * 60; // 1 years in seconds
+const NINE_YEARS = 9 * ONE_YEAR; // 9 years in seconds
 
-describe('Model', function (){
+describe('Model', function () {
   this.timeout(15000);
-  before(function(done) {
+  before(function (done) {
     this.timeout(12000);
-    dynamoose.setDefaults({ prefix: 'test-', suffix: '-db' });
+    dynamoose.setDefaults({'prefix': 'test-', 'suffix': '-db'});
     Cats = CatsFixture(dynamoose);
     done();
   });
 
-  after(function (done) {
+  after((done) => {
 
     delete dynamoose.models['test-Cat-db'];
     done();
@@ -48,7 +48,7 @@ describe('Model', function (){
     Cats.Cat.$__.name.should.eql('test-Cat-db');
     Cats.Cat.$__.options.should.have.property('create', true);
 
-    var schema = Cats.Cat.$__.schema;
+    const schema = Cats.Cat.$__.schema;
 
     should.exist(schema);
 
@@ -67,38 +67,38 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cats.Cat(
+    const kitten = new Cats.Cat(
       {
-        id: 1,
-        name: 'Fluffy',
-        vet:{name:'theVet', address:'12 somewhere'},
-        ears:[{name:'left'}, {name:'right'}],
-        legs: ['front right', 'front left', 'back right', 'back left'],
-        more: {favorites: {food: 'fish'}},
-        array: [{one: '1'}],
-        validated: 'valid'
+        'id': 1,
+        'name': 'Fluffy',
+        'vet': {'name': 'theVet', 'address': '12 somewhere'},
+        'ears': [{'name': 'left'}, {'name': 'right'}],
+        'legs': ['front right', 'front left', 'back right', 'back left'],
+        'more': {'favorites': {'food': 'fish'}},
+        'array': [{'one': '1'}],
+        'validated': 'valid'
       }
     );
 
     kitten.id.should.eql(1);
     kitten.name.should.eql('Fluffy');
 
-    var dynamoObj = await schema.toDynamo(kitten);
+    const dynamoObj = await schema.toDynamo(kitten);
 
     dynamoObj.should.eql({
-      ears: {
-        L: [
-          { M: { name: { S: 'left' } } },
-          { M: { name: { S: 'right' } } }
+      'ears': {
+        'L': [
+          {'M': {'name': {'S': 'left'}}},
+          {'M': {'name': {'S': 'right'}}}
         ]
       },
-      id: { N: '1' },
-      name: { S: 'Fluffy' },
-      vet: { M: { address: { S: '12 somewhere' }, name: { S: 'theVet' } } },
-      legs: { SS: ['front right', 'front left', 'back right', 'back left']},
-      more: { S: '{"favorites":{"food":"fish"}}' },
-      array: { S: '[{"one":"1"}]' },
-      validated: { S: 'valid' }
+      'id': {'N': '1'},
+      'name': {'S': 'Fluffy'},
+      'vet': {'M': {'address': {'S': '12 somewhere'}, 'name': {'S': 'theVet'}}},
+      'legs': {'SS': ['front right', 'front left', 'back right', 'back left']},
+      'more': {'S': '{"favorites":{"food":"fish"}}'},
+      'array': {'S': '[{"one":"1"}]'},
+      'validated': {'S': 'valid'}
     });
 
     await kitten.save();
@@ -109,11 +109,11 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf1 = dynamoose.model('Wolf1', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        validate: function (val) {
-          return new Promise(function(resolve) {
+      'id': Number,
+      'name': {
+        'type': String,
+        'validate' (val) {
+          return new Promise((resolve) => {
             setTimeout(() => resolve(val.length >= 5), 1000);
           });
         }
@@ -122,7 +122,7 @@ describe('Model', function (){
 
     let error;
     try {
-      await Wolf1.create({id: 1, name: 'Rob'});
+      await Wolf1.create({'id': 1, 'name': 'Rob'});
     } catch (e) {
       error = e;
     }
@@ -130,7 +130,7 @@ describe('Model', function (){
     error = null;
 
     try {
-      await Wolf1.create({id: 2, name: 'Smith'});
+      await Wolf1.create({'id': 2, 'name': 'Smith'});
     } catch (e) {
       error = e;
     }
@@ -140,22 +140,22 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf2 = dynamoose.model('Wolf2', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        validate: {
-          isAsync: true,
-          validator: function (val, cb) {
+      'id': Number,
+      'name': {
+        'type': String,
+        'validate': {
+          'isAsync': true,
+          'validator' (val, cb) {
             setTimeout(() => cb(val.length >= 5), 1000);
           },
-          disableModelParameter: true
+          'disableModelParameter': true
         }
       }
     }));
 
     let error;
     try {
-      await Wolf2.create({id: 1, name: 'Rob'});
+      await Wolf2.create({'id': 1, 'name': 'Rob'});
     } catch (e) {
       error = e;
     }
@@ -163,7 +163,7 @@ describe('Model', function (){
     error = null;
 
     try {
-      await Wolf2.create({id: 2, name: 'Smith'});
+      await Wolf2.create({'id': 2, 'name': 'Smith'});
     } catch (e) {
       error = e;
     }
@@ -173,22 +173,22 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf12 = dynamoose.model('Wolf12', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        validate: {
-          isAsync: true,
-          validate: function (val, cb) {
+      'id': Number,
+      'name': {
+        'type': String,
+        'validate': {
+          'isAsync': true,
+          'validate' (val, cb) {
             setTimeout(() => cb(val.length >= 5), 1000);
           },
-          disableModelParameter: true
+          'disableModelParameter': true
         }
       }
     }));
 
     let error;
     try {
-      await Wolf12.create({id: 1, name: 'Rob'});
+      await Wolf12.create({'id': 1, 'name': 'Rob'});
     } catch (e) {
       error = e;
     }
@@ -196,7 +196,7 @@ describe('Model', function (){
     error = null;
 
     try {
-      await Wolf12.create({id: 2, name: 'Smith'});
+      await Wolf12.create({'id': 2, 'name': 'Smith'});
     } catch (e) {
       error = e;
     }
@@ -206,12 +206,12 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf3 = dynamoose.model('Wolf3', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        set: function (val) {
-          return new Promise(function(resolve) {
-            setTimeout(() => resolve(val + 'Hello World'), 1000);
+      'id': Number,
+      'name': {
+        'type': String,
+        'set' (val) {
+          return new Promise((resolve) => {
+            setTimeout(() => resolve(`${val}Hello World`), 1000);
           });
         }
       }
@@ -219,7 +219,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf3.create({id: 1, name: 'Rob'});
+      await Wolf3.create({'id': 1, 'name': 'Rob'});
       res = await Wolf3.get(1);
     } catch (e) {
       error = e;
@@ -232,13 +232,13 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf4 = dynamoose.model('Wolf4', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        set: {
-          isAsync: true,
-          set: function (val, cb) {
-            setTimeout(() => cb(val + 'Hello World'), 1000);
+      'id': Number,
+      'name': {
+        'type': String,
+        'set': {
+          'isAsync': true,
+          'set' (val, cb) {
+            setTimeout(() => cb(`${val}Hello World`), 1000);
           }
         }
       }
@@ -246,7 +246,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf4.create({id: 1, name: 'Rob'});
+      await Wolf4.create({'id': 1, 'name': 'Rob'});
       res = await Wolf4.get(1);
     } catch (e) {
       error = e;
@@ -259,12 +259,12 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf5 = dynamoose.model('Wolf5', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        get: function (val) {
-          return new Promise(function(resolve) {
-            setTimeout(() => resolve(val + 'Hello World'), 1000);
+      'id': Number,
+      'name': {
+        'type': String,
+        'get' (val) {
+          return new Promise((resolve) => {
+            setTimeout(() => resolve(`${val}Hello World`), 1000);
           });
         }
       }
@@ -272,7 +272,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf5.create({id: 1, name: 'Rob'});
+      await Wolf5.create({'id': 1, 'name': 'Rob'});
       res = await Wolf5.get(1);
     } catch (e) {
       error = e;
@@ -285,13 +285,13 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf6 = dynamoose.model('Wolf6', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        get: {
-          isAsync: true,
-          get: function (val, cb) {
-            setTimeout(() => cb(val + 'Hello World'), 1000);
+      'id': Number,
+      'name': {
+        'type': String,
+        'get': {
+          'isAsync': true,
+          'get' (val, cb) {
+            setTimeout(() => cb(`${val}Hello World`), 1000);
           }
         }
       }
@@ -299,7 +299,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf6.create({id: 1, name: 'Rob'});
+      await Wolf6.create({'id': 1, 'name': 'Rob'});
       res = await Wolf6.get(1);
     } catch (e) {
       error = e;
@@ -312,11 +312,11 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf7 = dynamoose.model('Wolf7', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        default: function () {
-          return new Promise(function(resolve) {
+      'id': Number,
+      'name': {
+        'type': String,
+        'default' () {
+          return new Promise((resolve) => {
             setTimeout(() => resolve('Hello World'), 1000);
           });
         }
@@ -325,7 +325,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf7.create({id: 1});
+      await Wolf7.create({'id': 1});
       res = await Wolf7.get(1);
     } catch (e) {
       error = e;
@@ -338,12 +338,12 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf8 = dynamoose.model('Wolf8', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        toDynamo: function () {
-          return new Promise(function(resolve) {
-            setTimeout(() => resolve({S: 'Hello World'}), 1000);
+      'id': Number,
+      'name': {
+        'type': String,
+        'toDynamo' () {
+          return new Promise((resolve) => {
+            setTimeout(() => resolve({'S': 'Hello World'}), 1000);
           });
         }
       }
@@ -351,7 +351,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf8.create({id: 1, name: 'test'});
+      await Wolf8.create({'id': 1, 'name': 'test'});
       res = await Wolf8.get(1);
     } catch (e) {
       error = e;
@@ -364,13 +364,13 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf11 = dynamoose.model('Wolf11', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        toDynamo: {
-          isAsync: true,
-          toDynamo: function (val, cb) {
-            setTimeout(() => cb({S: 'Hello World'}), 1000);
+      'id': Number,
+      'name': {
+        'type': String,
+        'toDynamo': {
+          'isAsync': true,
+          'toDynamo' (val, cb) {
+            setTimeout(() => cb({'S': 'Hello World'}), 1000);
           }
         }
       }
@@ -378,7 +378,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf11.create({id: 1, name: 'test'});
+      await Wolf11.create({'id': 1, 'name': 'test'});
       res = await Wolf11.get(1);
     } catch (e) {
       error = e;
@@ -391,11 +391,11 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf9 = dynamoose.model('Wolf9', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        fromDynamo: function () {
-          return new Promise(function(resolve) {
+      'id': Number,
+      'name': {
+        'type': String,
+        'fromDynamo' () {
+          return new Promise((resolve) => {
             setTimeout(() => resolve('Hello World'), 1000);
           });
         }
@@ -404,7 +404,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf9.create({id: 1, name: 'test'});
+      await Wolf9.create({'id': 1, 'name': 'test'});
       res = await Wolf9.get(1);
     } catch (e) {
       error = e;
@@ -417,12 +417,12 @@ describe('Model', function (){
     this.timeout(12000);
 
     const Wolf10 = dynamoose.model('Wolf10', new dynamoose.Schema({
-      id: Number,
-      name: {
-        type: String,
-        fromDynamo: {
-          isAsync: true,
-          fromDynamo: function (val, cb) {
+      'id': Number,
+      'name': {
+        'type': String,
+        'fromDynamo': {
+          'isAsync': true,
+          'fromDynamo' (val, cb) {
             setTimeout(() => cb('Hello World'), 1000);
           }
         }
@@ -431,7 +431,7 @@ describe('Model', function (){
 
     let error, res;
     try {
-      await Wolf10.create({id: 1, name: 'test'});
+      await Wolf10.create({'id': 1, 'name': 'test'});
       res = await Wolf10.get(1);
     } catch (e) {
       error = e;
@@ -441,7 +441,7 @@ describe('Model', function (){
     res.name.should.eql('Hello World');
   });
 
-  it('Create simple model with range key', function () {
+  it('Create simple model with range key', () => {
 
     Cats.Cat2.should.have.property('name');
     // Older node doesn't support Function.name changes
@@ -454,7 +454,7 @@ describe('Model', function (){
     Cats.Cat2.$__.name.should.eql('test-Cat2-db');
     Cats.Cat2.$__.options.should.have.property('create', true);
 
-    var schema = Cats.Cat2.$__.schema;
+    const schema = Cats.Cat2.$__.schema;
 
     should.exist(schema);
 
@@ -489,7 +489,7 @@ describe('Model', function (){
     Cats.Cat5.$__.name.should.eql('test-Cat5-db');
     Cats.Cat5.$__.options.should.have.property('saveUnknown', true);
 
-    var schema = Cats.Cat5.$__.schema;
+    const schema = Cats.Cat5.$__.schema;
 
     should.exist(schema);
 
@@ -508,69 +508,69 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cats.Cat5(
+    const kitten = new Cats.Cat5(
       {
-        id: 2,
-        name: 'Fluffy',
-        owner: 'Someone',
-        unnamedInt: 1,
-        unnamedInt0: 0,
-        unnamedBooleanFalse: false,
-        unnamedBooleanTrue: true,
-        unnamedString: 'unnamed',
+        'id': 2,
+        'name': 'Fluffy',
+        'owner': 'Someone',
+        'unnamedInt': 1,
+        'unnamedInt0': 0,
+        'unnamedBooleanFalse': false,
+        'unnamedBooleanTrue': true,
+        'unnamedString': 'unnamed',
 
         // Attributes with empty values. DynamoDB won't store empty values
         // so the return value of toDynamo() should exclude these attributes.
-        unnamedUndefined: undefined,
-        unnamedNull: null,
-        unnamedEmptyString: '',
-        unnamedNumberNaN: NaN,
+        'unnamedUndefined': undefined,
+        'unnamedNull': null,
+        'unnamedEmptyString': '',
+        'unnamedNumberNaN': NaN
       }
     );
 
     kitten.id.should.eql(2);
     kitten.name.should.eql('Fluffy');
 
-    var dynamoObj = await schema.toDynamo(kitten);
+    const dynamoObj = await schema.toDynamo(kitten);
 
     dynamoObj.should.eql({
-      id: { N: '2' },
-      name: { S: 'Fluffy' },
-      owner: { S: 'Someone' },
-      unnamedInt: { N: '1' },
-      unnamedInt0: { N: '0' },
-      unnamedBooleanFalse: { BOOL: false },
-      unnamedBooleanTrue: { BOOL: true },
-      unnamedString: { S: 'unnamed' },
+      'id': {'N': '2'},
+      'name': {'S': 'Fluffy'},
+      'owner': {'S': 'Someone'},
+      'unnamedInt': {'N': '1'},
+      'unnamedInt0': {'N': '0'},
+      'unnamedBooleanFalse': {'BOOL': false},
+      'unnamedBooleanTrue': {'BOOL': true},
+      'unnamedString': {'S': 'unnamed'}
     });
 
     await kitten.save();
 
   });
 
-  it('Create returnRequest option', function (done) {
-    Cats.ExpiringCat.create({name: 'Leo'}, {returnRequest: true})
-      .then(function (request) {
+  it('Create returnRequest option', (done) => {
+    Cats.ExpiringCat.create({'name': 'Leo'}, {'returnRequest': true})
+      .then((request) => {
         request.should.exist;
 
         request.TableName.should.eql('test-ExpiringCat-db');
-        request.Item.name.should.eql({S: 'Leo'});
+        request.Item.name.should.eql({'S': 'Leo'});
         done();
       })
       .catch(done);
   });
 
-  it('Should support useDocumentTypes and useNativeBooleans being false', function(done) {
+  it('Should support useDocumentTypes and useNativeBooleans being false', function (done) {
     this.timeout(12000);
 
-    var kitten = new Cats.Cat10({
-      id: 2,
-      isHappy: true,
-      parents: ['Max', 'Leah'],
-      details: {
-        playful: true,
-        thirsty: false,
-        tired: false
+    const kitten = new Cats.Cat10({
+      'id': 2,
+      'isHappy': true,
+      'parents': ['Max', 'Leah'],
+      'details': {
+        'playful': true,
+        'thirsty': false,
+        'tired': false
       }
     });
 
@@ -578,29 +578,29 @@ describe('Model', function (){
     kitten.isHappy.should.eql(true);
     kitten.parents.should.eql(['Max', 'Leah']);
     kitten.details.should.eql({
-      playful: true,
-      thirsty: false,
-      tired: false
+      'playful': true,
+      'thirsty': false,
+      'tired': false
     });
 
-    kitten.save(function(err, kitten) {
+    kitten.save((err, kitten) => {
       kitten.id.should.eql(2);
       kitten.isHappy.should.eql(true);
       kitten.parents.should.eql(['Max', 'Leah']);
       kitten.details.should.eql({
-        playful: true,
-        thirsty: false,
-        tired: false
+        'playful': true,
+        'thirsty': false,
+        'tired': false
       });
 
-      Cats.Cat10.get(2, function(err, kitten) {
+      Cats.Cat10.get(2, (err, kitten) => {
         kitten.id.should.eql(2);
         kitten.isHappy.should.eql(true);
         kitten.parents.should.eql(['Max', 'Leah']);
         kitten.details.should.eql({
-          playful: true,
-          thirsty: false,
-          tired: false
+          'playful': true,
+          'thirsty': false,
+          'tired': false
         });
 
         done();
@@ -622,7 +622,7 @@ describe('Model', function (){
     Cats.Cat1.$__.name.should.eql('test-Cat1-db');
     Cats.Cat1.$__.options.should.have.property('saveUnknown', true);
 
-    var schema = Cats.Cat1.$__.schema;
+    const schema = Cats.Cat1.$__.schema;
 
     should.exist(schema);
 
@@ -641,50 +641,50 @@ describe('Model', function (){
     schema.hashKey.should.equal(schema.attributes.id); // should be same object
     should.not.exist(schema.rangeKey);
 
-    var kitten = new Cats.Cat1(
+    const kitten = new Cats.Cat1(
       {
-        id: 2,
-        name: 'Fluffy',
-        owner: 'Someone',
-        children: {
-          'mittens' : {
-            name : 'mittens',
-            age: 1
+        'id': 2,
+        'name': 'Fluffy',
+        'owner': 'Someone',
+        'children': {
+          'mittens': {
+            'name': 'mittens',
+            'age': 1
           },
-          'puddles' : {
-            name : 'puddles',
-            age: 2
+          'puddles': {
+            'name': 'puddles',
+            'age': 2
           }
         },
-        characteristics: ['cute', 'fuzzy']
+        'characteristics': ['cute', 'fuzzy']
       }
     );
 
     kitten.id.should.eql(2);
     kitten.name.should.eql('Fluffy');
 
-    var dynamoObj = await schema.toDynamo(kitten);
+    const dynamoObj = await schema.toDynamo(kitten);
 
     dynamoObj.should.eql({
-      id: {N: '2'},
-      name: {S: 'Fluffy'},
-      owner: {S: 'Someone'},
-      children: {
-        M: {
-          'mittens': {M: {'name': {S: 'mittens'}, 'age': {N: '1'}}},
-          'puddles': {M: {'name': {S: 'puddles'}, 'age': {N: '2'}}}
+      'id': {'N': '2'},
+      'name': {'S': 'Fluffy'},
+      'owner': {'S': 'Someone'},
+      'children': {
+        'M': {
+          'mittens': {'M': {'name': {'S': 'mittens'}, 'age': {'N': '1'}}},
+          'puddles': {'M': {'name': {'S': 'puddles'}, 'age': {'N': '2'}}}
         }
       },
-      characteristics: {L: [{S: 'cute'}, {S: 'fuzzy'}]}
+      'characteristics': {'L': [{'S': 'cute'}, {'S': 'fuzzy'}]}
     });
 
     await kitten.save();
 
   });
 
-  it('Get item for model with unnamed attributes', function (done) {
+  it('Get item for model with unnamed attributes', (done) => {
 
-    Cats.Cat5.get(2, function(err, model) {
+    Cats.Cat5.get(2, (err, model) => {
       should.not.exist(err);
       should.exist(model);
 
@@ -698,26 +698,24 @@ describe('Model', function (){
     });
   });
 
-  it('Get item for model', function (done) {
+  it('Get item for model', (done) => {
 
-    Cats.Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.exist(model);
 
       model.should.have.property('id', 1);
       model.should.have.property('name', 'Fluffy');
-      model.should.have.property('vet', { address: '12 somewhere', name: 'theVet' });
+      model.should.have.property('vet', {'address': '12 somewhere', 'name': 'theVet'});
       model.should.have.property('$__');
       done();
     });
   });
 
-  it('Get item for model with falsy keys', function (done) {
-    Cats.Cat8.create({id: 0, age: 0})
-      .then(function () {
-        return Cats.Cat8.get({id: 0, age: 0});
-      })
-      .then(function (falsyCat) {
+  it('Get item for model with falsy keys', (done) => {
+    Cats.Cat8.create({'id': 0, 'age': 0})
+      .then(() => Cats.Cat8.get({'id': 0, 'age': 0}))
+      .then((falsyCat) => {
         falsyCat.should.have.property('id', 0);
         falsyCat.should.have.property('age', 0);
         done();
@@ -725,9 +723,9 @@ describe('Model', function (){
       .catch(done);
   });
 
-  it('Get item with invalid key', function (done) {
+  it('Get item with invalid key', (done) => {
 
-    Cats.Cat.get(0, function(err, model) {
+    Cats.Cat.get(0, (err, model) => {
       should.exist(err);
       err.name.should.equal('ValidationError');
       should.not.exist(model);
@@ -735,49 +733,45 @@ describe('Model', function (){
     });
   });
 
-  it('Get and Update corrupted item', function (done) {
+  it('Get and Update corrupted item', (done) => {
 
     // create corrupted item
-    var req = dynamoose.ddb().putItem({
-      Item: {
+    const req = dynamoose.ddb().putItem({
+      'Item': {
         'id': {
-          N: '7'
+          'N': '7'
         },
         'isHappy': {
           // this is the data corruption
-          S: 'tue'
+          'S': 'tue'
         }
       },
-      ReturnConsumedCapacity: 'TOTAL',
-      TableName: Cats.Cat7.$__.table.name
+      'ReturnConsumedCapacity': 'TOTAL',
+      'TableName': Cats.Cat7.$__.table.name
     });
 
-    req.promise().then(function(){
-      return Cats.Cat7.get(7);
-    }).catch(function(err){
+    req.promise().then(() => Cats.Cat7.get(7)).catch((err) => {
       should.exist(err.message);
-    }).then(function(){
-      return Cats.Cat7.update(7, { name : 'my favorite cat'});
-    }).catch(function(err){
+    }).then(() => Cats.Cat7.update(7, {'name': 'my favorite cat'})).catch((err) => {
       should.exist(err.message);
       done();
     });
   });
 
-  it('Get returnRequest option', function (done) {
-    Cats.Cat.get(1, {returnRequest: true}, function(err, request) {
+  it('Get returnRequest option', (done) => {
+    Cats.Cat.get(1, {'returnRequest': true}, (err, request) => {
       should.not.exist(err);
       should.exist(request);
 
       request.TableName.should.eql('test-Cat-db');
-      request.Key.should.eql({id: {N: '1'}});
+      request.Key.should.eql({'id': {'N': '1'}});
       done();
     });
   });
 
-  it('Save existing item', function (done) {
+  it('Save existing item', (done) => {
 
-    Cats.Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.exist(model);
 
@@ -787,10 +781,10 @@ describe('Model', function (){
       model.vet.name = 'Tough Vet';
       model.ears[0].name = 'right';
 
-      model.save(function (err) {
+      model.save((err) => {
         should.not.exist(err);
 
-        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
           should.not.exist(err);
           badCat.name.should.eql('Bad Cat');
           badCat.vet.name.should.eql('Tough Vet');
@@ -802,26 +796,26 @@ describe('Model', function (){
     });
   });
 
-  it('Save existing item without defining updating timestamps', function (done) {
-    var myCat = new Cats.Cat9({
-      id: 1,
-      name: 'Fluffy',
-      vet:{name:'theVet', address:'12 somewhere'},
-      ears:[{name:'left'}, {name:'right'}],
-      legs: ['front right', 'front left', 'back right', 'back left'],
-      more: {favorites: {food: 'fish'}},
-      array: [{one: '1'}],
-      validated: 'valid'
+  it('Save existing item without defining updating timestamps', (done) => {
+    const myCat = new Cats.Cat9({
+      'id': 1,
+      'name': 'Fluffy',
+      'vet': {'name': 'theVet', 'address': '12 somewhere'},
+      'ears': [{'name': 'left'}, {'name': 'right'}],
+      'legs': ['front right', 'front left', 'back right', 'back left'],
+      'more': {'favorites': {'food': 'fish'}},
+      'array': [{'one': '1'}],
+      'validated': 'valid'
     });
 
-    myCat.save(function(err, theSavedCat1) {
-      var expectedCreatedAt = theSavedCat1.createdAt;
-      var expectedUpdatedAt = theSavedCat1.updatedAt;
+    myCat.save((err, theSavedCat1) => {
+      const expectedCreatedAt = theSavedCat1.createdAt;
+      const expectedUpdatedAt = theSavedCat1.updatedAt;
 
       theSavedCat1.name = 'FluffyB';
-      setTimeout(function() {
-        theSavedCat1.save(function () {
-          Cats.Cat9.get(1, function(err, realCat) {
+      setTimeout(() => {
+        theSavedCat1.save(() => {
+          Cats.Cat9.get(1, (err, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
             realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
@@ -832,26 +826,26 @@ describe('Model', function (){
     });
   });
 
-  it('Save existing item with updating timestamps', function (done) {
-    var myCat = new Cats.Cat9({
-      id: 1,
-      name: 'Fluffy',
-      vet:{name:'theVet', address:'12 somewhere'},
-      ears:[{name:'left'}, {name:'right'}],
-      legs: ['front right', 'front left', 'back right', 'back left'],
-      more: {favorites: {food: 'fish'}},
-      array: [{one: '1'}],
-      validated: 'valid'
+  it('Save existing item with updating timestamps', (done) => {
+    const myCat = new Cats.Cat9({
+      'id': 1,
+      'name': 'Fluffy',
+      'vet': {'name': 'theVet', 'address': '12 somewhere'},
+      'ears': [{'name': 'left'}, {'name': 'right'}],
+      'legs': ['front right', 'front left', 'back right', 'back left'],
+      'more': {'favorites': {'food': 'fish'}},
+      'array': [{'one': '1'}],
+      'validated': 'valid'
     });
 
-    myCat.save(function(err, theSavedCat1) {
-      var expectedCreatedAt = theSavedCat1.createdAt;
-      var expectedUpdatedAt = theSavedCat1.updatedAt;
+    myCat.save((err, theSavedCat1) => {
+      const expectedCreatedAt = theSavedCat1.createdAt;
+      const expectedUpdatedAt = theSavedCat1.updatedAt;
 
       myCat.name = 'FluffyB';
-      setTimeout(function() {
-        myCat.save({updateTimestamps: true}, function () {
-          Cats.Cat9.get(1, function(err, realCat) {
+      setTimeout(() => {
+        myCat.save({'updateTimestamps': true}, () => {
+          Cats.Cat9.get(1, (err, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
             realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
@@ -862,26 +856,26 @@ describe('Model', function (){
     });
   });
 
-  it('Save existing item without updating timestamps', function (done) {
-    var myCat = new Cats.Cat9({
-      id: 1,
-      name: 'Fluffy',
-      vet:{name:'theVet', address:'12 somewhere'},
-      ears:[{name:'left'}, {name:'right'}],
-      legs: ['front right', 'front left', 'back right', 'back left'],
-      more: {favorites: {food: 'fish'}},
-      array: [{one: '1'}],
-      validated: 'valid'
+  it('Save existing item without updating timestamps', (done) => {
+    const myCat = new Cats.Cat9({
+      'id': 1,
+      'name': 'Fluffy',
+      'vet': {'name': 'theVet', 'address': '12 somewhere'},
+      'ears': [{'name': 'left'}, {'name': 'right'}],
+      'legs': ['front right', 'front left', 'back right', 'back left'],
+      'more': {'favorites': {'food': 'fish'}},
+      'array': [{'one': '1'}],
+      'validated': 'valid'
     });
 
-    myCat.save(function(err, theSavedCat1) {
-      var expectedCreatedAt = theSavedCat1.createdAt;
-      var expectedUpdatedAt = theSavedCat1.updatedAt;
+    myCat.save((err, theSavedCat1) => {
+      const expectedCreatedAt = theSavedCat1.createdAt;
+      const expectedUpdatedAt = theSavedCat1.updatedAt;
 
       myCat.name = 'FluffyB';
-      setTimeout(function() {
-        myCat.save({updateTimestamps: false}, function () {
-          Cats.Cat9.get(1, function(err, realCat) {
+      setTimeout(() => {
+        myCat.save({'updateTimestamps': false}, () => {
+          Cats.Cat9.get(1, (err, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
             realCat.updatedAt.should.eql(expectedUpdatedAt); // updatedAt should be the same as before
@@ -893,25 +887,25 @@ describe('Model', function (){
   });
 
 
-  it('Save existing item with updating expires', function (done) {
-    var myCat = new Cats.Cat11({
-      id: 1,
-      name: 'Fluffy',
-      vet:{name:'theVet', address:'12 somewhere'},
-      ears:[{name:'left'}, {name:'right'}],
-      legs: ['front right', 'front left', 'back right', 'back left'],
-      more: {favorites: {food: 'fish'}},
-      array: [{one: '1'}],
-      validated: 'valid'
+  it('Save existing item with updating expires', (done) => {
+    const myCat = new Cats.Cat11({
+      'id': 1,
+      'name': 'Fluffy',
+      'vet': {'name': 'theVet', 'address': '12 somewhere'},
+      'ears': [{'name': 'left'}, {'name': 'right'}],
+      'legs': ['front right', 'front left', 'back right', 'back left'],
+      'more': {'favorites': {'food': 'fish'}},
+      'array': [{'one': '1'}],
+      'validated': 'valid'
     });
 
-    myCat.save(function(err, theSavedCat1) {
-      var expectedExpires = theSavedCat1.expires;
+    myCat.save((err, theSavedCat1) => {
+      const expectedExpires = theSavedCat1.expires;
 
       myCat.name = 'FluffyB';
-      setTimeout(function() {
-        myCat.save({updateExpires: true}, function () {
-          Cats.Cat11.get(1, function(err, realCat) {
+      setTimeout(() => {
+        myCat.save({'updateExpires': true}, () => {
+          Cats.Cat11.get(1, (err, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.expires.should.not.eql(expectedExpires); // expires should be different than before
             done();
@@ -922,25 +916,25 @@ describe('Model', function (){
   });
 
 
-  it('Save existing item without updating expires', function (done) {
-    var myCat = new Cats.Cat11({
-      id: 2,
-      name: 'Fluffy',
-      vet:{name:'theVet', address:'12 somewhere'},
-      ears:[{name:'left'}, {name:'right'}],
-      legs: ['front right', 'front left', 'back right', 'back left'],
-      more: {favorites: {food: 'fish'}},
-      array: [{one: '1'}],
-      validated: 'valid'
+  it('Save existing item without updating expires', (done) => {
+    const myCat = new Cats.Cat11({
+      'id': 2,
+      'name': 'Fluffy',
+      'vet': {'name': 'theVet', 'address': '12 somewhere'},
+      'ears': [{'name': 'left'}, {'name': 'right'}],
+      'legs': ['front right', 'front left', 'back right', 'back left'],
+      'more': {'favorites': {'food': 'fish'}},
+      'array': [{'one': '1'}],
+      'validated': 'valid'
     });
 
-    myCat.save(function(err, theSavedCat1) {
-      var expectedExpires = theSavedCat1.expires;
+    myCat.save((err, theSavedCat1) => {
+      const expectedExpires = theSavedCat1.expires;
 
       myCat.name = 'FluffyB';
-      setTimeout(function() {
-        myCat.save({updateExpires: false}, function () {
-          Cats.Cat11.get(2, function(err, realCat) {
+      setTimeout(() => {
+        myCat.save({'updateExpires': false}, () => {
+          Cats.Cat11.get(2, (err, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.expires.should.eql(expectedExpires); // expires should be the same as before
             done();
@@ -951,25 +945,25 @@ describe('Model', function (){
   });
 
 
-  it('Save existing item without updating expires (default)', function (done) {
-    var myCat = new Cats.Cat11({
-      id: 3,
-      name: 'Fluffy',
-      vet:{name:'theVet', address:'12 somewhere'},
-      ears:[{name:'left'}, {name:'right'}],
-      legs: ['front right', 'front left', 'back right', 'back left'],
-      more: {favorites: {food: 'fish'}},
-      array: [{one: '1'}],
-      validated: 'valid'
+  it('Save existing item without updating expires (default)', (done) => {
+    const myCat = new Cats.Cat11({
+      'id': 3,
+      'name': 'Fluffy',
+      'vet': {'name': 'theVet', 'address': '12 somewhere'},
+      'ears': [{'name': 'left'}, {'name': 'right'}],
+      'legs': ['front right', 'front left', 'back right', 'back left'],
+      'more': {'favorites': {'food': 'fish'}},
+      'array': [{'one': '1'}],
+      'validated': 'valid'
     });
 
-    myCat.save(function(err, theSavedCat1) {
-      var expectedExpires = theSavedCat1.expires;
+    myCat.save((err, theSavedCat1) => {
+      const expectedExpires = theSavedCat1.expires;
 
       myCat.name = 'FluffyB';
-      setTimeout(function() {
-        myCat.save(function () {
-          Cats.Cat11.get(3, function(err, realCat) {
+      setTimeout(() => {
+        myCat.save(() => {
+          Cats.Cat11.get(3, (err, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.expires.should.eql(expectedExpires); // expires should be the same as before
             done();
@@ -979,8 +973,8 @@ describe('Model', function (){
     });
   });
 
-  it('Save existing item with a false condition', function (done) {
-    Cats.Cat.get(1, function(err, model) {
+  it('Save existing item with a false condition', (done) => {
+    Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.exist(model);
 
@@ -988,14 +982,14 @@ describe('Model', function (){
 
       model.name = 'Whiskers';
       model.save({
-        condition: '#name = :name',
-        conditionNames: { name: 'name' },
-        conditionValues: { name: 'Muffin' }
-      }, function (err) {
+        'condition': '#name = :name',
+        'conditionNames': {'name': 'name'},
+        'conditionValues': {'name': 'Muffin'}
+      }, (err) => {
         should.exist(err);
         err.code.should.eql('ConditionalCheckFailedException');
 
-        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
           should.not.exist(err);
           badCat.name.should.eql('Bad Cat');
           done();
@@ -1004,8 +998,8 @@ describe('Model', function (){
     });
   });
 
-  it('Save existing item with a true condition', function (done) {
-    Cats.Cat.get(1, function(err, model) {
+  it('Save existing item with a true condition', (done) => {
+    Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.exist(model);
 
@@ -1013,13 +1007,13 @@ describe('Model', function (){
 
       model.name = 'Whiskers';
       model.save({
-        condition: '#name = :name',
-        conditionNames: { name: 'name' },
-        conditionValues: { name: 'Bad Cat' }
-      }, function (err) {
+        'condition': '#name = :name',
+        'conditionNames': {'name': 'name'},
+        'conditionValues': {'name': 'Bad Cat'}
+      }, (err) => {
         should.not.exist(err);
 
-        Cats.Cat.get({id: 1}, {consistent: true}, function(err, whiskers) {
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, whiskers) => {
           should.not.exist(err);
           whiskers.name.should.eql('Whiskers');
           done();
@@ -1028,14 +1022,14 @@ describe('Model', function (){
     });
   });
 
-  it('Save with a pre hook', function (done) {
-    var flag = false;
-    Cats.Cat.pre('save', function (next) {
+  it('Save with a pre hook', (done) => {
+    let flag = false;
+    Cats.Cat.pre('save', (next) => {
       flag = true;
       next();
     });
 
-    Cats.Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.exist(model);
 
@@ -1043,10 +1037,10 @@ describe('Model', function (){
 
       model.name = 'Fluffy';
       model.vet.name = 'Nice Guy';
-      model.save(function (err) {
+      model.save((err) => {
         should.not.exist(err);
 
-        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
           should.not.exist(err);
           badCat.name.should.eql('Fluffy');
           badCat.vet.name.should.eql('Nice Guy');
@@ -1059,16 +1053,16 @@ describe('Model', function (){
     });
   });
 
-  it('Save existing item with an invalid attribute', function (done) {
-    Cats.Cat.get(1, function(err, model) {
+  it('Save existing item with an invalid attribute', (done) => {
+    Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.exist(model);
 
       model.validated = 'bad';
-      model.save().catch(function(err) {
+      model.save().catch((err) => {
         should.exist(err);
         err.name.should.equal('ValidationError');
-        Cats.Cat.get({id: 1}, {consistent: true}, function(err, badCat) {
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
           should.not.exist(err);
           badCat.name.should.eql('Fluffy');
           badCat.vet.name.should.eql('Nice Guy');
@@ -1080,50 +1074,50 @@ describe('Model', function (){
     });
   });
 
-  it('Deletes item', function (done) {
+  it('Deletes item', (done) => {
 
-    var cat = new Cats.Cat({id: 1});
+    const cat = new Cats.Cat({'id': 1});
 
     cat.delete(done);
   });
 
-  it('Deletes item with invalid key', function (done) {
+  it('Deletes item with invalid key', (done) => {
 
-    var cat = new Cats.Cat({id: 0});
+    const cat = new Cats.Cat({'id': 0});
 
-    cat.delete(function(err) {
+    cat.delete((err) => {
       should.exist(err);
       err.name.should.equal('ValidationError');
       done();
     });
   });
 
-  it('Delete returnRequest option', function (done) {
-    var cat = new Cats.Cat({id: 1});
+  it('Delete returnRequest option', (done) => {
+    const cat = new Cats.Cat({'id': 1});
 
-    cat.delete({returnRequest: true}, function (err, request) {
+    cat.delete({'returnRequest': true}, (err, request) => {
       should.not.exist(err);
       request.should.exist;
 
       request.TableName.should.eql('test-Cat-db');
-      request.Key.should.eql({id: {N: '1'}});
+      request.Key.should.eql({'id': {'N': '1'}});
 
       done();
     });
   });
 
-  it('Get missing item', function (done) {
+  it('Get missing item', (done) => {
 
 
-    Cats.Cat.get(1, function(err, model) {
+    Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.not.exist(model);
       done();
     });
   });
 
-  it('Static Creates new item', function (done) {
-    Cats.Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+  it('Static Creates new item', (done) => {
+    Cats.Cat.create({'id': 666, 'name': 'Garfield'}, (err, garfield) => {
       should.not.exist(err);
       should.exist(garfield);
       garfield.id.should.eql(666);
@@ -1131,8 +1125,8 @@ describe('Model', function (){
     });
   });
 
-  it('Static Creates new item with range key', function (done) {
-    Cats.Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
+  it('Static Creates new item with range key', (done) => {
+    Cats.Cat2.create({'ownerId': 666, 'name': 'Garfield'}, (err, garfield) => {
       should.not.exist(err);
       should.exist(garfield);
       garfield.ownerId.should.eql(666);
@@ -1140,32 +1134,32 @@ describe('Model', function (){
     });
   });
 
-  it('Prevent duplicate create', function (done) {
-    Cats.Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+  it('Prevent duplicate create', (done) => {
+    Cats.Cat.create({'id': 666, 'name': 'Garfield'}, (err, garfield) => {
       should.exist(err);
       should.not.exist(garfield);
       done();
     });
   });
 
-  it('Should allow for primary key being `_id` while creating', function (done) {
-    Cats.Cat12.create({_id: 666, name: 'Garfield'}, function (err, garfield) {
+  it('Should allow for primary key being `_id` while creating', (done) => {
+    Cats.Cat12.create({'_id': 666, 'name': 'Garfield'}, (err, garfield) => {
       should.not.exist(err);
       should.exist(garfield);
       done();
     });
   });
 
-  it('Prevent duplicate create with range key', function (done) {
-    Cats.Cat2.create({ownerId: 666, name: 'Garfield'}, function (err, garfield) {
+  it('Prevent duplicate create with range key', (done) => {
+    Cats.Cat2.create({'ownerId': 666, 'name': 'Garfield'}, (err, garfield) => {
       should.exist(err);
       should.not.exist(garfield);
       done();
     });
   });
 
-  it('Static Creates second item', function (done) {
-    Cats.Cat.create({id: 777, name: 'Catbert'}, function (err, catbert) {
+  it('Static Creates second item', (done) => {
+    Cats.Cat.create({'id': 777, 'name': 'Catbert'}, (err, catbert) => {
       should.not.exist(err);
       should.exist(catbert);
       catbert.id.should.eql(777);
@@ -1173,19 +1167,17 @@ describe('Model', function (){
     });
   });
 
-  it('BatchGet items', function (done) {
-    Cats.Cat.batchGet([{id: 666}, {id: 777}], function (err, cats) {
+  it('BatchGet items', (done) => {
+    Cats.Cat.batchGet([{'id': 666}, {'id': 777}], (err, cats) => {
       cats.length.should.eql(2);
       done();
     });
   });
 
-  it('BatchGet items for model with falsy keys', function (done) {
-    Cats.Cat8.create({id: 1, age: 0})
-      .then(function () {
-        return Cats.Cat8.batchGet([{id: 1, age: 0}]);
-      })
-      .then(function (cats) {
+  it('BatchGet items for model with falsy keys', (done) => {
+    Cats.Cat8.create({'id': 1, 'age': 0})
+      .then(() => Cats.Cat8.batchGet([{'id': 1, 'age': 0}]))
+      .then((cats) => {
         cats.length.should.eql(1);
         cats[0].should.have.property('id', 1);
         cats[0].should.have.property('age', 0);
@@ -1194,10 +1186,10 @@ describe('Model', function (){
       .catch(done);
   });
 
-  it('Static Delete', function (done) {
-    Cats.Cat.delete(666, function (err) {
+  it('Static Delete', (done) => {
+    Cats.Cat.delete(666, (err) => {
       should.not.exist(err);
-      Cats.Cat.get(666, function (err, delCat) {
+      Cats.Cat.get(666, (err, delCat) => {
         should.not.exist(err);
         should.not.exist(delCat);
 
@@ -1206,18 +1198,18 @@ describe('Model', function (){
     });
   });
 
-  it('Should support deletions with validators', function (done) {
-    var cat = new Cats.CatWithGeneratedID({
-      owner: {
-        name: 'Joe',
-        address: 'Somewhere'
+  it('Should support deletions with validators', (done) => {
+    const cat = new Cats.CatWithGeneratedID({
+      'owner': {
+        'name': 'Joe',
+        'address': 'Somewhere'
       },
-      name: 'Garfield',
-      id: 'Joe_Garfield'
+      'name': 'Garfield',
+      'id': 'Joe_Garfield'
     });
-    cat.delete(function (err) {
+    cat.delete((err) => {
       should.not.exist(err);
-      Cats.CatWithGeneratedID.get(cat, function (err, delCat) {
+      Cats.CatWithGeneratedID.get(cat, (err, delCat) => {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
@@ -1225,10 +1217,10 @@ describe('Model', function (){
     });
   });
 
-  it('Static Delete with range key', function (done) {
-    Cats.Cat2.delete({ ownerId: 666, name: 'Garfield' }, function (err) {
+  it('Static Delete with range key', (done) => {
+    Cats.Cat2.delete({'ownerId': 666, 'name': 'Garfield'}, (err) => {
       should.not.exist(err);
-      Cats.Cat2.get({ ownerId: 666, name: 'Garfield' }, function (err, delCat) {
+      Cats.Cat2.get({'ownerId': 666, 'name': 'Garfield'}, (err, delCat) => {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
@@ -1236,8 +1228,8 @@ describe('Model', function (){
     });
   });
 
-  it('Static Creates new item', function (done) {
-    Cats.Cat.create({id: 666, name: 'Garfield'}, function (err, garfield) {
+  it('Static Creates new item', (done) => {
+    Cats.Cat.create({'id': 666, 'name': 'Garfield'}, (err, garfield) => {
       should.not.exist(err);
       should.exist(garfield);
       garfield.id.should.eql(666);
@@ -1245,13 +1237,13 @@ describe('Model', function (){
     });
   });
 
-  it('Static Delete with update', function (done) {
-    Cats.Cat.delete(666, { update: true }, function (err, data) {
+  it('Static Delete with update', (done) => {
+    Cats.Cat.delete(666, {'update': true}, (err, data) => {
       should.not.exist(err);
       should.exist(data);
       data.id.should.eql(666);
       data.name.should.eql('Garfield');
-      Cats.Cat.get(666, function (err, delCat) {
+      Cats.Cat.get(666, (err, delCat) => {
         should.not.exist(err);
         should.not.exist(delCat);
         done();
@@ -1259,8 +1251,8 @@ describe('Model', function (){
     });
   });
 
-  it('Static Delete with update failure', function (done) {
-    Cats.Cat.delete(666, { update: true }, function (err) {
+  it('Static Delete with update failure', (done) => {
+    Cats.Cat.delete(666, {'update': true}, (err) => {
       should.exist(err);
       err.statusCode.should.eql(400);
       err.code.should.eql('ConditionalCheckFailedException');
@@ -1271,47 +1263,47 @@ describe('Model', function (){
 
   // See comments on PR #306 for details on why the test below is commented out
 
-  it('Should enable server side encryption', function() {
-    var Model = dynamoose.model('TestTable', { id: Number, name: String }, { serverSideEncryption: true });
+  it('Should enable server side encryption', () => {
+    const Model = dynamoose.model('TestTable', {'id': Number, 'name': String}, {'serverSideEncryption': true});
     Model.getTableReq().SSESpecification.Enabled.should.be.true;
   });
 
-  it('Server side encryption shouldn\'t be enabled unless specified', function(done) {
-    var Model = dynamoose.model('TestTableB', { id: Number, name: String });
-    setTimeout(function () {
-      Model.$__.table.describe(function(err, data) {
-        var works = !data.Table.SSEDescription || data.Table.SSEDescription.Status === 'DISABLED';
+  it('Server side encryption shouldn\'t be enabled unless specified', (done) => {
+    const Model = dynamoose.model('TestTableB', {'id': Number, 'name': String});
+    setTimeout(() => {
+      Model.$__.table.describe((err, data) => {
+        const works = !data.Table.SSEDescription || data.Table.SSEDescription.Status === 'DISABLED';
         works.should.be.true;
         done();
       });
     }, 2000);
   });
 
-  it('Makes model class available inside schema methods', function() {
+  it('Makes model class available inside schema methods', () => {
     Object.keys(dynamoose.models).should.containEql('test-CatWithMethods-db');
 
-    var cat = new Cats.CatWithMethods({id: 1, name: 'Sir Pounce'});
+    const cat = new Cats.CatWithMethods({'id': 1, 'name': 'Sir Pounce'});
 
     cat.getModel.should.throw(Error);
 
-    var modelClass = cat.getModel('test-CatWithMethods-db');
+    const modelClass = cat.getModel('test-CatWithMethods-db');
     modelClass.should.equal(Cats.CatWithMethods);
   });
 
-  describe('Model.update', function (){
-    before(function (done) {
-      var stray = new Cats.Cat({id: 999, name: 'Tom'});
+  describe('Model.update', () => {
+    before((done) => {
+      const stray = new Cats.Cat({'id': 999, 'name': 'Tom'});
       stray.save(done);
     });
 
-    it('False condition', function (done) {
-      Cats.Cat.update({id: 999}, {name: 'Oliver'}, {
-        condition: '#name = :name',
-        conditionNames: { name: 'name' },
-        conditionValues: { name: 'Muffin' }
-      }, function (err) {
+    it('False condition', (done) => {
+      Cats.Cat.update({'id': 999}, {'name': 'Oliver'}, {
+        'condition': '#name = :name',
+        'conditionNames': {'name': 'name'},
+        'conditionValues': {'name': 'Muffin'}
+      }, (err) => {
         should.exist(err);
-        Cats.Cat.get(999, function (err, tomcat) {
+        Cats.Cat.get(999, (err, tomcat) => {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -1323,17 +1315,17 @@ describe('Model', function (){
       });
     });
 
-    it('True condition', function (done) {
-      Cats.Cat.update({id: 999}, {name: 'Oliver'}, {
-        condition: '#name = :name',
-        conditionNames: { name: 'name' },
-        conditionValues: { name: 'Tom' }
-      }, function (err, data) {
+    it('True condition', (done) => {
+      Cats.Cat.update({'id': 999}, {'name': 'Oliver'}, {
+        'condition': '#name = :name',
+        'conditionNames': {'name': 'name'},
+        'conditionValues': {'name': 'Tom'}
+      }, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Oliver');
-        Cats.Cat.get(999, function (err, oliver) {
+        Cats.Cat.get(999, (err, oliver) => {
           should.not.exist(err);
           should.exist(oliver);
           oliver.id.should.eql(999);
@@ -1345,29 +1337,29 @@ describe('Model', function (){
       });
     });
 
-    it('If key is null or undefined, will use defaults', function (done) {
-      Cats.Cat3.update(null, {age: 3, name: 'Furrgie'}, function (err, data) {
+    it('If key is null or undefined, will use defaults', (done) => {
+      Cats.Cat3.update(null, {'age': 3, 'name': 'Furrgie'}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(888);
         data.name.should.equal('Furrgie');
         data.age.should.equal(3);
 
-        Cats.Cat3.get(888, function (err, furrgie) {
+        Cats.Cat3.get(888, (err, furrgie) => {
           should.not.exist(err);
           should.exist(furrgie);
           furrgie.id.should.eql(888);
           furrgie.name.should.eql('Furrgie');
           data.age.should.equal(3);
 
-          Cats.Cat3.update(undefined, {age: 4}, function (err, data) {
+          Cats.Cat3.update(undefined, {'age': 4}, (err, data) => {
             should.not.exist(err);
             should.exist(data);
             data.id.should.eql(888);
             data.name.should.equal('Furrgie');
             data.age.should.equal(4);
 
-            Cats.Cat3.get(888, function (err, furrgie) {
+            Cats.Cat3.get(888, (err, furrgie) => {
               should.not.exist(err);
               should.exist(furrgie);
               furrgie.id.should.eql(888);
@@ -1381,23 +1373,23 @@ describe('Model', function (){
       });
     });
 
-    it('If key is null or undefined and default isn\'t provided, will throw an error', function (done) {
-      Cats.Cat.update(null, {name: 'Oliver'}, function (err, data) {
+    it('If key is null or undefined and default isn\'t provided, will throw an error', (done) => {
+      Cats.Cat.update(null, {'name': 'Oliver'}, (err, data) => {
         should.not.exist(data);
         should.exist(err);
         done();
       });
     });
 
-    it('If key is a value, will search by that value', function (done) {
-      Cats.Cat3.update(888, {age: 5}, function (err, data) {
+    it('If key is a value, will search by that value', (done) => {
+      Cats.Cat3.update(888, {'age': 5}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(888);
         data.name.should.equal('Furrgie');
         data.age.should.equal(5);
 
-        Cats.Cat3.get(888, function (err, furrgie) {
+        Cats.Cat3.get(888, (err, furrgie) => {
           should.not.exist(err);
           should.exist(furrgie);
           furrgie.id.should.eql(888);
@@ -1408,14 +1400,14 @@ describe('Model', function (){
       });
     });
 
-    it('Creates an item with required attributes\' defaults if createRequired is true', function (done) {
-      Cats.Cat3.update({id: 25}, {age: 3}, {createRequired: true}, function (err, data) {
+    it('Creates an item with required attributes\' defaults if createRequired is true', (done) => {
+      Cats.Cat3.update({'id': 25}, {'age': 3}, {'createRequired': true}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(25);
         data.name.should.equal('Mittens');
         data.age.should.equal(3);
-        Cats.Cat3.get(25, function (err, mittens) {
+        Cats.Cat3.get(25, (err, mittens) => {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(25);
@@ -1427,11 +1419,11 @@ describe('Model', function (){
       });
     });
 
-    it('Throws an error when a required attribute has no default and has not been specified in the update if createRequired is true', function (done) {
-      Cats.Cat3.update({id: 25}, {name: 'Rufflestiltskins'}, {createRequired: true}, function (err, data) {
+    it('Throws an error when a required attribute has no default and has not been specified in the update if createRequired is true', (done) => {
+      Cats.Cat3.update({'id': 25}, {'name': 'Rufflestiltskins'}, {'createRequired': true}, (err, data) => {
         should.not.exist(data);
         should.exist(err);
-        Cats.Cat3.get(25, function (err, mittens) {
+        Cats.Cat3.get(25, (err, mittens) => {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(25);
@@ -1441,14 +1433,14 @@ describe('Model', function (){
       });
     });
 
-    it('Adds required attributes, even when not specified, if createRequired is true', function (done) {
-      Cats.Cat3.update({id: 45}, {age: 4}, {createRequired: true}, function (err, data) {
+    it('Adds required attributes, even when not specified, if createRequired is true', (done) => {
+      Cats.Cat3.update({'id': 45}, {'age': 4}, {'createRequired': true}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(45);
         data.name.should.equal('Mittens');
         data.age.should.equal(4);
-        Cats.Cat3.get(45, function (err, mittens) {
+        Cats.Cat3.get(45, (err, mittens) => {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(45);
@@ -1460,14 +1452,14 @@ describe('Model', function (){
       });
     });
 
-    it('Does not add required attributes if createRequired is false', function (done) {
-      Cats.Cat3.update({id: 24}, {name: 'Cat-rina'}, {createRequired: false}, function (err, data) {
+    it('Does not add required attributes if createRequired is false', (done) => {
+      Cats.Cat3.update({'id': 24}, {'name': 'Cat-rina'}, {'createRequired': false}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(24);
         data.name.should.equal('Cat-rina');
         should.not.exist(data.age);
-        Cats.Cat3.get(24, function (err, mittens) {
+        Cats.Cat3.get(24, (err, mittens) => {
           should.not.exist(err);
           should.exist(mittens);
           mittens.id.should.eql(24);
@@ -1479,10 +1471,10 @@ describe('Model', function (){
       });
     });
 
-    it('If item did not exist and timestamps are desired, createdAt and updatedAt will both be filled in', function (done) {
+    it('If item did not exist and timestamps are desired, createdAt and updatedAt will both be filled in', (done) => {
       // try a delete beforehand in case the test is run more than once
-      Cats.Cat4.delete({id: 22}, function () {
-        Cats.Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+      Cats.Cat4.delete({'id': 22}, () => {
+        Cats.Cat4.update({'id': 22}, {'name': 'Twinkles'}, (err, data) => {
           should.not.exist(err);
           should.exist(data);
           should.exist(data.myLittleCreatedAt);
@@ -1490,7 +1482,7 @@ describe('Model', function (){
           data.id.should.eql(22);
           data.name.should.equal('Twinkles');
 
-          Cats.Cat4.get(22, function (err, twinkles) {
+          Cats.Cat4.get(22, (err, twinkles) => {
             should.not.exist(err);
             should.exist(twinkles);
             twinkles.id.should.eql(22);
@@ -1503,10 +1495,10 @@ describe('Model', function (){
       });
     });
 
-    it('UpdatedAt will be updated ', function (done) {
+    it('UpdatedAt will be updated ', (done) => {
       // try a delete beforehand in case the test is run more than once
-      Cats.Cat4.delete({id: 22}, function () {
-        Cats.Cat4.update({id: 22}, {name: 'Twinkles'}, function (err, data) {
+      Cats.Cat4.delete({'id': 22}, () => {
+        Cats.Cat4.update({'id': 22}, {'name': 'Twinkles'}, (err, data) => {
           should.not.exist(err);
           should.exist(data);
           data.id.should.eql(22);
@@ -1515,13 +1507,13 @@ describe('Model', function (){
           should.exist(data.myLittleUpdatedAt);
 
           // now do another update
-          Cats.Cat4.update({id: 22}, {name: 'Furr-nando'}, function (err, data) {
+          Cats.Cat4.update({'id': 22}, {'name': 'Furr-nando'}, (err, data) => {
             should.not.exist(err);
             should.exist(data);
             data.id.should.eql(22);
             data.name.should.equal('Furr-nando');
             data.myLittleUpdatedAt.getTime().should.be.above(data.myLittleCreatedAt.getTime());
-            Cats.Cat4.get(22, function (err, furrnando) {
+            Cats.Cat4.get(22, (err, furrnando) => {
               should.not.exist(err);
               should.exist(furrnando);
               furrnando.id.should.eql(22);
@@ -1534,27 +1526,27 @@ describe('Model', function (){
       });
     });
 
-    it('Expires will be updated ', function (done) {
-      Cats.ExpiringCat.create({name: 'Fluffy2'})
-        .then(function (fluffy) {
-          var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
-          var min = max - 1;
+    it('Expires will be updated ', (done) => {
+      Cats.ExpiringCat.create({'name': 'Fluffy2'})
+        .then((fluffy) => {
+          const max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+          const min = max - 1;
           should.exist(fluffy);
           should.exist(fluffy.expires);
           should.exist(fluffy.expires.getTime);
 
-          var expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
+          const expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
           expiresInSec.should.be.within(min, max);
 
 
-          setTimeout(function() {
-            Cats.ExpiringCat.update({name: 'Fluffy2'}, {name: 'Twinkles'}, { updateExpires: true }, function (err, fluffy) {
+          setTimeout(() => {
+            Cats.ExpiringCat.update({'name': 'Fluffy2'}, {'name': 'Twinkles'}, {'updateExpires': true}, (err, fluffy) => {
               should.not.exist(err);
               should.exist(fluffy);
               should.exist(fluffy.expires);
               should.exist(fluffy.expires.getTime);
 
-              var expiresInSec2 = Math.floor(fluffy.expires.getTime() / 1000);
+              const expiresInSec2 = Math.floor(fluffy.expires.getTime() / 1000);
               expiresInSec2.should.be.above(expiresInSec);
 
               done();
@@ -1564,16 +1556,16 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Set expires attribute on save', function (done) {
-      Cats.ExpiringCat.create({name: 'Fluffy'})
-        .then(function (fluffy) {
-          var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
-          var min = max - 1;
+    it('Set expires attribute on save', (done) => {
+      Cats.ExpiringCat.create({'name': 'Fluffy'})
+        .then((fluffy) => {
+          const max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+          const min = max - 1;
           should.exist(fluffy);
           should.exist(fluffy.expires);
           should.exist(fluffy.expires.getTime);
 
-          var expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
+          const expiresInSec = Math.floor(fluffy.expires.getTime() / 1000);
           expiresInSec.should.be.within(min, max);
           done();
         })
@@ -1581,19 +1573,19 @@ describe('Model', function (){
 
     });
 
-    it('Does not set expires attribute on save if exists', function (done) {
+    it('Does not set expires attribute on save if exists', (done) => {
       Cats.ExpiringCat.create({
-        name: 'Tigger',
-        expires: new Date(Date.now() + (ONE_YEAR*1000))
+        'name': 'Tigger',
+        'expires': new Date(Date.now() + ONE_YEAR * 1000)
       })
-        .then(function (tigger) {
-          var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
-          var min = max - 1;
+        .then((tigger) => {
+          const max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+          const min = max - 1;
           should.exist(tigger);
           should.exist(tigger.expires);
           should.exist(tigger.expires.getTime);
 
-          var expiresInSec = Math.floor(tigger.expires.getTime() / 1000);
+          const expiresInSec = Math.floor(tigger.expires.getTime() / 1000);
           expiresInSec.should.be.within(min, max);
           done();
         })
@@ -1601,23 +1593,23 @@ describe('Model', function (){
 
     });
 
-    it('Update expires attribute on save', function (done) {
+    it('Update expires attribute on save', (done) => {
       Cats.ExpiringCat.create({
-        name: 'Leo'
+        'name': 'Leo'
       })
-        .then(function (leo) {
-          var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
-          var min = max - 1;
-          var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        .then((leo) => {
+          const max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+          const min = max - 1;
+          const expiresInSec = Math.floor(leo.expires.getTime() / 1000);
           expiresInSec.should.be.within(min, max);
 
-          leo.expires = new Date(Date.now() + (ONE_YEAR* 1000));
+          leo.expires = new Date(Date.now() + ONE_YEAR * 1000);
           return leo.save();
         })
-        .then(function (leo) {
-          var max = Math.floor(Date.now() / 1000) + ONE_YEAR;
-          var min = max - 1;
-          var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        .then((leo) => {
+          const max = Math.floor(Date.now() / 1000) + ONE_YEAR;
+          const min = max - 1;
+          const expiresInSec = Math.floor(leo.expires.getTime() / 1000);
           expiresInSec.should.be.within(min, max);
           done();
         })
@@ -1625,35 +1617,35 @@ describe('Model', function (){
 
     });
 
-    it('Save returnRequest option', function (done) {
+    it('Save returnRequest option', (done) => {
       Cats.ExpiringCat.create({
-        name: 'Leo5'
+        'name': 'Leo5'
       })
-        .then(function (leo) {
-          var max = Math.floor(Date.now() / 1000) + NINE_YEARS;
-          var min = max - 1;
-          var expiresInSec = Math.floor(leo.expires.getTime() / 1000);
+        .then((leo) => {
+          const max = Math.floor(Date.now() / 1000) + NINE_YEARS;
+          const min = max - 1;
+          const expiresInSec = Math.floor(leo.expires.getTime() / 1000);
           expiresInSec.should.be.within(min, max);
 
-          leo.expires = new Date(Date.now() + (ONE_YEAR* 1000));
-          return leo.save({returnRequest: true});
+          leo.expires = new Date(Date.now() + ONE_YEAR * 1000);
+          return leo.save({'returnRequest': true});
         })
-        .then(function (request) {
+        .then((request) => {
           request.should.exist;
 
           request.TableName.should.eql('test-ExpiringCat-db');
-          request.Item.name.should.eql({S: 'Leo5'});
+          request.Item.name.should.eql({'S': 'Leo5'});
           done();
         })
         .catch(done);
     });
 
-    it('Should not have an expires property if TTL is set to null', function (done) {
+    it('Should not have an expires property if TTL is set to null', (done) => {
       Cats.ExpiringCatNull.create({
-        name: 'Leo12'
+        'name': 'Leo12'
       })
-        .then(function () {
-          Cats.ExpiringCatNull.get('Leo12').then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNull.get('Leo12').then((leo) => {
             should.exist(leo);
             should.not.exist(leo.expires);
             done();
@@ -1662,17 +1654,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should not return expired items if returnExpiredItems is false (get)', function (done) {
+    it('Should not return expired items if returnExpiredItems is false (get)', (done) => {
       Cats.ExpiringCatNoReturn.create({
-        name: 'Leo1',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo1',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.get('Leo1').then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNoReturn.get('Leo1').then((leo) => {
             should.not.exist(leo);
             done();
           }).catch(done);
@@ -1680,17 +1672,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is false and expires is null (get)', function (done) {
+    it('Should return expired items if returnExpiredItems is false and expires is null (get)', (done) => {
       Cats.ExpiringCatNoReturn.create({
-        name: 'Leo11',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo11',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.get('Leo11').then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNoReturn.get('Leo11').then((leo) => {
             should.not.exist(leo.expires);
             should.exist(leo);
             done();
@@ -1699,17 +1691,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is undefined (get)', function (done) {
+    it('Should return expired items if returnExpiredItems is undefined (get)', (done) => {
       Cats.ExpiringCatNull.create({
-        name: 'Leo1',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo1',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNull.get('Leo1').then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNull.get('Leo1').then((leo) => {
             should.exist(leo);
             done();
           }).catch(done);
@@ -1717,17 +1709,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is undefined and expires is null (get)', function (done) {
+    it('Should return expired items if returnExpiredItems is undefined and expires is null (get)', (done) => {
       Cats.ExpiringCatNull.create({
-        name: 'Leo11',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo11',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNull.get('Leo11').then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNull.get('Leo11').then((leo) => {
             should.not.exist(leo.expires);
             should.exist(leo);
             done();
@@ -1736,17 +1728,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is true (get)', function (done) {
+    it('Should return expired items if returnExpiredItems is true (get)', (done) => {
       Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo1',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo1',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.get('Leo1').then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.get('Leo1').then((leo) => {
             should.exist(leo);
             done();
           }).catch(done);
@@ -1754,17 +1746,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is true and expires is null (get)', function (done) {
+    it('Should return expired items if returnExpiredItems is true and expires is null (get)', (done) => {
       Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo11',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo11',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.get('Leo11').then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.get('Leo11').then((leo) => {
             should.not.exist(leo.expires);
             should.exist(leo);
             done();
@@ -1774,17 +1766,17 @@ describe('Model', function (){
     });
 
 
-    it('Should not return expired items if returnExpiredItems is false (batchGet)', function (done) {
+    it('Should not return expired items if returnExpiredItems is false (batchGet)', (done) => {
       Cats.ExpiringCatNoReturn.create({
-        name: 'Leo2',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo2',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.batchGet(['Leo2']).then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNoReturn.batchGet(['Leo2']).then((leo) => {
             leo.length.should.eql(0);
             done();
           }).catch(done);
@@ -1792,17 +1784,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is false and expires is null (batchGet)', function (done) {
+    it('Should return expired items if returnExpiredItems is false and expires is null (batchGet)', (done) => {
       Cats.ExpiringCatNoReturn.create({
-        name: 'Leo22',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo22',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.batchGet(['Leo22']).then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNoReturn.batchGet(['Leo22']).then((leo) => {
             leo.length.should.eql(1);
             should.not.exist(leo[0].expires);
             done();
@@ -1811,17 +1803,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is undefined (batchGet)', function (done) {
+    it('Should return expired items if returnExpiredItems is undefined (batchGet)', (done) => {
       Cats.ExpiringCatNull.create({
-        name: 'Leo2',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo2',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNull.batchGet(['Leo2']).then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNull.batchGet(['Leo2']).then((leo) => {
             leo.length.should.eql(1);
             done();
           }).catch(done);
@@ -1829,17 +1821,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is undefined and expires is null (batchGet)', function (done) {
+    it('Should return expired items if returnExpiredItems is undefined and expires is null (batchGet)', (done) => {
       Cats.ExpiringCatNull.create({
-        name: 'Leo22',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo22',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNull.batchGet(['Leo22']).then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatNull.batchGet(['Leo22']).then((leo) => {
             leo.length.should.eql(1);
             should.not.exist(leo[0].expires);
             done();
@@ -1848,17 +1840,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is true (batchGet)', function (done) {
+    it('Should return expired items if returnExpiredItems is true (batchGet)', (done) => {
       Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo2',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo2',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.batchGet(['Leo2']).then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.batchGet(['Leo2']).then((leo) => {
             leo.length.should.eql(1);
             done();
           }).catch(done);
@@ -1866,17 +1858,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is true and expires is null (batchGet)', function (done) {
+    it('Should return expired items if returnExpiredItems is true and expires is null (batchGet)', (done) => {
       Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo22',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo22',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.batchGet(['Leo22']).then(function (leo) {
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.batchGet(['Leo22']).then((leo) => {
             leo.length.should.eql(1);
             should.not.exist(leo[0].expires);
             done();
@@ -1886,147 +1878,17 @@ describe('Model', function (){
     });
 
 
-
-    it('Should not return expired items if returnExpiredItems is false (scan)', function (done) {
+    it('Should not return expired items if returnExpiredItems is false (scan)', (done) => {
       Cats.ExpiringCatNoReturn.create({
-        name: 'Leo3',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo3',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.scan({name: 'Leo3'}, function (err, leo) {
-            if (err) {
-              done(err);
-            }
-            leo.length.should.eql(0);
-            done();
-          });
-        })
-        .catch(done);
-    });
-
-    it('Should return expired items if returnExpiredItems is false and expires is null (scan)', function (done) {
-      Cats.ExpiringCatNoReturn.create({
-        name: 'Leo33',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
-      })
-        .then(function (leo) {
-          leo.expires = null;
-          return leo.save();
-        })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.scan({name: 'Leo33'}, function (err, leo) {
-            if (err) {
-              done(err);
-            }
-            leo.length.should.eql(1);
-            should.not.exist(leo[0].expires);
-            done();
-          });
-        })
-        .catch(done);
-    });
-
-    it('Should return expired items if returnExpiredItems is undefined (scan)', function (done) {
-      Cats.ExpiringCatNull.create({
-        name: 'Leo3',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
-      })
-        .then(function (leo) {
-          leo.expires = new Date(Date.now() - 5000);
-          return leo.save();
-        })
-        .then(function () {
-          Cats.ExpiringCatNull.scan({name: 'Leo3'}, function (err, leo) {
-            if (err) {
-              done(err);
-            }
-            leo.length.should.eql(1);
-            done();
-          });
-        })
-        .catch(done);
-    });
-
-    it('Should return expired items if returnExpiredItems is undefined and expires is null (scan)', function (done) {
-      Cats.ExpiringCatNull.create({
-        name: 'Leo33',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
-      })
-        .then(function (leo) {
-          leo.expires = null;
-          return leo.save();
-        })
-        .then(function () {
-          Cats.ExpiringCatNull.scan({name: 'Leo33'}, function (err, leo) {
-            if (err) {
-              done(err);
-            }
-            leo.length.should.eql(1);
-            should.not.exist(leo[0].expires);
-            done();
-          });
-        })
-        .catch(done);
-    });
-
-    it('Should return expired items if returnExpiredItems is true (scan)', function (done) {
-      Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo3',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
-      })
-        .then(function (leo) {
-          leo.expires = new Date(Date.now() - 5000);
-          return leo.save();
-        })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.scan({name: 'Leo3'}, function (err, leo) {
-            if (err) {
-              done(err);
-            }
-            leo.length.should.eql(1);
-            done();
-          });
-        })
-        .catch(done);
-    });
-
-    it('Should return expired items if returnExpiredItems is true and expires is null (scan)', function (done) {
-      Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo33',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
-      })
-        .then(function (leo) {
-          leo.expires = null;
-          return leo.save();
-        })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.scan({name: 'Leo33'}, function (err, leo) {
-            if (err) {
-              done(err);
-            }
-            leo.length.should.eql(1);
-            should.not.exist(leo[0].expires);
-            done();
-          });
-        })
-        .catch(done);
-    });
-
-    it('Should not return expired items if returnExpiredItems is false (query)', function (done) {
-      Cats.ExpiringCatNoReturn.create({
-        name: 'Leo4',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
-      })
-        .then(function (leo) {
-          leo.expires = new Date(Date.now() - 5000);
-          return leo.save();
-        })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.query({name: 'Leo4'}, function (err, leo) {
+        .then(() => {
+          Cats.ExpiringCatNoReturn.scan({'name': 'Leo3'}, (err, leo) => {
             if (err) {
               done(err);
             }
@@ -2037,17 +1899,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is false and expires is null (query)', function (done) {
+    it('Should return expired items if returnExpiredItems is false and expires is null (scan)', (done) => {
       Cats.ExpiringCatNoReturn.create({
-        name: 'Leo44',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo33',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNoReturn.query({name: 'Leo44'}, function (err, leo) {
+        .then(() => {
+          Cats.ExpiringCatNoReturn.scan({'name': 'Leo33'}, (err, leo) => {
             if (err) {
               done(err);
             }
@@ -2059,17 +1921,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is undefined (query)', function (done) {
+    it('Should return expired items if returnExpiredItems is undefined (scan)', (done) => {
       Cats.ExpiringCatNull.create({
-        name: 'Leo4',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo3',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNull.query({name: 'Leo4'}, function (err, leo) {
+        .then(() => {
+          Cats.ExpiringCatNull.scan({'name': 'Leo3'}, (err, leo) => {
             if (err) {
               done(err);
             }
@@ -2080,17 +1942,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is undefined and expires is null (query)', function (done) {
+    it('Should return expired items if returnExpiredItems is undefined and expires is null (scan)', (done) => {
       Cats.ExpiringCatNull.create({
-        name: 'Leo44',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo33',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatNull.query({name: 'Leo44'}, function (err, leo) {
+        .then(() => {
+          Cats.ExpiringCatNull.scan({'name': 'Leo33'}, (err, leo) => {
             if (err) {
               done(err);
             }
@@ -2102,17 +1964,17 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is true (query)', function (done) {
+    it('Should return expired items if returnExpiredItems is true (scan)', (done) => {
       Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo4',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo3',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = new Date(Date.now() - 5000);
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.query({name: 'Leo4'}, function (err, leo) {
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.scan({'name': 'Leo3'}, (err, leo) => {
             if (err) {
               done(err);
             }
@@ -2123,17 +1985,146 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Should return expired items if returnExpiredItems is true and expires is null (query)', function (done) {
+    it('Should return expired items if returnExpiredItems is true and expires is null (scan)', (done) => {
       Cats.ExpiringCatReturnTrue.create({
-        name: 'Leo44',
-        expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 365))
+        'name': 'Leo33',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
       })
-        .then(function (leo) {
+        .then((leo) => {
           leo.expires = null;
           return leo.save();
         })
-        .then(function () {
-          Cats.ExpiringCatReturnTrue.query({name: 'Leo44'}, function (err, leo) {
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.scan({'name': 'Leo33'}, (err, leo) => {
+            if (err) {
+              done(err);
+            }
+            leo.length.should.eql(1);
+            should.not.exist(leo[0].expires);
+            done();
+          });
+        })
+        .catch(done);
+    });
+
+    it('Should not return expired items if returnExpiredItems is false (query)', (done) => {
+      Cats.ExpiringCatNoReturn.create({
+        'name': 'Leo4',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
+      })
+        .then((leo) => {
+          leo.expires = new Date(Date.now() - 5000);
+          return leo.save();
+        })
+        .then(() => {
+          Cats.ExpiringCatNoReturn.query({'name': 'Leo4'}, (err, leo) => {
+            if (err) {
+              done(err);
+            }
+            leo.length.should.eql(0);
+            done();
+          });
+        })
+        .catch(done);
+    });
+
+    it('Should return expired items if returnExpiredItems is false and expires is null (query)', (done) => {
+      Cats.ExpiringCatNoReturn.create({
+        'name': 'Leo44',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
+      })
+        .then((leo) => {
+          leo.expires = null;
+          return leo.save();
+        })
+        .then(() => {
+          Cats.ExpiringCatNoReturn.query({'name': 'Leo44'}, (err, leo) => {
+            if (err) {
+              done(err);
+            }
+            leo.length.should.eql(1);
+            should.not.exist(leo[0].expires);
+            done();
+          });
+        })
+        .catch(done);
+    });
+
+    it('Should return expired items if returnExpiredItems is undefined (query)', (done) => {
+      Cats.ExpiringCatNull.create({
+        'name': 'Leo4',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
+      })
+        .then((leo) => {
+          leo.expires = new Date(Date.now() - 5000);
+          return leo.save();
+        })
+        .then(() => {
+          Cats.ExpiringCatNull.query({'name': 'Leo4'}, (err, leo) => {
+            if (err) {
+              done(err);
+            }
+            leo.length.should.eql(1);
+            done();
+          });
+        })
+        .catch(done);
+    });
+
+    it('Should return expired items if returnExpiredItems is undefined and expires is null (query)', (done) => {
+      Cats.ExpiringCatNull.create({
+        'name': 'Leo44',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
+      })
+        .then((leo) => {
+          leo.expires = null;
+          return leo.save();
+        })
+        .then(() => {
+          Cats.ExpiringCatNull.query({'name': 'Leo44'}, (err, leo) => {
+            if (err) {
+              done(err);
+            }
+            leo.length.should.eql(1);
+            should.not.exist(leo[0].expires);
+            done();
+          });
+        })
+        .catch(done);
+    });
+
+    it('Should return expired items if returnExpiredItems is true (query)', (done) => {
+      Cats.ExpiringCatReturnTrue.create({
+        'name': 'Leo4',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
+      })
+        .then((leo) => {
+          leo.expires = new Date(Date.now() - 5000);
+          return leo.save();
+        })
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.query({'name': 'Leo4'}, (err, leo) => {
+            if (err) {
+              done(err);
+            }
+            leo.length.should.eql(1);
+            done();
+          });
+        })
+        .catch(done);
+    });
+
+    it('Should return expired items if returnExpiredItems is true and expires is null (query)', (done) => {
+      Cats.ExpiringCatReturnTrue.create({
+        'name': 'Leo44',
+        'expires': new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365)
+      })
+        .then((leo) => {
+          leo.expires = null;
+          return leo.save();
+        })
+        .then(() => {
+          Cats.ExpiringCatReturnTrue.query({'name': 'Leo44'}, (err, leo) => {
             if (err) {
               done(err);
             }
@@ -2155,15 +2146,13 @@ describe('Model', function (){
     // });
 
 
-
-
-    it('Updated key and update together ', function (done) {
-      Cats.Cat.update({id: 999, name: 'Felix'}, function (err, data) {
+    it('Updated key and update together ', (done) => {
+      Cats.Cat.update({'id': 999, 'name': 'Felix'}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Felix');
-        Cats.Cat.get(999, function (err, felix){
+        Cats.Cat.get(999, (err, felix) => {
           should.not.exist(err);
           should.exist(felix);
           felix.id.should.eql(999);
@@ -2175,19 +2164,19 @@ describe('Model', function (){
       });
     });
 
-    it('Updated key with range and update together ', function (done) {
-      Cats.Owner.create({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: '2345551212'})
-        .then(function (owner) {
+    it('Updated key with range and update together ', (done) => {
+      Cats.Owner.create({'name': 'OwnerToUpdate', 'address': '123 A Street', 'phoneNumber': '2345551212'})
+        .then((owner) => {
           owner.name.should.eql('OwnerToUpdate');
           owner.phoneNumber.should.eql('2345551212');
-          return Cats.Owner.update({name: 'OwnerToUpdate', address: '123 A Street', phoneNumber: 'newnumber'});
+          return Cats.Owner.update({'name': 'OwnerToUpdate', 'address': '123 A Street', 'phoneNumber': 'newnumber'});
         })
-        .then(function (updatedOwner) {
+        .then((updatedOwner) => {
           updatedOwner.name.should.eql('OwnerToUpdate');
           updatedOwner.phoneNumber.should.eql('newnumber');
-          return Cats.Owner.get({name: 'OwnerToUpdate', address: '123 A Street'});
+          return Cats.Owner.get({'name': 'OwnerToUpdate', 'address': '123 A Street'});
         })
-        .then(function (updatedOwner) {
+        .then((updatedOwner) => {
           updatedOwner.name.should.eql('OwnerToUpdate');
           updatedOwner.phoneNumber.should.eql('newnumber');
           done();
@@ -2195,13 +2184,13 @@ describe('Model', function (){
         .catch(done);
     });
 
-    it('Default puts attribute', function (done) {
-      Cats.Cat.update({id: 999}, {name: 'Tom'}, function (err, data) {
+    it('Default puts attribute', (done) => {
+      Cats.Cat.update({'id': 999}, {'name': 'Tom'}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Tom');
-        Cats.Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, (err, tomcat) => {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -2213,13 +2202,13 @@ describe('Model', function (){
       });
     });
 
-    it('Manual puts attribute with removal', function (done) {
-      Cats.Cat.update({id: 999}, {$PUT: {name: null}}, function (err, data) {
+    it('Manual puts attribute with removal', (done) => {
+      Cats.Cat.update({'id': 999}, {'$PUT': {'name': null}}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         should.not.exist(data.name);
-        Cats.Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, (err, tomcat) => {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -2229,13 +2218,13 @@ describe('Model', function (){
       });
     });
 
-    it('Manual puts attribute', function (done) {
-      Cats.Cat.update({id: 999}, {$PUT: {name: 'Tom', owner: 'Jerry', age: 3}}, function (err, data) {
+    it('Manual puts attribute', (done) => {
+      Cats.Cat.update({'id': 999}, {'$PUT': {'name': 'Tom', 'owner': 'Jerry', 'age': 3}}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.owner.should.equal('Jerry');
-        Cats.Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, (err, tomcat) => {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -2247,13 +2236,13 @@ describe('Model', function (){
       });
     });
 
-    it('Add attribute', function (done) {
-      Cats.Cat.update({id: 999}, {$ADD: {age: 1}}, function (err, data) {
+    it('Add attribute', (done) => {
+      Cats.Cat.update({'id': 999}, {'$ADD': {'age': 1}}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         data.age.should.equal(4);
-        Cats.Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, (err, tomcat) => {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -2265,30 +2254,30 @@ describe('Model', function (){
       });
     });
 
-    it('Add attribute to list', function (done) {
-      Cats.Cat13.create({id: 1000, items: [{name: 'item 2', amount: 25}]}, function () {
-        Cats.Cat13.update({id: 1000}, {$ADD: {items: [{name: 'item 1', amount: 50}]}}, function (err, data) {
+    it('Add attribute to list', (done) => {
+      Cats.Cat13.create({'id': 1000, 'items': [{'name': 'item 2', 'amount': 25}]}, () => {
+        Cats.Cat13.update({'id': 1000}, {'$ADD': {'items': [{'name': 'item 1', 'amount': 50}]}}, (err, data) => {
           should.not.exist(err);
           should.exist(data);
           data.id.should.eql(1000);
-          data.items.should.eql([{name: 'item 2', amount: 25}, {name: 'item 1', amount: 50}]);
-          Cats.Cat13.get(1000, function (err, cat){
+          data.items.should.eql([{'name': 'item 2', 'amount': 25}, {'name': 'item 1', 'amount': 50}]);
+          Cats.Cat13.get(1000, (err, cat) => {
             should.not.exist(err);
             should.exist(cat);
             cat.id.should.eql(1000);
-            cat.items.should.eql([{name: 'item 2', amount: 25}, {name: 'item 1', amount: 50}]);
+            cat.items.should.eql([{'name': 'item 2', 'amount': 25}, {'name': 'item 1', 'amount': 50}]);
             done();
           });
         });
       });
     });
-    it('Delete attribute', function (done) {
-      Cats.Cat.update({id: 999}, {$DELETE: {owner: null}}, function (err, data) {
+    it('Delete attribute', (done) => {
+      Cats.Cat.update({'id': 999}, {'$DELETE': {'owner': null}}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
         should.not.exist(data.owner);
-        Cats.Cat.get(999, function (err, tomcat){
+        Cats.Cat.get(999, (err, tomcat) => {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -2300,12 +2289,12 @@ describe('Model', function (){
       });
     });
 
-    it('With invalid attribute', function (done) {
-      Cats.Cat.update({id: 999}, {name: 'Oliver', validated: 'bad'}, function (err, data) {
+    it('With invalid attribute', (done) => {
+      Cats.Cat.update({'id': 999}, {'name': 'Oliver', 'validated': 'bad'}, (err, data) => {
         should.exist(err);
         should.not.exist(data);
         err.name.should.equal('ValidationError');
-        Cats.Cat.get(999, function (err, tomcat) {
+        Cats.Cat.get(999, (err, tomcat) => {
           should.not.exist(err);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
@@ -2315,68 +2304,44 @@ describe('Model', function (){
       });
     });
 
-    it('Update returns all new values using default returnValues option', function () {
-      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
-        return Cats.Cat.update({id: old.id}, {name: 'Tom'}).then(function(data){
-          should.exist(data);
-          data.name.should.equal('Tom');
-          data.should.have.property('id');
-        });
-      });
-    });
+    it('Update returns all new values using default returnValues option', () => Cats.Cat.create({'id': '678', 'name': 'Oliver'}, {'overwrite': true}).then((old) => Cats.Cat.update({'id': old.id}, {'name': 'Tom'}).then((data) => {
+      should.exist(data);
+      data.name.should.equal('Tom');
+      data.should.have.property('id');
+    })));
 
-    it('Update respects global defaultReturnValues option', function () {
-      return Cats.ReturnValuesNoneCat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
-        return Cats.ReturnValuesNoneCat.update({id: old.id}, {name: 'Tom'}).then(function(data){
-          should.not.exist(data);
-        });
-      });
-    });
+    it('Update respects global defaultReturnValues option', () => Cats.ReturnValuesNoneCat.create({'id': '678', 'name': 'Oliver'}, {'overwrite': true}).then((old) => Cats.ReturnValuesNoneCat.update({'id': old.id}, {'name': 'Tom'}).then((data) => {
+      should.not.exist(data);
+    })));
 
-    it('Update returns updated new values using \'UPDATED_NEW\'', function () {
-      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
-        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_NEW'}).then(function(data){
-          should.exist(data);
-          data.name.should.equal('Tom');
-          data.should.not.have.property('id');
-        });
-      });
-    });
+    it('Update returns updated new values using \'UPDATED_NEW\'', () => Cats.Cat.create({'id': '678', 'name': 'Oliver'}, {'overwrite': true}).then((old) => Cats.Cat.update({'id': old.id}, {'name': 'Tom'}, {'returnValues': 'UPDATED_NEW'}).then((data) => {
+      should.exist(data);
+      data.name.should.equal('Tom');
+      data.should.not.have.property('id');
+    })));
 
-    it('Update returns all new values using \'ALL_NEW\'', function () {
-      return Cats.Cat.create({id: '678', name: 'Oliver'}, {overwrite: true}).then(function(old){
-        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_NEW'}).then(function(data){
-          should.exist(data);
-          data.name.should.equal('Tom');
-          data.should.have.property('id');
-        });
-      });
-    });
+    it('Update returns all new values using \'ALL_NEW\'', () => Cats.Cat.create({'id': '678', 'name': 'Oliver'}, {'overwrite': true}).then((old) => Cats.Cat.update({'id': old.id}, {'name': 'Tom'}, {'returnValues': 'ALL_NEW'}).then((data) => {
+      should.exist(data);
+      data.name.should.equal('Tom');
+      data.should.have.property('id');
+    })));
 
-    it('Update returns old updated values using \'UPDATED_OLD\'', function () {
-      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
-        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'UPDATED_OLD'}).then(function(data){
-          should.exist(data);
-          data.name.should.equal('Oliver');
-          data.should.not.have.property('id');
-        });
-      });
-    });
+    it('Update returns old updated values using \'UPDATED_OLD\'', () => Cats.Cat.create({'id': '679', 'name': 'Oliver'}, {'overwrite': true}).then((old) => Cats.Cat.update({'id': old.id}, {'name': 'Tom'}, {'returnValues': 'UPDATED_OLD'}).then((data) => {
+      should.exist(data);
+      data.name.should.equal('Oliver');
+      data.should.not.have.property('id');
+    })));
 
-    it('Update returns old values using \'ALL_OLD\'', function () {
-      return Cats.Cat.create({id: '679', name: 'Oliver'}, {overwrite: true}).then(function(old){
-        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'ALL_OLD'}).then(function(data){
-          should.exist(data);
-          data.name.should.equal('Oliver');
-          data.should.have.property('id');
-        });
-      });
-    });
+    it('Update returns old values using \'ALL_OLD\'', () => Cats.Cat.create({'id': '679', 'name': 'Oliver'}, {'overwrite': true}).then((old) => Cats.Cat.update({'id': old.id}, {'name': 'Tom'}, {'returnValues': 'ALL_OLD'}).then((data) => {
+      should.exist(data);
+      data.name.should.equal('Oliver');
+      data.should.have.property('id');
+    })));
 
-    it('Update with saveUnknown enabled', function (done) {
-      Cats.Cat1.create({id: 982, name: 'Oliver'}, function(err, old){
+    it('Update with saveUnknown enabled', (done) => {
+      Cats.Cat1.create({'id': 982, 'name': 'Oliver'}, (err, old) => {
         should.not.exist(err);
-        Cats.Cat1.update({id: old.id}, {otherProperty: 'Testing123'}, function(err, data){
+        Cats.Cat1.update({'id': old.id}, {'otherProperty': 'Testing123'}, (err, data) => {
           should.not.exist(err);
           should.exist(data);
           data.should.have.property('otherProperty');
@@ -2386,12 +2351,12 @@ describe('Model', function (){
       });
     });
 
-    it('Update $ADD with saveUnknown enabled', function (done) {
-      Cats.Cat1.create({id: 986, name: 'Oliver', mathy: 1}, function(err, old){
+    it('Update $ADD with saveUnknown enabled', (done) => {
+      Cats.Cat1.create({'id': 986, 'name': 'Oliver', 'mathy': 1}, (err, old) => {
         should.not.exist(err);
         old.should.have.property('mathy');
         old.mathy.should.eql(1);
-        Cats.Cat1.update({id: old.id}, {$ADD: {mathy: 4}}, function(err, data){
+        Cats.Cat1.update({'id': old.id}, {'$ADD': {'mathy': 4}}, (err, data) => {
           should.not.exist(err);
           should.exist(data);
           data.should.have.property('mathy');
@@ -2401,15 +2366,15 @@ describe('Model', function (){
       });
     });
 
-    it('Update $DELETE with saveUnknown enabled', function (done) {
-      Cats.Cat1.create({id: 984, name: 'Oliver'}, function(err, old){
+    it('Update $DELETE with saveUnknown enabled', (done) => {
+      Cats.Cat1.create({'id': 984, 'name': 'Oliver'}, (err, old) => {
         should.not.exist(err);
-        Cats.Cat1.update({id: old.id}, {otherProperty: 'Testing123'}, function(err, data){
+        Cats.Cat1.update({'id': old.id}, {'otherProperty': 'Testing123'}, (err, data) => {
           should.not.exist(err);
           should.exist(data);
           data.should.have.property('otherProperty');
           data.otherProperty.should.eql('Testing123');
-          Cats.Cat1.update({id: old.id}, { $DELETE: {otherProperty: 'Testing123'} }, function(err, data) {
+          Cats.Cat1.update({'id': old.id}, {'$DELETE': {'otherProperty': 'Testing123'}}, (err, data) => {
             should.not.exist(err);
             should.exist(data);
             data.should.not.have.property('otherProperty');
@@ -2419,77 +2384,69 @@ describe('Model', function (){
       });
     });
 
-    it('Update returns should not return any values using \'none\' option', function () {
-      return Cats.Cat.create({id: '680', name: 'Oliver'}, {overwrite: true}).then(function(old){
-        return Cats.Cat.update({id: old.id}, {name: 'Tom'}, {returnValues: 'NONE'}).then(function(data){
-          should.not.exist(data);
-        });
-      });
-    });
+    it('Update returns should not return any values using \'none\' option', () => Cats.Cat.create({'id': '680', 'name': 'Oliver'}, {'overwrite': true}).then((old) => Cats.Cat.update({'id': old.id}, {'name': 'Tom'}, {'returnValues': 'NONE'}).then((data) => {
+      should.not.exist(data);
+    })));
 
-    it('Update returnRequest option', function (done) {
-      Cats.Cat.update({id: 999}, {name: 'Oliver'}, {returnRequest: true}, function(err, request) {
+    it('Update returnRequest option', (done) => {
+      Cats.Cat.update({'id': 999}, {'name': 'Oliver'}, {'returnRequest': true}, (err, request) => {
         should.not.exist(err);
         should.exist(request);
 
         request.TableName.should.eql('test-Cat-db');
-        request.Key.should.eql({id: {N: '999'}});
+        request.Key.should.eql({'id': {'N': '999'}});
         done();
       });
     });
   });
 
-  describe('Model.populate', function (){
-    before(function (done) {
-      var kittenWithParents = new Cats.Cat6({id: 1, name: 'One'});
-      var owner = new Cats.Owner({name: 'Owner', address: '123 A Street', phoneNumber: '2345551212'});
-      var kittenWithOwner = new Cats.CatWithOwner({
-        id: 100,
-        name: 'Owned',
-        owner: {name: owner.name, address: owner.address}
+  describe('Model.populate', () => {
+    before((done) => {
+      const kittenWithParents = new Cats.Cat6({'id': 1, 'name': 'One'});
+      const owner = new Cats.Owner({'name': 'Owner', 'address': '123 A Street', 'phoneNumber': '2345551212'});
+      const kittenWithOwner = new Cats.CatWithOwner({
+        'id': 100,
+        'name': 'Owned',
+        'owner': {'name': owner.name, 'address': owner.address}
       });
       kittenWithParents.save()
-        .then(function(kitten) {
-          var kittenWithParents = new Cats.Cat6({id: 2, name: 'Two', parent: kitten.id});
+        .then((kitten) => {
+          const kittenWithParents = new Cats.Cat6({'id': 2, 'name': 'Two', 'parent': kitten.id});
           return kittenWithParents.save();
         })
-        .then(function(kitten) {
-          var kittenWithParents = new Cats.Cat6({id: 3, name: 'Three', parent: kitten.id});
+        .then((kitten) => {
+          const kittenWithParents = new Cats.Cat6({'id': 3, 'name': 'Three', 'parent': kitten.id});
           return kittenWithParents.save();
         })
-        .then(function(kitten) {
-          var kittenWithParents = new Cats.Cat6({id: 4, name: 'Four', parent: kitten.id});
+        .then((kitten) => {
+          const kittenWithParents = new Cats.Cat6({'id': 4, 'name': 'Four', 'parent': kitten.id});
           return kittenWithParents.save();
         })
-        .then(function() {
-          var kittenWithParents = new Cats.Cat6({id: 5, name: 'Five', parent: 999});
+        .then(() => {
+          const kittenWithParents = new Cats.Cat6({'id': 5, 'name': 'Five', 'parent': 999});
           return kittenWithParents.save();
         })
-        .then(function() {
-          var kittenWithParents = new Cats.Cat7({id: 1, name: 'One'});
+        .then(() => {
+          const kittenWithParents = new Cats.Cat7({'id': 1, 'name': 'One'});
           return kittenWithParents.save();
         })
-        .then(function(kitten) {
-          var kittenWithParents = new Cats.Cat7({id: 2, name: 'Two', parent: kitten.id});
+        .then((kitten) => {
+          const kittenWithParents = new Cats.Cat7({'id': 2, 'name': 'Two', 'parent': kitten.id});
           return kittenWithParents.save();
         })
-        .then(function() {
-          return owner.save();
-        })
-        .then(function() {
+        .then(() => owner.save())
+        .then(() => {
           kittenWithOwner.save(done);
         });
     });
 
-    it('Should populate with one parent', function (done) {
+    it('Should populate with one parent', (done) => {
       Cats.Cat6.get(4)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent',
-            model: 'Cat6'
-          });
-        })
-        .then(function(cat) {
+        .then((cat) => cat.populate({
+          'path': 'parent',
+          'model': 'Cat6'
+        }))
+        .then((cat) => {
           should.exist(cat.parent);
           cat.parent.id.should.eql(3);
           cat.parent.name.should.eql('Three');
@@ -2497,25 +2454,23 @@ describe('Model', function (){
         });
     });
 
-    it('Should deep populate with mutiple parent', function (done) {
+    it('Should deep populate with mutiple parent', (done) => {
       Cats.Cat6.get(4)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent',
-            model: 'Cat6',
-            populate: {
-              path: 'parent',
-              model: 'Cat6',
-              populate: {
-                path: 'parent',
-                model: 'Cat6'
-              }
+        .then((cat) => cat.populate({
+          'path': 'parent',
+          'model': 'Cat6',
+          'populate': {
+            'path': 'parent',
+            'model': 'Cat6',
+            'populate': {
+              'path': 'parent',
+              'model': 'Cat6'
             }
-          });
-        })
-        .then(function(cat) {
+          }
+        }))
+        .then((cat) => {
           should.exist(cat.parent);
-          var parent = cat.parent;
+          let parent = cat.parent;
           parent.id.should.eql(3);
           parent.name.should.eql('Three');
           parent = parent.parent;
@@ -2529,16 +2484,16 @@ describe('Model', function (){
     });
 
 
-    it('Should populate with range & hash key', function (done) {
+    it('Should populate with range & hash key', (done) => {
       Cats.CatWithOwner.get(100)
-        .then(function(cat) {
+        .then((cat) => {
           should.not.exist(cat.owner.phoneNumber);
           return cat.populate({
-            path: 'owner',
-            model: 'test-Owner'
+            'path': 'owner',
+            'model': 'test-Owner'
           });
         })
-        .then(function(cat) {
+        .then((cat) => {
           should.exist(cat.owner);
           cat.owner.name.should.eql('Owner');
           cat.owner.phoneNumber.should.eql('2345551212');
@@ -2546,55 +2501,47 @@ describe('Model', function (){
         });
     });
 
-    it('Populating without the model definition and without ref', function (done) {
+    it('Populating without the model definition and without ref', (done) => {
       Cats.Cat7.get(2)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent'
-          });
-        })
-        .catch(function(err){
+        .then((cat) => cat.populate({
+          'path': 'parent'
+        }))
+        .catch((err) => {
           should.exist(err.message);
           done();
         });
     });
 
-    it('Populating with model and without the path definition', function (done) {
+    it('Populating with model and without the path definition', (done) => {
       Cats.Cat6.get(4)
-        .then(function(cat) {
-          return cat.populate({
-            model: 'Cat6'
-          });
-        })
-        .catch(function(err){
+        .then((cat) => cat.populate({
+          'model': 'Cat6'
+        }))
+        .catch((err) => {
           should.exist(err.message);
           done();
         });
     });
 
-    it('Populating with the wrong reference id', function (done) {
+    it('Populating with the wrong reference id', (done) => {
       Cats.Cat6.get(5)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent',
-            model: 'Cat6'
-          });
-        })
-        .catch(function(err){
+        .then((cat) => cat.populate({
+          'path': 'parent',
+          'model': 'Cat6'
+        }))
+        .catch((err) => {
           should.exist(err.message);
           done();
         });
     });
 
-    it('Populate works with hashkey', function (done) {
+    it('Populate works with hashkey', (done) => {
       Cats.Cat7.get(2)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent',
-            model: 'Cat7'
-          });
-        })
-        .then(function(cat) {
+        .then((cat) => cat.populate({
+          'path': 'parent',
+          'model': 'Cat7'
+        }))
+        .then((cat) => {
           should.exist(cat.parent);
           cat.parent.id.should.eql(1);
           cat.parent.name.should.eql('One');
@@ -2602,15 +2549,13 @@ describe('Model', function (){
         });
     });
 
-    it('Populate works with prefix', function (done) {
+    it('Populate works with prefix', (done) => {
       Cats.Cat6.get(4)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent',
-            model: 'test-Cat6-db'
-          });
-        })
-        .then(function(cat) {
+        .then((cat) => cat.populate({
+          'path': 'parent',
+          'model': 'test-Cat6-db'
+        }))
+        .then((cat) => {
           should.exist(cat.parent);
           cat.parent.id.should.eql(3);
           cat.parent.name.should.eql('Three');
@@ -2618,44 +2563,38 @@ describe('Model', function (){
         });
     });
 
-    it('Populating with the wrong model name won\'t work', function (done) {
+    it('Populating with the wrong model name won\'t work', (done) => {
       Cats.Cat6.get(5)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent',
-            model: 'Cats6'
-          });
-        })
-        .catch(function(err){
+        .then((cat) => cat.populate({
+          'path': 'parent',
+          'model': 'Cats6'
+        }))
+        .catch((err) => {
           should.exist(err.message);
           done();
         });
     });
 
-    it('Populating with path and ref at the schema', function (done) {
+    it('Populating with path and ref at the schema', (done) => {
       Cats.Cat6.get(4)
-        .then(function(cat) {
-          return cat.populate({
-            path: 'parent'
-          });
-        })
-        .then(function(cat) {
+        .then((cat) => cat.populate({
+          'path': 'parent'
+        }))
+        .then((cat) => {
           should.exist(cat.parent);
-          var parent = cat.parent;
+          const parent = cat.parent;
           parent.id.should.eql(3);
           parent.name.should.eql('Three');
           done();
         });
     });
 
-    it('Populating with string and ref at the schema', function (done) {
+    it('Populating with string and ref at the schema', (done) => {
       Cats.Cat6.get(4)
-        .then(function(cat) {
-          return cat.populate('parent');
-        })
-        .then(function(cat) {
+        .then((cat) => cat.populate('parent'))
+        .then((cat) => {
           should.exist(cat.parent);
-          var parent = cat.parent;
+          const parent = cat.parent;
           parent.id.should.eql(3);
           parent.name.should.eql('Three');
           done();
@@ -2664,26 +2603,26 @@ describe('Model', function (){
 
   });
 
-  describe('Model.batchPut', function (){
+  describe('Model.batchPut', () => {
 
-    it('Put new', function (done) {
-      var cats = [];
+    it('Put new', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat({id: 10+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat({'id': 10 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
 
-        for (var i=0 ; i<10 ; i += 1) {
+        for (let i = 0; i < 10; i += 1) {
 
           delete cats[i].name;
         }
 
-        Cats.Cat.batchGet(cats, function (err2, result2) {
+        Cats.Cat.batchGet(cats, (err2, result2) => {
           should.not.exist(err2);
           should.exist(result2);
           result2.length.should.eql(cats.length);
@@ -2692,23 +2631,23 @@ describe('Model', function (){
       });
     });
 
-    it('Put lots of new items', function (done) {
-      var cats = [];
+    it('Put lots of new items', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<100 ; i += 1) {
-        cats.push(new Cats.Cat({id: 100+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 100; i += 1) {
+        cats.push(new Cats.Cat({'id': 100 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
 
-        for (var i=0 ; i<100 ; i += 1) {
+        for (let i = 0; i < 100; i += 1) {
           delete cats[i].name;
         }
 
-        Cats.Cat.batchGet(cats, function (err2, result2) {
+        Cats.Cat.batchGet(cats, (err2, result2) => {
           should.not.exist(err2);
           should.exist(result2);
           result2.length.should.eql(cats.length);
@@ -2717,19 +2656,19 @@ describe('Model', function (){
       });
     });
 
-    it('Put new with range key', function (done) {
-      var cats = [];
+    it('Put new with range key', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat2({ownerId: 10+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat2({'ownerId': 10 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
         Object.getOwnPropertyNames(result.UnprocessedItems).length.should.eql(0);
 
-        Cats.Cat2.batchGet(cats, function (err2, result2) {
+        Cats.Cat2.batchGet(cats, (err2, result2) => {
           should.not.exist(err2);
           should.exist(result2);
           result2.length.should.eql(cats.length);
@@ -2738,46 +2677,46 @@ describe('Model', function (){
       });
     });
 
-    it('Put new without range key', function (done) {
-      var cats = [];
+    it('Put new without range key', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat2({ownerId: 10+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat2({'ownerId': 10 + i}));
       }
 
-      Cats.Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, (err, result) => {
         should.exist(err);
         should.not.exist(result);
         done();
       });
     });
 
-    it('Update items', function (done) {
-      var cats = [];
+    it('Update items', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat({id: 20+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat({'id': 20 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; i += 1) {
-          var cat = cats[i];
-          cat.name = 'John_' + (cat.id + 100);
+        for (let i = 0; i < 10; i += 1) {
+          const cat = cats[i];
+          cat.name = `John_${cat.id + 100}`;
         }
 
-        Cats.Cat.batchPut(cats, function (err2, result2) {
+        Cats.Cat.batchPut(cats, (err2, result2) => {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          for (var i=0 ; i<10 ; i += 1) {
+          for (let i = 0; i < 10; i += 1) {
             delete cats[i].name;
           }
 
-          Cats.Cat.batchGet(cats, function (err3, result3) {
+          Cats.Cat.batchGet(cats, (err3, result3) => {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(cats.length);
@@ -2787,28 +2726,28 @@ describe('Model', function (){
       });
     });
 
-    it('Update with range key', function (done) {
-      var cats = [];
+    it('Update with range key', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat2({ownerId: 20+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat2({'ownerId': 20 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; i += 1) {
-          var cat = cats[i];
-          cat.name = 'John_' + (cat.ownerId + 100);
+        for (let i = 0; i < 10; i += 1) {
+          const cat = cats[i];
+          cat.name = `John_${cat.ownerId + 100}`;
         }
 
-        Cats.Cat2.batchPut(cats, function (err2, result2) {
+        Cats.Cat2.batchPut(cats, (err2, result2) => {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          Cats.Cat2.batchGet(cats, function (err3, result3) {
+          Cats.Cat2.batchGet(cats, (err3, result3) => {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(cats.length);
@@ -2818,22 +2757,22 @@ describe('Model', function (){
       });
     });
 
-    it('Update without range key', function (done) {
-      var cats = [];
+    it('Update without range key', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat2({ownerId: 20+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat2({'ownerId': 20 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; i += 1) {
+        for (let i = 0; i < 10; i += 1) {
           cats[i].name = null;
         }
 
-        Cats.Cat2.batchPut(cats, function (err2, result2) {
+        Cats.Cat2.batchPut(cats, (err2, result2) => {
           should.exist(err2);
           should.not.exist(result2);
           done();
@@ -2841,21 +2780,21 @@ describe('Model', function (){
       });
     });
 
-    it('Update without updateTimestamps (default)', async function () {
+    it('Update without updateTimestamps (default)', async () => {
       const cats = [...Array(10)]
-        .map((_, i) => new Cats.Cat4({ id: i + 1, name: 'Tom_' + i }));
+        .map((_, i) => new Cats.Cat4({'id': i + 1, 'name': `Tom_${i}`}));
 
       const result = await Cats.Cat4.batchPut(cats);
       should.exist(result);
 
       const timestamps = {};
       cats.forEach((cat, i) => {
-        const { id, myLittleUpdatedAt } = cat;
-        cat.name = 'John_' + i;
+        const {id, myLittleUpdatedAt} = cat;
+        cat.name = `John_${i}`;
         timestamps[id] = new Date(myLittleUpdatedAt);
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const result2 = await Cats.Cat4.batchPut(cats);
       should.exist(result2);
       Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
@@ -2863,86 +2802,86 @@ describe('Model', function (){
       const updatedCats = await Cats.Cat4.batchGet(cats);
       should.exist(updatedCats);
       updatedCats.length.should.eql(cats.length);
-      updatedCats.forEach(cat => {
+      updatedCats.forEach((cat) => {
         cat.myLittleUpdatedAt.should.eql(timestamps[cat.id]);
       });
     });
 
-    it('Update with updateTimestamps set to false', async function () {
+    it('Update with updateTimestamps set to false', async () => {
       const cats = [...Array(10)]
-        .map((_, i) => new Cats.Cat4({ id: i + 1, name: 'Tom_' + i }));
+        .map((_, i) => new Cats.Cat4({'id': i + 1, 'name': `Tom_${i}`}));
 
       const result = await Cats.Cat4.batchPut(cats);
       should.exist(result);
 
       const timestamps = {};
       cats.forEach((cat, i) => {
-        const { id, myLittleUpdatedAt } = cat;
-        cat.name = 'John_' + i;
+        const {id, myLittleUpdatedAt} = cat;
+        cat.name = `John_${i}`;
         timestamps[id] = new Date(myLittleUpdatedAt);
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const result2 = await Cats.Cat4.batchPut(cats, { updateTimestamps: false });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result2 = await Cats.Cat4.batchPut(cats, {'updateTimestamps': false});
       should.exist(result2);
       Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
       const updatedCats = await Cats.Cat4.batchGet(cats);
       should.exist(updatedCats);
       updatedCats.length.should.eql(cats.length);
-      updatedCats.forEach(cat => {
+      updatedCats.forEach((cat) => {
         cat.myLittleUpdatedAt.should.eql(timestamps[cat.id]);
       });
     });
 
-    it('Update with updateTimestamps set to true', async function () {
+    it('Update with updateTimestamps set to true', async () => {
       const cats = [...Array(10)]
-        .map((_, i) => new Cats.Cat4({ id: i + 1, name: 'Tom_' + i }));
+        .map((_, i) => new Cats.Cat4({'id': i + 1, 'name': `Tom_${i}`}));
 
       const result = await Cats.Cat4.batchPut(cats);
       should.exist(result);
 
       const timestamps = {};
       cats.forEach((cat, i) => {
-        const { id, myLittleUpdatedAt } = cat;
-        cat.name = 'John_' + i;
+        const {id, myLittleUpdatedAt} = cat;
+        cat.name = `John_${i}`;
         timestamps[id] = new Date(myLittleUpdatedAt);
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const result2 = await Cats.Cat4.batchPut(cats, { updateTimestamps: true });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result2 = await Cats.Cat4.batchPut(cats, {'updateTimestamps': true});
       should.exist(result2);
       Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
       const updatedCats = await Cats.Cat4.batchGet(cats);
       should.exist(updatedCats);
       updatedCats.length.should.eql(cats.length);
-      updatedCats.forEach(cat => {
+      updatedCats.forEach((cat) => {
         cat.myLittleUpdatedAt.should.be.greaterThan(timestamps[cat.id]);
       });
     });
 
-    it('Update without updateExpires (default)', async function () {
+    it('Update without updateExpires (default)', async () => {
       const cats = [
         new Cats.Cat11({
-          id: 1,
-          name: 'Crookshanks',
-          vet: { name: 'theVet', address: 'Diagon Alley' },
-          ears: [{ name: 'left' }, { name: 'right' }],
-          legs: ['front right', 'front left', 'back right', 'back left'],
-          more: { favorites: { food: 'fish' } },
-          array: [{ one: '1' }],
-          validated: 'valid'
+          'id': 1,
+          'name': 'Crookshanks',
+          'vet': {'name': 'theVet', 'address': 'Diagon Alley'},
+          'ears': [{'name': 'left'}, {'name': 'right'}],
+          'legs': ['front right', 'front left', 'back right', 'back left'],
+          'more': {'favorites': {'food': 'fish'}},
+          'array': [{'one': '1'}],
+          'validated': 'valid'
         }),
         new Cats.Cat11({
-          id: 2,
-          name: 'Behemoth',
-          vet: { name:'Mikhail Bulgakov', address:'Moscow' },
-          ears: [{ name: 'left' }, { name: 'right' }],
-          legs: ['front right', 'front left', 'back right', 'back left'],
-          more: { favorites: { drink: 'pure alcohol' } },
-          array: [{ one: '1' }],
-          validated: 'valid'
+          'id': 2,
+          'name': 'Behemoth',
+          'vet': {'name': 'Mikhail Bulgakov', 'address': 'Moscow'},
+          'ears': [{'name': 'left'}, {'name': 'right'}],
+          'legs': ['front right', 'front left', 'back right', 'back left'],
+          'more': {'favorites': {'drink': 'pure alcohol'}},
+          'array': [{'one': '1'}],
+          'validated': 'valid'
         })
       ];
 
@@ -2954,12 +2893,12 @@ describe('Model', function (){
       savedCats.length.should.eql(cats.length);
 
       const originalExpires = {};
-      savedCats.forEach(cat => {
-        cat.array.push({ two: '2' });
+      savedCats.forEach((cat) => {
+        cat.array.push({'two': '2'});
         originalExpires[cat.id] = cat.expires;
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       const result2 = await Cats.Cat11.batchPut(savedCats);
       should.exist(result2);
       Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
@@ -2973,27 +2912,27 @@ describe('Model', function (){
       });
     });
 
-    it('Update with updateExpires set to false', async function () {
+    it('Update with updateExpires set to false', async () => {
       const cats = [
         new Cats.Cat11({
-          id: 1,
-          name: 'Crookshanks',
-          vet: { name: 'theVet', address: 'Diagon Alley' },
-          ears: [{ name: 'left' }, { name: 'right' }],
-          legs: ['front right', 'front left', 'back right', 'back left'],
-          more: { favorites: { food: 'fish' } },
-          array: [{ one: '1' }],
-          validated: 'valid'
+          'id': 1,
+          'name': 'Crookshanks',
+          'vet': {'name': 'theVet', 'address': 'Diagon Alley'},
+          'ears': [{'name': 'left'}, {'name': 'right'}],
+          'legs': ['front right', 'front left', 'back right', 'back left'],
+          'more': {'favorites': {'food': 'fish'}},
+          'array': [{'one': '1'}],
+          'validated': 'valid'
         }),
         new Cats.Cat11({
-          id: 2,
-          name: 'Behemoth',
-          vet: { name:'Mikhail Bulgakov', address:'Moscow' },
-          ears: [{ name: 'left' }, { name: 'right' }],
-          legs: ['front right', 'front left', 'back right', 'back left'],
-          more: { favorites: { drink: 'pure alcohol' } },
-          array: [{ one: '1' }],
-          validated: 'valid'
+          'id': 2,
+          'name': 'Behemoth',
+          'vet': {'name': 'Mikhail Bulgakov', 'address': 'Moscow'},
+          'ears': [{'name': 'left'}, {'name': 'right'}],
+          'legs': ['front right', 'front left', 'back right', 'back left'],
+          'more': {'favorites': {'drink': 'pure alcohol'}},
+          'array': [{'one': '1'}],
+          'validated': 'valid'
         })
       ];
 
@@ -3005,13 +2944,13 @@ describe('Model', function (){
       savedCats.length.should.eql(cats.length);
 
       const originalExpires = {};
-      savedCats.forEach(cat => {
-        cat.array.push({ two: '2' });
+      savedCats.forEach((cat) => {
+        cat.array.push({'two': '2'});
         originalExpires[cat.id] = cat.expires;
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const result2 = await Cats.Cat11.batchPut(savedCats, { updateExpires: false });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result2 = await Cats.Cat11.batchPut(savedCats, {'updateExpires': false});
       should.exist(result2);
       Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
@@ -3024,27 +2963,27 @@ describe('Model', function (){
       });
     });
 
-    it('Update with updateExpires set to true', async function () {
+    it('Update with updateExpires set to true', async () => {
       const cats = [
         new Cats.Cat11({
-          id: 1,
-          name: 'Crookshanks',
-          vet: { name: 'theVet', address: 'Diagon Alley' },
-          ears: [{ name: 'left' }, { name: 'right' }],
-          legs: ['front right', 'front left', 'back right', 'back left'],
-          more: { favorites: { food: 'fish' } },
-          array: [{ one: '1' }],
-          validated: 'valid'
+          'id': 1,
+          'name': 'Crookshanks',
+          'vet': {'name': 'theVet', 'address': 'Diagon Alley'},
+          'ears': [{'name': 'left'}, {'name': 'right'}],
+          'legs': ['front right', 'front left', 'back right', 'back left'],
+          'more': {'favorites': {'food': 'fish'}},
+          'array': [{'one': '1'}],
+          'validated': 'valid'
         }),
         new Cats.Cat11({
-          id: 2,
-          name: 'Behemoth',
-          vet: { name:'Mikhail Bulgakov', address:'Moscow' },
-          ears: [{ name: 'left' }, { name: 'right' }],
-          legs: ['front right', 'front left', 'back right', 'back left'],
-          more: { favorites: { drink: 'pure alcohol' } },
-          array: [{ one: '1' }],
-          validated: 'valid'
+          'id': 2,
+          'name': 'Behemoth',
+          'vet': {'name': 'Mikhail Bulgakov', 'address': 'Moscow'},
+          'ears': [{'name': 'left'}, {'name': 'right'}],
+          'legs': ['front right', 'front left', 'back right', 'back left'],
+          'more': {'favorites': {'drink': 'pure alcohol'}},
+          'array': [{'one': '1'}],
+          'validated': 'valid'
         })
       ];
 
@@ -3056,13 +2995,13 @@ describe('Model', function (){
       savedCats.length.should.eql(cats.length);
 
       const originalExpires = {};
-      savedCats.forEach(cat => {
-        cat.array.push({ two: '2' });
+      savedCats.forEach((cat) => {
+        cat.array.push({'two': '2'});
         originalExpires[cat.id] = cat.expires;
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const result2 = await Cats.Cat11.batchPut(savedCats, { updateExpires: true });
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result2 = await Cats.Cat11.batchPut(savedCats, {'updateExpires': true});
       should.exist(result2);
       Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
@@ -3075,18 +3014,18 @@ describe('Model', function (){
       });
     });
 
-    it('Works with multiple Array globals', async function () {
+    it('Works with multiple Array globals', async () => {
       const catsUsingOriginalArrayGlobal = [
         new Cats.Cat11({
-          id: 1,
-          name: 'Crookshanks',
-          vet: { name: 'theVet', address: 'Diagon Alley' },
-          ears: [{ name: 'left' }, { name: 'right' }],
-          legs: ['front right', 'front left', 'back right', 'back left'],
-          more: { favorites: { food: 'fish' } },
-          array: [{ one: '1' }],
-          validated: 'valid'
-        }),
+          'id': 1,
+          'name': 'Crookshanks',
+          'vet': {'name': 'theVet', 'address': 'Diagon Alley'},
+          'ears': [{'name': 'left'}, {'name': 'right'}],
+          'legs': ['front right', 'front left', 'back right', 'back left'],
+          'more': {'favorites': {'food': 'fish'}},
+          'array': [{'one': '1'}],
+          'validated': 'valid'
+        })
       ];
       const arrayPrototypeClone = {};
       for (const method of Object.getOwnPropertyNames(Array.prototype)) {
@@ -3098,24 +3037,24 @@ describe('Model', function (){
     });
   });
 
-  describe('Model.batchDelete', function (){
-    it('Simple delete', function (done) {
-      var cats = [];
+  describe('Model.batchDelete', () => {
+    it('Simple delete', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat({id: 30+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat({'id': 30 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat.batchPut(cats, function (err, result) {
+      Cats.Cat.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
 
-        Cats.Cat.batchDelete(cats, function (err2, result2) {
+        Cats.Cat.batchDelete(cats, (err2, result2) => {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          Cats.Cat.batchGet(cats, function (err3, result3) {
+          Cats.Cat.batchGet(cats, (err3, result3) => {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(0);
@@ -3125,23 +3064,23 @@ describe('Model', function (){
       });
     });
 
-    it('Delete with range key', function (done) {
-      var cats = [];
+    it('Delete with range key', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat2({ownerId: 30+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat2({'ownerId': 30 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
 
-        Cats.Cat2.batchDelete(cats, function (err2, result2) {
+        Cats.Cat2.batchDelete(cats, (err2, result2) => {
           should.not.exist(err2);
           should.exist(result2);
           Object.getOwnPropertyNames(result2.UnprocessedItems).length.should.eql(0);
 
-          Cats.Cat2.batchGet(cats, function (err3, result3) {
+          Cats.Cat2.batchGet(cats, (err3, result3) => {
             should.not.exist(err3);
             should.exist(result3);
             result3.length.should.eql(0);
@@ -3151,22 +3090,22 @@ describe('Model', function (){
       });
     });
 
-    it('Delete without range key', function (done) {
-      var cats = [];
+    it('Delete without range key', (done) => {
+      const cats = [];
 
-      for (var i=0 ; i<10 ; i += 1) {
-        cats.push(new Cats.Cat2({ownerId: 30+i, name: 'Tom_'+i}));
+      for (let i = 0; i < 10; i += 1) {
+        cats.push(new Cats.Cat2({'ownerId': 30 + i, 'name': `Tom_${i}`}));
       }
 
-      Cats.Cat2.batchPut(cats, function (err, result) {
+      Cats.Cat2.batchPut(cats, (err, result) => {
         should.not.exist(err);
         should.exist(result);
 
-        for (var i=0 ; i<10 ; i += 1) {
+        for (let i = 0; i < 10; i += 1) {
           delete cats[i].name;
         }
 
-        Cats.Cat2.batchDelete(cats, function (err2, result2) {
+        Cats.Cat2.batchDelete(cats, (err2, result2) => {
           should.exist(err2);
           should.not.exist(result2);
           done();
@@ -3177,20 +3116,20 @@ describe('Model', function (){
 
   });
 
-  describe('Model.default', function() {
-    it('Default is set properly', function() {
-      var cat = new Cats.CatModel({
-        id: 1111,
-        name: 'NAME_VALUE',
-        owner: 'OWNER_VALUE',
-        shouldRemainUnchanged: 'AAA',
-        shouldBeChanged: undefined,
-        shouldAlwaysBeChanged: 'BBB'
+  describe('Model.default', () => {
+    it('Default is set properly', () => {
+      const cat = new Cats.CatModel({
+        'id': 1111,
+        'name': 'NAME_VALUE',
+        'owner': 'OWNER_VALUE',
+        'shouldRemainUnchanged': 'AAA',
+        'shouldBeChanged': undefined,
+        'shouldAlwaysBeChanged': 'BBB'
       });
 
       return cat
         .save()
-        .then(function() {
+        .then(() => {
           should(cat.shouldRemainUnchanged).eql('AAA');
           should(cat.shouldBeChanged).eql('shouldBeChanged_NAME_VALUE_OWNER_VALUE');
           should(cat.shouldAlwaysBeChanged).eql('shouldAlwaysBeChanged_NAME_VALUE_OWNER_VALUE');
@@ -3200,7 +3139,7 @@ describe('Model', function (){
     });
   });
 
-  it('Model.getTableReq', function() {
+  it('Model.getTableReq', () => {
     Cats.Cat.getTableReq().AttributeDefinitions.should.exist;
     Cats.Cat.getTableReq().TableName.should.exist;
     Cats.Cat.getTableReq().TableName.should.equal('test-Cat-db');
@@ -3208,91 +3147,91 @@ describe('Model', function (){
     Cats.Cat.getTableReq().ProvisionedThroughput.should.exist;
   });
 
-  it('Should have BillingMode set to PROVISIONED when creating table, and no throughput defined', function() {
-    var BillModeSchema1 = new dynamoose.Schema({
-      id: Number,
-      name: String
+  it('Should have BillingMode set to PROVISIONED when creating table, and no throughput defined', () => {
+    const BillModeSchema1 = new dynamoose.Schema({
+      'id': Number,
+      'name': String
     });
-    var BillModeModel1 = dynamoose.model('BillModeModel1', BillModeSchema1);
+    const BillModeModel1 = dynamoose.model('BillModeModel1', BillModeSchema1);
 
     BillModeModel1.getTableReq().BillingMode.should.eql('PROVISIONED');
   });
-  it('Should have BillingMode set to PROVISIONED when creating table, and throughput defined', function() {
-    var BillModeSchema2 = new dynamoose.Schema({
-      id: Number,
-      name: String
-    }, {throughput: {
-      write: 10,
-      read: 10
+  it('Should have BillingMode set to PROVISIONED when creating table, and throughput defined', () => {
+    const BillModeSchema2 = new dynamoose.Schema({
+      'id': Number,
+      'name': String
+    }, {'throughput': {
+      'write': 10,
+      'read': 10
     }});
-    var BillModeModel2 = dynamoose.model('BillModeModel2', BillModeSchema2);
+    const BillModeModel2 = dynamoose.model('BillModeModel2', BillModeSchema2);
 
     BillModeModel2.getTableReq().BillingMode.should.eql('PROVISIONED');
   });
 
-  it('Should have BillingMode set to PAY_PER_REQUEST when creating table, and throughput is ON_DEMAND', function() {
-    var BillModeSchema3 = new dynamoose.Schema({
-      id: Number,
-      name: String
-    }, {throughput: 'ON_DEMAND'});
-    var BillModeModel3 = dynamoose.model('BillModeModel3', BillModeSchema3, {create: false});
+  it('Should have BillingMode set to PAY_PER_REQUEST when creating table, and throughput is ON_DEMAND', () => {
+    const BillModeSchema3 = new dynamoose.Schema({
+      'id': Number,
+      'name': String
+    }, {'throughput': 'ON_DEMAND'});
+    const BillModeModel3 = dynamoose.model('BillModeModel3', BillModeSchema3, {'create': false});
 
     BillModeModel3.getTableReq().BillingMode.should.eql('PAY_PER_REQUEST');
   });
 
-  it('Should have correct throughput set when set', function() {
-    var BillModeSchema4 = new dynamoose.Schema({
-      id: Number,
-      name: String
-    }, {throughput: {
-      write: 10,
-      read: 10
+  it('Should have correct throughput set when set', () => {
+    const BillModeSchema4 = new dynamoose.Schema({
+      'id': Number,
+      'name': String
+    }, {'throughput': {
+      'write': 10,
+      'read': 10
     }});
-    var BillModeModel4 = dynamoose.model('BillModeModel4', BillModeSchema4, {create: false});
+    const BillModeModel4 = dynamoose.model('BillModeModel4', BillModeSchema4, {'create': false});
 
     BillModeModel4.getTableReq().ProvisionedThroughput.ReadCapacityUnits.should.eql(10);
     BillModeModel4.getTableReq().ProvisionedThroughput.WriteCapacityUnits.should.eql(10);
   });
 
-  it('Should not have throughput on Global Secondary Index if Model throughput is ON_DEMAND', function() {
-    var BillModeSchema5 = new dynamoose.Schema({
-      id: Number,
-      name: { type: String, index: { global: true } }
-    }, {throughput: 'ON_DEMAND'});
-    var BillModeModel5 = dynamoose.model('BillModeModel5', BillModeSchema5, {create: false});
+  it('Should not have throughput on Global Secondary Index if Model throughput is ON_DEMAND', () => {
+    const BillModeSchema5 = new dynamoose.Schema({
+      'id': Number,
+      'name': {'type': String, 'index': {'global': true}}
+    }, {'throughput': 'ON_DEMAND'});
+    const BillModeModel5 = dynamoose.model('BillModeModel5', BillModeSchema5, {'create': false});
 
     should.not.exist(BillModeModel5.getTableReq().GlobalSecondaryIndexes[0].ProvisionedThroughput);
   });
 
-  it('Should have correct throughput on Global Secondary Index if Model throughput is set', function() {
-    var BillModeSchema6 = new dynamoose.Schema({
-      id: Number,
-      name: { type: String, index: { global: true, throughput: { write: 5, read: 5 } } }
-    }, {throughput: {
-      write: 10,
-      read: 10
+  it('Should have correct throughput on Global Secondary Index if Model throughput is set', () => {
+    const BillModeSchema6 = new dynamoose.Schema({
+      'id': Number,
+      'name': {'type': String, 'index': {'global': true, 'throughput': {'write': 5, 'read': 5}}}
+    }, {'throughput': {
+      'write': 10,
+      'read': 10
     }});
-    var BillModeModel6 = dynamoose.model('BillModeModel6', BillModeSchema6, {create: false});
+    const BillModeModel6 = dynamoose.model('BillModeModel6', BillModeSchema6, {'create': false});
 
     BillModeModel6.getTableReq().GlobalSecondaryIndexes[0].ProvisionedThroughput.ReadCapacityUnits.should.eql(5);
     BillModeModel6.getTableReq().GlobalSecondaryIndexes[0].ProvisionedThroughput.WriteCapacityUnits.should.eql(5);
   });
 
-  it('Should allow for originalItem function on models', function(done) {
-    var item = {
-      id: 2222,
-      name: 'NAME_VALUE',
-      owner: 'OWNER_VALUE'
+  it('Should allow for originalItem function on models', (done) => {
+    const item = {
+      'id': 2222,
+      'name': 'NAME_VALUE',
+      'owner': 'OWNER_VALUE'
     };
 
-    var cat = new Cats.Cat(item);
+    const cat = new Cats.Cat(item);
     cat.originalItem().should.eql(item);
-    cat.save(function(err, newCat) {
+    cat.save((err, newCat) => {
       newCat.originalItem().should.eql(item);
       newCat.name = 'NAME_VALUE_2';
       newCat.originalItem().should.eql(item);
       newCat.name.should.eql('NAME_VALUE_2');
-      Cats.Cat.get(2222, function(err, newCatB) {
+      Cats.Cat.get(2222, (err, newCatB) => {
         newCatB.originalItem().should.eql(item);
         newCatB.name = 'NAME_VALUE_2';
         newCatB.originalItem().should.eql(item);
@@ -3302,23 +3241,23 @@ describe('Model', function (){
     });
   });
 
-  it('Should store/load binary data safely', function(done) {
-    var imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
+  it('Should store/load binary data safely', (done) => {
+    const imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
 
     imageData.should.not.eql(Buffer.from(imageData.toString())); // The binary value should not be UTF-8 string for test.
 
 
-    var item = {
-      id: 3333,
-      name: 'NAME_VALUE',
-      owner: 'OWNER_VALUE',
-      profileImage: imageData
+    const item = {
+      'id': 3333,
+      'name': 'NAME_VALUE',
+      'owner': 'OWNER_VALUE',
+      'profileImage': imageData
     };
 
-    var cat = new Cats.Cat(item);
-    cat.save(function(err) {
+    const cat = new Cats.Cat(item);
+    cat.save((err) => {
       should.not.exist(err);
-      Cats.Cat.get(3333, function(err, newCatB) {
+      Cats.Cat.get(3333, (err, newCatB) => {
         should.not.exist(err);
         should.exist(newCatB);
         newCatB.should.have.property('profileImage', imageData);
@@ -3327,23 +3266,23 @@ describe('Model', function (){
     });
   });
 
-  describe('Model.transaction', function() {
-    it('Model.transaction should exist and be an object', function() {
+  describe('Model.transaction', () => {
+    it('Model.transaction should exist and be an object', () => {
       should.exist(Cats.Cat.transaction);
       Cats.Cat.transaction.should.be.instanceof(Object);
     });
 
     describe('Model.transaction.get', () => {
-      it('Model.transaction.get should work', function(done) {
-        Cats.Cat.transaction.get('1').then(function(result) {
+      it('Model.transaction.get should work', (done) => {
+        Cats.Cat.transaction.get('1').then((result) => {
           should.exist(result);
           should.exist(result.Get);
 
           done();
         }).catch(done);
       });
-      it('Model.transaction.get should work with options', function(done) {
-        Cats.Cat.transaction.get('1', {consistent: true}).then(function(result) {
+      it('Model.transaction.get should work with options', (done) => {
+        Cats.Cat.transaction.get('1', {'consistent': true}).then((result) => {
           should.exist(result);
           should.exist(result.Get);
 
@@ -3353,16 +3292,16 @@ describe('Model', function (){
       });
     });
     describe('Model.transaction.delete', () => {
-      it('Model.transaction.delete should work', function(done) {
-        Cats.Cat.transaction.delete('1').then(function(result) {
+      it('Model.transaction.delete should work', (done) => {
+        Cats.Cat.transaction.delete('1').then((result) => {
           should.exist(result);
           should.exist(result.Delete);
 
           done();
         }).catch(done);
       });
-      it('Model.transaction.delete should work with options', function(done) {
-        Cats.Cat.transaction.delete('1', {update: true}).then(function(result) {
+      it('Model.transaction.delete should work with options', (done) => {
+        Cats.Cat.transaction.delete('1', {'update': true}).then((result) => {
           should.exist(result);
           should.exist(result.Delete);
 
@@ -3372,16 +3311,16 @@ describe('Model', function (){
       });
     });
     describe('Model.transaction.create', () => {
-      it('Model.transaction.create should work', function(done) {
-        Cats.Cat.transaction.create({id: 1}).then(function(result) {
+      it('Model.transaction.create should work', (done) => {
+        Cats.Cat.transaction.create({'id': 1}).then((result) => {
           should.exist(result);
           should.exist(result.Put);
 
           done();
         }).catch(done);
       });
-      it('Model.transaction.create should work with options', function(done) {
-        Cats.Cat.transaction.create({id: 1}, {overwrite: true}).then(function(result) {
+      it('Model.transaction.create should work with options', (done) => {
+        Cats.Cat.transaction.create({'id': 1}, {'overwrite': true}).then((result) => {
           should.exist(result);
           should.exist(result.Put);
 
@@ -3391,8 +3330,8 @@ describe('Model', function (){
       });
     });
     describe('Model.transaction.update', () => {
-      it('Model.transaction.update should work if combined', function(done) {
-        Cats.Cat.transaction.update({id: 1, name: 'Bob'}).then(function(result) {
+      it('Model.transaction.update should work if combined', (done) => {
+        Cats.Cat.transaction.update({'id': 1, 'name': 'Bob'}).then((result) => {
           should.exist(result);
           should.exist(result.Update);
           should.exist(result.Update.TableName);
@@ -3400,8 +3339,8 @@ describe('Model', function (){
           done();
         }).catch(done);
       });
-      it('Model.transaction.update should work if seperate', function(done) {
-        Cats.Cat.transaction.update({id: 1}, {name: 'Bob'}).then(function(result) {
+      it('Model.transaction.update should work if seperate', (done) => {
+        Cats.Cat.transaction.update({'id': 1}, {'name': 'Bob'}).then((result) => {
           should.exist(result);
           should.exist(result.Update);
           should.exist(result.Update.TableName);
@@ -3409,8 +3348,8 @@ describe('Model', function (){
           done();
         }).catch(done);
       });
-      it('Model.transaction.update should work with options seperate', function(done) {
-        Cats.Cat.transaction.update({id: 1}, {name: 'Bob'}, {condition: 'attribute_not_exists(name)'}).then(function(result) {
+      it('Model.transaction.update should work with options seperate', (done) => {
+        Cats.Cat.transaction.update({'id': 1}, {'name': 'Bob'}, {'condition': 'attribute_not_exists(name)'}).then((result) => {
           should.exist(result);
           should.exist(result.Update);
           should.exist(result.Update.TableName);
@@ -3422,104 +3361,102 @@ describe('Model', function (){
     });
   });
 
-  describe('Transactions', function () {
-    it('Should return correct request object', function(done) {
+  describe('Transactions', () => {
+    it('Should return correct request object', (done) => {
       dynamoose.transaction([
-        Cats.Cat.transaction.create({id: 10000}),
-        Cats.Cat2.transaction.update({ownerId: 1, name: 'Sara'})
-      ], {returnRequest: true}).then(function(request) {
+        Cats.Cat.transaction.create({'id': 10000}),
+        Cats.Cat2.transaction.update({'ownerId': 1, 'name': 'Sara'})
+      ], {'returnRequest': true}).then((request) => {
         should.exist(request);
         should.exist(request.TransactItems);
 
-        request.should.eql({'TransactItems':[{'Put':{'TableName':'test-Cat-db','Item':{'id':{'N':'10000'}},'ConditionExpression':'attribute_not_exists(id)'}},{'Update':{'TableName':'test-Cat2-db','Key':{'ownerId':{'N':'1'},'name':{'S':'Sara'}}}}]});
+        request.should.eql({'TransactItems': [{'Put': {'TableName': 'test-Cat-db', 'Item': {'id': {'N': '10000'}}, 'ConditionExpression': 'attribute_not_exists(id)'}}, {'Update': {'TableName': 'test-Cat2-db', 'Key': {'ownerId': {'N': '1'}, 'name': {'S': 'Sara'}}}}]});
 
         done();
       }).catch(done);
     });
 
-    it('Should return correct request object when all items are get', function(done) {
+    it('Should return correct request object when all items are get', (done) => {
       dynamoose.transaction([
         Cats.Cat.transaction.get(10000),
-        Cats.Cat4.transaction.get(10000),
-      ], {returnRequest: true}).then(function(request) {
+        Cats.Cat4.transaction.get(10000)
+      ], {'returnRequest': true}).then((request) => {
         should.exist(request);
         should.exist(request.TransactItems);
 
-        request.should.eql({'TransactItems':[{'Get':{'TableName':'test-Cat-db','Key':{'id':{'N':'10000'}}}},{'Get':{'TableName':'test-Cat4-db','Key':{'id':{'N':'10000'}}}}]});
+        request.should.eql({'TransactItems': [{'Get': {'TableName': 'test-Cat-db', 'Key': {'id': {'N': '10000'}}}}, {'Get': {'TableName': 'test-Cat4-db', 'Key': {'id': {'N': '10000'}}}}]});
 
         done();
       }).catch(done);
     });
 
-    it('Should return correct request object when setting type to write', function(done) {
+    it('Should return correct request object when setting type to write', (done) => {
       dynamoose.transaction([
-        Cats.Cat.transaction.create({id: 10000}),
-        Cats.Cat2.transaction.update({ownerId: 1, name: 'Sara'})
-      ], {returnRequest: true, type: 'write'}).then(function(request) {
+        Cats.Cat.transaction.create({'id': 10000}),
+        Cats.Cat2.transaction.update({'ownerId': 1, 'name': 'Sara'})
+      ], {'returnRequest': true, 'type': 'write'}).then((request) => {
         should.exist(request);
         should.exist(request.TransactItems);
 
-        request.should.eql({'TransactItems':[{'Put':{'TableName':'test-Cat-db','Item':{'id':{'N':'10000'}},'ConditionExpression':'attribute_not_exists(id)'}},{'Update':{'TableName':'test-Cat2-db','Key':{'ownerId':{'N':'1'},'name':{'S':'Sara'}}}}]});
+        request.should.eql({'TransactItems': [{'Put': {'TableName': 'test-Cat-db', 'Item': {'id': {'N': '10000'}}, 'ConditionExpression': 'attribute_not_exists(id)'}}, {'Update': {'TableName': 'test-Cat2-db', 'Key': {'ownerId': {'N': '1'}, 'name': {'S': 'Sara'}}}}]});
 
         done();
       }).catch(done);
     });
 
-    it('Should return correct request object when setting type to get', function(done) {
+    it('Should return correct request object when setting type to get', (done) => {
       dynamoose.transaction([
-        Cats.Cat.transaction.create({id: 10000}),
-        Cats.Cat2.transaction.update({ownerId: 1, name: 'Sara'})
-      ], {returnRequest: true, type: 'get'}).then(function(request) {
+        Cats.Cat.transaction.create({'id': 10000}),
+        Cats.Cat2.transaction.update({'ownerId': 1, 'name': 'Sara'})
+      ], {'returnRequest': true, 'type': 'get'}).then((request) => {
         should.exist(request);
         should.exist(request.TransactItems);
 
-        request.should.eql({'TransactItems':[{'Put':{'TableName':'test-Cat-db','Item':{'id':{'N':'10000'}},'ConditionExpression':'attribute_not_exists(id)'}},{'Update':{'TableName':'test-Cat2-db','Key':{'ownerId':{'N':'1'},'name':{'S':'Sara'}}}}]});
+        request.should.eql({'TransactItems': [{'Put': {'TableName': 'test-Cat-db', 'Item': {'id': {'N': '10000'}}, 'ConditionExpression': 'attribute_not_exists(id)'}}, {'Update': {'TableName': 'test-Cat2-db', 'Key': {'ownerId': {'N': '1'}, 'name': {'S': 'Sara'}}}}]});
 
         done();
       }).catch(done);
     });
 
-    it('Should throw if invalid type passed in', function(done) {
+    it('Should throw if invalid type passed in', (done) => {
       dynamoose.transaction([
         Cats.Cat.transaction.get(10000),
-        Cats.Cat4.transaction.get(10000),
-      ], {returnRequest: true, type: 'other'}).then(function () {
+        Cats.Cat4.transaction.get(10000)
+      ], {'returnRequest': true, 'type': 'other'}).then(() => {
 
-      }).catch(function (error) {
+      }).catch((error) => {
         should.exist(error);
         done();
       });
     });
 
-    it('Should Properly work with read transactions', function(done) {
+    it('Should Properly work with read transactions', (done) => {
       Cats.Cat.batchPut([
-        new Cats.Cat({id: '680', name: 'Oliver'}),
-        new Cats.Cat({id: '780', name: 'Whiskers'})
-      ], function () {
-        return dynamoose.transaction([
-          Cats.Cat.transaction.get(680),
-          Cats.Cat.transaction.get(780),
-        ]).then(function(result) {
-          should.exist(result);
-          result.length.should.equal(2);
-          result[0].should.be.instanceof(Cats.Cat);
-          result[1].should.be.instanceof(Cats.Cat);
-          result[0].id.should.equal(680);
-          result[1].id.should.equal(780);
+        new Cats.Cat({'id': '680', 'name': 'Oliver'}),
+        new Cats.Cat({'id': '780', 'name': 'Whiskers'})
+      ], () => dynamoose.transaction([
+        Cats.Cat.transaction.get(680),
+        Cats.Cat.transaction.get(780)
+      ]).then((result) => {
+        should.exist(result);
+        result.length.should.equal(2);
+        result[0].should.be.instanceof(Cats.Cat);
+        result[1].should.be.instanceof(Cats.Cat);
+        result[0].id.should.equal(680);
+        result[1].id.should.equal(780);
 
-          done();
-        }).catch(done);
-      });
+        done();
+      }).catch(done));
     });
 
-    it('Should respond with no data', async function() {
+    it('Should respond with no data', async () => {
       let result;
 
       try {
         result = await dynamoose.transaction([
-          Cats.Cat.transaction.create({id: 10000}),
-          Cats.Cat3.transaction.update({id: 1, name: 'Sara'}),
-          Cats.Cat.transaction.delete({id: 10000})
+          Cats.Cat.transaction.create({'id': 10000}),
+          Cats.Cat3.transaction.update({'id': 1, 'name': 'Sara'}),
+          Cats.Cat.transaction.delete({'id': 10000})
         ]);
       } catch (e) {
         console.error(e);
@@ -3528,22 +3465,22 @@ describe('Model', function (){
       should.not.exist(result);
     });
 
-    it('Should throw if RAW item object passed in, and table doesn\'t exist in Dynamoose', async function() {
+    it('Should throw if RAW item object passed in, and table doesn\'t exist in Dynamoose', async () => {
       let error;
 
       try {
         await dynamoose.transaction([
-          Cats.Cat.transaction.create({id: 30000}),
-          Cats.Cat3.transaction.update({id: 1, name: 'Sara'}),
-          Cats.Cat.transaction.delete({id: 30000}),
+          Cats.Cat.transaction.create({'id': 30000}),
+          Cats.Cat3.transaction.update({'id': 1, 'name': 'Sara'}),
+          Cats.Cat.transaction.delete({'id': 30000}),
           {
-            Delete: {
-              Key: {
-                id: {
-                  S: 'helloworld'
+            'Delete': {
+              'Key': {
+                'id': {
+                  'S': 'helloworld'
                 }
               },
-              TableName: 'MyOtherTable'
+              'TableName': 'MyOtherTable'
             }
           }
         ]);
@@ -3555,17 +3492,17 @@ describe('Model', function (){
       error.message.should.eql('MyOtherTable is not a registered model. You can only use registered Dynamoose models when using a RAW transaction object.');
     });
 
-    it('Should work with conditionCheck', async function() {
+    it('Should work with conditionCheck', async () => {
       let result;
 
       try {
         result = await dynamoose.transaction([
-          Cats.Cat.transaction.create({id: 20000}),
-          Cats.Cat3.transaction.update({id: 1, name: 'Sara'}),
+          Cats.Cat.transaction.create({'id': 20000}),
+          Cats.Cat3.transaction.update({'id': 1, 'name': 'Sara'}),
           Cats.Cat5.transaction.conditionCheck(5, {
-            condition: 'attribute_not_exists(owner)'
+            'condition': 'attribute_not_exists(owner)'
           }),
-          Cats.Cat.transaction.delete({id: 20000})
+          Cats.Cat.transaction.delete({'id': 20000})
         ]);
       } catch (e) {
         console.error(e);
