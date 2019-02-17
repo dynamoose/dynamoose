@@ -65,7 +65,6 @@ module.exports = {
     'no-ternary': 'off',
     'require-atomic-updates': 'off',
     'func-style': 'off',
-    'no-multi-assign': 'off',
     'no-warning-comments': 'off',
     'object-property-newline': 'off',
     'array-element-newline': 'off',
