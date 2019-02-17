@@ -9,8 +9,7 @@ dynamoose.AWS.config.update({
 
 dynamoose.local();
 
-const Schema = dynamoose.Schema;
-
+const {Schema} = dynamoose;
 const should = require('should');
 
 
@@ -61,7 +60,7 @@ describe('Scan', function () {
         }
       }
     }, {'useDocumentTypes': true});
-
+    const Dog = dynamoose.model('Dog', dogSchema);
 
     function addDogs (dogs) {
       if (dogs.length <= 0) {
@@ -75,8 +74,6 @@ describe('Scan', function () {
         addDogs(dogs);
       });
     }
-
-    var Dog = dynamoose.model('Dog', dogSchema);
 
     addDogs([
       {'ownerId': 1, 'name': 'Foxy Lady', 'breed': 'Jack Russell Terrier ', 'color': ['White', 'Brown', 'Black']},

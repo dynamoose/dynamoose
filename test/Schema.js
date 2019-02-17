@@ -13,7 +13,7 @@ dynamoose.AWS.config.update({
 
 dynamoose.local();
 
-const Schema = dynamoose.Schema;
+const {Schema} = dynamoose;
 
 const should = require('should');
 
@@ -127,7 +127,7 @@ describe('Schema tests', function () {
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
     should.not.exist(schema.attributes.id.default);
-    const validator = schema.attributes.id.validator;
+    const {validator} = schema.attributes.id;
     should.exist(validator);
     validator(-1).should.not.be.ok;
     validator(1).should.be.ok;
@@ -246,7 +246,7 @@ describe('Schema tests', function () {
     schema1.attributes.id.type.name.should.eql('number');
     should(schema1.attributes.id.isSet).not.be.ok;
     should.not.exist(schema1.attributes.id.default);
-    const validator = schema1.attributes.id.validator;
+    const {validator} = schema1.attributes.id;
     should.exist(validator);
     validator(-1).should.not.be.ok;
     validator(1).should.be.ok;
@@ -483,13 +483,13 @@ describe('Schema tests', function () {
     schema.attributes.ownerId.type.name.should.eql('number');
     should(schema.attributes.ownerId.isSet).not.be.ok;
     should.not.exist(schema.attributes.ownerId.default);
-    const validator = schema.attributes.ownerId.validator;
+    const {validator} = schema.attributes.ownerId;
     should.exist(validator);
     validator(-1).should.not.be.ok;
     validator(1).should.be.ok;
     should(schema.attributes.ownerId.required).not.be.ok;
 
-    const breed = schema.attributes.breed;
+    const {breed} = schema.attributes;
     breed.type.name.should.eql('string');
     breed.isSet.should.not.be.ok;
     should.not.exist(breed.default);
@@ -501,7 +501,7 @@ describe('Schema tests', function () {
     breed.indexes.IdGlobalIndex.should.have.property('rangeKey', 'color');
     breed.indexes.IdGlobalIndex.should.have.property('throughput', {'read': 5, 'write': 5});
 
-    const name = schema.attributes.name;
+    const {name} = schema.attributes;
     name.type.name.should.eql('string');
     name.isSet.should.not.be.ok;
     should.not.exist(name.default);
@@ -514,7 +514,7 @@ describe('Schema tests', function () {
     name.indexes.nameLocalIndex.should.not.have.property('throughput');
 
 
-    const color = schema.attributes.color;
+    const {color} = schema.attributes;
     color.type.name.should.eql('string');
     color.isSet.should.not.be.ok;
     color.default().should.eql('Brown');
@@ -531,7 +531,7 @@ describe('Schema tests', function () {
     color.indexes.colorGlobalIndex.should.not.have.property('rangeKey');
     color.indexes.colorGlobalIndex.should.have.property('throughput', {'read': 1, 'write': 1});
 
-    const born = schema.attributes.born;
+    const {born} = schema.attributes;
     born.type.name.should.eql('date');
     born.isSet.should.not.be.ok;
     born.default().should.be.ok;
@@ -1111,7 +1111,7 @@ describe('Schema tests', function () {
       });
     } catch (err) {
       err.should.be.instanceof(errors.ParseError);
-      err.message.should.match(/Attribute "nestedField" of type "BOOL" has an invalid value of "This is a string"/);
+      err.message.should.match(/Attribute "nestedField" of type "BOOL" has an invalid value of "This is a string"/u);
     }
   });
 
@@ -1184,7 +1184,7 @@ describe('Schema tests', function () {
   it('Enum Should save new instance of model with a good value', (done) => {
 
     const enumData = ['Golden retriever', 'Beagle'];
-    const choosedRace = enumData[0];
+    const [choosedRace] = enumData;
 
     const schema = new Schema({
       'race': {
@@ -1329,7 +1329,7 @@ describe('Schema tests', function () {
     }
 
     err.should.be.instanceof(errors.ParseError);
-    err.message.should.match(/Unknown nested attribute nestedUnknownAttribute with value: {"S":"I too am a stranger. Will the schema be able to find me down here\?"}/);
+    err.message.should.match(/Unknown nested attribute nestedUnknownAttribute with value: \{"S":"I too am a stranger\. Will the schema be able to find me down here\?"\}/u);
   });
 
   it('Should throw error when type is map but no map is provided', (done) => {
