@@ -59,7 +59,6 @@ module.exports = {
     'handle-callback-err': 'off',
     'no-proto': 'off',
     'no-shadow': 'off',
-    'no-negated-condition': 'off',
     'guard-for-in': 'off',
     'multiline-ternary': 'off',
     'no-continue': 'off',
