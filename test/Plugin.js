@@ -79,7 +79,7 @@ describe('Plugin', function() {
 
     Model.plugin(function(obj) {
       obj.on('plugin:register', function() {
-        counter++;
+        counter += 1;
       });
     });
 
@@ -93,7 +93,7 @@ describe('Plugin', function() {
 
     Model.plugin(function(obj) {
       obj.on('plugin:register', function() {
-        counter++;
+        counter += 1;
       });
     });
 
@@ -156,7 +156,7 @@ describe('Plugin', function() {
 
     Model.plugin(function(obj) {
       obj.on('*', function () {
-        counter++;
+        counter += 1;
       });
     });
 
@@ -170,7 +170,7 @@ describe('Plugin', function() {
 
     Model.plugin(function(obj) {
       obj.on(function () {
-        counter++;
+        counter += 1;
       });
     });
 
@@ -185,7 +185,7 @@ describe('Plugin', function() {
     var pluginB = function(plugin) {
       plugin.setName('Plugin B');
       plugin.on('plugin', 'init', function () {
-        counter++;
+        counter += 1;
       });
     };
 
@@ -211,7 +211,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:scan', function () {
-        counter++;
+        counter += 1;
       });
     };
 
@@ -329,7 +329,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:query', function () {
-        counter++;
+        counter += 1;
       });
     };
 
@@ -447,7 +447,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:get', function () {
-        counter++;
+        counter += 1;
       });
     };
 
@@ -565,7 +565,7 @@ describe('Plugin', function() {
     var pluginA = function(plugin) {
       plugin.setName('Plugin A');
       plugin.on('model:put', function () {
-        counter++;
+        counter += 1;
       });
     };
 
