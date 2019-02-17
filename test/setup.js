@@ -1,3 +1,5 @@
+'use strict';
+
 const DynamoDbLocal = require('dynamodb-local');
 const DYNAMO_DB_PORT = 8000;
 

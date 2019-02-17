@@ -27,7 +27,6 @@ module.exports = {
     'no-console': 'off',
     'one-var': 'off',
     'padded-blocks': 'off',
-    'strict': 'off',
     'max-len': 'off',
     'init-declarations': 'off',
     'func-names': 'off',
