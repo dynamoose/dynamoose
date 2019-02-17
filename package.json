@@ -56,6 +56,8 @@
   "devDependencies": {
     "@commitlint/cli": "7.5.1",
     "@commitlint/config-conventional": "7.5.0",
+    "@semantic-release/commit-analyzer": "6.1.0",
+    "@semantic-release/release-notes-generator": "7.1.4",
     "@semantic-release/changelog": "3.0.2",
     "@semantic-release/git": "7.0.8",
     "@semantic-release/github": "5.2.10",
@@ -72,8 +74,6 @@
     "should": "13.2.3"
   },
   "dependencies": {
-    "@semantic-release/commit-analyzer": "6.1.0",
-    "@semantic-release/release-notes-generator": "7.1.4",
     "aws-sdk": "2.395.0",
     "debug": "4.1.1",
     "deep-equal": "1.0.1",
