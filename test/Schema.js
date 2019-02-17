@@ -1,48 +1,48 @@
 'use strict';
 
-//var util = require('util');
+// var util = require('util');
 
-var dynamoose = require('../');
-var errors = require('../lib/errors');
+const dynamoose = require('../');
+const errors = require('../lib/errors');
 
 dynamoose.AWS.config.update({
-  accessKeyId: 'AKID',
-  secretAccessKey: 'SECRET',
-  region: 'us-east-1'
+  'accessKeyId': 'AKID',
+  'secretAccessKey': 'SECRET',
+  'region': 'us-east-1'
 });
 
 dynamoose.local();
 
-var Schema = dynamoose.Schema;
+const Schema = dynamoose.Schema;
 
-var should = require('should');
+const should = require('should');
 
-describe('Schema tests', function (){
+describe('Schema tests', function () {
   this.timeout(10000);
 
-  it('Simple schema', function (done) {
-    var schemaObj = {
-      id: Number,
-      name: String,
-      children: [Number],
-      aObject: Object,
-      aArray: Array,
-      aMap: {
-        mapId: Number,
-        mapName: String,
-        anotherMap: {
-          m1:String,
+  it('Simple schema', (done) => {
+    const schemaObj = {
+      'id': Number,
+      'name': String,
+      'children': [Number],
+      'aObject': Object,
+      'aArray': Array,
+      'aMap': {
+        'mapId': Number,
+        'mapName': String,
+        'anotherMap': {
+          'm1': String
         }
       },
-      aList: [
+      'aList': [
         {
-          listMapId: Number,
-          listMapName: String
+          'listMapId': Number,
+          'listMapName': String
         }
       ]
     };
 
-    var schema = new Schema(schemaObj);
+    const schema = new Schema(schemaObj);
 
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
@@ -79,55 +79,55 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('Schema with basic options', function (done) {
-    var schema = new Schema({
-      id: {
-        type: Number,
-        validate: function(v) { return v > 0; },
-        rangeKey: true
+  it('Schema with basic options', (done) => {
+    const schema = new Schema({
+      'id': {
+        'type': Number,
+        'validate' (v) { return v > 0; },
+        'rangeKey': true
       },
-      breed: {
-        type: String,
-        hashKey: true
+      'breed': {
+        'type': String,
+        'hashKey': true
       },
-      name: {
-        type: String,
-        required: true
+      'name': {
+        'type': String,
+        'required': true
       },
-      color: {
-        type: String,
-        default: 'Brown'
+      'color': {
+        'type': String,
+        'default': 'Brown'
       },
-      born: {
-        type: Date,
-        default: Date.now
+      'born': {
+        'type': Date,
+        'default': Date.now
       },
-      aObject: {
-        type: 'Object',
-        default: { state: 'alive' }
+      'aObject': {
+        'type': 'Object',
+        'default': {'state': 'alive'}
       },
-      aMap: {
-        type: 'map',
-        map: {
-          mapId: {type: Number, required:true },
-          mapName: {type: String, required:true }
+      'aMap': {
+        'type': 'map',
+        'map': {
+          'mapId': {'type': Number, 'required': true},
+          'mapName': {'type': String, 'required': true}
         }
       },
-      aList: {
-        type: 'list',
-        list: [
+      'aList': {
+        'type': 'list',
+        'list': [
           {
-            listMapId: {type: Number, default: 1},
-            listMapName: {type: String, default:'SomeName'}
+            'listMapId': {'type': Number, 'default': 1},
+            'listMapName': {'type': String, 'default': 'SomeName'}
           }
         ]
       }
-    }, {throughput: {read: 10, write: 2}, useDocumentTypes: false, useNativeBooleans: false});
+    }, {'throughput': {'read': 10, 'write': 2}, 'useDocumentTypes': false, 'useNativeBooleans': false});
 
     schema.attributes.id.type.name.should.eql('number');
     should(schema.attributes.id.isSet).not.be.ok;
     should.not.exist(schema.attributes.id.default);
-    var validator = schema.attributes.id.validator;
+    const validator = schema.attributes.id.validator;
     should.exist(validator);
     validator(-1).should.not.be.ok;
     validator(1).should.be.ok;
@@ -167,86 +167,86 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('Schema with ttl default options', function (done) {
-    var schema = new Schema(
+  it('Schema with ttl default options', (done) => {
+    const schema = new Schema(
       {
-        id: Number,
-        name: String
+        'id': Number,
+        'name': String
       },
       {
-        expires: 30*24*60*60 // 30 days in seconds
+        'expires': 30 * 24 * 60 * 60 // 30 days in seconds
       }
     );
 
     should.exist(schema.expires);
     should.exist(schema.expires.ttl);
-    schema.expires.ttl.should.be.equal(30*24*60*60);
+    schema.expires.ttl.should.be.equal(30 * 24 * 60 * 60);
     should.exist(schema.expires.attribute);
     schema.expires.attribute.should.be.equal('expires');
     done();
   });
 
-  it('Schema with ttl options', function (done) {
-    var schema = new Schema(
+  it('Schema with ttl options', (done) => {
+    const schema = new Schema(
       {
-        id: Number,
-        name: String
+        'id': Number,
+        'name': String
       },
       {
-        expires: {
-          ttl: 30*24*60*60, // 30 days in seconds
-          attribute: 'ttl'
+        'expires': {
+          'ttl': 30 * 24 * 60 * 60, // 30 days in seconds
+          'attribute': 'ttl'
         }
       }
     );
 
     should.exist(schema.expires);
     should.exist(schema.expires.ttl);
-    schema.expires.ttl.should.be.equal(30*24*60*60);
+    schema.expires.ttl.should.be.equal(30 * 24 * 60 * 60);
     should.exist(schema.expires.attribute);
     schema.expires.attribute.should.be.equal('ttl');
     done();
   });
 
 
-  it('Schema with timestamps options', function (done) {
-    var schema1 = new Schema({
-      id: {
-        type: Number,
-        validate: function(v) { return v > 0; },
-        rangeKey: true
+  it('Schema with timestamps options', (done) => {
+    const schema1 = new Schema({
+      'id': {
+        'type': Number,
+        'validate' (v) { return v > 0; },
+        'rangeKey': true
       },
-      name: {
-        type: String,
-        required: true
-      },
+      'name': {
+        'type': String,
+        'required': true
+      }
     },
     {
-      throughput: {read: 10, write: 2},
-      timestamps: true
+      'throughput': {'read': 10, 'write': 2},
+      'timestamps': true
     });
 
-    var schema2 = new Schema({
-      id: {
-        type: Number,
-        validate: function(v) { return v > 0; },
-        rangeKey: true
+    const schema2 = new Schema({
+      'id': {
+        'type': Number,
+        'validate' (v) { return v > 0; },
+        'rangeKey': true
       },
-      name: {
-        type: String,
-        required: true
-      },
+      'name': {
+        'type': String,
+        'required': true
+      }
     },
     {
-      throughput: {read: 10, write: 2},
-      timestamps: { createdAt: 'createDate', updatedAt: 'lastUpdate'}
+      'throughput': {'read': 10, 'write': 2},
+      'timestamps': {'createdAt': 'createDate', 'updatedAt': 'lastUpdate'}
     });
 
 
     schema1.attributes.id.type.name.should.eql('number');
     should(schema1.attributes.id.isSet).not.be.ok;
     should.not.exist(schema1.attributes.id.default);
-    var validator = schema1.attributes.id.validator;
+    const validator = schema1.attributes.id.validator;
     should.exist(validator);
     validator(-1).should.not.be.ok;
     validator(1).should.be.ok;
@@ -295,21 +295,21 @@ describe('Schema tests', function (){
   });
 
 
-  it('Schema with timestamps options that are rangeKey', function () {
-    var schema = new Schema({
-      id: {
-        type: Number,
-        hashKey: true
+  it('Schema with timestamps options that are rangeKey', () => {
+    const schema = new Schema({
+      'id': {
+        'type': Number,
+        'hashKey': true
       },
-      started_at: {
-        type: Number,
-        rangeKey: true
+      'started_at': {
+        'type': Number,
+        'rangeKey': true
       }
     },
     {
-      timestamps: {
-        createdAt: 'started_at',
-        updatedAt: 'updated_at'
+      'timestamps': {
+        'createdAt': 'started_at',
+        'updatedAt': 'updated_at'
       }
     });
 
@@ -331,49 +331,49 @@ describe('Schema tests', function (){
   });
 
 
-  it('Schema with use Document Types', function (done) {
-    var schema = new Schema({
-      id: {
-        type: Number,
-        validate: function(v) { return v > 0; },
-        rangeKey: true
+  it('Schema with use Document Types', (done) => {
+    const schema = new Schema({
+      'id': {
+        'type': Number,
+        'validate' (v) { return v > 0; },
+        'rangeKey': true
       },
-      breed: {
-        type: String,
-        hashKey: true
+      'breed': {
+        'type': String,
+        'hashKey': true
       },
-      aObject: {
-        type: 'Object',
-        default: { state: 'alive' }
+      'aObject': {
+        'type': 'Object',
+        'default': {'state': 'alive'}
       },
-      anotherObject: Object,
-      aArray: Array,
-      aMap: {
-        mapId: Number,
-        mapName: String,
-        anotherMap:{
-          m1:String,
+      'anotherObject': Object,
+      'aArray': Array,
+      'aMap': {
+        'mapId': Number,
+        'mapName': String,
+        'anotherMap': {
+          'm1': String
         }
       },
-      aList:[
+      'aList': [
         {
-          listMapId: Number,
-          listMapName: String
+          'listMapId': Number,
+          'listMapName': String
         }
       ],
-      anotherMap: {
-        type: 'map',
-        map: {
-          mapId: {type: Number, required:true },
-          mapName: {type: String, required:true }
+      'anotherMap': {
+        'type': 'map',
+        'map': {
+          'mapId': {'type': Number, 'required': true},
+          'mapName': {'type': String, 'required': true}
         }
       },
-      anotherList: {
-        type: 'list',
-        list: [
+      'anotherList': {
+        'type': 'list',
+        'list': [
           {
-            listMapId: {type: Number, default: 1},
-            listMapName: {type: String, default:'SomeName'}
+            'listMapId': {'type': Number, 'default': 1},
+            'listMapName': {'type': String, 'default': 'SomeName'}
           }
         ]
       }
@@ -390,9 +390,9 @@ describe('Schema tests', function (){
     schema.attributes.aMap.type.name.should.eql('map');
     schema.attributes.aMap.attributes.mapId.type.name.should.eql('number');
     schema.attributes.aMap.attributes.mapName.type.name.should.eql('string');
-    should.not.exist( schema.attributes.aMap.attributes.mapId.default);
-    should.not.exist( schema.attributes.aMap.attributes.mapId.validator);
-    should( schema.attributes.aMap.attributes.mapId.required).not.be.ok;
+    should.not.exist(schema.attributes.aMap.attributes.mapId.default);
+    should.not.exist(schema.attributes.aMap.attributes.mapId.validator);
+    should(schema.attributes.aMap.attributes.mapId.required).not.be.ok;
     schema.attributes.aMap.attributes.anotherMap.attributes.m1.type.name.should.eql('string');
 
     schema.attributes.anotherMap.attributes.mapId.type.name.should.eql('number');
@@ -412,14 +412,14 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('Schema with use Native Booleans', function (done) {
-    var schema = new Schema({
-      name: String,
-      isAwesome: Boolean
+  it('Schema with use Native Booleans', (done) => {
+    const schema = new Schema({
+      'name': String,
+      'isAwesome': Boolean
     });
 
-    var Cat = dynamoose.model('Cat' + Date.now(), schema);
-    var fluffy = new Cat();
+    const Cat = dynamoose.model(`Cat${Date.now()}`, schema);
+    const fluffy = new Cat();
 
     fluffy.name = 'Fluff Johnson';
     fluffy.isAwesome = true;
@@ -428,52 +428,54 @@ describe('Schema tests', function (){
 
     Cat.$__.schema.attributes.isAwesome.type.dynamo.should.eql('BOOL');
 
-    Cat.$__.table.delete(function () {
+    Cat.$__.table.delete(() => {
       delete dynamoose.models.Cat;
       done();
     });
 
   });
 
-  it('Schema with secondary indexes', function (done) {
-    var schema = new Schema({
-      ownerId: {
-        type: Number,
-        validate: function(v) { return v > 0; },
-        hashKey: true
+  it('Schema with secondary indexes', (done) => {
+    const schema = new Schema({
+      'ownerId': {
+        'type': Number,
+        'validate' (v) { return v > 0; },
+        'hashKey': true
       },
-      breed: {
-        type: String,
-        rangeKey: true,
-        index: {
-          global: true,
-          rangeKey: 'color',
-          name: 'IdGlobalIndex',
-          project: true, // ProjectionType: ALL
-          throughput: 5 // read and write are both 5
+      'breed': {
+        'type': String,
+        'rangeKey': true,
+        'index': {
+          'global': true,
+          'rangeKey': 'color',
+          'name': 'IdGlobalIndex',
+          'project': true, // ProjectionType: ALL
+          'throughput': 5 // read and write are both 5
         }
       },
-      name: {
-        type: String,
-        required: true,
-        index: true // name: nameLocalIndex, ProjectionType: ALL
+      'name': {
+        'type': String,
+        'required': true,
+        'index': true // name: nameLocalIndex, ProjectionType: ALL
       },
-      color: {
-        type: String,
-        default: 'Brown',
-        index: [{ // name: colorLocalIndex
-          project: ['name'] // ProjectionType: INCLUDE
-        },{ // name: colorGlobalIndex, no ragne key
-          global: true,
-          project: ['name', 'breed'] // ProjectionType: INCLUDE
-        }]
+      'color': {
+        'type': String,
+        'default': 'Brown',
+        'index': [
+          { // name: colorLocalIndex
+            'project': ['name'] // ProjectionType: INCLUDE
+          }, { // name: colorGlobalIndex, no ragne key
+            'global': true,
+            'project': ['name', 'breed'] // ProjectionType: INCLUDE
+          }
+        ]
       },
-      born: {
-        type: Date,
-        default: Date.now,
-        index: {
-          name: 'birthIndex',
-          project: false // ProjectionType: KEYS_ONLY
+      'born': {
+        'type': Date,
+        'default': Date.now,
+        'index': {
+          'name': 'birthIndex',
+          'project': false // ProjectionType: KEYS_ONLY
         }
       }
     });
@@ -481,13 +483,13 @@ describe('Schema tests', function (){
     schema.attributes.ownerId.type.name.should.eql('number');
     should(schema.attributes.ownerId.isSet).not.be.ok;
     should.not.exist(schema.attributes.ownerId.default);
-    var validator = schema.attributes.ownerId.validator;
+    const validator = schema.attributes.ownerId.validator;
     should.exist(validator);
     validator(-1).should.not.be.ok;
     validator(1).should.be.ok;
     should(schema.attributes.ownerId.required).not.be.ok;
 
-    var breed = schema.attributes.breed;
+    const breed = schema.attributes.breed;
     breed.type.name.should.eql('string');
     breed.isSet.should.not.be.ok;
     should.not.exist(breed.default);
@@ -497,9 +499,9 @@ describe('Schema tests', function (){
     breed.indexes.IdGlobalIndex.should.have.property('global', true);
     breed.indexes.IdGlobalIndex.should.have.property('project', true);
     breed.indexes.IdGlobalIndex.should.have.property('rangeKey', 'color');
-    breed.indexes.IdGlobalIndex.should.have.property('throughput', {read: 5, write: 5});
+    breed.indexes.IdGlobalIndex.should.have.property('throughput', {'read': 5, 'write': 5});
 
-    var name = schema.attributes.name;
+    const name = schema.attributes.name;
     name.type.name.should.eql('string');
     name.isSet.should.not.be.ok;
     should.not.exist(name.default);
@@ -512,7 +514,7 @@ describe('Schema tests', function (){
     name.indexes.nameLocalIndex.should.not.have.property('throughput');
 
 
-    var color = schema.attributes.color;
+    const color = schema.attributes.color;
     color.type.name.should.eql('string');
     color.isSet.should.not.be.ok;
     color.default().should.eql('Brown');
@@ -525,11 +527,11 @@ describe('Schema tests', function (){
     color.indexes.colorLocalIndex.should.not.have.property('throughput');
     color.indexes.should.have.property('colorGlobalIndex');
     color.indexes.colorGlobalIndex.should.have.property('global', true);
-    color.indexes.colorGlobalIndex.should.have.property('project', ['name', 'breed'] );
+    color.indexes.colorGlobalIndex.should.have.property('project', ['name', 'breed']);
     color.indexes.colorGlobalIndex.should.not.have.property('rangeKey');
-    color.indexes.colorGlobalIndex.should.have.property('throughput', {read: 1, write: 1});
+    color.indexes.colorGlobalIndex.should.have.property('throughput', {'read': 1, 'write': 1});
 
-    var born = schema.attributes.born;
+    const born = schema.attributes.born;
     born.type.name.should.eql('date');
     born.isSet.should.not.be.ok;
     born.default().should.be.ok;
@@ -551,49 +553,49 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('Schema useDocumentTypes and useNativeBooleans should default to true', function (done) {
-    var schema = new Schema({
-      id: {
-        type: Number,
-        validate: function(v) { return v > 0; },
-        rangeKey: true
+  it('Schema useDocumentTypes and useNativeBooleans should default to true', (done) => {
+    const schema = new Schema({
+      'id': {
+        'type': Number,
+        'validate' (v) { return v > 0; },
+        'rangeKey': true
       },
-      breed: {
-        type: String,
-        hashKey: true
+      'breed': {
+        'type': String,
+        'hashKey': true
       },
-      aObject: {
-        type: 'Object',
-        default: { state: 'alive' }
+      'aObject': {
+        'type': 'Object',
+        'default': {'state': 'alive'}
       },
-      anotherObject: Object,
-      aArray: Array,
-      aMap: {
-        mapId: Number,
-        mapName: String,
-        anotherMap:{
-          m1:String,
+      'anotherObject': Object,
+      'aArray': Array,
+      'aMap': {
+        'mapId': Number,
+        'mapName': String,
+        'anotherMap': {
+          'm1': String
         }
       },
-      aList:[
+      'aList': [
         {
-          listMapId: Number,
-          listMapName: String
+          'listMapId': Number,
+          'listMapName': String
         }
       ],
-      anotherMap: {
-        type: 'map',
-        map: {
-          mapId: {type: Number, required:true },
-          mapName: {type: String, required:true }
+      'anotherMap': {
+        'type': 'map',
+        'map': {
+          'mapId': {'type': Number, 'required': true},
+          'mapName': {'type': String, 'required': true}
         }
       },
-      anotherList: {
-        type: 'list',
-        list: [
+      'anotherList': {
+        'type': 'list',
+        'list': [
           {
-            listMapId: {type: Number, default: 1},
-            listMapName: {type: String, default:'SomeName'}
+            'listMapId': {'type': Number, 'default': 1},
+            'listMapName': {'type': String, 'default': 'SomeName'}
           }
         ]
       }
@@ -605,30 +607,30 @@ describe('Schema tests', function (){
   });
 
 
-  it('Schema with added instance methods', function (done) {
+  it('Schema with added instance methods', (done) => {
 
-    dynamoose.setDefaults({ prefix: '' });
+    dynamoose.setDefaults({'prefix': ''});
 
-    var schema = new Schema({
-      id: Number
+    const schema = new Schema({
+      'id': Number
     });
 
-    schema.method('meow', function() {
+    schema.method('meow', function () {
       this.lastcall = 'meooowwww';
     });
 
-    var Kitty = dynamoose.model('Kitty', schema);
-    var fizz = new Kitty();
+    const Kitty = dynamoose.model('Kitty', schema);
+    const fizz = new Kitty();
     fizz.meow();
     fizz.lastcall.should.eql('meooowwww');
 
     schema.method({
-      purr:function(){this.didpurr = 1;},
-      scratch:function(){this.didscratch = 1;}
+      'purr' () { this.didpurr = 1; },
+      'scratch' () { this.didscratch = 1; }
     });
 
-    var Tabby = dynamoose.model('Tabby', schema);
-    var tom = new Tabby();
+    const Tabby = dynamoose.model('Tabby', schema);
+    const tom = new Tabby();
 
     tom.should.not.have.property('didpurr');
     tom.should.not.have.property('didscratch');
@@ -640,10 +642,10 @@ describe('Schema tests', function (){
     tom.didpurr.should.be.ok;
 
 
-    Tabby.$__.table.delete(function () {
+    Tabby.$__.table.delete(() => {
       delete dynamoose.models.Tabby;
 
-      Kitty.$__.table.delete(function () {
+      Kitty.$__.table.delete(() => {
         delete dynamoose.models.Kitty;
         done();
       });
@@ -651,64 +653,60 @@ describe('Schema tests', function (){
 
   });
 
-  it('Schema with added static methods', function (done) {
+  it('Schema with added static methods', (done) => {
 
-    dynamoose.setDefaults({ prefix: '' });
+    dynamoose.setDefaults({'prefix': ''});
 
-    var staticSchema = new Schema({
-      name: String
+    const staticSchema = new Schema({
+      'name': String
     });
 
-    staticSchema.static('findKittenName', function (name){
-      return name + '\'s kitten';
-    });
+    staticSchema.static('findKittenName', (name) => `${name}'s kitten`);
 
-    var Cat = dynamoose.model('Cat' + Date.now(),staticSchema);
-    var kitten = Cat.findKittenName('sue');
+    const Cat = dynamoose.model(`Cat${Date.now()}`, staticSchema);
+    const kitten = Cat.findKittenName('sue');
     kitten.should.eql('sue\'s kitten');
 
     staticSchema.static({
-      findCatsByOwner:function(owner){return owner + 'fluffy';},
-      findCatsByRace:function(owner){return owner + 'bobbly';}
+      'findCatsByOwner' (owner) { return `${owner}fluffy`; },
+      'findCatsByRace' (owner) { return `${owner}bobbly`; }
     });
 
-    var Cats = dynamoose.model('Cats',staticSchema);
-    var catsByOwner = Cats.findCatsByOwner('fred');
-    var catsByRace = Cats.findCatsByRace('siamese');
+    const Cats = dynamoose.model('Cats', staticSchema);
+    const catsByOwner = Cats.findCatsByOwner('fred');
+    const catsByRace = Cats.findCatsByRace('siamese');
 
     catsByOwner.should.eql('fredfluffy');
     catsByRace.should.eql('siamesebobbly');
 
-    Cat.$__.table.delete(function () {
+    Cat.$__.table.delete(() => {
       delete dynamoose.models.Cat;
 
-      Cats.$__.table.delete(function () {
+      Cats.$__.table.delete(() => {
         delete dynamoose.models.Cats;
         done();
       });
     });
   });
 
-  it('Schema with bound static methods', function (done) {
+  it('Schema with bound static methods', (done) => {
 
-    dynamoose.setDefaults({ prefix: '' });
+    dynamoose.setDefaults({'prefix': ''});
 
-    var staticSchema = new Schema({
-      name: String
+    const staticSchema = new Schema({
+      'name': String
     });
 
-    staticSchema.static('getKittensNamePunctuation', function (){
-      return '!';
-    });
+    staticSchema.static('getKittensNamePunctuation', () => '!');
 
-    staticSchema.static('findKittenName', function (name){
+    staticSchema.static('findKittenName', function (name) {
       // Inside a static method "this" refers to the Model
-      return name + '\'s kitten' + this.getKittensNamePunctuation();
+      return `${name}'s kitten${this.getKittensNamePunctuation()}`;
     });
 
-    var Cat = dynamoose.model('Cat' + Date.now(), staticSchema);
-    var kittenOwners = ['Sue', 'Janice'];
-    var kittens = kittenOwners.map(Cat.findKittenName);
+    const Cat = dynamoose.model(`Cat${Date.now()}`, staticSchema);
+    const kittenOwners = ['Sue', 'Janice'];
+    const kittens = kittenOwners.map(Cat.findKittenName);
 
     kittens.should.eql(['Sue\'s kitten!', 'Janice\'s kitten!']);
 
@@ -716,23 +714,23 @@ describe('Schema tests', function (){
   });
 
 
-  it('Schema with added virtual methods', function (done) {
+  it('Schema with added virtual methods', (done) => {
 
-    var schema = new Schema({
-      name: String,
-      owner: String
+    const schema = new Schema({
+      'name': String,
+      'owner': String
     });
 
     schema.virtual('mergedname').get(function () {
-      return (this._mergedname)?this._mergedname:this.name;//this.name + this.owner;
+      return this._mergedname ? this._mergedname : this.name;// this.name + this.owner;
     });
 
-    schema.virtual('mergedname').set(function(v){
+    schema.virtual('mergedname').set(function (v) {
       this._mergedname = v;
     });
 
-    var Cat = dynamoose.model('Cat' + Date.now(), schema);
-    var tim = new Cat();
+    const Cat = dynamoose.model(`Cat${Date.now()}`, schema);
+    const tim = new Cat();
 
     tim.name = 'tommy';
     tim.owner = 'bill';
@@ -744,41 +742,41 @@ describe('Schema tests', function (){
     tim.mergedname.should.eql('george');
 
 
-    Cat.$__.table.delete(function () {
+    Cat.$__.table.delete(() => {
       delete dynamoose.models.Cat;
       done();
     });
   });
 
-  it('Schema with custom parser', function (done) {
+  it('Schema with custom parser', (done) => {
 
-    var schema = new Schema({
-      name: String,
-      owner: String
+    const schema = new Schema({
+      'name': String,
+      'owner': String
     }, {
-      attributeFromDynamo: function(name, value, fallback) {
+      'attributeFromDynamo' (name, value, fallback) {
         if (name === 'owner') {
-          return 'Cat Lover: ' + value.S;
+          return `Cat Lover: ${value.S}`;
         }
         return fallback(value);
       }
     });
 
-    var Cat = dynamoose.model('Cat' + Date.now(), schema);
-    var tim = new Cat();
+    const Cat = dynamoose.model(`Cat${Date.now()}`, schema);
+    const tim = new Cat();
 
     tim.name = 'tommy';
     tim.owner = 'bill';
 
-    tim.save(function() {
-      Cat.scan().exec(function(err, models) {
+    tim.save(() => {
+      Cat.scan().exec((err, models) => {
         if (err) {
           throw err;
         }
-        var timSaved = models.pop();
+        const timSaved = models.pop();
         timSaved.owner.should.eql('Cat Lover: bill');
 
-        Cat.$__.table.delete(function () {
+        Cat.$__.table.delete(() => {
           delete dynamoose.models.Cat;
           done();
         });
@@ -786,35 +784,35 @@ describe('Schema tests', function (){
     });
   });
 
-  it('Schema with custom formatter', function (done) {
+  it('Schema with custom formatter', (done) => {
 
-    var schema = new Schema({
-      name: String,
-      owner: String
+    const schema = new Schema({
+      'name': String,
+      'owner': String
     }, {
-      attributeToDynamo: function(name, value, model, fallback) {
+      'attributeToDynamo' (name, value, model, fallback) {
         if (name === 'owner') {
-          return {S: 'Cat Lover: ' + value};
+          return {'S': `Cat Lover: ${value}`};
         }
         return fallback(value);
       }
     });
 
-    var Cat = dynamoose.model('Cat' + Date.now(), schema);
-    var tim = new Cat();
+    const Cat = dynamoose.model(`Cat${Date.now()}`, schema);
+    const tim = new Cat();
 
     tim.name = 'tommy';
     tim.owner = 'bill';
 
-    tim.save(function() {
-      Cat.scan().exec(function(err, models) {
+    tim.save(() => {
+      Cat.scan().exec((err, models) => {
         if (err) {
           throw err;
         }
-        var timSaved = models.pop();
+        const timSaved = models.pop();
         timSaved.owner.should.eql('Cat Lover: bill');
 
-        Cat.$__.table.delete(function () {
+        Cat.$__.table.delete(() => {
           delete dynamoose.models.Cat;
           done();
         });
@@ -822,33 +820,33 @@ describe('Schema tests', function (){
     });
   });
 
-  it('Attribute with custom parser', function (done) {
+  it('Attribute with custom parser', (done) => {
 
-    var schema = new Schema({
-      name: String,
-      owner: {
-        type: String,
-        fromDynamo: function(json) {
-          return 'Cat Lover: ' + json.S;
+    const schema = new Schema({
+      'name': String,
+      'owner': {
+        'type': String,
+        'fromDynamo' (json) {
+          return `Cat Lover: ${json.S}`;
         }
       }
     });
 
-    var Cat = dynamoose.model('Cat' + Date.now(), schema);
-    var tim = new Cat();
+    const Cat = dynamoose.model(`Cat${Date.now()}`, schema);
+    const tim = new Cat();
 
     tim.name = 'tommy';
     tim.owner = 'bill';
 
-    tim.save(function() {
-      Cat.scan().exec(function(err, models) {
+    tim.save(() => {
+      Cat.scan().exec((err, models) => {
         if (err) {
           throw err;
         }
-        var timSaved = models.pop();
+        const timSaved = models.pop();
         timSaved.owner.should.eql('Cat Lover: bill');
 
-        Cat.$__.table.delete(function () {
+        Cat.$__.table.delete(() => {
           delete dynamoose.models.Cat;
           done();
         });
@@ -856,33 +854,33 @@ describe('Schema tests', function (){
     });
   });
 
-  it('Schema with custom formatter', function (done) {
+  it('Schema with custom formatter', (done) => {
 
-    var schema = new Schema({
-      name: String,
-      owner: {
-        type: String,
-        toDynamo: function(value) {
-          return {S: 'Cat Lover: ' + value};
+    const schema = new Schema({
+      'name': String,
+      'owner': {
+        'type': String,
+        'toDynamo' (value) {
+          return {'S': `Cat Lover: ${value}`};
         }
       }
     });
 
-    var Cat = dynamoose.model('Cat' + Date.now(), schema);
-    var tim = new Cat();
+    const Cat = dynamoose.model(`Cat${Date.now()}`, schema);
+    const tim = new Cat();
 
     tim.name = 'tommy';
     tim.owner = 'bill';
 
-    tim.save(function() {
-      Cat.scan().exec(function(err, models) {
+    tim.save(() => {
+      Cat.scan().exec((err, models) => {
         if (err) {
           throw err;
         }
-        var timSaved = models.pop();
+        const timSaved = models.pop();
         timSaved.owner.should.eql('Cat Lover: bill');
 
-        Cat.$__.table.delete(function () {
+        Cat.$__.table.delete(() => {
           delete dynamoose.models.Cat;
           done();
         });
@@ -890,137 +888,137 @@ describe('Schema tests', function (){
     });
   });
 
-  it('Parses document types when saveUnknown=false and useDocumentTypes=true', async function () {
+  it('Parses document types when saveUnknown=false and useDocumentTypes=true', async () => {
 
-    var schema = new Schema({
-      id: Number,
-      mapAttrib: {
-        aString: String,
-        aNumber: Number,
+    const schema = new Schema({
+      'id': Number,
+      'mapAttrib': {
+        'aString': String,
+        'aNumber': Number
       },
-      listAttrib: {
-        type: 'list',
-        list: [String],
-      },
+      'listAttrib': {
+        'type': 'list',
+        'list': [String]
+      }
     }, {
-      saveUnknown: false
+      'saveUnknown': false
     });
 
-    var model = {};
+    const model = {};
     await schema.parseDynamo(model, {
-      id: { N: '2' },
-      mapAttrib: {
-        M: {
-          aString: { S: 'Fluffy' },
-          aNumber: { N: '5' },
-        },
-      },
-      listAttrib: {
-        L: [
-          { S: 'v1' },
-          { S: 'v2' },
-        ],
-      },
-    });
-
-    model.should.eql({
-      id: 2,
-      mapAttrib: {
-        aString: 'Fluffy',
-        aNumber: 5,
-      },
-      listAttrib: [
-        'v1',
-        'v2',
-      ],
-    });
-  });
-
-  it('Parses document types when saveUnknown=true and useDocumentTypes=true', async function () {
-
-    var schema = new Schema({
-      id: Number,
-      anotherMap: Map,
-    }, {
-      saveUnknown: true
-    });
-
-    var model = {};
-    await schema.parseDynamo(model, {
-      id: { N: '2' },
-      mapAttrib: {
-        M: {
-          aString: { S: 'Fluffy' },
-          aNumber: { N: '5' },
-        },
-      },
-      anotherMap: {
-        M: {
-          aNestedAttribute: { S: 'I am a nested unknown sub-attribute of a known top-level attribute' },
-          weHaveTheSameName: { S: 'I should be independent of the top-level field with the same name' },
+      'id': {'N': '2'},
+      'mapAttrib': {
+        'M': {
+          'aString': {'S': 'Fluffy'},
+          'aNumber': {'N': '5'}
         }
       },
-      weHaveTheSameName: { N: 123 },
-      listAttrib: {
-        L: [
-          { S: 'v1' },
-          { S: 'v2' },
-        ],
-      },
+      'listAttrib': {
+        'L': [
+          {'S': 'v1'},
+          {'S': 'v2'}
+        ]
+      }
     });
 
     model.should.eql({
-      id: 2,
-      mapAttrib: {
-        aString: 'Fluffy',
-        aNumber: 5,
+      'id': 2,
+      'mapAttrib': {
+        'aString': 'Fluffy',
+        'aNumber': 5
       },
-      anotherMap: {
-        aNestedAttribute: 'I am a nested unknown sub-attribute of a known top-level attribute',
-        weHaveTheSameName: 'I should be independent of the top-level field with the same name'
-      },
-      weHaveTheSameName: 123,
-      listAttrib: [
+      'listAttrib': [
         'v1',
-        'v2',
-      ],
+        'v2'
+      ]
     });
   });
 
-  it('Parses document types to DynamoDB with nested maps within maps when saveUnknown=true and useDocumentTypes=true', async function () {
+  it('Parses document types when saveUnknown=true and useDocumentTypes=true', async () => {
 
-    var schema = new Schema({
-      id: Number,
-      anotherMap: Map,
+    const schema = new Schema({
+      'id': Number,
+      'anotherMap': Map
     }, {
-      saveUnknown: true
+      'saveUnknown': true
     });
 
-    var model = {
-      id: 2,
-      anotherMap: {
-        test1: {
-          name: 'Bob'
+    const model = {};
+    await schema.parseDynamo(model, {
+      'id': {'N': '2'},
+      'mapAttrib': {
+        'M': {
+          'aString': {'S': 'Fluffy'},
+          'aNumber': {'N': '5'}
+        }
+      },
+      'anotherMap': {
+        'M': {
+          'aNestedAttribute': {'S': 'I am a nested unknown sub-attribute of a known top-level attribute'},
+          'weHaveTheSameName': {'S': 'I should be independent of the top-level field with the same name'}
+        }
+      },
+      'weHaveTheSameName': {'N': 123},
+      'listAttrib': {
+        'L': [
+          {'S': 'v1'},
+          {'S': 'v2'}
+        ]
+      }
+    });
+
+    model.should.eql({
+      'id': 2,
+      'mapAttrib': {
+        'aString': 'Fluffy',
+        'aNumber': 5
+      },
+      'anotherMap': {
+        'aNestedAttribute': 'I am a nested unknown sub-attribute of a known top-level attribute',
+        'weHaveTheSameName': 'I should be independent of the top-level field with the same name'
+      },
+      'weHaveTheSameName': 123,
+      'listAttrib': [
+        'v1',
+        'v2'
+      ]
+    });
+  });
+
+  it('Parses document types to DynamoDB with nested maps within maps when saveUnknown=true and useDocumentTypes=true', async () => {
+
+    const schema = new Schema({
+      'id': Number,
+      'anotherMap': Map
+    }, {
+      'saveUnknown': true
+    });
+
+    const model = {
+      'id': 2,
+      'anotherMap': {
+        'test1': {
+          'name': 'Bob'
         },
-        test2: {
-          name: 'Smith'
+        'test2': {
+          'name': 'Smith'
         }
       }
     };
     const result = await schema.toDynamo(model);
 
     result.should.eql({
-      id: { N: '2' },
-      anotherMap: {
-        M: {
-          test1: {
-            M: {
-              name: { S: 'Bob' },
+      'id': {'N': '2'},
+      'anotherMap': {
+        'M': {
+          'test1': {
+            'M': {
+              'name': {'S': 'Bob'}
             }
           },
-          test2: {
-            M: {
-              name: { S: 'Smith' },
+          'test2': {
+            'M': {
+              'name': {'S': 'Smith'}
             }
           }
         }
@@ -1028,101 +1026,101 @@ describe('Schema tests', function (){
     });
   });
 
-  it('Handle unknown attributes in DynamoDB', async function () {
+  it('Handle unknown attributes in DynamoDB', async () => {
 
-    var unknownSchema = new Schema({
-      id: Number
+    const unknownSchema = new Schema({
+      'id': Number
     }, {
-      saveUnknown: true
+      'saveUnknown': true
     });
 
-    var model = {};
+    const model = {};
     await unknownSchema.parseDynamo(model, {
-      id: { N: 2 },
-      name: { S: 'Fluffy' },
-      anObject: { S: '{"a":"attribute"}' },
-      numberString: { S: '1' },
-      anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]' },
-      anObjectB: { M: {'a':{S: 'attribute'}} },
-      anArrayB: { L: [{N : 1}, {N : 2}, {N : 3}]},// can't handle dissimilar items list {M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
-      aBoolean: { S: 'true' },
-      aBooleanB: { BOOL: true },
+      'id': {'N': 2},
+      'name': {'S': 'Fluffy'},
+      'anObject': {'S': '{"a":"attribute"}'},
+      'numberString': {'S': '1'},
+      'anArray': {'S': '[2,{"test2": "5","test": "1"},"value1"]'},
+      'anObjectB': {'M': {'a': {'S': 'attribute'}}},
+      'anArrayB': {'L': [{'N': 1}, {'N': 2}, {'N': 3}]}, // can't handle dissimilar items list {M: {'test2': {S: '5'},'test': {S: '1'}}},{S: "value1"}] },
+      'aBoolean': {'S': 'true'},
+      'aBooleanB': {'BOOL': true}
     });
 
     model.should.eql({
-      id: 2,
-      name: 'Fluffy',
-      anObject: '{"a":"attribute"}',
-      numberString: '1',
+      'id': 2,
+      'name': 'Fluffy',
+      'anObject': '{"a":"attribute"}',
+      'numberString': '1',
       // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
-      anArray: '[2,{"test2": "5","test": "1"},"value1"]',
-      anObjectB: { a: 'attribute' },
+      'anArray': '[2,{"test2": "5","test": "1"},"value1"]',
+      'anObjectB': {'a': 'attribute'},
       // TODO: the numbers below should probably be parseInt'ed like the `numberString` attr
-      anArrayB: [1, 2, 3],
-      aBoolean: 'true',
-      aBooleanB: true
+      'anArrayB': [1, 2, 3],
+      'aBoolean': 'true',
+      'aBooleanB': true
     });
   });
 
-  it('Handle unknown attributes in DynamoDB when document types are set to false', async function () {
+  it('Handle unknown attributes in DynamoDB when document types are set to false', async () => {
 
-    var unknownSchema = new Schema({
-      id: Number
+    const unknownSchema = new Schema({
+      'id': Number
     }, {
-      saveUnknown: true,
-      useDocumentTypes: false,
-      useNativeBooleans: false
+      'saveUnknown': true,
+      'useDocumentTypes': false,
+      'useNativeBooleans': false
     });
 
-    var model = {};
+    const model = {};
 
     try {
       await unknownSchema.parseDynamo(model, {
-        id: { N: 2 },
-        name: { S: 'Fluffy' },
-        anObject: { S: '{"a":"attribute"}' },
-        numberString: { S: '1' },
-        anArray: { S: '[2,{"test2": "5","test": "1"},"value1"]'},
-        anObjectB: { M: {'a':{S: 'attribute'}} },
-        anArrayB: { L: [{N:2},{M: {'test2': {S: '5'},'test': {S: '1'}}},{S: 'value1'}]},
-        aBoolean: { S: 'true' },
-        aBooleanB: { BOOL: true },
+        'id': {'N': 2},
+        'name': {'S': 'Fluffy'},
+        'anObject': {'S': '{"a":"attribute"}'},
+        'numberString': {'S': '1'},
+        'anArray': {'S': '[2,{"test2": "5","test": "1"},"value1"]'},
+        'anObjectB': {'M': {'a': {'S': 'attribute'}}},
+        'anArrayB': {'L': [{'N': 2}, {'M': {'test2': {'S': '5'}, 'test': {'S': '1'}}}, {'S': 'value1'}]},
+        'aBoolean': {'S': 'true'},
+        'aBooleanB': {'BOOL': true}
       });
-    } catch(err) {
+    } catch (err) {
       // M and L aren't supported with document types are set to false
       err.should.be.instanceof(Error);
       err.should.be.instanceof(errors.ParseError);
     }
   });
 
-  it('Throws a useful error when parsing a record that does not match the schema', async function () {
+  it('Throws a useful error when parsing a record that does not match the schema', async () => {
 
     const schema = new Schema({
-      topLevel: {
-        nestedField: Boolean,
+      'topLevel': {
+        'nestedField': Boolean
       }
     });
 
-    var model = {};
+    const model = {};
 
     try {
       await schema.parseDynamo(model, {
-        topLevel: {
-          nestedField: 'This is a string',
+        'topLevel': {
+          'nestedField': 'This is a string'
         }
       });
-    } catch(err) {
+    } catch (err) {
       err.should.be.instanceof(errors.ParseError);
       err.message.should.match(/Attribute "nestedField" of type "BOOL" has an invalid value of "This is a string"/);
     }
   });
 
-  it('Enum Should be set in schema attributes object', function (done) {
-    var enumData = ['Golden retriever', 'Beagle'];
-    var schema = new Schema({
-      race: {
-        type: String,
-        enum: enumData
+  it('Enum Should be set in schema attributes object', (done) => {
+    const enumData = ['Golden retriever', 'Beagle'];
+    const schema = new Schema({
+      'race': {
+        'type': String,
+        'enum': enumData
       }
     });
 
@@ -1131,159 +1129,159 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('Enum Should throw error when using different value', function (done) {
-    var schema = new Schema({
-      race: {
-        type: String,
-        enum: ['Golden retriever', 'Beagle']
+  it('Enum Should throw error when using different value', (done) => {
+    const schema = new Schema({
+      'race': {
+        'type': String,
+        'enum': ['Golden retriever', 'Beagle']
       }
     });
 
-    var Dog = dynamoose.model('Dog' + Date.now(), schema);
-    var oscar = new Dog();
+    const Dog = dynamoose.model(`Dog${Date.now()}`, schema);
+    const oscar = new Dog();
 
     oscar.race = 'Persian';
 
-    oscar.save(function(err) {
+    oscar.save((err) => {
       err.should.be.instanceof(Error);
       err.should.be.instanceof(errors.ValidationError);
       done();
     });
   });
 
-  it('Enum Should not throw an error if value is empty', function (done) {
-    var schema = new Schema({
-      name: {
-        type: String,
-        required: true,
-        hashKey: true
+  it('Enum Should not throw an error if value is empty', (done) => {
+    const schema = new Schema({
+      'name': {
+        'type': String,
+        'required': true,
+        'hashKey': true
       },
-      race: {
-        type: String,
-        enum: ['Golden retriever', 'Beagle']
+      'race': {
+        'type': String,
+        'enum': ['Golden retriever', 'Beagle']
       },
-      weight: {
-        type: Number
+      'weight': {
+        'type': Number
       }
     });
 
-    var Dog = dynamoose.model('Dog' + Date.now(), schema);
-    var oscar = new Dog();
+    const Dog = dynamoose.model(`Dog${Date.now()}`, schema);
+    const oscar = new Dog();
 
     oscar.name = 'oscar';
     oscar.weight = 100;
 
-    oscar.save(function(err) {
+    oscar.save((err) => {
       should(err).be.null();
 
-      Dog.$__.table.delete(function () {
+      Dog.$__.table.delete(() => {
         delete dynamoose.models.Dog;
         done();
       });
     });
   });
 
-  it('Enum Should save new instance of model with a good value', function (done) {
+  it('Enum Should save new instance of model with a good value', (done) => {
 
-    var enumData = ['Golden retriever', 'Beagle'];
-    var choosedRace = enumData[0];
+    const enumData = ['Golden retriever', 'Beagle'];
+    const choosedRace = enumData[0];
 
-    var schema = new Schema({
-      race: {
-        type: String,
-        enum: enumData
+    const schema = new Schema({
+      'race': {
+        'type': String,
+        'enum': enumData
       }
     });
 
-    var Dog = dynamoose.model('Dog' + Date.now(), schema);
-    var oscar = new Dog();
+    const Dog = dynamoose.model(`Dog${Date.now()}`, schema);
+    const oscar = new Dog();
 
     oscar.race = choosedRace;
 
-    oscar.save(function(err, savedDog) {
+    oscar.save((err, savedDog) => {
       should(err).be.null();
       savedDog.race.should.equal(choosedRace);
 
-      Dog.$__.table.delete(function () {
+      Dog.$__.table.delete(() => {
         delete dynamoose.models.Dog;
         done();
       });
     });
   });
-  it('Handle unknown attributes as array in DynamoDB', async function () {
+  it('Handle unknown attributes as array in DynamoDB', async () => {
 
-    var unknownSchema = new Schema({
-      id: Number
+    const unknownSchema = new Schema({
+      'id': Number
     }, {
-      saveUnknown: ['name', 'numberString']
+      'saveUnknown': ['name', 'numberString']
     });
 
-    var model = {};
+    const model = {};
     await unknownSchema.parseDynamo(model, {
-      id: { N: '2' },
-      name: { S: 'Fluffy' },
-      anObject: { S: '{"a":"attribute"}' },
-      numberString: { S: '1' }
+      'id': {'N': '2'},
+      'name': {'S': 'Fluffy'},
+      'anObject': {'S': '{"a":"attribute"}'},
+      'numberString': {'S': '1'}
     });
 
     model.should.eql({
-      id: 2,
-      name: 'Fluffy',
-      numberString: '1'
+      'id': 2,
+      'name': 'Fluffy',
+      'numberString': '1'
     });
   });
 
-  it('Handle unknown attributes as array in DynamoDB when document types are set to false', async function () {
+  it('Handle unknown attributes as array in DynamoDB when document types are set to false', async () => {
 
-    var unknownSchema = new Schema({
-      id: Number
+    const unknownSchema = new Schema({
+      'id': Number
     }, {
-      saveUnknown: ['name', 'numberString'],
-      useDocumentTypes: false,
-      useNativeBooleans: false
+      'saveUnknown': ['name', 'numberString'],
+      'useDocumentTypes': false,
+      'useNativeBooleans': false
     });
 
-    var model = {};
+    const model = {};
     await unknownSchema.parseDynamo(model, {
-      id: { N: '2' },
-      name: { S: 'Fluffy' },
-      anObject: { S: '{"a":"attribute"}' },
-      numberString: { S: '1' }
+      'id': {'N': '2'},
+      'name': {'S': 'Fluffy'},
+      'anObject': {'S': '{"a":"attribute"}'},
+      'numberString': {'S': '1'}
     });
 
     model.should.eql({
-      id: 2,
-      name: 'Fluffy',
-      numberString: '1'
+      'id': 2,
+      'name': 'Fluffy',
+      'numberString': '1'
     });
   });
 
 
-  it('Errors when encountering an unknown attribute if errorUnknown is set to true', async function () {
+  it('Errors when encountering an unknown attribute if errorUnknown is set to true', async () => {
     const schema = new Schema({
-      myHashKey: {
-        hashKey: true,
-        type: String,
+      'myHashKey': {
+        'hashKey': true,
+        'type': String
       },
-      myRangeKey: {
-        rangeKey: true,
-        type: String,
+      'myRangeKey': {
+        'rangeKey': true,
+        'type': String
       },
-      knownAttribute: String,
+      'knownAttribute': String
     }, {
-      errorUnknown: true,
+      'errorUnknown': true
     });
 
     let err;
-    const model = {['$__']: {
-      name: 'OnlyKnownAttributesModel'
+    const model = {'$__': {
+      'name': 'OnlyKnownAttributesModel'
     }};
     try {
       await schema.parseDynamo(model, {
-        myHashKey: 'I am the hash key',
-        myRangeKey: 'I am the range key',
-        knownAttribute: { S: 'I am known to the schema. Everything is groovy.' },
-        unknownAttribute: { S: 'I am but a stranger to the schema. I should cause an error.' }
+        'myHashKey': 'I am the hash key',
+        'myRangeKey': 'I am the range key',
+        'knownAttribute': {'S': 'I am known to the schema. Everything is groovy.'},
+        'unknownAttribute': {'S': 'I am but a stranger to the schema. I should cause an error.'}
       });
     } catch (e) {
       err = e;
@@ -1294,35 +1292,35 @@ describe('Schema tests', function (){
   });
 
 
-  it('Errors when encountering an unknown nested attribute if errorUnknown is set to true', async function () {
+  it('Errors when encountering an unknown nested attribute if errorUnknown is set to true', async () => {
     const schema = new Schema({
-      myHashKey: {
-        hashKey: true,
-        type: String,
+      'myHashKey': {
+        'hashKey': true,
+        'type': String
       },
-      myRangeKey: {
-        rangeKey: true,
-        type: String,
+      'myRangeKey': {
+        'rangeKey': true,
+        'type': String
       },
-      knownAttribute: String,
-      myMap: Map,
+      'knownAttribute': String,
+      'myMap': Map
     }, {
-      errorUnknown: true,
+      'errorUnknown': true
     });
 
     let err;
-    const model = {['$__']: {
-      name: 'OnlyKnownAttributesModel'
+    const model = {'$__': {
+      'name': 'OnlyKnownAttributesModel'
     }};
 
     try {
       await schema.parseDynamo(model, {
-        myHashKey: 'I am the hash key',
-        myRangeKey: 'I am the range key',
-        knownAttribute: { S: 'I am known to the schema. Everything is groovy.' },
-        myMap: {
-          M: {
-            nestedUnknownAttribute: { S: 'I too am a stranger. Will the schema be able to find me down here?' }
+        'myHashKey': 'I am the hash key',
+        'myRangeKey': 'I am the range key',
+        'knownAttribute': {'S': 'I am known to the schema. Everything is groovy.'},
+        'myMap': {
+          'M': {
+            'nestedUnknownAttribute': {'S': 'I too am a stranger. Will the schema be able to find me down here?'}
           }
         }
       });
@@ -1334,12 +1332,12 @@ describe('Schema tests', function (){
     err.message.should.match(/Unknown nested attribute nestedUnknownAttribute with value: {"S":"I too am a stranger. Will the schema be able to find me down here\?"}/);
   });
 
-  it('Should throw error when type is map but no map is provided', function (done) {
+  it('Should throw error when type is map but no map is provided', (done) => {
     let err;
     try {
       new Schema({
-        race: {
-          type: 'map',
+        'race': {
+          'type': 'map'
         }
       });
     } catch (e) {
@@ -1351,12 +1349,12 @@ describe('Schema tests', function (){
     done();
   });
 
-  it('Should throw error when type is list but no list is provided', function (done) {
+  it('Should throw error when type is list but no list is provided', (done) => {
     let err;
     try {
       new Schema({
-        race: {
-          type: 'list',
+        'race': {
+          'type': 'list'
         }
       });
     } catch (e) {
@@ -1368,9 +1366,9 @@ describe('Schema tests', function (){
     err = undefined;
     try {
       new Schema({
-        race: {
-          type: 'list',
-          list: []
+        'race': {
+          'type': 'list',
+          'list': []
         }
       });
     } catch (e) {
