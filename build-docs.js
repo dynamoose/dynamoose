@@ -3,7 +3,7 @@ const fs = require('fs');
 const glob = require('glob');
 glob('lib/**/*.js', {}, (err, files) => {
   const docs = files.map(file => {
-    const doc = jsdoc2md.renderSync({ files: file});
+    const doc = jsdoc2md.renderSync({ files: file });
     return {
       location: `docs/${file.replace('.js', '.md')}`,
       content: doc
