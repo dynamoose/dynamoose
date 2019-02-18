@@ -582,21 +582,21 @@ describe('Model', function () {
       'tired': false
     });
 
-    kitten.save((err, kitten) => {
-      kitten.id.should.eql(2);
-      kitten.isHappy.should.eql(true);
-      kitten.parents.should.eql(['Max', 'Leah']);
-      kitten.details.should.eql({
+    kitten.save((firstReturnedError, firstReturnedKitten) => {
+      firstReturnedKitten.id.should.eql(2);
+      firstReturnedKitten.isHappy.should.eql(true);
+      firstReturnedKitten.parents.should.eql(['Max', 'Leah']);
+      firstReturnedKitten.details.should.eql({
         'playful': true,
         'thirsty': false,
         'tired': false
       });
 
-      Cats.Cat10.get(2, (err, kitten) => {
-        kitten.id.should.eql(2);
-        kitten.isHappy.should.eql(true);
-        kitten.parents.should.eql(['Max', 'Leah']);
-        kitten.details.should.eql({
+      Cats.Cat10.get(2, (secondReturnedError, secondReturnedKitten) => {
+        secondReturnedKitten.id.should.eql(2);
+        secondReturnedKitten.isHappy.should.eql(true);
+        secondReturnedKitten.parents.should.eql(['Max', 'Leah']);
+        secondReturnedKitten.details.should.eql({
           'playful': true,
           'thirsty': false,
           'tired': false
@@ -780,11 +780,11 @@ describe('Model', function () {
       model.vet.name = 'Tough Vet';
       model.ears[0].name = 'right';
 
-      model.save((err) => {
-        should.not.exist(err);
+      model.save((errB) => {
+        should.not.exist(errB);
 
-        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
-          should.not.exist(err);
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (errC, badCat) => {
+          should.not.exist(errC);
           badCat.name.should.eql('Bad Cat');
           badCat.vet.name.should.eql('Tough Vet');
           badCat.ears[0].name.should.eql('right');
@@ -814,7 +814,7 @@ describe('Model', function () {
       theSavedCat1.name = 'FluffyB';
       setTimeout(() => {
         theSavedCat1.save(() => {
-          Cats.Cat9.get(1, (err, realCat) => {
+          Cats.Cat9.get(1, (errB, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
             realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
@@ -844,7 +844,7 @@ describe('Model', function () {
       myCat.name = 'FluffyB';
       setTimeout(() => {
         myCat.save({'updateTimestamps': true}, () => {
-          Cats.Cat9.get(1, (err, realCat) => {
+          Cats.Cat9.get(1, (errB, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
             realCat.updatedAt.should.not.eql(expectedUpdatedAt); // updatedAt should be different than before
@@ -874,7 +874,7 @@ describe('Model', function () {
       myCat.name = 'FluffyB';
       setTimeout(() => {
         myCat.save({'updateTimestamps': false}, () => {
-          Cats.Cat9.get(1, (err, realCat) => {
+          Cats.Cat9.get(1, (errB, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.createdAt.should.eql(expectedCreatedAt); // createdAt should be the same as before
             realCat.updatedAt.should.eql(expectedUpdatedAt); // updatedAt should be the same as before
@@ -904,7 +904,7 @@ describe('Model', function () {
       myCat.name = 'FluffyB';
       setTimeout(() => {
         myCat.save({'updateExpires': true}, () => {
-          Cats.Cat11.get(1, (err, realCat) => {
+          Cats.Cat11.get(1, (errB, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.expires.should.not.eql(expectedExpires); // expires should be different than before
             done();
@@ -933,7 +933,7 @@ describe('Model', function () {
       myCat.name = 'FluffyB';
       setTimeout(() => {
         myCat.save({'updateExpires': false}, () => {
-          Cats.Cat11.get(2, (err, realCat) => {
+          Cats.Cat11.get(2, (errB, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.expires.should.eql(expectedExpires); // expires should be the same as before
             done();
@@ -962,7 +962,7 @@ describe('Model', function () {
       myCat.name = 'FluffyB';
       setTimeout(() => {
         myCat.save(() => {
-          Cats.Cat11.get(3, (err, realCat) => {
+          Cats.Cat11.get(3, (errB, realCat) => {
             realCat.name.should.eql('FluffyB');
             realCat.expires.should.eql(expectedExpires); // expires should be the same as before
             done();
@@ -984,12 +984,12 @@ describe('Model', function () {
         'condition': '#name = :name',
         'conditionNames': {'name': 'name'},
         'conditionValues': {'name': 'Muffin'}
-      }, (err) => {
-        should.exist(err);
-        err.code.should.eql('ConditionalCheckFailedException');
+      }, (errA) => {
+        should.exist(errA);
+        errA.code.should.eql('ConditionalCheckFailedException');
 
-        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
-          should.not.exist(err);
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (errB, badCat) => {
+          should.not.exist(errB);
           badCat.name.should.eql('Bad Cat');
           done();
         });
@@ -1009,11 +1009,11 @@ describe('Model', function () {
         'condition': '#name = :name',
         'conditionNames': {'name': 'name'},
         'conditionValues': {'name': 'Bad Cat'}
-      }, (err) => {
-        should.not.exist(err);
+      }, (errA) => {
+        should.not.exist(errA);
 
-        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, whiskers) => {
-          should.not.exist(err);
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (errB, whiskers) => {
+          should.not.exist(errB);
           whiskers.name.should.eql('Whiskers');
           done();
         });
@@ -1036,11 +1036,11 @@ describe('Model', function () {
 
       model.name = 'Fluffy';
       model.vet.name = 'Nice Guy';
-      model.save((err) => {
-        should.not.exist(err);
+      model.save((errA) => {
+        should.not.exist(errA);
 
-        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
-          should.not.exist(err);
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (errB, badCat) => {
+          should.not.exist(errB);
           badCat.name.should.eql('Fluffy');
           badCat.vet.name.should.eql('Nice Guy');
           flag.should.be.true;
@@ -1058,11 +1058,11 @@ describe('Model', function () {
       should.exist(model);
 
       model.validated = 'bad';
-      model.save().catch((err) => {
-        should.exist(err);
-        err.name.should.equal('ValidationError');
-        Cats.Cat.get({'id': 1}, {'consistent': true}, (err, badCat) => {
-          should.not.exist(err);
+      model.save().catch((errA) => {
+        should.exist(errA);
+        errA.name.should.equal('ValidationError');
+        Cats.Cat.get({'id': 1}, {'consistent': true}, (errB, badCat) => {
+          should.not.exist(errB);
           badCat.name.should.eql('Fluffy');
           badCat.vet.name.should.eql('Nice Guy');
           badCat.ears[0].name.should.eql('right');
@@ -1188,8 +1188,8 @@ describe('Model', function () {
   it('Static Delete', (done) => {
     Cats.Cat.delete(666, (err) => {
       should.not.exist(err);
-      Cats.Cat.get(666, (err, delCat) => {
-        should.not.exist(err);
+      Cats.Cat.get(666, (errA, delCat) => {
+        should.not.exist(errA);
         should.not.exist(delCat);
 
         Cats.Cat.delete(777, done);
@@ -1208,8 +1208,8 @@ describe('Model', function () {
     });
     cat.delete((err) => {
       should.not.exist(err);
-      Cats.CatWithGeneratedID.get(cat, (err, delCat) => {
-        should.not.exist(err);
+      Cats.CatWithGeneratedID.get(cat, (errA, delCat) => {
+        should.not.exist(errA);
         should.not.exist(delCat);
         done();
       });
@@ -1219,8 +1219,8 @@ describe('Model', function () {
   it('Static Delete with range key', (done) => {
     Cats.Cat2.delete({'ownerId': 666, 'name': 'Garfield'}, (err) => {
       should.not.exist(err);
-      Cats.Cat2.get({'ownerId': 666, 'name': 'Garfield'}, (err, delCat) => {
-        should.not.exist(err);
+      Cats.Cat2.get({'ownerId': 666, 'name': 'Garfield'}, (errA, delCat) => {
+        should.not.exist(errA);
         should.not.exist(delCat);
         done();
       });
@@ -1242,8 +1242,8 @@ describe('Model', function () {
       should.exist(data);
       data.id.should.eql(666);
       data.name.should.eql('Garfield');
-      Cats.Cat.get(666, (err, delCat) => {
-        should.not.exist(err);
+      Cats.Cat.get(666, (errA, delCat) => {
+        should.not.exist(errA);
         should.not.exist(delCat);
         done();
       });
@@ -1302,8 +1302,8 @@ describe('Model', function () {
         'conditionValues': {'name': 'Muffin'}
       }, (err) => {
         should.exist(err);
-        Cats.Cat.get(999, (err, tomcat) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, tomcat) => {
+          should.not.exist(errA);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
           tomcat.name.should.eql('Tom');
@@ -1324,8 +1324,8 @@ describe('Model', function () {
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Oliver');
-        Cats.Cat.get(999, (err, oliver) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, oliver) => {
+          should.not.exist(errA);
           should.exist(oliver);
           oliver.id.should.eql(999);
           oliver.name.should.eql('Oliver');
@@ -1344,27 +1344,27 @@ describe('Model', function () {
         data.name.should.equal('Furrgie');
         data.age.should.equal(3);
 
-        Cats.Cat3.get(888, (err, furrgie) => {
-          should.not.exist(err);
+        Cats.Cat3.get(888, (errA, furrgie) => {
+          should.not.exist(errA);
           should.exist(furrgie);
           furrgie.id.should.eql(888);
           furrgie.name.should.eql('Furrgie');
           data.age.should.equal(3);
 
-          Cats.Cat3.update(undefined, {'age': 4}, (err, data) => {
-            should.not.exist(err);
-            should.exist(data);
-            data.id.should.eql(888);
-            data.name.should.equal('Furrgie');
-            data.age.should.equal(4);
+          Cats.Cat3.update(undefined, {'age': 4}, (errB, dataB) => {
+            should.not.exist(errB);
+            should.exist(dataB);
+            dataB.id.should.eql(888);
+            dataB.name.should.equal('Furrgie');
+            dataB.age.should.equal(4);
 
-            Cats.Cat3.get(888, (err, furrgie) => {
-              should.not.exist(err);
-              should.exist(furrgie);
-              furrgie.id.should.eql(888);
-              furrgie.name.should.eql('Furrgie');
-              should.not.exist(furrgie.owner);
-              data.age.should.equal(4);
+            Cats.Cat3.get(888, (errC, furrgieB) => {
+              should.not.exist(errC);
+              should.exist(furrgieB);
+              furrgieB.id.should.eql(888);
+              furrgieB.name.should.eql('Furrgie');
+              should.not.exist(furrgieB.owner);
+              dataB.age.should.equal(4);
               done();
             });
           });
@@ -1388,8 +1388,8 @@ describe('Model', function () {
         data.name.should.equal('Furrgie');
         data.age.should.equal(5);
 
-        Cats.Cat3.get(888, (err, furrgie) => {
-          should.not.exist(err);
+        Cats.Cat3.get(888, (errA, furrgie) => {
+          should.not.exist(errA);
           should.exist(furrgie);
           furrgie.id.should.eql(888);
           furrgie.name.should.eql('Furrgie');
@@ -1406,8 +1406,8 @@ describe('Model', function () {
         data.id.should.eql(25);
         data.name.should.equal('Mittens');
         data.age.should.equal(3);
-        Cats.Cat3.get(25, (err, mittens) => {
-          should.not.exist(err);
+        Cats.Cat3.get(25, (errA, mittens) => {
+          should.not.exist(errA);
           should.exist(mittens);
           mittens.id.should.eql(25);
           mittens.name.should.eql('Mittens');
@@ -1422,8 +1422,8 @@ describe('Model', function () {
       Cats.Cat3.update({'id': 25}, {'name': 'Rufflestiltskins'}, {'createRequired': true}, (err, data) => {
         should.not.exist(data);
         should.exist(err);
-        Cats.Cat3.get(25, (err, mittens) => {
-          should.not.exist(err);
+        Cats.Cat3.get(25, (errA, mittens) => {
+          should.not.exist(errA);
           should.exist(mittens);
           mittens.id.should.eql(25);
           mittens.name.should.eql('Mittens');
@@ -1439,8 +1439,8 @@ describe('Model', function () {
         data.id.should.eql(45);
         data.name.should.equal('Mittens');
         data.age.should.equal(4);
-        Cats.Cat3.get(45, (err, mittens) => {
-          should.not.exist(err);
+        Cats.Cat3.get(45, (errA, mittens) => {
+          should.not.exist(errA);
           should.exist(mittens);
           mittens.id.should.eql(45);
           mittens.name.should.eql('Mittens');
@@ -1458,8 +1458,8 @@ describe('Model', function () {
         data.id.should.eql(24);
         data.name.should.equal('Cat-rina');
         should.not.exist(data.age);
-        Cats.Cat3.get(24, (err, mittens) => {
-          should.not.exist(err);
+        Cats.Cat3.get(24, (errA, mittens) => {
+          should.not.exist(errA);
           should.exist(mittens);
           mittens.id.should.eql(24);
           data.name.should.equal('Cat-rina');
@@ -1481,8 +1481,8 @@ describe('Model', function () {
           data.id.should.eql(22);
           data.name.should.equal('Twinkles');
 
-          Cats.Cat4.get(22, (err, twinkles) => {
-            should.not.exist(err);
+          Cats.Cat4.get(22, (errA, twinkles) => {
+            should.not.exist(errA);
             should.exist(twinkles);
             twinkles.id.should.eql(22);
             twinkles.name.should.equal('Twinkles');
@@ -1506,14 +1506,14 @@ describe('Model', function () {
           should.exist(data.myLittleUpdatedAt);
 
           // now do another update
-          Cats.Cat4.update({'id': 22}, {'name': 'Furr-nando'}, (err, data) => {
-            should.not.exist(err);
-            should.exist(data);
-            data.id.should.eql(22);
-            data.name.should.equal('Furr-nando');
-            data.myLittleUpdatedAt.getTime().should.be.above(data.myLittleCreatedAt.getTime());
-            Cats.Cat4.get(22, (err, furrnando) => {
-              should.not.exist(err);
+          Cats.Cat4.update({'id': 22}, {'name': 'Furr-nando'}, (errA, dataA) => {
+            should.not.exist(errA);
+            should.exist(dataA);
+            dataA.id.should.eql(22);
+            dataA.name.should.equal('Furr-nando');
+            dataA.myLittleUpdatedAt.getTime().should.be.above(data.myLittleCreatedAt.getTime());
+            Cats.Cat4.get(22, (errB, furrnando) => {
+              should.not.exist(errB);
               should.exist(furrnando);
               furrnando.id.should.eql(22);
               furrnando.name.should.equal('Furr-nando');
@@ -1539,13 +1539,13 @@ describe('Model', function () {
 
 
           setTimeout(() => {
-            Cats.ExpiringCat.update({'name': 'Fluffy2'}, {'name': 'Twinkles'}, {'updateExpires': true}, (err, fluffy) => {
+            Cats.ExpiringCat.update({'name': 'Fluffy2'}, {'name': 'Twinkles'}, {'updateExpires': true}, (err, fluffyA) => {
               should.not.exist(err);
-              should.exist(fluffy);
-              should.exist(fluffy.expires);
-              should.exist(fluffy.expires.getTime);
+              should.exist(fluffyA);
+              should.exist(fluffyA.expires);
+              should.exist(fluffyA.expires.getTime);
 
-              const expiresInSec2 = Math.floor(fluffy.expires.getTime() / 1000);
+              const expiresInSec2 = Math.floor(fluffyA.expires.getTime() / 1000);
               expiresInSec2.should.be.above(expiresInSec);
 
               done();
@@ -2151,8 +2151,8 @@ describe('Model', function () {
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Felix');
-        Cats.Cat.get(999, (err, felix) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, felix) => {
+          should.not.exist(errA);
           should.exist(felix);
           felix.id.should.eql(999);
           felix.name.should.eql('Felix');
@@ -2189,8 +2189,8 @@ describe('Model', function () {
         should.exist(data);
         data.id.should.eql(999);
         data.name.should.equal('Tom');
-        Cats.Cat.get(999, (err, tomcat) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, tomcat) => {
+          should.not.exist(errA);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
           tomcat.name.should.eql('Tom');
@@ -2207,8 +2207,8 @@ describe('Model', function () {
         should.exist(data);
         data.id.should.eql(999);
         should.not.exist(data.name);
-        Cats.Cat.get(999, (err, tomcat) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, tomcat) => {
+          should.not.exist(errA);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
           should.not.exist(tomcat.name);
@@ -2223,8 +2223,8 @@ describe('Model', function () {
         should.exist(data);
         data.id.should.eql(999);
         data.owner.should.equal('Jerry');
-        Cats.Cat.get(999, (err, tomcat) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, tomcat) => {
+          should.not.exist(errA);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
           tomcat.name.should.eql('Tom');
@@ -2241,8 +2241,8 @@ describe('Model', function () {
         should.exist(data);
         data.id.should.eql(999);
         data.age.should.equal(4);
-        Cats.Cat.get(999, (err, tomcat) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, tomcat) => {
+          should.not.exist(errA);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
           tomcat.name.should.eql('Tom');
@@ -2260,8 +2260,8 @@ describe('Model', function () {
           should.exist(data);
           data.id.should.eql(1000);
           data.items.should.eql([{'name': 'item 2', 'amount': 25}, {'name': 'item 1', 'amount': 50}]);
-          Cats.Cat13.get(1000, (err, cat) => {
-            should.not.exist(err);
+          Cats.Cat13.get(1000, (errA, cat) => {
+            should.not.exist(errA);
             should.exist(cat);
             cat.id.should.eql(1000);
             cat.items.should.eql([{'name': 'item 2', 'amount': 25}, {'name': 'item 1', 'amount': 50}]);
@@ -2276,8 +2276,8 @@ describe('Model', function () {
         should.exist(data);
         data.id.should.eql(999);
         should.not.exist(data.owner);
-        Cats.Cat.get(999, (err, tomcat) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, tomcat) => {
+          should.not.exist(errA);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
           tomcat.name.should.eql('Tom');
@@ -2293,8 +2293,8 @@ describe('Model', function () {
         should.exist(err);
         should.not.exist(data);
         err.name.should.equal('ValidationError');
-        Cats.Cat.get(999, (err, tomcat) => {
-          should.not.exist(err);
+        Cats.Cat.get(999, (errA, tomcat) => {
+          should.not.exist(errA);
           should.exist(tomcat);
           tomcat.id.should.eql(999);
           tomcat.name.should.eql('Tom');
@@ -2340,8 +2340,8 @@ describe('Model', function () {
     it('Update with saveUnknown enabled', (done) => {
       Cats.Cat1.create({'id': 982, 'name': 'Oliver'}, (err, old) => {
         should.not.exist(err);
-        Cats.Cat1.update({'id': old.id}, {'otherProperty': 'Testing123'}, (err, data) => {
-          should.not.exist(err);
+        Cats.Cat1.update({'id': old.id}, {'otherProperty': 'Testing123'}, (errA, data) => {
+          should.not.exist(errA);
           should.exist(data);
           data.should.have.property('otherProperty');
           data.otherProperty.should.eql('Testing123');
@@ -2355,8 +2355,8 @@ describe('Model', function () {
         should.not.exist(err);
         old.should.have.property('mathy');
         old.mathy.should.eql(1);
-        Cats.Cat1.update({'id': old.id}, {'$ADD': {'mathy': 4}}, (err, data) => {
-          should.not.exist(err);
+        Cats.Cat1.update({'id': old.id}, {'$ADD': {'mathy': 4}}, (errA, data) => {
+          should.not.exist(errA);
           should.exist(data);
           data.should.have.property('mathy');
           data.mathy.should.eql(5);
@@ -2368,15 +2368,15 @@ describe('Model', function () {
     it('Update $DELETE with saveUnknown enabled', (done) => {
       Cats.Cat1.create({'id': 984, 'name': 'Oliver'}, (err, old) => {
         should.not.exist(err);
-        Cats.Cat1.update({'id': old.id}, {'otherProperty': 'Testing123'}, (err, data) => {
-          should.not.exist(err);
+        Cats.Cat1.update({'id': old.id}, {'otherProperty': 'Testing123'}, (errA, data) => {
+          should.not.exist(errA);
           should.exist(data);
           data.should.have.property('otherProperty');
           data.otherProperty.should.eql('Testing123');
-          Cats.Cat1.update({'id': old.id}, {'$DELETE': {'otherProperty': 'Testing123'}}, (err, data) => {
-            should.not.exist(err);
-            should.exist(data);
-            data.should.not.have.property('otherProperty');
+          Cats.Cat1.update({'id': old.id}, {'$DELETE': {'otherProperty': 'Testing123'}}, (errB, dataB) => {
+            should.not.exist(errB);
+            should.exist(dataB);
+            dataB.should.not.have.property('otherProperty');
             done();
           });
         });
@@ -2401,14 +2401,14 @@ describe('Model', function () {
 
   describe('Model.populate', () => {
     before((done) => {
-      const kittenWithParents = new Cats.Cat6({'id': 1, 'name': 'One'});
+      const kittenWithParentsA = new Cats.Cat6({'id': 1, 'name': 'One'});
       const owner = new Cats.Owner({'name': 'Owner', 'address': '123 A Street', 'phoneNumber': '2345551212'});
       const kittenWithOwner = new Cats.CatWithOwner({
         'id': 100,
         'name': 'Owned',
         'owner': {'name': owner.name, 'address': owner.address}
       });
-      kittenWithParents.save()
+      kittenWithParentsA.save()
         .then((kitten) => {
           const kittenWithParents = new Cats.Cat6({'id': 2, 'name': 'Two', 'parent': kitten.id});
           return kittenWithParents.save();
@@ -3230,7 +3230,7 @@ describe('Model', function () {
       newCat.name = 'NAME_VALUE_2';
       newCat.originalItem().should.eql(item);
       newCat.name.should.eql('NAME_VALUE_2');
-      Cats.Cat.get(2222, (err, newCatB) => {
+      Cats.Cat.get(2222, (errB, newCatB) => {
         newCatB.originalItem().should.eql(item);
         newCatB.name = 'NAME_VALUE_2';
         newCatB.originalItem().should.eql(item);
@@ -3256,8 +3256,8 @@ describe('Model', function () {
     const cat = new Cats.Cat(item);
     cat.save((err) => {
       should.not.exist(err);
-      Cats.Cat.get(3333, (err, newCatB) => {
-        should.not.exist(err);
+      Cats.Cat.get(3333, (errB, newCatB) => {
+        should.not.exist(errB);
         should.exist(newCatB);
         newCatB.should.have.property('profileImage', imageData);
         done();

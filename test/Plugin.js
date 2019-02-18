@@ -120,13 +120,13 @@ describe('Plugin', function () {
 
   it('Should pass in details into "plugin:register" on function', (done) => {
     Model.plugin((obj) => {
-      obj.on('plugin:register', (obj) => {
-        should.exist(obj.event);
-        should.exist(obj.model);
-        should.exist(obj.modelName);
-        should.exist(obj.plugin);
-        should.exist(obj.plugins);
-        obj.plugins.length.should.eql(1);
+      obj.on('plugin:register', (objB) => {
+        should.exist(objB.event);
+        should.exist(objB.model);
+        should.exist(objB.modelName);
+        should.exist(objB.plugin);
+        should.exist(objB.plugins);
+        objB.plugins.length.should.eql(1);
       });
     });
 
@@ -135,8 +135,8 @@ describe('Plugin', function () {
 
   it('Plugin Options should equal empty object if not defined', (done) => {
     Model.plugin((obj) => {
-      obj.on('plugin:register', (obj) => {
-        obj.event.pluginOptions.should.deep.eql({});
+      obj.on('plugin:register', (objB) => {
+        objB.event.pluginOptions.should.deep.eql({});
       });
     });
     done();
@@ -144,8 +144,8 @@ describe('Plugin', function () {
 
   it('Plugin Options should equal object passed in', (done) => {
     Model.plugin((obj) => {
-      obj.on('plugin:register', (obj) => {
-        obj.event.pluginOptions.should.deep.eql({'username': 'test'});
+      obj.on('plugin:register', (objB) => {
+        objB.event.pluginOptions.should.deep.eql({'username': 'test'});
       });
     }, {'username': 'test'});
     done();
