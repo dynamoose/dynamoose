@@ -694,8 +694,8 @@ describe('Query', function () {
           Log.query('orgId').eq('org1')
             .where('createdAt').lt(new Date())
             .exec()
-            .then((res) => {
-              res.length.should.eql(1);
+            .then((resB) => {
+              resB.length.should.eql(1);
               done();
             })
             .catch((e) => {

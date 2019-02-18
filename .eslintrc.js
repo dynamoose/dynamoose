@@ -63,7 +63,6 @@ module.exports = {
     'one-var-declaration-per-line': 'off',
 
     // Higher priority to enable
-    'no-shadow': 'off',
     'no-await-in-loop': 'off',
     'guard-for-in': 'off',
     'no-undefined': 'off',
