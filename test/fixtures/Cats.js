@@ -1,371 +1,377 @@
 'use strict';
 
-module.exports = function(dynamoose){
-  const ONE_YEAR = 365*24*60*60; // 1 years in seconds
-  const NINE_YEARS = 9*ONE_YEAR; // 9 years in seconds
+module.exports = function (dynamoose) {
+  const ONE_YEAR = 365 * 24 * 60 * 60; // 1 years in seconds
+  const NINE_YEARS = 9 * ONE_YEAR; // 9 years in seconds
 
   const Cat = dynamoose.model('Cat', {
-    id: {
-      type:  Number,
-      validate: function (v) { return v > 0; }
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; }
     },
-    name: String,
-    owner: String,
-    age: { type: Number },
-    vet:{
-      name: String,
-      address: String
+    'name': String,
+    'owner': String,
+    'age': {'type': Number},
+    'vet': {
+      'name': String,
+      'address': String
     },
-    ears:[{
-      name: String
-    }],
-    legs: [String],
-    profileImage: Buffer,
-    more: Object,
-    array: Array,
-    validated: {
-      type: String,
-      validate: function (v) { return v === 'valid'; }
+    'ears': [
+      {
+        'name': String
+      }
+    ],
+    'legs': [String],
+    'profileImage': Buffer,
+    'more': Object,
+    'array': Array,
+    'validated': {
+      'type': String,
+      'validate' (v) { return v === 'valid'; }
     }
   });
 
   // Create a model with unnamed attributes
   const Cat1 = dynamoose.model('Cat1', {
-    id: {
-      type:  Number,
-      validate: function (v) { return v > 0; },
-      default: 888
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; },
+      'default': 888
     },
-    name: {
-      type: String,
-      required: true,
-      default: 'Mittens'
+    'name': {
+      'type': String,
+      'required': true,
+      'default': 'Mittens'
     },
-    owner: String
-  }, {saveUnknown: true});
+    'owner': String
+  }, {'saveUnknown': true});
 
   // Create a model with a range key
   const Cat2 = dynamoose.model('Cat2', {
-    ownerId: {
-      type: Number,
-      hashKey: true
+    'ownerId': {
+      'type': Number,
+      'hashKey': true
     },
-    name: {
-      type: String,
-      rangeKey: true
+    'name': {
+      'type': String,
+      'rangeKey': true
     }
   });
 
   // Create a model with required attributes
   const Cat3 = dynamoose.model('Cat3', {
-    id: {
-      type:  Number,
-      validate: function (v) { return v > 0; },
-      default: 888
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; },
+      'default': 888
     },
-    name: {
-      type: String,
-      required: true,
-      default: 'Mittens'
+    'name': {
+      'type': String,
+      'required': true,
+      'default': 'Mittens'
     },
-    owner: String,
-    age: {
-      type: Number,
-      required: true
+    'owner': String,
+    'age': {
+      'type': Number,
+      'required': true
     }
   });
 
   // Create a model with timestamps
   const Cat4 = dynamoose.model('Cat4', {
-    id: {
-      type:  Number,
-      validate: function (v) { return v > 0; }
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; }
     },
-    name: {
-      type: String,
-      default: 'Bobo'
+    'name': {
+      'type': String,
+      'default': 'Bobo'
     }
   },
   {
-    timestamps: {
-      createdAt: 'myLittleCreatedAt',
-      updatedAt: 'myLittleUpdatedAt'
+    'timestamps': {
+      'createdAt': 'myLittleCreatedAt',
+      'updatedAt': 'myLittleUpdatedAt'
     }
   });
 
   // Create a model with unnamed attributes
   const Cat5 = dynamoose.model('Cat5', {
-    id: {
-      type:  Number,
-      validate: function (v) { return v > 0; },
-      default: 888
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; },
+      'default': 888
     },
-    name: {
-      type: String,
-      required: true,
-      default: 'Mittens'
+    'name': {
+      'type': String,
+      'required': true,
+      'default': 'Mittens'
     },
-    owner: String,
+    'owner': String
   },
   {
-    saveUnknown: true
+    'saveUnknown': true
   });
 
   const Cat6 = dynamoose.model('Cat6', {
-    id: {
-      type:  Number
+    'id': {
+      'type': Number
     },
-    name: {
-      type: String
+    'name': {
+      'type': String
     },
-    parent: {
-      type: Number,
-      ref: 'Cat6'
+    'parent': {
+      'type': Number,
+      'ref': 'Cat6'
     }
   });
 
   const Cat7 = dynamoose.model('Cat7', {
-    id: {
-      type:  Number,
-      hashKey: true
+    'id': {
+      'type': Number,
+      'hashKey': true
     },
-    name: {
-      type: String
+    'name': {
+      'type': String
     },
-    parent: Number,
-    isHappy: Boolean
-  }, {useDocumentTypes: false, useNativeBooleans: false});
+    'parent': Number,
+    'isHappy': Boolean
+  }, {'useDocumentTypes': false, 'useNativeBooleans': false});
 
   const Cat8 = dynamoose.model('Cat8', {
-    id: {
-      type:  Number,
-      hashKey: true
+    'id': {
+      'type': Number,
+      'hashKey': true
     },
-    age: {
-      type: Number,
-      rangeKey: true
+    'age': {
+      'type': Number,
+      'rangeKey': true
     }
   });
 
   const CatWithOwner = dynamoose.model('CatWithOwner', {
-    id: {
-      type:  Number
+    'id': {
+      'type': Number
     },
-    name: {
-      type: String
+    'name': {
+      'type': String
     },
-    owner: {
-      name: String,
-      address: String
+    'owner': {
+      'name': String,
+      'address': String
     }
   });
 
   const Owner = dynamoose.model('Owner', {
-    name: {
-      type: String,
-      hashKey: true
+    'name': {
+      'type': String,
+      'hashKey': true
     },
-    address: {
-      type: String,
-      rangeKey: true
+    'address': {
+      'type': String,
+      'rangeKey': true
     },
-    phoneNumber: String
+    'phoneNumber': String
   });
 
   const ExpiringCat = dynamoose.model('ExpiringCat', {
-    name: String
-  }, {expires: NINE_YEARS});
+    'name': String
+  }, {'expires': NINE_YEARS});
 
   const ExpiringCatNull = dynamoose.model('ExpiringCatNull', {
-    name: String
+    'name': String
   },
   {
-    expires: {
-      ttl: NINE_YEARS,
-      attribute: 'expires',
-      defaultExpires: function() {
+    'expires': {
+      'ttl': NINE_YEARS,
+      'attribute': 'expires',
+      'defaultExpires' () {
         return null;
       }
     }
   });
 
   const ExpiringCatNoReturn = dynamoose.model('ExpiringCatNoReturn', {
-    name: String
+    'name': String
   }, {
-    expires: {
-      ttl: NINE_YEARS,
-      attribute: 'expires',
-      returnExpiredItems: false,
-      defaultExpires: function() {
+    'expires': {
+      'ttl': NINE_YEARS,
+      'attribute': 'expires',
+      'returnExpiredItems': false,
+      'defaultExpires' () {
         return null;
       }
     }
   });
 
   const ExpiringCatReturnTrue = dynamoose.model('ExpiringCatReturnTrue', {
-    name: String
+    'name': String
   }, {
-    expires: {
-      ttl: NINE_YEARS,
-      attribute: 'expires',
-      returnExpiredItems: true,
-      defaultExpires: function() {
+    'expires': {
+      'ttl': NINE_YEARS,
+      'attribute': 'expires',
+      'returnExpiredItems': true,
+      'defaultExpires' () {
         return null;
       }
     }
   });
 
   const CatWithGeneratedID = dynamoose.model('CatWithGeneratedID', {
-    id: {
-      type: String,
-      default: function (model) {
-        return model.owner.name + '_' + model.name;
+    'id': {
+      'type': String,
+      'default' (model) {
+        return `${model.owner.name}_${model.name}`;
       },
-      validate: function (value, model) {
-        return value === model.owner.name + '_' + model.name;
+      'validate' (value, model) {
+        return value === `${model.owner.name}_${model.name}`;
       }
     },
-    name: {
-      type: String,
+    'name': {
+      'type': String
     },
-    owner: {
-      name: String,
-      address: String
+    'owner': {
+      'name': String,
+      'address': String
     }
   });
 
   const CatModel = dynamoose.model('CatDefault', {
-    id: {
-      type:  Number,
-      validate: function (v) { return v > 0; }
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; }
     },
-    name: String,
-    owner: String,
-    shouldRemainUnchanged: {
-      type: String,
-      default: function(model) {
-        return 'shouldRemainUnchanged_'+ model.name +'_'+ model.owner;
+    'name': String,
+    'owner': String,
+    'shouldRemainUnchanged': {
+      'type': String,
+      'default' (model) {
+        return `shouldRemainUnchanged_${model.name}_${model.owner}`;
       }
     },
-    shouldBeChanged: {
-      type: String,
-      default: function(model) {
-        return 'shouldBeChanged_'+ model.name +'_'+ model.owner;
+    'shouldBeChanged': {
+      'type': String,
+      'default' (model) {
+        return `shouldBeChanged_${model.name}_${model.owner}`;
       }
     },
-    shouldAlwaysBeChanged: {
-      type: String,
-      default: function(model) {
-        return 'shouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
+    'shouldAlwaysBeChanged': {
+      'type': String,
+      'default' (model) {
+        return `shouldAlwaysBeChanged_${model.name}_${model.owner}`;
       },
-      forceDefault: true
+      'forceDefault': true
     },
-    unsetShouldBeChanged: {
-      type: String,
-      default: function(model) {
-        return 'unsetShouldBeChanged_'+ model.name +'_'+ model.owner;
+    'unsetShouldBeChanged': {
+      'type': String,
+      'default' (model) {
+        return `unsetShouldBeChanged_${model.name}_${model.owner}`;
       }
     },
-    unsetShouldAlwaysBeChanged: {
-      type: String,
-      default: function(model) {
-        return 'unsetShouldAlwaysBeChanged_'+ model.name +'_'+ model.owner;
+    'unsetShouldAlwaysBeChanged': {
+      'type': String,
+      'default' (model) {
+        return `unsetShouldAlwaysBeChanged_${model.name}_${model.owner}`;
       }
     }
   });
 
   const Cat9 = dynamoose.model('Cat9', {
-    id: {
-      type: Number,
-      validate: function (v) { return v > 0; }
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; }
     },
-    name: String,
-    owner: String,
-    age: { type: Number },
-    vet:{
-      name: String,
-      address: String
+    'name': String,
+    'owner': String,
+    'age': {'type': Number},
+    'vet': {
+      'name': String,
+      'address': String
     },
-    ears:[{
-      name: String
-    }],
-    legs: [String],
-    more: Object,
-    array: Array,
-    validated: {
-      type: String,
-      validate: function (v) { return v === 'valid'; }
+    'ears': [
+      {
+        'name': String
+      }
+    ],
+    'legs': [String],
+    'more': Object,
+    'array': Array,
+    'validated': {
+      'type': String,
+      'validate' (v) { return v === 'valid'; }
     }
-  }, {timestamps: true});
+  }, {'timestamps': true});
 
   const Cat10 = dynamoose.model('Cat10', {
-    id: {
-      type:  Number,
-      hashKey: true
+    'id': {
+      'type': Number,
+      'hashKey': true
     },
-    isHappy: Boolean,
-    parents: Array,
-    details: Object
-  }, {useDocumentTypes: false, useNativeBooleans: false});
+    'isHappy': Boolean,
+    'parents': Array,
+    'details': Object
+  }, {'useDocumentTypes': false, 'useNativeBooleans': false});
 
   const Cat11 = dynamoose.model('Cat11', {
-    id: {
-      type: Number,
-      validate: function(v) {
+    'id': {
+      'type': Number,
+      'validate' (v) {
         return v > 0;
       }
     },
-    name: String,
-    owner: String,
-    age: {
-      type: Number
+    'name': String,
+    'owner': String,
+    'age': {
+      'type': Number
     },
-    vet: {
-      name: String,
-      address: String
+    'vet': {
+      'name': String,
+      'address': String
     },
-    ears: [{
-      name: String
-    }],
-    legs: [String],
-    more: Object,
-    array: Array,
-    validated: {
-      type: String,
-      validate: function(v) {
+    'ears': [
+      {
+        'name': String
+      }
+    ],
+    'legs': [String],
+    'more': Object,
+    'array': Array,
+    'validated': {
+      'type': String,
+      'validate' (v) {
         return v === 'valid';
       }
     }
   }, {
-    useDocumentTypes: true,
-    expires: NINE_YEARS
+    'useDocumentTypes': true,
+    'expires': NINE_YEARS
   });
 
   const Cat12 = dynamoose.model('Cat12',
     {
-      _id: {
-        type:  Number,
-        validate: function (v) { return v > 0; }
+      '_id': {
+        'type': Number,
+        'validate' (v) { return v > 0; }
       },
-      name: String
+      'name': String
     });
 
   const Cat13 = dynamoose.model('Cat13', {
-    id: {
-      type: Number,
-      validate: function (v) { return v > 0; }
+    'id': {
+      'type': Number,
+      'validate' (v) { return v > 0; }
     },
-    items: {
-      type: 'list',
-      list: [
+    'items': {
+      'type': 'list',
+      'list': [
         {
-          name: {
-            type: String,
-            required: true
+          'name': {
+            'type': String,
+            'required': true
           },
-          amount: {
-            type: Number,
-            required: true
+          'amount': {
+            'type': Number,
+            'required': true
           }
         }
       ]
@@ -373,8 +379,8 @@ module.exports = function(dynamoose){
   });
 
   const CatWithMethodsSchema = new dynamoose.Schema({
-    id: Number,
-    name: String
+    'id': Number,
+    'name': String
   });
   CatWithMethodsSchema.method('getModel', function (modelName) {
     return this.model(modelName);
@@ -382,10 +388,10 @@ module.exports = function(dynamoose){
   const CatWithMethods = dynamoose.model('CatWithMethods', CatWithMethodsSchema);
 
   const ReturnValuesNoneCat = dynamoose.model('ReturnValuesNoneCat', {
-    id: Number,
-    name: String,
-  },{
-    defaultReturnValues: 'NONE',
+    'id': Number,
+    'name': String
+  }, {
+    'defaultReturnValues': 'NONE'
   });
 
   return {
