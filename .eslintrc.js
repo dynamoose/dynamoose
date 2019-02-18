@@ -62,7 +62,6 @@ module.exports = {
     'multiline-comment-style': 'off',
     'capitalized-comments': 'off',
     'function-paren-newline': 'off',
-    'no-use-before-define': 'off',
     'brace-style': ['error', '1tbs', {'allowSingleLine': true}],
     'dot-location': 'off',
     'one-var-declaration-per-line': 'off',
