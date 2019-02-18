@@ -34,7 +34,7 @@ module.exports = {
     'max-lines-per-function': ['error', {'max': 3500}],
     'max-statements-per-line': ['error', {'max': 6}],
     'max-depth': ['error', {'max': 7}],
-    'max-len': ['error', {'code': 388}],
+    'max-len': ['error', {'code': 351}],
     'no-console': 'off',
     'one-var': 'off',
     'padded-blocks': 'off',
