@@ -3574,4 +3574,44 @@ describe('Model', function (){
       should.not.exist(result);
     });
   });
+  
+  it('should not call validate on the model when calling get', async function(){
+    const model = dynamoose.model('no-validate', new dynamoose.Schema(
+      {
+        id: {
+          type: String,
+          required: true,
+          hashKey: true,
+          validate: function (val, model) {
+            if (!model.name){
+              // Is called on get :(
+              throw new Error('should not throw');
+            }
+            return true;
+          }
+        },
+        projectId: {
+          type: String,
+          required: true,
+          rangeKey: true,
+          index: {
+            global: true,
+            name: 'projectId-index',
+            project: true,
+          },
+        },
+      }));
+
+
+    let error, res;
+    try {
+      await model.create({id: 'idid', projectId:'project', name: 'Rob'});
+      res = await model.get({id: 'idid', projectId: 'project'});
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+    res.name.should.eql('Rob');
+  });
 });
