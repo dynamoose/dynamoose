@@ -1,5 +1,13 @@
 # Dynamoose Changelog
 
+## [1.6.3](https://github.com/dynamoosejs/dynamoose/compare/v1.6.2...v1.6.3) (2019-02-18)
+
+
+### Bug Fixes
+
+* **model:** fixing batchDelete syntax bug ([dfb448f](https://github.com/dynamoosejs/dynamoose/commit/dfb448f))
+* **model:** fixing update and condition check syntax bug ([74623bf](https://github.com/dynamoosejs/dynamoose/commit/74623bf))
+
 ## [1.6.2](https://github.com/dynamoosejs/dynamoose/compare/v1.6.1...v1.6.2) (2019-02-13)
 
 
