@@ -44,9 +44,7 @@ module.exports = {
     'max-lines-per-function': ['error', {'max': 3500}],
     'max-statements-per-line': ['error', {'max': 6}],
     'max-depth': ['error', {'max': 7}],
-    'no-mixed-operators': 'off',
     'new-cap': 'off',
-    'no-param-reassign': 'off',
     'no-invalid-this': 'off',
     'no-empty-function': 'off',
     'handle-callback-err': 'off',
@@ -71,6 +69,8 @@ module.exports = {
     'guard-for-in': 'off',
     'no-undefined': 'off',
     'consistent-return': 'off',
-    'sort-keys': 'off'
+    'sort-keys': 'off',
+    'no-mixed-operators': 'off',
+    'no-param-reassign': 'off'
   }
 };
