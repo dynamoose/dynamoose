@@ -1,6 +1,5 @@
 'use strict';
 
-
 const dynamoose = require('../');
 dynamoose.AWS.config.update({
   'accessKeyId': 'AKID',

@@ -47,7 +47,6 @@ module.exports = {
     'no-mixed-operators': 'off',
     'new-cap': 'off',
     'no-param-reassign': 'off',
-    'no-unused-expressions': 'off',
     'no-invalid-this': 'off',
     'no-empty-function': 'off',
     'handle-callback-err': 'off',
