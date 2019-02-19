@@ -885,6 +885,34 @@ describe('Model', function () {
     });
   });
 
+  it('should save without updating timestamps in conditions', (done) => {
+    const myCat = new Cats.Cat9({
+      'id': 1,
+      'name': 'Fluffy',
+      'vet': {'name': 'theVet', 'address': '12 somewhere'},
+      'ears': [{'name': 'left'}, {'name': 'right'}],
+      'legs': ['front right', 'front left', 'back right', 'back left'],
+      'more': {'favorites': {'food': 'fish'}},
+      'array': [{'one': '1'}],
+      'validated': 'valid'
+    });
+
+    myCat.save((err, theSavedCat1) => {
+      const savedUpdatedAt = theSavedCat1.updatedAt;
+
+      myCat.name = 'FluffyB';
+      myCat.save({
+        'condition': 'updatedAt = :updatedAt',
+        'conditionValues': {
+          'updatedAt': savedUpdatedAt
+        }
+      }, (error) => {
+        should(error).eql(null);
+        done();
+      });
+    });
+  });
+
 
   it('Save existing item with updating expires', (done) => {
     const myCat = new Cats.Cat11({
