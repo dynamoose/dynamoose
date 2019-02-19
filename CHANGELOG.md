@@ -1,5 +1,13 @@
 # Dynamoose Changelog
 
+## [1.6.4](https://github.com/dynamoosejs/dynamoose/compare/v1.6.3...v1.6.4) (2019-02-19)
+
+
+### Bug Fixes
+
+* stop conditions being overwritten ([966d7bc](https://github.com/dynamoosejs/dynamoose/commit/966d7bc))
+* **lint:** increase limit for Model test file ([907b8a6](https://github.com/dynamoosejs/dynamoose/commit/907b8a6))
+
 ## [1.6.3](https://github.com/dynamoosejs/dynamoose/compare/v1.6.2...v1.6.3) (2019-02-18)
 
 
