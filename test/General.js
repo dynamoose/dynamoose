@@ -2,9 +2,9 @@
 
 const dynamoose = require('../');
 dynamoose.AWS.config.update({
-  accessKeyId: 'AKID',
-  secretAccessKey: 'SECRET',
-  region: 'us-east-1'
+  'accessKeyId': 'AKID',
+  'secretAccessKey': 'SECRET',
+  'region': 'us-east-1'
 });
 dynamoose.local();
 
