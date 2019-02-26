@@ -1,3 +1,5 @@
+'use strict';
+
 const DynamoDbLocal = require('dynamodb-local');
 const DYNAMO_DB_PORT = 8000;
 
@@ -12,7 +14,7 @@ const startUpAndReturnDynamo = async () => {
 
 let dynamoDb;
 
-before(async function() {
+before(async function () {
   this.timeout(30000);
   dynamoDb = await startUpAndReturnDynamo();
 });
