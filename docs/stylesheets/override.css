@@ -2,4 +2,6 @@
   width: calc(122rem - 40rem);
   position: relative;
   max-width: 120vw;
+  left: 100%;
+  transform: translateX(-80%);
 }
