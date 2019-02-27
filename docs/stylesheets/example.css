@@ -1,28 +1,28 @@
-body, html {
+.index-page body, .index-page html {
     height: 100%;
     padding: 0;
     margin: 0;
     font-family: Avenir Next;
 }
 
-* {
+.index-page * {
     padding: 0;
     margin: 0;
     border: none;
 }
 
-*:focus {
+.index-page *:focus {
     outline: none;
 }
 
-a {
+.index-page a {
     text-decoration: none;
     color: black;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#header {
+.index-page #header {
     width: 100%;
     height: 80px;
     display: flex;
@@ -31,7 +31,7 @@ a {
     background-image: linear-gradient(to bottom, #38458a, #6a74a1)
 }
 
-#header #logo {
+.index-page #header #logo {
     padding: 0 50px;
     font-size: 19px;
     font-weight: bold;
@@ -39,7 +39,7 @@ a {
     margin: auto 0;
 }
 
-#header #nav {
+.index-page #header #nav {
     list-style: none;
     margin: auto 50px;
     display: flex;
@@ -47,7 +47,7 @@ a {
     justify-content: space-evenly;
 }
 
-#header #nav li a {
+.index-page #header #nav li a {
     color: white;
     font-size: 16px;
     font-weight: 500;
@@ -57,26 +57,26 @@ a {
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#examples {
+.index-page #examples {
     width: 100%;
     /* min-height: 400px; */
     height: auto;
 }
 
-#section-title {
+.index-page #section-title {
     font-weight: bold;
     font-size: 35px;
     color: #2d3436;
     padding: 30px 50px 10px 50px;
 }
 
-#section-subtitle {
+.index-page #section-subtitle {
     padding: 5px 50px 10px 50px;
     font-size: 20px;
     color: #8395a7;
 }
 
-#examples #examples-section {
+.index-page #examples #examples-section {
     width: auto;
     height: auto;
     display: flex;
@@ -86,7 +86,7 @@ a {
     flex-wrap: wrap;
 }
 
-.eg-card {
+.index-page .eg-card {
     width: 200px;
     height: 250px;
     border-radius: 7px;
@@ -97,19 +97,19 @@ a {
     justify-content: space-evenly;
 }
 
-.eg-card .eg-img {
+.index-page .eg-card .eg-img {
     margin: 0 auto;
     height: 60%;
 }
 
-.eg-card .eg-title {
+.index-page .eg-card .eg-title {
     font-weight: bold;
     font-size: 22px;
     text-align: center;
     color: #2d3436;
 }
 
-.eg-card:hover {
+.index-page .eg-card:hover {
     transform: scale(1.05);
     opacity: 0.75;
     cursor: pointer;
@@ -118,7 +118,7 @@ a {
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#code-box {
+.index-page #code-box {
     width: 100%;
     min-height: 200px;
     height: auto;
@@ -127,7 +127,7 @@ a {
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#footer {
+.index-page #footer {
     width: 100%;
     height: 80px;
     background-color: #c8d6e5;
@@ -137,7 +137,7 @@ a {
     justify-content: space-between;
 }
 
-#footer a {
+.index-page #footer a {
     font-size: 30px;
     color: #8395a7;
     margin: auto 0;
@@ -145,7 +145,7 @@ a {
     cursor: pointer;
 }
 
-#footer p {
+.index-page #footer p {
     font-weight: 500;
     font-size: 17px;
     color: white;
@@ -153,11 +153,11 @@ a {
     padding: 0 50px;
 }
 
-#footer p i {
+.index-page #footer p i {
     color: #ff6b6b;
 }
 
-#footer p span {
+.index-page #footer p span {
     font-weight: 600;
     color: #10ac84;
 }

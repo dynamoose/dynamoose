@@ -1,29 +1,31 @@
-body,
-html {
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
+@import url('https://use.fontawesome.com/releases/v5.5.0/css/all.css');
+
+.index-page body,
+.index-page html {
   height: 100%;
   padding: 0;
   margin: 0;
-  font-family: Avenir Next;
 }
 
-* {
+.index-page * {
   padding: 0;
   margin: 0;
   border: none;
 }
 
-*:focus {
+.index-page *:focus {
   outline: none;
 }
 
-a {
+.index-page a {
   text-decoration: none;
   color: black;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#header {
+.index-page #header {
   width: 100%;
   height: 80px;
   display: flex;
@@ -33,7 +35,7 @@ a {
   z-index: 1000;
 }
 
-#header #logo {
+.index-page #header #logo {
   padding: 0 50px;
   font-size: 19px;
   font-weight: bold;
@@ -41,7 +43,7 @@ a {
   margin: auto 0;
 }
 
-#header #nav {
+.index-page #header #nav {
   list-style: none;
   margin: auto 50px;
   display: flex;
@@ -49,7 +51,7 @@ a {
   justify-content: space-evenly;
 }
 
-#header #nav li a {
+.index-page #header #nav li a {
   color: white;
   font-size: 16px;
   font-weight: 500;
@@ -59,40 +61,41 @@ a {
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#hero {
+.index-page #hero {
   width: 100%;
   height: 100%;
+  padding: 30px 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background-image: linear-gradient(to bottom, #38458a, #6a74a1);
+  background-image: linear-gradient(to bottom, #3f51b5, #38458a);
+  border-radius: 5px;
 }
 
-#hero #hero-title {
+.index-page #hero #hero-title {
   font-size: 35px;
   font-weight: bold;
   text-align: center;
   color: #00b894;
 }
 
-#hero #hero-subtitle {
+.index-page #hero #hero-subtitle {
   font-size: 17px;
   text-align: center;
-  padding: 10px 0;
-  color: #cecece;
+  color: #f7f7f7;
   line-height: 27px;
 }
 
-#hero #hero-subtitle span {
+.index-page #hero #hero-subtitle span {
   font-weight: 500;
 }
 
-#hero #download {
+.index-page #hero #download {
   margin-bottom: 30px;
 }
 
-#hero #code-box {
-  width: 30%;
+.index-page #hero #code-box {
+  width: 80%;
   height: 90px;
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 5px;
@@ -103,17 +106,17 @@ a {
   justify-content: flex-start;
 }
 
-#hero #code-box #code-box-top-corner {
+.index-page #hero #code-box #code-box-top-corner {
   padding: 2px 5px;
 }
 
-#hero #code-box #code-box-top-corner i {
+.index-page #hero #code-box #code-box-top-corner i {
   font-size: 9px;
   padding: 0 5px;
   color: #535c83;
 }
 
-#hero #code-box #code-box-command {
+.index-page #hero #code-box #code-box-command {
   text-align: center;
   font-size: 17px;
   font-weight: 500;
@@ -121,50 +124,51 @@ a {
   padding-top: 10px;
   font-family: Roboto Mono, monospace;
   display: flex;
+  padding-left: 20px;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: center;
 }
 
-#hero #code-box #code-box-command #prompt {
+.index-page #hero #code-box #code-box-command #prompt {
   color: #00b894;
   font-weight: 600;
   padding: 0 10px;
 }
 
-#hero #code-box #code-box-command p #prompt {
+.index-page #hero #code-box #code-box-command p #prompt {
   color: #00b894;
   font-weight: 600;
   padding: 0;
 }
 
-#hero #code-box #code-box-command #npmname {
+.index-page #hero #code-box #code-box-command #npmname {
   font-weight: 600;
 }
 
-#hero #get-started {
+.index-page #hero #get-started {
   width: auto;
   height: 50px;
   padding: 0 20px;
+  line-height: 46px;
   border: 2px solid #00b894;
   color: white;
-  font-family: Avenir Next;
   font-size: 18px;
   font-weight: 500;
   background: none;
   border-radius: 100px;
   margin: 0 auto;
-  cursor: pointer;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#example {
+.index-page #example {
   width: 100%;
   height: auto;
   background-color: white;
 }
 
-#example #section-title {
+.index-page #example #section-title {
   text-align: center;
   font-weight: bold;
   font-size: 35px;
@@ -172,25 +176,25 @@ a {
   padding: 50px 0 10px 0;
 }
 
-#example #section-subtitle {
+.index-page #example #section-subtitle {
   text-align: center;
   font-size: 20px;
   color: #8395a7;
 }
 
-.eg-container {
-  width: 65%;
+.index-page .eg-container {
+  width: 80%;
   height: auto;
   margin: 30px auto;
 }
 
-.eg-container .eg-title {
+.index-page .eg-container .eg-title {
   font-size: 20px;
   font-weight: 600;
   color: #38458a;
 }
 
-.eg-container .eg-container-code {
+.index-page .eg-container .eg-container-code {
   width: 100%;
   height: auto;
   margin: 30px 0;
@@ -199,66 +203,66 @@ a {
   border-radius: 7px;
 }
 
-.eg-container .eg-container-code {
+.index-page .eg-container .eg-container-code {
   padding-left: 20px;
   color: #9da1a5;
   font-family: Roboto Mono, monospace;
   font-size: 87.5%;
 }
 
-#code-kw {
+.index-page #code-kw {
   font-weight: 500;
   color: #ee5253;
   padding: 0 2px;
 }
 
-#code-var {
+.index-page #code-var {
   font-weight: 500;
   color: #f6b93b;
   padding: 0 2px;
 }
 
-#code-str {
+.index-page #code-str {
   font-weight: 500;
   color: #10ac84;
   padding: 0 2px;
 }
 
-#code-func {
+.index-page #code-func {
   font-weight: 500;
   color: #54a0ff;
   padding: 0 2px;
 }
 
-#code-method {
+.index-page #code-method {
   font-weight: 500;
   color: #8395a7;
   padding: 0 2px;
 }
 
-#code-type {
+.index-page #code-type {
   font-weight: 400;
   color: #ff9f43;
   padding: 0 2px;
 }
 
-#code-comment {
+.index-page #code-comment {
   font-weight: 400;
   color: #8395a7;
   padding: 0 2px;
 }
 
-#code-int {
+.index-page #code-int {
   font-weight: 400;
   color: #4a69bd;
   padding: 0 2px;
 }
 
-#code-indent {
+.index-page #code-indent {
   padding: 0 30px 0 0;
 }
 
-#code-param {
+.index-page #code-param {
   color: #ff9f43;
   font-style: oblique;
   padding: 0 2px;
@@ -266,7 +270,7 @@ a {
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#footer {
+.index-page #footer {
   width: 100%;
   height: 80px;
   background-color: #c8d6e5;
@@ -276,7 +280,7 @@ a {
   justify-content: space-between;
 }
 
-#footer a {
+.index-page #footer a {
   font-size: 30px;
   color: #8395a7;
   margin: auto 0;
@@ -284,7 +288,7 @@ a {
   cursor: pointer;
 }
 
-#footer p {
+.index-page #footer p {
   font-weight: 500;
   font-size: 17px;
   color: white;
@@ -292,11 +296,11 @@ a {
   padding: 0 50px;
 }
 
-#footer p i {
+.index-page #footer p i {
   color: #ff6b6b;
 }
 
-#footer p span {
+.index-page #footer p span {
   font-weight: 600;
   color: #10ac84;
 }

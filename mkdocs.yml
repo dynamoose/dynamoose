@@ -4,9 +4,12 @@ repo_url: https://github.com/dynamoosejs/dynamoose
 extra_css:
   - 'stylesheets/default.css'
   - 'stylesheets/override.css'
+  - 'stylesheets/example.css'
+  - 'stylesheets/index.css'
 extra_javascript:
   - 'javascripts/highlight.js'
   - 'javascripts/init.js'
+  - 'javascripts/examples.js'
 nav:
     - Home: index.md
     - Examples:
