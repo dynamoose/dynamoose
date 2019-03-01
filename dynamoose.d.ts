@@ -132,7 +132,7 @@ declare module "dynamoose" {
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
 
-    originalItem(): object;
+    originalItem(): ModelData;
 
     populate<T>(path: string | PopulateOptions): Promise<Model<ModelData> & T>
   }
