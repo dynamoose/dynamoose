@@ -1,5 +1,13 @@
 # Dynamoose Changelog
 
+## [1.6.5](https://github.com/dynamoosejs/dynamoose/compare/v1.6.4...v1.6.5) (2019-03-03)
+
+
+### Bug Fixes
+
+* **comment:** fix comments in pr ([68d757b](https://github.com/dynamoosejs/dynamoose/commit/68d757b))
+* **index:** fixing styling and content ([75ea512](https://github.com/dynamoosejs/dynamoose/commit/75ea512))
+
 ## [1.6.4](https://github.com/dynamoosejs/dynamoose/compare/v1.6.3...v1.6.4) (2019-02-19)
 
 
