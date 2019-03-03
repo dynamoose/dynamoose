@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
+@import url('https://use.fontawesome.com/releases/v5.5.0/css/all.css');
+
+.index-page body,
+.index-page html {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.index-page * {
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+
+.index-page *:focus {
+  outline: none;
+}
+
+.index-page a {
+  text-decoration: none;
+  color: black;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------ */
+
+.index-page #header {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  position: absolute;
+  z-index: 1000;
+}
+
+.index-page #header #logo {
+  padding: 0 50px;
+  font-size: 19px;
+  font-weight: bold;
+  color: white;
+  margin: auto 0;
+}
+
+.index-page #header #nav {
+  list-style: none;
+  margin: auto 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+.index-page #header #nav li a {
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 0 20px;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------ */
+
+.index-page #hero {
+  width: 100%;
+  height: 100%;
+  padding: 30px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-image: linear-gradient(to bottom, #3f51b5, #38458a);
+  border-radius: 5px;
+}
+
+.index-page #hero #hero-title {
+  font-size: 35px;
+  font-weight: bold;
+  text-align: center;
+  color: #00b894;
+}
+
+.index-page #hero #hero-subtitle {
+  font-size: 17px;
+  text-align: center;
+  color: #f7f7f7;
+  line-height: 27px;
+}
+
+.index-page #hero #hero-subtitle span {
+  font-weight: 500;
+}
+
+.index-page #hero #download {
+  margin-bottom: 30px;
+}
+
+.index-page #hero #code-box {
+  width: 80%;
+  height: 90px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  margin: 20px auto;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.index-page #hero #code-box #code-box-top-corner {
+  padding: 2px 5px;
+}
+
+.index-page #hero #code-box #code-box-top-corner i {
+  font-size: 9px;
+  padding: 0 5px;
+  color: #535c83;
+}
+
+.index-page #hero #code-box #code-box-command {
+  text-align: center;
+  font-size: 17px;
+  font-weight: 500;
+  color: white;
+  padding-top: 10px;
+  font-family: Roboto Mono, monospace;
+  display: flex;
+  padding-left: 20px;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.index-page #hero #code-box #code-box-command #prompt {
+  color: #00b894;
+  font-weight: 600;
+  padding: 0 10px;
+}
+
+.index-page #hero #code-box #code-box-command p #prompt {
+  color: #00b894;
+  font-weight: 600;
+  padding: 0;
+}
+
+.index-page #hero #code-box #code-box-command #npmname {
+  font-weight: 600;
+}
+
+.index-page #hero #get-started {
+  width: auto;
+  height: 50px;
+  padding: 0 20px;
+  line-height: 46px;
+  border: 2px solid #00b894;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  background: none;
+  border-radius: 100px;
+  margin: 0 auto;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------ */
+
+.index-page #example {
+  width: 100%;
+  height: auto;
+  background-color: white;
+}
+
+.index-page #example #section-title {
+  text-align: center;
+  font-weight: bold;
+  font-size: 35px;
+  color: #2d3436;
+  padding: 50px 0 10px 0;
+}
+
+.index-page #example #section-subtitle {
+  text-align: center;
+  font-size: 20px;
+  color: #8395a7;
+}
+
+.index-page .eg-container {
+  width: 80%;
+  height: auto;
+  margin: 30px auto;
+}
+
+.index-page .eg-container .eg-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #38458a;
+}
+
+.index-page .eg-container .eg-container-code {
+  width: 100%;
+  height: auto;
+  margin: 30px 0;
+  background-color: #f9fbfc;
+  padding: 20px 0;
+  border-radius: 7px;
+}
+
+.index-page .eg-container .eg-container-code {
+  padding-left: 20px;
+  color: #9da1a5;
+  font-family: Roboto Mono, monospace;
+  font-size: 87.5%;
+}
+
+.index-page #code-kw {
+  font-weight: 500;
+  color: #ee5253;
+  padding: 0 2px;
+}
+
+.index-page #code-var {
+  font-weight: 500;
+  color: #f6b93b;
+  padding: 0 2px;
+}
+
+.index-page #code-str {
+  font-weight: 500;
+  color: #10ac84;
+  padding: 0 2px;
+}
+
+.index-page #code-func {
+  font-weight: 500;
+  color: #54a0ff;
+  padding: 0 2px;
+}
+
+.index-page #code-method {
+  font-weight: 500;
+  color: #8395a7;
+  padding: 0 2px;
+}
+
+.index-page #code-type {
+  font-weight: 400;
+  color: #ff9f43;
+  padding: 0 2px;
+}
+
+.index-page #code-comment {
+  font-weight: 400;
+  color: #8395a7;
+  padding: 0 2px;
+}
+
+.index-page #code-int {
+  font-weight: 400;
+  color: #4a69bd;
+  padding: 0 2px;
+}
+
+.index-page #code-indent {
+  padding: 0 30px 0 0;
+}
+
+.index-page #code-param {
+  color: #ff9f43;
+  font-style: oblique;
+  padding: 0 2px;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------ */
+
+.index-page #footer {
+  width: 100%;
+  height: 80px;
+  background-color: #c8d6e5;
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.index-page #footer a {
+  font-size: 30px;
+  color: #8395a7;
+  margin: auto 0;
+  padding: 0 50px;
+  cursor: pointer;
+}
+
+.index-page #footer p {
+  font-weight: 500;
+  font-size: 17px;
+  color: white;
+  margin: auto 0;
+  padding: 0 50px;
+}
+
+.index-page #footer p i {
+  color: #ff6b6b;
+}
+
+.index-page #footer p span {
+  font-weight: 600;
+  color: #10ac84;
+}
