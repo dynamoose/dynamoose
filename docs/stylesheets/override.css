@@ -1,0 +1,14 @@
+.runkit-frame {
+  width: calc(122rem - 40rem);
+  position: relative;
+  max-width: 120vw;
+  left: 100%;
+  transform: translateX(-80%);
+}
+
+@media only screen
+  and (max-device-width: 480px) {
+    .runkit-frame {
+      left: 113%;
+    }
+}

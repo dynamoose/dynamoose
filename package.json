@@ -1,9 +1,9 @@
 {
   "name": "dynamoose",
-  "version": "1.3.0",
+  "version": "1.6.5",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "typings": "./dynamoose.d.ts",
-  "homepage": "https://github.com/dynamoosejs/dynamoose",
+  "homepage": "https://dynamoosejs.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/dynamoosejs/dynamoose"
@@ -18,8 +18,16 @@
     "lib/*"
   ],
   "scripts": {
-    "test": "grunt test",
-    "coverage": "nyc grunt test"
+    "test": "mocha",
+    "test:debug": "mocha --inspect",
+    "test:debug:brk": "mocha --inspect-brk",
+    "lint": "eslint .",
+    "coverage": "nyc npm test",
+    "commit": "git-cz",
+    "sem-rel": "semantic-release",
+    "lint:commit": "commitlint -E $GIT_PARAMS",
+    "ci": "npm run lint && npm run coverage",
+    "coveralls-ci": "npm run ci && nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
     "dynamodb",
@@ -46,18 +54,30 @@
   "author": "Brandon Goode",
   "license": "MIT",
   "devDependencies": {
+    "@commitlint/cli": "7.5.1",
+    "@commitlint/config-conventional": "7.5.0",
+    "@semantic-release/commit-analyzer": "6.1.0",
+    "@semantic-release/release-notes-generator": "7.1.4",
+    "@semantic-release/changelog": "3.0.2",
+    "@semantic-release/git": "7.0.8",
+    "@semantic-release/github": "5.2.10",
+    "@semantic-release/npm": "5.1.4",
+    "commitizen": "3.0.5",
     "coveralls": "3.0.2",
+    "cz-conventional-changelog": "2.1.0",
     "dynamodb-local": "0.0.24",
-    "grunt": "1.0.3",
-    "grunt-contrib-jshint": "2.0.0",
-    "grunt-mocha-test": "0.13.3",
+    "eslint": "5.13.0",
+    "glob": "7.1.3",
+    "husky": "1.3.1",
+    "jsdoc-to-markdown": "4.0.1",
     "mocha": "5.2.0",
     "nyc": "13.1.0",
+    "semantic-release": "15.13.3",
     "should": "13.2.3"
   },
   "dependencies": {
-    "aws-sdk": "2.370.0",
-    "debug": "4.1.0",
+    "aws-sdk": "2.395.0",
+    "debug": "4.1.1",
     "deep-equal": "1.0.1",
     "hooks": "0.3.2",
     "object-path": "0.11.4",
@@ -75,9 +95,21 @@
       "text-summary"
     ],
     "check-coverage": true,
-    "lines": 50,
-    "statements": 50,
-    "functions": 50,
-    "branches": 50
+    "lines": 80,
+    "statements": 80,
+    "functions": 80,
+    "branches": 80
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "npm run lint",
+      "pre-push": "npm run ci"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

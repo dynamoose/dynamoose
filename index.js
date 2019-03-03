@@ -1,1 +1,5 @@
-exports = module.exports = require('./lib');
+'use strict';
+
+const lib = require('./lib');
+exports = lib;
+module.exports = lib;

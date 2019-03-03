@@ -1,4 +1,118 @@
-# Dynamoose ChangeLog
+# Dynamoose Changelog
+
+## [1.6.5](https://github.com/dynamoosejs/dynamoose/compare/v1.6.4...v1.6.5) (2019-03-03)
+
+
+### Bug Fixes
+
+* **comment:** fix comments in pr ([68d757b](https://github.com/dynamoosejs/dynamoose/commit/68d757b))
+* **index:** fixing styling and content ([75ea512](https://github.com/dynamoosejs/dynamoose/commit/75ea512))
+
+## [1.6.4](https://github.com/dynamoosejs/dynamoose/compare/v1.6.3...v1.6.4) (2019-02-19)
+
+
+### Bug Fixes
+
+* stop conditions being overwritten ([966d7bc](https://github.com/dynamoosejs/dynamoose/commit/966d7bc))
+* **lint:** increase limit for Model test file ([907b8a6](https://github.com/dynamoosejs/dynamoose/commit/907b8a6))
+
+## [1.6.3](https://github.com/dynamoosejs/dynamoose/compare/v1.6.2...v1.6.3) (2019-02-18)
+
+
+### Bug Fixes
+
+* **model:** fixing batchDelete syntax bug ([dfb448f](https://github.com/dynamoosejs/dynamoose/commit/dfb448f))
+* **model:** fixing update and condition check syntax bug ([74623bf](https://github.com/dynamoosejs/dynamoose/commit/74623bf))
+
+## [1.6.2](https://github.com/dynamoosejs/dynamoose/compare/v1.6.1...v1.6.2) (2019-02-13)
+
+
+### Bug Fixes
+
+* **saveunknown:** fixing saveunknown toDynamo for maps ([873a6ed](https://github.com/dynamoosejs/dynamoose/commit/873a6ed)), closes [#323](https://github.com/dynamoosejs/dynamoose/issues/323)
+
+## Version 1.5.2
+
+This is a minor bug fix for Plugins, and also adds some other improvements for plugins and other parts of the app.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- **[Plugin shouldContinue Fix & Other Improvements](https://github.com/dynamoosejs/dynamoose/pull/564)** #564
+
+---
+
+## Version 1.5.1
+
+This is a minor release with documentation and project improvements.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Documentation
+
+- **[Add constructor for model schema types in TypeScript](https://github.com/dynamoosejs/dynamoose/pull/547)** #547
+- **[Defined dynamoose transaction in dynamoose.d.ts](https://github.com/dynamoosejs/dynamoose/pull/540)** #540
+- **[Documentation Improvements](https://github.com/dynamoosejs/dynamoose/pull/561)** #561  
+
+### Other
+
+- **[ESLint](https://github.com/dynamoosejs/dynamoose/pull/557)** #557
+- **[Project Improvements](https://github.com/dynamoosejs/dynamoose/pull/558)** #558
+- **[Updating issue template with warning about not filling out fields](https://github.com/dynamoosejs/dynamoose/pull/538)** #538
+- **[Updating Dependencies](https://github.com/dynamoosejs/dynamoose/pull/562)** #562
+- **[Refactor transactions tests to use DynamoDB Local tests](https://github.com/dynamoosejs/dynamoose/pull/563)** #563
+
+---
+
+## Version 1.5.0
+
+This release adds support for `list_append` when adding elements to a list using the `Model.update` method.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- **[Adding support for list_append](https://github.com/dynamoosejs/dynamoose/pull/544)** #544
+
+---
+
+## Version 1.4.0
+
+This version adds some more options to the model and schema options objects.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- **[errorUnknown](https://github.com/dynamoosejs/dynamoose/pull/531)** #531
+- **[defaultReturnValues](https://github.com/dynamoosejs/dynamoose/pull/533)** #533
+
+---
+
+## Version 1.3.1
+
+Just a simple bug fix release!
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- **[Make saveUnknown work recursively](https://github.com/dynamoosejs/dynamoose/pull/522)** #522
+- **[Always use Array.isArray to check if array](https://github.com/dynamoosejs/dynamoose/pull/521)** #521
+- **[Fix error logging for data/schema mismatch](https://github.com/dynamoosejs/dynamoose/pull/518)** #518
+- **[Changing to not update timestamps when scaning or querying with filter](https://github.com/dynamoosejs/dynamoose/pull/510)** #510
+
+### Documentation
+
+- **[dynamoose.d.ts allow validate property on schema to return promise as well as raw boolean](https://github.com/dynamoosejs/dynamoose/pull/520)** #520
+- **[update typescript typings to allow `ON_DEMAND` throughput in SchemaOptions](https://github.com/dynamoosejs/dynamoose/pull/530)** #530
+
+### Other
+
+- **[Add error when not missing hash key for Model.get](https://github.com/dynamoosejs/dynamoose/pull/524)** #524
+
+---
 
 ## Version 1.3.0
 
