@@ -17,15 +17,3 @@ jobs:
         skip_cleanup: true
         script:
           - ./travis-deploy
-language: python
-python:
-  - '2.7'
-jobs:
-  include:
-    - stage: deploy-docs
-      if: branch = master
-      deploy:
-        provider: script
-        skip_cleanup: true
-        script:
-          - ./travis-docs
