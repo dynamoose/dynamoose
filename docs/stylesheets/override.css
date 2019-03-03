@@ -5,3 +5,10 @@
   left: 100%;
   transform: translateX(-80%);
 }
+
+@media only screen
+  and (max-device-width: 480px) {
+    .runkit-frame {
+      left: 113%;
+    }
+}

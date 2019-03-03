@@ -29,20 +29,34 @@
       <i style="padding: 0 0 0 10px;" class="fas fa-arrow-right"></i>
     </a>
   </div>
-  <div id="example">
-    <p id="section-title">Let's get up to speed</p>
-    <p id="section-subtitle">Here's how it works:</p>
-    <div class="eg-container">
-      <p class="eg-title">Set AWS configurations in environment variables:</p>
-      <pre>
-              <code id="bash-code" class="bash">
-  export AWS_ACCESS_KEY_ID = "Your AWS Access Key ID"
-  export AWS_SECRET_ACCESS_KEY = "Your AWS Secret Access Key"
-  export AWS_REGION = "us-east-1"
-              </code>
-              </pre>
-    </div>
-    <p id="section-title">Let's see it in action!</p>
+</div>
+## Let's Get Up To Speed
+
+Here's how it works, set your AWS configurations in either:
+
+### Your Environment
+
+```sh
+export AWS_ACCESS_KEY_ID = "Your AWS Access Key ID"
+export AWS_SECRET_ACCESS_KEY = "Your AWS Secret Access Key"
+export AWS_REGION = "us-east-1"
+```
+
+### Programatically
+
+```js
+dynamoose.AWS.config.update({
+  accessKeyId: 'AKID',
+  secretAccessKey: 'SECRET',
+  region: 'us-east-1'
+});
+```
+
+## Let's See It In Action
+
+This simple example creates a Cat model and gets it's name after saving and re-fetching it.
+
+<div class="index-page">
     <div id="simple-example" class="runkit-frame">
 const dynamoose = require('dynamoose');
 const dynalite = require('dynalite');
