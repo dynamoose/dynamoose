@@ -20,5 +20,5 @@ workflows:
       - build:
           filters:
             branches:
-              only: /.*/
+              only: master
 
