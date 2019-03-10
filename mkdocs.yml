@@ -1,10 +1,15 @@
-site_name: DynamooseJS
+site_name: Dynamooses
+repo_name: dynamoosejs/dynamoose
+repo_url: https://github.com/dynamoosejs/dynamoose
 extra_css:
   - 'stylesheets/default.css'
   - 'stylesheets/override.css'
+  - 'stylesheets/example.css'
+  - 'stylesheets/index.css'
 extra_javascript:
   - 'javascripts/highlight.js'
   - 'javascripts/init.js'
+  - 'javascripts/examples.js'
 nav:
     - Home: index.md
     - Examples:
@@ -19,8 +24,4 @@ nav:
         - Query: api/query.md
         - Scan: api/scan.md
         - Schema: api/schema.md
-    - Library:
-        - About This Section: lib/about.md
-        - lib/Plugin.md
-        - lib/VirtualType.md
 theme: material

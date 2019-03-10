@@ -1,5 +1,36 @@
 # Dynamoose Changelog
 
+## [1.6.5](https://github.com/dynamoosejs/dynamoose/compare/v1.6.4...v1.6.5) (2019-03-03)
+
+
+### Bug Fixes
+
+* **comment:** fix comments in pr ([68d757b](https://github.com/dynamoosejs/dynamoose/commit/68d757b))
+* **index:** fixing styling and content ([75ea512](https://github.com/dynamoosejs/dynamoose/commit/75ea512))
+
+## [1.6.4](https://github.com/dynamoosejs/dynamoose/compare/v1.6.3...v1.6.4) (2019-02-19)
+
+
+### Bug Fixes
+
+* stop conditions being overwritten ([966d7bc](https://github.com/dynamoosejs/dynamoose/commit/966d7bc))
+* **lint:** increase limit for Model test file ([907b8a6](https://github.com/dynamoosejs/dynamoose/commit/907b8a6))
+
+## [1.6.3](https://github.com/dynamoosejs/dynamoose/compare/v1.6.2...v1.6.3) (2019-02-18)
+
+
+### Bug Fixes
+
+* **model:** fixing batchDelete syntax bug ([dfb448f](https://github.com/dynamoosejs/dynamoose/commit/dfb448f))
+* **model:** fixing update and condition check syntax bug ([74623bf](https://github.com/dynamoosejs/dynamoose/commit/74623bf))
+
+## [1.6.2](https://github.com/dynamoosejs/dynamoose/compare/v1.6.1...v1.6.2) (2019-02-13)
+
+
+### Bug Fixes
+
+* **saveunknown:** fixing saveunknown toDynamo for maps ([873a6ed](https://github.com/dynamoosejs/dynamoose/commit/873a6ed)), closes [#323](https://github.com/dynamoosejs/dynamoose/issues/323)
+
 ## Version 1.5.2
 
 This is a minor bug fix for Plugins, and also adds some other improvements for plugins and other parts of the app.

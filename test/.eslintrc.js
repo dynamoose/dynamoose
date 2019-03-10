@@ -1,5 +1,8 @@
 module.exports = {
-  "env": {
-    "mocha": true
+  'env': {
+    'mocha': true
+  },
+  'rules': {
+    'no-unused-expressions': 'off'
   }
 };
