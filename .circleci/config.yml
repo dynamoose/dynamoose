@@ -11,6 +11,8 @@ jobs:
           git config --global user.email $GH_EMAIL
           git config --global user.name $GH_USER
           ls ~/repo
+          cwd
+          pwd
           docker run --rm -it -v ~/.ssh:/root/.ssh -v ~/repo:/docs squidfunk/mkdocs-material gh-deploy
 
 workflows:
