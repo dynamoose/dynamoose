@@ -1,17 +1,16 @@
 version: 2
 jobs:
   build:
+    machine: true
     docker:
       - image: circleci/python:3.7.0
     working_directory: ~/repo
     steps:
-      - setup_remote_docker
       - checkout
       - run: |
           git config --global user.email $GH_EMAIL
           git config --global user.name $GH_USER
-          ls ~/repo
-          pwd
+          ls
           docker run --rm -it -v ~/.ssh:/root/.ssh -v /home/circleci/repo:/docs squidfunk/mkdocs-material gh-deploy
 
 workflows:
