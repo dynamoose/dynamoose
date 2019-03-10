@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: |
-          pip install mkdocs mkdocs-material
+          pip install --user mkdocs mkdocs-material
           git config --global user.email $GH_EMAIL
           git config --global user.name $GH_NAME
           mkdocs gh-deploy
