@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run: |
           git config --global user.email $GH_EMAIL
-          git config --global user.name $GH_NAME
+          git config --global user.name $GH_USER
           mkdocs gh-deploy
 
 workflows:
