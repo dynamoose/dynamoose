@@ -1,16 +1,17 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: circleci/python:3.7.0
+    machine: true
     working_directory: ~/repo
     steps:
       - checkout
       - run: |
-          pip install --user mkdocs mkdocs-material
           git config --global user.email $GH_EMAIL
-          git config --global user.name $GH_NAME
-          mkdocs gh-deploy
+          git config --global user.name $GH_USER
+          git remote add gh-token "https://${GH_TOKEN}@github.com/dynamoosejs/dynamoose.git"
+          git fetch gh-token && git fetch gh-token gh-pages:gh-pages
+          pip install mkdocs mkdocs-material
+          mkdocs gh-deploy -v --clean --remote-name gh-token
 
 workflows:
   version: 2
