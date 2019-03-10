@@ -3,12 +3,12 @@ Monokai style - ported by Luigi Maselli - http://grigio.org
 */
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
 
-.hljs, .md-typeset pre, .md-typeset code {
+.hljs {
   display: block;
   overflow-x: auto;
   padding: 0.5em;
-  background: #272822; color: #ddd;
-  font-family: 'Roboto Mono', monospace;
+  background: #272822 !important; color: #ddd !important;
+  font-family: 'Roboto Mono', monospace !important;
 }
 
 .hljs-tag,
