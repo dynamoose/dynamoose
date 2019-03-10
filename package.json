@@ -27,7 +27,7 @@
     "commit": "git-cz",
     "sem-rel": "semantic-release",
     "lint:commit": "commitlint -E $GIT_PARAMS",
-    "ci": "npm run lint && npm run coverage",
+    "ci": "npm run lint && npm run tslint && npm run coverage",
     "coveralls-ci": "npm run ci && nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
