@@ -61,7 +61,7 @@ export interface IDynamooseOptions extends ISchemaOptions {
 
 /**
  * The default export, basically a container for all of the innerworkings of dynamoose
- * This exports our Cofnig, Models, Schema, Table, and all other important functions
+ * This exports our Config, Models, Schema, Table, and all other important functions
  */
 function Dynamoose () {
   this.models = {};
