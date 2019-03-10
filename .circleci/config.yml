@@ -8,8 +8,10 @@ jobs:
       - run: |
           git config --global user.email $GH_EMAIL
           git config --global user.name $GH_USER
-          ls
-          docker run --rm -it -v ~/.ssh:/root/.ssh -v /home/circleci/repo:/docs squidfunk/mkdocs-material gh-deploy
+          git remote add gh-token "https://${GH_TOKEN}@github.com/dynamoosejs/dynamoose.git"
+          git fetch gh-token && git fetch gh-token gh-pages:gh-pages
+          pip install mkdocs mkdocs-material
+          mkdocs gh-deploy -v --clean --remote-name gh-token
 
 workflows:
   version: 2
