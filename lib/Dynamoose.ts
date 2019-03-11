@@ -11,16 +11,8 @@ import errors from "./errors";
 const debug = debugBase("dynamoose");
 const debugTransaction = debugBase("dynamoose:transaction");
 
-function createLocalDb (endpointURL: string) {
-  const dynamoConfig = {};
-  // This has to be done as the aws sdk types insist that new AWS.Endpoint(endpointURL) is not a string
-  dynamoConfig["endpoint"] = new AWS.Endpoint(endpointURL);
-  return new AWS.DynamoDB(dynamoConfig);
-}
-
 export type TAttributeToDynamo = (name: string, json: any, model: any, defaultFormatter: Function, options: ISchemaOptions) => any;
 export type TAttributeFromDynamo = (name: string, json: any, defaultFormatter: Function) => any;
-
 export interface ISchemaOptions {
   throughput?: number | string | {
     read: number;
@@ -43,7 +35,6 @@ export interface ISchemaOptions {
   attributeToDynamo?: TAttributeToDynamo;
   attributeFromDynamo?: TAttributeFromDynamo;
 }
-
 export interface IDynamooseOptions extends ISchemaOptions {
   create?: boolean;
   update?: boolean;
@@ -58,229 +49,280 @@ export interface IDynamooseOptions extends ISchemaOptions {
   serverSideEncryption?: boolean;
   defaultReturnValues?: string;
 }
+export interface ITransactionOptions {
+  type?: string;
+  returnRequest?: boolean;
+}
+export function createLocalDb (endpointURL: string) {
+  const dynamoConfig = {};
+  // This has to be done as the aws sdk types insist that new AWS.Endpoint(endpointURL) is not a string
+  dynamoConfig["endpoint"] = new AWS.Endpoint(endpointURL);
+  return new AWS.DynamoDB(dynamoConfig);
+}
+export function getModelSchemaFromIndex (item: any, dynamoose: Dynamoose) {
+  const requestItem = item;
+  const [requestItemProperty] = Object.keys(item);
+  const tableName = requestItem[requestItemProperty].TableName;
+  const TheModel = dynamoose.models[tableName];
+  if (!TheModel) {
+    const errorMessage = `${tableName} is not a registered model. You can only use registered Dynamoose models when using a RAW transaction object.`;
+    throw new errors.TransactionError(errorMessage);
+  }
+  const TheModel$ = TheModel.$__;
+  const {schema} = TheModel$;
 
-/**
- * The default export, basically a container for all of the innerworkings of dynamoose
- * This exports our Config, Models, Schema, Table, and all other important functions
- */
-function Dynamoose () {
-  this.models = {};
-
-  this.defaults = {
-    "create": true,
-    "waitForActive": true, // Wait for table to be created
-    "waitForActiveTimeout": 180000, // 3 minutes
-    "prefix": "", // prefix_Table
-    "suffix": "" // Table_suffix
-  }; // defaults
+  return {TheModel, TheModel$, schema};
 }
 
-Dynamoose.prototype.model = function (name: string, schema: any, options?: IDynamooseOptions) {
-  options = options || {};
-
-  for (const key in this.defaults) {
-    options[key] = typeof options[key] === "undefined" ? this.defaults[key] : options[key];
-  }
-
-  name = options.prefix + name + options.suffix;
-
-  debug("Looking up model %s", name);
-
-  if (this.models[name]) {
-    return this.models[name];
-  }
-  if (!(schema instanceof Schema)) {
-    schema = new Schema(schema, options);
-  }
-
-  const model = Model.compile(name, schema, options, this);
-  this.models[name] = model;
-  return model;
-};
-
 /**
- * The Mongoose [VirtualType](#virtualtype_VirtualType) constructor
- *
- * @method VirtualType
- * @api public
+ * @class Dynamoose
+ * The main export of dyanmoose, this class houses all of the model, table, and config
+ * functionality. All calls to any submodule occur through this class.
  */
-Dynamoose.prototype.VirtualType = VirtualType;
+class Dynamoose {
+  models: any;
+  defaults: any;
+  VirtualType: Function;
+  AWS: any;
+  endpointURL: string;
+  dynamoDB: AWS.DynamoDB;
+  dynamoDocumentClient: AWS.DynamoDB.DocumentClient;
+  Schema: any;
+  Table: any;
+  Dynamoose: any;
+  /**
+   * @constructor
+   * This set's our default options, initializes our models object, and adds these methods:
+   *    VirtualType
+   *    AWS
+   *    Schema
+   *    Table
+   *    Dynamoose
+   *
+   * These are the externally availbale modules.
+   */
+  constructor() {
+    this.models = {};
+    this.defaults = {
+      "create": true,
+      "waitForActive": true, // Wait for table to be created
+      "waitForActiveTimeout": 180000, // 3 minutes
+      "prefix": "", // prefix_Table
+      "suffix": "" // Table_suffix
+    };
+    this.VirtualType = VirtualType;
+    this.AWS = AWS;
+    this.Schema = Schema;
+    this.Table = Table;
+    this.Dynamoose = this;
+  }
+  /**
+   * This method adds a new model or returns the existing one if not unique.
+   * @param name The chosen name for your model
+   * @param schema The defined Schema
+   * @param options The supported set of Dynamoose and Schema options
+   * @returns an instance of your started Model
+   */
+  model(name: string, schema: any, options?: IDynamooseOptions) {
+    options = options || {};
 
-Dynamoose.prototype.AWS = AWS;
+    for (const key in this.defaults) {
+      options[key] = typeof options[key] === "undefined" ? this.defaults[key] : options[key];
+    }
 
-Dynamoose.prototype.local = function (url?: string) {
-  this.endpointURL = url || "http://localhost:8000";
-  this.dynamoDB = createLocalDb(this.endpointURL);
-  debug("Setting DynamoDB to local (%s)", this.endpointURL);
-};
+    name = options.prefix + name + options.suffix;
 
-/**
- * Document client for executing nested scans
- */
-Dynamoose.prototype.documentClient = function () {
-  if (this.dynamoDocumentClient) {
+    debug("Looking up model %s", name);
+
+    if (this.models[name]) {
+      return this.models[name];
+    }
+    if (!(schema instanceof Schema)) {
+      schema = new Schema(schema, options);
+    }
+
+    const model = Model.compile(name, schema, options, this);
+    this.models[name] = model;
+    return model;
+  }
+  /**
+   * This methods sets up and attaches a local db instance
+   * @param url the url to connect to locally
+   */
+  local (url?: string) {
+    this.endpointURL = url || "http://localhost:8000";
+    this.dynamoDB = createLocalDb(this.endpointURL);
+    debug("Setting DynamoDB to local (%s)", this.endpointURL);
+  }
+  /**
+   * This method will initialize and then return the dynamoDocumentClient
+   * @returns an instance of the AWS.DynamoDB.DocumentClient
+   */
+  documentClient () {
+    if (this.dynamoDocumentClient) {
+      return this.dynamoDocumentClient;
+    }
+    if (this.endpointURL) {
+      debug("Setting dynamodb document client to %s", this.endpointURL);
+      this.AWS.config.update({"endpoint": this.endpointURL});
+    } else {
+      debug("Getting default dynamodb document client");
+    }
+    this.dynamoDocumentClient = new this.AWS.DynamoDB.DocumentClient();
     return this.dynamoDocumentClient;
   }
-  if (this.endpointURL) {
-    debug("Setting dynamodb document client to %s", this.endpointURL);
-    this.AWS.config.update({"endpoint": this.endpointURL});
-  } else {
-    debug("Getting default dynamodb document client");
+  /**
+   * This method allows you to ovveride the built AWS.DynamoDB.DocumentClient instance
+   * @param documentClient your AWS.DynamoDB.DocumentClient instance
+   */
+  setDocumentClient(documentClient: AWS.DynamoDB.DocumentClient) {
+    debug("Setting dynamodb document client");
+    this.dynamoDocumentClient = documentClient;
   }
-  this.dynamoDocumentClient = new this.AWS.DynamoDB.DocumentClient();
-  return this.dynamoDocumentClient;
-};
+  /**
+   * This method initializes and returns an AWS.DynamoDB instance
+   * @returns an AWS.DynamoDB instance
+   */
+  ddb() {
+    if (this.dynamoDB) {
+      return this.dynamoDB;
+    }
 
-Dynamoose.prototype.setDocumentClient = function (documentClient) {
-  debug("Setting dynamodb document client");
-  this.dynamoDocumentClient = documentClient;
-};
-
-Dynamoose.prototype.ddb = function () {
-  if (this.dynamoDB) {
+    if (this.endpointURL) {
+      debug("Setting DynamoDB to %s", this.endpointURL);
+      this.dynamoDB = createLocalDb(this.endpointURL);
+    } else {
+      debug("Getting default DynamoDB");
+      this.dynamoDB = new this.AWS.DynamoDB({
+        "httpOptions": {
+          "agent": new https.Agent({
+            "rejectUnauthorized": true,
+            "keepAlive": true
+          })
+        }
+      });
+    }
     return this.dynamoDB;
   }
+  /**
+   * This method allows you to override the defaults defined at initialization of this instance
+   * @param options the accepted options for Dynamoose or Schemas
+   */
+  setDefaults(options: IDynamooseOptions) {
+    for (const key in this.defaults) {
+      options[key] = typeof options[key] === "undefined" ? this.defaults[key] : options[key];
+    }
 
-  if (this.endpointURL) {
-    debug("Setting DynamoDB to %s", this.endpointURL);
-    this.dynamoDB = createLocalDb(this.endpointURL);
-  } else {
-    debug("Getting default DynamoDB");
-    this.dynamoDB = new this.AWS.DynamoDB({
-      "httpOptions": {
-        "agent": new https.Agent({
-          "rejectUnauthorized": true,
-          "keepAlive": true
-        })
-      }
-    });
+    this.defaults = options;
   }
-  return this.dynamoDB;
-};
-
-Dynamoose.prototype.setDefaults = function (options: IDynamooseOptions) {
-  for (const key in this.defaults) {
-    options[key] = typeof options[key] === "undefined" ? this.defaults[key] : options[key];
+  /**
+   * This method allows you to override the default AWS.DynamoDB instance
+   * @param ddb an instance of AWS.DynamoDB
+   */
+  setDDB(ddb: AWS.DynamoDB) {
+    debug("Setting custom DDB");
+    this.dynamoDB = ddb;
   }
-
-  this.defaults = options;
-};
-
-Dynamoose.prototype.Schema = Schema;
-Dynamoose.prototype.Table = Table;
-Dynamoose.prototype.Dynamoose = Dynamoose;
-
-Dynamoose.prototype.setDDB = function (ddb) {
-  debug("Setting custom DDB");
-  this.dynamoDB = ddb;
-};
-Dynamoose.prototype.revertDDB = function () {
-  debug("Reverting to default DDB");
-  this.dynamoDB = undefined;
-};
-
-Dynamoose.prototype.transaction = async function (items: Array<any>, options?: Function | any, next?: Function) {
-  debugTransaction("Run Transaction");
-  const deferred = Q.defer();
-  const dbClient = this.documentClient();
-  const DynamoDBSet = dbClient.createSet([1, 2, 3]).constructor;
-  const that = this;
-
-
-  options = options || {};
-  if (typeof options === "function") {
-    next = options;
-    options = {};
+  /**
+   * This method allows you to clear the AWS.DynamoDB instance
+   */
+  revertDDB() {
+    debug("Reverting to default DDB");
+    this.dynamoDB = undefined;
   }
+  /**
+   * This method process an array of models as defined by the options and calls the callback when complete
+   * @param items An array of Models to process
+   * @param options Either a callback or the allowed option set
+   * @param next A callback for post transaction completion
+   */
+  async transaction(items: Array<any>, options?: Function | ITransactionOptions, next?: Function) {
+    debugTransaction("Run Transaction");
+    const deferred = Q.defer();
+    const dbClient = this.documentClient();
+    const DynamoDBSet = dbClient.createSet([1, 2, 3]).constructor;
+    const that = this;
 
-  if (!Array.isArray(items) || items.length === 0) {
-    deferred.reject(new errors.TransactionError("Items required to run transaction"));
-    return deferred.promise.nodeify(next);
-  }
+    let builtOptions: any = options || {};
+    if (typeof options === "function") {
+      next = options;
+      builtOptions = {};
+    }
 
-  const tmpItems = await Promise.all(items);
-  items = tmpItems;
-  const transactionReq = {
-    "TransactItems": items
-  };
-  let transactionMethodName;
-  if (options.type) {
-    debugTransaction("Using custom transaction method");
-    if (options.type === "get") {
-      transactionMethodName = "transactGetItems";
-    } else if (options.type === "write") {
-      transactionMethodName = "transactWriteItems";
-    } else {
-      deferred.reject(new errors.TransactionError('Invalid type option, please pass in "get" or "write"'));
+    if (!Array.isArray(items) || items.length === 0) {
+      deferred.reject(new errors.TransactionError("Items required to run transaction"));
       return deferred.promise.nodeify(next);
     }
-  } else {
-    debugTransaction("Using predetermined transaction method");
-    transactionMethodName = items.map((obj) => Object.keys(obj)[0]).every((key) => key === "Get") ? "transactGetItems" : "transactWriteItems";
-  }
-  debugTransaction(`Using transaction method: ${transactionMethodName}`);
 
-  function getModelSchemaFromIndex (index: number) {
-    const requestItem = items[index];
-    const [requestItemProperty] = Object.keys(items[index]);
-    const tableName = requestItem[requestItemProperty].TableName;
-    const TheModel = that.models[tableName];
-    if (!TheModel) {
-      const errorMessage = `${tableName} is not a registered model. You can only use registered Dynamoose models when using a RAW transaction object.`;
-      throw new errors.TransactionError(errorMessage);
+    const tmpItems = await Promise.all(items);
+    items = tmpItems;
+    const transactionReq = {
+      "TransactItems": items
+    };
+    let transactionMethodName;
+    if (builtOptions.type) {
+      debugTransaction("Using custom transaction method");
+      if (builtOptions.type === "get") {
+        transactionMethodName = "transactGetItems";
+      } else if (builtOptions.type === "write") {
+        transactionMethodName = "transactWriteItems";
+      } else {
+        deferred.reject(new errors.TransactionError('Invalid type option, please pass in "get" or "write"'));
+        return deferred.promise.nodeify(next);
+      }
+    } else {
+      debugTransaction("Using predetermined transaction method");
+      transactionMethodName = items.map((obj) => Object.keys(obj)[0]).every((key) => key === "Get") ? "transactGetItems" : "transactWriteItems";
     }
-    const TheModel$ = TheModel.$__;
-    const {schema} = TheModel$;
+    debugTransaction(`Using transaction method: ${transactionMethodName}`);
 
-    return {TheModel, TheModel$, schema};
+    const transact = () => {
+      debugTransaction("transact", transactionReq);
+      this.dynamoDB[transactionMethodName](transactionReq, async (err, data) => {
+        if (err) {
+          debugTransaction(`Error returned by ${transactionMethodName}`, err);
+          return deferred.reject(err);
+        }
+
+        debugTransaction(`${transactionMethodName} response`, data);
+
+        if (!data.Responses) {
+          return deferred.resolve();
+        }
+
+        return deferred.resolve((await Promise.all(data.Responses.map(async (item, index) => {
+          const {TheModel, schema} = getModelSchemaFromIndex(items[index], this);
+          Object.keys(item).forEach((prop) => {
+            if (item[prop] instanceof DynamoDBSet) {
+              item[prop] = item[prop].values;
+            }
+          });
+
+          const model = new TheModel();
+          model.$__.isNew = false;
+          // Destruct 'item' DynamoDB's returned structure.
+          await schema.parseDynamo(model, item.Item);
+          debugTransaction(`${transactionMethodName} parsed model`, model);
+          return model;
+        }))).filter((item, index) => {
+          const {schema} = getModelSchemaFromIndex(items[index], this);
+
+          return !(schema.expires && schema.expires.returnExpiredItems === false && item[schema.expires.attribute] && item[schema.expires.attribute] < new Date());
+        }));
+      });
+    };
+
+    if (builtOptions.returnRequest) {
+      deferred.resolve(transactionReq);
+    } else if (items.some((item, index) => getModelSchemaFromIndex(items[index], this).TheModel.$__.table.options.waitForActive)) {
+      const waitForActivePromises = Promise.all(items.filter((item, index) => getModelSchemaFromIndex(items[index], this).TheModel.$__.table.options.waitForActive).map((item, index) => getModelSchemaFromIndex(items[index], this).TheModel.$__.table.waitForActive()));
+      waitForActivePromises.then(transact).catch(deferred.reject);
+    } else {
+      transact();
+    }
+    return deferred.promise.nodeify(next);
   }
-
-  const transact = () => {
-    debugTransaction("transact", transactionReq);
-    this.dynamoDB[transactionMethodName](transactionReq, async (err, data) => {
-      if (err) {
-        debugTransaction(`Error returned by ${transactionMethodName}`, err);
-        return deferred.reject(err);
-      }
-
-      debugTransaction(`${transactionMethodName} response`, data);
-
-      if (!data.Responses) {
-        return deferred.resolve();
-      }
-
-      return deferred.resolve((await Promise.all(data.Responses.map(async (item, index) => {
-        const {TheModel, schema} = getModelSchemaFromIndex(index);
-        Object.keys(item).forEach((prop) => {
-          if (item[prop] instanceof DynamoDBSet) {
-            item[prop] = item[prop].values;
-          }
-        });
-
-        const model = new TheModel();
-        model.$__.isNew = false;
-        // Destruct 'item' DynamoDB's returned structure.
-        await schema.parseDynamo(model, item.Item);
-        debugTransaction(`${transactionMethodName} parsed model`, model);
-        return model;
-      }))).filter((item, index) => {
-        const {schema} = getModelSchemaFromIndex(index);
-
-        return !(schema.expires && schema.expires.returnExpiredItems === false && item[schema.expires.attribute] && item[schema.expires.attribute] < new Date());
-      }));
-    });
-  };
-
-  if (options.returnRequest) {
-    deferred.resolve(transactionReq);
-  } else if (items.some((item, index) => getModelSchemaFromIndex(index).TheModel.$__.table.options.waitForActive)) {
-    const waitForActivePromises = Promise.all(items.filter((item, index) => getModelSchemaFromIndex(index).TheModel.$__.table.options.waitForActive).map((item, index) => getModelSchemaFromIndex(index).TheModel.$__.table.waitForActive()));
-    waitForActivePromises.then(transact).catch(deferred.reject);
-  } else {
-    transact();
-  }
-  return deferred.promise.nodeify(next);
-};
+}
 
 const DynamooseInstance = new Dynamoose();
 
