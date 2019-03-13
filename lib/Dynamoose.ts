@@ -1,15 +1,15 @@
-import https from "https";
-import AWS from "aws-sdk";
-import debugBase from "debug";
-import Q from "q";
-import Table from "./Table";
-import Schema from "./Schema";
-import Model from "./Model";
-import VirtualType from "./VirtualType";
-import errors from "./errors";
+import https from 'https';
+import AWS from 'aws-sdk';
+import debugBase from 'debug';
+import Q from 'q';
+import Table from './Table';
+import Schema from './Schema';
+import Model from './Model';
+import VirtualType from './VirtualType';
+import errors from './errors';
 
-const debug = debugBase("dynamoose");
-const debugTransaction = debugBase("dynamoose:transaction");
+const debug = debugBase('dynamoose');
+const debugTransaction = debugBase('dynamoose:transaction');
 
 export type TAttributeToDynamo = (name: string, json: any, model: any, defaultFormatter: Function, options: ISchemaOptions) => any;
 export type TAttributeFromDynamo = (name: string, json: any, defaultFormatter: Function) => any;
@@ -56,7 +56,7 @@ export interface ITransactionOptions {
 export function createLocalDb (endpointURL: string) {
   const dynamoConfig = {};
   // This has to be done as the aws sdk types insist that new AWS.Endpoint(endpointURL) is not a string
-  dynamoConfig["endpoint"] = new AWS.Endpoint(endpointURL);
+  dynamoConfig['endpoint'] = new AWS.Endpoint(endpointURL);
   return new AWS.DynamoDB(dynamoConfig);
 }
 export function getModelSchemaFromIndex (item: any, dynamoose: Dynamoose) {
@@ -104,11 +104,11 @@ class Dynamoose {
   constructor() {
     this.models = {};
     this.defaults = {
-      "create": true,
-      "waitForActive": true, // Wait for table to be created
-      "waitForActiveTimeout": 180000, // 3 minutes
-      "prefix": "", // prefix_Table
-      "suffix": "" // Table_suffix
+      'create': true,
+      'waitForActive': true, // Wait for table to be created
+      'waitForActiveTimeout': 180000, // 3 minutes
+      'prefix': '', // prefix_Table
+      'suffix': '' // Table_suffix
     };
     this.VirtualType = VirtualType;
     this.AWS = AWS;
@@ -127,12 +127,12 @@ class Dynamoose {
     options = options || {};
 
     for (const key in this.defaults) {
-      options[key] = typeof options[key] === "undefined" ? this.defaults[key] : options[key];
+      options[key] = typeof options[key] === 'undefined' ? this.defaults[key] : options[key];
     }
 
     name = options.prefix + name + options.suffix;
 
-    debug("Looking up model %s", name);
+    debug('Looking up model %s', name);
 
     if (this.models[name]) {
       return this.models[name];
@@ -150,9 +150,9 @@ class Dynamoose {
    * @param url the url to connect to locally
    */
   local (url?: string) {
-    this.endpointURL = url || "http://localhost:8000";
+    this.endpointURL = url || 'http://localhost:8000';
     this.dynamoDB = createLocalDb(this.endpointURL);
-    debug("Setting DynamoDB to local (%s)", this.endpointURL);
+    debug('Setting DynamoDB to local (%s)', this.endpointURL);
   }
   /**
    * This method will initialize and then return the dynamoDocumentClient
@@ -163,10 +163,10 @@ class Dynamoose {
       return this.dynamoDocumentClient;
     }
     if (this.endpointURL) {
-      debug("Setting dynamodb document client to %s", this.endpointURL);
-      this.AWS.config.update({"endpoint": this.endpointURL});
+      debug('Setting dynamodb document client to %s', this.endpointURL);
+      this.AWS.config.update({'endpoint': this.endpointURL});
     } else {
-      debug("Getting default dynamodb document client");
+      debug('Getting default dynamodb document client');
     }
     this.dynamoDocumentClient = new this.AWS.DynamoDB.DocumentClient();
     return this.dynamoDocumentClient;
@@ -176,7 +176,7 @@ class Dynamoose {
    * @param documentClient your AWS.DynamoDB.DocumentClient instance
    */
   setDocumentClient(documentClient: AWS.DynamoDB.DocumentClient) {
-    debug("Setting dynamodb document client");
+    debug('Setting dynamodb document client');
     this.dynamoDocumentClient = documentClient;
   }
   /**
@@ -189,15 +189,15 @@ class Dynamoose {
     }
 
     if (this.endpointURL) {
-      debug("Setting DynamoDB to %s", this.endpointURL);
+      debug('Setting DynamoDB to %s', this.endpointURL);
       this.dynamoDB = createLocalDb(this.endpointURL);
     } else {
-      debug("Getting default DynamoDB");
+      debug('Getting default DynamoDB');
       this.dynamoDB = new this.AWS.DynamoDB({
-        "httpOptions": {
-          "agent": new https.Agent({
-            "rejectUnauthorized": true,
-            "keepAlive": true
+        'httpOptions': {
+          'agent': new https.Agent({
+            'rejectUnauthorized': true,
+            'keepAlive': true
           })
         }
       });
@@ -210,7 +210,7 @@ class Dynamoose {
    */
   setDefaults(options: IDynamooseOptions) {
     for (const key in this.defaults) {
-      options[key] = typeof options[key] === "undefined" ? this.defaults[key] : options[key];
+      options[key] = typeof options[key] === 'undefined' ? this.defaults[key] : options[key];
     }
 
     this.defaults = options;
@@ -220,14 +220,14 @@ class Dynamoose {
    * @param ddb an instance of AWS.DynamoDB
    */
   setDDB(ddb: AWS.DynamoDB) {
-    debug("Setting custom DDB");
+    debug('Setting custom DDB');
     this.dynamoDB = ddb;
   }
   /**
    * This method allows you to clear the AWS.DynamoDB instance
    */
   revertDDB() {
-    debug("Reverting to default DDB");
+    debug('Reverting to default DDB');
     this.dynamoDB = undefined;
   }
   /**
@@ -237,47 +237,47 @@ class Dynamoose {
    * @param next A callback for post transaction completion
    */
   async transaction(items: Array<any>, options?: Function | ITransactionOptions, next?: Function) {
-    debugTransaction("Run Transaction");
+    debugTransaction('Run Transaction');
     const deferred = Q.defer();
     const dbClient = this.documentClient();
     const DynamoDBSet = dbClient.createSet([1, 2, 3]).constructor;
     const that = this;
 
     let builtOptions: any = options || {};
-    if (typeof options === "function") {
+    if (typeof options === 'function') {
       next = options;
       builtOptions = {};
     }
 
     if (!Array.isArray(items) || items.length === 0) {
-      deferred.reject(new errors.TransactionError("Items required to run transaction"));
+      deferred.reject(new errors.TransactionError('Items required to run transaction'));
       return deferred.promise.nodeify(next);
     }
 
     const tmpItems = await Promise.all(items);
     items = tmpItems;
     const transactionReq = {
-      "TransactItems": items
+      'TransactItems': items
     };
     let transactionMethodName;
     if (builtOptions.type) {
-      debugTransaction("Using custom transaction method");
-      if (builtOptions.type === "get") {
-        transactionMethodName = "transactGetItems";
-      } else if (builtOptions.type === "write") {
-        transactionMethodName = "transactWriteItems";
+      debugTransaction('Using custom transaction method');
+      if (builtOptions.type === 'get') {
+        transactionMethodName = 'transactGetItems';
+      } else if (builtOptions.type === 'write') {
+        transactionMethodName = 'transactWriteItems';
       } else {
         deferred.reject(new errors.TransactionError('Invalid type option, please pass in "get" or "write"'));
         return deferred.promise.nodeify(next);
       }
     } else {
-      debugTransaction("Using predetermined transaction method");
-      transactionMethodName = items.map((obj) => Object.keys(obj)[0]).every((key) => key === "Get") ? "transactGetItems" : "transactWriteItems";
+      debugTransaction('Using predetermined transaction method');
+      transactionMethodName = items.map((obj) => Object.keys(obj)[0]).every((key) => key === 'Get') ? 'transactGetItems' : 'transactWriteItems';
     }
     debugTransaction(`Using transaction method: ${transactionMethodName}`);
 
     const transact = () => {
-      debugTransaction("transact", transactionReq);
+      debugTransaction('transact', transactionReq);
       this.dynamoDB[transactionMethodName](transactionReq, async (err, data) => {
         if (err) {
           debugTransaction(`Error returned by ${transactionMethodName}`, err);

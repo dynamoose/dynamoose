@@ -7,7 +7,8 @@
         ],
         "indent": [
             true,
-            "spaces"
+            "spaces",
+            2
         ],
         "one-line": [
             true,
@@ -17,7 +18,7 @@
         "no-var-keyword": true,
         "quotemark": [
             true,
-            "double",
+            "single",
             "avoid-escape"
         ],
         "semicolon": [
