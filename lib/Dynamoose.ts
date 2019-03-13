@@ -4,9 +4,9 @@ import debugBase from "debug";
 import Q from "q";
 import Table from "./Table";
 import Schema from "./Schema";
-import Model from "./Model";
 import VirtualType from "./VirtualType";
 import errors from "./errors";
+import { compile } from "./NewModel";
 
 const debug = debugBase("dynamoose");
 const debugTransaction = debugBase("dynamoose:transaction");
@@ -141,7 +141,7 @@ class Dynamoose {
       schema = new Schema(schema, options);
     }
 
-    const model = Model.compile(name, schema, options, this);
+    const model = compile(name, schema, options, this);
     this.models[name] = model;
     return model;
   }
