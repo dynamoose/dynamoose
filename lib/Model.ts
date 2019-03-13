@@ -1,16 +1,16 @@
-import Q from "q";
-import objectPath from "object-path";
-import debugWrapper from "debug";
-import Attribute from "./Attribute";
-import Query from "./Query";
-import Scan from "./Scan";
-import errors from "./errors";
-import reservedKeywords from "./reserved-keywords";
-import { toBatchChunks, batchWriteItems, processCondition, validKeyValue } from "./ModelLibs";
+import Q from 'q';
+import objectPath from 'object-path';
+import debugWrapper from 'debug';
+import Attribute from './Attribute';
+import Query from './Query';
+import Scan from './Scan';
+import errors from './errors';
+import reservedKeywords from './reserved-keywords';
+import { toBatchChunks, batchWriteItems, processCondition, validKeyValue } from './ModelLibs';
 
 // const MAX_BATCH_READ_SIZE = 100;
 const MAX_BATCH_WRITE_SIZE = 25;
-const debug = debugWrapper("dynamoose:model");
+const debug = debugWrapper('dynamoose:model');
 
 function Model (obj) {
   this.$__.isNew = true;
@@ -21,17 +21,17 @@ function Model (obj) {
 }
 
 Model.prototype.put = async function (options, next) {
-  debug("put", this);
+  debug('put', this);
   const deferred = Q.defer();
-  const shouldContinuePutCalled = await this.$__.NewModel._emit("model:put", "put:called", {"event": {"callback": next, options}, "actions": {"updateCallback" (cb) { next = cb; }, "updateOptions" (newOptions) { options = newOptions; }}}, deferred);
+  const shouldContinuePutCalled = await this.$__.NewModel._emit('model:put', 'put:called', {'event': {'callback': next, options}, 'actions': {'updateCallback' (cb) { next = cb; }, 'updateOptions' (newOptions) { options = newOptions; }}}, deferred);
   if (shouldContinuePutCalled === false) { return; }
   let item;
 
   const putItem = async () => {
-    const shouldContinueRequestPre = await this.$__.NewModel._emit("model:put", "request:pre", {"event": {options, item}, "actions": {"updateItem" (newItem) { item = newItem; }}}, deferred);
+    const shouldContinueRequestPre = await this.$__.NewModel._emit('model:put', 'request:pre', {'event': {options, item}, 'actions': {'updateItem' (newItem) { item = newItem; }}}, deferred);
     if (shouldContinueRequestPre === false) { return; }
     this.$__.base.ddb().putItem(item, async (err) => {
-      const shouldContinueRequestPost = await this.$__.NewModel._emit("model:put", "request:post", {"event": {options, item, "error": err}, "actions": {"updateError" (newErr) { err = newErr; }}}, deferred);
+      const shouldContinueRequestPost = await this.$__.NewModel._emit('model:put', 'request:post', {'event': {options, item, 'error': err}, 'actions': {'updateError' (newErr) { err = newErr; }}}, deferred);
       if (shouldContinueRequestPost === false) { return; }
       if (err) {
         deferred.reject(err);
@@ -42,7 +42,7 @@ Model.prototype.put = async function (options, next) {
 
   try {
     options = options || {};
-    if (typeof options === "function") {
+    if (typeof options === 'function') {
       next = options;
       options = {};
     }
@@ -51,7 +51,7 @@ Model.prototype.put = async function (options, next) {
     }
 
     const toDynamoOptions: any = {
-      "updateTimestamps": true
+      'updateTimestamps': true
     };
 
     if (options.updateTimestamps === false) {
@@ -64,24 +64,24 @@ Model.prototype.put = async function (options, next) {
 
     const {schema} = this.$__;
     item = {
-      "TableName": this.$__.name,
-      "Item": await schema.toDynamo(this, toDynamoOptions)
+      'TableName': this.$__.name,
+      'Item': await schema.toDynamo(this, toDynamoOptions)
     };
 
     await schema.parseDynamo(this, item.Item);
 
     if (!options.overwrite) {
-      if (!reservedKeywords.isReservedKeyword(schema.hashKey.name) && !schema.hashKey.name.startsWith("_")) {
+      if (!reservedKeywords.isReservedKeyword(schema.hashKey.name) && !schema.hashKey.name.startsWith('_')) {
         item.ConditionExpression = `attribute_not_exists(${schema.hashKey.name})`;
       } else {
-        item.ConditionExpression = "attribute_not_exists(#__hash_key)";
+        item.ConditionExpression = 'attribute_not_exists(#__hash_key)';
         item.ExpressionAttributeNames = item.ExpressionAttributeNames || {};
-        item.ExpressionAttributeNames["#__hash_key"] = schema.hashKey.name;
+        item.ExpressionAttributeNames['#__hash_key'] = schema.hashKey.name;
       }
     }
     await processCondition(item, options, this);
 
-    debug("putItem", item);
+    debug('putItem', item);
 
     if (options.returnRequest) {
       deferred.resolve(item);
@@ -104,14 +104,14 @@ Model.prototype.populate = function (options, resultObj, fillPath) {
   }
   const returnObj = resultObj || this;
 
-  let ModelPathName = "";
+  let ModelPathName = '';
 
-  if (typeof options === "string") {
+  if (typeof options === 'string') {
     ModelPathName = this.$__.table.schema.attributes[options].options.ref;
   } else if (options.path) {
     ModelPathName = this.$__.table.schema.attributes[options.path].options.ref;
   } else if (!options.path && !options.model) {
-    throw new Error("Invalid parameters provided to the populate method");
+    throw new Error('Invalid parameters provided to the populate method');
   }
 
   const modelPropName = Object.keys(this.$__.table.base.models).filter((key) => {
@@ -137,7 +137,7 @@ Model.prototype.populate = function (options, resultObj, fillPath) {
     .get(this[options.path || options])
     .then((target) => {
       if (!target) {
-        throw new Error("Invalid reference");
+        throw new Error('Invalid reference');
       }
       this[options.path || options] = target;
       fillPath = fillPath.concat(options.path || options);
@@ -151,7 +151,7 @@ Model.prototype.populate = function (options, resultObj, fillPath) {
 
 Model.prototype.delete = async function (options, next) {
   options = options || {};
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = {};
   }
@@ -163,19 +163,19 @@ Model.prototype.delete = async function (options, next) {
   const deferred = Q.defer();
 
   if (this[hashKeyName] === null || this[hashKeyName] === undefined) {
-    deferred.reject(new errors.ModelError("Hash key required: %s", hashKeyName));
+    deferred.reject(new errors.ModelError('Hash key required: %s', hashKeyName));
     return deferred.promise.nodeify(next);
   }
 
   if (schema.rangeKey && (this[schema.rangeKey.name] === null || this[schema.rangeKey.name] === undefined)) {
-    deferred.reject(new errors.ModelError("Range key required: %s", schema.hashKey.name));
+    deferred.reject(new errors.ModelError('Range key required: %s', schema.hashKey.name));
     return deferred.promise.nodeify(next);
   }
 
 
   const getDelete: any = {
-    "TableName": this.$__.name,
-    "Key": {}
+    'TableName': this.$__.name,
+    'Key': {}
   };
 
   try {
@@ -191,24 +191,24 @@ Model.prototype.delete = async function (options, next) {
   }
 
   if (options.update) {
-    getDelete.ReturnValues = "ALL_OLD";
+    getDelete.ReturnValues = 'ALL_OLD';
     getDelete.ConditionExpression = `attribute_exists(${schema.hashKey.name})`;
   }
 
   const deleteItem = () => {
 
-    debug("deleteItem", getDelete);
+    debug('deleteItem', getDelete);
     this.$__.base.ddb().deleteItem(getDelete, async (err, data) => {
       if (err) {
-        debug("Error returned by deleteItem", err);
+        debug('Error returned by deleteItem', err);
         return deferred.reject(err);
       }
-      debug("deleteItem response", data);
+      debug('deleteItem response', data);
 
       if (options.update && data.Attributes) {
         try {
           await schema.parseDynamo(this, data.Attributes);
-          debug("deleteItem parsed model", this);
+          debug('deleteItem parsed model', this);
         } catch (parseDynamoError) {
           return deferred.reject(parseDynamoError);
         }
@@ -231,12 +231,12 @@ Model.prototype.delete = async function (options, next) {
 };
 
 Model.conditionCheck = async function (NewModel, key, options, next) {
-  debug("Condition Check", this);
+  debug('Condition Check', this);
   const deferred = Q.defer();
 
   try {
     options = options || {};
-    if (typeof options === "function") {
+    if (typeof options === 'function') {
       next = options;
       options = {};
     }
@@ -256,8 +256,8 @@ Model.conditionCheck = async function (NewModel, key, options, next) {
     }
 
     const conditionReq = {
-      "TableName": NewModel.$__.name,
-      "Key": {}
+      'TableName': NewModel.$__.name,
+      'Key': {}
     };
     try {
       conditionReq.Key[hashKeyName] = schema.hashKey.toDynamo(key[hashKeyName], undefined, key);
@@ -271,7 +271,7 @@ Model.conditionCheck = async function (NewModel, key, options, next) {
     }
     await processCondition(conditionReq, options, NewModel);
 
-    debug("Condition Check", conditionReq);
+    debug('Condition Check', conditionReq);
     deferred.resolve(conditionReq);
   } catch (err) {
     deferred.reject(err);
@@ -282,7 +282,7 @@ Model.conditionCheck = async function (NewModel, key, options, next) {
 Model.create = function (NewModel, obj, options, next) {
   options = options || {};
 
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = {};
   }
@@ -296,26 +296,26 @@ Model.create = function (NewModel, obj, options, next) {
 };
 
 Model.get = async function (NewModel, key, options, next) {
-  debug("Get %j", key);
+  debug('Get %j', key);
   const deferred = Q.defer();
-  const shouldContinueGetCalled = await NewModel._emit("model:get", "get:called", {"event": {"callback": next, key, options}, "actions": {"updateCallback" (cb) { next = cb; }, "updateKey" (newKey) { key = newKey; }, "updateOptions" (newOptions) { options = newOptions; }}}, deferred);
+  const shouldContinueGetCalled = await NewModel._emit('model:get', 'get:called', {'event': {'callback': next, key, options}, 'actions': {'updateCallback' (cb) { next = cb; }, 'updateKey' (newKey) { key = newKey; }, 'updateOptions' (newOptions) { options = newOptions; }}}, deferred);
   if (shouldContinueGetCalled === false) { return; }
 
   options = options || {};
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = {};
   }
 
   if (key === null || key === undefined) {
-    deferred.reject(new errors.ModelError("Key required to get item"));
+    deferred.reject(new errors.ModelError('Key required to get item'));
     return deferred.promise.nodeify(next);
   }
 
   const {schema} = NewModel.$__;
   const hashKeyName = schema.hashKey.name;
 
-  if (typeof key === "object" && !validKeyValue(key[hashKeyName])) {
+  if (typeof key === 'object' && !validKeyValue(key[hashKeyName])) {
     deferred.reject(new errors.ModelError(`Hash key required: ${schema.hashKey.name}`));
     return deferred.promise.nodeify(next);
   }
@@ -333,8 +333,8 @@ Model.get = async function (NewModel, key, options, next) {
 
 
   let getReq: any = {
-    "TableName": NewModel.$__.name,
-    "Key": {}
+    'TableName': NewModel.$__.name,
+    'Key': {}
   };
 
   try {
@@ -359,26 +359,26 @@ Model.get = async function (NewModel, key, options, next) {
   const newModel$ = NewModel.$__;
 
   async function get () {
-    debug("getItem", getReq);
+    debug('getItem', getReq);
 
-    const emitEventObjectRequestPre = {"callback": next, key, options, "getRequest": getReq};
-    const emitObjectRequestPre = {"event": emitEventObjectRequestPre, "actions": {"updateCallback" (cb) { next = cb; }, "updateKey" (newKey) { key = newKey; }, "updateOptions" (newOptions) { options = newOptions; }, "updateGetRequest" (newReq) { getReq = newReq; }}};
-    const shouldContinueRequestPre = await NewModel._emit("model:get", "request:pre", emitObjectRequestPre, deferred);
+    const emitEventObjectRequestPre = {'callback': next, key, options, 'getRequest': getReq};
+    const emitObjectRequestPre = {'event': emitEventObjectRequestPre, 'actions': {'updateCallback' (cb) { next = cb; }, 'updateKey' (newKey) { key = newKey; }, 'updateOptions' (newOptions) { options = newOptions; }, 'updateGetRequest' (newReq) { getReq = newReq; }}};
+    const shouldContinueRequestPre = await NewModel._emit('model:get', 'request:pre', emitObjectRequestPre, deferred);
     if (shouldContinueRequestPre === false) { return; }
 
     newModel$.base.ddb().getItem(getReq, async (err, data) => {
 
-      const emitEventObjectRequestPost = {"callback": next, key, options, "error": err, data};
-      const emitObjectRequestPost = {"event": emitEventObjectRequestPost, "actions": {"updateCallback" (cb) { next = cb; }, "updateKey" (newKey) { key = newKey; }, "updateOptions" (newOptions) { options = newOptions; }, "updateError" (newErr) { err = newErr; }, "updateData" (newData) { data = newData; }}};
-      const shouldContinueRequestPost = await NewModel._emit("model:get", "request:post", emitObjectRequestPost, deferred);
+      const emitEventObjectRequestPost = {'callback': next, key, options, 'error': err, data};
+      const emitObjectRequestPost = {'event': emitEventObjectRequestPost, 'actions': {'updateCallback' (cb) { next = cb; }, 'updateKey' (newKey) { key = newKey; }, 'updateOptions' (newOptions) { options = newOptions; }, 'updateError' (newErr) { err = newErr; }, 'updateData' (newData) { data = newData; }}};
+      const shouldContinueRequestPost = await NewModel._emit('model:get', 'request:post', emitObjectRequestPost, deferred);
       if (shouldContinueRequestPost === false) { return; }
 
       if (err) {
-        debug("Error returned by getItem", err);
+        debug('Error returned by getItem', err);
         return deferred.reject(err);
       }
 
-      debug("getItem response", data);
+      debug('getItem response', data);
 
       if (!Object.keys(data).length) {
         return deferred.resolve();
@@ -390,7 +390,7 @@ Model.get = async function (NewModel, key, options, next) {
       try {
         await schema.parseDynamo(model, data.Item);
       } catch (e) {
-        debug("cannot parse data", data);
+        debug('cannot parse data', data);
         return deferred.reject(e);
       }
 
@@ -398,7 +398,7 @@ Model.get = async function (NewModel, key, options, next) {
         deferred.resolve();
       }
 
-      debug("getItem parsed model", model);
+      debug('getItem parsed model', model);
       deferred.resolve(model);
     });
   }
@@ -424,11 +424,11 @@ Model.get = async function (NewModel, key, options, next) {
 // NewModel.update({id: 123}, { $PUT: {a: 1, b: 2} });
 // NewModel.update({id: 123}, {a: 1, b: 2} ); // Defaults to put (same as above)*/
 Model.update = async function (NewModel, key, update, options, next) {
-  debug("Update %j", key);
+  debug('Update %j', key);
   const deferred = Q.defer();
   const {schema} = NewModel.$__;
 
-  if (typeof update === "function") {
+  if (typeof update === 'function') {
     next = update;
     update = undefined;
   }
@@ -438,24 +438,24 @@ Model.update = async function (NewModel, key, update, options, next) {
   }
 
   options = options || {};
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = {};
   }
 
   // default createRequired to false
-  if (typeof options.createRequired === "undefined") {
+  if (typeof options.createRequired === 'undefined') {
     options.createRequired = false;
   }
 
   // default updateTimestamps to true
-  if (typeof options.updateTimestamps === "undefined") {
+  if (typeof options.updateTimestamps === 'undefined') {
     options.updateTimestamps = true;
   }
 
   // default return values to 'ALL_NEW' unless `defaultReturnValues` is set;
-  if (typeof options.returnValues === "undefined") {
-    options.returnValues = NewModel.$__.options.defaultReturnValues || "ALL_NEW";
+  if (typeof options.returnValues === 'undefined') {
+    options.returnValues = NewModel.$__.options.defaultReturnValues || 'ALL_NEW';
   }
 
   // if the key part was emtpy, try the key defaults before giving up...
@@ -465,23 +465,23 @@ Model.update = async function (NewModel, key, update, options, next) {
     // first figure out the primary/hash key
     const hashKeyDefault = schema.attributes[schema.hashKey.name].options.default;
 
-    if (typeof hashKeyDefault === "undefined") {
-      deferred.reject(new errors.ModelError("Key required to get item"));
+    if (typeof hashKeyDefault === 'undefined') {
+      deferred.reject(new errors.ModelError('Key required to get item'));
       return deferred.promise.nodeify(next);
     }
 
-    key[schema.hashKey.name] = typeof hashKeyDefault === "function" ? hashKeyDefault() : hashKeyDefault;
+    key[schema.hashKey.name] = typeof hashKeyDefault === 'function' ? hashKeyDefault() : hashKeyDefault;
 
     // now see if you have to figure out a range key
     if (schema.rangeKey) {
       const rangeKeyDefault = schema.attributes[schema.rangeKey.name].options.default;
 
-      if (typeof rangeKeyDefault === "undefined") {
+      if (typeof rangeKeyDefault === 'undefined') {
         deferred.reject(new errors.ModelError(`Range key required: ${schema.rangeKey.name}`));
         return deferred.promise.nodeify(next);
       }
 
-      key[schema.rangeKey.name] = typeof rangeKeyDefault === "function" ? rangeKeyDefault() : rangeKeyDefault;
+      key[schema.rangeKey.name] = typeof rangeKeyDefault === 'function' ? rangeKeyDefault() : rangeKeyDefault;
     }
   }
 
@@ -493,11 +493,11 @@ Model.update = async function (NewModel, key, update, options, next) {
   }
 
   const updateReq: any = {
-    "TableName": NewModel.$__.name,
-    "Key": {},
-    "ExpressionAttributeNames": {},
-    "ExpressionAttributeValues": {},
-    "ReturnValues": options.returnValues
+    'TableName': NewModel.$__.name,
+    'Key': {},
+    'ExpressionAttributeNames': {},
+    'ExpressionAttributeValues': {},
+    'ReturnValues': options.returnValues
   };
   await processCondition(updateReq, options, NewModel);
 
@@ -546,7 +546,7 @@ Model.update = async function (NewModel, key, update, options, next) {
 
     this.getUpdateExpression = function (getUpdateReq) {
       let attrCount = 0;
-      let updateExpression = "";
+      let updateExpression = '';
 
       let attrName;
       let valName;
@@ -595,7 +595,7 @@ Model.update = async function (NewModel, key, update, options, next) {
         attrCount += 1;
       }
       if (setExpressions.length > 0) {
-        updateExpression += `SET ${setExpressions.join(",")} `;
+        updateExpression += `SET ${setExpressions.join(',')} `;
       }
 
       const addExpressions = [];
@@ -613,7 +613,7 @@ Model.update = async function (NewModel, key, update, options, next) {
         attrCount += 1;
       }
       if (addExpressions.length > 0) {
-        updateExpression += `ADD ${addExpressions.join(",")} `;
+        updateExpression += `ADD ${addExpressions.join(',')} `;
       }
 
       const removeExpressions = [];
@@ -629,7 +629,7 @@ Model.update = async function (NewModel, key, update, options, next) {
         attrCount += 1;
       }
       if (removeExpressions.length > 0) {
-        updateExpression += `REMOVE ${removeExpressions.join(",")}`;
+        updateExpression += `REMOVE ${removeExpressions.join(',')}`;
       }
 
       getUpdateReq.UpdateExpression = updateExpression;
@@ -646,7 +646,7 @@ Model.update = async function (NewModel, key, update, options, next) {
       if (putAttr || schema.options.saveUnknown) {
         const val = updatePUT[putItem];
 
-        let removeParams = val === null || val === undefined || val === "";
+        let removeParams = val === null || val === undefined || val === '';
 
         if (!options.allowEmptyArray) {
           removeParams = removeParams || Array.isArray(val) && val.length === 0;
@@ -699,7 +699,7 @@ Model.update = async function (NewModel, key, update, options, next) {
       const addVal = update.$ADD[addItem];
       try {
         if (addAttr) {
-          if (addAttr.type.name === "list") {
+          if (addAttr.type.name === 'list') {
             operations.addListAppend(addItem, await addAttr.toDynamo(addVal));
           } else {
             operations.addAdd(addItem, await addAttr.toDynamo(addVal));
@@ -756,14 +756,14 @@ Model.update = async function (NewModel, key, update, options, next) {
 
         // throw an error if you have required attribute without a default (and you didn't supply
         //  anything to update with)
-        if (typeof defaultValueOrFunction === "undefined") {
+        if (typeof defaultValueOrFunction === 'undefined') {
           const err = `Required attribute "${attributeName}" does not have a default.`;
-          debug("Error returned by updateItem", err);
+          debug('Error returned by updateItem', err);
           deferred.reject(err);
           return deferred.promise.nodeify(next);
         }
 
-        const defaultValue = typeof defaultValueOrFunction === "function" ? defaultValueOrFunction() : defaultValueOrFunction;
+        const defaultValue = typeof defaultValueOrFunction === 'function' ? defaultValueOrFunction() : defaultValueOrFunction;
 
         operations.addIfNotExistsSet(attributeName, await attribute.toDynamo(defaultValue));
       }
@@ -786,13 +786,13 @@ Model.update = async function (NewModel, key, update, options, next) {
   const newModel$ = NewModel.$__;
 
   function updateItem () {
-    debug("updateItem", updateReq);
+    debug('updateItem', updateReq);
     newModel$.base.ddb().updateItem(updateReq, async (err, data) => {
       if (err) {
-        debug("Error returned by updateItem", err);
+        debug('Error returned by updateItem', err);
         return deferred.reject(err);
       }
-      debug("updateItem response", data);
+      debug('updateItem response', data);
 
       if (!Object.keys(data).length) {
         return deferred.resolve();
@@ -803,11 +803,11 @@ Model.update = async function (NewModel, key, update, options, next) {
       try {
         await schema.parseDynamo(model, data.Attributes);
       } catch (e) {
-        debug("cannot parse data", data);
+        debug('cannot parse data', data);
         return deferred.reject(e);
       }
 
-      debug("updateItem parsed model", model);
+      debug('updateItem parsed model', model);
 
       deferred.resolve(model);
     });
@@ -837,7 +837,7 @@ Model.delete = function (NewModel, key, options, next) {
 
   if (schema.rangeKey && !key[schema.rangeKey.name]) {
     const deferred = Q.defer();
-    deferred.reject(new errors.ModelError("Range key required: %s", schema.hashKey.name));
+    deferred.reject(new errors.ModelError('Range key required: %s', schema.hashKey.name));
     return deferred.promise.nodeify(next);
   }
 
@@ -857,7 +857,7 @@ query({id: 1})
 query('id').eq(1).where('name').begienwith('foxy')
 */
 Model.query = function (NewModel, query, options, next) {
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = undefined;
   }
@@ -872,7 +872,7 @@ Model.query = function (NewModel, query, options, next) {
 };
 
 Model.queryOne = function (NewModel, query, options, next) {
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = undefined;
   }
@@ -901,7 +901,7 @@ scan().exec(); // All records
 
 */
 Model.scan = function (NewModel, filter, options, next) {
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = undefined;
   }
@@ -916,14 +916,14 @@ Model.scan = function (NewModel, filter, options, next) {
 };
 
 Model.batchGet = async function (NewModel, keys, options, next) {
-  debug("BatchGet %j", keys);
+  debug('BatchGet %j', keys);
   const deferred = Q.defer();
   if (!Array.isArray(keys)) {
-    deferred.reject(new errors.ModelError("batchGet requires keys to be an array"));
+    deferred.reject(new errors.ModelError('batchGet requires keys to be an array'));
     return deferred.promise.nodeify(next);
   }
   options = options || {};
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = {};
   }
@@ -946,7 +946,7 @@ Model.batchGet = async function (NewModel, keys, options, next) {
   }
 
   const batchReq = {
-    "RequestItems": {}
+    'RequestItems': {}
   };
 
   const getReq: any = {};
@@ -974,13 +974,13 @@ Model.batchGet = async function (NewModel, keys, options, next) {
   const newModel$ = NewModel.$__;
 
   function batchGet () {
-    debug("batchGetItem", batchReq);
+    debug('batchGetItem', batchReq);
     newModel$.base.ddb().batchGetItem(batchReq, async (err, data) => {
       if (err) {
-        debug("Error returned by batchGetItem", err);
+        debug('Error returned by batchGetItem', err);
         return deferred.reject(err);
       }
-      debug("batchGetItem response", data);
+      debug('batchGetItem response', data);
 
       if (!Object.keys(data).length) {
         return deferred.resolve();
@@ -991,7 +991,7 @@ Model.batchGet = async function (NewModel, keys, options, next) {
         model.$__.isNew = false;
         await schema.parseDynamo(model, item);
 
-        debug("batchGet parsed model", model);
+        debug('batchGet parsed model', model);
 
         return model;
       }
@@ -1024,15 +1024,15 @@ Model.batchGet = async function (NewModel, keys, options, next) {
 };
 
 Model.batchPut = async function (NewModel, items, options, next) {
-  debug("BatchPut %j", items);
+  debug('BatchPut %j', items);
   const deferred = Q.defer();
 
   if (!Array.isArray(items)) {
-    deferred.reject(new errors.ModelError("batchPut requires items to be an array"));
+    deferred.reject(new errors.ModelError('batchPut requires items to be an array'));
     return deferred.promise.nodeify(next);
   }
   options = options || {};
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = {};
   }
@@ -1041,13 +1041,13 @@ Model.batchPut = async function (NewModel, items, options, next) {
   const newModel$ = NewModel.$__;
 
   const toDynamoOptions = {
-    "updateTimestamps": options.updateTimestamps || false,
-    "updateExpires": options.updateExpires || false
+    'updateTimestamps': options.updateTimestamps || false,
+    'updateExpires': options.updateExpires || false
   };
 
   const batchRequests = await toBatchChunks(newModel$.name, items, MAX_BATCH_WRITE_SIZE, async (item) => ({
-    "PutRequest": {
-      "Item": await schema.toDynamo(item, toDynamoOptions)
+    'PutRequest': {
+      'Item': await schema.toDynamo(item, toDynamoOptions)
     }
   }));
 
@@ -1068,16 +1068,16 @@ Model.batchPut = async function (NewModel, items, options, next) {
 };
 
 Model.batchDelete = async function (NewModel, keys, options, next) {
-  debug("BatchDel %j", keys);
+  debug('BatchDel %j', keys);
   const deferred = Q.defer();
 
   if (!Array.isArray(keys)) {
-    deferred.reject(new errors.ModelError("batchDelete requires keys to be an array"));
+    deferred.reject(new errors.ModelError('batchDelete requires keys to be an array'));
     return deferred.promise.nodeify(next);
   }
 
   options = options || {};
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
     options = {};
   }
@@ -1095,8 +1095,8 @@ Model.batchDelete = async function (NewModel, keys, options, next) {
     }
 
     return {
-      "DeleteRequest": {
-        "Key": key_element
+      'DeleteRequest': {
+        'Key': key_element
       }
     };
   });

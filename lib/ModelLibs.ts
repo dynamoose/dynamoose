@@ -1,10 +1,10 @@
-import debugWrapper from "debug";
-import errors from "./errors";
-import Q from "q";
-const debug = debugWrapper("dynamoose:model");
+import debugWrapper from 'debug';
+import errors from './errors';
+import Q from 'q';
+const debug = debugWrapper('dynamoose:model');
 
 export function validKeyValue (value) {
-  return value !== undefined && value !== null && value !== "";
+  return value !== undefined && value !== null && value !== '';
 }
 
 export async function processCondition (req, options, model) {
@@ -30,7 +30,7 @@ export async function processCondition (req, options, model) {
         const val = options.conditionValues[k];
         const attr = model.$__.schema.attributes[k];
         if (attr) {
-          req.ExpressionAttributeValues[`:${k}`] = await attr.toDynamo(val, undefined, model, {"updateTimestamps": false});
+          req.ExpressionAttributeValues[`:${k}`] = await attr.toDynamo(val, undefined, model, {'updateTimestamps': false});
         } else {
           throw new errors.ModelError(`Invalid condition value: ${k}. The name must either be in the schema or a full DynamoDB object must be specified.`);
         }
@@ -45,7 +45,7 @@ export async function processCondition (req, options, model) {
   * @param {Schema} schema
   */
 export const applyVirtuals = function (model, schema) {
-  debug("applying virtuals");
+  debug('applying virtuals');
   for (const i in schema.virtuals) {
     schema.virtuals[i].applyVirtuals(model);
   }
@@ -58,7 +58,7 @@ export const applyVirtuals = function (model, schema) {
   * @param {Schema} schema
   */
 export const applyMethods = function (model, schema) {
-  debug("applying methods");
+  debug('applying methods');
   for (const i in schema.methods) {
     model.prototype[i] = schema.methods[i];
   }
@@ -70,17 +70,17 @@ export const applyMethods = function (model, schema) {
   * @param {Schema} schema
   */
 export const applyStatics = function (model, schema) {
-  debug("applying statics");
+  debug('applying statics');
   for (const i in schema.statics) {
     model[i] = schema.statics[i].bind(model);
   }
 };
 
 export function sendErrorToCallback (error, options, next?) {
-  if (typeof options === "function") {
+  if (typeof options === 'function') {
     next = options;
   }
-  if (typeof next === "function") {
+  if (typeof next === 'function') {
     return next(error);
   }
 }
@@ -93,7 +93,7 @@ export async function toBatchChunks (modelName, list, chunkSize, requestMaker) {
   while ((chunk = listClone.splice(0, chunkSize)).length) {
     const requests = await Promise.all(chunk.map(requestMaker));
     const batchReq = {
-      "RequestItems": {}
+      'RequestItems': {}
     };
 
     batchReq.RequestItems[modelName] = requests;
@@ -115,7 +115,7 @@ export function reduceBatchResult (resultList) {
         consumed += responses[tableName].ConsumedCapacityUnits;
 
         acc.Responses[tableName] = {
-          "ConsumedCapacityUnits": consumed
+          'ConsumedCapacityUnits': consumed
         };
       }
     }
@@ -130,18 +130,18 @@ export function reduceBatchResult (resultList) {
     }
 
     return acc;
-  }, {"Responses": {}, "UnprocessedItems": {}});
+  }, {'Responses': {}, 'UnprocessedItems': {}});
 }
 
 export function batchWriteItems (NewModel, batchRequests) {
-  debug("batchWriteItems");
+  debug('batchWriteItems');
   const newModel$ = NewModel.$__;
   const batchList = batchRequests.map((batchReq) => {
     const deferredBatch = Q.defer();
 
     newModel$.base.ddb().batchWriteItem(batchReq, (err, data) => {
       if (err) {
-        debug("Error returned by batchWriteItems", err);
+        debug('Error returned by batchWriteItems', err);
         return deferredBatch.reject(err);
       }
 

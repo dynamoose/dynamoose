@@ -1,16 +1,16 @@
-import util from "util";
-import Q from "q";
-import hooks from "hooks";
-import debugWrapper from "debug";
-import Table = require("./Table");
-import Model from "./Model";
-import { applyVirtuals, sendErrorToCallback, applyMethods, applyStatics } from "./ModelLibs";
-import Plugin = require("./Plugin");
-import errors = require("./errors");
-const debug = debugWrapper("dynamoose:model:compile");
+import util from 'util';
+import Q from 'q';
+import hooks from 'hooks';
+import debugWrapper from 'debug';
+import Table = require('./Table');
+import Model from './Model';
+import { applyVirtuals, sendErrorToCallback, applyMethods, applyStatics } from './ModelLibs';
+import Plugin = require('./Plugin');
+import errors = require('./errors');
+const debug = debugWrapper('dynamoose:model:compile');
 
 export function compile (name, schema, options, base) {
-    debug("compiling NewModel %s", name);
+    debug('compiling NewModel %s', name);
 
     const table = new Table(name, schema, options, base);
 
@@ -22,13 +22,13 @@ export function compile (name, schema, options, base) {
 
     // Set NewModel.name to match name of table. Original property descriptor
     // values are reused.
-    const nameDescriptor = Object.getOwnPropertyDescriptor(NewModel, "name");
+    const nameDescriptor = Object.getOwnPropertyDescriptor(NewModel, 'name');
     // Skip if 'name' property can not be redefined. This probably means
     // code is running in a "non-standard, pre-ES2015 implementations",
     // like node 0.12.
     if (nameDescriptor.configurable) {
       nameDescriptor.value = `Model-${name}`;
-      Object.defineProperty(NewModel, "name", nameDescriptor);
+      Object.defineProperty(NewModel, 'name', nameDescriptor);
     }
 
     util.inherits(NewModel, Model);
@@ -41,30 +41,30 @@ export function compile (name, schema, options, base) {
       schema,
       options,
       NewModel,
-      "plugins": []
+      'plugins': []
     };
     NewModel.$__ = NewModel.prototype.$__;
 
 
     NewModel.plugin = function (pluginPackage, pluginOptions) {
       const obj = {
-        "event": {
-          "plugin": pluginPackage,
+        'event': {
+          'plugin': pluginPackage,
           pluginOptions
         }
       };
       // Emit plugin type `plugin:register` with stage `pre`
-      this._emit("plugin:register", "pre", obj);
+      this._emit('plugin:register', 'pre', obj);
 
       // Run actual action to create plugin
       this.$__.plugins.push(new Plugin(this, pluginPackage, pluginOptions, this.plugin.bind(this)));
 
       // Emit plugin type `plugin:register` with stage `post`
-      this._emit("plugin:register", "post", obj);
+      this._emit('plugin:register', 'post', obj);
     };
 
     NewModel.clearAllPlugins = function () {
-      debug("Clearing all plugins");
+      debug('Clearing all plugins');
       this.$__.plugins = [];
     };
 
@@ -119,7 +119,7 @@ export function compile (name, schema, options, base) {
 
     NewModel.populate = function (populateOptions, resultObj, fillPath) {
       try {
-        return Model["populate"](populateOptions, resultObj, fillPath);
+        return Model['populate'](populateOptions, resultObj, fillPath);
       } catch (err) {
         sendErrorToCallback(err, populateOptions);
         return Q.reject(err);
@@ -226,24 +226,24 @@ export function compile (name, schema, options, base) {
 
     function createTransactionFunction (func, val, optionsIndex) {
       return async function (...args) {
-        if (typeof args[args.length - 1] === "function") {
-          console.warn("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+        if (typeof args[args.length - 1] === 'function') {
+          console.warn('Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.');
           // Callback function passed in which is not allowed, removing that from arguments list
           args.pop();
         }
 
         // Adding returnRequest to options
         if (args.length >= optionsIndex + 1) {
-          args[optionsIndex] = {...args[optionsIndex], "returnRequest": true};
+          args[optionsIndex] = {...args[optionsIndex], 'returnRequest': true};
         } else if (args.length < optionsIndex) {
-          args[optionsIndex] = {"returnRequest": true};
+          args[optionsIndex] = {'returnRequest': true};
         } else {
-          args.push({"returnRequest": true});
+          args.push({'returnRequest': true});
         }
 
         const requestObj = await func(...args);
 
-        if (val === "Update") {
+        if (val === 'Update') {
           delete requestObj.ReturnValues;
         }
 
@@ -255,11 +255,11 @@ export function compile (name, schema, options, base) {
       // key - the key to be attached to the returned request object to pass into the DynamoDB transaciton request
       // name - the name to attach to the resulting object for NewModel.transaction
       // optionsIndex - the zero-based index for where the options parameter should be in the method arguments list
-      {"method": NewModel.get, "key": "Get", "name": "get", "optionsIndex": 1},
-      {"method": NewModel.delete, "key": "Delete", "name": "delete", "optionsIndex": 1},
-      {"method": NewModel.create, "key": "Put", "name": "create", "optionsIndex": 1},
-      {"method": NewModel.update, "key": "Update", "name": "update", "optionsIndex": 2},
-      {"method": NewModel.conditionCheck, "key": "ConditionCheck", "name": "conditionCheck", "optionsIndex": 1}
+      {'method': NewModel.get, 'key': 'Get', 'name': 'get', 'optionsIndex': 1},
+      {'method': NewModel.delete, 'key': 'Delete', 'name': 'delete', 'optionsIndex': 1},
+      {'method': NewModel.create, 'key': 'Put', 'name': 'create', 'optionsIndex': 1},
+      {'method': NewModel.update, 'key': 'Update', 'name': 'update', 'optionsIndex': 2},
+      {'method': NewModel.conditionCheck, 'key': 'ConditionCheck', 'name': 'conditionCheck', 'optionsIndex': 1}
     ].reduce((original, newItem) => {
       original[newItem.name] = createTransactionFunction(newItem.method, newItem.key, newItem.optionsIndex);
       return original;

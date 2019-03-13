@@ -49,7 +49,7 @@ Cat.get(666).then((badCat) => {
 
 ## API Docs
 
-The documentation can be found at https://dynamoosejs.com/api. You can also find additional examples at https://dynamoosejs.com/examples.
+The documentation can be found at https://dynamoosejs.com/api/about/. You can also find additional examples at https://dynamoosejs.com/examples/about/.
 
 ## Changelog
 
