@@ -1,5 +1,28 @@
 # Dynamoose Changelog
 
+## [1.7.2](https://github.com/dynamoosejs/dynamoose/compare/v1.7.1...v1.7.2) (2019-03-18)
+
+
+### Bug Fixes
+
+* **types:** minor updates to typings ([63bb60d](https://github.com/dynamoosejs/dynamoose/commit/63bb60d)), closes [#599](https://github.com/dynamoosejs/dynamoose/issues/599) [#600](https://github.com/dynamoosejs/dynamoose/issues/600)
+
+## [1.7.1](https://github.com/dynamoosejs/dynamoose/compare/v1.7.0...v1.7.1) (2019-03-18)
+
+
+### Bug Fixes
+
+* **naming:** remove extension from name ([ca346d0](https://github.com/dynamoosejs/dynamoose/commit/ca346d0))
+
+# [1.7.0](https://github.com/dynamoosejs/dynamoose/compare/v1.6.5...v1.7.0) (2019-03-18)
+
+
+### Features
+
+* **ts:** adding ts testing, compiling and exports ([0d2ef68](https://github.com/dynamoosejs/dynamoose/commit/0d2ef68))
+* **ts:** fix ci script to also lint typescript ([992c7ff](https://github.com/dynamoosejs/dynamoose/commit/992c7ff))
+* **ts:** fixing spelling ([e087570](https://github.com/dynamoosejs/dynamoose/commit/e087570))
+
 ## [1.6.5](https://github.com/dynamoosejs/dynamoose/compare/v1.6.4...v1.6.5) (2019-03-03)
 
 
