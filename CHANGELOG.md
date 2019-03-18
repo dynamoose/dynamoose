@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+## [1.7.2](https://github.com/dynamoosejs/dynamoose/compare/v1.7.1...v1.7.2) (2019-03-18)
+
+
+### Bug Fixes
+
+* **types:** minor updates to typings ([63bb60d](https://github.com/dynamoosejs/dynamoose/commit/63bb60d)), closes [#599](https://github.com/dynamoosejs/dynamoose/issues/599) [#600](https://github.com/dynamoosejs/dynamoose/issues/600)
+
 ## [1.7.1](https://github.com/dynamoosejs/dynamoose/compare/v1.7.0...v1.7.1) (2019-03-18)
 
 
