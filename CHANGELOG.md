@@ -1,5 +1,14 @@
 # Dynamoose Changelog
 
+# [1.7.0](https://github.com/dynamoosejs/dynamoose/compare/v1.6.5...v1.7.0) (2019-03-18)
+
+
+### Features
+
+* **ts:** adding ts testing, compiling and exports ([0d2ef68](https://github.com/dynamoosejs/dynamoose/commit/0d2ef68))
+* **ts:** fix ci script to also lint typescript ([992c7ff](https://github.com/dynamoosejs/dynamoose/commit/992c7ff))
+* **ts:** fixing spelling ([e087570](https://github.com/dynamoosejs/dynamoose/commit/e087570))
+
 ## [1.6.5](https://github.com/dynamoosejs/dynamoose/compare/v1.6.4...v1.6.5) (2019-03-03)
 
 
