@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+## [1.7.1](https://github.com/dynamoosejs/dynamoose/compare/v1.7.0...v1.7.1) (2019-03-18)
+
+
+### Bug Fixes
+
+* **naming:** remove extension from name ([ca346d0](https://github.com/dynamoosejs/dynamoose/commit/ca346d0))
+
 # [1.7.0](https://github.com/dynamoosejs/dynamoose/compare/v1.6.5...v1.7.0) (2019-03-18)
 
 
