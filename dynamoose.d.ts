@@ -4,7 +4,7 @@ import * as _AWS from 'aws-sdk';
 declare module "dynamoose" {
   export var AWS: typeof _AWS;
 
-  export function local(url: string): void;
+  export function local(url?: string): void;
   export function ddb(): _AWS.DynamoDB;
   export function setDocumentClient(documentClient: _AWS.DynamoDB.DocumentClient): void;
 
@@ -136,6 +136,7 @@ declare module "dynamoose" {
     init(next: any): any;
     update(next: any): any;
     waitForActive(timeout: any, next: any): any;
+    getTableReq(): any;
   }
 
   /**
