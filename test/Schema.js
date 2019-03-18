@@ -2,7 +2,7 @@
 
 // var util = require('util');
 
-const dynamoose = require('../');
+const dynamoose = require('../lib/');
 const errors = require('../lib/errors');
 
 dynamoose.AWS.config.update({
