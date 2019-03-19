@@ -1287,6 +1287,19 @@ describe('Model', function () {
     });
   });
 
+  it('should delete a model with update set to true', async () => {
+    const cat = new Cats.Cat({'id': 1});
+    const model = await cat.save();
+    let error, res;
+    try {
+      res = await Cats.Cat.delete(model, {'update': true});
+    } catch (e) {
+      error = e;
+    }
+    should.not.exist(error);
+    res.id.should.eql(1);
+  });
+
 
   // See comments on PR #306 for details on why the test below is commented out
 
