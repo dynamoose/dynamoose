@@ -1,12 +1,12 @@
 'use strict';
-
-const debug = require('debug')('dynamoose:plugin');
-const Listener = require('./Listener');
+import debugInstance from 'debug';
+import Listener from './Listener';
+const debug = debugInstance('dynamoose:plugin');
 
 /**
  * @alias module:plugin
  * @typicalname Plugin
-*/
+ */
 /**
  * This is a helper to bind new plugins and the events they trigger to your model.
  * This helper is consumed by the Model, and not directly when creating a Plugin.
@@ -47,8 +47,8 @@ function Plugin (model, func, options, registerPlugin) {
      * This is the function that gets called from your plugin.on() hook.
      *
      * This example will reject a put if they attempt to modify a key you don't want modified.
-     *```js
-     *plugin.on('model:put', 'put:called', (pluginEvent) => {
+     * ```js
+     * plugin.on('model:put', 'put:called', (pluginEvent) => {
      *    const {event, model} = pluginEvent;
      *    const ItemToTransform = event.item.Item;
      *    const mutatingKeys = Object.keys(putQuery);
@@ -61,8 +61,8 @@ function Plugin (model, func, options, registerPlugin) {
      *    }
      *    return Promise.resolve(result)
      *  }
-     *)
-     *```
+     * )
+     * ```
      *
      * @param  {mixed} type - if a string, sets what type to listen to, a function sets listeners on all event stages and types
      * @param  {mixed} stage - if a string, sets the stage to listen to, a function sets listeners on all stage for the preceding type
@@ -134,4 +134,4 @@ Plugin.prototype.emit = async function (type, stage, obj) {
   }
 };
 
-module.exports = Plugin;
+export default Plugin;

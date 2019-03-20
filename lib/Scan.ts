@@ -1,8 +1,9 @@
-'use strict';
-const Q = require('q');
-const debug = require('debug')('dynamoose:scan');
+import debugInstance from 'debug';
+import Q from 'q';
+import errors from './errors';
+const debug = debugInstance('dynamoose:scan');
 
-const errors = require('./errors');
+
 
 function Scan (Model, filter, options) {
 
@@ -52,7 +53,7 @@ Scan.prototype.exec = async function (next) {
 
   const deferredMain = Q.defer();
 
-  let scanReq = { };
+  let scanReq: any = { };
 
   async function toModel (item) {
     const model = new Model();
@@ -197,7 +198,7 @@ Scan.prototype.exec = async function (next) {
 
     debug('adding scan segement', scanOneReq);
 
-    let lastKey, models = {}, scannedCount = 0, timesScanned = 0, totalCount = 0;
+    let lastKey, models: any = {}, scannedCount = 0, timesScanned = 0, totalCount = 0;
     if (!options.all) {
       options.all = {'delay': 0, 'max': 1};
     }
@@ -573,4 +574,4 @@ Scan.prototype.parallel = function (numberOfSegments) {
   return this;
 };
 
-module.exports = Scan;
+export default Scan;

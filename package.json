@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
-  "main": "dist/index.js",
+  "main": "dist/Dynamoose.js",
   "files": [
     "dynamoose.d.ts",
     "dist/*"

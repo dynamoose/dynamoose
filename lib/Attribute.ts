@@ -1,6 +1,6 @@
-'use strict';
-const debug = require('debug')('dynamoose:attribute');
-const errors = require('./errors');
+import debugInstance from 'debug';
+import errors from './errors';
+const debug = debugInstance('dynamoose:attribute');
 
 function Attribute (schema, name, value) {
   this.options = {};
@@ -51,7 +51,7 @@ function Attribute (schema, name, value) {
         throw new errors.SchemaError(`Duplicate attribute: ${subattrName} in ${this.name}`);
       }
 
-      this.attributes[subattrName] = module.exports.create(schema, subattrName, value[subattrName]);
+      this.attributes[subattrName] = create(schema, subattrName, value[subattrName]);
     }
 
   } else if (this.type.name === 'list') {
@@ -70,7 +70,7 @@ function Attribute (schema, name, value) {
 
 
     for (let i = 0; i < value.length; i += 1) {
-      this.attributes[i] = module.exports.create(schema, 0, value[i]);
+      this.attributes[i] = create(schema, 0, value[i]);
     }
 
   }
@@ -307,6 +307,19 @@ Attribute.prototype.applyValidation = function (validator) {
   }
 };
 
+interface IThroughputOptions {
+  read: number;
+  write: number;
+}
+
+interface IIndexOptions {
+  name?: string;
+  project?: boolean;
+  global?: boolean;
+  rangeKey?: string;
+  throughput?: number | IThroughputOptions;
+}
+
 Attribute.prototype.applyIndexes = function (indexes) {
   if (indexes === null || indexes === undefined) {
     delete this.indexes;
@@ -321,7 +334,7 @@ Attribute.prototype.applyIndexes = function (indexes) {
       i = {};
     }
 
-    const index = {};
+    const index: IIndexOptions = {};
 
     if (i.global) {
       index.global = true;
@@ -335,7 +348,7 @@ Attribute.prototype.applyIndexes = function (indexes) {
         if (typeof throughput === 'number') {
           throughput = {'read': throughput, 'write': throughput};
         }
-        index.throughput = throughput;
+        index.throughput = throughput as IThroughputOptions;
         if ((!index.throughput.read || !index.throughput.write) && index.throughput.read >= 1 && index.throughput.write >= 1) {
           throw new errors.SchemaError(`Invalid Index throughput: ${index.throughput}`);
         }
@@ -379,6 +392,16 @@ Attribute.prototype.setDefault = async function (model) {
     debug('Defaulted %s to %s', this.name, model[this.name]);
   }
 };
+
+interface IDynamoType {
+  L?: any;
+  S?: any;
+  M?: any;
+  N?: any;
+  BOOL?: any;
+  B?: any;
+  NS?: any;
+}
 
 Attribute.prototype.toDynamo = async function (val, noSet, model, options) {
   if (this.toDynamoCustom) {
@@ -436,7 +459,7 @@ Attribute.prototype.toDynamo = async function (val, noSet, model, options) {
   const {type} = this;
 
   const isSet = this.isSet && !noSet;
-  const dynamoObj = {};
+  const dynamoObj: IDynamoType = {};
 
   if (isSet) {
     dynamoObj[`${type.dynamo}S`] = val.map((v) => {
@@ -464,7 +487,7 @@ Attribute.prototype.toDynamo = async function (val, noSet, model, options) {
       let subAttr = this.attributes[name];
       // if saveUnknown is activated the input has an unknown attribute, let's create one on the fly.
       if (!subAttr && (this.schema.options.saveUnknown || Array.isArray(this.options.saveUnknown) && this.options.saveUnknown.indexOf(name) >= 0)) {
-        subAttr = module.exports.create(this.schema, name, value);
+        subAttr = create(this.schema, name, value);
         this.attributes[name] = subAttr;
       }
       if (subAttr) {
@@ -530,9 +553,15 @@ Attribute.prototype.toDynamo = async function (val, noSet, model, options) {
   return dynamoObj;
 };
 
+interface IAttrDef {
+  map?: any;
+  list?: any[];
+  type: any;
+}
+
 /*
 * Converts DynamoDB document types (Map and List) to dynamoose
-* attribute definition map and ist types
+* attribute definition map and list types
 *
 * For example, DynamoDB value:
 * {
@@ -553,8 +582,8 @@ Attribute.prototype.toDynamo = async function (val, noSet, model, options) {
 */
 function createAttrDefFromDynamo (dynamoAttribute) {
   let dynamoType;
-  const attrDef = {
-    'type': module.exports.lookupType(dynamoAttribute)
+  const attrDef: IAttrDef = {
+    'type': lookupType(dynamoAttribute)
   };
   if (attrDef.type === Object) {
     attrDef.type = 'map';
@@ -573,14 +602,12 @@ function createAttrDefFromDynamo (dynamoAttribute) {
   return attrDef;
 }
 
-const createUnknownAttributeFromDynamo = function (schema, name, dynamoAttribute) {
+export const createUnknownAttributeFromDynamo = function (schema, name, dynamoAttribute) {
   debug('createUnknownAttributeFromDynamo: %j : "%s" : %j', schema, name, dynamoAttribute);
   const attrDef = createAttrDefFromDynamo(dynamoAttribute);
   const attr = new Attribute(schema, name, attrDef);
   return attr;
 };
-module.exports.createUnknownAttributeFromDynamo = createUnknownAttributeFromDynamo;
-
 
 Attribute.prototype.parseDynamo = async function (json) {
   if (this.parseDynamoCustom) {
@@ -676,7 +703,6 @@ Attribute.prototype.parseDynamo = async function (json) {
     return v;
   }
 
-
   let val;
 
   switch (this.type.name) {
@@ -712,7 +738,6 @@ Attribute.prototype.parseDynamo = async function (json) {
     throw new errors.SchemaError(`Invalid attribute type: ${this.type}`);
   }
 
-
   if (this.get) {
     val = await this.get(val);
   }
@@ -722,12 +747,16 @@ Attribute.prototype.parseDynamo = async function (json) {
   return val;
 };
 
-module.exports.create = function (schema, name, obj) {
+interface ICreateOptions {
+  hashKey?: string;
+  rangeKey?: string;
+}
+
+export const create = function (schema, name, obj) {
   debug('create: %j : "%s" : %j', schema, name, obj);
 
-
   const value = obj;
-  let options = {};
+  let options: ICreateOptions = {};
   if (typeof obj === 'object' && obj.type) {
     options = obj;
   }
@@ -764,8 +793,7 @@ module.exports.create = function (schema, name, obj) {
   return attr;
 };
 
-
-module.exports.lookupType = function (dynamoObj) {
+export const lookupType = function (dynamoObj) {
   if (dynamoObj.S !== null && dynamoObj.S !== undefined) {
     // try {
     //   JSON.parse(dynamoObj.S);
@@ -793,3 +821,5 @@ module.exports.lookupType = function (dynamoObj) {
     return [Number];
   }
 };
+
+export default Attribute;

@@ -1,7 +1,9 @@
 'use strict';
-const Q = require('q');
-const debug = require('debug')('dynamoose:table');
-const deepEqual = require('deep-equal');
+import Q from 'q';
+import deepEqual from 'deep-equal';
+import debugInstance from 'debug';
+const debug = debugInstance('dynamoose:table');
+
 
 function Table (name, schema, options, base) {
   debug('new Table (%s)', name, schema);
@@ -13,6 +15,13 @@ function Table (name, schema, options, base) {
   if (this.options.create === undefined || this.options.create === null) {
     this.options.create = true;
   }
+}
+
+interface ILocalIndex {
+  IndexName?: any;
+  KeySchema?: any;
+  Projection?: any;
+  ProvisionedThroughput?: any;
 }
 
 const compareIndexes = function compareIndexes (local, remote) {
@@ -36,7 +45,7 @@ const compareIndexes = function compareIndexes (local, remote) {
       if (remoteIndexes[j].IndexName === localIndexes[i].IndexName) {
         // let's see if the core data matches. if it doesn't,
         // we may need to delete the remote GSI and rebuild.
-        const localIndex = (({IndexName, KeySchema, Projection}) => ({IndexName, KeySchema, Projection}))(localIndexes[i]);
+        const localIndex: ILocalIndex = (({IndexName, KeySchema, Projection}) => ({IndexName, KeySchema, Projection}))(localIndexes[i]);
         if (Array.isArray(localIndex && localIndex.Projection && localIndex.Projection.NonKeyAttributes)) {
           localIndex.Projection.NonKeyAttributes.sort();
         }
@@ -327,6 +336,18 @@ Table.prototype.describe = function (next) {
   return deferred.promise.nodeify(next);
 };
 
+interface ITableCreateQuery {
+  AttributeDefinitions?: any;
+  TableName?: any;
+  KeySchema?: any;
+  BillingMode?: any;
+  ProvisionedThroughput?: any;
+  LocalSecondaryIndexes?: any;
+  GlobalSecondaryIndexes?: any;
+  StreamSpecification?: any;
+  SSESpecification?: any;
+}
+
 Table.prototype.buildTableReq = function buildTableReq (name, schema) {
   const attrDefs = [];
 
@@ -372,7 +393,7 @@ Table.prototype.buildTableReq = function buildTableReq (name, schema) {
     });
   }
 
-  const createTableReq = {
+  const createTableReq: ITableCreateQuery = {
     'AttributeDefinitions': attrDefs,
     'TableName': name,
     'KeySchema': keySchema
@@ -398,7 +419,7 @@ Table.prototype.buildTableReq = function buildTableReq (name, schema) {
 
     const indexAttr = schema.indexes.local[localSecIndexName];
     index = indexAttr.indexes[localSecIndexName];
-    const localSecIndex = {
+    const localSecIndex: any = {
       'IndexName': localSecIndexName,
       'KeySchema': [
         {
@@ -439,7 +460,7 @@ Table.prototype.buildTableReq = function buildTableReq (name, schema) {
     const globalIndexAttr = schema.indexes.global[globalSecIndexName];
     index = globalIndexAttr.indexes[globalSecIndexName];
 
-    const globalSecIndex = {
+    const globalSecIndex: any = {
       'IndexName': globalSecIndexName,
       'KeySchema': [
         {
@@ -562,4 +583,4 @@ Table.prototype.update = function (next) {
   return deferred.promise.nodeify(next);
 };
 
-module.exports = Table;
+export default Table;

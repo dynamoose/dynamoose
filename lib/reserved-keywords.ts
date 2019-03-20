@@ -1,5 +1,3 @@
-'use strict';
-
 // @see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ReservedWords.html
 
 const RESERVED_KEYWORDS_LIST = [
@@ -582,12 +580,12 @@ const RESERVED_KEYWORDS = RESERVED_KEYWORDS_LIST.reduce((hash, keyword) => {
   hash[keyword.toUpperCase()] = true;
   return hash;
 }, {});
-module.exports.RESRVED_KEYWORDS = RESERVED_KEYWORDS;
 
-exports.isReservedKeyword = function (keyword) {
+export const RESRVED_KEYWORDS = RESERVED_KEYWORDS;
+
+export const isReservedKeyword = function (keyword) {
   if (typeof keyword !== 'string') {
     return false;
   }
-
   return Boolean(RESERVED_KEYWORDS[keyword.toUpperCase()]);
 };

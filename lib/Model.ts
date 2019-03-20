@@ -1,20 +1,19 @@
-'use strict';
-
-const util = require('util');
-const Q = require('q');
-const hooks = require('hooks');
-const Attribute = require('./Attribute');
-const Table = require('./Table');
-const Query = require('./Query');
-const Scan = require('./Scan');
-const Plugin = require('./Plugin');
-const errors = require('./errors');
-const reservedKeywords = require('./reserved-keywords');
-const objectPath = require('object-path');
+import util from 'util';
+import Q from 'q';
+import hooks from 'hooks';
+import * as Attribute from './Attribute';
+import Table from './Table';
+import Query from './Query';
+import Scan from './Scan';
+import Plugin from './Plugin';
+import errors from './errors';
+import { isReservedKeyword } from './reserved-keywords';
+import objectPath from 'object-path';
 
 // const MAX_BATCH_READ_SIZE   = 100;
 const MAX_BATCH_WRITE_SIZE = 25;
-const debug = require('debug')('dynamoose:model');
+import debugInstance from 'debug';
+const debug = debugInstance('dynamoose:model');
 
 function Model (obj) {
   this.$__.isNew = true;
@@ -93,7 +92,7 @@ const applyStatics = function (model, schema) {
   }
 };
 
-function sendErrorToCallback (error, options, next) {
+function sendErrorToCallback (error, options, next?: any) {
   if (typeof options === 'function') {
     next = options;
   }
@@ -191,6 +190,7 @@ Model.compile = function compile (name, schema, options, base) {
   NewModel.prototype.originalItem = function () {
     return this.$__.originalItem;
   };
+
   NewModel.prototype.model = function (modelName) {
     const {models} = this.$__.base;
     if (!Object.prototype.hasOwnProperty.call(models, modelName)) {
@@ -212,7 +212,7 @@ Model.compile = function compile (name, schema, options, base) {
 
   NewModel.populate = function (populateOptions, resultObj, fillPath) {
     try {
-      return Model.populate(populateOptions, resultObj, fillPath);
+      return Model['populate'](populateOptions, resultObj, fillPath);
     } catch (err) {
       sendErrorToCallback(err, populateOptions);
       return Q.reject(err);
@@ -320,7 +320,7 @@ Model.compile = function compile (name, schema, options, base) {
   function createTransactionFunction (func, val, optionsIndex) {
     return async function (...args) {
       if (typeof args[args.length - 1] === 'function') {
-        console.warning('Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.');
+        console.warn('Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.');
         // Callback function passed in which is not allowed, removing that from arguments list
         args.pop();
       }
@@ -459,7 +459,7 @@ Model.prototype.put = async function (options, next) {
       options.overwrite = true;
     }
 
-    const toDynamoOptions = {
+    const toDynamoOptions: any = {
       'updateTimestamps': true
     };
 
@@ -480,7 +480,7 @@ Model.prototype.put = async function (options, next) {
     await schema.parseDynamo(this, item.Item);
 
     if (!options.overwrite) {
-      if (!reservedKeywords.isReservedKeyword(schema.hashKey.name) && !schema.hashKey.name.startsWith('_')) {
+      if (!{isReservedKeyword}.isReservedKeyword(schema.hashKey.name) && !schema.hashKey.name.startsWith('_')) {
         item.ConditionExpression = `attribute_not_exists(${schema.hashKey.name})`;
       } else {
         item.ConditionExpression = 'attribute_not_exists(#__hash_key)';
@@ -560,7 +560,7 @@ Model.get = async function (NewModel, key, options, next) {
   }
 
 
-  let getReq = {
+  let getReq: any = {
     'TableName': NewModel.$__.name,
     'Key': {}
   };
@@ -769,7 +769,7 @@ Model.update = async function (NewModel, key, update, options, next) {
     key[hashKeyName] = keyVal;
   }
 
-  const updateReq = {
+  const updateReq: any = {
     'TableName': NewModel.$__.name,
     'Key': {},
     'ExpressionAttributeNames': {},
@@ -1146,7 +1146,7 @@ Model.prototype.delete = async function (options, next) {
   }
 
 
-  const getDelete = {
+  const getDelete: any = {
     'TableName': this.$__.name,
     'Key': {}
   };
@@ -1305,7 +1305,7 @@ Model.batchGet = async function (NewModel, keys, options, next) {
     'RequestItems': {}
   };
 
-  const getReq = {};
+  const getReq: any = {};
   batchReq.RequestItems[NewModel.$__.name] = getReq;
 
   getReq.Keys = await Promise.all(keys.map(async (key) => {
@@ -1352,7 +1352,7 @@ Model.batchGet = async function (NewModel, keys, options, next) {
         return model;
       }
 
-      const models = data.Responses[newModel$.name] ? (await Promise.all(data.Responses[newModel$.name].map(toModel))).filter((item) => !(schema.expires && schema.expires.returnExpiredItems === false && item[schema.expires.attribute] && item[schema.expires.attribute] < new Date())) : [];
+      const models: any = data.Responses[newModel$.name] ? (await Promise.all(data.Responses[newModel$.name].map(toModel))).filter((item) => !(schema.expires && schema.expires.returnExpiredItems === false && item[schema.expires.attribute] && item[schema.expires.attribute] < new Date())) : [];
       if (data.UnprocessedKeys[newModel$.name]) {
         // convert unprocessed keys back to dynamoose format
         models.unprocessed = await Promise.all(data.UnprocessedKeys[newModel$.name].Keys.map(async (key) => {
@@ -1544,4 +1544,4 @@ Model.batchDelete = async function (NewModel, keys, options, next) {
   return deferred.promise.nodeify(next);
 };
 
-module.exports = Model;
+export default Model;

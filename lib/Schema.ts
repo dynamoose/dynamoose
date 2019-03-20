@@ -1,12 +1,8 @@
-'use strict';
-
-const Attribute = require('./Attribute');
-const errors = require('./errors');
-const VirtualType = require('./VirtualType');
-// const util = require('util');
-
-const debug = require('debug')('dynamoose:schema');
-
+import { create, createUnknownAttributeFromDynamo } from './Attribute';
+import errors from './errors';
+import VirtualType from './VirtualType';
+import debugInstance from 'debug';
+const debug = debugInstance('dynamoose:schema');
 
 function Schema (obj, options) {
   debug('Creating Schema', obj);
@@ -69,7 +65,7 @@ function Schema (obj, options) {
   * Added support for expires attribute
   */
   if (this.options.expires !== null && this.options.expires !== undefined) {
-    const expires = {
+    const expires: any = {
       'attribute': 'expires',
       'returnExpiredItems': true
     };
@@ -128,7 +124,7 @@ function Schema (obj, options) {
     }
 
     debug('Adding Attribute to Schema (%s)', n, obj);
-    this.attributes[n] = Attribute.create(this, n, obj[n]);
+    this.attributes[n] = create(this, n, obj[n]);
   }
 }
 
@@ -152,7 +148,7 @@ Schema.prototype.toDynamo = async function (model, options) {
       }
       attr = this.attributes[name];
       if (!attr && this.options.saveUnknown === true || Array.isArray(this.options.saveUnknown) && this.options.saveUnknown.indexOf(name) >= 0) {
-        attr = Attribute.create(this, name, model[name]);
+        attr = create(this, name, model[name]);
         this.attributes[name] = attr;
       }
     }
@@ -192,7 +188,7 @@ Schema.prototype.parseDynamo = async function (model, dynamoObj) {
       throw new errors.ParseError(errorMessage);
     }
     if (!attr && this.options.saveUnknown === true || Array.isArray(this.options.saveUnknown) && this.options.saveUnknown.indexOf(name) >= 0) {
-      attr = Attribute.createUnknownAttributeFromDynamo(this, name, dynamoObj[name]);
+      attr = createUnknownAttributeFromDynamo(this, name, dynamoObj[name]);
       this.attributes[name] = attr;
     }
 
@@ -222,36 +218,36 @@ Schema.prototype.parseDynamo = async function (model, dynamoObj) {
 };
 
 /**
-* Adds an instance method to documents constructed from Models compiled from this schema.
-*
-* ####Example
-*
-*     let schema = kittySchema = new Schema(..);
-*
-*     schema.method('meow', function () {
-*       console.log('meeeeeoooooooooooow');
-*     })
-*
-*     let Kitty = mongoose.model('Kitty', schema);
-*
-*     let fizz = new Kitty;
-*     fizz.meow(); // meeeeeooooooooooooow
-*
-* If a hash of name/fn pairs is passed as the only argument, each name/fn pair will be added as methods.
-*
-*     schema.method({
-*         purr: function () {}
-*       , scratch: function () {}
-*     });
-*
-*     // later
-*     fizz.purr();
-*     fizz.scratch();
-*
-* @param {String|Object} method name
-* @param {Function} [fn]
-* @api public
-*/
+ * Adds an instance method to documents constructed from Models compiled from this schema.
+ *
+ * ####Example
+ *
+ *     let schema = kittySchema = new Schema(..);
+ *
+ *     schema.method('meow', function () {
+ *       console.log('meeeeeoooooooooooow');
+ *     })
+ *
+ *     let Kitty = mongoose.model('Kitty', schema);
+ *
+ *     let fizz = new Kitty;
+ *     fizz.meow(); // meeeeeooooooooooooow
+ *
+ * If a hash of name/fn pairs is passed as the only argument, each name/fn pair will be added as methods.
+ *
+ *     schema.method({
+ *         purr: function () {}
+ *       , scratch: function () {}
+ *     });
+ *
+ *     // later
+ *     fizz.purr();
+ *     fizz.scratch();
+ *
+ * @param {String|Object} method name
+ * @param {Function} [fn]
+ * @api public
+ */
 
 Schema.prototype.method = function (name, fn) {
   if (typeof name === 'string') {
@@ -265,26 +261,26 @@ Schema.prototype.method = function (name, fn) {
 };
 
 /**
-* Adds static "class" methods to Models compiled from this schema.
-*
-* ####Example
-*
-*     let schema = new Schema(..);
-*     schema.static('findByName', function (name, callback) {
-*       return this.find({ name: name }, callback);
-*     });
-*
-*     let Drink = mongoose.model('Drink', schema);
-*     Drink.findByName('sanpellegrino', function (err, drinks) {
-*       //
-*     });
-*
-* If a hash of name/fn pairs is passed as the only argument, each name/fn pair will be added as statics.
-*
-* @param {String} name
-* @param {Function} fn
-* @api public
-*/
+ * Adds static "class" methods to Models compiled from this schema.
+ *
+ * ####Example
+ *
+ *     let schema = new Schema(..);
+ *     schema.static('findByName', function (name, callback) {
+ *       return this.find({ name: name }, callback);
+ *     });
+ *
+ *     let Drink = mongoose.model('Drink', schema);
+ *     Drink.findByName('sanpellegrino', function (err, drinks) {
+ *       //
+ *     });
+ *
+ * If a hash of name/fn pairs is passed as the only argument, each name/fn pair will be added as statics.
+ *
+ * @param {String} name
+ * @param {Function} fn
+ * @api public
+ */
 
 Schema.prototype.static = function (name, fn) {
   if (typeof name === 'string') {
@@ -299,12 +295,12 @@ Schema.prototype.static = function (name, fn) {
 
 
 /**
-* Creates a virtual type with the given name.
-*
-* @param {String} name
-* @param {Object} [options]
-* @return {VirtualType}
-*/
+ * Creates a virtual type with the given name.
+ *
+ * @param {String} name
+ * @param {Object} [options]
+ * @return {VirtualType}
+ */
 
 Schema.prototype.virtual = function (name, options) {
   // let virtuals = this.virtuals;
@@ -323,14 +319,14 @@ Schema.prototype.virtual = function (name, options) {
 };
 
 /**
-* Returns the virtual type with the given `name`.
-*
-* @param {String} name
-* @return {VirtualType}
-*/
+ * Returns the virtual type with the given `name`.
+ *
+ * @param {String} name
+ * @return {VirtualType}
+ */
 
 Schema.prototype.virtualpath = function (name) {
   return this.virtuals[name];
 };
 
-module.exports = Schema;
+export default Schema;

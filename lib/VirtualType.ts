@@ -1,6 +1,5 @@
-'use strict';
-
-const debug = require('debug')('dynamoose:virtualtype');
+import debugInstance from 'debug';
+const debug = debugInstance('dynamoose:virtualtype');
 
 /**
  * VirtualType constructor
@@ -65,7 +64,12 @@ VirtualType.prototype.set = function (fn) {
   return this;
 };
 
-
+interface IVirtualProp {
+  enumerable: boolean;
+  configurable: boolean;
+  set?: any;
+  get?: any;
+}
 /**
  * Applies getters and setters to the model
  * @param {Object} model
@@ -74,7 +78,7 @@ VirtualType.prototype.set = function (fn) {
  */
 VirtualType.prototype.applyVirtuals = function (model) {
   debug('applyVirtuals for %s', this.path);
-  const property = {'enumerable': true, 'configurable': true};
+  const property: IVirtualProp = {'enumerable': true, 'configurable': true};
 
   if (this.setter) {
     property.set = this.setter;
@@ -87,8 +91,4 @@ VirtualType.prototype.applyVirtuals = function (model) {
   Object.defineProperty(model, this.path, property);
 };
 
-/*!
- * exports
- */
-
-module.exports = VirtualType;
+export default VirtualType;

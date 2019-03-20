@@ -1,5 +1,5 @@
 import https from 'https';
-import AWS from 'aws-sdk';
+import * as AWS from 'aws-sdk';
 import debugBase from 'debug';
 import Q from 'q';
 import Table from './Table';

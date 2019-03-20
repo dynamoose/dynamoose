@@ -1,9 +1,8 @@
 'use strict';
-
-// var util = require('util');
-
-const dynamoose = require('../lib/');
-const errors = require('../lib/errors');
+const dynamooseModule = require('../lib/Dynamoose');
+const dynamoose = dynamooseModule.default;
+const errorsModule = require('../lib/errors');
+const errors = errorsModule.default;
 
 dynamoose.AWS.config.update({
   'accessKeyId': 'AKID',

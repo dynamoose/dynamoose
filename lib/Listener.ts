@@ -1,6 +1,4 @@
-'use strict';
-
-const debug = require('debug');
+import debugInstance from 'debug';
 
 function Listener (type, stage, func, plugin) {
   this.type = type;
@@ -8,7 +6,7 @@ function Listener (type, stage, func, plugin) {
   this.func = func;
 
   const debugPluginName = plugin.name && plugin.name !== '' ? plugin.name : 'unnamed-plugin';
-  this._debug = debug(`dynamoose:${debugPluginName}:listener`);
+  this._debug = debugInstance(`dynamoose:${debugPluginName}:listener`);
 }
 
 Listener.prototype.emit = async function (type, stage, obj) {
@@ -29,4 +27,4 @@ Listener.prototype.emit = async function (type, stage, obj) {
   }
 };
 
-module.exports = Listener;
+export default Listener;

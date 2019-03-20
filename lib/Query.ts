@@ -1,13 +1,12 @@
 'use strict';
-const Q = require('q');
-const errors = require('./errors');
-const debug = require('debug')('dynamoose:query');
+import Q from 'q';
+import errors from './errors';
+import debugInstance from 'debug';
+const debug = debugInstance('dynamoose:query');
 
 function Query (Model, query, options) {
   this.Model = Model;
   this.options = options || {'all': {'delay': 0, 'max': 1}};
-
-
   // {
   //   hashKey: {
   //     name: 'name',
@@ -20,11 +19,9 @@ function Query (Model, query, options) {
   //   }
   // }
   this.query = {'hashKey': {}};
-
   this.filters = {};
   this.buildState = false;
   this.validationError = null;
-
   let hashKeyName, hashKeyVal;
   if (typeof query === 'string') {
     this.buildState = 'hashKey';
@@ -61,6 +58,19 @@ function Query (Model, query, options) {
   Model._emit('model:query', 'query:called', {'event': {'query': this}});
 }
 
+interface IQueryRequest {
+  IndexName?: string;
+  TableName: string;
+  KeyConditions: any;
+  QueryFilter?: any;
+  ConditionalOperator?: any;
+  AttributesToGet?: any;
+  Select?: any;
+  ConsistentRead?: any;
+  Limit?: any;
+  ScanIndexForward?: any;
+  ExclusiveStartKey?: any;
+}
 
 Query.prototype.exec = async function (next) {
   debug('exec query for ', this.query);
@@ -79,7 +89,7 @@ Query.prototype.exec = async function (next) {
 
   debug('Query with schema', schema);
 
-  let queryReq = {
+  let queryReq: IQueryRequest = {
     'TableName': Model.$__.name,
     'KeyConditions': {}
   };
@@ -220,7 +230,7 @@ Query.prototype.exec = async function (next) {
       options.all = {'delay': 0, 'max': 1};
     }
 
-    let lastKey, models = {}, scannedCount = 0, timesQueried = 0, totalCount = 0;
+    let lastKey, models: any = {}, scannedCount = 0, timesQueried = 0, totalCount = 0;
     async function queryOne () {
       debug('DynamoDB Query: %j', queryReq);
       const shouldContinueRequestPre = await that.Model._emit('model:query', 'request:pre', {'event': {'query': that, 'callback': next, queryReq}, 'actions': {'updateQueryReq' (req) { queryReq = req; }}}, deferred);
@@ -298,7 +308,6 @@ Query.prototype.exec = async function (next) {
     return deferred.promise.nodeify(next);
   }
 
-
   if (Model$.options.waitForActive) {
     return Model$.table.waitForActive().then(query).catch(query);
   }
@@ -355,6 +364,7 @@ Query.prototype.filter = function (filter) {
 };
 
 const VALID_RANGE_KEYS = ['EQ', 'LE', 'LT', 'GE', 'GT', 'BEGINS_WITH', 'BETWEEN'];
+
 Query.prototype.compVal = function (vals, comp) {
   if (this.validationError) {
     return this;
@@ -411,22 +421,18 @@ Query.prototype.null = function () {
 
 };
 
-
 Query.prototype.eq = function (val) {
   if (this.notState) {
     return this.compVal([val], 'NE');
   }
   return this.compVal([val], 'EQ');
-
 };
-
 
 Query.prototype.lt = function (val) {
   if (this.notState) {
     return this.compVal([val], 'GE');
   }
   return this.compVal([val], 'LT');
-
 };
 
 Query.prototype.le = function (val) {
@@ -434,7 +440,6 @@ Query.prototype.le = function (val) {
     return this.compVal([val], 'GT');
   }
   return this.compVal([val], 'LE');
-
 };
 
 Query.prototype.ge = function (val) {
@@ -442,7 +447,6 @@ Query.prototype.ge = function (val) {
     return this.compVal([val], 'LT');
   }
   return this.compVal([val], 'GE');
-
 };
 
 Query.prototype.gt = function (val) {
@@ -450,7 +454,6 @@ Query.prototype.gt = function (val) {
     return this.compVal([val], 'LE');
   }
   return this.compVal([val], 'GT');
-
 };
 
 Query.prototype.contains = function (val) {
@@ -458,7 +461,6 @@ Query.prototype.contains = function (val) {
     return this.compVal([val], 'NOT_CONTAINS');
   }
   return this.compVal([val], 'CONTAINS');
-
 };
 
 Query.prototype.beginsWith = function (val) {
@@ -480,7 +482,6 @@ Query.prototype.in = function (vals) {
     this.validationError = new errors.QueryError('Invalid Query state: in() cannot follow not()');
     return this;
   }
-
   return this.compVal(vals, 'IN');
 };
 
@@ -516,7 +517,6 @@ Query.prototype.descending = function () {
   this.options.descending = true;
   return this;
 };
-
 
 Query.prototype.ascending = function () {
   this.options.descending = false;
@@ -557,4 +557,4 @@ Query.prototype.all = function (delay, max) {
   return this;
 };
 
-module.exports = Query;
+export default Query;
