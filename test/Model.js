@@ -2298,8 +2298,27 @@ describe('Model', function () {
         });
       });
     });
+
+    it('Delete item to list', (done) => {
+      Cats.Cat.create({'id': 1000, 'legs': ['a', 's', 'd', 'f']}, () => {
+        Cats.Cat.update({'id': 1000}, {'$DELETE': {'legs': ['a', 's']}}, (err, data) => {
+          should.not.exist(err);
+          should.exist(data);
+          data.id.should.eql(1000);
+          data.legs.should.eql(['d', 'f']);
+          Cats.Cat.get(1000, (errA, cat) => {
+            should.not.exist(errA);
+            should.exist(cat);
+            cat.id.should.eql(1000);
+            cat.legs.should.eql(['d', 'f']);
+            done();
+          });
+        });
+      });
+    });
+
     it('Delete attribute', (done) => {
-      Cats.Cat.update({'id': 999}, {'$DELETE': {'owner': null}}, (err, data) => {
+      Cats.Cat.update({'id': 999}, {'$REMOVE': {'owner': null}}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
@@ -2393,7 +2412,7 @@ describe('Model', function () {
       });
     });
 
-    it('Update $DELETE with saveUnknown enabled', (done) => {
+    it('Update $REMOVE with saveUnknown enabled', (done) => {
       Cats.Cat1.create({'id': 984, 'name': 'Oliver'}, (err, old) => {
         should.not.exist(err);
         Cats.Cat1.update({'id': old.id}, {'otherProperty': 'Testing123'}, (errA, data) => {
@@ -2401,12 +2420,25 @@ describe('Model', function () {
           should.exist(data);
           data.should.have.property('otherProperty');
           data.otherProperty.should.eql('Testing123');
-          Cats.Cat1.update({'id': old.id}, {'$DELETE': {'otherProperty': 'Testing123'}}, (errB, dataB) => {
+          Cats.Cat1.update({'id': old.id}, {'$REMOVE': {'otherProperty': 'Testing123'}}, (errB, dataB) => {
             should.not.exist(errB);
             should.exist(dataB);
             dataB.should.not.have.property('otherProperty');
             done();
           });
+        });
+      });
+    });
+
+    it('Should return Error when Update $DELETE type list', (done) => {
+      Cats.Cat1.create({'id': 1234, 'name': 'Oliver', 'legs': [1, 2, 3, 4]}, (err, old) => {
+        should.not.exist(err);
+        old.should.have.property('legs');
+        old.legs.should.eql([1, 2, 3, 4]);
+        Cats.Cat1.update({'id': old.id}, {'$DELETE': {'legs': [4]}}, (errA, data) => {
+          should.exist(errA);
+          should.not.exist(data);
+          done();
         });
       });
     });
