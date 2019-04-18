@@ -28,7 +28,7 @@ module.exports = {
     'brace-style': ['error', '1tbs', {'allowSingleLine': true}],
     'id-length': ['error', {'min': 1}],
     'max-params': ['error', {'max': 5}],
-    'max-statements': ['error', {'max': 137}],
+    'max-statements': ['error', {'max': 138}],
     'max-lines': ['error', {'max': 3600}],
     'complexity': ['error', {'max': 81}],
     'max-lines-per-function': ['error', {'max': 3600}],
