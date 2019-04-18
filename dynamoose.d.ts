@@ -230,6 +230,7 @@ declare module "dynamoose" {
   type UpdateUpdate<DataSchema> = (
     Partial<DataSchema>
     | { $PUT: Partial<DataSchema> }
+    | { $REMOVE: Partial<DataSchema> }
     | { $ADD: Partial<DataSchema> }
     | { $DELETE: Partial<DataSchema> }
   );
