@@ -1,15 +1,12 @@
 {
-  "name": "dynamoose",
+  "name": "dynamoose-mod",
   "version": "1.7.2",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "typings": "./dynamoose.d.ts",
   "homepage": "https://dynamoosejs.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dynamoosejs/dynamoose"
-  },
-  "bugs": {
-    "url": "https://github.com/dynamoosejs/dynamoose/issues"
+    "url": "https://github.com/CodeBanBan/dynamoose"
   },
   "main": "dist/index.js",
   "files": [
