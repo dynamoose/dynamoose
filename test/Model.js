@@ -3301,6 +3301,35 @@ describe('Model', function () {
     });
   });
 
+  it('Should allow for originalItem on multiple models', (done) => {
+    const item1 = {
+      'id': 1111,
+      'name': 'NAME_VALUE_1',
+      'owner': 'OWNER_VALUE_1'
+    };
+
+    const item2 = {
+      'id': 2222,
+      'name': 'NAME_VALUE_2',
+      'owner': 'OWNER_VALUE_2'
+    };
+
+    const cat1 = new Cats.Cat(item1);
+    const cat2 = new Cats.Cat(item2);
+
+
+    cat1.originalItem().should.eql(item1);
+    cat2.originalItem().should.eql(item2);
+    cat1.save((err, cat1Read) => {
+      cat1Read.originalItem().should.eql(item1);
+      cat2.save((err2, cat2Read) => {
+        cat2Read.originalItem().should.eql(item2);
+        cat1Read.originalItem().should.eql(item1);
+        done();
+      });
+    });
+  });
+
   it('Should store/load binary data safely', (done) => {
     const imageData = Buffer.from([0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0xd3, 0x61, 0x60, 0x60]);
 
