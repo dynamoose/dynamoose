@@ -576,20 +576,20 @@ describe('Plugin', function () {
 
     Model.plugin(pluginA);
 
-    const myItem = new Model(
-      {
-        'id': 1,
-        'name': 'Lucky',
-        'owner': 'Bob',
-        'age': 2
-      }
-    );
+    const data = {
+      'id': 1,
+      'name': 'Lucky',
+      'owner': 'Bob',
+      'age': 2
+    };
+    const myItem = new Model(data);
     myItem.save({'prop': true}, () => {
       should.exist(emitObject);
       emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
 
       emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:put');
       emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('put:called');
+      emitObject.should.have.propertyByPath('event', 'item').match(data);
       emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
       emitObject.should.have.propertyByPath('event', 'callback').which.is.Function;
 
