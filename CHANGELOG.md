@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+## [1.7.3](https://github.com/dynamoosejs/dynamoose/compare/v1.7.2...v1.7.3) (2019-05-15)
+
+
+### Bug Fixes
+
+* **model:** allows string for array attribute in contains condition ([f68c13a](https://github.com/dynamoosejs/dynamoose/commit/f68c13a))
+
 ## [1.7.2](https://github.com/dynamoosejs/dynamoose/compare/v1.7.1...v1.7.2) (2019-03-18)
 
 
