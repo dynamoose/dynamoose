@@ -1,4 +1,4 @@
-### Model.query(query, options, callback)
+### Model.query(query, callback)
 
 Queries a table or index. The query parameter can either be the hash key of the table or global index or a complete query object. If the callback is provided, the exec command is called automatically, and the query parameter must be a query object.
 
@@ -16,7 +16,7 @@ Dog.query({breed: {eq: 'Beagle'}}, function (err, dogs) {
 });
 ```
 
-### Model.queryOne(query, options, callback)
+### Model.queryOne(query, callback)
 
 Queries a table or index, sets [`query.limit`](#querylimitlimit) to `1`.
 
