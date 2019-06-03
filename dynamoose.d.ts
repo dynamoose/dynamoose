@@ -161,7 +161,7 @@ declare module "dynamoose" {
   }
   type PopulateOptions = { path: string, model: string, populate?: PopulateOptions }
 
-  export interface PutOptions {
+  export interface PutOptions extends ConditionOptions {
     /**
     * Overwrite existing item. Defaults to true for `model.put` and false for `Model.create`.
     */
@@ -174,18 +174,6 @@ declare module "dynamoose" {
     * Whether to update the documents expires or not. Defaults to false.
     */
     updateExpires?: boolean;
-    /**
-    * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
-    */
-    condition?: string;
-    /**
-    * A map of name substitutions for the condition expression.
-    */
-    conditionNames?: any;
-    /**
-    * A map of values for the condition expression. Note that in order for automatic object conversion to work, the keys in this object must match schema attribute names.
-    */
-    conditionValues?: any;
   }
   type SaveOptions = PutOptions;
 
@@ -234,7 +222,7 @@ declare module "dynamoose" {
     | { $DELETE: Partial<DataSchema> }
   );
 
-  export interface UpdateOption {
+  export interface UpdateOption extends ConditionOptions {
     /**
     * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
     */
@@ -355,8 +343,17 @@ declare module "dynamoose" {
     conditionCheck(key: KeySchema, options?: ConditionOptions): void
   }
   export interface ConditionOptions {
-    condition: string,
-    conditionNames: object,
-    conditionValues: object,
+    /**
+    * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
+    */
+    condition?: string;
+    /**
+    * A map of name substitutions for the condition expression.
+    */
+    conditionNames?: object;
+    /**
+    * A map of values for the condition expression. Note that in order for automatic object conversion to work, the keys in this object must match schema attribute names.
+    */
+    conditionValues?: object;
   }
 }
