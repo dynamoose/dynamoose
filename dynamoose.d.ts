@@ -226,15 +226,15 @@ declare module "dynamoose" {
     /**
     * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
     */
-    allowEmptyArray: boolean;
+    allowEmptyArray?: boolean;
     /**
     * If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
     */
-    createRequired: boolean;
+    createRequired?: boolean;
     /**
     * If true, the timestamps attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
     */
-    updateTimestamps: boolean;
+    updateTimestamps?: boolean;
   }
 
 
