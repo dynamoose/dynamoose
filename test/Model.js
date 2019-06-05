@@ -2425,6 +2425,39 @@ describe('Model', function () {
         done();
       });
     });
+
+    it('Allows simple string for array attribute in contains condition', (done) => {
+      const kitten = new Cats.Cat(
+        {
+          'id': 1,
+          'name': 'Fluffy',
+          'legs': ['front right', 'front left', 'back right', 'back left']
+        }
+      );
+
+      kitten.save(() => {
+        const updateOptions = {
+          'condition': 'contains(legs, :legs)',
+          'conditionValues': {'legs': 'front right'}
+        };
+
+        Cats.Cat.update({'id': 1}, {'name': 'Puffy'}, updateOptions, (err, data) => {
+          should.not.exist(err);
+          should.exist(data);
+          data.id.should.eql(1);
+          data.name.should.equal('Puffy');
+          Cats.Cat.get(1, (errA, puffy) => {
+            should.not.exist(errA);
+            should.exist(puffy);
+            puffy.id.should.eql(1);
+            puffy.name.should.eql('Puffy');
+            done();
+          });
+        });
+      });
+
+    });
+
   });
 
   describe('Model.populate', () => {
