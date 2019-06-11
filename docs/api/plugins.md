@@ -244,7 +244,7 @@ Dynamoose will emit this event when a put is called on a model.
 	event: {
 		options: _____, // options passed to put (object) (warning: in some cases this can be the callback function in the `put:called` stage)
 		callback: _____, // callback passed to put (function) (warning: in some cases this can be the null if options is not passed in) (only valid on `put:called`)
-		item: _____ // item that will be/has been saved to DynamoDB (function) (only valid on `request:*`)
+		item: _____ // item that will be/has been saved to DynamoDB (object) (model class instance on `put:called`, PutItem request object on `request:*`)
 		error: _____ // the error object that was received from DynamoDB (object) (only valid on `request:post`)
 	}
 	action: {
