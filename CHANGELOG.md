@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+## [1.8.3](https://github.com/dynamoosejs/dynamoose/compare/v1.8.2...v1.8.3) (2019-06-22)
+
+
+### Bug Fixes
+
+* **types:** add property to interface ([0c05751](https://github.com/dynamoosejs/dynamoose/commit/0c05751)), closes [#617](https://github.com/dynamoosejs/dynamoose/issues/617)
+
 ## [1.8.2](https://github.com/dynamoosejs/dynamoose/compare/v1.8.1...v1.8.2) (2019-06-22)
 
 
