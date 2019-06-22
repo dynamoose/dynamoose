@@ -302,6 +302,7 @@ declare module "dynamoose" {
     attributes(attributes: string[]): QueryInterface<T, R>;
     count(): QueryInterface<T, R>;
     counts(): QueryInterface<T, R>;
+    using(indexName: string): QueryInterface<T, R>;
   }
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
