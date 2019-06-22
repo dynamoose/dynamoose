@@ -565,6 +565,42 @@ describe('Plugin', function () {
 
   });
 
+  it('Should pass emit object to put:called callback', (done) => {
+    let emitObject;
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:put', 'put:called', (obj) => { emitObject = obj; });
+    };
+
+
+    Model.plugin(pluginA);
+
+    const data = {
+      'id': 1,
+      'name': 'Lucky',
+      'owner': 'Bob',
+      'age': 2
+    };
+    const myItem = new Model(data);
+    myItem.save({'prop': true}, () => {
+      should.exist(emitObject);
+      emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
+
+      emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:put');
+      emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('put:called');
+      emitObject.should.have.propertyByPath('event', 'item').match(data);
+      emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
+      emitObject.should.have.propertyByPath('event', 'callback').which.is.Function;
+
+      emitObject.should.have.propertyByPath('actions', 'updateCallback').which.is.Function;
+      emitObject.should.have.propertyByPath('actions', 'updateOptions').which.is.Function;
+
+      done();
+    });
+
+  });
+
   it('Should continue for model:put request:pre', (done) => {
 
     const pluginA = function (plugin) {
@@ -619,6 +655,41 @@ describe('Plugin', function () {
     );
     myItem.save((err) => {
       err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should pass emit object to request:pre callback', (done) => {
+    let emitObject;
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:put', 'request:pre', (obj) => { emitObject = obj; });
+    };
+
+
+    Model.plugin(pluginA);
+
+    const myItem = new Model(
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      }
+    );
+    myItem.save({'prop': true}, () => {
+      should.exist(emitObject);
+      emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
+
+      emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:put');
+      emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('request:pre');
+      emitObject.should.have.propertyByPath('event', 'item').which.has.keys('Item', 'TableName');
+      emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
+
+      emitObject.should.have.propertyByPath('actions', 'updateItem').which.is.Function;
 
       done();
     });
@@ -681,6 +752,46 @@ describe('Plugin', function () {
       err.should.eql('Test');
 
       done();
+    });
+
+  });
+
+  it('Should pass emit object to request:post callback', (done) => {
+    let emitObject;
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:put', 'request:post', (obj) => { emitObject = obj; });
+    };
+
+
+    Model.plugin(pluginA);
+
+    const myItem = new Model(
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      }
+    );
+    myItem.save({'prop': true}, () => {
+      should.exist(emitObject);
+      emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
+
+      emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:put');
+      emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('request:post');
+      emitObject.should.have.propertyByPath('event', 'item').which.has.keys('Item', 'TableName');
+      emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
+
+      emitObject.should.have.propertyByPath('actions', 'updateError').which.is.Function;
+
+      delete myItem.id;
+      myItem.save(() => {
+        emitObject.should.have.propertyByPath('event', 'error').which.is.not.eql(null).and.has.property('message');
+
+        done();
+      });
     });
 
   });
