@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+# [1.8.0](https://github.com/dynamoosejs/dynamoose/compare/v1.7.3...v1.8.0) (2019-06-11)
+
+
+### Features
+
+* **plugin:** item prop for model:put put:called ([5043cf3](https://github.com/dynamoosejs/dynamoose/commit/5043cf3))
+
 ## [1.7.3](https://github.com/dynamoosejs/dynamoose/compare/v1.7.2...v1.7.3) (2019-05-15)
 
 
