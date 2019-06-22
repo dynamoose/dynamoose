@@ -1,5 +1,19 @@
 # Dynamoose Changelog
 
+## [1.8.2](https://github.com/dynamoosejs/dynamoose/compare/v1.8.1...v1.8.2) (2019-06-22)
+
+
+### Bug Fixes
+
+* **dynamoose.ts.d:** Add/fix TypeScript types ([e7472a7](https://github.com/dynamoosejs/dynamoose/commit/e7472a7))
+
+## [1.8.1](https://github.com/dynamoosejs/dynamoose/compare/v1.8.0...v1.8.1) (2019-06-22)
+
+
+### Bug Fixes
+
+* **types:** added streamOptions to ModelOption ([a85780a](https://github.com/dynamoosejs/dynamoose/commit/a85780a))
+
 # [1.8.0](https://github.com/dynamoosejs/dynamoose/compare/v1.7.3...v1.8.0) (2019-06-11)
 
 
