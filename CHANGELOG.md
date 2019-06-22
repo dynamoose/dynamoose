@@ -1,5 +1,26 @@
 # Dynamoose Changelog
 
+## [1.8.1](https://github.com/dynamoosejs/dynamoose/compare/v1.8.0...v1.8.1) (2019-06-22)
+
+
+### Bug Fixes
+
+* **types:** added streamOptions to ModelOption ([a85780a](https://github.com/dynamoosejs/dynamoose/commit/a85780a))
+
+# [1.8.0](https://github.com/dynamoosejs/dynamoose/compare/v1.7.3...v1.8.0) (2019-06-11)
+
+
+### Features
+
+* **plugin:** item prop for model:put put:called ([5043cf3](https://github.com/dynamoosejs/dynamoose/commit/5043cf3))
+
+## [1.7.3](https://github.com/dynamoosejs/dynamoose/compare/v1.7.2...v1.7.3) (2019-05-15)
+
+
+### Bug Fixes
+
+* **model:** allows string for array attribute in contains condition ([f68c13a](https://github.com/dynamoosejs/dynamoose/commit/f68c13a))
+
 ## [1.7.2](https://github.com/dynamoosejs/dynamoose/compare/v1.7.1...v1.7.2) (2019-03-18)
 
 
