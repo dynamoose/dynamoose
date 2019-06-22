@@ -39,6 +39,10 @@ declare module "dynamoose" {
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
     suffix?: string, // Set table name suffix
+    streamOptions?: { // Set table stream options
+      enabled: boolean, // Enable/disable stream
+      type: 'NEW_IMAGE'|'OLD_IMAGE'|'NEW_AND_OLD_IMAGES'|'KEYS_ONLY', // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html#DDB-Type-StreamSpecification-StreamViewType
+    },
     serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
