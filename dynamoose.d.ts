@@ -39,6 +39,10 @@ declare module "dynamoose" {
     waitForActiveTimeout?: number, // wait 3 minutes for table to activate
     prefix?: string, // Set table name prefix
     suffix?: string, // Set table name suffix
+    streamOptions?: { // Set table stream options
+      enabled: boolean, // Enable/disable stream
+      type: 'NEW_IMAGE'|'OLD_IMAGE'|'NEW_AND_OLD_IMAGES'|'KEYS_ONLY', // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html#DDB-Type-StreamSpecification-StreamViewType
+    },
     serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
@@ -144,16 +148,14 @@ declare module "dynamoose" {
   */
   export class Model<ModelData> {
     constructor(obj: ModelData);
-    put(options: PutOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
-    save(options: SaveOptions, callback: (err: Error) => void): Promise<Model<ModelData>>;
 
     delete(callback?: (err: Error) => void): Promise<undefined>;
 
+    put(options: PutOptions, callback?: (err: Error) => void): Promise<Model<ModelData>>;
     put(callback: (err: Error) => void): Promise<Model<ModelData>>;
-    put(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
 
+    save(options: SaveOptions, callback?: (err: Error) => void): Promise<Model<ModelData>>;
     save(callback?: (err: Error) => void): Promise<Model<ModelData>>;
-    save(options: ModelData, callback?: (err: Error) => void): Promise<Model<ModelData>>;
 
     originalItem(): object;
 
@@ -211,9 +213,9 @@ declare module "dynamoose" {
     queryOne(query: QueryFilter, callback?: (err: Error, results: ModelSchema<DataSchema>) => void): QueryInterface<ModelSchema<DataSchema>, ModelSchema<DataSchema>>;
     scan(filter?: ScanFilter, callback?: (err: Error, results: ModelSchema<DataSchema>[]) => void): ScanInterface<ModelSchema<DataSchema>>;
 
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOptions, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<ModelSchema<DataSchema>>;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOptions): Promise<ModelSchema<DataSchema>>;
 
     transaction: ModelTransactionConstructor<DataSchema, KeySchema>
   }
@@ -234,19 +236,40 @@ declare module "dynamoose" {
     | { $DELETE: Partial<DataSchema> }
   );
 
-  export interface UpdateOption {
+  export interface UpdateOptions {
     /**
     * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
     */
-    allowEmptyArray: boolean;
+    allowEmptyArray?: boolean;
     /**
     * If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
     */
-    createRequired: boolean;
+    createRequired?: boolean;
     /**
     * If true, the timestamps attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
     */
-    updateTimestamps: boolean;
+    updateTimestamps?: boolean;
+    /**
+     * Specifies what should be returned after update successfully completes.
+     */
+    returnValues?:
+      | "NONE"
+      | "ALL_OLD"
+      | "UPDATED_OLD"
+      | "ALL_NEW"
+      | "UPDATED_NEW";
+    /**
+     * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
+     */
+    condition?: string;
+    /**
+     * A map of name substitutions for the condition expression.
+     */
+    conditionNames?: any;
+    /**
+     * A map of values for the condition expression. Note that in order for automatic object conversion to work, the keys in this object must match schema attribute names.
+     */
+    conditionValues?: any;
   }
 
 
@@ -279,6 +302,7 @@ declare module "dynamoose" {
     attributes(attributes: string[]): QueryInterface<T, R>;
     count(): QueryInterface<T, R>;
     counts(): QueryInterface<T, R>;
+    using(indexName: string): QueryInterface<T, R>;
   }
   export interface QueryResult<T> extends Array<T> {
     lastKey?: QueryKey;
@@ -348,9 +372,9 @@ declare module "dynamoose" {
 
     delete(key: KeySchema, callback?: (err: Error) => void): Promise<undefined>;
 
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOption, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options: UpdateOptions, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
-    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOption): Promise<ModelSchema<DataSchema>>;
+    update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOptions): Promise<ModelSchema<DataSchema>>;
 
     conditionCheck(key: KeySchema, options?: ConditionOptions): void
   }

@@ -45,7 +45,17 @@ var dogSchema = new Schema({
     type: [String],
     default: ['Brown']
   },
-  age: Number
+  age: Number,
+  awards: {
+    type: 'list',
+    list: [{
+      type: 'map',
+      map: {
+        year: Number,
+        name: String
+      }
+    }]
+  }  
 },
 {
   throughput: {read: 15, write: 5}
