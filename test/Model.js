@@ -2438,6 +2438,39 @@ describe('Model', function () {
         done();
       });
     });
+
+    it('Allows simple string for array attribute in contains condition', (done) => {
+      const kitten = new Cats.Cat(
+        {
+          'id': 1,
+          'name': 'Fluffy',
+          'legs': ['front right', 'front left', 'back right', 'back left']
+        }
+      );
+
+      kitten.save(() => {
+        const updateOptions = {
+          'condition': 'contains(legs, :legs)',
+          'conditionValues': {'legs': 'front right'}
+        };
+
+        Cats.Cat.update({'id': 1}, {'name': 'Puffy'}, updateOptions, (err, data) => {
+          should.not.exist(err);
+          should.exist(data);
+          data.id.should.eql(1);
+          data.name.should.equal('Puffy');
+          Cats.Cat.get(1, (errA, puffy) => {
+            should.not.exist(errA);
+            should.exist(puffy);
+            puffy.id.should.eql(1);
+            puffy.name.should.eql('Puffy');
+            done();
+          });
+        });
+      });
+
+    });
+
   });
 
   describe('Model.populate', () => {
@@ -3276,6 +3309,35 @@ describe('Model', function () {
         newCatB.name = 'NAME_VALUE_2';
         newCatB.originalItem().should.eql(item);
         newCatB.name.should.eql('NAME_VALUE_2');
+        done();
+      });
+    });
+  });
+
+  it('Should allow for originalItem on multiple models', (done) => {
+    const item1 = {
+      'id': 1111,
+      'name': 'NAME_VALUE_1',
+      'owner': 'OWNER_VALUE_1'
+    };
+
+    const item2 = {
+      'id': 2222,
+      'name': 'NAME_VALUE_2',
+      'owner': 'OWNER_VALUE_2'
+    };
+
+    const cat1 = new Cats.Cat(item1);
+    const cat2 = new Cats.Cat(item2);
+
+
+    cat1.originalItem().should.eql(item1);
+    cat2.originalItem().should.eql(item2);
+    cat1.save((err, cat1Read) => {
+      cat1Read.originalItem().should.eql(item1);
+      cat2.save((err2, cat2Read) => {
+        cat2Read.originalItem().should.eql(item2);
+        cat1Read.originalItem().should.eql(item1);
         done();
       });
     });
