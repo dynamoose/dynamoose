@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+## [1.8.5](https://github.com/dynamoosejs/dynamoose/compare/v1.8.4...v1.8.5) (2019-06-25)
+
+
+### Bug Fixes
+
+* **schema:** fixed circular reference with `JSON.stringify` in Schema ([3f614f0](https://github.com/dynamoosejs/dynamoose/commit/3f614f0))
+
 ## [1.8.4](https://github.com/dynamoosejs/dynamoose/compare/v1.8.3...v1.8.4) (2019-06-23)
 
 
