@@ -255,3 +255,32 @@ Dynamoose will emit this event when a put is called on a model.
 	}
 }
 ```
+
+#### `model:batchput`
+
+Dynamoose will emit this event when a batchPut is called on a model.
+
+##### Stages
+
+- `batchput:called` - Dynamoose will emit this stage when a batchPut is about to start
+- `request:pre` - Dynamoose will emit this stage when a batchPut request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when a batchPut request response has been received from DynamoDB
+
+##### Additional Items Added to Object
+
+```
+{
+	event: {
+		options: _____, // options passed to batchPut (object) (warning: in some cases this can be the callback function in the `batchput:called` stage)
+		callback: _____, // callback passed to batchPut (function) (warning: in some cases this can be the null if options is not passed in) (only valid on `batchput:called`)
+		items: _____ // items that will be/has been saved to DynamoDB (object) (model class instances on `batchput:called`, BatchWriteItem batched requests on `request:pre`, flattened BatchWriteItem responses on `request:post`)
+		error: _____ // the error object that was received from DynamoDB (object) (only valid on `request:post`)
+	}
+	action: {
+		updateCallback: _____ // function to update callback that is called (fn: function) (only valid on `batchput:called`)
+		updateOptions: _____ // function to update options object (reqObj: object) (only valid on `batchput:called`)
+		updateItems: _____ // function to update data that will be sent to DynamoDB (dataObj: object) (only valid on `request:pre`)
+		updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
+	}
+}
+```
