@@ -661,7 +661,7 @@ describe('Plugin', function () {
 
   });
 
-  it('Should pass emit object to request:pre callback', (done) => {
+  it('Should pass emit object to model:put request:pre callback', (done) => {
     let emitObject;
 
     const pluginA = function (plugin) {
@@ -756,7 +756,7 @@ describe('Plugin', function () {
 
   });
 
-  it('Should pass emit object to request:post callback', (done) => {
+  it('Should pass emit object to model:put request:post callback', (done) => {
     let emitObject;
 
     const pluginA = function (plugin) {
@@ -788,6 +788,310 @@ describe('Plugin', function () {
 
       delete myItem.id;
       myItem.save(() => {
+        emitObject.should.have.propertyByPath('event', 'error').which.is.not.eql(null).and.has.property('message');
+
+        done();
+      });
+    });
+
+  });
+
+  it('Should work with model:batchput', (done) => {
+    let counter = 0;
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', () => {
+        counter += 1;
+      });
+    };
+
+
+    Model.plugin(pluginA);
+
+    const myItem = {
+      'id': 1,
+      'name': 'Lucky',
+      'owner': 'Bob',
+      'age': 2
+    };
+    Model.batchPut([myItem], () => {
+      Model.$__.plugins.length.should.eql(1);
+      counter.should.eql(3);
+
+      done();
+    });
+
+  });
+
+  it('Should pass emit object to batchput:called callback', (done) => {
+    let emitObject;
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'batchput:called', (obj) => { emitObject = obj; });
+    };
+
+
+    Model.plugin(pluginA);
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, {'prop': true}, () => {
+      should.exist(emitObject);
+      emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
+
+      emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:batchput');
+      emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('batchput:called');
+      emitObject.should.have.propertyByPath('event', 'items').which.has.length(2);
+      emitObject.should.have.propertyByPath('event', 'items', 0).match(items[0]);
+      emitObject.should.have.propertyByPath('event', 'items', 1).match(items[1]);
+      emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
+      emitObject.should.have.propertyByPath('event', 'callback').which.is.Function;
+
+      emitObject.should.have.propertyByPath('actions', 'updateCallback').which.is.Function;
+      emitObject.should.have.propertyByPath('actions', 'updateOptions').which.is.Function;
+
+      done();
+    });
+
+  });
+
+  it('Should continue for model:batchput request:pre', (done) => {
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'request:pre', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'resolve': 'Test'});
+        }, 500);
+      }));
+    };
+
+
+    Model.plugin(pluginA);
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, (err, result) => {
+      result.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should not continue for model:batchput request:pre on adding a model', (done) => {
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'request:pre', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'reject': 'Test'});
+        }, 500);
+      }));
+    };
+
+
+    Model.plugin(pluginA);
+
+    const myItem = {
+      'id': 1,
+      'name': 'Lucky',
+      'owner': 'Bob',
+      'age': 2
+    };
+    Model.batchPut([myItem], (err) => {
+      err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should pass emit object to model:batchput request:pre callback', (done) => {
+    let emitObject;
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'request:pre', (obj) => { emitObject = obj; });
+    };
+
+
+    Model.plugin(pluginA);
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, {'prop': true}, () => {
+      should.exist(emitObject);
+      emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
+
+      emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:batchput');
+      emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('request:pre');
+      emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
+
+      emitObject.should.have.propertyByPath('event', 'items').which.has.length(1);
+      emitObject.should.have.propertyByPath('event', 'items', 0).which.has.keys('RequestItems');
+      const [{RequestItems}] = emitObject.event.items;
+      RequestItems.should.have.propertyByPath(Model.$__.name).which.has.length(2);
+      RequestItems.should.have.propertyByPath(Model.$__.name, 0, 'PutRequest').which.has.keys('Item');
+      RequestItems.should.have.propertyByPath(Model.$__.name, 1, 'PutRequest').which.has.keys('Item');
+
+      emitObject.should.have.propertyByPath('actions', 'updateItems').which.is.Function;
+
+      done();
+    });
+
+  });
+
+  it('Should continue for model:batchput request:post', (done) => {
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'request:post', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'resolve': 'Test'});
+        }, 500);
+      }));
+    };
+
+
+    Model.plugin(pluginA);
+
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, (err, result) => {
+      result.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should not continue for model:batchput request:post', (done) => {
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'request:post', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'reject': 'Test'});
+        }, 500);
+      }));
+    };
+
+
+    Model.plugin(pluginA);
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, (err) => {
+      err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should pass emit object to model:batchput request:post callback', (done) => {
+    let emitObject;
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'request:post', (obj) => { emitObject = obj; });
+    };
+
+
+    Model.plugin(pluginA);
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, {'prop': true}, () => {
+      should.exist(emitObject);
+      emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
+
+      emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:batchput');
+      emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('request:post');
+      emitObject.should.have.propertyByPath('event', 'items', 'Responses');
+      emitObject.should.have.propertyByPath('event', 'items', 'UnprocessedItems').which.is.empty;
+      emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
+
+      emitObject.should.have.propertyByPath('actions', 'updateError').which.is.Function;
+
+      delete items[0].id;
+      Model.batchPut(items, () => {
         emitObject.should.have.propertyByPath('event', 'error').which.is.not.eql(null).and.has.property('message');
 
         done();
