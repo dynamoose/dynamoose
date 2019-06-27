@@ -1,6 +1,6 @@
 {
   "name": "dynamoose",
-  "version": "1.8.5",
+  "version": "1.9.0",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "typings": "./dynamoose.d.ts",
   "homepage": "https://dynamoosejs.com",

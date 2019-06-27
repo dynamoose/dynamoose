@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+# [1.9.0](https://github.com/dynamoosejs/dynamoose/compare/v1.8.5...v1.9.0) (2019-06-27)
+
+
+### Features
+
+* **schema:** change the way attributes are set by parseDynamo function ([b8d1737](https://github.com/dynamoosejs/dynamoose/commit/b8d1737))
+
 ## [1.8.5](https://github.com/dynamoosejs/dynamoose/compare/v1.8.4...v1.8.5) (2019-06-25)
 
 
