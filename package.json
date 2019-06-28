@@ -23,7 +23,7 @@
     "lint": "eslint .",
     "tslint": "tslint lib/**/*.ts",
     "coverage": "nyc npm test",
-    "prepack": "tsc",
+    "prepare": "tsc",
     "commit": "git-cz",
     "sem-rel": "semantic-release",
     "lint:commit": "commitlint -E $GIT_PARAMS",
