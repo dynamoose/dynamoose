@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+# [1.10.0](https://github.com/dynamoosejs/dynamoose/compare/v1.9.0...v1.10.0) (2019-06-28)
+
+
+### Features
+
+* **scan:** add Scan.using() for scanning sparse secondary indexes ([cfb5614](https://github.com/dynamoosejs/dynamoose/commit/cfb5614))
+
 # [1.9.0](https://github.com/dynamoosejs/dynamoose/compare/v1.8.5...v1.9.0) (2019-06-27)
 
 
