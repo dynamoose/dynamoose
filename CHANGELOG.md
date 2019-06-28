@@ -1,5 +1,61 @@
 # Dynamoose Changelog
 
+# [1.9.0](https://github.com/dynamoosejs/dynamoose/compare/v1.8.5...v1.9.0) (2019-06-27)
+
+
+### Features
+
+* **schema:** change the way attributes are set by parseDynamo function ([b8d1737](https://github.com/dynamoosejs/dynamoose/commit/b8d1737))
+
+## [1.8.5](https://github.com/dynamoosejs/dynamoose/compare/v1.8.4...v1.8.5) (2019-06-25)
+
+
+### Bug Fixes
+
+* **schema:** fixed circular reference with `JSON.stringify` in Schema ([3f614f0](https://github.com/dynamoosejs/dynamoose/commit/3f614f0))
+
+## [1.8.4](https://github.com/dynamoosejs/dynamoose/compare/v1.8.3...v1.8.4) (2019-06-23)
+
+
+### Bug Fixes
+
+* change originalItem from being static ([44a5b6b](https://github.com/dynamoosejs/dynamoose/commit/44a5b6b))
+
+## [1.8.3](https://github.com/dynamoosejs/dynamoose/compare/v1.8.2...v1.8.3) (2019-06-22)
+
+
+### Bug Fixes
+
+* **types:** add property to interface ([0c05751](https://github.com/dynamoosejs/dynamoose/commit/0c05751)), closes [#617](https://github.com/dynamoosejs/dynamoose/issues/617)
+
+## [1.8.2](https://github.com/dynamoosejs/dynamoose/compare/v1.8.1...v1.8.2) (2019-06-22)
+
+
+### Bug Fixes
+
+* **dynamoose.ts.d:** Add/fix TypeScript types ([e7472a7](https://github.com/dynamoosejs/dynamoose/commit/e7472a7))
+
+## [1.8.1](https://github.com/dynamoosejs/dynamoose/compare/v1.8.0...v1.8.1) (2019-06-22)
+
+
+### Bug Fixes
+
+* **types:** added streamOptions to ModelOption ([a85780a](https://github.com/dynamoosejs/dynamoose/commit/a85780a))
+
+# [1.8.0](https://github.com/dynamoosejs/dynamoose/compare/v1.7.3...v1.8.0) (2019-06-11)
+
+
+### Features
+
+* **plugin:** item prop for model:put put:called ([5043cf3](https://github.com/dynamoosejs/dynamoose/commit/5043cf3))
+
+## [1.7.3](https://github.com/dynamoosejs/dynamoose/compare/v1.7.2...v1.7.3) (2019-05-15)
+
+
+### Bug Fixes
+
+* **model:** allows string for array attribute in contains condition ([f68c13a](https://github.com/dynamoosejs/dynamoose/commit/f68c13a))
+
 ## [1.7.2](https://github.com/dynamoosejs/dynamoose/compare/v1.7.1...v1.7.2) (2019-03-18)
 
 
