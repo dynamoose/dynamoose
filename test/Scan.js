@@ -892,4 +892,33 @@ describe('Scan', function () {
     const updatedFilterRecords = await Lion.scan(updatedFilter).all(0).exec();
     updatedFilterRecords.length.should.eql(10);
   });
+
+  it('Scan using sparse index', async () => {
+    const Lion = dynamoose.model('Lion2', {
+      'id': {
+        'type': String,
+        'hashKey': true,
+        'trim': true
+      },
+      'indexId': {
+        'type': String,
+        'index': {
+          'name': 'sparseIndex',
+          'global': true
+        }
+      }
+    });
+
+    for (let i = 0; i < 10; i += 1) {
+      const record = {'id': `${i}`};
+      if (i % 3 === 0) {
+        record.indexId = record.id;
+      }
+
+      await new Lion(record).save();
+    }
+
+    const allIndexRecords = await Lion.scan().using('sparseIndex').exec();
+    allIndexRecords.length.should.eql(4);
+  });
 });
