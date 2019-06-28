@@ -33,7 +33,7 @@ describe('Model', function () {
   });
 
   it('Create simple model', async function () {
-    this.timeout(12000);
+    this.timeout(30000);
 
 
     Cats.Cat.should.have.property('$__');
