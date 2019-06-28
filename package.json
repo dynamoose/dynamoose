@@ -1,12 +1,15 @@
 {
-  "name": "dynamoose-mod",
+  "name": "dynamoose",
   "version": "1.7.2",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "typings": "./dynamoose.d.ts",
   "homepage": "https://dynamoosejs.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CodeBanBan/dynamoose"
+    "url": "https://github.com/dynamoosejs/dynamoose"
+  },
+  "bugs": {
+    "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "main": "dist/index.js",
   "files": [
@@ -106,7 +109,8 @@
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "npm run lint && npm run tslint"
+      "pre-commit": "npm run lint && npm run tslint",
+      "pre-push": "npm run ci"
     }
   },
   "config": {
