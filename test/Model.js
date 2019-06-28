@@ -2299,7 +2299,7 @@ describe('Model', function () {
       });
     });
 
-    it('Delete item to list', (done) => {
+    it('Delete item from list', (done) => {
       Cats.Cat.create({'id': 1000, 'legs': ['a', 's', 'd', 'f']}, () => {
         Cats.Cat.update({'id': 1000}, {'$DELETE': {'legs': ['a', 's']}}, (err, data) => {
           should.not.exist(err);
