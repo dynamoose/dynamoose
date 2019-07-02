@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 'use strict';
 
 const dynamoose = require('../lib/');
@@ -1328,6 +1329,11 @@ describe('Model', function () {
 
     const modelClass = cat.getModel('test-CatWithMethods-db');
     modelClass.should.equal(Cats.CatWithMethods);
+  });
+
+  it.only('can create two models with the same backing table', () => {
+    Object.keys(dynamoose.models).should.containEql('test-SharedCat1-db');
+    Cats.SharedCat1.$__.table.name.should.equal(Cats.SharedCat2.$__.table.name);
   });
 
   describe('Model.update', () => {
