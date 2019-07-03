@@ -404,10 +404,10 @@ module.exports = function (dynamoose) {
     'name': String,
     'color': String
   });
-  const SharedCat1 = dynamoose.model('SharedCat1', SharedTableCat1, {
+  const CatWithBreed = dynamoose.model('CatWithBreed', SharedTableCat1, {
     'tableName': 'shared-cat'
   });
-  const SharedCat2 = dynamoose.model('SharedCat2', SharedTableCat2, {
+  const CatWithColor = dynamoose.model('CatWithColor', SharedTableCat2, {
     'tableName': 'shared-cat'
   });
 
@@ -436,7 +436,7 @@ module.exports = function (dynamoose) {
     CatWithMethods,
     CatModel,
     ReturnValuesNoneCat,
-    SharedCat1,
-    SharedCat2
+    CatWithBreed,
+    CatWithColor
   };
 };

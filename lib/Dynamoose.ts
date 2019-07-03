@@ -60,11 +60,12 @@ export function createLocalDb (endpointURL: string) {
   dynamoConfig['endpoint'] = new AWS.Endpoint(endpointURL);
   return new AWS.DynamoDB(dynamoConfig);
 }
+
 export function getModelSchemaFromIndex (item: any, dynamoose: Dynamoose) {
   const requestItem = item;
   const [requestItemProperty] = Object.keys(item);
   const tableName = requestItem[requestItemProperty].TableName;
-  const TheModel = dynamoose.models[tableName];
+  const TheModel = requestItem._dynamooseModel;
   if (!TheModel) {
     const errorMessage = `${tableName} is not a registered model. You can only use registered Dynamoose models when using a RAW transaction object.`;
     throw new errors.TransactionError(errorMessage);
@@ -144,6 +145,7 @@ class Dynamoose {
 
     const model = Model.compile(name, schema, options, this);
     this.models[name] = model;
+
     return model;
   }
   /**
@@ -258,7 +260,12 @@ class Dynamoose {
     const tmpItems = await Promise.all(items);
     items = tmpItems;
     const transactionReq = {
-      'TransactItems': items
+      'TransactItems': items.map(i => {
+        // Omit the dynamoose model reference.
+        const itemCopy = Object.assign({}, i);
+        delete itemCopy._dynamooseModel;
+        return itemCopy;
+      })
     };
     let transactionMethodName;
     if (builtOptions.type) {
