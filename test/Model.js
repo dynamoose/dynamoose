@@ -2224,7 +2224,7 @@ describe('Model', function () {
         .catch(done);
     });
 
-    it('Default puts attribute', (done) => {
+    it('Default set attribute', (done) => {
       Cats.Cat.update({'id': 999}, {'name': 'Tom'}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
@@ -2242,8 +2242,8 @@ describe('Model', function () {
       });
     });
 
-    it('Manual puts attribute with removal', (done) => {
-      Cats.Cat.update({'id': 999}, {'$PUT': {'name': null}}, (err, data) => {
+    it('Manual set attribute with removal', (done) => {
+      Cats.Cat.update({'id': 999}, {'$SET': {'name': null}}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
@@ -2258,8 +2258,8 @@ describe('Model', function () {
       });
     });
 
-    it('Manual puts attribute', (done) => {
-      Cats.Cat.update({'id': 999}, {'$PUT': {'name': 'Tom', 'owner': 'Jerry', 'age': 3}}, (err, data) => {
+    it('Manual set attribute', (done) => {
+      Cats.Cat.update({'id': 999}, {'$SET': {'name': 'Tom', 'owner': 'Jerry', 'age': 3}}, (err, data) => {
         should.not.exist(err);
         should.exist(data);
         data.id.should.eql(999);
