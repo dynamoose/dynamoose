@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 'use strict';
 
 const dynamoose = require('../lib/');
@@ -1328,6 +1329,12 @@ describe('Model', function () {
 
     const modelClass = cat.getModel('test-CatWithMethods-db');
     modelClass.should.equal(Cats.CatWithMethods);
+  });
+
+  it('can create two models with the same backing table', () => {
+    Object.keys(dynamoose.models).should.containEql('test-CatWithBreed-db');
+    Object.keys(dynamoose.models).should.containEql('test-CatWithColor-db');
+    Cats.CatWithBreed.$__.table.name.should.equal(Cats.CatWithColor.$__.table.name);
   });
 
   describe('Model.update', () => {
@@ -3611,6 +3618,25 @@ describe('Model', function () {
       }
 
       should.not.exist(result);
+    });
+
+    it.only('should work with shared table model', async () => {
+      let result;
+
+      try {
+        await Cats.CatWithBreed.create({'id': 500, 'name': 'George', 'breed': 'tabby'});
+        await Cats.CatWithColor.create({'id': 501, 'name': 'Harry', 'color': 'brown'});
+        result = await dynamoose.transaction([
+          Cats.CatWithBreed.transaction.get({'id': '500'}),
+          Cats.CatWithColor.transaction.get({'id': '501'})
+        ]);
+      } catch (e) {
+        console.error(e);
+      }
+
+      should.exist(result);
+      result[0].should.be.instanceOf(Cats.CatWithBreed);
+      result[1].should.be.instanceOf(Cats.CatWithColor);
     });
   });
 });
