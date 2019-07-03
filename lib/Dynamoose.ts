@@ -48,6 +48,7 @@ export interface IDynamooseOptions extends ISchemaOptions {
   suffix?: string;
   serverSideEncryption?: boolean;
   defaultReturnValues?: string;
+  tableName?: string;
 }
 export interface ITransactionOptions {
   type?: string;

@@ -394,6 +394,23 @@ module.exports = function (dynamoose) {
     'defaultReturnValues': 'NONE'
   });
 
+  const SharedTableCat1 = new dynamoose.Schema({
+    'id': Number,
+    'name': String,
+    'breed': String
+  });
+  const SharedTableCat2 = new dynamoose.Schema({
+    'id': Number,
+    'name': String,
+    'color': String
+  });
+  const SharedCat1 = dynamoose.model('SharedCat1', SharedTableCat1, {
+    'tableName': 'shared-cat'
+  });
+  const SharedCat2 = dynamoose.model('SharedCat2', SharedTableCat2, {
+    'tableName': 'shared-cat'
+  });
+
   return {
     Cat,
     Cat1,
@@ -418,6 +435,8 @@ module.exports = function (dynamoose) {
     CatWithGeneratedID,
     CatWithMethods,
     CatModel,
-    ReturnValuesNoneCat
+    ReturnValuesNoneCat,
+    SharedCat1,
+    SharedCat2
   };
 };
