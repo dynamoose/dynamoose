@@ -29,7 +29,7 @@ Default `options`:
     type: undefined // sets the stream type (NEW_IMAGE | OLD_IMAGE | NEW_AND_OLD_IMAGES | KEYS_ONLY) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html#DDB-Type-StreamSpecification-StreamViewType)
   },
   serverSideEncryption: false, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: false)
-  defaultReturnValues: 'ALL_NEW', // sets ReturnValues for the UpdateItem operation (NONE | ALL_OLD | UPDATED_OLD | ALL_NEW | UPDATED_NEW) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
+  defaultReturnValues: 'ALL_NEW' // sets ReturnValues for the UpdateItem operation (NONE | ALL_OLD | UPDATED_OLD | ALL_NEW | UPDATED_NEW) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
 }
 ```
 
