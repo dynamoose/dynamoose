@@ -3620,7 +3620,7 @@ describe('Model', function () {
       should.not.exist(result);
     });
 
-    it.only('should work with shared table model', async () => {
+    it('should work with shared table model', async () => {
       let result;
 
       try {
