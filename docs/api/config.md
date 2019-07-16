@@ -29,7 +29,7 @@ Default `options`:
     type: undefined // sets the stream type (NEW_IMAGE | OLD_IMAGE | NEW_AND_OLD_IMAGES | KEYS_ONLY) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html#DDB-Type-StreamSpecification-StreamViewType)
   },
   serverSideEncryption: false, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: false)
-  defaultReturnValues: 'ALL_NEW' // sets ReturnValues for the UpdateItem operation (NONE | ALL_OLD | UPDATED_OLD | ALL_NEW | UPDATED_NEW) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
+  defaultReturnValues: 'ALL_NEW', // sets ReturnValues for the UpdateItem operation (NONE | ALL_OLD | UPDATED_OLD | ALL_NEW | UPDATED_NEW) (https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_UpdateItem.html)
 }
 ```
 
@@ -60,6 +60,10 @@ const model = dynamoose.model('Cat', {...}, {
   serverSideEncryption: true
 });
 ```
+
+tableName: string
+
+Overrides the table name which is generated automatically by Dynamoose. This option can be used to provide custom table names for cases where the name of a model does not directly map to the table that it lives in. It can also be used to allow multiple models to reside in a single table.
 
 ### dynamoose.local(url)
 
