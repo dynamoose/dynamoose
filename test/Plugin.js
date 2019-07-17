@@ -824,6 +824,79 @@ describe('Plugin', function () {
 
   });
 
+  it('Should continue for model:batchput batchput:called', (done) => {
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'batchput:called', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'resolve': 'Test'});
+        }, 500);
+      }));
+    };
+
+
+    Model.plugin(pluginA);
+
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, (err, result) => {
+      result.should.eql('Test');
+
+      done();
+    });
+
+  });
+
+  it('Should not continue for model:batchput batchput:called', (done) => {
+
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:batchput', 'batchput:called', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'reject': 'Test'});
+        }, 500);
+      }));
+    };
+
+
+    Model.plugin(pluginA);
+
+    const items = [
+      {
+        'id': 1,
+        'name': 'Lucky',
+        'owner': 'Bob',
+        'age': 2
+      },
+      {
+        'id': 2,
+        'name': 'Pharaoh',
+        'owner': 'Jack',
+        'age': 5
+      }
+    ];
+    Model.batchPut(items, (err) => {
+      err.should.eql('Test');
+
+      done();
+    });
+
+  });
+
   it('Should pass emit object to batchput:called callback', (done) => {
     let emitObject;
 
