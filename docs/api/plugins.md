@@ -271,8 +271,8 @@ Dynamoose will emit this event when a batchPut is called on a model.
 ```
 {
 	event: {
-		options: _____, // options passed to batchPut (object) (warning: in some cases this can be the callback function in the `batchput:called` stage)
-		callback: _____, // callback passed to batchPut (function) (warning: in some cases this can be the null if options is not passed in) (only valid on `batchput:called`)
+		options: _____, // options passed to batchPut (object)
+		callback: _____, // callback passed to batchPut (function) (only valid on `batchput:called`)
 		items: _____, // items that will be/has been saved to DynamoDB (object) (model class instances on `batchput:called`, BatchWriteItem batched requests on `request:pre`, flattened BatchWriteItem responses on `request:post`)
 		error: _____ // the error object that was received from DynamoDB (object) (only valid on `request:post`)
 	},
