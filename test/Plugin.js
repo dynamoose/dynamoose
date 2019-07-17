@@ -1195,6 +1195,49 @@ describe('Plugin', function () {
     counter.should.eql(3);
   });
 
+  it('Should continue for model:update update:called', async () => {
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:update', 'update:called', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'resolve': 'Test'});
+        }, 500);
+      }));
+    };
+    Model.plugin(pluginA);
+
+    await Model.create({
+      'id': 4,
+      'name': 'Oliver',
+      'owner': 'Bill',
+      'age': 1
+    });
+    const result = await Model.update({'id': 4}, {'$ADD': {'age': 1}}, {'prop': true});
+
+    result.should.eql('Test');
+  });
+
+  it('Should not continue for model:update update:called', async () => {
+    const pluginA = function (plugin) {
+      plugin.setName('Plugin A');
+      plugin.on('model:update', 'update:called', () => new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({'reject': new Error('Test')});
+        }, 500);
+      }));
+    };
+    Model.plugin(pluginA);
+
+    await Model.create({
+      'id': 5,
+      'name': 'Daisy',
+      'owner': 'Veronica',
+      'age': 1
+    });
+
+    await Model.update({'id': 5}, {'$ADD': {'age': 1}}, {'prop': true}).should.be.rejectedWith('Test');
+  });
+
   it('Should pass emit object to update:called callback', async () => {
     let emitObject;
 
@@ -1205,19 +1248,19 @@ describe('Plugin', function () {
     Model.plugin(pluginA);
 
     await Model.create({
-      'id': 4,
+      'id': 6,
       'name': 'Rex',
       'owner': 'Mike',
       'age': 1
     });
-    await Model.update({'id': 4}, {'$ADD': {'age': 1}}, {'prop': true});
+    await Model.update({'id': 6}, {'$ADD': {'age': 1}}, {'prop': true});
 
     should.exist(emitObject);
     emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
 
     emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:update');
     emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('update:called');
-    emitObject.should.have.propertyByPath('event', 'key').match({'id': 4});
+    emitObject.should.have.propertyByPath('event', 'key').match({'id': 6});
     emitObject.should.have.propertyByPath('event', 'expression').match({'$ADD': {'age': 1}});
     emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
     emitObject.should.have.propertyByPath('event', 'callback').which.is.Function;
@@ -1240,12 +1283,12 @@ describe('Plugin', function () {
     Model.plugin(pluginA);
 
     await Model.create({
-      'id': 5,
+      'id': 7,
       'name': 'Duke',
       'owner': 'Maria',
       'age': 1
     });
-    const result = await Model.update({'id': 5}, {'$ADD': {'age': 1}}, {'prop': true});
+    const result = await Model.update({'id': 7}, {'$ADD': {'age': 1}}, {'prop': true});
 
     result.should.eql('Test');
   });
@@ -1262,13 +1305,13 @@ describe('Plugin', function () {
     Model.plugin(pluginA);
 
     await Model.create({
-      'id': 6,
+      'id': 8,
       'name': 'Lucy',
       'owner': 'Piper',
       'age': 2
     });
 
-    await Model.update({'id': 6}, {'$ADD': {'age': 1}}, {'prop': true}).should.be.rejectedWith('Test');
+    await Model.update({'id': 8}, {'$ADD': {'age': 1}}, {'prop': true}).should.be.rejectedWith('Test');
   });
 
   it('Should pass emit object to model:update request:pre callback', async () => {
@@ -1281,12 +1324,12 @@ describe('Plugin', function () {
     Model.plugin(pluginA);
 
     await Model.create({
-      'id': 7,
+      'id': 9,
       'name': 'Ollie',
       'owner': 'Chris',
       'age': 2
     });
-    await Model.update({'id': 7}, {'$ADD': {'age': 1}}, {'prop': true});
+    await Model.update({'id': 9}, {'$ADD': {'age': 1}}, {'prop': true});
 
     should.exist(emitObject);
     emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
@@ -1294,7 +1337,7 @@ describe('Plugin', function () {
     emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:update');
     emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('request:pre');
     emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
-    emitObject.should.have.propertyByPath('event', 'key').match({'id': 7});
+    emitObject.should.have.propertyByPath('event', 'key').match({'id': 9});
     emitObject.should.have.propertyByPath('event', 'request').which.has.keys('TableName', 'Key', 'ExpressionAttributeNames', 'ExpressionAttributeValues', 'ReturnValues', 'UpdateExpression');
 
     const {UpdateExpression, ExpressionAttributeNames, ExpressionAttributeValues} = emitObject.event.request;
@@ -1318,12 +1361,12 @@ describe('Plugin', function () {
     Model.plugin(pluginA);
 
     await Model.create({
-      'id': 8,
+      'id': 10,
       'name': 'Louie',
       'owner': 'Nick',
       'age': 1
     });
-    const result = await Model.update({'id': 8}, {'$ADD': {'age': 1}}, {'prop': true});
+    const result = await Model.update({'id': 10}, {'$ADD': {'age': 1}}, {'prop': true});
 
     result.should.eql('Test');
   });
@@ -1340,13 +1383,13 @@ describe('Plugin', function () {
     Model.plugin(pluginA);
 
     await Model.create({
-      'id': 9,
+      'id': 11,
       'name': 'Sophie',
       'owner': 'Irene',
       'age': 1
     });
 
-    await Model.update({'id': 9}, {'$ADD': {'age': 1}}, {'prop': true}).should.be.rejectedWith('Test');
+    await Model.update({'id': 11}, {'$ADD': {'age': 1}}, {'prop': true}).should.be.rejectedWith('Test');
   });
 
   it('Should pass emit object to model:update request:post callback', async () => {
@@ -1359,12 +1402,12 @@ describe('Plugin', function () {
     Model.plugin(pluginA);
 
     await Model.create({
-      'id': 10,
+      'id': 12,
       'name': 'Tucker',
       'owner': 'Jeff',
       'age': 1
     });
-    await Model.update({'id': 10}, {'$ADD': {'age': 1}}, {'prop': true});
+    await Model.update({'id': 12}, {'$ADD': {'age': 1}}, {'prop': true});
 
     should.exist(emitObject);
     emitObject.should.have.keys('model', 'modelName', 'plugins', 'plugin', 'event', 'actions');
@@ -1372,14 +1415,14 @@ describe('Plugin', function () {
     emitObject.should.have.propertyByPath('event', 'type').which.is.eql('model:update');
     emitObject.should.have.propertyByPath('event', 'stage').which.is.eql('request:post');
     emitObject.should.have.propertyByPath('event', 'options').match({'prop': true});
-    emitObject.should.have.propertyByPath('event', 'key').match({'id': 10});
+    emitObject.should.have.propertyByPath('event', 'key').match({'id': 12});
     emitObject.should.have.propertyByPath('event', 'data').which.has.keys('Attributes');
     emitObject.should.have.propertyByPath('event', 'data', 'Attributes').which.has.keys('owner', 'name', 'id', 'age');
 
     emitObject.should.have.propertyByPath('actions', 'updateError').which.is.Function;
     emitObject.should.have.propertyByPath('actions', 'updateData').which.is.Function;
 
-    await Model.update({'id': 10}, {'$ADD': {'age': 1}}, {'condition': 'attr_not_exists(age)'}).should.be.rejected();
+    await Model.update({'id': 12}, {'$ADD': {'age': 1}}, {'condition': 'attr_not_exists(age)'}).should.be.rejected();
 
     emitObject.should.have.propertyByPath('event', 'error').which.is.not.eql(null).and.has.property('message');
   });
