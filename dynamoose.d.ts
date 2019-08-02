@@ -196,8 +196,8 @@ declare module "dynamoose" {
     (value?: DataSchema): ModelSchema<DataSchema>;
     readonly prototype: ModelSchema<DataSchema>;
 
-    batchPut(items: DataSchema[], options?: PutOptions, callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
-    batchPut(items: DataSchema[], callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
+    batchPut(items: Partial<DataSchema>[], options?: PutOptions, callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
+    batchPut(items: Partial<DataSchema>[], callback?: (err: Error, items: ModelSchema<DataSchema>[]) => void): Promise<ModelSchema<DataSchema>[]>;
 
     create(item: DataSchema, options?: PutOptions, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
     create(item: DataSchema, callback?: (err: Error, model: ModelSchema<DataSchema>) => void): Promise<ModelSchema<DataSchema>>;
