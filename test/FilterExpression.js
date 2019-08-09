@@ -2,7 +2,7 @@
 const should = require('should');
 const FilterExpression = require('../lib/FilterExpression');
 
-describe.only('FilterExpression', () => {
+describe('FilterExpression', () => {
   let expression;
 
   beforeEach(() => {
