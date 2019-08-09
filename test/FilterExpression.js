@@ -2,7 +2,7 @@
 const should = require('should');
 const FilterExpression = require('../lib/FilterExpression');
 
-describe('FilterExpression', () => {
+describe.only('FilterExpression', () => {
   let expression;
 
   beforeEach(() => {
@@ -69,5 +69,21 @@ describe('FilterExpression', () => {
   it('can construct BETWEEN filter', () => {
     expression.filter('time').between('2019-01-01', '2019-12-31');
     expression.toString().should.equal('#attr1 BETWEEN :val1 AND :val2');
+  });
+
+  it('cannot perform a comparison without an attribute', () => {
+    should.throws(() => expression.comparison('=', 42), 'comparison "=" must be preceded by a filter(attribute) call.');
+  });
+
+  it('cannot perform a function without an attribute', () => {
+    should.throws(() => expression.func('begins_with', 42), 'function "=" must be preceded by a filter(attribute) call.');
+  });
+
+  it('cannot construct IN filter without an attribute', () => {
+    should.throws(() => expression.in([1, 2, 3]), 'operation "IN" must be preceded by a filter(attribute) call.');
+  });
+
+  it('cannot construct BETWEEN filter without an attribute', () => {
+    should.throws(() => expression.between(10, 42), 'operation "BETWEEN" must be preceded by a filter(attribute) call.');
   });
 });
