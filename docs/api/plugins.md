@@ -255,3 +255,67 @@ Dynamoose will emit this event when a put is called on a model.
 	}
 }
 ```
+
+#### `model:batchput`
+
+Dynamoose will emit this event when a batchPut is called on a model.
+
+##### Stages
+
+- `batchput:called` - Dynamoose will emit this stage when a batchPut is about to start
+- `request:pre` - Dynamoose will emit this stage when a batchPut request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when a batchPut request response has been received from DynamoDB
+
+##### Additional Items Added to Object
+
+```
+{
+	event: {
+		options: _____, // options passed to batchPut (object)
+		callback: _____, // callback passed to batchPut (function) (only valid on `batchput:called`)
+		items: _____, // items that will be/has been saved to DynamoDB (object) (model class instances on `batchput:called`, BatchWriteItem batched requests on `request:pre`, flattened BatchWriteItem responses on `request:post`)
+		error: _____ // the error object that was received from DynamoDB (object) (only valid on `request:post`)
+	},
+	action: {
+		updateCallback: _____, // function to update callback that is called (fn: function) (only valid on `batchput:called`)
+		updateOptions: _____, // function to update options object (reqObj: object) (only valid on `batchput:called`)
+		updateItems: _____, // function to update data that will be sent to DynamoDB (dataObj: object) (only valid on `request:pre`)
+		updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
+	}
+}
+```
+
+#### `model:update`
+
+Dynamoose will emit this event when an update is called on a model.
+
+##### Stages
+
+- `update:called` - Dynamoose will emit this stage when an update is about to start
+- `request:pre` - Dynamoose will emit this stage when an update request is about to be made to DynamoDB
+- `request:post` - Dynamoose will emit this stage when an update request response has been received from DynamoDB
+
+##### Additional Items Added to Object
+
+```
+{
+	event: {
+		options: _____, // options passed to update (object)
+		key: _____, // key of item that will be updated in DynamoDB (object)
+		callback: _____, // callback passed to update (function) (only valid on `update:called`)
+		expression: _____, // Update Expression that will be sent to DynamoDB (object) (only valid on `update:called`)
+		request: _____, // Update Request that will be sent to DynamoDB (object) (only valid on `request:pre`)
+		data: _____, // Update Request response that was received from DynamoDB (object) (only valid on `request:post`)
+		error: _____ // the error object that was received from DynamoDB (object) (only valid on `request:post`)
+	},
+	action: {
+		updateCallback: _____, // function to update callback that is called (fn: function) (only valid on `update:called`)
+		updateOptions: _____, // function to update options object (object) (only valid on `update:called`)
+		updateKey: _____, // function to update key of item that will be updated in DynamoDB (object) (only valid on `update:called`)
+		updateExpression: _____, // function to update Update Expression that will be sent to DynamoDB (object) (only valid on `update:called`)
+		updateRequest: _____, // function to update Update Request that will be sent to DynamoDB (object) (only valid on `request:pre`)
+		updateData: _____, // function to update Update Request response that was received from DynamoDB (object) (only valid on `request:post`)
+		updateError: _____ // function to update error that was received from DynamoDB query before proceeding (errorObj: object) (only valid on `request:post`)
+	}
+}
+```
