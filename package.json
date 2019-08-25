@@ -23,9 +23,6 @@
     "test:debug:brk": "mocha --inspect-brk",
     "lint": "eslint .",
     "coverage": "nyc npm test",
-    "commit": "git-cz",
-    "sem-rel": "semantic-release",
-    "lint:commit": "commitlint -E $GIT_PARAMS",
     "ci": "npm run lint && npm run coverage",
     "coveralls-ci": "npm run ci && nyc report --reporter=text-lcov | coveralls"
   },
@@ -54,34 +51,22 @@
   "author": "Brandon Goode",
   "license": "MIT",
   "devDependencies": {
-    "@commitlint/cli": "7.5.1",
-    "@commitlint/config-conventional": "7.5.0",
-    "@semantic-release/commit-analyzer": "6.1.0",
-    "@semantic-release/release-notes-generator": "7.1.4",
-    "@semantic-release/changelog": "3.0.2",
-    "@semantic-release/git": "7.0.8",
-    "@semantic-release/github": "5.2.10",
-    "@semantic-release/npm": "5.1.4",
-    "commitizen": "3.0.5",
-    "coveralls": "3.0.2",
-    "cz-conventional-changelog": "2.1.0",
-    "dynamodb-local": "0.0.24",
-    "eslint": "5.13.0",
-    "glob": "7.1.3",
-    "husky": "1.3.1",
-    "jsdoc-to-markdown": "4.0.1",
-    "mocha": "5.2.0",
-    "nyc": "13.1.0",
-    "semantic-release": "15.13.3",
-    "should": "13.2.3"
+    "coveralls": "^3.0.2",
+    "dynamodb-local": "^0.0.24",
+    "eslint": "^5.13.0",
+    "glob": "^7.1.3",
+    "jsdoc-to-markdown": "^5.0.0",
+    "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
+    "should": "^13.2.3"
   },
   "dependencies": {
-    "aws-sdk": "2.395.0",
-    "debug": "4.1.1",
-    "deep-equal": "1.0.1",
-    "hooks": "0.3.2",
-    "object-path": "0.11.4",
-    "q": "1.5.1"
+    "aws-sdk": "^2.395.0",
+    "debug": "^4.1.1",
+    "deep-equal": "^1.0.1",
+    "hooks": "^0.3.2",
+    "object-path": "^0.11.4",
+    "q": "^1.5.1"
   },
   "engines": {
     "node": ">=8.0.0"

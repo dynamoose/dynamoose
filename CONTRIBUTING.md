@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-We have added a few helpers for your development. There are some scripts for you, and some automation for us. Once you've passed all tests and automation hooks, you can expect an almost instant release.
+We have added a few helpers for your development. There are some scripts for you, and some automation for us.
 
 To get all setup:
 
@@ -13,14 +13,6 @@ This will get you ready to develop.
 ## Development Scripts
 
 Dynamoose has a few helpers for local development. These are included in the scripts section of our `package.json`.
-
-### npm run commit
-
-This will run `git-cz`, a helper for creating a commit that semantic release can interpret.
-
-### npm run lint:commit
-
-This will run our lint configuration against your commit to let you know if it's correct.
 
 ### npm test
 
@@ -48,9 +40,4 @@ We have a few requirements for getting a PR merged. They are:
 
   1. Must pass our `eslint`
   2. Must have test coverage not decrease
-  3. A [well formatted commit message](#npm-run-commit)
-  4. An approved review
-
-### husky
-
-To make your life super easy, we use husky. If husky passes your commit message, and allows the push you should be able to breeze through all of the above steps.
+  3. An approved review
