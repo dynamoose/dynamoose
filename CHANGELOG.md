@@ -1,5 +1,105 @@
 # Dynamoose Changelog
 
+# [1.11.0](https://github.com/dynamoosejs/dynamoose/compare/v1.10.0...v1.11.0) (2019-08-25)
+
+
+### Bug Fixes
+
+* **plugin:** solve problem with rejecting during batchput:called ([be01f8c](https://github.com/dynamoosejs/dynamoose/commit/be01f8c))
+* **plugin:** solve problem with rejecting during update:called ([959ba8c](https://github.com/dynamoosejs/dynamoose/commit/959ba8c))
+
+
+### Features
+
+* **plugin:** add batchPut events ([501c689](https://github.com/dynamoosejs/dynamoose/commit/501c689))
+* **plugin:** add update events ([78e8538](https://github.com/dynamoosejs/dynamoose/commit/78e8538))
+
+# [1.10.0](https://github.com/dynamoosejs/dynamoose/compare/v1.9.0...v1.10.0) (2019-06-28)
+
+
+### Features
+
+* **scan:** add Scan.using() for scanning sparse secondary indexes ([cfb5614](https://github.com/dynamoosejs/dynamoose/commit/cfb5614))
+
+# [1.9.0](https://github.com/dynamoosejs/dynamoose/compare/v1.8.5...v1.9.0) (2019-06-27)
+
+
+### Features
+
+* **schema:** change the way attributes are set by parseDynamo function ([b8d1737](https://github.com/dynamoosejs/dynamoose/commit/b8d1737))
+
+## [1.8.5](https://github.com/dynamoosejs/dynamoose/compare/v1.8.4...v1.8.5) (2019-06-25)
+
+
+### Bug Fixes
+
+* **schema:** fixed circular reference with `JSON.stringify` in Schema ([3f614f0](https://github.com/dynamoosejs/dynamoose/commit/3f614f0))
+
+## [1.8.4](https://github.com/dynamoosejs/dynamoose/compare/v1.8.3...v1.8.4) (2019-06-23)
+
+
+### Bug Fixes
+
+* change originalItem from being static ([44a5b6b](https://github.com/dynamoosejs/dynamoose/commit/44a5b6b))
+
+## [1.8.3](https://github.com/dynamoosejs/dynamoose/compare/v1.8.2...v1.8.3) (2019-06-22)
+
+
+### Bug Fixes
+
+* **types:** add property to interface ([0c05751](https://github.com/dynamoosejs/dynamoose/commit/0c05751)), closes [#617](https://github.com/dynamoosejs/dynamoose/issues/617)
+
+## [1.8.2](https://github.com/dynamoosejs/dynamoose/compare/v1.8.1...v1.8.2) (2019-06-22)
+
+
+### Bug Fixes
+
+* **dynamoose.ts.d:** Add/fix TypeScript types ([e7472a7](https://github.com/dynamoosejs/dynamoose/commit/e7472a7))
+
+## [1.8.1](https://github.com/dynamoosejs/dynamoose/compare/v1.8.0...v1.8.1) (2019-06-22)
+
+
+### Bug Fixes
+
+* **types:** added streamOptions to ModelOption ([a85780a](https://github.com/dynamoosejs/dynamoose/commit/a85780a))
+
+# [1.8.0](https://github.com/dynamoosejs/dynamoose/compare/v1.7.3...v1.8.0) (2019-06-11)
+
+
+### Features
+
+* **plugin:** item prop for model:put put:called ([5043cf3](https://github.com/dynamoosejs/dynamoose/commit/5043cf3))
+
+## [1.7.3](https://github.com/dynamoosejs/dynamoose/compare/v1.7.2...v1.7.3) (2019-05-15)
+
+
+### Bug Fixes
+
+* **model:** allows string for array attribute in contains condition ([f68c13a](https://github.com/dynamoosejs/dynamoose/commit/f68c13a))
+
+## [1.7.2](https://github.com/dynamoosejs/dynamoose/compare/v1.7.1...v1.7.2) (2019-03-18)
+
+
+### Bug Fixes
+
+* **types:** minor updates to typings ([63bb60d](https://github.com/dynamoosejs/dynamoose/commit/63bb60d)), closes [#599](https://github.com/dynamoosejs/dynamoose/issues/599) [#600](https://github.com/dynamoosejs/dynamoose/issues/600)
+
+## [1.7.1](https://github.com/dynamoosejs/dynamoose/compare/v1.7.0...v1.7.1) (2019-03-18)
+
+
+### Bug Fixes
+
+* **naming:** remove extension from name ([ca346d0](https://github.com/dynamoosejs/dynamoose/commit/ca346d0))
+
+# [1.7.0](https://github.com/dynamoosejs/dynamoose/compare/v1.6.5...v1.7.0) (2019-03-18)
+
+
+### Features
+
+* **ts:** adding ts testing, compiling and exports ([0d2ef68](https://github.com/dynamoosejs/dynamoose/commit/0d2ef68))
+* **ts:** fix ci script to also lint typescript ([992c7ff](https://github.com/dynamoosejs/dynamoose/commit/992c7ff))
+* **ts:** fixing spelling ([e087570](https://github.com/dynamoosejs/dynamoose/commit/e087570))
+
 ## [1.6.5](https://github.com/dynamoosejs/dynamoose/compare/v1.6.4...v1.6.5) (2019-03-03)
 
 

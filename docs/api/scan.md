@@ -157,3 +157,11 @@ If you used a filter in the scan, then `count` is the number of items returned a
 ### scan.consistent()
 
 Scan with consistent read.
+
+### scan.using(index)
+
+Scan can be performed on a [sparse index](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-indexes-general-sparse-indexes.html) instead of the entire table. To scan an index you have to manually specify which index to use by adding the `scan.using` method to your scan chain. The string you pass into the `scan.using` method must match the name of an index on your table. Unlike query, this method is required for index scanning.
+
+```js
+Dog.scan().using('BreedRangeIndex').where('breed').beginsWith('Sp')
+```

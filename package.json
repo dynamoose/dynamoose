@@ -1,6 +1,6 @@
 {
   "name": "dynamoose",
-  "version": "1.6.5",
+  "version": "1.11.0",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "typings": "./dynamoose.d.ts",
   "homepage": "https://dynamoosejs.com",
@@ -11,19 +11,19 @@
   "bugs": {
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "files": [
-    "index.js",
     "dynamoose.d.ts",
-    "lib/*"
+    "dist/*"
   ],
   "scripts": {
-    "test": "mocha",
-    "test:debug": "mocha --inspect",
-    "test:debug:brk": "mocha --inspect-brk",
+    "test": "ts-mocha test/",
+    "test:debug": "ts-mocha --inspect test/",
+    "test:debug:brk": "ts-mocha --inspect-brk test/",
     "lint": "eslint .",
+    "tslint": "tslint lib/**/*.ts",
     "coverage": "nyc npm test",
-    "ci": "npm run lint && npm run coverage",
+    "ci": "npm run lint && npm run tslint && npm run coverage",
     "coveralls-ci": "npm run ci && nyc report --reporter=text-lcov | coveralls"
   },
   "keywords": [
@@ -58,9 +58,14 @@
     "jsdoc-to-markdown": "^5.0.0",
     "mocha": "^5.2.0",
     "nyc": "^13.1.0",
-    "should": "^13.2.3"
+    "should": "^13.2.3",
+    "ts-mocha": "6.0.0",
+    "ts-node": "8.0.3",
+    "tslint": "5.13.1",
+    "typescript": "3.3.3333"
   },
   "dependencies": {
+    "@types/node": "11.11.0",
     "aws-sdk": "^2.395.0",
     "debug": "^4.1.1",
     "deep-equal": "^1.0.1",
@@ -88,7 +93,7 @@
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "npm run lint",
+      "pre-commit": "npm run lint && npm run tslint",
       "pre-push": "npm run ci"
     }
   },

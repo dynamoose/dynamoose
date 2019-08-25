@@ -29,7 +29,7 @@ module.exports = {
     'id-length': ['error', {'min': 1}],
     'max-params': ['error', {'max': 5}],
     'max-statements': ['error', {'max': 130}],
-    'max-lines': ['error', {'max': 3600}],
+    'max-lines': ['error', {'max': 3700}],
     'complexity': ['error', {'max': 75}],
     'max-lines-per-function': ['error', {'max': 3600}],
     'max-statements-per-line': ['error', {'max': 6}],

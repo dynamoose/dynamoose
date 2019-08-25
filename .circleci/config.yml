@@ -1,0 +1,24 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: |
+          git config --global user.email $GH_EMAIL
+          git config --global user.name $GH_USER
+          git remote add gh-token "https://${GH_TOKEN}@github.com/dynamoosejs/dynamoose.git"
+          git fetch gh-token && git fetch gh-token gh-pages:gh-pages
+          pip install mkdocs mkdocs-material
+          mkdocs gh-deploy -v --clean --remote-name gh-token
+
+workflows:
+  version: 2
+  build-docs:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+
