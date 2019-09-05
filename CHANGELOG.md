@@ -1,5 +1,12 @@
 # Dynamoose Changelog
 
+## [1.11.1](https://github.com/dynamoosejs/dynamoose/compare/v1.11.0...v1.11.1) (2019-09-05)
+
+
+### Bug Fixes
+
+* fixing model.transaction.conditioncheck ([cc04bee](https://github.com/dynamoosejs/dynamoose/commit/cc04bee)), closes [#539](https://github.com/dynamoosejs/dynamoose/issues/539)
+
 # [1.11.0](https://github.com/dynamoosejs/dynamoose/compare/v1.10.0...v1.11.0) (2019-08-25)
 
 
