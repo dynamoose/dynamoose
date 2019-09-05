@@ -47,6 +47,7 @@ odie.save({
 ```
 
 Options:
+
   - overwrite: should overwrite the existing item in DynamoDB (default: true)
   - updateExpires: should update the expires timestamp if exists (default: false)
   - updateTimestamps: should update the updatedAt timestamp if exists (default: true)
