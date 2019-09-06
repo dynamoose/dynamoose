@@ -272,7 +272,7 @@ If an object is passed in it must have a `toDynamo` property that is a function.
 
 Adds a getter function that will be used to transform the value directly returned from the DB. This skips all type management and parsing normally provided by `options.get`.
 
-Your function may also be an async function with `await` statements in it, or return a promise. For example:
+Your function may also be an async function with `await` statements in it, or you may return a promise. For example:
 
 ```js
 function(val) {
