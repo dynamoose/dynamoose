@@ -1,121 +1,27 @@
 {
   "name": "dynamoose",
-  "version": "1.11.1",
-  "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
-  "typings": "./dynamoose.d.ts",
-  "homepage": "https://dynamoosejs.com",
+  "version": "2.0.0-alpha.0",
+  "description": "",
+  "main": "lib/index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dynamoosejs/dynamoose"
+    "url": "git+https://github.com/dynamoosejs/dynamoose.git"
   },
+  "author": "Brandon Goode",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
-  "main": "dist/index.js",
-  "files": [
-    "dynamoose.d.ts",
-    "dist/*"
-  ],
-  "scripts": {
-    "test": "ts-mocha test/",
-    "test:debug": "ts-mocha --inspect test/",
-    "test:debug:brk": "ts-mocha --inspect-brk test/",
-    "lint": "eslint .",
-    "tslint": "tslint lib/**/*.ts",
-    "coverage": "nyc npm test",
-    "prepare": "tsc",
-    "commit": "git-cz",
-    "sem-rel": "semantic-release",
-    "lint:commit": "commitlint -E $GIT_PARAMS",
-    "ci": "npm run lint && npm run tslint && npm run coverage",
-    "coveralls-ci": "npm run ci && nyc report --reporter=text-lcov | coveralls"
-  },
-  "keywords": [
-    "dynamodb",
-    "dynamo",
-    "mongoose",
-    "aws",
-    "amazon",
-    "document",
-    "model",
-    "schema",
-    "database",
-    "data",
-    "datastore",
-    "query",
-    "scan",
-    "nosql",
-    "db",
-    "nosql",
-    "store",
-    "document store",
-    "table",
-    "json"
-  ],
-  "author": "Brandon Goode",
-  "license": "MIT",
-  "devDependencies": {
-    "@commitlint/cli": "7.5.1",
-    "@commitlint/config-conventional": "7.5.0",
-    "@semantic-release/changelog": "3.0.2",
-    "@semantic-release/commit-analyzer": "6.1.0",
-    "@semantic-release/git": "7.0.8",
-    "@semantic-release/github": "5.2.10",
-    "@semantic-release/npm": "5.1.4",
-    "@semantic-release/release-notes-generator": "7.1.4",
-    "commitizen": "3.0.7",
-    "coveralls": "3.0.2",
-    "cz-conventional-changelog": "2.1.0",
-    "dynamodb-local": "0.0.24",
-    "eslint": "5.13.0",
-    "glob": "7.1.3",
-    "husky": "1.3.1",
-    "jsdoc-to-markdown": "^5.0.0",
-    "mocha": "5.2.0",
-    "nyc": "14.1.1",
-    "semantic-release": "^15.13.16",
-    "should": "13.2.3",
-    "ts-mocha": "6.0.0",
-    "ts-node": "8.0.3",
-    "tslint": "5.13.1",
-    "typescript": "3.3.3333"
-  },
-  "dependencies": {
-    "@types/node": "11.11.0",
-    "aws-sdk": "2.395.0",
-    "debug": "4.1.1",
-    "deep-equal": "1.0.1",
-    "hooks": "0.3.2",
-    "object-path": "0.11.4",
-    "q": "1.5.1"
-  },
-  "engines": {
-    "node": ">=8.0.0"
-  },
-  "nyc": {
-    "include": [
-      "lib/**/*.js"
-    ],
-    "reporter": [
-      "html",
-      "text-summary"
-    ],
-    "check-coverage": true,
-    "lines": 80,
-    "statements": 80,
-    "functions": 80,
-    "branches": 80
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "npm run lint && npm run tslint",
-      "pre-push": "npm run ci"
-    }
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
-  }
+  "homepage": "https://github.com/dynamoosejs/dynamoose#readme"
 }
