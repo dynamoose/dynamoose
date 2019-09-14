@@ -1,0 +1,8 @@
+{
+	"exclude": [
+		"manual_test",
+		"test",
+		"coverage",
+		".eslintrc.js"
+	]
+}

@@ -6,13 +6,20 @@
   "directories": {
     "doc": "docs"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mongoose": "^5.7.1"
+  },
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^6.2.0"
+    "eslint": "^6.4.0",
+    "mocha": "^6.2.0",
+    "nyc": "^14.1.1"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "nyc --all mocha && npm run report-coverage",
+    "test-nocoverage": "mocha",
+    "lint": "eslint .",
+    "report-coverage": "nyc report --reporter=html"
   },
   "repository": {
     "type": "git",
