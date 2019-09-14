@@ -6,9 +6,6 @@
   "directories": {
     "doc": "docs"
   },
-  "dependencies": {
-    "mongoose": "^5.7.1"
-  },
   "devDependencies": {
     "chai": "^4.2.0",
     "eslint": "^6.4.0",

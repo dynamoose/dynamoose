@@ -16,26 +16,36 @@ describe("Model", () => {
 	});
 
 	describe("Initalization", () => {
-		it("Should throw an error if no schema is passed in", () => {
-			expect(() => new dynamoose.model("Cat")).to.throw(Error.MissingSchemaError);
-		});
+		const options = [
+			// TODO: Mongoose supports using the `new` keyword when creating a model with no error
+			// {"name": "Using new keyword", "func": (...args) => new dynamoose.model(...args)},
+			{"name": "Without new keyword", "func": (...args) => dynamoose.model(...args)}
+		];
 
-		it("Should throw same error as no schema if nothing passed in", () => {
-			expect(() => new dynamoose.model()).to.throw(Error.MissingSchemaError);
-		});
+		options.forEach((option) => {
+			describe(option.name, () => {
+				it("Should throw an error if no schema is passed in", () => {
+					expect(() => option.func("Cat")).to.throw(Error.MissingSchemaError);
+				});
 
-		it("Should create a schema if not passing in schema instance", () => {
-			const schema = {"name": String};
-			const Cat = new dynamoose.model("Cat", schema);
-			expect(Cat.schema).to.not.eql(schema);
-			expect(Cat.schema instanceof dynamoose.Schema).to.be.true;
-		});
+				it("Should throw same error as no schema if nothing passed in", () => {
+					expect(() => option.func()).to.throw(Error.MissingSchemaError);
+				});
 
-		it("Should use schema instance if passed in", () => {
-			const schema = new dynamoose.Schema({"name": String});
-			const Cat = new dynamoose.model("Cat", schema);
-			expect(Cat.schema).to.eql(schema);
-			expect(Cat.schema instanceof dynamoose.Schema).to.be.true;
+				it("Should create a schema if not passing in schema instance", () => {
+					const schema = {"name": String};
+					const Cat = option.func("Cat", schema);
+					expect(Cat.schema).to.not.eql(schema);
+					expect(Cat.schema instanceof dynamoose.Schema).to.be.true;
+				});
+
+				it("Should use schema instance if passed in", () => {
+					const schema = new dynamoose.Schema({"name": String});
+					const Cat = option.func("Cat", schema);
+					expect(Cat.schema).to.eql(schema);
+					expect(Cat.schema instanceof dynamoose.Schema).to.be.true;
+				});
+			});
 		});
 	});
 });

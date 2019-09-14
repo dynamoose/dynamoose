@@ -9,9 +9,11 @@ mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true});
 // mongoose.model();
 
 
-const schema = new mongoose.Schema({"name": String});
-const schemaB = new mongoose.Schema(schema);
+// const schema = new mongoose.Schema({"name": String});
+// const schemaB = new mongoose.Schema(schema);
 
+const Cat = mongoose.model('Cat', { name: String });
+const CatB = new mongoose.model('CatB', { name: String });
 
-console.log(schema);
-console.log(schemaB);
+console.log(Cat);
+console.log(CatB);
