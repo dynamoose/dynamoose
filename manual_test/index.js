@@ -1,4 +1,4 @@
-const dynamoose = require("dynamoose");
+const dynamoose = require("../lib");
 
 const Cat = dynamoose.model("Cat", { "name": String });
 
