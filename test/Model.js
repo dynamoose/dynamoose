@@ -49,3 +49,15 @@ describe("Model", () => {
 		});
 	});
 });
+
+describe("model", () => {
+	let Cat;
+	beforeEach(() => {
+		const schema = new dynamoose.Schema({"name": String});
+		Cat = dynamoose.model("Cat", schema);
+	});
+
+	it("Should allow creating instance of Model", () => {
+		expect(() => new Cat({"name": "Bob"})).to.not.throw();
+	});
+});
