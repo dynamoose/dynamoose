@@ -86,7 +86,7 @@ declare module "dynamoose" {
     throughput?: boolean | { read: number, write: number } | "ON_DEMAND";
     useNativeBooleans?: boolean;
     useDocumentTypes?: boolean;
-    timestamps?: boolean | { createdAt: string, updatedAt: string };
+    timestamps?: boolean | { createdAt?: string | boolean, updatedAt?: string|boolean };
     expires?: number | { ttl: number, attribute: string, returnExpiredItems: boolean };
     saveUnknown?: boolean;
 
