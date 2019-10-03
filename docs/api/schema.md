@@ -361,35 +361,6 @@ var schema = new Schema({...}, {
   timestamps: true
 });
 ```
-You can specify to add only createdAt or updatedAt only, like in the examples below that add only createdAt field:
-```js
-var schema = new Schema({...}, {
-  throughput: 5,
-  timestamps: {
-    createdAt: true
-    updatedAt: false
-  }
-});
-```
-or also: 
-```js
-var schema = new Schema({...}, {
-  throughput: 5,
-  timestamps: {
-    createdAt: 'creationDate'
-    updatedAt: false
-  }
-});
-```
-or even: 
-```js
-var schema = new Schema({...}, {
-  throughput: 5,
-  timestamps: {
-    updatedAt: false
-  }
-});
-```
 
 You can specify the names that the fields will use, like in the following example:
 

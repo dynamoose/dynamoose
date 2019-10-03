@@ -73,7 +73,7 @@
     "jsdoc-to-markdown": "^5.0.0",
     "mocha": "5.2.0",
     "nyc": "14.1.1",
-    "semantic-release": "^15.13.16",
+    "semantic-release": "^15.13.25",
     "should": "13.2.3",
     "ts-mocha": "6.0.0",
     "ts-node": "8.0.3",
