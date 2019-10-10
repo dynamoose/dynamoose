@@ -293,6 +293,116 @@ describe('Schema tests', function () {
 
     done();
   });
+  it('Schema with only createdAt timestamp options', (done) => {
+    const schema1 = new Schema({
+      'id': {
+        'type': Number,
+        'rangeKey': true
+      },
+      'name': {
+        'type': String,
+        'required': true
+      }
+    },
+    {
+      'throughput': {'read': 10, 'write': 2},
+      'timestamps': {
+        'updatedAt': false
+      }
+    });
+
+    const schema2 = new Schema({
+      'id': {
+        'type': Number,
+        'rangeKey': true
+      },
+      'name': {
+        'type': String,
+        'required': true
+      }
+    },
+    {
+      'throughput': {'read': 10, 'write': 2},
+      'timestamps': {'createdAt': 'createDate', 'updatedAt': false}
+    });
+
+    //
+    // Schema1 timestamps validation
+    //
+    should.exist(schema1.timestamps);
+    should.exist(schema1.timestamps.createdAt);
+    schema1.timestamps.createdAt.should.be.equal('createdAt');
+    should.not.exist(schema1.attributes.updatedAt);
+
+    schema1.attributes.createdAt.type.name.should.eql('date');
+    should.exist(schema1.attributes.createdAt.default);
+
+    //
+    // Schema2 timestamps validation
+    //
+    should.exist(schema2.timestamps);
+    should.exist(schema2.timestamps.createdAt);
+    schema2.timestamps.createdAt.should.be.equal('createDate');
+
+    schema2.attributes.createDate.type.name.should.eql('date');
+    should.exist(schema2.attributes.createDate.default);
+    done();
+  });
+  it('Schema with only updatedAt timestamp options', (done) => {
+    const schema1 = new Schema({
+      'id': {
+        'type': Number,
+        'rangeKey': true
+      },
+      'name': {
+        'type': String,
+        'required': true
+      }
+    },
+    {
+      'throughput': {'read': 10, 'write': 2},
+      'timestamps': {
+        'createdAt': false
+      }
+    });
+
+    const schema2 = new Schema({
+      'id': {
+        'type': Number,
+        'rangeKey': true
+      },
+      'name': {
+        'type': String,
+        'required': true
+      }
+    },
+    {
+      'throughput': {'read': 10, 'write': 2},
+      'timestamps': {'createdAt': false, 'updatedAt': 'updateDate'}
+    });
+
+    //
+    // Schema1 updatedAt timestamp validation
+    //
+    should.exist(schema1.timestamps);
+    should.exist(schema1.timestamps.updatedAt);
+    schema1.timestamps.updatedAt.should.be.equal('updatedAt');
+    should.not.exist(schema1.attributes.createdAt);
+
+    schema1.attributes.updatedAt.type.name.should.eql('date');
+    should.exist(schema1.attributes.updatedAt.default);
+
+    //
+    // Schema2 updatedAt timestamp validation
+    //
+    should.exist(schema2.timestamps);
+    should.exist(schema2.timestamps.updatedAt);
+    schema2.timestamps.updatedAt.should.be.equal('updateDate');
+
+    schema2.attributes.updateDate.type.name.should.eql('date');
+    should.exist(schema2.attributes.updateDate.default);
+    done();
+  });
 
 
   it('Schema with timestamps options that are rangeKey', () => {
