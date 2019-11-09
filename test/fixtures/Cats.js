@@ -394,6 +394,20 @@ module.exports = function (dynamoose) {
     'defaultReturnValues': 'NONE'
   });
 
+  const CatWithTimestampRangeKey = dynamoose.model('CatWithTimestampRangeKey', {
+    'ownerId': {
+      'type': Number,
+      'hashKey': true
+    },
+    'createdAt': {
+      'type': Date,
+      'rangeKey': true
+    },
+    'name': String
+  }, {
+    'timestamps': true
+  });
+
   return {
     Cat,
     Cat1,
@@ -418,6 +432,7 @@ module.exports = function (dynamoose) {
     CatWithGeneratedID,
     CatWithMethods,
     CatModel,
-    ReturnValuesNoneCat
+    ReturnValuesNoneCat,
+    CatWithTimestampRangeKey
   };
 };

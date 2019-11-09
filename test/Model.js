@@ -1133,9 +1133,12 @@ describe('Model', function () {
     });
   });
 
+  it('Delete item with timestamp rangeKey', async () => {
+    const cat = await Cats.CatWithTimestampRangeKey.create({'ownerId': 1});
+    await cat.delete();
+  });
+
   it('Get missing item', (done) => {
-
-
     Cats.Cat.get(1, (err, model) => {
       should.not.exist(err);
       should.not.exist(model);
