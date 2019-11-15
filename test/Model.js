@@ -18,7 +18,7 @@ describe("Model", () => {
 	describe("Initalization", () => {
 		const options = [
 			// TODO: Mongoose supports using the `new` keyword when creating a model with no error
-			// {"name": "Using new keyword", "func": (...args) => new dynamoose.model(...args)},
+			{"name": "Using new keyword", "func": (...args) => new dynamoose.model(...args)},
 			{"name": "Without new keyword", "func": (...args) => dynamoose.model(...args)}
 		];
 
@@ -35,15 +35,15 @@ describe("Model", () => {
 				it("Should create a schema if not passing in schema instance", () => {
 					const schema = {"name": String};
 					const Cat = option.func("Cat", schema);
-					expect(Cat.schema).to.not.eql(schema);
-					expect(Cat.schema instanceof dynamoose.Schema).to.be.true;
+					expect(Cat.Model.schema).to.not.eql(schema);
+					expect(Cat.Model.schema instanceof dynamoose.Schema).to.be.true;
 				});
 
 				it("Should use schema instance if passed in", () => {
 					const schema = new dynamoose.Schema({"name": String});
 					const Cat = option.func("Cat", schema);
-					expect(Cat.schema).to.eql(schema);
-					expect(Cat.schema instanceof dynamoose.Schema).to.be.true;
+					expect(Cat.Model.schema).to.eql(schema);
+					expect(Cat.Model.schema instanceof dynamoose.Schema).to.be.true;
 				});
 			});
 		});

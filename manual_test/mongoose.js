@@ -17,3 +17,9 @@ const CatB = new mongoose.model('CatB', { name: String });
 
 console.log(Cat);
 console.log(CatB);
+
+const itemA = new Cat({"name": "Test"});
+const itemB = Cat({"name": "Test2"});
+
+console.log(itemA);
+console.log(itemB);

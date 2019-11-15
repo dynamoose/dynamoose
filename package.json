@@ -22,7 +22,7 @@
     "type": "git",
     "url": "git+https://github.com/dynamoosejs/dynamoose.git"
   },
-  "author": "Brandon Goode",
+  "author": "Charlie Fish & Brandon Goode",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
