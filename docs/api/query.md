@@ -22,7 +22,24 @@ Queries a table or index, sets [`query.limit`](#querylimitlimit) to `1`.
 
 ### query.exec(callback)
 
-Executes the query against the table or index.
+Executes the query against the table or index. If no callback is provided, this returns a promise.
+
+```js
+Dog.query('breed').eq('Beagle').exec(function (err, dogs) {
+  // Look at all the beagles
+});
+```
+
+```js
+async function getBeagles() {
+  try {
+    const beagles = await Dog.query('breed').eq('Beagle').exec()
+    // Find out something about beagles
+  } catch (err) {
+    // Handle error
+  }
+}
+```
 
 ### query.all([delay[, max]])
 
