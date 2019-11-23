@@ -133,6 +133,19 @@ Sort in ascending order (default).
 
 Start query at key. Use `lastKey` returned in query.exec() callback.
 
+**Note:** `lastKey` is returned and must be passed as an object in the AWS format with type annotations
+
+```js
+{
+  "myPartitionKey": {
+    "S": "id"
+  },
+  "myRangeKey": {
+    "N": 123
+  }
+}
+```
+
 ### query.attributes(attributes)
 
 Set the list of attributes to return.
