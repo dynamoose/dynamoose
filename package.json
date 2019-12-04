@@ -27,5 +27,8 @@
   "bugs": {
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
-  "homepage": "https://github.com/dynamoosejs/dynamoose#readme"
+  "homepage": "https://github.com/dynamoosejs/dynamoose#readme",
+  "dependencies": {
+    "aws-sdk": "^2.584.0"
+  }
 }
