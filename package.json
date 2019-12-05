@@ -13,8 +13,8 @@
     "nyc": "^14.1.1"
   },
   "scripts": {
-    "test": "nyc --all mocha && npm run report-coverage",
-    "test-nocoverage": "mocha",
+    "test": "nyc --all mocha --recursive && npm run report-coverage",
+    "test-nocoverage": "mocha --recursive",
     "lint": "eslint .",
     "report-coverage": "nyc report --reporter=html"
   },
