@@ -17,7 +17,6 @@ describe("Model", () => {
 
 	describe("Initalization", () => {
 		const options = [
-			// TODO: Mongoose supports using the `new` keyword when creating a model with no error
 			{"name": "Using new keyword", "func": (...args) => new dynamoose.model(...args)},
 			{"name": "Without new keyword", "func": (...args) => dynamoose.model(...args)}
 		];
