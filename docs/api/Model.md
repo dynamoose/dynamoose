@@ -15,3 +15,7 @@ const Cat = dynamoose.model("Cat", {"name": String});
 ```
 
 The config parameter is an object used to customize settings for the model.
+
+// TODO: Add details about config parameter and what the default values are.
+
+// TODO: add details about how to set the default values for the model config parameter
