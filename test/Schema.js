@@ -6,8 +6,11 @@ describe("Schema", () => {
 		expect(Schema).to.be.a("function");
 	});
 
-	// TODO: enable this test below
-	it.skip("Should throw an error if nothing passed in", () => {
+	it("Should throw an error if nothing passed in", () => {
 		expect(() => new Schema()).to.throw();
+	});
+
+	it("Should throw an error if empty object passed in", () => {
+		expect(() => new Schema({})).to.throw();
 	});
 });
