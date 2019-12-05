@@ -44,6 +44,38 @@ describe("Model", () => {
 					expect(Cat.Model.schema).to.eql(schema);
 					expect(Cat.Model.schema instanceof dynamoose.Schema).to.be.true;
 				});
+
+				// Prefixes & Suffixes
+				afterEach(() => {
+					dynamoose.model.defaults = {};
+				});
+				const optionsB = [
+					{"name": "Prefix", "value": "prefix", "check": (val, result) => expect(result).to.match(new RegExp(`^${val}`))},
+					{"name": "Suffix", "value": "suffix", "check": (val, result) => expect(result).to.match(new RegExp(`${val}$`))}
+				];
+				const optionsC = [
+					{"name": "Defaults", "func": (type, value, ...args) => {
+						dynamoose.model.defaults = {[type]: value};
+						return option.func(...args);
+					}},
+					{"name": "Options", "func": (type, value, ...args) => option.func(...args, {[type]: value})}
+				];
+				optionsB.forEach((optionB) => {
+					describe(optionB.name, () => {
+						optionsC.forEach((optionC) => {
+							describe(optionC.name, () => {
+								it("Should result in correct model name", () => {
+									const extension = "MyApp";
+									const tableName = "Users";
+									const model = optionC.func(optionB.value, extension, tableName, {"id": String});
+									expect(model.Model.name).to.include(extension);
+									expect(model.Model.name).to.not.eql(tableName);
+								});
+							});
+						});
+					});
+				});
+
 			});
 		});
 	});
