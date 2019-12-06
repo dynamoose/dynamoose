@@ -14,6 +14,12 @@ const dynamoose = require("dynamoose");
 const Cat = dynamoose.model("Cat", {"name": String});
 ```
 
+```js
+const dynamoose = require("dynamoose");
+
+const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
+```
+
 The config parameter is an object used to customize settings for the model.
 
 | Name | Description | Type | Default |
@@ -25,6 +31,20 @@ The config parameter is an object used to customize settings for the model.
 | prefix | A string that should be prepended to every model name. | String | "" |
 | suffix | A string that should be appended to every model name. | String | "" |
 
+The default object is listed below.
+
+```js
+{
+	"create": true,
+	"throughput": {
+		"read": 5,
+		"write": 5
+	},
+	"prefix": "",
+	"suffix": ""
+}
+```
+
 ## dynamoose.model.defaults
 
 The `dynamoose.model.defaults` object is a property you can edit to set default values for the config object for new models that are created. Ensure that you set this property before initializing your models to ensure the defaults are applied to your models.
@@ -34,6 +54,8 @@ The priority of how the configuration gets set for new models is:
 - Configuration object passed into model creation
 - Custom defaults provided by `dynamoose.model.defaults`
 - Dynamoose internal defaults
+
+In the event that properties are not passed into the configuration object or custom defaults, the Dynamoose internal defaults will be used.
 
 You can set the defaults by setting the property to a custom object:
 
@@ -48,7 +70,3 @@ In order to revert to the default and remove custom defaults you can set it to a
 ```js
 dynamoose.model.defaults = {};
 ```
-
-
-
-// TODO: Add details about config parameter and what the default values are.
