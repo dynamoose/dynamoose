@@ -16,6 +16,39 @@ const Cat = dynamoose.model("Cat", {"name": String});
 
 The config parameter is an object used to customize settings for the model.
 
-// TODO: Add details about config parameter and what the default values are.
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| create | If Dynamoose should attempt to create the table on DynamoDB. For production environments we recommend setting this value to `false`. | Boolean | true |
+| throughput | An object with settings for what the throughput for the table should be on creation. If the table is not created by Dynamoose, this object has no effect. | Object |  |
+| throughput.read | What the read throughput should be set to. | Number | 5 |
+| throughput.write | What the write throughput should be set to. | Number | 5 |
+| prefix | A string that should be prepended to every model name. | String | "" |
+| suffix | A string that should be appended to every model name. | String | "" |
 
-// TODO: add details about how to set the default values for the model config parameter
+## dynamoose.model.defaults
+
+The `dynamoose.model.defaults` object is a property you can edit to set default values for the config object for new models that are created. Ensure that you set this property before initializing your models to ensure the defaults are applied to your models.
+
+The priority of how the configuration gets set for new models is:
+
+- Configuration object passed into model creation
+- Custom defaults provided by `dynamoose.model.defaults`
+- Dynamoose internal defaults
+
+You can set the defaults by setting the property to a custom object:
+
+```js
+dynamoose.model.defaults = {
+	"prefix": "MyApplication_"
+};
+```
+
+In order to revert to the default and remove custom defaults you can set it to an empty object:
+
+```js
+dynamoose.model.defaults = {};
+```
+
+
+
+// TODO: Add details about config parameter and what the default values are.
