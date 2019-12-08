@@ -3,6 +3,13 @@ const dynamoose = require("../lib");
 const Error = require("../lib/Error");
 
 describe("Model", () => {
+	beforeEach(() => {
+		dynamoose.model.defaults = {"create": false};
+	});
+	afterEach(() => {
+		dynamoose.model.defaults = {};
+	});
+
 	it("Should have a model proprety on the dynamoose object", () => {
 		expect(dynamoose.model).to.exist;
 	});
@@ -46,16 +53,13 @@ describe("Model", () => {
 				});
 
 				// Prefixes & Suffixes
-				afterEach(() => {
-					dynamoose.model.defaults = {};
-				});
 				const optionsB = [
 					{"name": "Prefix", "value": "prefix", "check": (val, result) => expect(result).to.match(new RegExp(`^${val}`))},
 					{"name": "Suffix", "value": "suffix", "check": (val, result) => expect(result).to.match(new RegExp(`${val}$`))}
 				];
 				const optionsC = [
 					{"name": "Defaults", "func": (type, value, ...args) => {
-						dynamoose.model.defaults = {[type]: value};
+						dynamoose.model.defaults = {...dynamoose.model.defaults, [type]: value};
 						return option.func(...args);
 					}},
 					{"name": "Options", "func": (type, value, ...args) => option.func(...args, {[type]: value})}
@@ -76,12 +80,83 @@ describe("Model", () => {
 					});
 				});
 
+				describe("Model.ready", () => {
+					it("Should not be ready to start", () => {
+						expect(option.func("Cat", {"id": String}, {"create": false}).Model.ready).to.be.false;
+					});
+
+					it("Should set ready after setup flow", async () => {
+						const model = option.func("Cat", {"id": String}, {"create": false});
+						await setImmediatePromise();
+						expect(model.Model.ready).to.be.true;
+					});
+				});
+
+				describe("Creation", () => {
+					let createTableParams = null;
+					beforeEach(() => {
+						dynamoose.model.defaults = {};
+					});
+					beforeEach(() => {
+						createTableParams = null;
+						dynamoose.aws.ddb.set({
+							"createTable": (params) => {
+								createTableParams = params;
+								return {
+									"promise": () => Promise.resolve()
+								};
+							}
+						});
+					});
+					afterEach(() => {
+						createTableParams = null;
+						dynamoose.aws.ddb.revert();
+					});
+
+					it("Should call createTable with correct parameters", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String});
+						await setImmediatePromise();
+						expect(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 5,
+								"WriteCapacityUnits": 5
+							},
+							"TableName": tableName
+						});
+					});
+
+					it("Should not call createTable if create option set to false", async () => {
+						option.func("Cat", {"id": String}, {"create": false});
+						await setImmediatePromise();
+						expect(createTableParams).to.eql(null);
+					});
+				});
 			});
 		});
 	});
 });
 
 describe("model", () => {
+	beforeEach(() => {
+		dynamoose.model.defaults = {"create": false};
+	});
+	afterEach(() => {
+		dynamoose.model.defaults = {};
+	});
+
 	let Cat;
 	beforeEach(() => {
 		const schema = new dynamoose.Schema({"name": String});
@@ -92,3 +167,8 @@ describe("model", () => {
 		expect(() => new Cat({"name": "Bob"})).to.not.throw();
 	});
 });
+
+// This function is used to turn `setImmediate` into a promise. This is espescially useful if you want to wait for pending promises to fire and complete before running the asserts on a test.
+function setImmediatePromise() {
+	return new Promise((resolve) => setImmediate(resolve));
+}
