@@ -36,6 +36,11 @@ describe("Schema", () => {
 					"favoriteNumbers": [Number],
 					"favoriteDates": [Date],
 					"favoritePictures": [Buffer],
+					"favoriteTypes": [Boolean],
+					"favoriteObjects": [Object],
+					"favoriteFriends": [Array],
+					"emptyItem": Symbol,
+					"emptyItems": [Symbol]
 				}
 			},
 			{
@@ -54,6 +59,9 @@ describe("Schema", () => {
 			},
 		];
 		const tests = [
+			{"input": undefined, "output": undefined},
+			{"input": null, "output": undefined},
+			{"input": "random", "output": undefined},
 			{"input": "id", "output": "S"},
 			{"input": "name", "output": "S"},
 			{"input": "age", "output": "N"},
@@ -65,7 +73,12 @@ describe("Schema", () => {
 			{"input": "favoriteFoods", "output": "SS", "collection": 1},
 			{"input": "favoriteNumbers", "output": "NS", "collection": 1},
 			{"input": "favoriteDates", "output": "NS", "collection": 1},
-			{"input": "favoritePictures", "output": "BS", "collection": 1},
+			{"input": "favoritePictures", "output": null, "collection": 1},
+			{"input": "favoriteTypes", "output": null, "collection": 1},
+			{"input": "favoriteObjects", "output": null, "collection": 1},
+			{"input": "favoriteFriends", "output": null, "collection": 1},
+			{"input": "emptyItem", "output": null, "collection": 1},
+			{"input": "emptyItems", "output": null, "collection": 1}
 		];
 		schemas.forEach((schemaObj) => {
 			["standard", "objectTypes"].forEach((type) => {
@@ -85,9 +98,15 @@ describe("Schema", () => {
 
 					tests.forEach((test) => {
 						if (!test.collection || test.collection === schemaObj.collection) {
-							it(`Should return ${test.output} for ${test.input}`, () => {
-								expect(schema.getAttributeType(test.input)).to.eql(test.output);
-							});
+							if (!test.output) {
+								it(`Should throw error for ${test.input}`, () => {
+									expect(() => schema.getAttributeType(test.input)).to.throw();
+								});
+							} else {
+								it(`Should return ${test.output} for ${test.input}`, () => {
+									expect(schema.getAttributeType(test.input)).to.eql(test.output);
+								});
+							}
 						}
 					});
 				});
