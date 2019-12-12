@@ -170,6 +170,7 @@ describe("model", () => {
 	});
 });
 
+// TODO: move the following function into a utils file
 // This function is used to turn `setImmediate` into a promise. This is espescially useful if you want to wait for pending promises to fire and complete before running the asserts on a test.
 function setImmediatePromise() {
 	return new Promise((resolve) => setImmediate(resolve));
