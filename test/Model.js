@@ -4,7 +4,7 @@ const Error = require("../lib/Error");
 
 describe("Model", () => {
 	beforeEach(() => {
-		dynamoose.model.defaults = {"create": false};
+		dynamoose.model.defaults = {"create": false, "waitForActive": false};
 	});
 	afterEach(() => {
 		dynamoose.model.defaults = {};
@@ -95,7 +95,9 @@ describe("Model", () => {
 				describe("Creation", () => {
 					let createTableParams = null;
 					beforeEach(() => {
-						dynamoose.model.defaults = {};
+						dynamoose.model.defaults = {
+							"waitForActive": false
+						};
 					});
 					beforeEach(() => {
 						createTableParams = null;
@@ -151,7 +153,7 @@ describe("Model", () => {
 
 describe("model", () => {
 	beforeEach(() => {
-		dynamoose.model.defaults = {"create": false};
+		dynamoose.model.defaults = {"create": false, "waitForActive": false};
 	});
 	afterEach(() => {
 		dynamoose.model.defaults = {};
