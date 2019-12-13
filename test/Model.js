@@ -1,6 +1,7 @@
 const {expect} = require("chai");
 const dynamoose = require("../lib");
 const Error = require("../lib/Error");
+const utils = require("../lib/utils");
 
 describe("Model", () => {
 	beforeEach(() => {
@@ -144,6 +145,83 @@ describe("Model", () => {
 						option.func("Cat", {"id": String}, {"create": false});
 						await setImmediatePromise();
 						expect(createTableParams).to.eql(null);
+					});
+				});
+
+				describe("Wait For Active", () => {
+					let describeTableParams = [], describeTableResult;
+					beforeEach(() => {
+						dynamoose.model.defaults = {
+							"create": false,
+							"waitForActive": {
+								"enabled": true,
+								"check": {
+									"timeout": 10,
+									"frequency": 1
+								}
+							}
+						};
+					});
+					beforeEach(() => {
+						describeTableParams = [];
+						dynamoose.aws.ddb.set({
+							"describeTable": (params) => {
+								describeTableParams.push(params);
+								return {
+									"promise": () => Promise.resolve(typeof describeTableResult === "function" ? describeTableResult() : describeTableResult)
+								};
+							}
+						});
+					});
+					afterEach(() => {
+						describeTableParams = [];
+						describeTableResult = null;
+						dynamoose.aws.ddb.revert();
+					});
+
+					it("Should call describeTable with correct parameters", async () => {
+						const tableName = "Cat";
+						describeTableResult = {
+							"Table": {
+								"TableStatus": "ACTIVE"
+							}
+						};
+						option.func(tableName, {"id": String});
+						await setImmediatePromise();
+						expect(describeTableParams).to.eql([{
+							"TableName": tableName
+						}]);
+					});
+
+					it("Should call describeTable with correct parameters multiple times", async () => {
+						const tableName = "Cat";
+						describeTableResult = () => ({
+							"Table": {
+								"TableStatus": describeTableParams.length > 1 ? "ACTIVE" : "CREATING"
+							}
+						});
+						option.func(tableName, {"id": String});
+						await utils.timeout(5);
+						expect(describeTableParams).to.eql([{
+							"TableName": tableName
+						}, {
+							"TableName": tableName
+						}]);
+					});
+
+					it("Should timeout according to waitForActive timeout rules", async () => {
+						const tableName = "Cat";
+						describeTableResult = () => ({
+							"Table": {
+								"TableStatus": "CREATING"
+							}
+						});
+						const model = option.func(tableName, {"id": String});
+						const errorHandler = () => {};
+						process.on("unhandledRejection", errorHandler);
+						await utils.timeout(15);
+						expect(describeTableParams.length).to.be.above(5);
+						process.removeListener("unhandledRejection", errorHandler);
 					});
 				});
 			});
