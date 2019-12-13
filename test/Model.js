@@ -146,6 +146,27 @@ describe("Model", () => {
 						await setImmediatePromise();
 						expect(createTableParams).to.eql(null);
 					});
+
+					it("Should bind request to function being called", async () => {
+						let self;
+						dynamoose.aws.ddb.set({
+							"createTable": (params) => {
+								createTableParams = params;
+								return {
+									"promise": function() {
+										self = this;
+										return Promise.resolve();
+									}
+								};
+							}
+						});
+
+						option.func("Cat", {"id": String});
+						await setImmediatePromise();
+						expect(self).to.be.an("object");
+						expect(Object.keys(self)).to.eql(["promise"]);
+						expect(self.promise).to.exist;
+					});
 				});
 
 				describe("Wait For Active", () => {
