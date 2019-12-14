@@ -23,7 +23,7 @@ describe("Document", () => {
 
 		tests.forEach((test) => {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-				expect(new Document(test.input).toDynamo()).to.eql(test.output);
+				expect(new (Document())(test.input).toDynamo()).to.eql(test.output);
 			});
 		});
 	});
@@ -69,8 +69,7 @@ describe("Document", () => {
 					}]);
 				});
 
-				// TODO: enable this test, it is currently failing because we aren't setting the model correctly on the Document
-				it.skip("Should save to correct table with multiple models", async () => {
+				it("Should save to correct table with multiple models", async () => {
 					const date = Date.now();
 					const Robot = new Model("Robot", {"id": Number, "built": Date});
 					const robot = new Robot({"id": 2, "built": date});
