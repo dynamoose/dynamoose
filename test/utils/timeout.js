@@ -11,10 +11,11 @@ describe("Timeout", () => {
 		expect(myTimeout).to.be.a("promise");
 	});
 
-	it("Should resolve in x miliseconds", async () => {
+	it("Should resolve in x milliseconds", async () => {
+		const ms = 50;
 		const timeA = Date.now();
-		await utils.timeout(100);
-		expect(Date.now() - timeA).to.be.at.least(100);
+		await utils.timeout(ms);
+		expect(Date.now() - timeA).to.be.at.least(ms);
 	});
 
 	it("Should reject if invalid number passed in", async () => {
