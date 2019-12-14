@@ -28,6 +28,25 @@ describe("Document", () => {
 		});
 	});
 
+	describe("fromDynamo", () => {
+		const tests = [
+			{
+				"input": {},
+				"output": {}
+			},
+			{
+				"input": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+				"output": {"id": 1, "name": "Charlie"}
+			}
+		];
+
+		tests.forEach((test) => {
+			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+				expect(new (Document())(test.input).fromDynamo()).to.eql(test.output);
+			});
+		});
+	});
+
 	describe("save", () => {
 		let User, user, putParams = [], putItemFunction;
 		beforeEach(() => {
