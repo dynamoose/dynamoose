@@ -23,7 +23,7 @@ describe("Model", () => {
 		expect(dynamoose.model).to.be.a("function");
 	});
 
-	describe("Initalization", () => {
+	describe("Initialization", () => {
 		const options = [
 			{"name": "Using new keyword", "func": (...args) => new dynamoose.model(...args)},
 			{"name": "Without new keyword", "func": (...args) => dynamoose.model(...args)}
