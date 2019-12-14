@@ -14,7 +14,9 @@ const Cat = dynamooseOld.model("Cat101", { "id": Number, "name": String });
 // Cat();
 // console.log(Cat instanceof dynamoose.model);
 const kitty = new Cat({ "id": 1, name: 'Zildjian' });
+const kittyB = Cat({ "id": 1, name: 'Zildjian' });
 kitty.save().then((res) => console.log(typeof res)).catch((err) => console.error(err));
+kittyB.save().then((res) => console.log(typeof res)).catch((err) => console.error(err));
 
 
 
