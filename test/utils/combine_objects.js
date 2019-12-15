@@ -48,6 +48,10 @@ describe("utils.combine_objects", () => {
 			"output": [1, 2, 3, 4, 5, 6]
 		},
 		{
+			"input": [{"a": {"b": true, "c": {"d": 1}}}, {"a": false}, {"a": {"b": true, "c": {"e": 2, "d": 3}}}],
+			"output": {"a": {"b": true, "c": {"d": 1, "e": 2}}}
+		},
+		{
 			"input": [[1, 2], {"a": "b"}],
 			"error": "You can't mix value types for the combine_objects method."
 		},
@@ -58,7 +62,7 @@ describe("utils.combine_objects", () => {
 		{
 			"input": [1],
 			"error": "You can only pass objects into combine_objects method."
-		},
+		}
 	];
 
 	tests.forEach((test) => {
