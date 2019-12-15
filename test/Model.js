@@ -329,6 +329,23 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to getItem if we pass in an object", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const user = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it("Should return object with correct values", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
@@ -353,6 +370,12 @@ describe("Model", () => {
 					}
 					expect(result).to.not.exist;
 					expect(error).to.eql({"error": "Error"});
+				});
+
+				it("Should return undefined if no object exists in DynamoDB", async () => {
+					getItemFunction = () => Promise.resolve({});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.eql(undefined);
 				});
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {

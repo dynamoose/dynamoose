@@ -80,7 +80,7 @@ dynamoose.model.defaults = {};
 
 You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return _________.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
 ## TODO: figure out what is returned with no item exists, and ensure we have unit tests for that.
 
