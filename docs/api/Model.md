@@ -4,7 +4,7 @@ The Model object represents one DynamoDB table. It takes in both a name and a sc
 
 ## dynamoose.model(name, schema[, config])
 
-This method is the basic entry point for creating a model in Dynamoose.
+This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
 The `schema` parameter can either be an object OR a Schema instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
@@ -76,6 +76,31 @@ In order to revert to the default and remove custom defaults you can set it to a
 dynamoose.model.defaults = {};
 ```
 
-## Model.get
+## Model.get(hashKey[, callback])
 
-### TODO: add documentation for Model.get
+You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return _________.
+
+## TODO: figure out what is returned with no item exists, and ensure we have unit tests for that.
+
+```js
+const User = dynamoose.model("User", {"id": Number, "name": String});
+
+try {
+	const myUser = await User.get(1);
+	console.log(myUser);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.get(1, (error, myUser) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUser);
+	}
+});
+```
