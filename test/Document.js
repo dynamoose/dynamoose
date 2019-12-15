@@ -32,7 +32,7 @@ describe("Document", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-					expect(new User(test.input).toDynamo()).to.eql(test.output);
+					expect(User.toDynamo(test.input)).to.eql(test.output);
 				});
 			});
 		});
@@ -51,7 +51,7 @@ describe("Document", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-					expect(new User(test.input).fromDynamo()).to.eql(test.output);
+					expect(User.fromDynamo(test.input)).to.eql(test.output);
 				});
 			});
 		});
