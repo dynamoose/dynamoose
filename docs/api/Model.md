@@ -30,7 +30,7 @@ The config parameter is an object used to customize settings for the model.
 | throughput.write | What the write throughput should be set to. | Number | 5 |
 | prefix | A string that should be prepended to every model name. | String | "" |
 | suffix | A string that should be appended to every model name. | String | "" |
-| waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. | Object |  |
+| waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. For production environments we recommend setting this value to `false`. | Object |  |
 | waitForActive.enabled | If Dynamoose should wait for the table to be active before running actions on it. | Boolean | true |
 | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
