@@ -72,11 +72,10 @@ describe("Document", () => {
 			putParams = [];
 		});
 
-		let functionCallTypes = [
+		const functionCallTypes = [
 			{"name": "Promise", "func": (document) => document.save},
 			{"name": "Callback", "func": (document) => util.promisify(document.save)}
 		];
-
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
 				it("Should save with correct parameters", async () => {
