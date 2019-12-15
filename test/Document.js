@@ -137,7 +137,53 @@ describe("Document", () => {
 					expect(result).to.not.exist;
 					expect(error).to.eql({"error": "Error"});
 				});
+
+				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
+					putItemFunction = () => Promise.resolve();
+					let describeTableResponse = {
+						"Table": {"TableStatus": "CREATING"}
+					};
+					aws.ddb.set({
+						"describeTable": () => ({
+							"promise": () => Promise.resolve(describeTableResponse)
+						}),
+						"putItem": (params) => {
+							putParams.push(params);
+							return {"promise": putItemFunction};
+						}
+					});
+					const model = new Model("User2", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
+					const document = new model({"id": 1, "name": "Charlie"});
+					await setImmediatePromise();
+
+					let finishedSavingUser = false;
+					callType.func(document).bind(document)().then(() => finishedSavingUser = true);
+
+					await setImmediatePromise();
+					expect(putParams).to.eql([]);
+					expect(finishedSavingUser).to.be.false;
+					expect(model.Model.pendingTasks.length).to.eql(1);
+
+					describeTableResponse = {
+						"Table": {"TableStatus": "ACTIVE"}
+					};
+					await setImmediatePromise();
+					expect(putParams).to.eql([{
+						"Item": {
+							"id": {"N": "1"},
+							"name": {"S": "Charlie"}
+						},
+						"TableName": "User2"
+					}]);
+					expect(finishedSavingUser).to.be.true;
+				});
 			});
 		});
 	});
 });
+
+// TODO: move the following function into a utils file
+// This function is used to turn `setImmediate` into a promise. This is espescially useful if you want to wait for pending promises to fire and complete before running the asserts on a test.
+function setImmediatePromise() {
+	return new Promise((resolve) => setImmediate(resolve));
+}
