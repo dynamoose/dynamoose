@@ -295,7 +295,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"getItem": (params) => {
 					getItemParams = params;
-					return {"promise": getItemFunction}
+					return {"promise": getItemFunction};
 				}
 			});
 		});
@@ -353,6 +353,39 @@ describe("Model", () => {
 					}
 					expect(result).to.not.exist;
 					expect(error).to.eql({"error": "Error"});
+				});
+
+				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
+					let calledGetItem = false;
+					getItemFunction = () => {calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});};
+					let describeTableResponse = {
+						"Table": {"TableStatus": "CREATING"}
+					};
+					dynamoose.aws.ddb.set({
+						"describeTable": () => ({
+							"promise": () => Promise.resolve(describeTableResponse)
+						}),
+						"getItem": () => ({
+							"promise": getItemFunction
+						})
+					});
+					const model = new dynamoose.model("User", {"id": Number, "name": "Charlie"}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
+					await setImmediatePromise();
+
+					let user;
+					callType.func(model).bind(model)(1).then((item) => user = item);
+
+					await setImmediatePromise();
+					expect(calledGetItem).to.be.false;
+					expect(user).to.not.exist;
+					expect(model.Model.pendingTasks.length).to.eql(1);
+
+					describeTableResponse = {
+						"Table": {"TableStatus": "ACTIVE"}
+					};
+					await setImmediatePromise();
+					expect(calledGetItem).to.be.true;
+					expect({...user}).to.eql({"id": 1, "name": "Charlie"});
 				});
 			});
 		});
