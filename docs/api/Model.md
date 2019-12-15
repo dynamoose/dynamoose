@@ -82,8 +82,6 @@ You can use Model.get to retrieve a document from DynamoDB. This method uses the
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
-## TODO: figure out what is returned with no item exists, and ensure we have unit tests for that.
-
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
 
@@ -97,6 +95,29 @@ try {
 // OR
 
 User.get(1, (error, myUser) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUser);
+	}
+});
+```
+
+In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+
+```js
+const User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+
+try {
+	const myUser = await User.get({"id": 1, "name": "Tim"});
+	console.log(myUser);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.get({"id": 1, "name": "Tim"}, (error, myUser) => {
 	if (error) {
 		console.error(error);
 	} else {
