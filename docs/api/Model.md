@@ -75,3 +75,7 @@ In order to revert to the default and remove custom defaults you can set it to a
 ```js
 dynamoose.model.defaults = {};
 ```
+
+## Model.get
+
+### TODO: add documentation for Model.get
