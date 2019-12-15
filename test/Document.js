@@ -180,6 +180,81 @@ describe("Document", () => {
 			});
 		});
 	});
+
+	describe("Document.isDynamoObject", () => {
+		let User;
+		beforeEach(() => {
+			User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+		});
+		afterEach(() => {
+			User = null;
+		});
+
+		it("Should be a function", () => {
+			expect(User.isDynamoObject).to.be.a("function");
+		});
+
+		const tests = [
+			{
+				"input": {},
+				"output": null
+			},
+			{
+				"input": {"N": "1"},
+				"output": false
+			},
+			{
+				"input": {"S": "Hello"},
+				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+				"output": true
+			},
+			{
+				"input": {"id": 1, "name": "Charlie"},
+				"output": false
+			},
+			{
+				"input": {"id": {"test": "1"}, "name": {"S": "Charlie"}},
+				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"M": {"test": {"N": "1"}}}},
+				"output": true
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"M": {"test": {"other": "1"}}}},
+				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"L": [{"S": "hello"},{"S": "world"}]}},
+				"output": true
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"L": ["hello", "world"]}},
+				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"L": [{"hello": {"S": "world"}}, {"test": {"N": "1"}}]}},
+				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"L": [{"M": {"hello": {"S": "world"}}}, {"M": {"test": {"N": "1"}}}]}},
+				"output": true
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"L": [{"hello": "world"}, {"test": 1}]}},
+				"output": false
+			}
+		];
+
+		tests.forEach((test) => {
+			it(`Should return ${test.output} for ${JSON.stringify(test.input)}`, () => {
+				expect(User.isDynamoObject(test.input)).to.eql(test.output);
+			});
+		});
+	});
 });
 
 // TODO: move the following function into a utils file
