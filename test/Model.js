@@ -44,14 +44,14 @@ describe("Model", () => {
 					const schema = {"name": String};
 					const Cat = option.func("Cat", schema);
 					expect(Cat.Model.schema).to.not.eql(schema);
-					expect(Cat.Model.schema instanceof dynamoose.Schema).to.be.true;
+					expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
 				});
 
 				it("Should use schema instance if passed in", () => {
 					const schema = new dynamoose.Schema({"name": String});
 					const Cat = option.func("Cat", schema);
 					expect(Cat.Model.schema).to.eql(schema);
-					expect(Cat.Model.schema instanceof dynamoose.Schema).to.be.true;
+					expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
 				});
 
 				// Prefixes & Suffixes
@@ -340,7 +340,7 @@ describe("Model", () => {
 				it("Should return object that is an instance of Document", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
-					expect(user instanceof User).to.be.true;
+					expect(user).to.be.an.instanceof(User);
 				});
 
 				it("Should throw error if DynamoDB responds with error", async () => {
