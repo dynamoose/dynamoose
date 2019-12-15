@@ -30,10 +30,23 @@ sdk.config.update({
 });
 const ddb = new dynamoose.aws.sdk.DynamoDB({"endpoint": "http://localhost:8000"});
 dynamoose.aws.ddb.set(ddb);
+dynamooseOld.setDDB(ddb);
 
-const Cat = new dynamoose.model("Cat200", {"id": Number, "name": String}, {"create": false});
+const Cat = dynamooseOld.model("Cat200", {"id": Number, "name": String}, {"create": false});
+const CatB = new dynamoose.model("Cat200", {"id": Number, "name": String}, {"create": false});
 
 async function main() {
+	console.log(await Cat.get(500));
+	console.log(await CatB.get(500));
+	console.log(await dynamoose.aws.ddb().getItem({
+		"Key": {
+			"id": {
+				"N": "200"
+			}
+		},
+		"TableName": "Cat200"
+	}).promise());
+	/*
 	const res1 = await (new Cat({"id": 1, "name": "Charlie"}).save());
 	const res2 = await Cat.Model.get(1);
 	// const res2 = await Cat.Model.model.prototype.get.bind(Cat.Model)(1);
@@ -42,5 +55,6 @@ async function main() {
 	console.log(res2);
 
 	console.log(JSON.stringify(await ddb.scan({"TableName": "Cat200"}).promise(), null, 4));
+	*/
 }
 main();
