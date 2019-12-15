@@ -92,6 +92,44 @@ describe("Model", () => {
 						await setImmediatePromise();
 						expect(model.Model.ready).to.be.true;
 					});
+
+					it("Should resolve pendingTaskPromises after model is ready", async () => {
+						let describeTableResponse = {
+							"Table": {"TableStatus": "CREATING"}
+						};
+						dynamoose.aws.ddb.set({
+							"describeTable": () => ({
+								"promise": () => Promise.resolve(describeTableResponse)
+							})
+						});
+						const model = option.func("Cat", {"id": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0}}});
+						await setImmediatePromise();
+
+						let pendingTaskPromiseResolved = false;
+						model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+
+						await setImmediatePromise();
+						expect(pendingTaskPromiseResolved).to.be.false;
+
+						describeTableResponse = {
+							"Table": {"TableStatus": "ACTIVE"}
+						};
+						await setImmediatePromise();
+						expect(pendingTaskPromiseResolved).to.be.true;
+						expect(model.Model.pendingTasks).to.eql([]);
+					});
+
+					it("Should immediately resolve pendingTaskPromises promise if table is already ready", async () => {
+						const model = option.func("Cat", {"id": String}, {"create": false});
+						await setImmediatePromise();
+
+						let pendingTaskPromiseResolved = false;
+						model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+
+						await setImmediatePromise();
+
+						expect(pendingTaskPromiseResolved).to.be.true;
+					});
 				});
 
 				describe("Creation", () => {
