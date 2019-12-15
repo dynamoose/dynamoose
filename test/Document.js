@@ -9,40 +9,50 @@ describe("Document", () => {
 		expect(Document).to.be.an("function");
 	});
 
-	describe("toDynamo", () => {
-		const tests = [
-			{
-				"input": {},
-				"output": {}
-			},
-			{
-				"input": {"id": 1, "name": "Charlie"},
-				"output": {"id": {"N": "1"}, "name": {"S": "Charlie"}}
-			}
-		];
+	describe("DynamoDB Conversation Methods", () => {
+		let User;
+		beforeEach(() => {
+			User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+		});
+		afterEach(() => {
+			User = null;
+		});
 
-		tests.forEach((test) => {
-			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-				expect(new (Document())(test.input).toDynamo()).to.eql(test.output);
+		describe("toDynamo", () => {
+			const tests = [
+				{
+					"input": {},
+					"output": {}
+				},
+				{
+					"input": {"id": 1, "name": "Charlie"},
+					"output": {"id": {"N": "1"}, "name": {"S": "Charlie"}}
+				}
+			];
+
+			tests.forEach((test) => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+					expect(new User(test.input).toDynamo()).to.eql(test.output);
+				});
 			});
 		});
-	});
 
-	describe("fromDynamo", () => {
-		const tests = [
-			{
-				"input": {},
-				"output": {}
-			},
-			{
-				"input": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
-				"output": {"id": 1, "name": "Charlie"}
-			}
-		];
+		describe("fromDynamo", () => {
+			const tests = [
+				{
+					"input": {},
+					"output": {}
+				},
+				{
+					"input": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+					"output": {"id": 1, "name": "Charlie"}
+				}
+			];
 
-		tests.forEach((test) => {
-			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-				expect(new (Document())(test.input).fromDynamo()).to.eql(test.output);
+			tests.forEach((test) => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+					expect(new User(test.input).fromDynamo()).to.eql(test.output);
+				});
 			});
 		});
 	});
