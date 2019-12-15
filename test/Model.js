@@ -2,6 +2,7 @@ const {expect} = require("chai");
 const dynamoose = require("../lib");
 const Error = require("../lib/Error");
 const utils = require("../lib/utils");
+const util = require("util");
 
 describe("Model", () => {
 	beforeEach(() => {
@@ -244,6 +245,76 @@ describe("Model", () => {
 						expect(describeTableParams.length).to.be.above(5);
 						process.removeListener("unhandledRejection", errorHandler);
 					});
+				});
+			});
+		});
+	});
+
+	describe("Model.get", () => {
+		let User, getItemParams, getItemFunction;
+		beforeEach(() => {
+			User = new dynamoose.model("User", {"id": Number, "name": String});
+			dynamoose.aws.ddb.set({
+				"getItem": (params) => {
+					getItemParams = params;
+					return {"promise": getItemFunction}
+				}
+			});
+		});
+		afterEach(() => {
+			User = null;
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should be a function", () => {
+			expect(User.get).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (Model) => Model.get},
+			{"name": "Callback", "func": (Model) => util.promisify(Model.get)}
+		];
+
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should send correct params to getItem", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should return object with correct values", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(user.id).to.eql(1);
+					expect(user.name).to.eql("Charlie");
+				});
+
+				it("Should return object that is an instance of Document", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user instanceof User).to.be.true;
+				});
+
+				it("Should throw error if DynamoDB responds with error", async () => {
+					getItemFunction = () => Promise.reject({"error": "Error"});
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)(1);
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql({"error": "Error"});
 				});
 			});
 		});
