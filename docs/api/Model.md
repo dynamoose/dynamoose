@@ -34,7 +34,7 @@ The config parameter is an object used to customize settings for the model.
 | waitForActive.enabled | If Dynamoose should wait for the table to be active before running actions on it. | Boolean | true |
 | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
-| waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. | Number | 1000 |
+| waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
 
 The default object is listed below.
 
