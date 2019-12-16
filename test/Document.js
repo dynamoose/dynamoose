@@ -3,6 +3,7 @@ const Document = require("../lib/Document");
 const Model = require("../lib/Model");
 const aws = require("../lib/aws");
 const util = require("util");
+const Error = require("../lib/Error");
 
 describe("Document", () => {
 	it("Should be a function", () => {
@@ -253,6 +254,61 @@ describe("Document", () => {
 			it(`Should return ${test.output} for ${JSON.stringify(test.input)}`, () => {
 				expect(User.isDynamoObject(test.input)).to.eql(test.output);
 			});
+		});
+	});
+
+	describe("Document.objectFromSchema", () => {
+		it("Should be a function", () => {
+			expect(new Model("User", {"id": Number}, {"create": false, "waitForActive": false}).objectFromSchema).to.be.a("function");
+		});
+
+		const tests = [
+			{
+				"input": {"id": 1},
+				"output": {"id": 1},
+				"schema": {"id": Number}
+			},
+			{
+				"input": {"id": 1, "name": "Charlie"},
+				"output": {"id": 1},
+				"schema": {"id": Number}
+			},
+			{
+				"input": {"id": 1, "name": "Charlie"},
+				"output": {"id": 1, "name": "Charlie"},
+				"schema": {"id": Number, "name": String}
+			},
+			// {
+			// 	"input": {"id": "1"},
+			// 	"output": {"id": 1},
+			// 	"schema": {"id": Number}
+			// },
+			{
+				"input": {"id": "hello"},
+				"error": new Error.TypeMismatch("Expected id to be of type number, instead found type string."),
+				"schema": {"id": Number}
+			}
+		];
+
+		tests.forEach((test) => {
+			const model = new Model("User", test.schema, {"create": false, "waitForActive": false});
+
+			if (test.error) {
+				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
+					let result, error;
+					try {
+						result = model.objectFromSchema(test.input);
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(test.error);
+				});
+			} else {
+				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
+					expect(model.objectFromSchema(test.input)).to.eql(test.output);
+				});
+			}
 		});
 	});
 });
