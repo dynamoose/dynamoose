@@ -133,6 +133,8 @@ describe("Document", () => {
 					}]);
 				});
 
+				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
+
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
