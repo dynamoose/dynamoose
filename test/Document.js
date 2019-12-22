@@ -214,9 +214,10 @@ describe("Document", () => {
 				const User = new Model("User", test.schema);
 				const user = new User(test.input);
 
-				user.conformToSchema();
+				const obj = user.conformToSchema();
 
 				expect({...user}).to.eql(test.output);
+				expect(obj).to.eql(user);
 			});
 		});
 	});
