@@ -311,6 +311,11 @@ describe("Document", () => {
 			// 	"output": {"id": 1},
 			// 	"schema": {"id": Number}
 			// },
+			// {
+			// 	"input": {"id": "1.5"},
+			// 	"output": {"id": 1},
+			// 	"schema": {"id": Number}
+			// },
 			{
 				"input": {"id": "hello"},
 				"error": new Error.TypeMismatch("Expected id to be of type number, instead found type string."),
