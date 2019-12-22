@@ -123,6 +123,16 @@ describe("Document", () => {
 					expect(result).to.eql(user);
 				});
 
+				it("Should save with correct object with more properties than in schema", async () => {
+					putItemFunction = () => Promise.resolve();
+					user = new User({"id": 1, "name": "Charlie", "hello": "world"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
