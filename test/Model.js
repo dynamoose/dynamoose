@@ -350,6 +350,7 @@ describe("Model", () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "name"]);
 					expect(user.id).to.eql(1);
 					expect(user.name).to.eql("Charlie");
 				});
@@ -378,6 +379,17 @@ describe("Model", () => {
 					expect(user).to.eql(undefined);
 				});
 
+				it("Should return object with correct values if Dynamo object consists properties that don't exist in schema", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "hello": {"S": "world"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "name"]);
+					expect(user.id).to.eql(1);
+					expect(user.name).to.eql("Charlie");
+				});
+
+				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
+
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledGetItem = false;
 					getItemFunction = () => {calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});};
@@ -392,7 +404,7 @@ describe("Model", () => {
 							"promise": getItemFunction
 						})
 					});
-					const model = new dynamoose.model("User", {"id": Number, "name": "Charlie"}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
+					const model = new dynamoose.model("User", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
 					await setImmediatePromise();
 
 					let user;
