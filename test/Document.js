@@ -196,6 +196,7 @@ describe("Document", () => {
 		const tests = [
 			{"schema": {"id": Number, "name": String}, "input": {"id": 1, "name": "Charlie", "hello": "world"}, "output": {"id": 1, "name": "Charlie"}},
 			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "output": {"id": 1}}
+			// TODO: add type mismatch error test here
 		];
 
 		tests.forEach((test) => {
@@ -306,6 +307,7 @@ describe("Document", () => {
 				"output": {"id": 1, "name": "Charlie"},
 				"schema": {"id": Number, "name": String}
 			},
+			// TODO: uncomment these lines below
 			// {
 			// 	"input": {"id": "1"},
 			// 	"output": {"id": 1},
