@@ -182,6 +182,34 @@ describe("Document", () => {
 		});
 	});
 
+	describe("conformToSchema", () => {
+		beforeEach(() => {
+			Model.defaults = {
+				"create": false,
+				"waitForActive": false
+			};
+		});
+		afterEach(() => {
+			Model.defaults = {};
+		});
+
+		const tests = [
+			{"schema": {"id": Number, "name": String}, "input": {"id": 1, "name": "Charlie", "hello": "world"}, "output": {"id": 1, "name": "Charlie"}},
+			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "output": {"id": 1}}
+		];
+
+		tests.forEach((test) => {
+			it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
+				const User = new Model("User", test.schema);
+				const user = new User(test.input);
+
+				user.conformToSchema();
+
+				expect({...user}).to.eql(test.output);
+			});
+		});
+	});
+
 	describe("Document.isDynamoObject", () => {
 		let User;
 		beforeEach(() => {
