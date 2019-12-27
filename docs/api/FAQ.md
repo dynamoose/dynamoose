@@ -8,6 +8,7 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 |------------------|----------------|-------|
 | new Model() | `createTable`, `describeTable` | `createTable` is only used if `create` is set to true. `describeTable` is only used if `waitForActive` is set to true. |
 | Model.get | `getItem` |  |
+| Model.scan | `scan` | This permission is only required on `scan.exec` |
 | document.save | `putItem` |  |
 
 ## Why is it recommended to set `create` & `waitForActive` model options to false for production environments?
