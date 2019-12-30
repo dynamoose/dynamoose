@@ -198,7 +198,17 @@ describe("Scan", () => {
 			expect(Model.scan().null()).to.be.a.instanceof(Model.scan.carrier);
 		});
 
-		// TODO: add more tests here
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().where("id").null();
+			expect(scan.settings.filters).to.eql({"id": {"type": "NULL", "value": []}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().where("id").not().null()
+			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_NULL", "value": []}});
+			expect(scan.settings.pending).to.eql({});
+		});
 	});
 
 	describe("scan.eq", () => {
