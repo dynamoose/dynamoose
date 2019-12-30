@@ -231,6 +231,13 @@ describe("Scan", () => {
 			expect(scan.settings.filters).to.eql({"id": {"type": "NE", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
+
+		it("Should have same options as scan.null for empty string, null, or undefined as value", () => {
+			expect(Model.scan().where("id").eq().settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
+			expect(Model.scan().where("id").eq("").settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
+			expect(Model.scan().where("id").eq(null).settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
+			expect(Model.scan().where("id").eq(undefined).settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
+		});
 	});
 
 	describe("scan.lt", () => {
