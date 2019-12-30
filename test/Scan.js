@@ -205,7 +205,7 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().null()
+			const scan = Model.scan().where("id").not().null();
 			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_NULL", "value": []}});
 			expect(scan.settings.pending).to.eql({});
 		});
