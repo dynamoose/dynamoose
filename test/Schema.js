@@ -232,4 +232,90 @@ describe("Schema", () => {
 			});
 		});
 	});
+
+	describe("attributes", () => {
+		const tests = [
+			{
+				"name": "Should return correct result with one attribute",
+				"input": {"id": String},
+				"output": ["id"]
+			},
+			{
+				"name": "Should return correct result with one attribute and object as value",
+				"input": {"id": {"type": String}},
+				"output": ["id"]
+			},
+			{
+				"name": "Should return correct result with multiple attributes",
+				"input": {"id": String, "age": Number},
+				"output": ["id", "age"]
+			},
+			{
+				"name": "Should return correct result with multiple attributes and object as values",
+				"input": {"id": {"type": String}, "age": {"type": Number}},
+				"output": ["id", "age"]
+			}
+		];
+
+		tests.forEach((test) => {
+			it(test.name, () => {
+				expect(new Schema(test.input).attributes()).to.eql(test.output);
+			});
+		});
+	});
+
+	describe("getAttributeDefaultValue", () => {
+		const tests = [
+			{
+				"name": "Should return undefined if no object as value for attribute",
+				"input": "id",
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined if no default for attribute",
+				"input": "id",
+				"schema": {"id": {"type": String}},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined for attribute that doesn't exist",
+				"input": "random",
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return default as string for attribute",
+				"input": "id",
+				"schema": {"id": {"type": String, "default": "Hello World"}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as string for attribute if default is a function",
+				"input": "id",
+				"schema": {"id": {"type": String, "default": () => "Hello World"}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as string for attribute if default is an async function",
+				"input": "id",
+				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as string for attribute if default is a function that returns a promise",
+				"input": "id",
+				"schema": {"id": {"type": String, "default": () => {
+					return new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100));
+				}}},
+				"output": "Hello World"
+			}
+		];
+
+		tests.forEach((test) => {
+			it(test.name, async () => {
+				expect(await (new Schema(test.schema).getAttributeDefaultValue(test.input))).to.eql(test.output);
+			});
+		});
+	});
 });
