@@ -56,6 +56,25 @@ describe("Document", () => {
 				});
 			});
 		});
+
+		describe("Document.prototype.toDynamo", () => {
+			const tests = [
+				{
+					"input": {},
+					"output": {}
+				},
+				{
+					"input": {"id": 1, "name": "Charlie"},
+					"output": {"id": {"N": "1"}, "name": {"S": "Charlie"}}
+				}
+			];
+
+			tests.forEach((test) => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with settings ${JSON.stringify(test.settings)}`, async () => {
+					expect(await (new User(test.input).toDynamo(test.settings))).to.eql(test.output);
+				});
+			});
+		});
 	});
 
 	describe("save", () => {
@@ -129,6 +148,50 @@ describe("Document", () => {
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with undefined attributes in schema", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": Number}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with default values", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "default": 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with default value as function", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "default": () => 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with default value as async function", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "default": async () => 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
 						"TableName": "User"
 					}]);
 				});
@@ -216,7 +279,7 @@ describe("Document", () => {
 				const User = new Model("User", test.schema);
 				const user = new User(test.input);
 
-				const obj = user.conformToSchema();
+				const obj = await user.conformToSchema();
 
 				expect({...user}).to.eql(test.output);
 				expect(obj).to.eql(user);
@@ -342,10 +405,10 @@ describe("Document", () => {
 			const model = new Model("User", test.schema, {"create": false, "waitForActive": false});
 
 			if (test.error) {
-				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
+				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, async () => {
 					let result, error;
 					try {
-						result = model.objectFromSchema(test.input);
+						result = await model.objectFromSchema(test.input);
 					} catch (e) {
 						error = e;
 					}
@@ -353,8 +416,8 @@ describe("Document", () => {
 					expect(error).to.eql(test.error);
 				});
 			} else {
-				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
-					expect(model.objectFromSchema(test.input)).to.eql(test.output);
+				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
+					expect(await model.objectFromSchema(test.input)).to.eql(test.output);
 				});
 			}
 		});
