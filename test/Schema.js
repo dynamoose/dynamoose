@@ -339,28 +339,34 @@ describe("Schema", () => {
 			{
 				"name": "Should return validator as function for attribute if validator is a function",
 				"input": ["validate", "id", {"returnFunction": true}],
-				"schema": {"id": {"type": String, "default": () => "Hello World"}},
+				"schema": {"id": {"type": String, "validate": () => "Hello World"}},
 				"output": () => "Hello World"
 			},
 			{
 				"name": "Should return validator as function for attribute if validator is an async function",
 				"input": ["validate", "id", {"returnFunction": true}],
-				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
+				"schema": {"id": {"type": String, "validate": async () => "Hello World"}},
 				"output": async () => "Hello World"
 			},
 			{
 				"name": "Should return validator as function for attribute if validator is a function that returns a promise",
 				"input": ["validate", "id", {"returnFunction": true}],
-				"schema": {"id": {"type": String, "default": () => {
-					return new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100));
-				}}},
-				"output": new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))
+				"schema": {"id": {"type": String, "validate": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))}},
+				"output": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))
 			}
 		];
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				expect(await (new Schema(test.schema).getAttributeSettingValue(...test.input))).to.eql(test.output);
+				const schema = new Schema(test.schema);
+				const output = await (schema.getAttributeSettingValue(...test.input));
+				if (typeof output !== "function") {
+					expect(output).to.eql(test.output);
+				} else {
+					expect(typeof output).to.eql(typeof test.output);
+					expect(output.toString()).to.eql(test.output.toString());
+					expect(await output()).to.eql(await test.output());
+				}
 			});
 		});
 	});
