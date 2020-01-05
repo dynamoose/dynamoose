@@ -310,6 +310,51 @@ describe("Schema", () => {
 					return new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100));
 				}}},
 				"output": "Hello World"
+			},
+			// Validator
+			{
+				"name": "Should return undefined if no object as value for attribute",
+				"input": ["validate", "id", {"returnFunction": true}],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined if no validator for attribute",
+				"input": ["validate", "id", {"returnFunction": true}],
+				"schema": {"id": {"type": String}},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined for attribute that doesn't exist",
+				"input": ["validate", "random", {"returnFunction": true}],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return validator as string for attribute",
+				"input": ["validate", "id", {"returnFunction": true}],
+				"schema": {"id": {"type": String, "validate": "Hello World"}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return validator as function for attribute if validator is a function",
+				"input": ["validate", "id", {"returnFunction": true}],
+				"schema": {"id": {"type": String, "default": () => "Hello World"}},
+				"output": () => "Hello World"
+			},
+			{
+				"name": "Should return validator as function for attribute if validator is an async function",
+				"input": ["validate", "id", {"returnFunction": true}],
+				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
+				"output": async () => "Hello World"
+			},
+			{
+				"name": "Should return validator as function for attribute if validator is a function that returns a promise",
+				"input": ["validate", "id", {"returnFunction": true}],
+				"schema": {"id": {"type": String, "default": () => {
+					return new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100));
+				}}},
+				"output": new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))
 			}
 		];
 
