@@ -40,7 +40,7 @@ const results = await Cat.scan().exec();
 
 The results array will have some special parameters attached to it to give you more information about the scan operation:
 
-- `lastKey` - In the event there are more items to scan in DynamoDB this property will be equal to an object that you can pass into [`scan.startAt(key)`](#scanstartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but we return it and handle it as a standard JS object without the DynamoDB types.
+- `lastKey` - In the event there are more items to scan in DynamoDB this property will be equal to an object that you can pass into [`scan.startAt(key)`](#scanstartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
 - `count` - The count property from DynamoDB, which represents how many items were returned from DynamoDB. This should always equal the number of items in the array.
 - `scannedCount` - How many items DynamoDB scanned. This doesn't necessarily represent how many items were returned from DynamoDB due to filters that might have been applied to the scan request.
 - `timesScanned` - How many times Dynamoose made a scan request to DynamoDB. This will always equal 1, unless you used the `scan.all` or `scan.parallel` method.

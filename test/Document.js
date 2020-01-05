@@ -196,6 +196,106 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with validation value", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "age": 5});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if invalid value for validation value", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "age": 4});
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("age with a value of 4 had a validation error when trying to save the document"));
+				});
+
+				it("Should save with correct object with validation function", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => val > 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "age": 6});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "age": {"N": "6"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if invalid value for validation function", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => val > 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "age": 4});
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("age with a value of 4 had a validation error when trying to save the document"));
+				});
+
+				it("Should save with correct object with validation async function", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": async (val) => val > 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "age": 6});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "age": {"N": "6"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if invalid value for validation async function", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": async (val) => val > 5}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "age": 4});
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("age with a value of 4 had a validation error when trying to save the document"));
+				});
+
+				it("Should save with correct object with validation RegExp", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "validate": /.../gu}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Tom"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if invalid value for validation RegExp", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "validate": /.../gu}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "a"});
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("name with a value of a had a validation error when trying to save the document"));
+				});
+
 				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
 
 				it("Should throw error if DynamoDB API returns an error", async () => {
@@ -398,7 +498,119 @@ describe("Document", () => {
 				"input": {"id": "hello"},
 				"error": new Error.TypeMismatch("Expected id to be of type number, instead found type string."),
 				"schema": {"id": Number}
-			}
+			},
+			// Defaults
+			{
+				"input": {},
+				"output": {},
+				"schema": {"id": {"type": String, "default": "id"}}
+			},
+			{
+				"input": [{}, {"defaults": true}],
+				"output": {"id": "id"},
+				"schema": {"id": {"type": String, "default": "id"}}
+			},
+			{
+				"input": {},
+				"output": {},
+				"schema": {"id": {"type": String, "default": () => "id"}}
+			},
+			{
+				"input": [{}, {"defaults": true}],
+				"output": {"id": "id"},
+				"schema": {"id": {"type": String, "default": () => "id"}}
+			},
+			{
+				"input": {},
+				"output": {},
+				"schema": {"id": {"type": String, "default": async () => "id"}}
+			},
+			{
+				"input": [{}, {"defaults": true}],
+				"output": {"id": "id"},
+				"schema": {"id": {"type": String, "default": async () => "id"}}
+			},
+			{
+				"input": {},
+				"output": {},
+				"schema": {"id": {"type": String, "validate": async () => "id"}}
+			},
+			{
+				"input": [{}, {"defaults": true}],
+				"output": {"id": "id"},
+				"schema": {"id": {"type": String, "default": async () => "id"}}
+			},
+			{
+				"input": [{"id": "test"}, {"validate": true}],
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
+			},
+			// Validations
+			{
+				"input": [{"id": "test"}, {"validate": true}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "age": {"type": Number, "validate": (val) => val > 0}}
+			},
+			{
+				"input": {"id": "test"},
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String, "validate": async (val) => val.length > 5}}
+			},
+			{
+				"input": [{"id": "test"}, {"validate": true}],
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"schema": {"id": {"type": String, "validate": async (val) => val.length > 5}}
+			},
+			{
+				"input": [{"id": "hello world"}, {"validate": true}],
+				"output": {"id": "hello world"},
+				"schema": {"id": {"type": String, "validate": async (val) => val.length > 5}}
+			},
+			{
+				"input": {"id": "test"},
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
+			},
+			{
+				"input": [{"id": "test"}, {"validate": true}],
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
+			},
+			{
+				"input": [{"id": "hello world"}, {"validate": true}],
+				"output": {"id": "hello world"},
+				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
+			},
+			{
+				"input": {"id": "test"},
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
+			},
+			{
+				"input": [{"id": "test"}, {"validate": true}],
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
+			},
+			{
+				"input": [{"id": "ID_test"}, {"validate": true}],
+				"output": {"id": "ID_test"},
+				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
+			},
+			{
+				"input": {"id": "test"},
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String, "validate": "ID_test"}}
+			},
+			{
+				"input": [{"id": "test"}, {"validate": true}],
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"schema": {"id": {"type": String, "validate": "ID_test"}}
+			},
+			{
+				"input": [{"id": "ID_test"}, {"validate": true}],
+				"output": {"id": "ID_test"},
+				"schema": {"id": {"type": String, "validate": "ID_test"}}
+			},
 		];
 
 		tests.forEach((test) => {
@@ -408,7 +620,7 @@ describe("Document", () => {
 				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, async () => {
 					let result, error;
 					try {
-						result = await model.objectFromSchema(test.input);
+						result = await model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input));
 					} catch (e) {
 						error = e;
 					}
@@ -417,7 +629,7 @@ describe("Document", () => {
 				});
 			} else {
 				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
-					expect(await model.objectFromSchema(test.input)).to.eql(test.output);
+					expect(await model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input))).to.eql(test.output);
 				});
 			}
 		});
