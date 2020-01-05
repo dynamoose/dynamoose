@@ -264,47 +264,48 @@ describe("Schema", () => {
 		});
 	});
 
-	describe("getAttributeDefaultValue", () => {
+	describe("getAttributeSettingValue", () => {
 		const tests = [
+			// Defaults
 			{
 				"name": "Should return undefined if no object as value for attribute",
-				"input": "id",
+				"input": ["default", "id"],
 				"schema": {"id": String},
 				"output": undefined
 			},
 			{
 				"name": "Should return undefined if no default for attribute",
-				"input": "id",
+				"input": ["default", "id"],
 				"schema": {"id": {"type": String}},
 				"output": undefined
 			},
 			{
 				"name": "Should return undefined for attribute that doesn't exist",
-				"input": "random",
+				"input": ["default", "random"],
 				"schema": {"id": String},
 				"output": undefined
 			},
 			{
 				"name": "Should return default as string for attribute",
-				"input": "id",
+				"input": ["default", "id"],
 				"schema": {"id": {"type": String, "default": "Hello World"}},
 				"output": "Hello World"
 			},
 			{
 				"name": "Should return default as string for attribute if default is a function",
-				"input": "id",
+				"input": ["default", "id"],
 				"schema": {"id": {"type": String, "default": () => "Hello World"}},
 				"output": "Hello World"
 			},
 			{
 				"name": "Should return default as string for attribute if default is an async function",
-				"input": "id",
+				"input": ["default", "id"],
 				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
 				"output": "Hello World"
 			},
 			{
 				"name": "Should return default as string for attribute if default is a function that returns a promise",
-				"input": "id",
+				"input": ["default", "id"],
 				"schema": {"id": {"type": String, "default": () => {
 					return new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100));
 				}}},
@@ -314,7 +315,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				expect(await (new Schema(test.schema).getAttributeDefaultValue(test.input))).to.eql(test.output);
+				expect(await (new Schema(test.schema).getAttributeSettingValue(...test.input))).to.eql(test.output);
 			});
 		});
 	});
