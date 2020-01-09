@@ -1,6 +1,7 @@
 const {expect} = require("chai");
 const Document = require("../lib/Document");
 const Model = require("../lib/Model");
+const Schema = require("../lib/Schema");
 const aws = require("../lib/aws");
 const util = require("util");
 const Error = require("../lib/Error");
@@ -353,6 +354,39 @@ describe("Document", () => {
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Tim"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with saveUnknown set to true", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": true}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Tom"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with saveUnknown set to an array with correct attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": ["name"]}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Tom"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with saveUnknown set to false", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": false}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Tom"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}},
 						"TableName": "User"
 					}]);
 				});
