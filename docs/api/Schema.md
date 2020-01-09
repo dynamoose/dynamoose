@@ -53,6 +53,20 @@ You can also pass in async functions or a function that returns a promise to the
 }
 ```
 
+### forceDefault: boolean
+
+You can set this property to always use the `default` value, even if a value is already set. This can be used for data that will be used as sort or secondary indexes. The default for this property is false.
+
+```js
+{
+	"age": {
+		"type": Number,
+		"default": 5,
+		"forceDefault": true
+	}
+}
+```
+
 ### validate: value | RegExp | function | async function
 
 You can set a validation on an attribute to ensure the value passes a given validation before saving the document. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function.
