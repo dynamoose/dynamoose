@@ -346,6 +346,17 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.ValidationError("name must equal [\"Tim\",\"Tom\"], but is set to Bob"));
 				});
 
+				it("Should save with correct object with forceDefault property", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "default": "Tim", "forceDefault": true}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Tom"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Tim"}},
+						"TableName": "User"
+					}]);
+				});
+
 				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
 
 				it("Should throw error if DynamoDB API returns an error", async () => {

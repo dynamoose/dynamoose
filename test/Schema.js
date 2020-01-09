@@ -409,6 +409,37 @@ describe("Schema", () => {
 				"input": ["enum", "id"],
 				"schema": {"id": {"type": String, "enum": ["Tim", "Tom"]}},
 				"output": ["Tim", "Tom"]
+			},
+			// forceDefault
+			{
+				"name": "Should return undefined if no object as value for attribute",
+				"input": ["forceDefault", "id"],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined if no forceDefault setting for attribute",
+				"input": ["forceDefault", "id"],
+				"schema": {"id": {"type": String}},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined for attribute that doesn't exist",
+				"input": ["forceDefault", "random"],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return forceDefault as true for attribute with forceDefault set to true",
+				"input": ["forceDefault", "id"],
+				"schema": {"id": {"type": String, "forceDefault": true}},
+				"output": true
+			},
+			{
+				"name": "Should return forceDefault as false for attribute with forceDefault set to false",
+				"input": ["forceDefault", "id"],
+				"schema": {"id": {"type": String, "forceDefault": false}},
+				"output": false
 			}
 		];
 
