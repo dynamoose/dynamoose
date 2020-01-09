@@ -353,6 +353,37 @@ describe("Schema", () => {
 				"input": ["validate", "id", {"returnFunction": true}],
 				"schema": {"id": {"type": String, "validate": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))}},
 				"output": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))
+			},
+			// Required
+			{
+				"name": "Should return undefined if no object as value for attribute",
+				"input": ["required", "id"],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined if no required setting for attribute",
+				"input": ["required", "id"],
+				"schema": {"id": {"type": String}},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined for attribute that doesn't exist",
+				"input": ["required", "random"],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return required as true for attribute being required",
+				"input": ["required", "id"],
+				"schema": {"id": {"type": String, "required": true}},
+				"output": true
+			},
+			{
+				"name": "Should return required as false for attribute being not required",
+				"input": ["required", "id"],
+				"schema": {"id": {"type": String, "required": false}},
+				"output": false
 			}
 		];
 

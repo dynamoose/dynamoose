@@ -296,6 +296,31 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.ValidationError("name with a value of a had a validation error when trying to save the document"));
 				});
 
+				it("Should save with correct object with required property", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "required": true}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Tom"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if required property not passed in", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "required": true}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("name is a required property but has no value when trying to save document"));
+				});
+
 				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
 
 				it("Should throw error if DynamoDB API returns an error", async () => {
