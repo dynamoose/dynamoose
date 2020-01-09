@@ -108,3 +108,16 @@ You can set an attribute to be required when saving documents to DynamoDB. By de
 	}
 }
 ```
+
+### enum: array
+
+You can set an attribute to have an enum array, which means it must match one of the values specified in the enum array. By default this setting is undefined and not set to anything.
+
+```js
+{
+	"name": {
+		"type": String,
+		"enum": ["Tom", "Tim"] // `name` must always equal "Tom" or "Tim"
+	}
+}
+```
