@@ -384,6 +384,31 @@ describe("Schema", () => {
 				"input": ["required", "id"],
 				"schema": {"id": {"type": String, "required": false}},
 				"output": false
+			},
+			// Enum
+			{
+				"name": "Should return undefined if no object as value for attribute",
+				"input": ["enum", "id"],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined if no enum setting for attribute",
+				"input": ["enum", "id"],
+				"schema": {"id": {"type": String}},
+				"output": undefined
+			},
+			{
+				"name": "Should return undefined for attribute that doesn't exist",
+				"input": ["enum", "random"],
+				"schema": {"id": String},
+				"output": undefined
+			},
+			{
+				"name": "Should return enum array for attribute having enum",
+				"input": ["enum", "id"],
+				"schema": {"id": {"type": String, "enum": ["Tim", "Tom"]}},
+				"output": ["Tim", "Tom"]
 			}
 		];
 

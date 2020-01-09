@@ -321,6 +321,31 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.ValidationError("name is a required property but has no value when trying to save document"));
 				});
 
+				it("Should save with correct object with enum property", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "enum": ["Tim", "Tom"]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Tom"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if value does not match value in enum property", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "enum": ["Tim", "Tom"]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Bob"});
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("name must equal [\"Tim\",\"Tom\"], but is set to Bob"));
+				});
+
 				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
 
 				it("Should throw error if DynamoDB API returns an error", async () => {
