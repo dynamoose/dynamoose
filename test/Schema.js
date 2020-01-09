@@ -18,6 +18,14 @@ describe("Schema", () => {
 		expect(() => new Schema({"id": String})).to.not.throw();
 	});
 
+	it("Should set correct settings value", () => {
+		expect(new Schema({"id": String}, {"saveUnknown": true}).settings).to.eql({"saveUnknown": true});
+	});
+
+	it("Should set correct settings value default value of empty object", () => {
+		expect(new Schema({"id": String}).settings).to.eql({});
+	});
+
 	describe("getAttributeType", () => {
 		const schemas = [
 			{
@@ -260,6 +268,20 @@ describe("Schema", () => {
 		tests.forEach((test) => {
 			it(test.name, () => {
 				expect(new Schema(test.input).attributes()).to.eql(test.output);
+			});
+		});
+	});
+
+	describe("getSettingValue", () => {
+		const tests = [
+			{"name": "Should return correct value as array for settings", "settings": {"saveUnknown": ["name"]}, "input": "saveUnknown", "output": ["name"]},
+			{"name": "Should return correct value as boolean for settings", "settings": {"saveUnknown": true}, "input": "saveUnknown", "output": true},
+			{"name": "Should return undefined if key doesn't exist in settings", "settings": {"saveUnknown": true}, "input": "random", "output": undefined}
+		];
+
+		tests.forEach((test) => {
+			it(test.name, () => {
+				expect(new Schema({"id": String}, test.settings).getSettingValue(test.input)).to.eql(test.output);
 			});
 		});
 	});
