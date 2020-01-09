@@ -95,3 +95,16 @@ You can set a validation on an attribute to ensure the value passes a given vali
 	}
 }
 ```
+
+### required: boolean
+
+You can set an attribute to be required when saving documents to DynamoDB. By default this setting is false.
+
+```js
+{
+	"email": {
+		"type": String,
+		"required": true
+	}
+}
+```
