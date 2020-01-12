@@ -21,7 +21,7 @@
     "test:debug": "ts-mocha --inspect test/",
     "test:debug:brk": "ts-mocha --inspect-brk test/",
     "lint": "eslint .",
-    "tslint": "tslint lib/**/*.ts",
+    "tslint": "tslint lib/**/*.ts && tslint dynamoose.d.ts",
     "coverage": "nyc npm test",
     "prepare": "tsc",
     "commit": "git-cz",
@@ -76,12 +76,12 @@
     "semantic-release": "^15.13.16",
     "should": "13.2.3",
     "ts-mocha": "6.0.0",
-    "ts-node": "8.0.3",
-    "tslint": "5.13.1",
-    "typescript": "3.3.3333"
+    "ts-node": "8.6.1",
+    "tslint": "5.20.1",
+    "typescript": "^3.7.4"
   },
   "dependencies": {
-    "@types/node": "11.11.0",
+    "@types/node": "12.12.24",
     "aws-sdk": "2.395.0",
     "debug": "4.1.1",
     "deep-equal": "1.0.1",

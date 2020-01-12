@@ -1,8 +1,8 @@
 // Custom made dynamoose declaration file.
 import * as _AWS from 'aws-sdk';
 
-declare module "dynamoose" {
-  export var AWS: typeof _AWS;
+declare module 'dynamoose' {
+  export const AWS: typeof _AWS;
 
   export function local(url?: string): void;
   export function ddb(): _AWS.DynamoDB;
@@ -24,31 +24,31 @@ declare module "dynamoose" {
     >,
     options?: TransactionOptions,
     next?: (err: Error, data: TransactionReturnData<DataSchema>) => void
-  ): Promise<TransactionReturnData<DataSchema>>
+  ): Promise<TransactionReturnData<DataSchema>>;
   export interface TransactionReturnData<DataSchema> {
-    TransactItems: Array<ModelSchema<DataSchema>>
+    TransactItems: Array<ModelSchema<DataSchema>>;
   }
   export interface TransactionOptions {
-    type: 'get' | 'write'
+    type: 'get' | 'write';
   }
 
   export interface ModelOption {
-    create?: boolean, // Create table in DB, if it does not exist,
-    update?: boolean, // Update remote indexes if they do not match local index structure
-    waitForActive?: boolean, // Wait for table to be created before trying to us it
-    waitForActiveTimeout?: number, // wait 3 minutes for table to activate
-    prefix?: string, // Set table name prefix
-    suffix?: string, // Set table name suffix
+    create?: boolean; // Create table in DB, if it does not exist,
+    update?: boolean; // Update remote indexes if they do not match local index structure
+    waitForActive?: boolean; // Wait for table to be created before trying to us it
+    waitForActiveTimeout?: number; // wait 3 minutes for table to activate
+    prefix?: string; // Set table name prefix
+    suffix?: string; // Set table name suffix
     streamOptions?: { // Set table stream options
       enabled: boolean, // Enable/disable stream
       type: 'NEW_IMAGE'|'OLD_IMAGE'|'NEW_AND_OLD_IMAGES'|'KEYS_ONLY', // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html#DDB-Type-StreamSpecification-StreamViewType
-    },
-    serverSideEncryption?: boolean, // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
+    };
+    serverSideEncryption?: boolean; // Set SSESpecification.Enabled (server-side encryption) to true or false (default: true)
   }
 
   /**
-  * Schema
-  */
+   * Schema
+   */
   export class Schema {
     constructor(schema: SchemaAttributes, options?: SchemaOptions);
     method(name: string, fn: any): any;
@@ -75,15 +75,15 @@ declare module "dynamoose" {
     trim?: boolean;
     lowercase?: boolean;
     uppercase?: boolean;
-    /**
+   /**
     * Indicating Secondary Index.
     * 'true' is means local, project all
     */
     index?: boolean | IndexDefinition | IndexDefinition[];
-    default?: (() => Type) | Type
+    default?: (() => Type) | Type;
   }
   export interface SchemaOptions {
-    throughput?: boolean | { read: number, write: number } | "ON_DEMAND";
+    throughput?: boolean | { read: number, write: number } | 'ON_DEMAND';
     useNativeBooleans?: boolean;
     useDocumentTypes?: boolean;
     timestamps?: boolean | { createdAt: string, updatedAt: string };
@@ -113,10 +113,10 @@ declare module "dynamoose" {
       | [StringConstructor]
       | ObjectConstructor
       | ArrayConstructor
-    )
+    );
   }
 
-  /**
+ /**
   * Index
   */
   interface IndexDefinition {
@@ -127,7 +127,7 @@ declare module "dynamoose" {
     throughput?: number | { read: number, write: number };
   }
 
-  /**
+ /**
   * Table
   */
   export class Table {
@@ -143,7 +143,7 @@ declare module "dynamoose" {
     getTableReq(): any;
   }
 
-  /**
+ /**
   * Model
   */
   export class Model<ModelData> {
@@ -159,32 +159,32 @@ declare module "dynamoose" {
 
     originalItem(): object;
 
-    populate<T>(path: string | PopulateOptions): Promise<Model<ModelData> & T>
+    populate<T>(path: string | PopulateOptions): Promise<Model<ModelData> & T>;
   }
-  type PopulateOptions = { path: string, model: string, populate?: PopulateOptions }
+  type PopulateOptions = { path: string, model: string, populate?: PopulateOptions };
 
   export interface PutOptions {
-    /**
+   /**
     * Overwrite existing item. Defaults to true for `model.put` and false for `Model.create`.
     */
     overwrite?: boolean;
-    /**
+   /**
     * Whether to update the documents timestamps or not. Defaults to true.
     */
     updateTimestamps?: boolean;
-    /**
+   /**
     * Whether to update the documents expires or not. Defaults to false.
     */
     updateExpires?: boolean;
-    /**
+   /**
     * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
     */
     condition?: string;
-    /**
+   /**
     * A map of name substitutions for the condition expression.
     */
     conditionNames?: any;
-    /**
+   /**
     * A map of values for the condition expression. Note that in order for automatic object conversion to work, the keys in this object must match schema attribute names.
     */
     conditionValues?: any;
@@ -217,15 +217,15 @@ declare module "dynamoose" {
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOptions): Promise<ModelSchema<DataSchema>>;
 
-    transaction: ModelTransactionConstructor<DataSchema, KeySchema>
+    transaction: ModelTransactionConstructor<DataSchema, KeySchema>;
   }
   type ModelSchema<T> = Model<T> & T;
 
-  /**
+ /**
   * Update
   */
 
-  /**
+ /**
   * Updates and existing item in the table. Three types of updates: $PUT, $ADD, and $DELETE.
   * Put is the default behavior.
   */
@@ -237,15 +237,15 @@ declare module "dynamoose" {
   );
 
   export interface UpdateOptions {
-    /**
+   /**
     * If true, the attribute can be updated to an empty array. If false, empty arrays will remove the attribute. Defaults to false.
     */
     allowEmptyArray?: boolean;
-    /**
+   /**
     * If true, required attributes will be filled with their default values on update (regardless of you specifying them for the update). Defaults to false.
     */
     createRequired?: boolean;
-    /**
+   /**
     * If true, the timestamps attributes will be updated. Will not do anything if timestamps attribute were not specified. Defaults to true.
     */
     updateTimestamps?: boolean;
@@ -253,11 +253,11 @@ declare module "dynamoose" {
      * Specifies what should be returned after update successfully completes.
      */
     returnValues?:
-      | "NONE"
-      | "ALL_OLD"
-      | "UPDATED_OLD"
-      | "ALL_NEW"
-      | "UPDATED_NEW";
+      | 'NONE'
+      | 'ALL_OLD'
+      | 'UPDATED_OLD'
+      | 'ALL_NEW'
+      | 'UPDATED_NEW';
     /**
      * An expression for a conditional update. See the AWS documentation for more information about condition expressions.
      */
@@ -273,7 +273,7 @@ declare module "dynamoose" {
   }
 
 
-  /**
+ /**
   * Query
   */
   type QueryFilter = any;
@@ -310,7 +310,7 @@ declare module "dynamoose" {
   type QueryKey = any;
 
 
-  /**
+ /**
   * Scan
   */
   type ScanFilter = string | any;
@@ -376,11 +376,11 @@ declare module "dynamoose" {
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, callback: (err: Error, items: ModelSchema<DataSchema>[]) => void): void;
     update(key: KeySchema, update: UpdateUpdate<DataSchema>, options?: UpdateOptions): Promise<ModelSchema<DataSchema>>;
 
-    conditionCheck(key: KeySchema, options?: ConditionOptions): void
+    conditionCheck(key: KeySchema, options?: ConditionOptions): void;
   }
   export interface ConditionOptions {
-    condition: string,
-    conditionNames: object,
-    conditionValues: object,
+    condition: string;
+    conditionNames: object;
+    conditionValues: object;
   }
 }
