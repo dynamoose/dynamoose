@@ -159,7 +159,9 @@ describe("Schema", () => {
 							"AttributeName": "id",
 							"KeyType": "HASH"
 						}
-					]
+					],
+					"GlobalSecondaryIndexes": [],
+					"LocalSecondaryIndexes": []
 				}
 			},
 			{
@@ -177,7 +179,9 @@ describe("Schema", () => {
 							"AttributeName": "age",
 							"KeyType": "HASH"
 						}
-					]
+					],
+					"GlobalSecondaryIndexes": [],
+					"LocalSecondaryIndexes": []
 				}
 			},
 			{
@@ -203,7 +207,9 @@ describe("Schema", () => {
 							"AttributeName": "age",
 							"KeyType": "RANGE"
 						}
-					]
+					],
+					"GlobalSecondaryIndexes": [],
+					"LocalSecondaryIndexes": []
 				}
 			},
 			{
@@ -229,7 +235,9 @@ describe("Schema", () => {
 							"AttributeName": "id",
 							"KeyType": "RANGE"
 						}
-					]
+					],
+					"GlobalSecondaryIndexes": [],
+					"LocalSecondaryIndexes": []
 				}
 			}
 		];

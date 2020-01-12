@@ -176,6 +176,8 @@ describe("Model", () => {
 								"ReadCapacityUnits": 5,
 								"WriteCapacityUnits": 5
 							},
+							"GlobalSecondaryIndexes": [],
+							"LocalSecondaryIndexes": [],
 							"TableName": tableName
 						});
 					});
