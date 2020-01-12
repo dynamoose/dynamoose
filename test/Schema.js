@@ -235,8 +235,8 @@ describe("Schema", () => {
 		];
 
 		tests.forEach((test) => {
-			it(test.name, () => {
-				expect(new Schema(test.input).getCreateTableAttributeParams()).to.eql(test.output);
+			it(test.name, async () => {
+				expect(await (new Schema(test.input).getCreateTableAttributeParams())).to.eql(test.output);
 			});
 		});
 	});
