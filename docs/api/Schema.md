@@ -135,3 +135,29 @@ You can set an attribute to have an enum array, which means it must match one of
 	}
 }
 ```
+
+### index: boolean | object | array
+
+You can define indexes on properties to be created or updated upon model initialization. If you pass in an array for the value of this setting it must be an array of index objects. By default no indexes are specified on the attribute.
+
+Your index object can contain the following properties:
+
+- name: string - Name of index (default: `${attribute}${global ? "GlobalIndex" : "LocalIndex"}`)
+- global: boolean - If the index should be a global secondary index or not. Attribute will be the hash key for the index. (default: `false`)
+- rangeKey: string - The range key attribute name for a global secondary index. (default: undefined)
+- project: boolean | [string] - Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. (default: `true`)
+- throughput: number | {read: number, write: number} - Sets the throughput for the global secondary index. (default: undefined)
+
+If you set `index` to `true`, it will create an index with all of the default settings.
+
+```js
+{
+	"email": {
+		"type": String,
+		"index": {
+			"name": "emailIndex",
+			"global": true
+		} // creates a global index with the name `emailIndex`
+	}
+}
+```
