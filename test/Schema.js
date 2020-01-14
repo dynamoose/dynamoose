@@ -490,6 +490,88 @@ describe("Schema", () => {
 					],
 					"LocalSecondaryIndexes": []
 				}
+			},
+			{
+				"name": "Should return correct result with index and no name as local index",
+				"input": {"id": String, "age": {"type": Number, "index": {"name": ""}}},
+				"output": {
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						},
+						{
+							"AttributeName": "age",
+							"AttributeType": "N"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"GlobalSecondaryIndexes": [],
+					"LocalSecondaryIndexes": [
+						{
+							"IndexName": "ageLocalIndex",
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
+								}
+							],
+							"Projection": {
+								"ProjectionType": "ALL"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Should return correct result with index and no name as global index",
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "", "global": true}}},
+				"output": {
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						},
+						{
+							"AttributeName": "age",
+							"AttributeType": "N"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"GlobalSecondaryIndexes": [
+						{
+							"IndexName": "ageGlobalIndex",
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
+								}
+							],
+							"Projection": {
+								"ProjectionType": "ALL"
+							}
+						}
+					],
+					"LocalSecondaryIndexes": []
+				}
 			}
 		];
 
