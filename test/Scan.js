@@ -39,6 +39,10 @@ describe("Scan", () => {
 			expect(Model.scan()).to.be.a.instanceof(Model.scan.carrier);
 		});
 
+		it("Should have correct class name", () => {
+			expect(Model.scan().constructor.name).to.eql("Scan");
+		});
+
 		it("Should set pending key if string passed into scan function", () => {
 			const id = "id";
 			const scan = Model.scan(id);
