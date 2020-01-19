@@ -376,6 +376,41 @@ describe("Model", () => {
 					expect(user).to.be.an.instanceof(User);
 				});
 
+				it("Should return object with correct values if using custom types", async () => {
+					User = new dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "name", "birthday"]);
+					expect(user.id).to.eql(1);
+					expect(user.name).to.eql("Charlie");
+					expect(user.birthday).to.eql(new Date(1));
+				});
+
+				it("Should return object with correct values if using custom types but value doesn't exist", async () => {
+					User = new dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "name"]);
+					expect(user.id).to.eql(1);
+					expect(user.name).to.eql("Charlie");
+					expect(user.birthday).to.not.exist;
+				});
+
+				it("Should throw type mismatch error if passing in wrong type with custom type", async () => {
+					User = new dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": "Hello World"}}});
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)(1);
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected birthday to be of type number, instead found type string."));
+				});
+
 				it("Should throw error if DynamoDB responds with error", async () => {
 					getItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
