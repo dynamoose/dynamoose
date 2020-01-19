@@ -211,7 +211,7 @@ describe("Model", () => {
 				});
 
 				describe("Wait For Active", () => {
-					let describeTableParams = [], describeTableResult;
+					let describeTableParams = [], describeTableFunction;
 					beforeEach(() => {
 						dynamoose.model.defaults = {
 							"create": false,
@@ -230,24 +230,24 @@ describe("Model", () => {
 							"describeTable": (params) => {
 								describeTableParams.push(params);
 								return {
-									"promise": () => Promise.resolve(typeof describeTableResult === "function" ? describeTableResult() : describeTableResult)
+									"promise": describeTableFunction
 								};
 							}
 						});
 					});
 					afterEach(() => {
 						describeTableParams = [];
-						describeTableResult = null;
+						describeTableFunction = null;
 						dynamoose.aws.ddb.revert();
 					});
 
 					it("Should call describeTable with correct parameters", async () => {
 						const tableName = "Cat";
-						describeTableResult = {
+						describeTableFunction = () => Promise.resolve({
 							"Table": {
 								"TableStatus": "ACTIVE"
 							}
-						};
+						});
 						option.func(tableName, {"id": String});
 						await setImmediatePromise();
 						expect(describeTableParams).to.eql([{
@@ -257,7 +257,7 @@ describe("Model", () => {
 
 					it("Should call describeTable with correct parameters multiple times", async () => {
 						const tableName = "Cat";
-						describeTableResult = () => ({
+						describeTableFunction = () => Promise.resolve({
 							"Table": {
 								"TableStatus": describeTableParams.length > 1 ? "ACTIVE" : "CREATING"
 							}
@@ -273,16 +273,29 @@ describe("Model", () => {
 
 					it("Should timeout according to waitForActive timeout rules", async () => {
 						const tableName = "Cat";
-						describeTableResult = () => ({
+						describeTableFunction = () => Promise.resolve({
 							"Table": {
 								"TableStatus": "CREATING"
 							}
 						});
-						const model = option.func(tableName, {"id": String});
+						option.func(tableName, {"id": String});
 						const errorHandler = () => {};
 						process.on("unhandledRejection", errorHandler);
 						await utils.timeout(15);
 						expect(describeTableParams.length).to.be.above(5);
+						process.removeListener("unhandledRejection", errorHandler);
+					});
+
+					it("Should throw error if AWS throws error", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.reject({"error": "ERROR"});
+
+						let error;
+						option.func(tableName, {"id": String});
+						const errorHandler = (err) => error = err;
+						process.on("unhandledRejection", errorHandler);
+						await utils.timeout(15);
+						expect(error).to.eql({"error": "ERROR"});
 						process.removeListener("unhandledRejection", errorHandler);
 					});
 				});
@@ -319,7 +332,7 @@ describe("Model", () => {
 			describe(callType.name, () => {
 				it("Should send correct params to getItem", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
-					const user = await callType.func(User).bind(User)(1);
+					await callType.func(User).bind(User)(1);
 					expect(getItemParams).to.be.an("object");
 					expect(getItemParams).to.eql({
 						"Key": {
@@ -333,7 +346,7 @@ describe("Model", () => {
 
 				it("Should send correct params to getItem if we pass in an object", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
-					const user = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
 					expect(getItemParams).to.be.an("object");
 					expect(getItemParams).to.eql({
 						"Key": {
@@ -456,7 +469,7 @@ describe("Model", () => {
 			describe(callType.name, () => {
 				it("Should send correct params to putItem", async () => {
 					createItemFunction = () => Promise.resolve();
-					const user = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
 					expect(createItemParams).to.be.an("object");
 					expect(createItemParams).to.eql({
 						"ConditionExpression": "attribute_not_exists(#__hash_key)",
@@ -477,7 +490,7 @@ describe("Model", () => {
 
 				it("Should overwrite if passed into options", async () => {
 					createItemFunction = () => Promise.resolve();
-					const user = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"}, {"overwrite": true});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"}, {"overwrite": true});
 					expect(createItemParams).to.be.an("object");
 					expect(createItemParams).to.eql({
 						"Item": {
