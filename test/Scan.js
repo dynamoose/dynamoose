@@ -186,10 +186,24 @@ describe("Scan", () => {
 			expect(Model.scan().where()).to.be.a.instanceof(Model.scan.carrier);
 		});
 
+		it("Should be an alias of scan.filter", () => {
+			expect(Model.scan().where).to.eql(Model.scan().filter);
+		});
+	});
+
+	describe("scan.filter", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().filter).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().filter()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
 		it("Should set correct property", () => {
 			expect(Model.scan().settings.pending).to.eql({});
-			expect(Model.scan().where("id").settings.pending).to.eql({"key": "id"});
-			expect(Model.scan().where("id").where("name").settings.pending).to.eql({"key": "name"});
+			expect(Model.scan().filter("id").settings.pending).to.eql({"key": "id"});
+			expect(Model.scan().filter("id").filter("name").settings.pending).to.eql({"key": "name"});
 		});
 	});
 

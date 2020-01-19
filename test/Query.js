@@ -186,10 +186,24 @@ describe("Query", () => {
 			expect(Model.query().where()).to.be.a.instanceof(Model.query.carrier);
 		});
 
+		it("Should be an alias of query.filter", () => {
+			expect(Model.query().where).to.eql(Model.query().filter);
+		});
+	});
+
+	describe("query.filter", () => {
+		it("Should be a function", () => {
+			expect(Model.query().filter).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().filter()).to.be.a.instanceof(Model.query.carrier);
+		});
+
 		it("Should set correct property", () => {
 			expect(Model.query().settings.pending).to.eql({});
-			expect(Model.query().where("id").settings.pending).to.eql({"key": "id"});
-			expect(Model.query().where("id").where("name").settings.pending).to.eql({"key": "name"});
+			expect(Model.query().filter("id").settings.pending).to.eql({"key": "id"});
+			expect(Model.query().filter("id").filter("name").settings.pending).to.eql({"key": "name"});
 		});
 	});
 
