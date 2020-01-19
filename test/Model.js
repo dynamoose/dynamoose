@@ -89,7 +89,7 @@ describe("Model", () => {
 
 					it("Should set ready after setup flow", async () => {
 						const model = option.func("Cat", {"id": String}, {"create": false});
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 						expect(model.Model.ready).to.be.true;
 					});
 
@@ -103,30 +103,30 @@ describe("Model", () => {
 							})
 						});
 						const model = option.func("Cat", {"id": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0}}});
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 
 						let pendingTaskPromiseResolved = false;
 						model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
 
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 						expect(pendingTaskPromiseResolved).to.be.false;
 
 						describeTableResponse = {
 							"Table": {"TableStatus": "ACTIVE"}
 						};
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 						expect(pendingTaskPromiseResolved).to.be.true;
 						expect(model.Model.pendingTasks).to.eql([]);
 					});
 
 					it("Should immediately resolve pendingTaskPromises promise if table is already ready", async () => {
 						const model = option.func("Cat", {"id": String}, {"create": false});
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 
 						let pendingTaskPromiseResolved = false;
 						model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
 
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 
 						expect(pendingTaskPromiseResolved).to.be.true;
 					});
@@ -158,7 +158,7 @@ describe("Model", () => {
 					it("Should call createTable with correct parameters", async () => {
 						const tableName = "Cat";
 						option.func(tableName, {"id": String});
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 						expect(createTableParams).to.eql({
 							"AttributeDefinitions": [
 								{
@@ -184,7 +184,7 @@ describe("Model", () => {
 
 					it("Should not call createTable if create option set to false", async () => {
 						option.func("Cat", {"id": String}, {"create": false});
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 						expect(createTableParams).to.eql(null);
 					});
 
@@ -203,7 +203,7 @@ describe("Model", () => {
 						});
 
 						option.func("Cat", {"id": String});
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 						expect(self).to.be.an("object");
 						expect(Object.keys(self)).to.eql(["promise"]);
 						expect(self.promise).to.exist;
@@ -249,7 +249,7 @@ describe("Model", () => {
 							}
 						});
 						option.func(tableName, {"id": String});
-						await setImmediatePromise();
+						await utils.set_immediate_promise();
 						expect(describeTableParams).to.eql([{
 							"TableName": tableName
 						}]);
@@ -438,7 +438,18 @@ describe("Model", () => {
 					expect(user.name).to.eql("Charlie");
 				});
 
-				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
+				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", async () => {
+					User = new dynamoose.model("User", {"id": Number, "name": String, "age": Number});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}});
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)(1);
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type string."));
+				});
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledGetItem = false;
@@ -455,12 +466,12 @@ describe("Model", () => {
 						})
 					});
 					const model = new dynamoose.model("User", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
-					await setImmediatePromise();
+					await utils.set_immediate_promise();
 
 					let user;
 					callType.func(model).bind(model)(1).then((item) => user = item);
 
-					await setImmediatePromise();
+					await utils.set_immediate_promise();
 					expect(calledGetItem).to.be.false;
 					expect(user).to.not.exist;
 					expect(model.Model.pendingTasks.length).to.eql(1);
@@ -468,7 +479,7 @@ describe("Model", () => {
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await setImmediatePromise();
+					await utils.set_immediate_promise();
 					expect(calledGetItem).to.be.true;
 					expect({...user}).to.eql({"id": 1, "name": "Charlie"});
 				});
@@ -562,9 +573,3 @@ describe("model", () => {
 		expect(() => new Cat({"name": "Bob"})).to.not.throw();
 	});
 });
-
-// TODO: move the following function into a utils file
-// This function is used to turn `setImmediate` into a promise. This is espescially useful if you want to wait for pending promises to fire and complete before running the asserts on a test.
-function setImmediatePromise() {
-	return new Promise((resolve) => setImmediate(resolve));
-}
