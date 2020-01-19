@@ -1,6 +1,39 @@
 # Schema
 
-## TODO: fill out this documentation (creating a schema, `saveUnknown`)
+## new dynamoose.Schema(schema[, options])
+
+You can use this method to create a schema. The `schema` parameter is an object defining your schema, each value should be a type or object defining the type with additional settings (listed below).
+
+The `options` parameter is an optional object with the following options:
+
+- `saveUnknown` array | boolean (default: false) - This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed.
+
+```js
+const schema = new dynamoose.Schema({
+	"id": String,
+	"age": Number
+}, {
+	"saveUnknown": true
+});
+```
+
+```js
+const schema = new dynamoose.Schema({
+	"id": String,
+	"age": {
+		"type": Number,
+		"default": 5
+	}
+});
+```
+
+## Attribute Types
+
+| Type    | Set Allowed | DynamoDB Type | Notes |
+|---------|-------------|---------------|-------|
+| String  | True        | S             |       |
+| Boolean | False       | BOOL          |       |
+| Number  | True        | N             |       |
 
 ## Attribute Settings
 
