@@ -143,6 +143,20 @@ describe("Document", () => {
 					expect(result).to.eql(user);
 				});
 
+				it("Should save with correct object with overwrite set to false", async () => {
+					putItemFunction = () => Promise.resolve();
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)({"overwrite": false});
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"TableName": "User",
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						}
+					}]);
+				});
+
 				it("Should save with correct object with more properties than in schema", async () => {
 					putItemFunction = () => Promise.resolve();
 					user = new User({"id": 1, "name": "Charlie", "hello": "world"});
