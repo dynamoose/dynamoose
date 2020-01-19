@@ -103,7 +103,7 @@ describe("Scan", () => {
 
 				it("Should send correct request on scan.exec with filters", async () => {
 					scanPromiseResolver = () => ({"Items": []});
-					const scan = Model.scan().where("id").eq("test");
+					const scan = Model.scan().filter("id").eq("test");
 					await callType.func(scan.exec).bind(scan)();
 					expect(scanParams).to.eql({"ScanFilter": {
 						"id": {
@@ -117,7 +117,7 @@ describe("Scan", () => {
 
 				it("Should send correct request on scan.exec with filters and multiple values", async () => {
 					scanPromiseResolver = () => ({"Items": []});
-					const scan = Model.scan().where("id").between(1, 3);
+					const scan = Model.scan().filter("id").between(1, 3);
 					await callType.func(scan.exec).bind(scan)();
 					expect(scanParams).to.eql({"ScanFilter": {
 						"id": {
@@ -217,13 +217,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").null();
+			const scan = Model.scan().filter("id").null();
 			expect(scan.settings.filters).to.eql({"id": {"type": "NULL", "value": []}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().null();
+			const scan = Model.scan().filter("id").not().null();
 			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_NULL", "value": []}});
 			expect(scan.settings.pending).to.eql({});
 		});
@@ -239,22 +239,22 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").eq("test");
+			const scan = Model.scan().filter("id").eq("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "EQ", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().eq("test");
+			const scan = Model.scan().filter("id").not().eq("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "NE", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should have same options as scan.null for empty string, null, or undefined as value", () => {
-			expect(Model.scan().where("id").eq().settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
-			expect(Model.scan().where("id").eq("").settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
-			expect(Model.scan().where("id").eq(null).settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
-			expect(Model.scan().where("id").eq(undefined).settings.filters).to.eql(Model.scan().where("id").null().settings.filters);
+			expect(Model.scan().filter("id").eq().settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
+			expect(Model.scan().filter("id").eq("").settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
+			expect(Model.scan().filter("id").eq(null).settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
+			expect(Model.scan().filter("id").eq(undefined).settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
 		});
 	});
 
@@ -268,13 +268,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").lt("test");
+			const scan = Model.scan().filter("id").lt("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "LT", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().lt("test");
+			const scan = Model.scan().filter("id").not().lt("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "GE", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
@@ -290,13 +290,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").le("test");
+			const scan = Model.scan().filter("id").le("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "LE", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().le("test");
+			const scan = Model.scan().filter("id").not().le("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "GT", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
@@ -312,13 +312,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").gt("test");
+			const scan = Model.scan().filter("id").gt("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "GT", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().gt("test");
+			const scan = Model.scan().filter("id").not().gt("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "LE", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
@@ -334,13 +334,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").ge("test");
+			const scan = Model.scan().filter("id").ge("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "GE", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().ge("test");
+			const scan = Model.scan().filter("id").not().ge("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "LT", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
@@ -356,13 +356,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").beginsWith("test");
+			const scan = Model.scan().filter("id").beginsWith("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "BEGINS_WITH", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should throw error with not()", () => {
-			const scan = () => Model.scan().where("id").not().beginsWith("test");
+			const scan = () => Model.scan().filter("id").not().beginsWith("test");
 			expect(scan).to.throw("BEGINS_WITH can not follow not()");
 		});
 	});
@@ -377,13 +377,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").contains("test");
+			const scan = Model.scan().filter("id").contains("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "CONTAINS", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().where("id").not().contains("test");
+			const scan = Model.scan().filter("id").not().contains("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_CONTAINS", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
@@ -399,13 +399,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").in("test");
+			const scan = Model.scan().filter("id").in("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "IN", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should throw error with not()", () => {
-			const scan = () => Model.scan().where("id").not().in("test");
+			const scan = () => Model.scan().filter("id").not().in("test");
 			expect(scan).to.throw("IN can not follow not()");
 		});
 	});
@@ -420,13 +420,13 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().where("id").between(1, 2);
+			const scan = Model.scan().filter("id").between(1, 2);
 			expect(scan.settings.filters).to.eql({"id": {"type": "BETWEEN", "value": [1, 2]}});
 			expect(scan.settings.pending).to.eql({});
 		});
 
 		it("Should throw error with not()", () => {
-			const scan = () => Model.scan().where("id").not().between(1, 2);
+			const scan = () => Model.scan().filter("id").not().between(1, 2);
 			expect(scan).to.throw("BETWEEN can not follow not()");
 		});
 	});
