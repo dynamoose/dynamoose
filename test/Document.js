@@ -120,7 +120,7 @@ describe("Document", () => {
 
 				it("Should save to correct table with multiple models", async () => {
 					const date = Date.now();
-					const Robot = new Model("Robot", {"id": Number, "built": Date});
+					const Robot = new Model("Robot", {"id": Number, "built": Number});
 					const robot = new Robot({"id": 2, "built": date});
 
 					putItemFunction = () => Promise.resolve();
