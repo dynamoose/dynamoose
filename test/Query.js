@@ -98,7 +98,7 @@ describe("Query", () => {
 				it("Should send correct request on query.exec", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query().exec).bind(Model.query())();
-					expect(queryParams).to.eql({"QueryFilter": {}, "TableName": "Cat"});
+					expect(queryParams).to.eql({"QueryFilter": {}, "TableName": "Cat", "KeyConditions": {}});
 				});
 
 				it("Should send correct request on query.exec with filters", async () => {
@@ -112,7 +112,7 @@ describe("Query", () => {
 								{"S": "test"}
 							]
 						}
-					}, "TableName": "Cat"});
+					}, "TableName": "Cat", "KeyConditions": {}});
 				});
 
 				it("Should send correct request on query.exec with filters and multiple values", async () => {
@@ -127,7 +127,36 @@ describe("Query", () => {
 								{"N": "3"}
 							]
 						}
-					}, "TableName": "Cat"});
+					}, "TableName": "Cat", "KeyConditions": {}});
+				});
+
+				it("Should send correct request on query.exec with query condition", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query().where("id").eq("test");
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({"KeyConditions": {
+						"id": {
+							"ComparisonOperator": "EQ",
+							"AttributeValueList": [
+								{"S": "test"}
+							]
+						}
+					}, "TableName": "Cat", "QueryFilter": {}});
+				});
+
+				it("Should send correct request on query.exec with query condition and multiple values", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query().where("id").between(1, 3);
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({"KeyConditions": {
+						"id": {
+							"ComparisonOperator": "BETWEEN",
+							"AttributeValueList": [
+								{"N": "1"},
+								{"N": "3"}
+							]
+						}
+					}, "TableName": "Cat", "QueryFilter": {}});
 				});
 
 				it("Should throw error from AWS", async () => {
@@ -186,8 +215,14 @@ describe("Query", () => {
 			expect(Model.query().where()).to.be.a.instanceof(Model.query.carrier);
 		});
 
-		it("Should be an alias of query.filter", () => {
-			expect(Model.query().where).to.eql(Model.query().filter);
+		it("Should not be an alias of query.filter", () => {
+			expect(Model.query().where).to.not.eql(Model.query().filter);
+		});
+
+		it("Should set correct property", () => {
+			expect(Model.query().settings.pending).to.eql({});
+			expect(Model.query().where("id").settings.pending).to.eql({"key": "id", "queryCondition": true});
+			expect(Model.query().where("id").where("name").settings.pending).to.eql({"key": "name", "queryCondition": true});
 		});
 	});
 
