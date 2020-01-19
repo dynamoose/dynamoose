@@ -16,11 +16,17 @@ const myUser = new User({
 // myUser is now a document instance of the User model
 ```
 
-## document.save([callback])
+## document.save([settings,] [callback])
 
 This saves a document to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
+
+You can also pass a settings object in as the first parameter. The following options are available for settings are:
+
+- `overwrite` (default: true) - If an existing document with the same hash key should be overwritten in the database. You can set this to false to not overwrite an existing document with the same hash key.
+
+Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 
 ```js
 //...
