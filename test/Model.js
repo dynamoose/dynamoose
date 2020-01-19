@@ -427,6 +427,73 @@ describe("Model", () => {
 			});
 		});
 	});
+
+	describe("Model.create", () => {
+		let User, createItemParams, createItemFunction;
+		beforeEach(() => {
+			User = new dynamoose.model("User", {"id": Number, "name": String});
+			dynamoose.aws.ddb.set({
+				"putItem": (params) => {
+					createItemParams = params;
+					return {"promise": createItemFunction};
+				}
+			});
+		});
+		afterEach(() => {
+			User = null;
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should be a function", () => {
+			expect(User.create).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (Model) => Model.create},
+			{"name": "Callback", "func": (Model) => util.promisify(Model.create)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should send correct params to putItem", async () => {
+					createItemFunction = () => Promise.resolve();
+					const user = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should overwrite if passed into options", async () => {
+					createItemFunction = () => Promise.resolve();
+					const user = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"}, {"overwrite": true});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+			});
+		});
+	});
 });
 
 describe("model", () => {
