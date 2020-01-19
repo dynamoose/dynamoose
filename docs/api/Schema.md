@@ -6,7 +6,7 @@ You can use this method to create a schema. The `schema` parameter is an object 
 
 The `options` parameter is an optional object with the following options:
 
-- `saveUnknown` array | boolean (default: false) - This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed.
+- `saveUnknown` array | boolean (default: false) - This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970)
 
 ```js
 const schema = new dynamoose.Schema({
@@ -29,12 +29,12 @@ const schema = new dynamoose.Schema({
 
 ## Attribute Types
 
-| Type    | Set Allowed | DynamoDB Type | Notes                                                                                               |
-|---------|-------------|---------------|-----------------------------------------------------------------------------------------------------|
-| String  | True        | S             |                                                                                                     |
-| Boolean | False       | BOOL          |                                                                                                     |
-| Number  | True        | N             |                                                                                                     |
-| Date    | True        | N             | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
+| Type    | Set Allowed | DynamoDB Type | Custom Dynamoose Type | Notes                                                                                               |
+|---------|-------------|---------------|-----------------------|-----------------------------------------------------------------------------------------------------|
+| String  | True        | S             | False                 |                                                                                                     |
+| Boolean | False       | BOOL          | False                 |                                                                                                     |
+| Number  | True        | N             | False                 |                                                                                                     |
+| Date    | True        | N             | True                  | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 
 ## Attribute Settings
 
