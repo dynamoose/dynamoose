@@ -432,7 +432,20 @@ describe("Document", () => {
 					}]);
 				});
 
-				// TODO: add test for `Should throw error if Dynamo object consists properties that have type mismatch with schema`
+				it("Should throw error if object contains properties that have type mismatch with schema", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": String, "age": Number}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie", "age": "test"});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type string."));
+				});
 
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
