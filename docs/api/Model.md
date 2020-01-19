@@ -125,3 +125,30 @@ User.get({"id": 1, "name": "Tim"}, (error, myUser) => {
 	}
 });
 ```
+
+### Model.create(document, [settings], [callback])
+
+This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
+
+If you do not pass in a `callback` parameter a promise will be returned.
+
+```js
+const User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+
+try {
+	const user = await User.create({"id": 1, "name": "Tim"}); // If a user with `id=1` already exists in the table, an error will be thrown.
+	console.log(user);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=1` already exists in the table, an error will be thrown.
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(user);
+	}
+});
+```
