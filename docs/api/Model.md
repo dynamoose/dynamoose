@@ -46,7 +46,14 @@ The default object is listed below.
 		"write": 5
 	},
 	"prefix": "",
-	"suffix": ""
+	"suffix": "",
+	"waitForActive": {
+		"enabled": true,
+		"check": {
+			"timeout": 180000,
+			"frequency": 1000
+		}
+	}
 }
 ```
 
