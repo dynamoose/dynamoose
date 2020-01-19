@@ -29,11 +29,12 @@ const schema = new dynamoose.Schema({
 
 ## Attribute Types
 
-| Type    | Set Allowed | DynamoDB Type | Notes |
-|---------|-------------|---------------|-------|
-| String  | True        | S             |       |
-| Boolean | False       | BOOL          |       |
-| Number  | True        | N             |       |
+| Type    | Set Allowed | DynamoDB Type | Notes                                                                                               |
+|---------|-------------|---------------|-----------------------------------------------------------------------------------------------------|
+| String  | True        | S             |                                                                                                     |
+| Boolean | False       | BOOL          |                                                                                                     |
+| Number  | True        | N             |                                                                                                     |
+| Date    | True        | N             | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 
 ## Attribute Settings
 

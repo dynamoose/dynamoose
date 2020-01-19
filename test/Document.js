@@ -157,6 +157,33 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with custom type", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
+					const birthday = new Date();
+					user = new User({"id": 1, "name": "Charlie", birthday});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${birthday.getTime()}`}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw type mismatch error if passing in wrong type with custom type", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie", "birthday": "test"});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected birthday to be of type number, instead found type string."));
+				});
+
 				it("Should save with correct object with more properties than in schema", async () => {
 					putItemFunction = () => Promise.resolve();
 					user = new User({"id": 1, "name": "Charlie", "hello": "world"});
