@@ -78,7 +78,7 @@ Cat.query().filter("id").not().between(1, 2); // Will throw error since between 
 
 ## query.filter(key)
 
-This function prepares a new filter conditional to be used with the request. If you have not finished your previous filter conditional before using this function again it will wipe out the previous pending conditional filter. The `key` parameter is a string that you pass in representing which attribute you would like to filter on.
+This function prepares a new filter conditional to be used with the request. If you have not finished your previous conditional before using this function again it will wipe out the previous pending conditional. The `key` parameter is a string that you pass in representing which attribute you would like to filter on.
 
 You will use this function with a comparison function which will complete the filter conditional and allow you to start another filter conditional if you wish.
 
@@ -89,7 +89,14 @@ Cat.query().filter("id").eq(1); // Since this query has a comparison function (e
 
 ## query.where(key)
 
-This function is identical to [`query.filter(key)`](#queryfilterkey) and just used as an alias.
+This function prepares a new range key conditional to query with the request. If you have not finished your previous conditional before using this function again it will wipe out the previous pending conditional. The `key` parameter is a string that you pass in representing which range key you would like to add a conditional to.
+
+You will use this function with a comparison function which will complete the conditional and allow you to start another conditional if you wish.
+
+```js
+Cat.query().where("id"); // Currently this query has no behavior and will query all items in the table
+Cat.query().where("id").eq(1); // Since this query has a comparison function (eq) after the conditional it will complete the conditional and only query items where `id` = 1
+```
 
 ## query.null()
 
