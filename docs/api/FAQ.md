@@ -14,3 +14,7 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 ## Why is it recommended to set `create` & `waitForActive` model options to false for production environments?
 
 Both the `create` & `waitForActive` model options add overhead to creating model instances. In your production environment it is assumed that you already have the tables setup prior to deploying your application, which makes the `create` & `waitForActive` options unnecessary.
+
+## Is Dynamoose's goal to be compatible with Mongoose?
+
+No. Although Dynamoose was inspired by Mongoose, there are a lot of differences between the two database engines. We do not have the goal of a fully compatible API with Mongoose, although you will find a lot of similarities. Some areas of Dynamoose we will not attempt to take any inspiration from Mongoose, and design it in our own way.
