@@ -5,6 +5,7 @@ const Schema = require("../lib/Schema");
 const aws = require("../lib/aws");
 const util = require("util");
 const Error = require("../lib/Error");
+const utils = require("../lib/utils");
 
 describe("Document", () => {
 	it("Should be a function", () => {
@@ -479,12 +480,12 @@ describe("Document", () => {
 					});
 					const model = new Model("User2", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
 					const document = new model({"id": 1, "name": "Charlie"});
-					await setImmediatePromise();
+					await utils.set_immediate_promise();
 
 					let finishedSavingUser = false;
 					callType.func(document).bind(document)().then(() => finishedSavingUser = true);
 
-					await setImmediatePromise();
+					await utils.set_immediate_promise();
 					expect(putParams).to.eql([]);
 					expect(finishedSavingUser).to.be.false;
 					expect(model.Model.pendingTasks.length).to.eql(1);
@@ -492,7 +493,7 @@ describe("Document", () => {
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await setImmediatePromise();
+					await utils.set_immediate_promise();
 					expect(putParams).to.eql([{
 						"Item": {
 							"id": {"N": "1"},
@@ -519,20 +520,37 @@ describe("Document", () => {
 
 		const tests = [
 			{"schema": {"id": Number, "name": String}, "input": {"id": 1, "name": "Charlie", "hello": "world"}, "output": {"id": 1, "name": "Charlie"}},
-			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "output": {"id": 1}}
-			// TODO: add type mismatch error test here
+			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "output": {"id": 1}},
+			{"schema": {"id": Number, "name": String, "age": Number}, "input": {"id": 1, "name": "Charlie", "age": "test"}, "error": "test"}
 		];
 
 		tests.forEach((test) => {
-			it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
-				const User = new Model("User", test.schema);
-				const user = new User(test.input);
+			if (test.error) {
+				it(`Should throw error ${test.error} correctly for input ${JSON.stringify(test.input)} and schema ${JSON.stringify(test.schema)}`, async () => {
+					const User = new Model("User", test.schema);
+					const user = new User(test.input);
 
-				const obj = await user.conformToSchema();
+					let result, error;
+					try {
+						result = await user.conformToSchema();
+					} catch (e) {
+						error = e;
+					}
 
-				expect({...user}).to.eql(test.output);
-				expect(obj).to.eql(user);
-			});
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type string."));
+				});
+			} else {
+				it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
+					const User = new Model("User", test.schema);
+					const user = new User(test.input);
+
+					const obj = await user.conformToSchema();
+
+					expect({...user}).to.eql(test.output);
+					expect(obj).to.eql(user);
+				});
+			}
 		});
 	});
 
@@ -784,9 +802,3 @@ describe("Document", () => {
 		});
 	});
 });
-
-// TODO: move the following function into a utils file
-// This function is used to turn `setImmediate` into a promise. This is espescially useful if you want to wait for pending promises to fire and complete before running the asserts on a test.
-function setImmediatePromise() {
-	return new Promise((resolve) => setImmediate(resolve));
-}
