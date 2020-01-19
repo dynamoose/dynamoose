@@ -80,6 +80,11 @@ describe("Scan", () => {
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
+				it("Should return correct result if unknown properties are in DynamoDB", async () => {
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
 				it("Should return correct metadata in result", async () => {
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1});
 					const result = await callType.func(Model.scan().exec).bind(Model.scan())();
@@ -511,7 +516,7 @@ describe("Scan", () => {
 
 		it("Should return correct result on scan.exec", async () => {
 			let count = 0;
-			scanPromiseResolver = () => ({"Items": [{"id": `${count * 50}`, "name": "Test"}, {"id": `${count * 100}`, "name": "Test 2"}], "Count": 2, "ScannedCount": 3, "LastEvaluatedKey": {"id": {"N": `${count++}`}}});
+			scanPromiseResolver = () => ({"Items": [{"id": count * 50, "name": "Test"}, {"id": count * 100, "name": "Test 2"}], "Count": 2, "ScannedCount": 3, "LastEvaluatedKey": {"id": {"N": `${count++}`}}});
 			const result = await Model.scan().parallel(5).exec();
 			expect(count).to.eql(5);
 			expect(result.lastKey).to.eql([{"id": 0}, {"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}]);

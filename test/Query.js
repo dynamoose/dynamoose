@@ -80,6 +80,11 @@ describe("Query", () => {
 					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
+				it("Should return correct result if unknown properties are in DynamoDB", async () => {
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
+					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
 				it("Should return correct metadata in result", async () => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1});
 					const result = await callType.func(Model.query().exec).bind(Model.query())();
