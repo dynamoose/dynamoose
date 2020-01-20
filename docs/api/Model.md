@@ -159,3 +159,57 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 	}
 });
 ```
+
+### Model.update(keyObj[, updateObj],[ callback])
+
+This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
+
+```js
+await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
+```
+
+If you do not pass in a `callback` parameter a promise will be returned.
+
+There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
+
+```js
+// The code below will set `name` to Bob for the user where `id` = 1
+
+await User.update({"id": 1}, {"name": "Bob"});
+
+// OR
+
+User.update({"id": 1}, {"name": "Bob"}, (error, user) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(user);
+	}
+});
+```
+
+The other method you can use is by using specific update types. These update types are as follows.
+
+- `$SET` - This method will set the attribute to the new value (as shown above)
+- `$ADD` - This method will add the value to the attribute. If the attribute is a number it will add the value to the existing number. If the attribute is a list, it will add the value to the list. Although this method only works for sets in DynamoDB, Dynamoose will automatically update this method to work for lists/arrays as well according to your schema. This update type does not work for any other attribute type.
+- `$REMOVE` - This method will remove the attribute from the document. Since this method doesn't require values you can pass in an array of attribute names.
+
+```js
+await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"age": 1}});
+// This will set the document name to Bob and increase the age by 1 for the user where id = 1
+
+await User.update({"id": 1}, {"$REMOVE": ["address"]});
+await User.update({"id": 1}, {"$REMOVE": {"address": null}});
+// These two function calls will delete the `address` attribute for the document where id = 1
+
+await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": "Tim"}});
+await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": ["Tim"]}});
+// This will set the document name to Bob and append Tim to the list/array/set of friends where id = 1
+```
+
+You are allowed to combine these two methods into one update object.
+
+```js
+await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
+// This will set the document name to Bob and increase the age by 1 for the user where id = 1
+```
