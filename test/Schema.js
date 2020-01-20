@@ -26,6 +26,11 @@ describe("Schema", () => {
 		expect(new Schema({"id": String}).settings).to.eql({});
 	});
 
+	it("Should throw error if timestamps already exists in schema", () => {
+		expect(() => new Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true}).settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
+	});
+
 	describe("getAttributeType", () => {
 		const schemas = [
 			{
