@@ -2,12 +2,12 @@ const dynamoose = require("../lib");
 const dynamooseOld = require("dynamoose");
 const expect = require("chai").expect;
 
-// dynamooseOld.AWS.config.update({
-// 	"accessKeyId": "AKID",
-// 	"secretAccessKey": "SECRET",
-// 	"region": "us-east-1"
-// });
-// dynamooseOld.local();
+dynamooseOld.AWS.config.update({
+	"accessKeyId": "AKID",
+	"secretAccessKey": "SECRET",
+	"region": "us-east-1"
+});
+dynamooseOld.local();
 //
 // const Cat = dynamooseOld.model("Cat101", { "id": Number, "name": String });
 //
@@ -20,10 +20,16 @@ const expect = require("chai").expect;
 // kittyB.save().then((res) => console.log(typeof res)).catch((err) => console.error(err));
 
 
-const a = dynamooseOld.model(`Test${Date.now()}`, {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "project": ["name"]}, "name": String, "address": String}}, {"create": false, "update": false});
-console.log(JSON.stringify(a.getTableReq(), null, 4));
+const a = dynamooseOld.model(`Test${Date.now()}`, {"id": String, "age": Number, "name": String, "address": String}, {"create": true, "update": false});
+// console.log(JSON.stringify(a.getTableReq(), null, 4));
 
-
+async function main() {
+	await a.create({"id": "test1", "age": 1, "name": "Tim"});
+	const result = await a.update({"id": "test1"}, {"$ADD": {"age": 1}});
+	console.log(await a.get("test1"));
+	console.log(result);
+}
+main();
 
 // const sdk = dynamoose.aws.sdk; // require("aws-sdk");
 // sdk.config.update({
