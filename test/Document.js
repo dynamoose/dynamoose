@@ -170,6 +170,117 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with timestamps set to true", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": true}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.createdAt).to.be.a("object");
+					expect(putParams[0].Item.updatedAt).to.be.a("object");
+					expect(putParams[0].Item.updatedAt.N).to.eql(putParams[0].Item.createdAt.N);
+
+					await utils.timeout(5);
+
+					user.name = "Bob";
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.a("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.createdAt).to.be.a("object");
+					expect(putParams[1].Item.updatedAt).to.be.a("object");
+
+					expect(putParams[1].Item.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
+					expect(parseInt(putParams[1].Item.updatedAt.N)).to.be.above(parseInt(putParams[0].Item.updatedAt.N));
+				});
+
+				it("Should save with correct object with custom timestamps attribute names", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.created).to.be.a("object");
+					expect(putParams[0].Item.updated).to.be.a("object");
+					expect(putParams[0].Item.updated.N).to.eql(putParams[0].Item.created.N);
+
+					await utils.timeout(5);
+
+					user.name = "Bob";
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.a("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.created).to.be.a("object");
+					expect(putParams[1].Item.updated).to.be.a("object");
+
+					expect(putParams[1].Item.created.N).to.eql(putParams[0].Item.created.N);
+					expect(parseInt(putParams[1].Item.updated.N)).to.be.above(parseInt(putParams[0].Item.updated.N));
+				});
+
+				it("Should save with correct object with timestamps but no createdAt timestamp", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": null, "updatedAt": "updatedAt"}}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.createdAt).to.not.exist;
+					expect(putParams[0].Item.updatedAt).to.be.a("object");
+
+					await utils.timeout(5);
+
+					user.name = "Bob";
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.a("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.createdAt).to.not.exist;
+					expect(putParams[1].Item.updatedAt).to.be.a("object");
+					expect(parseInt(putParams[1].Item.updatedAt.N)).to.be.above(parseInt(putParams[0].Item.updatedAt.N));
+				});
+
+				it("Should save with correct object with timestamps but no updatedAt timestamp", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": "createdAt", "updatedAt": false}}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.createdAt).to.be.a("object");
+					expect(putParams[0].Item.updatedAt).to.not.exist;
+
+					await utils.timeout(5);
+
+					user.name = "Bob";
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.a("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.createdAt).to.be.a("object");
+					expect(putParams[1].Item.updatedAt).to.not.exist;
+
+					expect(putParams[1].Item.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
+				});
+
 				it("Should throw type mismatch error if passing in wrong type with custom type", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
