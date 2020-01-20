@@ -566,6 +566,356 @@ describe("Model", () => {
 			});
 		});
 	});
+
+	describe("Model.update", () => {
+		let User, updateItemParams, updateItemFunction;
+		beforeEach(() => {
+			User = new dynamoose.model("User", {"id": Number, "name": String, "age": Number});
+			dynamoose.aws.ddb.set({
+				"updateItem": (params) => {
+					updateItemParams = params;
+					return {"promise": updateItemFunction};
+				}
+			});
+		});
+		afterEach(() => {
+			User = null;
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should be a function", () => {
+			expect(User.update).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (Model) => Model.update},
+			{"name": "Callback", "func": (Model) => util.promisify(Model.update)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should send correct params to updateItem for single object update", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for single object update with multiple updates", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with seperate key and update objects", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with seperate key and update objects and multiple updates", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $SET update expression", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "Tim"}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Tim"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD update expression", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "ADD #a0 :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD and $SET update expression", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}, "$SET": {"name": "Bob"}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "5"
+							},
+							":v1": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "ADD #a0 :v0 SET #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD and $SET update expression but $SET expression not as object", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}, "name": "Bob"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "5"
+							},
+							":v1": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "ADD #a0 :v0 SET #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD with one item for list append", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": Array});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": "Tim"}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"L": [{"S": "Tim"}]
+							}
+						},
+						"UpdateExpression": "SET #a0 = list_append(#a0, :v0)",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD with one item for list append", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": Array});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": ["Tim", "Charlie"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"L": [{"S": "Tim"}, {"S": "Charlie"}]
+							}
+						},
+						"UpdateExpression": "SET #a0 = list_append(#a0, :v0)",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $REMOVE", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"age": null}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age",
+						},
+						"ExpressionAttributeValues": {},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $REMOVE as array", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["age"]});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age",
+						},
+						"ExpressionAttributeValues": {},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should return updated document upon success", async () => {
+					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(result.constructor.name).to.eql("Document");
+					expect({...result}).to.eql({
+						"id": 1,
+						"name": "Charlie"
+					});
+				});
+
+				it("Should throw error if AWS throws error", async () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}, "name": "Bob"});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql({"error": "ERROR"});
+				});
+			});
+		});
+	});
 });
 
 describe("model", () => {
