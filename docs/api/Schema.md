@@ -7,13 +7,15 @@ You can use this method to create a schema. The `schema` parameter is an object 
 The `options` parameter is an optional object with the following options:
 
 - `saveUnknown` array | boolean (default: false) - This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970)
+- `timestamps` boolean | object (default: false) - This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
 const schema = new dynamoose.Schema({
 	"id": String,
 	"age": Number
 }, {
-	"saveUnknown": true
+	"saveUnknown": true,
+	"timestamps": true
 });
 ```
 
@@ -23,6 +25,18 @@ const schema = new dynamoose.Schema({
 	"age": {
 		"type": Number,
 		"default": 5
+	}
+});
+```
+
+```js
+const schema = new dynamoose.Schema({
+	"id": String,
+	"name": String
+}, {
+	"timestamps": {
+		"createdAt": "createDate",
+		"updatedAt": null // updatedAt will not be stored as part of the timestamp
 	}
 });
 ```
