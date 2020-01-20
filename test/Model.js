@@ -534,6 +534,19 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should not include attributes that do not exist in schema", async () => {
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "hello": "world"});
+					expect(createItemParams.Item).to.eql({
+						"id": {
+							"N": "1"
+						},
+						"name": {
+							"S": "Charlie"
+						}
+					});
+				});
+
 				it("Should overwrite if passed into options", async () => {
 					createItemFunction = () => Promise.resolve();
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"}, {"overwrite": true});
