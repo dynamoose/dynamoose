@@ -8,9 +8,9 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^6.4.0",
-    "mocha": "^6.2.0",
-    "nyc": "^14.1.1"
+    "eslint": "^6.8.0",
+    "mocha": "^7.0.0",
+    "nyc": "^15.0.0"
   },
   "scripts": {
     "test": "nyc --all mocha --recursive && npm run report-coverage",
@@ -29,6 +29,6 @@
   },
   "homepage": "https://github.com/dynamoosejs/dynamoose#readme",
   "dependencies": {
-    "aws-sdk": "^2.584.0"
+    "aws-sdk": "^2.606.0"
   }
 }
