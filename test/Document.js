@@ -144,6 +144,28 @@ describe("Document", () => {
 					expect(result).to.eql(user);
 				});
 
+				it("Should save with correct object with string set", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": [String]});
+					user = new User({"id": 1, "friends": ["Charlie", "Tim", "Bob"]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Tim", "Bob"]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with string set", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "numbers": [Number]});
+					user = new User({"id": 1, "numbers": [5, 7]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with overwrite set to false", async () => {
 					putItemFunction = () => Promise.resolve();
 					user = new User({"id": 1, "name": "Charlie"});
@@ -730,6 +752,10 @@ describe("Document", () => {
 			{
 				"input": {"id": {"N": "1"}, "map": {"L": [{"hello": "world"}, {"test": 1}]}},
 				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Bob"]}},
+				"output": true
 			}
 		];
 
