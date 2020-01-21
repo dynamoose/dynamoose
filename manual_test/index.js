@@ -1,6 +1,7 @@
 const dynamoose = require("../lib");
 const dynamooseOld = require("dynamoose");
 const expect = require("chai").expect;
+const AWS = require("aws-sdk");
 
 dynamooseOld.AWS.config.update({
 	"accessKeyId": "AKID",
@@ -8,6 +9,20 @@ dynamooseOld.AWS.config.update({
 	"region": "us-east-1"
 });
 dynamooseOld.local();
+
+console.log(AWS.DynamoDB.Converter.marshall({
+	"id": 1,
+	"friends": {
+  wrapperName: 'Set',
+  values: [ 'test', 'test1' ],
+  type: 'String' }
+}));
+
+console.log(AWS.DynamoDB.Converter.unmarshall({
+	"id": {"N": "1"},
+	"friends": {"SS": ["test", "test1"]}
+}).friends);
+
 //
 // const Cat = dynamooseOld.model("Cat101", { "id": Number, "name": String });
 //
@@ -20,16 +35,16 @@ dynamooseOld.local();
 // kittyB.save().then((res) => console.log(typeof res)).catch((err) => console.error(err));
 
 
-const a = dynamooseOld.model(`Test${Date.now()}`, {"id": String, "age": Number, "name": String, "address": String}, {"create": true, "update": false});
-// console.log(JSON.stringify(a.getTableReq(), null, 4));
-
-async function main() {
-	await a.create({"id": "test1", "age": 1, "name": "Tim"});
-	const result = await a.update({"id": "test1"}, {"$ADD": {"age": 1}});
-	console.log(await a.get("test1"));
-	console.log(result);
-}
-main();
+// const a = dynamooseOld.model(`Test${Date.now()}`, {"id": String, "age": Number, "name": String, "address": String}, {"create": true, "update": false});
+// // console.log(JSON.stringify(a.getTableReq(), null, 4));
+//
+// async function main() {
+// 	await a.create({"id": "test1", "age": 1, "name": "Tim"});
+// 	const result = await a.update({"id": "test1"}, {"$ADD": {"age": 1}});
+// 	console.log(await a.get("test1"));
+// 	console.log(result);
+// }
+// main();
 
 // const sdk = dynamoose.aws.sdk; // require("aws-sdk");
 // sdk.config.update({
