@@ -25,12 +25,15 @@ console.log(AWS.DynamoDB.Converter.unmarshall({
 
 console.log(AWS.DynamoDB.Converter.marshall({
 	"id": 1,
-	"data": Buffer.from("test")
+	"data": {
+  wrapperName: 'Set',
+  values: [ Buffer.from("test"), Buffer.from("test2") ],
+  type: 'Buffer' }
 }));
 
 console.log(AWS.DynamoDB.Converter.unmarshall({
 	"id": {"N": "1"},
-	"data": {"BS": ["test", "test1"]}
+	"data": {"BS": [Buffer.from("test"), Buffer.from("test2")]}
 }));
 
 //
