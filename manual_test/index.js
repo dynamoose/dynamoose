@@ -23,6 +23,16 @@ console.log(AWS.DynamoDB.Converter.unmarshall({
 	"friends": {"SS": ["test", "test1"]}
 }).friends);
 
+console.log(AWS.DynamoDB.Converter.marshall({
+	"id": 1,
+	"data": Buffer.from("test")
+}));
+
+console.log(AWS.DynamoDB.Converter.unmarshall({
+	"id": {"N": "1"},
+	"data": {"BS": ["test", "test1"]}
+}));
+
 //
 // const Cat = dynamooseOld.model("Cat101", { "id": Number, "name": String });
 //
