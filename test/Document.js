@@ -177,6 +177,17 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with buffer set", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "data": [Buffer]});
+					user = new User({"id": 1, "data": [Buffer.from("testdata"), Buffer.from("testdata2")]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with overwrite set to false", async () => {
 					putItemFunction = () => Promise.resolve();
 					user = new User({"id": 1, "name": "Charlie"});
@@ -766,6 +777,10 @@ describe("Document", () => {
 			},
 			{
 				"input": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Bob"]}},
+				"output": true
+			},
+			{
+				"input": {"id": {"N": "1"}, "data": {"B": Buffer.from("testdata")}},
 				"output": true
 			}
 		];

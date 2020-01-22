@@ -86,7 +86,7 @@ describe("Schema", () => {
 			{"input": "favoriteFoods", "output": "SS", "collection": 1},
 			{"input": "favoriteNumbers", "output": "NS", "collection": 1},
 			{"input": "favoriteDates", "output": "NS", "collection": 1},
-			{"input": "favoritePictures", "output": null, "collection": 1},
+			{"input": "favoritePictures", "output": "BS", "collection": 1},
 			{"input": "favoriteTypes", "output": null, "collection": 1},
 			{"input": "favoriteObjects", "output": null, "collection": 1},
 			{"input": "favoriteFriends", "output": null, "collection": 1},
