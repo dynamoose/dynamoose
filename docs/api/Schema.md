@@ -53,6 +53,8 @@ const schema = new dynamoose.Schema({
 
 If you use a set you will define the type surrounded by brackets. For example a String Set would be defined as a type of `[String]`. Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array.
 
+When using `saveUnknown` with a set, the type recognized by Dynamoose will be the underlying JavaScript Set constructor. If you have a set type defined in your schema the underlying type will be an Array.
+
 Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
 ## Attribute Settings
