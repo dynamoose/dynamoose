@@ -376,6 +376,16 @@ describe("Model", () => {
 					expect(user).to.be.an.instanceof(User);
 				});
 
+				it("Should return object with correct values with saveUnknown", async () => {
+					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "hello": {"S": "world"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "hello"]);
+					expect(user.id).to.eql(1);
+					expect(user.hello).to.eql("world");
+				});
+
 				it("Should return object with correct values for string set", async () => {
 					User = new dynamoose.model("User", {"id": Number, "friends": [String]});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Bob"]}}});
@@ -386,8 +396,28 @@ describe("Model", () => {
 					expect(user.friends).to.eql(new Set(["Charlie", "Bob"]));
 				});
 
+				it("Should return object with correct values for string set with saveUnknown", async () => {
+					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Bob"]}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "friends"]);
+					expect(user.id).to.eql(1);
+					expect(user.friends).to.eql(new Set(["Charlie", "Bob"]));
+				});
+
 				it("Should return object with correct values for number set", async () => {
 					User = new dynamoose.model("User", {"id": Number, "numbers": [Number]});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "numbers"]);
+					expect(user.id).to.eql(1);
+					expect(user.numbers).to.eql(new Set([5, 7]));
+				});
+
+				it("Should return object with correct values for number set with saveUnknown", async () => {
+					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -408,6 +438,16 @@ describe("Model", () => {
 
 				it("Should return object with correct values for buffer set", async () => {
 					User = new dynamoose.model("User", {"id": Number, "data": [Buffer]});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "data"]);
+					expect(user.id).to.eql(1);
+					expect(user.data).to.eql(new Set([Buffer.from("testdata"), Buffer.from("testdata2")]));
+				});
+
+				it("Should return object with correct values for buffer set", async () => {
+					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");

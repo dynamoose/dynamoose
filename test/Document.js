@@ -155,10 +155,32 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should save with correct object with string set", async () => {
+				it("Should save with correct object with string set and saveUnknown", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": true}));
+					user = new User({"id": 1, "friends": new Set(["Charlie", "Tim", "Bob"])});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Tim", "Bob"]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with number set", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "numbers": [Number]});
 					user = new User({"id": 1, "numbers": [5, 7]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with number set using saveUnknown", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": true}));
+					user = new User({"id": 1, "numbers": new Set([5, 7])});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}},
@@ -181,6 +203,17 @@ describe("Document", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "data": [Buffer]});
 					user = new User({"id": 1, "data": [Buffer.from("testdata"), Buffer.from("testdata2")]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with buffer set using saveUnknown", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": true}));
+					user = new User({"id": 1, "data": new Set([Buffer.from("testdata"), Buffer.from("testdata2")])});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}},
