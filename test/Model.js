@@ -575,9 +575,28 @@ describe("Model", () => {
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
 					expect(Object.keys(user)).to.eql(["id", "address"]);
-					expect(Object.keys(user.address)).to.eql(["zip", "country"]);
 					expect(user.id).to.eql(1);
 					expect(user.address).to.eql({"country": "world", "zip": 12345});
+				});
+
+				it("Should return object with correct values with multiple nested object properties and saveUnknown set to true", async () => {
+					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "address"]);
+					expect(user.id).to.eql(1);
+					expect(user.address).to.eql({"data": {"country": "world"}, "name": "Home"});
+				});
+
+				it("Should return object with correct values with multiple nested object properties", async () => {
+					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"data": {"type": Object, "schema": {"country": String}}, "name": String}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "address"]);
+					expect(user.id).to.eql(1);
+					expect(user.address).to.eql({"data": {"country": "world"}, "name": "Home"});
 				});
 
 				it("Should throw error if DynamoDB responds with error", async () => {
