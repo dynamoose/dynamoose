@@ -608,6 +608,16 @@ describe("Schema", () => {
 				"name": "Should return correct result with multiple attributes and object as values",
 				"input": {"id": {"type": String}, "age": {"type": Number}},
 				"output": ["id", "age"]
+			},
+			{
+				"name": "Should return correct result with object type",
+				"input": {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}},
+				"output": ["id", "address", "address.street", "address.country"]
+			},
+			{
+				"name": "Should return correct result with object type and no schema",
+				"input": {"id": Number, "address": Object},
+				"output": ["id", "address"]
 			}
 		];
 

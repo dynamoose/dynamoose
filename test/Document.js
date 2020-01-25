@@ -247,6 +247,106 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with object type in schema", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"street": "hello", "country": "world"}});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with object type in schema with properties that don't exist in schema", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"street": "hello", "country": "world", "random": "test"}});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should handle nested attributes inside object correctly for default value", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "default": "world"}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"street": "hello"}});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should handle nested attributes inside object correctly for default value with object not passed in", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "default": "world"}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"S": "world"}}}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if required property inside object doesn't exist", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"street": "hello"}});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("address.country is a required property but has no value when trying to save document"));
+				});
+
+				it("Should throw type mismatch error if passing in wrong type with custom type for object", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": "test"});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected address to be of type object, instead found type string."));
+				});
+
+				it("Should throw type mismatch error if passing in wrong type for nested object attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"country": true}});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected address.country to be of type string, instead found type boolean."));
+				});
+
+				it("Should save correct object with object property and saveUnknown set to true", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "address": Object}, {"saveUnknown": true}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"country": "world", "zip": 12345}});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"S": "world"}, "zip": {"N": "12345"}}}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with timestamps set to true", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": true}), {"create": false, "waitForActive": false});
