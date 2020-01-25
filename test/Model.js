@@ -318,13 +318,10 @@ describe("Model", () => {
 
 					it("Should not call describeTable if table already created and already attempted to createTable again", async () => {
 						const tableName = "Cat";
-						let count = 0;
 						describeTableFunction = () => {
-							count++;
 							return Promise.resolve({"Table": {"TableStatus": "ACTIVE"}});
 						};
 
-						let error;
 						option.func(tableName, {"id": String}, {"create": true});
 						await utils.timeout(5);
 						expect(describeTableParams).to.eql([{
