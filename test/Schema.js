@@ -164,9 +164,7 @@ describe("Schema", () => {
 							"AttributeName": "id",
 							"KeyType": "HASH"
 						}
-					],
-					"GlobalSecondaryIndexes": [],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -184,9 +182,7 @@ describe("Schema", () => {
 							"AttributeName": "age",
 							"KeyType": "HASH"
 						}
-					],
-					"GlobalSecondaryIndexes": [],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -212,9 +208,7 @@ describe("Schema", () => {
 							"AttributeName": "age",
 							"KeyType": "RANGE"
 						}
-					],
-					"GlobalSecondaryIndexes": [],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -240,9 +234,7 @@ describe("Schema", () => {
 							"AttributeName": "id",
 							"KeyType": "RANGE"
 						}
-					],
-					"GlobalSecondaryIndexes": [],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -265,7 +257,6 @@ describe("Schema", () => {
 							"KeyType": "HASH"
 						}
 					],
-					"GlobalSecondaryIndexes": [],
 					"LocalSecondaryIndexes": [
 						{
 							"IndexName": "ageLocalIndex",
@@ -279,6 +270,66 @@ describe("Schema", () => {
 								},
 								{
 									"AttributeName": "age",
+									"KeyType": "RANGE"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Should return correct result with index as true and multiple indexes",
+				"input": {"id": String, "age": {"type": Number, "index": true}, "name": {"type": String, "index": true}},
+				"output": {
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						},
+						{
+							"AttributeName": "age",
+							"AttributeType": "N"
+						},
+						{
+							"AttributeName": "name",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"LocalSecondaryIndexes": [
+						{
+							"IndexName": "ageLocalIndex",
+							"Projection": {
+								"ProjectionType": "ALL"
+							},
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
+								}
+							]
+						},
+						{
+							"IndexName": "nameLocalIndex",
+							"Projection": {
+								"ProjectionType": "ALL"
+							},
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "name",
 									"KeyType": "RANGE"
 								}
 							]
@@ -306,7 +357,6 @@ describe("Schema", () => {
 							"KeyType": "HASH"
 						}
 					],
-					"GlobalSecondaryIndexes": [],
 					"LocalSecondaryIndexes": [
 						{
 							"IndexName": "ageIndex",
@@ -368,8 +418,7 @@ describe("Schema", () => {
 								"ProjectionType": "ALL"
 							}
 						}
-					],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -409,8 +458,7 @@ describe("Schema", () => {
 								"ProjectionType": "ALL"
 							}
 						}
-					],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -450,8 +498,7 @@ describe("Schema", () => {
 								"ProjectionType": "KEYS_ONLY"
 							}
 						}
-					],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -492,8 +539,7 @@ describe("Schema", () => {
 								"ProjectionType": "INCLUDE"
 							}
 						}
-					],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			},
 			{
@@ -516,7 +562,6 @@ describe("Schema", () => {
 							"KeyType": "HASH"
 						}
 					],
-					"GlobalSecondaryIndexes": [],
 					"LocalSecondaryIndexes": [
 						{
 							"IndexName": "ageLocalIndex",
@@ -574,8 +619,7 @@ describe("Schema", () => {
 								"ProjectionType": "ALL"
 							}
 						}
-					],
-					"LocalSecondaryIndexes": []
+					]
 				}
 			}
 		];
