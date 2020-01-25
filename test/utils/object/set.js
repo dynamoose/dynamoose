@@ -26,6 +26,18 @@ describe("utils.object.set", () => {
 		{
 			"input": [{}, "test.hello.test", "random"],
 			"output": {"test": {"hello": {"test": "random"}}}
+		},
+		{
+			"input": [{"data": [{"id": "hello world"}]}, "data.0.id", "random"],
+			"output": {"data": [{"id": "random"}]}
+		},
+		{
+			"input": [{"data": [{"id": "hello world"}]}, "data.1.id", "random"],
+			"output": {"data": [{"id": "hello world"}, {"id": "random"}]}
+		},
+		{
+			"input": [{"data": []}, "data.0", {"hello": "world"}],
+			"output": {"data": [{"hello": "world"}]}
 		}
 	];
 

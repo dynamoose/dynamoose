@@ -22,6 +22,10 @@ describe("utils.object.get", () => {
 		{
 			"input": [{}, "test.hello.test"],
 			"output": undefined
+		},
+		{
+			"input": [{"data": [{"id": "hello world"}]}, "data.0.id"],
+			"output": "hello world"
 		}
 	];
 
