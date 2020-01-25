@@ -336,6 +336,28 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.TypeMismatch("Expected address.country to be of type string, instead found type boolean."));
 				});
 
+				it("Should save correct object with nested objects and saveUnknown set to true", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "address": Object}, {"saveUnknown": true}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"data": {"country": "world"}, "name": "Home"}});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save correct object with nested objects", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"data": {"type": Object, "schema": {"country": String}}, "name": String}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "address": {"data": {"country": "world"}, "name": "Home"}});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save correct object with object property and saveUnknown set to true", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", new Schema({"id": Number, "address": Object}, {"saveUnknown": true}), {"create": false, "waitForActive": false});
