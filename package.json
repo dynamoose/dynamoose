@@ -29,6 +29,6 @@
   },
   "homepage": "https://github.com/dynamoosejs/dynamoose#readme",
   "dependencies": {
-    "aws-sdk": "^2.606.0"
+    "aws-sdk": "^2.610.0"
   }
 }
