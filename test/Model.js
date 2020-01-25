@@ -491,6 +491,65 @@ describe("Model", () => {
 					expect(error).to.eql(new Error.TypeMismatch("Expected birthday to be of type number, instead found type string."));
 				});
 
+				it("Should return object with correct values with object property", async () => {
+					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "address"]);
+					expect(user.id).to.eql(1);
+					expect(user.address).to.eql({"street": "hello", "country": "world"});
+				});
+
+				it("Should return object with correct values with object property with elements that don't exist in schema", async () => {
+					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "address"]);
+					expect(user.id).to.eql(1);
+					expect(user.address).to.eql({"country": "world"});
+				});
+
+				it("Should throw type mismatch error if passing in wrong type with custom type for object", async () => {
+					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"S": "test"}}});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)(1);
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected address to be of type object, instead found type string."));
+				});
+
+				it("Should throw type mismatch error if passing in wrong type for nested object attribute", async () => {
+					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"BOOL": true}}}}});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)(1);
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected address.country to be of type string, instead found type boolean."));
+				});
+
+				it("Should return object with correct values with object property and saveUnknown set to true", async () => {
+					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "address"]);
+					expect(Object.keys(user.address)).to.eql(["zip", "country"]);
+					expect(user.id).to.eql(1);
+					expect(user.address).to.eql({"country": "world", "zip": 12345});
+				});
+
 				it("Should throw error if DynamoDB responds with error", async () => {
 					getItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
