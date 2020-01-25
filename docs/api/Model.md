@@ -24,7 +24,7 @@ The config parameter is an object used to customize settings for the model.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| create | If Dynamoose should attempt to create the table on DynamoDB. For production environments we recommend setting this value to `false`. | Boolean | true |
+| create | If Dynamoose should attempt to create the table on DynamoDB. This function will run a `describeTable` call first to ensure the table doesn't already exist. For production environments we recommend setting this value to `false`. | Boolean | true |
 | throughput | An object with settings for what the throughput for the table should be on creation. If the table is not created by Dynamoose, this object has no effect. | Object |  |
 | throughput.read | What the read throughput should be set to. | Number | 5 |
 | throughput.write | What the write throughput should be set to. | Number | 5 |

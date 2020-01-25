@@ -147,7 +147,8 @@ describe("Model", () => {
 								return {
 									"promise": () => Promise.resolve()
 								};
-							}
+							},
+							"describeTable": () => ({"promise": () => Promise.resolve()})
 						});
 					});
 					afterEach(() => {
@@ -180,6 +181,23 @@ describe("Model", () => {
 						});
 					});
 
+					it("Shouldn't call createTable if table already exists", async () => {
+						dynamoose.aws.ddb.set({
+							"createTable": (params) => {
+								createTableParams = params;
+								return {
+									"promise": () => Promise.resolve()
+								};
+							},
+							"describeTable": () => ({"promise": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})})
+						});
+
+						const tableName = "Cat";
+						option.func(tableName, {"id": String});
+						await utils.set_immediate_promise();
+						expect(createTableParams).to.eql(null);
+					});
+
 					it("Should not call createTable if create option set to false", async () => {
 						option.func("Cat", {"id": String}, {"create": false});
 						await utils.set_immediate_promise();
@@ -197,7 +215,8 @@ describe("Model", () => {
 										return Promise.resolve();
 									}
 								};
-							}
+							},
+							"describeTable": () => ({"promise": () => Promise.resolve()})
 						});
 
 						option.func("Cat", {"id": String});
@@ -295,6 +314,22 @@ describe("Model", () => {
 						await utils.timeout(15);
 						expect(error).to.eql({"error": "ERROR"});
 						process.removeListener("unhandledRejection", errorHandler);
+					});
+
+					it("Should not call describeTable if table already created and already attempted to createTable again", async () => {
+						const tableName = "Cat";
+						let count = 0;
+						describeTableFunction = () => {
+							count++;
+							return Promise.resolve({"Table": {"TableStatus": "ACTIVE"}});
+						};
+
+						let error;
+						option.func(tableName, {"id": String}, {"create": true});
+						await utils.timeout(5);
+						expect(describeTableParams).to.eql([{
+							"TableName": tableName
+						}]);
 					});
 				});
 			});
