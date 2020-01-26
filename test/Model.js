@@ -464,7 +464,7 @@ describe("Model", () => {
 					expect(user).to.be.an("object");
 					expect(Object.keys(user)).to.eql(["id", "times"]);
 					expect(user.id).to.eql(1);
-					expect(user.times).to.eql([time, new Date(0)]);
+					expect(user.times).to.eql(new Set([time, new Date(0)]));
 				});
 
 				it("Should return object with correct values for buffer", async () => {
