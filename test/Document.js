@@ -188,6 +188,18 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with date set", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "times": [Date]});
+					const time = new Date();
+					user = new User({"id": 1, "times": [time, new Date(0)]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "times": {"NS": [time.getTime(), 0]}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with buffer", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "data": Buffer});

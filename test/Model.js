@@ -456,6 +456,17 @@ describe("Model", () => {
 					expect(user.numbers).to.eql(new Set([5, 7]));
 				});
 
+				it("Should return object with correct values for date set", async () => {
+					User = new dynamoose.model("User", {"id": Number, "times": [Date]});
+					const time = new Date();
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "times": {"NS": [time.getTime(), 0]}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "times"]);
+					expect(user.id).to.eql(1);
+					expect(user.times).to.eql([time, new Date(0)]);
+				});
+
 				it("Should return object with correct values for buffer", async () => {
 					User = new dynamoose.model("User", {"id": Number, "data": Buffer});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"B": Buffer.from("testdata")}}});
