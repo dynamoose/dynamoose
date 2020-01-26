@@ -610,6 +610,26 @@ describe("Model", () => {
 					expect(user.address).to.eql({"data": {"country": "world"}, "name": "Home"});
 				});
 
+				it("Should return correct object for array properties", async () => {
+					User = new dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "friends"]);
+					expect(user.id).to.eql(1);
+					expect(user.friends).to.eql(["Tim", "Bob"]);
+				});
+
+				it("Should return correct object with array and objects within array", async () => {
+					User = new dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": Number, "name": String}}]}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"L": [{"M": {"name": {"S": "Tim"}, "id": {"N": "1"}}}, {"M": {"name": {"S": "Bob"}, "id": {"N": "2"}}}]}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "friends"]);
+					expect(user.id).to.eql(1);
+					expect(user.friends).to.eql([{"name": "Tim", "id": 1}, {"name": "Bob", "id": 2}]);
+				});
+
 				it("Should throw error if DynamoDB responds with error", async () => {
 					getItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
