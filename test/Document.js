@@ -195,7 +195,7 @@ describe("Document", () => {
 					user = new User({"id": 1, "times": [time, new Date(0)]});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
-						"Item": {"id": {"N": "1"}, "times": {"NS": [time.getTime(), 0]}},
+						"Item": {"id": {"N": "1"}, "times": {"NS": [`${time.getTime()}`, "0"]}},
 						"TableName": "User"
 					}]);
 				});
