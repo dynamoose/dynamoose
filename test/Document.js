@@ -455,7 +455,7 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.ValidationError("friends.0.id is a required property but has no value when trying to save document"));
 				});
 
-				it.only("Should throw error if not passing in required property in array for second item", async () => {
+				it("Should throw error if not passing in required property in array for second item", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]});
@@ -470,7 +470,7 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.ValidationError("friends.1.id is a required property but has no value when trying to save document"));
 				});
 
-				it.only("Should throw error if not passing in required property in array for second item with multi nested objects", async () => {
+				it("Should throw error if not passing in required property in array for second item with multi nested objects", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}}}]}}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}]});
@@ -1088,6 +1088,7 @@ describe("Document", () => {
 				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}
 			},
 			{
+				// TODO: not confident I wrote the output of this test correctly. The most important part of this output that I know for 100% sure is correct is the `friends.1.addresses.1.country`. The last 3 items in the output I'm not 100% confident with tho.
 				"input": {"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}]},
 				"output": ["id", "friends", "friends.0", "friends.1", "friends.0.name", "friends.1.name", "friends.0.addresses", "friends.1.addresses", "friends.0.addresses.0", "friends.1.addresses.0", "friends.0.addresses.0.country", "friends.1.addresses.0.country", "friends.1.addresses.1.country", "friends.0.addresses.0.zip", "friends.1.addresses.0.zip", "friends.1.addresses.1.zip"],
 				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}}}]}}}]}}
@@ -1095,7 +1096,7 @@ describe("Document", () => {
 		];
 
 		tests.forEach((test) => {
-			it.only(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
+			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
 				expect((new Model("User", test.schema, {"create": false, "waitForActive": false})).attributesWithSchema(test.input)).to.eql(test.output);
 			});
 		});
