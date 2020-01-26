@@ -381,6 +381,110 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save correct object with array", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": ["Tim", "Bob"]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save correct object with array as object schema", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": String}]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": ["Tim", "Bob"]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save correct object with array and objects within array", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": Number, "name": String}}]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": [{"name": "Tim", "id": 1}, {"name": "Bob", "id": 2}]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"L": [{"M": {"name": {"S": "Tim"}, "id": {"N": "1"}}}, {"M": {"name": {"S": "Bob"}, "id": {"N": "2"}}}]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save correct object with nested array's", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [String]}}}]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": [{"name": "Tim", "data": ["hello", "world"]}, {"name": "Bob", "data": ["random", "data"]}]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"L": [{"M": {"name": {"S": "Tim"}, "data": {"L": [{"S": "hello"}, {"S": "world"}]}}}, {"M": {"name": {"S": "Bob"}, "data": {"L": [{"S": "random"}, {"S": "data"}]}}}]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw type mismatch error if passing in wrong type for nested array object", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": Number, "name": String}}]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": [true]});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected friends.0 to be of type object, instead found type boolean."));
+				});
+
+				it("Should throw error if not passing in required property in array", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": [{"name": "Bob"}]});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("friends.0.id is a required property but has no value when trying to save document"));
+				});
+
+				it.only("Should throw error if not passing in required property in array for second item", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("friends.1.id is a required property but has no value when trying to save document"));
+				});
+
+				it.only("Should throw error if not passing in required property in array for second item with multi nested objects", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}}}]}}}]}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}]});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("friends.1.addresses.1.country is a required property but has no value when trying to save document"));
+				});
+
 				it("Should save with correct object with timestamps set to true", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": true}), {"create": false, "waitForActive": false});
@@ -949,12 +1053,50 @@ describe("Document", () => {
 			{
 				"input": {"id": {"N": "1"}, "data": {"B": Buffer.from("testdata")}},
 				"output": true
+			},
+			{
+				"input": {"id": {"N": "1"}, "friends": [{"S": "Tim"}, {"S": "Bob"}]},
+				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}},
+				"output": true
 			}
 		];
 
 		tests.forEach((test) => {
 			it(`Should return ${test.output} for ${JSON.stringify(test.input)}`, () => {
 				expect(User.isDynamoObject(test.input)).to.eql(test.output);
+			});
+		});
+	});
+
+	describe("Document.attributesWithSchema", () => {
+		it("Should be a function", () => {
+			expect(new Model("User", {"id": Number}, {"create": false, "waitForActive": false}).attributesWithSchema).to.be.a("function");
+		});
+
+		const tests = [
+			{
+				"input": {"id": 1},
+				"output": ["id"],
+				"schema": {"id": Number}
+			},
+			{
+				"input": {"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]},
+				"output": ["id", "friends", "friends.0", "friends.1", "friends.0.id", "friends.1.id", "friends.0.name", "friends.1.name"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}]},
+				"output": ["id", "friends", "friends.0", "friends.1", "friends.0.name", "friends.1.name", "friends.0.addresses", "friends.1.addresses", "friends.0.addresses.0", "friends.1.addresses.0", "friends.0.addresses.0.country", "friends.1.addresses.0.country", "friends.1.addresses.1.country", "friends.0.addresses.0.zip", "friends.1.addresses.0.zip", "friends.1.addresses.1.zip"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}}}]}}}]}}
+			}
+		];
+
+		tests.forEach((test) => {
+			it.only(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
+				expect((new Model("User", test.schema, {"create": false, "waitForActive": false})).attributesWithSchema(test.input)).to.eql(test.output);
 			});
 		});
 	});

@@ -31,6 +31,31 @@ describe("Schema", () => {
 		expect(() => new Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
 	});
 
+	it("Should throw error if passing multiple schema elements into array", () => {
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [String, Number]}})).to.throw("You must only pass one element into schema array.");
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("You must only pass one element into schema array.");
+	});
+
+	it("Should not throw error if passing only one element into schema elements array", () => {
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [String]}})).to.not.throw();
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [String]}}}]}})).to.not.throw();
+	});
+
+	it("Should throw error if attribute names contain dots", () => {
+		expect(() => new Schema({"id.data": String})).to.throw("Attributes must not contain dots.");
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name.other": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes must not contain dots.");
+	});
+
+	it.skip("Should throw error if attribute names only contains number", () => {
+		expect(() => new Schema({"1": String})).to.throw("Attributes names must not be numbers.");
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
+	});
+
+	it("Should not throw error if valid schema passed in", () => {
+		expect(() => new Schema({"id": Number, "friends": [String]})).to.not.throw();
+	});
+
 	describe("getAttributeType", () => {
 		const schemas = [
 			{

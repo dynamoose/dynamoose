@@ -22,6 +22,10 @@ describe("utils.object.keys", () => {
 		{
 			"input": {"name": "Bob", "friends": ["Bob", "Tim"]},
 			"output": ["name", "friends", "friends.0", "friends.1"]
+		},
+		{
+			"input": {"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]},
+			"output": ["id", "friends", "friends.0", "friends.0.name", "friends.0.id", "friends.1", "friends.1.name"]
 		}
 	];
 
