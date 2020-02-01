@@ -1110,6 +1110,82 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem with $SET date", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					const date = new Date();
+					User = new dynamoose.model("User", {"id": Number, "birthday": Date});
+					await callType.func(User).bind(User)({"id": 1}, {"birthday": date});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "birthday"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": `${date.getTime()}`
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $SET date as number", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.model("User", {"id": Number, "birthday": Date});
+					await callType.func(User).bind(User)({"id": 1}, {"birthday": 0});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "birthday"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "0"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD date as number", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.model("User", {"id": Number, "birthday": Date});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"birthday": 1000}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "birthday"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "1000"
+							}
+						},
+						"UpdateExpression": "ADD #a0 :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should return updated document upon success", async () => {
 					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
