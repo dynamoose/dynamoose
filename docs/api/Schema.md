@@ -58,7 +58,13 @@ When using `saveUnknown` with a set, the type recognized by Dynamoose will be th
 
 Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
-For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute. For example something like the following is acceptable.
+For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute.
+
+## Attribute Settings
+
+### schema: object | array
+
+This property is only used for the `Object` or `Array` attribute types. It is used to define the schema for the underlying nested type. For `Array` attribute types, this value must be an `Array` with one element defining the schema. This element for `Array` attribute types can either be another raw Dynamoose type (ex. `String`), or an object defining a more detailed schema for the `Array` elements. For `Object` attribute types this value must be an object defining the schema. Some examples of this property in action can be found below.
 
 ```js
 {
@@ -75,7 +81,32 @@ For types that are `Nested Types`, you must define a `schema` setting that inclu
 }
 ```
 
-## Attribute Settings
+```js
+{
+	"friends": {
+		"type": Array,
+		"schema": [String]
+	}
+}
+```
+
+```js
+{
+	"friends": {
+		"type": Array,
+		"schema": [{
+			"type": Object,
+			"schema": {
+				"zip": Number,
+				"country": {
+					"type": String,
+					"required": true
+				}
+			}
+		}]
+	}
+}
+```
 
 ### default: value | function | async function
 
