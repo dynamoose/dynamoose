@@ -213,3 +213,5 @@ You are allowed to combine these two methods into one update object.
 await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 // This will set the document name to Bob and increase the age by 1 for the user where id = 1
 ```
+
+The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
