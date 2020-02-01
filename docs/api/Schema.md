@@ -51,6 +51,7 @@ const schema = new dynamoose.Schema({
 | Buffer  | True        | B             | False                 | False       |                                                                                                     |
 | Date    | True        | N             | True                  | False       | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 | Object  | False       | M             | False                 | True        |                                                                                                     |
+| Array   | False       | L             | False                 | True        |                                                                                                     |
 
 If you use a set you will define the type surrounded by brackets. For example a String Set would be defined as a type of `[String]`. Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array.
 
