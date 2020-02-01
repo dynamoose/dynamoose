@@ -1022,7 +1022,7 @@ describe("Model", () => {
 
 				it("Should send correct params to updateItem with $ADD with one item for list append", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": Array});
+					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": "Tim"}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -1045,9 +1045,9 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem with $ADD with one item for list append", async () => {
+				it("Should send correct params to updateItem with $ADD with multiple items for list append", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": Array});
+					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": ["Tim", "Charlie"]}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -1118,6 +1118,61 @@ describe("Model", () => {
 						"id": 1,
 						"name": "Charlie"
 					});
+				});
+
+				it("Should throw error for type mismatch for set", async () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1}, {"name": false});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected name to be of type string, instead found type boolean."));
+				});
+
+				it("Should throw error for type mismatch for add", async () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+					User = new dynamoose.model("User", {"id": Number, "myNumber": Number});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"myNumber": false}});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected myNumber to be of type number, instead found type boolean."));
+				});
+
+				it("Should throw error for one item list append type mismatch", async () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": false}});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected friends.0 to be of type string, instead found type boolean."));
+				});
+
+				it("Should throw error for multiple item list append type mismatch", async () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": [1, 5]}});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected friends.0 to be of type string, instead found type number."));
 				});
 
 				it("Should throw error if AWS throws error", async () => {
