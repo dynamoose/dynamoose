@@ -1200,9 +1200,9 @@ describe("Model", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
 
-					let result, error;
+					let error;
 					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"myNumber": 11});
+						await callType.func(User).bind(User)({"id": 1}, {"myNumber": 11});
 					} catch (e) {
 						error = e;
 					}
@@ -1213,9 +1213,9 @@ describe("Model", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
 
-					let result, error;
+					let error;
 					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"myNumber": 5}});
+						await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"myNumber": 5}});
 					} catch (e) {
 						error = e;
 					}
