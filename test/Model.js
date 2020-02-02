@@ -181,6 +181,56 @@ describe("Model", () => {
 						});
 					});
 
+					it("Should call createTable with correct parameters with capacity as number", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String}, {"throughput": 1});
+						await utils.set_immediate_promise();
+						expect(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters with capacity as object", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String}, {"throughput": {"read": 2, "write": 3}});
+						await utils.set_immediate_promise();
+						expect(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 2,
+								"WriteCapacityUnits": 3
+							},
+							"TableName": tableName
+						});
+					});
+
 					it("Shouldn't call createTable if table already exists", async () => {
 						dynamoose.aws.ddb.set({
 							"createTable": (params) => {
