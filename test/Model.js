@@ -231,6 +231,28 @@ describe("Model", () => {
 						});
 					});
 
+					it("Should call createTable with correct parameters with capacity as ON_DEMAND", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String}, {"throughput": "ON_DEMAND"});
+						await utils.set_immediate_promise();
+						expect(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"BillingMode": "PAY_PER_REQUEST",
+							"TableName": tableName
+						});
+					});
+
 					it("Shouldn't call createTable if table already exists", async () => {
 						dynamoose.aws.ddb.set({
 							"createTable": (params) => {
