@@ -34,7 +34,7 @@ async function main() {
 	}, {
 		"saveUnknown": true
 	});
-	const modelB = new dynamoose.model(`Wikidata`, schemaB);
+	const modelB = new dynamoose.Model(`Wikidata`, schemaB);
 	await modelB.create(data, {"overwrite": true});
 
 

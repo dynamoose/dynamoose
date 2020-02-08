@@ -6,28 +6,28 @@ const util = require("util");
 
 describe("Model", () => {
 	beforeEach(() => {
-		dynamoose.model.defaults = {"create": false, "waitForActive": false};
+		dynamoose.Model.defaults = {"create": false, "waitForActive": false};
 	});
 	afterEach(() => {
-		dynamoose.model.defaults = {};
+		dynamoose.Model.defaults = {};
 	});
 
 	it("Should have a model proprety on the dynamoose object", () => {
-		expect(dynamoose.model).to.exist;
+		expect(dynamoose.Model).to.exist;
 	});
 
 	it("Should resolve to correct file for dynamoose object", () => {
-		expect(dynamoose.model).to.eql(require("../lib/Model"));
+		expect(dynamoose.Model).to.eql(require("../lib/Model"));
 	});
 
 	it("Should be a function", () => {
-		expect(dynamoose.model).to.be.a("function");
+		expect(dynamoose.Model).to.be.a("function");
 	});
 
 	describe("Initialization", () => {
 		const options = [
-			{"name": "Using new keyword", "func": (...args) => new dynamoose.model(...args)},
-			{"name": "Without new keyword", "func": (...args) => dynamoose.model(...args)}
+			{"name": "Using new keyword", "func": (...args) => new dynamoose.Model(...args)},
+			{"name": "Without new keyword", "func": (...args) => dynamoose.Model(...args)}
 		];
 
 		options.forEach((option) => {
@@ -61,7 +61,7 @@ describe("Model", () => {
 				];
 				const optionsC = [
 					{"name": "Defaults", "func": (type, value, ...args) => {
-						dynamoose.model.defaults = {...dynamoose.model.defaults, [type]: value};
+						dynamoose.Model.defaults = {...dynamoose.Model.defaults, [type]: value};
 						return option.func(...args);
 					}},
 					{"name": "Options", "func": (type, value, ...args) => option.func(...args, {[type]: value})}
@@ -135,7 +135,7 @@ describe("Model", () => {
 				describe("Creation", () => {
 					let createTableParams = null;
 					beforeEach(() => {
-						dynamoose.model.defaults = {
+						dynamoose.Model.defaults = {
 							"waitForActive": false
 						};
 					});
@@ -302,7 +302,7 @@ describe("Model", () => {
 				describe("Wait For Active", () => {
 					let describeTableParams = [], describeTableFunction;
 					beforeEach(() => {
-						dynamoose.model.defaults = {
+						dynamoose.Model.defaults = {
 							"create": false,
 							"waitForActive": {
 								"enabled": true,
@@ -408,7 +408,7 @@ describe("Model", () => {
 	describe("Model.get", () => {
 		let User, getItemParams, getItemFunction;
 		beforeEach(() => {
-			User = new dynamoose.model("User", {"id": Number, "name": String});
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
 			dynamoose.aws.ddb.set({
 				"getItem": (params) => {
 					getItemParams = params;
@@ -479,7 +479,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values with saveUnknown", async () => {
-					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "hello": {"S": "world"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -489,7 +489,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for string set", async () => {
-					User = new dynamoose.model("User", {"id": Number, "friends": [String]});
+					User = new dynamoose.Model("User", {"id": Number, "friends": [String]});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Bob"]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -499,7 +499,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for string set with saveUnknown", async () => {
-					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Bob"]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -509,7 +509,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for number set", async () => {
-					User = new dynamoose.model("User", {"id": Number, "numbers": [Number]});
+					User = new dynamoose.Model("User", {"id": Number, "numbers": [Number]});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -519,7 +519,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for number set with saveUnknown", async () => {
-					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -529,7 +529,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for date set", async () => {
-					User = new dynamoose.model("User", {"id": Number, "times": [Date]});
+					User = new dynamoose.Model("User", {"id": Number, "times": [Date]});
 					const time = new Date();
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "times": {"NS": [time.getTime(), 0]}}});
 					const user = await callType.func(User).bind(User)(1);
@@ -540,7 +540,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for buffer", async () => {
-					User = new dynamoose.model("User", {"id": Number, "data": Buffer});
+					User = new dynamoose.Model("User", {"id": Number, "data": Buffer});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"B": Buffer.from("testdata")}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -550,7 +550,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for buffer set", async () => {
-					User = new dynamoose.model("User", {"id": Number, "data": [Buffer]});
+					User = new dynamoose.Model("User", {"id": Number, "data": [Buffer]});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -560,7 +560,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for buffer set", async () => {
-					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -570,7 +570,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values if using custom types", async () => {
-					User = new dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "birthday": Date});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -581,7 +581,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values if using custom types but value doesn't exist", async () => {
-					User = new dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "birthday": Date});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -592,7 +592,7 @@ describe("Model", () => {
 				});
 
 				it("Should throw type mismatch error if passing in wrong type with custom type", async () => {
-					User = new dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "birthday": Date});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": "Hello World"}}});
 					let result, error;
 					try {
@@ -605,7 +605,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values with object property", async () => {
-					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					User = new dynamoose.Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -615,7 +615,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values with object property with elements that don't exist in schema", async () => {
-					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					User = new dynamoose.Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -625,7 +625,7 @@ describe("Model", () => {
 				});
 
 				it("Should throw type mismatch error if passing in wrong type with custom type for object", async () => {
-					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					User = new dynamoose.Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"S": "test"}}});
 
 					let result, error;
@@ -639,7 +639,7 @@ describe("Model", () => {
 				});
 
 				it("Should throw type mismatch error if passing in wrong type for nested object attribute", async () => {
-					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					User = new dynamoose.Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"BOOL": true}}}}});
 
 					let result, error;
@@ -653,7 +653,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values with object property and saveUnknown set to true", async () => {
-					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -663,7 +663,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values with multiple nested object properties and saveUnknown set to true", async () => {
-					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -673,7 +673,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values with multiple nested object properties", async () => {
-					User = new dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"data": {"type": Object, "schema": {"country": String}}, "name": String}}});
+					User = new dynamoose.Model("User", {"id": Number, "address": {"type": Object, "schema": {"data": {"type": Object, "schema": {"country": String}}, "name": String}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -683,7 +683,7 @@ describe("Model", () => {
 				});
 
 				it("Should return correct object for array properties", async () => {
-					User = new dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}});
+					User = new dynamoose.Model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -693,7 +693,7 @@ describe("Model", () => {
 				});
 
 				it("Should return correct object with array and objects within array", async () => {
-					User = new dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": Number, "name": String}}]}});
+					User = new dynamoose.Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": Number, "name": String}}]}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"L": [{"M": {"name": {"S": "Tim"}, "id": {"N": "1"}}}, {"M": {"name": {"S": "Bob"}, "id": {"N": "2"}}}]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -730,7 +730,7 @@ describe("Model", () => {
 				});
 
 				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", async () => {
-					User = new dynamoose.model("User", {"id": Number, "name": String, "age": Number});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "age": Number});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}});
 					let result, error;
 					try {
@@ -756,7 +756,7 @@ describe("Model", () => {
 							"promise": getItemFunction
 						})
 					});
-					const model = new dynamoose.model("User", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
+					const model = new dynamoose.Model("User", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
 					await utils.set_immediate_promise();
 
 					let user;
@@ -781,7 +781,7 @@ describe("Model", () => {
 	describe("Model.create", () => {
 		let User, createItemParams, createItemFunction;
 		beforeEach(() => {
-			User = new dynamoose.model("User", {"id": Number, "name": String});
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
 			dynamoose.aws.ddb.set({
 				"putItem": (params) => {
 					createItemParams = params;
@@ -861,7 +861,7 @@ describe("Model", () => {
 	describe("Model.update", () => {
 		let User, updateItemParams, updateItemFunction;
 		beforeEach(() => {
-			User = new dynamoose.model("User", {"id": Number, "name": String, "age": Number});
+			User = new dynamoose.Model("User", {"id": Number, "name": String, "age": Number});
 			dynamoose.aws.ddb.set({
 				"updateItem": (params) => {
 					updateItemParams = params;
@@ -1094,7 +1094,7 @@ describe("Model", () => {
 
 				it("Should send correct params to updateItem with $ADD with one item for list append", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": "Tim"}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -1119,7 +1119,7 @@ describe("Model", () => {
 
 				it("Should send correct params to updateItem with $ADD with multiple items for list append", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": ["Tim", "Charlie"]}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -1185,7 +1185,7 @@ describe("Model", () => {
 				it("Should send correct params to updateItem with $SET date", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					const date = new Date();
-					User = new dynamoose.model("User", {"id": Number, "birthday": Date});
+					User = new dynamoose.Model("User", {"id": Number, "birthday": Date});
 					await callType.func(User).bind(User)({"id": 1}, {"birthday": date});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -1210,7 +1210,7 @@ describe("Model", () => {
 
 				it("Should send correct params to updateItem with $SET date as number", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "birthday": Date});
+					User = new dynamoose.Model("User", {"id": Number, "birthday": Date});
 					await callType.func(User).bind(User)({"id": 1}, {"birthday": 0});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -1235,7 +1235,7 @@ describe("Model", () => {
 
 				it("Should send correct params to updateItem with $ADD date as number", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "birthday": Date});
+					User = new dynamoose.Model("User", {"id": Number, "birthday": Date});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"birthday": 1000}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -1260,7 +1260,7 @@ describe("Model", () => {
 
 				it("Should send correct params to updateItem for timestamps with updateAt", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
 					const date = Date.now();
 					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
 					expect(updateItemParams).to.be.an("object");
@@ -1301,7 +1301,7 @@ describe("Model", () => {
 
 				it("Should not throw error if validation passes", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
+					User = new dynamoose.Model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
 
 					let error;
 					try {
@@ -1314,7 +1314,7 @@ describe("Model", () => {
 
 				it("Should not throw error if validation doesn't pass when using $ADD", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
+					User = new dynamoose.Model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
 
 					let error;
 					try {
@@ -1327,7 +1327,7 @@ describe("Model", () => {
 
 				it("Should throw error if validation doesn't pass", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
-					User = new dynamoose.model("User", {"id": Number, "name": {"type": String, "validate": (val) => val.length > 10}});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "validate": (val) => val.length > 10}});
 
 					let result, error;
 					try {
@@ -1341,7 +1341,7 @@ describe("Model", () => {
 
 				it("Should throw error if value not in enum", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
-					User = new dynamoose.model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
 
 					let result, error;
 					try {
@@ -1355,7 +1355,7 @@ describe("Model", () => {
 
 				it("Should not throw error if value is in enum", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
 
 					let error;
 					try {
@@ -1381,7 +1381,7 @@ describe("Model", () => {
 
 				it("Should throw error for type mismatch for add", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
-					User = new dynamoose.model("User", {"id": Number, "myNumber": Number});
+					User = new dynamoose.Model("User", {"id": Number, "myNumber": Number});
 
 					let result, error;
 					try {
@@ -1395,7 +1395,7 @@ describe("Model", () => {
 
 				it("Should throw error for one item list append type mismatch", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
-					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 
 					let result, error;
 					try {
@@ -1409,7 +1409,7 @@ describe("Model", () => {
 
 				it("Should throw error for multiple item list append type mismatch", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
-					User = new dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 
 					let result, error;
 					try {
@@ -1440,16 +1440,16 @@ describe("Model", () => {
 
 describe("model", () => {
 	beforeEach(() => {
-		dynamoose.model.defaults = {"create": false, "waitForActive": false};
+		dynamoose.Model.defaults = {"create": false, "waitForActive": false};
 	});
 	afterEach(() => {
-		dynamoose.model.defaults = {};
+		dynamoose.Model.defaults = {};
 	});
 
 	let Cat;
 	beforeEach(() => {
 		const schema = new dynamoose.Schema({"name": String});
-		Cat = dynamoose.model("Cat", schema);
+		Cat = dynamoose.Model("Cat", schema);
 	});
 
 	it("Should allow creating instance of Model", () => {

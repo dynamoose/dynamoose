@@ -2,7 +2,7 @@
 
 The Model object represents one DynamoDB table. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
 
-## dynamoose.model(name, schema[, config])
+## dynamoose.Model(name, schema[, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
@@ -11,13 +11,13 @@ The `schema` parameter can either be an object OR a Schema instance. If you pass
 ```js
 const dynamoose = require("dynamoose");
 
-const Cat = dynamoose.model("Cat", {"name": String});
+const Cat = dynamoose.Model("Cat", {"name": String});
 ```
 
 ```js
 const dynamoose = require("dynamoose");
 
-const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
+const Cat = dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
 ```
 
 The config parameter is an object used to customize settings for the model.
@@ -57,14 +57,14 @@ The default object is listed below.
 }
 ```
 
-## dynamoose.model.defaults
+## dynamoose.Model.defaults
 
-The `dynamoose.model.defaults` object is a property you can edit to set default values for the config object for new models that are created. Ensure that you set this property before initializing your models to ensure the defaults are applied to your models.
+The `dynamoose.Model.defaults` object is a property you can edit to set default values for the config object for new models that are created. Ensure that you set this property before initializing your models to ensure the defaults are applied to your models.
 
 The priority of how the configuration gets set for new models is:
 
 - Configuration object passed into model creation
-- Custom defaults provided by `dynamoose.model.defaults`
+- Custom defaults provided by `dynamoose.Model.defaults`
 - Dynamoose internal defaults
 
 In the event that properties are not passed into the configuration object or custom defaults, the Dynamoose internal defaults will be used.
@@ -72,7 +72,7 @@ In the event that properties are not passed into the configuration object or cus
 You can set the defaults by setting the property to a custom object:
 
 ```js
-dynamoose.model.defaults = {
+dynamoose.Model.defaults = {
 	"prefix": "MyApplication_"
 };
 ```
@@ -80,7 +80,7 @@ dynamoose.model.defaults = {
 In order to revert to the default and remove custom defaults you can set it to an empty object:
 
 ```js
-dynamoose.model.defaults = {};
+dynamoose.Model.defaults = {};
 ```
 
 ## Model.get(hashKey[, callback])
@@ -90,7 +90,7 @@ You can use Model.get to retrieve a document from DynamoDB. This method uses the
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
 ```js
-const User = dynamoose.model("User", {"id": Number, "name": String});
+const User = dynamoose.Model("User", {"id": Number, "name": String});
 
 try {
 	const myUser = await User.get(1);
@@ -113,7 +113,7 @@ User.get(1, (error, myUser) => {
 In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
 
 ```js
-const User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	const myUser = await User.get({"id": 1, "name": "Tim"});
@@ -140,7 +140,7 @@ This function lets you create a new document for a given model. This function is
 If you do not pass in a `callback` parameter a promise will be returned.
 
 ```js
-const User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	const user = await User.create({"id": 1, "name": "Tim"}); // If a user with `id=1` already exists in the table, an error will be thrown.

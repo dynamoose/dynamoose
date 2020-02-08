@@ -4,10 +4,10 @@ const util = require("util");
 
 describe("Scan", () => {
 	beforeEach(() => {
-		dynamoose.model.defaults = {"create": false, "waitForActive": false};
+		dynamoose.Model.defaults = {"create": false, "waitForActive": false};
 	});
 	afterEach(() => {
-		dynamoose.model.defaults = {};
+		dynamoose.Model.defaults = {};
 	});
 
 	let scanPromiseResolver, scanParams;
@@ -27,7 +27,7 @@ describe("Scan", () => {
 
 	let Model;
 	beforeEach(() => {
-		Model = new dynamoose.model("Cat", {"id": Number, "name": String});
+		Model = new dynamoose.Model("Cat", {"id": Number, "name": String});
 	});
 
 	describe("Model.scan", () => {
@@ -86,7 +86,7 @@ describe("Scan", () => {
 				});
 
 				it("Should return correct result if using custom types", async () => {
-					Model = new dynamoose.model("Cat", {"id": Number, "name": String, "birthday": Date});
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": String, "birthday": Date});
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}]});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
 				});
