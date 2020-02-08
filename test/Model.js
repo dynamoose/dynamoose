@@ -1339,6 +1339,33 @@ describe("Model", () => {
 					expect(error).to.eql(new Error.ValidationError("name with a value of Bob had a validation error when trying to save the document"));
 				});
 
+				it("Should throw error if value not in enum", async () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+					User = new dynamoose.model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1}, {"name": "Todd"});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("name must equal [\"Bob\",\"Tim\"], but is set to Todd"));
+				});
+
+				it("Should not throw error if value is in enum", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
+
+					let error;
+					try {
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
+					} catch (e) {
+						error = e;
+					}
+					expect(error).to.not.exist;
+				});
+
 				it("Should throw error for type mismatch for set", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
