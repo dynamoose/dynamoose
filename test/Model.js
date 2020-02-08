@@ -1258,6 +1258,37 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem for timestamps with updateAt", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
+					const date = Date.now();
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "updatedAt",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": updateItemParams.ExpressionAttributeValues[":v0"].N
+							},
+							":v1": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
+				});
+
 				it("Should return updated document upon success", async () => {
 					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
