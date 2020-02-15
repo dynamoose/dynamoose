@@ -1563,6 +1563,137 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should use forceDefault value if deleting property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": "Bob", "forceDefault": true}});
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should use forceDefault value if modifying property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": "Bob", "forceDefault": true}});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Tim"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should use forceDefault value if adding to property that is a string set", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "friends": {"type": [String], "default": ["Bob"], "forceDefault": true}});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": ["Tim"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"SS": ["Bob"]
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should use forceDefault value if adding to property that is a string list", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "friends": {"type": Array, "schema": [String], "default": ["Bob"], "forceDefault": true}});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": ["Tim"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"L": [
+									{"S": "Bob"}
+								]
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should use forceDefault value if modifying different property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": "Bob", "forceDefault": true}, "data": String});
+					await callType.func(User).bind(User)({"id": 1}, {"data": "test"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "test"
+							},
+							":v1": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should throw error if AWS throws error", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
