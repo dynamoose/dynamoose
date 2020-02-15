@@ -1461,6 +1461,81 @@ describe("Model", () => {
 					expect(error).to.not.exist;
 				});
 
+				it("Should use default value if deleting property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": "Bob"}});
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Shouldn't use default value if modifying property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": "Bob"}});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Tim"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Tim"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Shouldn't use default value if modifying different property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": "Bob"}, "data": String});
+					await callType.func(User).bind(User)({"id": 1}, {"data": "test"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "test"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should throw error if AWS throws error", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
