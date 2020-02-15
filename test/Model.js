@@ -1421,6 +1421,46 @@ describe("Model", () => {
 					expect(error).to.eql(new Error.TypeMismatch("Expected friends.0 to be of type string, instead found type number."));
 				});
 
+				it("Should throw error if trying to remove required property", async () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "required": true}});
+
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.ValidationError("name is a required property but has no value when trying to save document"));
+				});
+
+				it("Should not throw error if trying to modify required property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "required": true}});
+
+					let error;
+					try {
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
+					} catch (e) {
+						error = e;
+					}
+					expect(error).to.not.exist;
+				});
+
+				it("Should not throw error if not modifying required property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "required": true}, "friends": [String]});
+
+					let error;
+					try {
+						await callType.func(User).bind(User)({"id": 1}, {"friends": ["Bob"]});
+					} catch (e) {
+						error = e;
+					}
+					expect(error).to.not.exist;
+				});
+
 				it("Should throw error if AWS throws error", async () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
