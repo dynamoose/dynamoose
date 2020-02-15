@@ -401,6 +401,113 @@ describe("Model", () => {
 						}]);
 					});
 				});
+
+				describe("Update", () => {
+					let describeTableFunction, updateTableParams = [];
+					beforeEach(() => {
+						dynamoose.Model.defaults = {
+							"create": false,
+							"update": true
+						};
+					});
+					beforeEach(() => {
+						updateTableParams = [];
+						dynamoose.aws.ddb.set({
+							"describeTable": (params) => {
+								return {
+									"promise": describeTableFunction
+								};
+							},
+							"updateTable": (params) => {
+								updateTableParams.push(params);
+								return {
+									"promise": Promise.resolve()
+								};
+							}
+						});
+					});
+					afterEach(() => {
+						updateTableParams = [];
+						describeTableFunction = null;
+						dynamoose.aws.ddb.revert();
+					});
+
+					it("Should not call updateTable if throughput matches", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 2
+								},
+								"TableStatus": "ACTIVE"
+							}
+						});
+						option.func(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).to.eql([]);
+					});
+
+					it("Should call updateTable with correct parameters if throughput doesn't match", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 2,
+									"WriteCapacityUnits": 2
+								},
+								"TableStatus": "ACTIVE"
+							}
+						});
+						option.func(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).to.eql([{
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 2
+							},
+							"TableName": tableName
+						}]);
+					});
+
+					it("Should call updateTable with correct parameters if switching from provisioned to on demand", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 2,
+									"WriteCapacityUnits": 2
+								},
+								"TableStatus": "ACTIVE"
+							}
+						});
+						option.func(tableName, {"id": String}, {"throughput": "ON_DEMAND"});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).to.eql([{
+							"BillingMode": "PAY_PER_REQUEST",
+							"TableName": tableName
+						}]);
+					});
+
+					it("Should call updateTable with correct parameters if switching from on demand to provisioned", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"BillingMode": "PAY_PER_REQUEST",
+								"TableStatus": "ACTIVE"
+							}
+						});
+						option.func(tableName, {"id": String}, {"throughput": 5});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).to.eql([{
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 5,
+								"WriteCapacityUnits": 5
+							},
+							"TableName": tableName
+						}]);
+					});
+				});
 			});
 		});
 	});
