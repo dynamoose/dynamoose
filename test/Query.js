@@ -1,757 +1,656 @@
-'use strict';
-
-
-const dynamoose = require('../lib/');
-dynamoose.AWS.config.update({
-  'accessKeyId': 'AKID',
-  'secretAccessKey': 'SECRET',
-  'region': 'us-east-1'
-});
-
-dynamoose.local();
-
-const {Schema} = dynamoose;
-
-const should = require('should');
-
-
-describe('Query', function () {
-  this.timeout(10000);
-
-  before((done) => {
-
-    dynamoose.setDefaults({'prefix': '', 'suffix': ''});
-
-    const dogSchema = new Schema({
-      'ownerId': {
-        'type': Number,
-        'validate' (v) { return v > 0; },
-        'hashKey': true,
-        'index': [
-          {
-            'global': true,
-            'rangeKey': 'color',
-            'name': 'ColorRangeIndex',
-            'project': true // ProjectionType: ALL
-          }, {
-            'global': true,
-            'rangeKey': 'breed',
-            'name': 'BreedRangeIndex',
-            'project': true // ProjectionType: ALL
-          }
-        ]
-      },
-      'breed': {
-        'type': String,
-        'required': true,
-        'index': {
-          'global': true,
-          'rangeKey': 'ownerId',
-          'name': 'BreedIndex',
-          'project': true, // ProjectionType: ALL
-          'throughput': 5 // read and write are both 5
-        }
-      },
-      'origin': {
-        'type': String,
-        'index': true // name: originLocalIndex, ProjectionType: ALL
-      },
-      'name': {
-        'type': String,
-        'rangeKey': true,
-        'index': true // name: nameLocalIndex, ProjectionType: ALL
-      },
-      'color': {
-        'type': String,
-        'default': 'Brown',
-        'index': [
-          { // name: colorLocalIndex
-            'project': ['name'] // ProjectionType: INCLUDE
-          }, { // name: colorGlobalIndex, no ragne key
-            'global': true,
-            'project': ['name'] // ProjectionType: INCLUDE
-          }
-        ]
-      },
-      'siblings': {
-        'type': 'list',
-        'list': [
-          {
-            'type': String
-          }
-        ]
-      },
-      'age': {
-        'type': Number
-      }
-    });
-
-    const Dog = dynamoose.model('Dog', dogSchema);
-
-    function addDogs (dogs) {
-      if (dogs.length <= 0) {
-        return done();
-      }
-      const dog = new Dog(dogs.pop());
-      dog.save((err) => {
-        if (err) {
-          return done(err);
-        }
-        addDogs(dogs);
-      });
-    }
-
-    addDogs([
-      {'ownerId': 1, 'name': 'Foxy Lady', 'breed': 'Jack Russell Terrier', 'color': 'White, Brown and Black', 'siblings': ['Quincy', 'Princes'], 'age': 2},
-      {'ownerId': 2, 'name': 'Quincy', 'breed': 'Jack Russell Terrier', 'color': 'White and Brown', 'siblings': ['Foxy Lady', 'Princes'], 'age': 3},
-      {'ownerId': 2, 'name': 'Princes', 'breed': 'Jack Russell Terrier', 'color': 'White and Brown', 'siblings': ['Foxy Lady', 'Quincy'], 'age': 6},
-      {'ownerId': 3, 'name': 'Toto', 'breed': 'Terrier', 'color': 'Brown', 'age': 1},
-      {'ownerId': 4, 'name': 'Oddie', 'breed': 'beagle', 'color': 'Tan', 'age': 2},
-      {'ownerId': 5, 'name': 'Pluto', 'breed': 'unknown', 'color': 'Mustard', 'age': 4},
-      {'ownerId': 6, 'name': 'Brian Griffin', 'breed': 'unknown', 'color': 'White', 'age': 5},
-      {'ownerId': 7, 'name': 'Scooby Doo', 'breed': 'Great Dane', 'age': 2},
-      {'ownerId': 8, 'name': 'Blue', 'breed': 'unknown', 'color': 'Blue', 'age': 1},
-      {'ownerId': 9, 'name': 'Lady', 'breed': ' Cocker Spaniel', 'age': 6},
-      {'ownerId': 10, 'name': 'Copper', 'breed': 'Hound', 'age': 8},
-      {'ownerId': 11, 'name': 'Old Yeller', 'breed': 'unknown', 'color': 'Tan', 'age': 1},
-      {'ownerId': 12, 'name': 'Hooch', 'breed': 'Dogue de Bordeaux', 'color': 'Brown', 'age': 3},
-      {'ownerId': 13, 'name': 'Rin Tin Tin', 'breed': 'German Shepherd', 'age': 5},
-      {'ownerId': 14, 'name': 'Benji', 'breed': 'unknown', 'age': 1},
-      {'ownerId': 15, 'name': 'Wishbone', 'breed': 'Jack Russell Terrier', 'color': 'White', 'age': 2},
-      {'ownerId': 16, 'name': 'Marley', 'breed': 'Labrador Retriever', 'color': 'Yellow', 'age': 9},
-      {'ownerId': 17, 'name': 'Beethoven', 'breed': 'St. Bernard', 'age': 3},
-      {'ownerId': 18, 'name': 'Lassie', 'breed': 'Collie', 'color': 'tan and white', 'age': 4},
-      {'ownerId': 19, 'name': 'Snoopy', 'breed': 'beagle', 'color': 'black and white', 'age': 6},
-      {'ownerId': 20, 'name': 'Max', 'breed': 'Westie', 'age': 7, 'origin': 'Scotland'},
-      {'ownerId': 20, 'name': 'Gigi', 'breed': 'Spaniel', 'color': 'Chocolate', 'age': 1, 'origin': 'Great Britain'},
-      {'ownerId': 20, 'name': 'Mimo', 'breed': 'Boxer', 'color': 'Chocolate', 'age': 2, 'origin': 'Germany'},
-      {'ownerId': 20, 'name': 'Bepo', 'breed': 'French Bulldog', 'color': 'Grey', 'age': 4, 'origin': 'France'}
-    ]);
-
-  });
-
-  after((done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.$__.table.delete((err) => {
-      if (err) {
-        done(err);
-      }
-      delete dynamoose.models.Dog;
-      done();
-    });
-
-  });
-
-  it('Basic Query', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').eq(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(2);
-      done();
-    });
-  });
-
-
-  it('Basic Query One', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.queryOne('ownerId').eq(1).exec((err, oneDog) => {
-      should.not.exist(err);
-      should.exist(oneDog);
-      oneDog.ownerId.should.eql(1);
-      done();
-    });
-  });
-
-  it('Basic Query on Secondary Global Index', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      dogs[0].ownerId.should.eql(1);
-      done();
-    });
-  });
-
-  it('Query on Secondary Global Index with range - no results', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier').where('ownerId').eq(4).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(0);
-      done();
-    });
-  });
-
-  it('Query on Secondary Global Index with range', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown').where('ownerId').lt(8).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(2);
-      done();
-    });
-  });
-
-  it('Query on Secondary Global Index with same hashKey', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').eq(20).where('color').beginsWith('Choc').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(2);
-      dogs[0].name.should.eql('Gigi');
-      dogs[1].name.should.eql('Mimo');
-      done();
-    });
-  });
-
-  it('Query on Secondary Global Index with same hashKey and 2nd in index list', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').using('BreedRangeIndex').eq(20).where('breed').beginsWith('Sp').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      dogs[0].name.should.eql('Gigi');
-      done();
-    });
-  });
-
-  it('Query with Secondary Local Index as range', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').eq(20).where('origin').beginsWith('G').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(2);
-      done();
-    });
-  });
-
-  it('where() must follow eq()', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.query('breed').where('test').exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid Query state: where() must follow eq()');
-  });
-
-  it('filter() must follow comparison', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.query('breed').filter('test').exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid Query state: filter() must follow comparison');
-  });
-
-  it('eq must follow query()', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.query('breed').lt(5).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid Query state: eq must follow query()');
-  });
-
-  it('Should throw first error', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.query('breed').lt(5).where().filter().compVal().beginsWith().in().between().exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid Query state: eq must follow query()');
-  });
-
-  it('Basic Query on SGI descending', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier').descending().exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      dogs[0].ownerId.should.eql(15);
-      done();
-    });
-  });
-
-  it('Basic Query on SGI ascending', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier').ascending().exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      dogs[0].ownerId.should.eql(1);
-      done();
-    });
-  });
-
-
-  it('Basic Query on SGI limit 1', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier').limit(1).exec((err, dogs) => {
-      should.not.exist(err);
-      should.exist(dogs.lastKey);
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(1);
-      done();
-    });
-  });
-
-  it('Basic Query on SGI startAt key', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    const startKey = {'breed': {'S': 'Jack Russell Terrier'},
-      'ownerId': {'N': '1'},
-      'name': {'S': 'Foxy Lady'}};
-
-    Dog.query('breed').eq('Jack Russell Terrier').startAt(startKey).limit(1).exec((err, dogs) => {
-      should.not.exist(err);
-      should.exist(dogs.lastKey);
-      dogs.length.should.eql(1);
-      dogs[0].ownerId.should.eql(2);
-      done();
-    });
-  });
-
-  it('Basic Query on SGI with attributes', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier').attributes(['name']).exec((err, dogs) => {
-      should.not.exist(err);
-      should.not.exist(dogs.lastKey);
-      dogs.length.should.eql(4);
-      dogs[0].should.not.have.property('ownerId');
-      dogs[0].should.have.property('name', 'Foxy Lady');
-      done();
-    });
-  });
-
-  it('Basic Query with consistent read', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').eq(2).consistent().exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(2);
-      done();
-    });
-  });
-
-  it('Basic Query on SGI with filter contains', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .where('ownerId').eq(1)
-      .filter('color').contains('Black').exec()
-      .then((dogs) => {
-        dogs.length.should.eql(1);
-        dogs[0].ownerId.should.eql(1);
-        done();
-      })
-      .catch(done);
-
-  });
-
-  it('Basic Query on SGI with filter contains on list', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .where('ownerId').eq(2)
-      .filter('siblings').contains('Quincy').exec()
-      .then((dogs) => {
-      //  console.log('The dogs', dogs);
-        dogs.length.should.eql(1);
-        dogs[0].ownerId.should.eql(2);
-        done();
-      })
-      .catch(done);
-
-  });
-
-  it('Basic Query on SGI with filter null', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .filter('color').not().null().exec()
-      .then((dogs) => {
-        dogs.length.should.eql(5);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter not null', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .filter('color').null().exec()
-      .then((dogs) => {
-        dogs.length.should.eql(0);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter le', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .where('ownerId').le(11)
-      .exec()
-      .then((dogs) => {
-        dogs.length.should.eql(4);
-        dogs[dogs.length - 1].ownerId.should.eql(11);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter not le', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .where('ownerId').not().le(11)
-      .exec()
-      .then((dogs) => {
-        dogs.length.should.eql(1);
-        dogs[0].ownerId.should.eql(14);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter ge', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .where('ownerId').ge(11)
-      .exec()
-      .then((dogs) => {
-        dogs.length.should.eql(2);
-        dogs[0].ownerId.should.eql(11);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter not ge', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .where('ownerId').not().ge(11)
-      .exec()
-      .then((dogs) => {
-        dogs.length.should.eql(3);
-        dogs[0].ownerId.should.eql(5);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter gt', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .where('ownerId').gt(11)
-      .exec()
-      .then((dogs) => {
-        dogs.length.should.eql(1);
-        dogs[0].ownerId.should.eql(14);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter not gt', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .where('ownerId').not().gt(11)
-      .exec()
-      .then((dogs) => {
-        dogs.length.should.eql(4);
-        dogs[0].ownerId.should.eql(5);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter not eq and not lt', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .where('ownerId').not().lt(10)
-      .and()
-      .filter('color').not().eq('Brown')
-      .exec()
-      .then((dogs) => {
-        dogs.length.should.eql(1);
-        dogs[0].ownerId.should.eql(11);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Basic Query on SGI with filter not contains or beginsWith', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .filter('color').not().contains('Brown')
-      .or()
-      .filter('name').beginsWith('Q').exec()
-      .then((dogs) => {
-        dogs.length.should.eql(2);
-        done();
-      })
-      .catch(done);
-
-  });
-
-  it('beginsWith() cannot follow not()', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.query('breed').eq('Jack Russell Terrier').filter('color').not().contains('Brown').or().filter('name').not().beginsWith('Q').exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid Query state: beginsWith() cannot follow not()');
-  });
-
-  it('Basic Query on SGI with filter between', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .filter('age').between(5, 7)
-      .exec((err, dogs) => {
-        should.not.exist(err);
-        dogs.length.should.eql(1);
-        dogs[0].ownerId.should.eql(2);
-        done();
-      });
-  });
-
-  it('between() cannot follow not()', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.query('breed').eq('Jack Russell Terrier').filter('age').not().between(5, 7).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid Query state: between() cannot follow not()');
-  });
-
-  it('Basic Query on SGI with filter in', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('Jack Russell Terrier')
-      .filter('color').in(['White and Brown', 'White'])
-      .exec((err, dogs) => {
-        should.not.exist(err);
-        dogs.length.should.eql(3);
-        dogs[0].ownerId.should.eql(2);
-        done();
-      });
-  });
-
-  it('in() cannot follow not()', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.query('breed').eq('Jack Russell Terrier').filter('color').not().in(['White and Brown', 'White']).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid Query state: in() cannot follow not()');
-  });
-
-  it('Query.count', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').eq(20).count().all().exec()
-      .then((count) => {
-        count.should.eql(4);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Query.counts', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('breed').eq('unknown')
-      .and()
-      .filter('color').not().eq('Brown')
-      .counts().all().exec()
-      .then((counts) => {
-        counts.scannedCount.should.eql(5);
-        counts.count.should.eql(4);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Query.all', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').eq(20).limit(2).all().exec()
-      .then((dogs) => {
-        dogs.length.should.eql(4);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Query.all(1, 3)', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.query('ownerId').eq(20).limit(1).all(1000, 3).exec()
-      .then((dogs) => {
-        dogs.length.should.eql(3);
-        dogs.timesQueried.should.eql(3);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Should allow multiple indexes and query correctly', (done) => {
-    const schema = new dynamoose.Schema({
-      'id': {
-        'type': String,
-        'hashKey': true,
-        'required': true
-      },
-      'orgId': {
-        'type': String,
-        'index': [
-          {
-            'global': true,
-            'name': 'OrganizationCreateAtIndex',
-            'rangeKey': 'createdAt',
-            'throughput': 1
-          }, {
-            'global': true,
-            'name': 'OrganizationExpectedArriveAtIndex',
-            'rangeKey': 'expectedArriveAt',
-            'throughput': 1
-          }
-        ],
-        'required': true
-      },
-      'expectedArriveAt': Date
-    }, {
-      'throughput': 1,
-      'timestamps': true
-    });
-    const Log = dynamoose.model('Log-1', schema);
-
-    const log1 = new Log({'id': 'test1', 'orgId': 'org1', 'expectedArriveAt': Date.now()});
-    log1.save(() => {
-      Log.query('orgId').eq('org1')
-        .where('expectedArriveAt').lt(new Date())
-        .exec()
-        .then((res) => {
-          res.length.should.eql(1);
-          Log.query('orgId').eq('org1')
-            .where('createdAt').lt(new Date())
-            .exec()
-            .then((resB) => {
-              resB.length.should.eql(1);
-              done();
-            })
-            .catch((e) => {
-              done(e);
-            });
-        })
-        .catch((e) => {
-          done(e);
-        });
-    });
-  });
-
-  it('Should allow multiple local indexes and query correctly', async () => {
-    const schema = new dynamoose.Schema({
-      'id': {
-        'type': String,
-        'hashKey': true
-      },
-      'orgId': {
-        'type': String,
-        'rangeKey': true
-      },
-      'updatedAt': {
-        'type': Date,
-        'index': {
-          'global': false,
-          'name': 'OrganizationUpdatedAtIndex'
-        }
-      },
-      'expectedArriveAt': {
-        'type': Date,
-        'index': {
-          'global': false,
-          'name': 'OrganizationExpectedArriveAtIndex'
-        }
-      }
-    }, {
-      'throughput': 1,
-      'timestamps': true
-    });
-    const Log = dynamoose.model('Log-2', schema);
-
-    const log1 = new Log({'id': 'test1', 'orgId': 'org1', 'expectedArriveAt': Date.now()});
-    const log2 = new Log({'id': 'test1', 'orgId': 'org2', 'expectedArriveAt': Date.now()});
-
-    await log1.save();
-    await log2.save();
-
-    const res = await Log.query('id').eq('test1')
-      .where('expectedArriveAt').lt(new Date())
-      .exec();
-    res.length.should.eql(2);
-
-    const res2 = await Log.query('id').eq('test1')
-      .where('updatedAt').le(log1.createdAt.getTime())
-      .exec();
-    res2.length.should.eql(1);
-  });
+const {expect} = require("chai");
+const dynamoose = require("../lib");
+const util = require("util");
+
+describe("Query", () => {
+	beforeEach(() => {
+		dynamoose.Model.defaults = {"create": false, "waitForActive": false};
+	});
+	afterEach(() => {
+		dynamoose.Model.defaults = {};
+	});
+
+	let queryPromiseResolver, queryParams;
+	beforeEach(() => {
+		dynamoose.aws.ddb.set({
+			"query": (request) => {
+				queryParams = request;
+				return {"promise": queryPromiseResolver};
+			}
+		});
+	});
+	afterEach(() => {
+		dynamoose.aws.ddb.revert();
+		queryPromiseResolver = null;
+		queryParams = null;
+	});
+
+	let Model;
+	beforeEach(() => {
+		Model = new dynamoose.Model("Cat", {"id": Number, "name": String});
+	});
+
+	describe("Model.query", () => {
+		it("Should return a function", () => {
+			expect(Model.query).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should have correct class name", () => {
+			expect(Model.query().constructor.name).to.eql("Query");
+		});
+
+		it("Should set pending key if string passed into query function", () => {
+			const id = "id";
+			const query = Model.query(id);
+			expect(query.settings.pending).to.eql({"key": id});
+		});
+
+		it("Should set filters correctly for object passed into query function", () => {
+			const query = Model.query({"name": {"eq": "Charlie"}, "id": {"le": 5}});
+			expect(query.settings.filters).to.eql({"id": {"type": "LE", "value": 5}, "name": {"type": "EQ", "value": "Charlie"}});
+		});
+
+		it("Should throw error if unknown comparison operator is passed in", () => {
+			expect(() => Model.query({"name": {"unknown": "Charlie"}})).to.throw("The type: unknown is invalid for the query operation.");
+		});
+	});
+
+	describe("query.exec", () => {
+		it("Should be a function", () => {
+			expect(Model.query().exec).to.be.a("function");
+		});
+
+		it("Should return a promise", () => {
+			queryPromiseResolver = () => ({"Items": []});
+			expect(Model.query().exec()).to.be.a("promise");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (func) => func},
+			{"name": "Callback", "func": (func) => util.promisify(func)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should return correct result", async () => {
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
+				it("Should return correct result if unknown properties are in DynamoDB", async () => {
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
+					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
+				it("Should return correct result if using custom types", async () => {
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": String, "birthday": Date});
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}]});
+					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
+				});
+
+				it("Should return correct metadata in result", async () => {
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1});
+					const result = await callType.func(Model.query().exec).bind(Model.query())();
+					expect(result.lastKey).to.eql(undefined);
+					expect(result.count).to.eql(1);
+					expect(result.queriedCount).to.eql(1);
+					expect(result.timesQueried).to.eql(1);
+				});
+
+				it("Should return correct lastKey", async () => {
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+					const result = await callType.func(Model.query().exec).bind(Model.query())();
+					expect(result.lastKey).to.eql({"id": 5});
+				});
+
+				it("Should send correct request on query.exec", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.query().exec).bind(Model.query())();
+					expect(queryParams).to.eql({"QueryFilter": {}, "TableName": "Cat", "KeyConditions": {}});
+				});
+
+				it("Should send correct request on query.exec with filters", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query().filter("id").eq("test");
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({"QueryFilter": {
+						"id": {
+							"ComparisonOperator": "EQ",
+							"AttributeValueList": [
+								{"S": "test"}
+							]
+						}
+					}, "TableName": "Cat", "KeyConditions": {}});
+				});
+
+				it("Should send correct request on query.exec with filters and multiple values", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query().filter("id").between(1, 3);
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({"QueryFilter": {
+						"id": {
+							"ComparisonOperator": "BETWEEN",
+							"AttributeValueList": [
+								{"N": "1"},
+								{"N": "3"}
+							]
+						}
+					}, "TableName": "Cat", "KeyConditions": {}});
+				});
+
+				it("Should send correct request on query.exec with query condition", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query().where("id").eq("test");
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({"KeyConditions": {
+						"id": {
+							"ComparisonOperator": "EQ",
+							"AttributeValueList": [
+								{"S": "test"}
+							]
+						}
+					}, "TableName": "Cat", "QueryFilter": {}});
+				});
+
+				it("Should send correct request on query.exec with query condition and multiple values", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query().where("id").between(1, 3);
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({"KeyConditions": {
+						"id": {
+							"ComparisonOperator": "BETWEEN",
+							"AttributeValueList": [
+								{"N": "1"},
+								{"N": "3"}
+							]
+						}
+					}, "TableName": "Cat", "QueryFilter": {}});
+				});
+
+				it("Should throw error from AWS", async () => {
+					queryPromiseResolver = () => {
+						throw {"error": "Error"};
+					};
+					let result, error;
+					try {
+						result = await callType.func(Model.query().exec).bind(Model.query())();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql({"error": "Error"});
+				});
+			});
+		});
+	});
+
+	describe("query.and", () => {
+		it("Should be a function", () => {
+			expect(Model.query().and).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().and()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should return same object as Model.query()", async () => {
+			expect(Model.query().and()).to.eql(Model.query());
+		});
+	});
+
+	describe("query.not", () => {
+		it("Should be a function", () => {
+			expect(Model.query().not).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().not()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct property", () => {
+			expect(Model.query().settings.pending.not).to.be.undefined;
+			expect(Model.query().not().settings.pending.not).to.be.true;
+			expect(Model.query().not().not().settings.pending.not).to.be.false;
+		});
+	});
+
+	describe("query.where", () => {
+		it("Should be a function", () => {
+			expect(Model.query().where).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().where()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should not be an alias of query.filter", () => {
+			expect(Model.query().where).to.not.eql(Model.query().filter);
+		});
+
+		it("Should set correct property", () => {
+			expect(Model.query().settings.pending).to.eql({});
+			expect(Model.query().where("id").settings.pending).to.eql({"key": "id", "queryCondition": true});
+			expect(Model.query().where("id").where("name").settings.pending).to.eql({"key": "name", "queryCondition": true});
+		});
+	});
+
+	describe("query.filter", () => {
+		it("Should be a function", () => {
+			expect(Model.query().filter).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().filter()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct property", () => {
+			expect(Model.query().settings.pending).to.eql({});
+			expect(Model.query().filter("id").settings.pending).to.eql({"key": "id"});
+			expect(Model.query().filter("id").filter("name").settings.pending).to.eql({"key": "name"});
+		});
+	});
+
+	describe("query.null", () => {
+		it("Should be a function", () => {
+			expect(Model.query().null).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().null()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").null();
+			expect(query.settings.filters).to.eql({"id": {"type": "NULL", "value": []}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().null();
+			expect(query.settings.filters).to.eql({"id": {"type": "NOT_NULL", "value": []}});
+			expect(query.settings.pending).to.eql({});
+		});
+	});
+
+	describe("query.eq", () => {
+		it("Should be a function", () => {
+			expect(Model.query().eq).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().eq()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").eq("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "EQ", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().eq("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "NE", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should have same options as query.null for empty string, null, or undefined as value", () => {
+			expect(Model.query().filter("id").eq().settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
+			expect(Model.query().filter("id").eq("").settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
+			expect(Model.query().filter("id").eq(null).settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
+			expect(Model.query().filter("id").eq(undefined).settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
+		});
+	});
+
+	describe("query.lt", () => {
+		it("Should be a function", () => {
+			expect(Model.query().lt).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().lt()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").lt("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "LT", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().lt("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "GE", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+	});
+
+	describe("query.le", () => {
+		it("Should be a function", () => {
+			expect(Model.query().le).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().le()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").le("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "LE", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().le("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "GT", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+	});
+
+	describe("query.gt", () => {
+		it("Should be a function", () => {
+			expect(Model.query().gt).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().gt()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").gt("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "GT", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().gt("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "LE", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+	});
+
+	describe("query.ge", () => {
+		it("Should be a function", () => {
+			expect(Model.query().ge).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().ge()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").ge("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "GE", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().ge("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "LT", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+	});
+
+	describe("query.beginsWith", () => {
+		it("Should be a function", () => {
+			expect(Model.query().beginsWith).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().beginsWith()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").beginsWith("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "BEGINS_WITH", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should throw error with not()", () => {
+			const query = () => Model.query().filter("id").not().beginsWith("test");
+			expect(query).to.throw("BEGINS_WITH can not follow not()");
+		});
+	});
+
+	describe("query.contains", () => {
+		it("Should be a function", () => {
+			expect(Model.query().contains).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().contains()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").contains("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "CONTAINS", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().contains("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "NOT_CONTAINS", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+	});
+
+	describe("query.in", () => {
+		it("Should be a function", () => {
+			expect(Model.query().in).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().in()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").in("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "IN", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should throw error with not()", () => {
+			const query = () => Model.query().filter("id").not().in("test");
+			expect(query).to.throw("IN can not follow not()");
+		});
+	});
+
+	describe("query.between", () => {
+		it("Should be a function", () => {
+			expect(Model.query().between).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().between()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").between(1, 2);
+			expect(query.settings.filters).to.eql({"id": {"type": "BETWEEN", "value": [1, 2]}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should throw error with not()", () => {
+			const query = () => Model.query().filter("id").not().between(1, 2);
+			expect(query).to.throw("BETWEEN can not follow not()");
+		});
+	});
+
+	describe("query.limit", () => {
+		it("Should be a function", () => {
+			expect(Model.query().limit).to.be.a("function");
+		});
+
+		it("Should set correct setting on query instance", async () => {
+			const query = Model.query().limit(5);
+			expect(query.settings.limit).to.eql(5);
+		});
+
+		it("Should send correct request on query.exec", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query().limit(5).exec();
+			expect(queryParams.Limit).to.eql(5);
+		});
+	});
+
+	describe("query.startAt", () => {
+		it("Should be a function", () => {
+			expect(Model.query().startAt).to.be.a("function");
+		});
+
+		it("Should set correct setting on query instance", async () => {
+			const query = Model.query().startAt({"id": 5});
+			expect(query.settings.startAt).to.eql({"id": 5});
+		});
+
+		it("Should send correct request on query.exec", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query().startAt({"id": 5}).exec();
+			expect(queryParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
+		});
+
+		it("Should set correct setting on query instance if passing in DynamoDB object", async () => {
+			const query = Model.query().startAt({"id": {"N": "5"}});
+			expect(query.settings.startAt).to.eql({"id": {"N": "5"}});
+		});
+
+		it("Should send correct request on query.exec if passing in DynamoDB object", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query().startAt({"id": {"N": "5"}}).exec();
+			expect(queryParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
+		});
+	});
+
+	describe("query.attributes", () => {
+		it("Should be a function", () => {
+			expect(Model.query().attributes).to.be.a("function");
+		});
+
+		it("Should set correct setting on query instance", async () => {
+			const query = Model.query().attributes(["id"]);
+			expect(query.settings.attributes).to.eql(["id"]);
+		});
+
+		it("Should send correct request on query.exec", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query().attributes(["id"]).exec();
+			expect(queryParams.AttributesToGet).to.eql(["id"]);
+		});
+	});
+
+	describe("query.parallel", () => {
+		it("Should not be a function", () => {
+			expect(Model.query().parallel).to.not.be.a("function");
+		});
+
+		it("Should not exist", async () => {
+			expect(Model.query().parallel).to.not.exist;
+		});
+	});
+
+	describe("query.count", () => {
+		it("Should be a function", () => {
+			expect(Model.query().count).to.be.a("function");
+		});
+
+		it("Should set correct setting on query instance", async () => {
+			const query = Model.query().count();
+			expect(query.settings.count).to.be.true;
+		});
+
+		it("Should send correct request on query.exec", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query().count().exec();
+			expect(queryParams.Select).to.eql("COUNT");
+		});
+
+		it("Should return correct result on query.exec", async () => {
+			queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+			const result = await Model.query().count().exec();
+			expect(result).to.eql({"count": 1, "queriedCount": 1});
+		});
+	});
+
+	describe("query.consistent", () => {
+		it("Should be a function", () => {
+			expect(Model.query().consistent).to.be.a("function");
+		});
+
+		it("Should set correct setting on query instance", async () => {
+			const query = Model.query().consistent();
+			expect(query.settings.consistent).to.be.true;
+		});
+
+		it("Should send correct request on query.exec", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query().consistent().exec();
+			expect(queryParams.ConsistentRead).to.be.true;
+		});
+	});
+
+	describe("query.using", () => {
+		it("Should be a function", () => {
+			expect(Model.query().using).to.be.a("function");
+		});
+
+		it("Should set correct setting on query instance", async () => {
+			const query = Model.query().using("customIndex");
+			expect(query.settings.index).to.eql("customIndex");
+		});
+
+		it("Should send correct request on query.exec", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query().using("customIndex").exec();
+			expect(queryParams.IndexName).to.eql("customIndex");
+		});
+	});
+
+	describe("query.all", () => {
+		it("Should be a function", () => {
+			expect(Model.query().all).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().all()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct default options", () => {
+			expect(Model.query().all().settings.all).to.eql({"delay": 0, "max": 0});
+		});
+
+		it("Should set correct option for delay", () => {
+			expect(Model.query().all(5).settings.all).to.eql({"delay": 5, "max": 0});
+		});
+
+		it("Should set correct option for max", () => {
+			expect(Model.query().all(0, 5).settings.all).to.eql({"delay": 0, "max": 5});
+		});
+
+		it("Should handle delay correctly on query.exec", async () => {
+			queryPromiseResolver = async () => ({"Items": [], "LastEvaluatedKey": {"id": {"S": "test"}}});
+
+			const start = Date.now();
+			await Model.query().all(50, 2).exec();
+			const end = Date.now();
+			expect(end - start).to.be.above(99);
+		});
+
+		it("Should send correct result on query.exec", async () => {
+			let count = 0;
+			queryPromiseResolver = async () => {
+				const obj = ({"Items": [{"id": ++count}], "Count": 1, "QueriedCount": 2});
+				if (count < 2) {
+					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
+				}
+				return obj;
+			};
+
+			const result = await Model.query().all().exec();
+			expect(result.map((item) => ({...item}))).to.eql([{"id": 1}, {"id": 2}]);
+			expect(result.count).to.eql(2);
+			expect(result.queriedCount).to.eql(4);
+			expect(result.lastKey).to.not.exist;
+		});
+	});
 });

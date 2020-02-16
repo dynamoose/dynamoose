@@ -1,924 +1,640 @@
-'use strict';
-
-const dynamoose = require('../lib/');
-dynamoose.AWS.config.update({
-  'accessKeyId': 'AKID',
-  'secretAccessKey': 'SECRET',
-  'region': 'us-east-1'
-});
-
-dynamoose.local();
-
-const {Schema} = dynamoose;
-const should = require('should');
-
-
-describe('Scan', function () {
-  this.timeout(10000);
-
-  before((done) => {
-
-    dynamoose.setDefaults({'prefix': '', 'suffix': ''});
-
-    const dogSchema = new Schema({
-      'ownerId': {
-        'type': Number,
-        'validate' (v) { return v > 0; },
-        'hashKey': true
-      },
-      'breed': {
-        'type': String,
-        'trim': true,
-        'required': true,
-        'index': {
-          'global': true,
-          'rangeKey': 'ownerId',
-          'name': 'BreedIndex',
-          'project': true, // ProjectionType: ALL
-          'throughput': 5 // read and write are both 5
-        }
-      },
-      'name': {
-        'type': String,
-        'rangeKey': true,
-        'index': true // name: nameLocalIndex, ProjectionType: ALL
-      },
-      'color': {
-        'lowercase': true,
-        'type': [String],
-        'default': ['Brown']
-      },
-      'cartoon': {
-        'type': Boolean
-      },
-      'details': {
-        'timeWakeUp': {
-          'type': String
-        },
-        'timeSleep': {
-          'type': String
-        }
-      }
-    }, {'useDocumentTypes': true});
-    const Dog = dynamoose.model('Dog', dogSchema);
-
-    function addDogs (dogs) {
-      if (dogs.length <= 0) {
-        return done();
-      }
-      const dog = new Dog(dogs.pop());
-      dog.save((err) => {
-        if (err) {
-          return done(err);
-        }
-        addDogs(dogs);
-      });
-    }
-
-    addDogs([
-      {'ownerId': 1, 'name': 'Foxy Lady', 'breed': 'Jack Russell Terrier ', 'color': ['White', 'Brown', 'Black']},
-      {'ownerId': 2, 'name': 'Quincy', 'breed': 'Jack Russell Terrier', 'color': ['White', 'Brown']},
-      {'ownerId': 2, 'name': 'Princes', 'breed': 'Jack Russell Terrier', 'color': ['White', 'Brown']},
-      {'ownerId': 3, 'name': 'Toto', 'breed': 'Terrier', 'color': ['Brown']},
-      {'ownerId': 4, 'name': 'Odie', 'breed': 'Beagle', 'color': ['Tan'], 'cartoon': true},
-      {'ownerId': 5, 'name': 'Pluto', 'breed': 'unknown', 'color': ['Mustard'], 'cartoon': true},
-      {'ownerId': 6, 'name': 'Brian Griffin', 'breed': 'unknown', 'color': ['White']},
-      {'ownerId': 7, 'name': 'Scooby Doo', 'breed': 'Great Dane', 'cartoon': true},
-      {'ownerId': 8, 'name': 'Blue', 'breed': 'unknown', 'color': ['Blue'], 'cartoon': true},
-      {'ownerId': 9, 'name': 'Lady', 'breed': ' Cocker Spaniel', 'cartoon': true},
-      {'ownerId': 10, 'name': 'Copper', 'breed': 'Hound', 'cartoon': true},
-      {'ownerId': 11, 'name': 'Old Yeller', 'breed': 'unknown', 'color': ['Tan']},
-      {'ownerId': 12, 'name': 'Hooch', 'breed': 'Dogue de Bordeaux', 'color': ['Brown']},
-      {'ownerId': 13, 'name': 'Rin Tin Tin', 'breed': 'German Shepherd'},
-      {'ownerId': 14, 'name': 'Benji', 'breed': 'unknown'},
-      {'ownerId': 15, 'name': 'Wishbone', 'breed': 'Jack Russell Terrier', 'color': ['White'], 'details': {'timeWakeUp': '6am', 'timeSleep': '8pm'}},
-      {'ownerId': 16, 'name': 'Marley', 'breed': 'Labrador Retriever', 'color': ['Yellow']},
-      {'ownerId': 17, 'name': 'Beethoven', 'breed': 'St. Bernard'},
-      {'ownerId': 18, 'name': 'Lassie', 'breed': 'Collie', 'color': ['tan', 'white']},
-      {'ownerId': 19, 'name': 'Snoopy', 'breed': 'Beagle', 'color': ['black', 'white'], 'cartoon': true, 'details': {'timeWakeUp': '8am', 'timeSleep': '8pm'}}
-    ]);
-  });
-
-  after((done) => {
-    const Dog = dynamoose.model('Dog');
-    Dog.$__.table.delete((err) => {
-      if (err) {
-        done(err);
-      }
-      delete dynamoose.models.Dog;
-      done();
-    });
-  });
-
-  it('Scan for all items without exec', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(20);
-      done();
-    });
-  });
-
-  it('Scan for all items', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(20);
-      done();
-    });
-  });
-
-  it('Scan on one attribute with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': {'eq': 'Jack Russell Terrier'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan on one attribute', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('breed').eq('Jack Russell Terrier').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan on two attribute with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': {'eq': 'Jack Russell Terrier'}, 'color': {'contains': 'black'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
-  });
-
-  it('Scan on two attribute', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('breed').eq(' Jack Russell Terrier').and().where('color').contains('black').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
-  });
-
-  it('Scan on two attribute and a not with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': {'eq': 'Jack Russell Terrier'}, 'color': {'not_contains': 'black'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      done();
-    });
-  });
-
-  it('Scan on two attribute and a not', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('breed').eq('Jack Russell Terrier').and().where('color').not().contains('black').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      done();
-    });
-  });
-
-  it('Scan with eq with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': {'eq': 'Jack Russell Terrier'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan with eq with filter object short version', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': 'Jack Russell Terrier'}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan with eq', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('breed').eq('Jack Russell Terrier').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan with ne with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': {'ne': 'Jack Russell Terrier'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(16);
-      done();
-    });
-  });
-
-  it('Scan with not eq', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('breed').not().eq('Jack Russell Terrier').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(16);
-      done();
-    });
-  });
-
-  it('Scan with null with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'cartoon': {'null': true}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(13);
-      done();
-    });
-  });
-
-  it('Scan with null', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('cartoon').null().exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(13);
-      done();
-    });
-  });
-
-  it('Scan with blank eq - same as null', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('cartoon').eq('').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(13);
-      done();
-    });
-  });
-
-  it('Scan with not null with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'cartoon': {'null': false}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(7);
-      done();
-    });
-  });
-
-  it('Scan with not null', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('cartoon').not().null().exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(7);
-      done();
-    });
-  });
-
-  it('Scan with lt with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'ownerId': {'lt': 2}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
-  });
-
-  it('Scan with lt', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').lt(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
-  });
-
-  it('Scan with ge with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'ownerId': {'ge': 2}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(19);
-      done();
-    });
-  });
-
-  it('Scan with not lt', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').not().lt(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(19);
-      done();
-    });
-  });
-
-  it('Scan with gt with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'ownerId': {'gt': 2}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(17);
-      done();
-    });
-  });
-
-  it('Scan with gt', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').gt(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(17);
-      done();
-    });
-  });
-
-  it('Scan with le with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'ownerId': {'le': 2}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      done();
-    });
-  });
-
-  it('Scan with not gt', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').not().gt(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      done();
-    });
-  });
-
-
-  it('Scan with le', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').le(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(3);
-      done();
-    });
-  });
-
-
-  it('Scan with not le', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').not().le(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(17);
-      done();
-    });
-  });
-
-
-  it('Scan with ge', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').ge(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(19);
-      done();
-    });
-  });
-
-
-  it('Scan with not ge', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').not().ge(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
-  });
-
-  it('Scan with contains with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': {'contains': 'Terrier'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(5);
-      done();
-    });
-  });
-
-  it('Scan with contains', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('breed').contains('Terrier').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(5);
-      done();
-    });
-  });
-
-  it('Scan with not contains with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'breed': {'not_contains': 'Terrier'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(15);
-      done();
-    });
-  });
-
-  it('Scan with not contains', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('breed').not().contains('Terrier').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(15);
-      done();
-    });
-  });
-
-  it('Scan with beginsWith with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'name': {'begins_with': 'B'}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan with beginsWith', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('name').beginsWith('B').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan with not beginsWith (error)', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.scan('name').not().beginsWith('B').exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid scan state: beginsWith() cannot follow not()');
-  });
-
-  it('Scan with in with filter object', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error, res;
-    try {
-      res = await Dog.scan({'breed': {'in': ['Beagle', 'Hound']}}).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.not.exist(error);
-    res.length.should.eql(3);
-  });
-
-  it('Scan with in', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error, res;
-    try {
-      res = await Dog.scan('breed').in(['Beagle', 'Hound']).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.not.exist(error);
-    res.length.should.eql(3);
-  });
-
-
-  it('Scan with not in (error)', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.scan('name').not().in(['Beagle', 'Hound']).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid scan state: in() cannot follow not()');
-  });
-
-  it('Scan with between with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'ownerId': {'between': [5, 8]}}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-  it('Scan with between', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan('ownerId').between(5, 8).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(4);
-      done();
-    });
-  });
-
-
-  it('Scan with not between (error)', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.scan('ownerId').not().between(5, 8).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid scan state: between() cannot follow not()');
-  });
-
-  it('Scan with limit', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error, res;
-    try {
-      res = await Dog.scan().limit(5).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.not.exist(error);
-    res.length.should.eql(5);
-  });
-
-  it('Scan with startAt key', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    const key = {'ownerId': {'N': '15'}, 'name': {'S': 'Wishbone'}};
-
-    Dog.scan().startAt(key).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(15);
-      done();
-    });
-  });
-
-  it('Scan with limit', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error, res;
-    try {
-      res = await Dog.scan().attributes(['name', 'breed']).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.not.exist(error);
-    res[0].should.not.have.property('ownerId');
-    res[0].should.not.have.property('color');
-    res[0].should.have.property('name');
-    res[0].should.have.property('breed');
-  });
-
-  it('Scan with ANDed filters (default)', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().filter('breed').eq('unknown').filter('name').eq('Benji').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
-  });
-
-  it('Scan with ANDed filter with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'and': [{'breed': {'eq': 'unknown'}}, {'name': {'eq': 'Benji'}}]}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(1);
-      done();
-    });
-  });
-
-  it('Scan with ANDed filter with filter object (error)', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error;
-    try {
-      await Dog.scan({'and': [{'breed': {'eq': 'unknown'}}, {'breed': {'eq': 'Benji'}}]}).exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.exist(error);
-    should.exist(error.message);
-    error.message.should.eql('Invalid scan state; %s can only be used once');
-  });
-
-  it('Scan with ANDed filter', async () => {
-    const Dog = dynamoose.model('Dog');
-
-    let error, res;
-    try {
-      res = await Dog.scan().and().filter('breed').eq('unknown').filter('name').eq('Benji').exec();
-    } catch (e) {
-      error = e;
-    }
-
-    should.not.exist(error);
-    res.length.should.eql(1);
-  });
-
-  it('Scan with ORed filter with filter object', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan({'or': [{'breed': {'eq': 'unknown'}}, {'name': {'eq': 'Odie'}}]}, (err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(6);
-      done();
-    });
-  });
-
-  it('Scan with ORed filters', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().or().filter('breed').eq('unknown').filter('name').eq('Odie').exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(6);
-      done();
-    });
-  });
-
-  it('Scan.consistent', (done) => {
-    const Dog = dynamoose.model('Dog');
-    Dog.scan('ownerId').eq(2).consistent().exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(2);
-      done();
-    });
-  });
-
-  it('Scan.all', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().all().limit(5).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(20);
-      done();
-    });
-  });
-
-  it('Scan.all(1,2)', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().all(1000, 2).limit(5).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(10);
-      done();
-    });
-  });
-
-  it('Scan using raw AWS filter', (done) => {
-    const Dog = dynamoose.model('Dog');
-    const filter = {
-      'FilterExpression': 'details.timeWakeUp = :wakeUp',
-      'ExpressionAttributeValues': {
-        ':wakeUp': '8am'
-      }
-    };
-
-    Dog.scan(filter, {'useRawAwsFilter': true}).exec()
-      .then((dogs) => {
-        dogs.length.should.eql(1);
-        done();
-      })
-      .catch((err) => {
-        should.not.exist(err);
-        done();
-      });
-  });
-
-  it('Scan using raw AWS filter should work with lastKey', (done) => {
-    const Dog = dynamoose.model('Dog');
-    const filter = {
-      'FilterExpression': 'ownerId > :ownerIdB',
-      'ExpressionAttributeValues': {
-        ':ownerIdB': 1
-      },
-      'Limit': 2
-    };
-
-    Dog.scan(filter, {'useRawAwsFilter': true}).exec((err, dogs) => {
-      should.not.exist(err);
-      should.exist(dogs.lastKey);
-
-      done();
-    });
-  });
-
-  it('Scan using raw AWS filter and select count', (done) => {
-    const Dog = dynamoose.model('Dog');
-    const filter = {
-      'FilterExpression': 'details.timeWakeUp = :wakeUp',
-      'ExpressionAttributeValues': {
-        ':wakeUp': '8am'
-      },
-      'Select': 'COUNT'
-    };
-
-    Dog.scan(filter, {'useRawAwsFilter': true}).exec()
-      .then((counts) => {
-        counts.count.should.eql(1);
-        done();
-      })
-      .catch((err) => {
-        should.not.exist(err);
-        done();
-      });
-  });
-
-  it('Raw AWS filter should return model instances', (done) => {
-    const Dog = dynamoose.model('Dog');
-    const filter = {
-      'FilterExpression': 'details.timeWakeUp = :wakeUp',
-      'ExpressionAttributeValues': {
-        ':wakeUp': '8am'
-      }
-    };
-
-    Dog.scan(filter, {'useRawAwsFilter': true}).exec()
-      .then((dogs) => {
-        dogs[0].should.be.instanceof(Dog);
-        done();
-      })
-      .catch((err) => {
-        should.not.exist(err);
-        done();
-      });
-  });
-
-  it('Scan parallel', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().parallel(2).exec((err, dogs) => {
-      should.not.exist(err);
-      dogs.length.should.eql(20);
-      done();
-    });
-  });
-
-
-  it('Scan with startAt array - implied parallel', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().parallel(2).limit(2).exec()
-      .then((dogs) => {
-        dogs.length.should.eql(4);
-        dogs.lastKey.length.should.eql(2);
-        dogs.count.should.eql(4);
-        dogs.scannedCount.should.eql(4);
-        dogs.timesScanned.should.eql(2);
-        return Dog.scan().startAt(dogs.lastKey).exec();
-      })
-      .then((more) => {
-        more.length.should.eql(16);
-        more.count.should.eql(16);
-        more.scannedCount.should.eql(16);
-        more.timesScanned.should.eql(2);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Scan parallel all', (done) => {
-    const Dog = dynamoose.model('Dog');
-
-    Dog.scan().parallel(2).limit(2).all().exec()
-      .then((dogs) => {
-        dogs.length.should.eql(20);
-        should.not.exist(dogs.lastKey);
-        done();
-      })
-      .catch(done);
-  });
-
-  it('Should delay when working with all and limit', function (done) {
-    this.timeout(15000);
-
-    const startTime = Date.now();
-    const Dog = dynamoose.model('Dog');
-    Dog.scan().all(1000, 5).limit(1).exec((err, dogs) => {
-      const endTime = Date.now();
-      const timeDifference = endTime - startTime;
-      dogs.length.should.eql(5);
-      timeDifference.should.be.above(4000); // first request executes immediately so we take the (delay * (number of rounds (or requests) - 1)) in MS.
-      done();
-    });
-  });
-
-
-  it('Should not set timestamps', async function () {
-    this.timeout(15000);
-
-    const Lion = dynamoose.model('Lion1', {
-      'id': {
-        'type': String,
-        'hashKey': true,
-        'trim': true
-      }
-    }, {
-      'timestamps': {
-        'createdAt': 'created_at',
-        'updatedAt': 'updated_at'
-      }
-    });
-
-    for (let i = 0; i < 10; i += 1) {
-      const record = {
-        'id': `${i}`
-      };
-
-      await new Lion(record).save();
-    }
-
-    // scan all records
-    const allRecords = await Lion.scan().all(0).exec();
-    allRecords.length.should.eql(10);
-
-    // filter by created_at
-    const tenMinAgo = new Date().getTime() - 10 * 60 * 1000;
-    const createdFilter = {
-      'created_at': {'gt': tenMinAgo}
-    };
-    const createdFilterRecords = await Lion.scan(createdFilter).all(0).exec();
-    createdFilterRecords.length.should.eql(10);
-
-    // filter by updated_at
-    const updatedFilter = {
-      'updated_at': {'gt': tenMinAgo}
-    };
-    const updatedFilterRecords = await Lion.scan(updatedFilter).all(0).exec();
-    updatedFilterRecords.length.should.eql(10);
-  });
-
-  it('Scan using sparse index', async () => {
-    const Lion = dynamoose.model('Lion2', {
-      'id': {
-        'type': String,
-        'hashKey': true,
-        'trim': true
-      },
-      'indexId': {
-        'type': String,
-        'index': {
-          'name': 'sparseIndex',
-          'global': true
-        }
-      }
-    });
-
-    for (let i = 0; i < 10; i += 1) {
-      const record = {'id': `${i}`};
-      if (i % 3 === 0) {
-        record.indexId = record.id;
-      }
-
-      await new Lion(record).save();
-    }
-
-    const allIndexRecords = await Lion.scan().using('sparseIndex').exec();
-    allIndexRecords.length.should.eql(4);
-  });
+const {expect} = require("chai");
+const dynamoose = require("../lib");
+const util = require("util");
+
+describe("Scan", () => {
+	beforeEach(() => {
+		dynamoose.Model.defaults = {"create": false, "waitForActive": false};
+	});
+	afterEach(() => {
+		dynamoose.Model.defaults = {};
+	});
+
+	let scanPromiseResolver, scanParams;
+	beforeEach(() => {
+		dynamoose.aws.ddb.set({
+			"scan": (request) => {
+				scanParams = request;
+				return {"promise": scanPromiseResolver};
+			}
+		});
+	});
+	afterEach(() => {
+		dynamoose.aws.ddb.revert();
+		scanPromiseResolver = null;
+		scanParams = null;
+	});
+
+	let Model;
+	beforeEach(() => {
+		Model = new dynamoose.Model("Cat", {"id": Number, "name": String});
+	});
+
+	describe("Model.scan", () => {
+		it("Should return a function", () => {
+			expect(Model.scan).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should have correct class name", () => {
+			expect(Model.scan().constructor.name).to.eql("Scan");
+		});
+
+		it("Should set pending key if string passed into scan function", () => {
+			const id = "id";
+			const scan = Model.scan(id);
+			expect(scan.settings.pending).to.eql({"key": id});
+		});
+
+		it("Should set filters correctly for object passed into scan function", () => {
+			const scan = Model.scan({"name": {"eq": "Charlie"}, "id": {"le": 5}});
+			expect(scan.settings.filters).to.eql({"id": {"type": "LE", "value": 5}, "name": {"type": "EQ", "value": "Charlie"}});
+		});
+
+		it("Should throw error if unknown comparison operator is passed in", () => {
+			expect(() => Model.scan({"name": {"unknown": "Charlie"}})).to.throw("The type: unknown is invalid for the scan operation.");
+		});
+	});
+
+	describe("scan.exec", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().exec).to.be.a("function");
+		});
+
+		it("Should return a promise", () => {
+			scanPromiseResolver = () => ({"Items": []});
+			expect(Model.scan().exec()).to.be.a("promise");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (func) => func},
+			{"name": "Callback", "func": (func) => util.promisify(func)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should return correct result", async () => {
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
+				it("Should return correct result if unknown properties are in DynamoDB", async () => {
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
+				it("Should return correct result if using custom types", async () => {
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": String, "birthday": Date});
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
+				});
+
+				it("Should return correct metadata in result", async () => {
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1});
+					const result = await callType.func(Model.scan().exec).bind(Model.scan())();
+					expect(result.lastKey).to.eql(undefined);
+					expect(result.count).to.eql(1);
+					expect(result.scannedCount).to.eql(1);
+					expect(result.timesScanned).to.eql(1);
+				});
+
+				it("Should return correct lastKey", async () => {
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+					const result = await callType.func(Model.scan().exec).bind(Model.scan())();
+					expect(result.lastKey).to.eql({"id": 5});
+				});
+
+				it("Should send correct request on scan.exec", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.scan().exec).bind(Model.scan())();
+					expect(scanParams).to.eql({"ScanFilter": {}, "TableName": "Cat"});
+				});
+
+				it("Should send correct request on scan.exec with filters", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const scan = Model.scan().filter("id").eq("test");
+					await callType.func(scan.exec).bind(scan)();
+					expect(scanParams).to.eql({"ScanFilter": {
+						"id": {
+							"ComparisonOperator": "EQ",
+							"AttributeValueList": [
+								{"S": "test"}
+							]
+						}
+					}, "TableName": "Cat"});
+				});
+
+				it("Should send correct request on scan.exec with filters and multiple values", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const scan = Model.scan().filter("id").between(1, 3);
+					await callType.func(scan.exec).bind(scan)();
+					expect(scanParams).to.eql({"ScanFilter": {
+						"id": {
+							"ComparisonOperator": "BETWEEN",
+							"AttributeValueList": [
+								{"N": "1"},
+								{"N": "3"}
+							]
+						}
+					}, "TableName": "Cat"});
+				});
+
+				it("Should throw error from AWS", async () => {
+					scanPromiseResolver = () => {
+						throw {"error": "Error"};
+					};
+					let result, error;
+					try {
+						result = await callType.func(Model.scan().exec).bind(Model.scan())();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql({"error": "Error"});
+				});
+			});
+		});
+	});
+
+	describe("scan.and", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().and).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().and()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should return same object as Model.scan()", async () => {
+			expect(Model.scan().and()).to.eql(Model.scan());
+		});
+	});
+
+	describe("scan.not", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().not).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().not()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct property", () => {
+			expect(Model.scan().settings.pending.not).to.be.undefined;
+			expect(Model.scan().not().settings.pending.not).to.be.true;
+			expect(Model.scan().not().not().settings.pending.not).to.be.false;
+		});
+	});
+
+	describe("scan.where", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().where).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().where()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should be an alias of scan.filter", () => {
+			expect(Model.scan().where).to.eql(Model.scan().filter);
+		});
+	});
+
+	describe("scan.filter", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().filter).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().filter()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct property", () => {
+			expect(Model.scan().settings.pending).to.eql({});
+			expect(Model.scan().filter("id").settings.pending).to.eql({"key": "id"});
+			expect(Model.scan().filter("id").filter("name").settings.pending).to.eql({"key": "name"});
+		});
+	});
+
+	describe("scan.null", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().null).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().null()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").null();
+			expect(scan.settings.filters).to.eql({"id": {"type": "NULL", "value": []}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().null();
+			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_NULL", "value": []}});
+			expect(scan.settings.pending).to.eql({});
+		});
+	});
+
+	describe("scan.eq", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().eq).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().eq()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").eq("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "EQ", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().eq("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "NE", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should have same options as scan.null for empty string, null, or undefined as value", () => {
+			expect(Model.scan().filter("id").eq().settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
+			expect(Model.scan().filter("id").eq("").settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
+			expect(Model.scan().filter("id").eq(null).settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
+			expect(Model.scan().filter("id").eq(undefined).settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
+		});
+	});
+
+	describe("scan.lt", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().lt).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().lt()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").lt("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "LT", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().lt("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "GE", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+	});
+
+	describe("scan.le", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().le).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().le()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").le("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "LE", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().le("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "GT", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+	});
+
+	describe("scan.gt", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().gt).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().gt()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").gt("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "GT", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().gt("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "LE", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+	});
+
+	describe("scan.ge", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().ge).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().ge()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").ge("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "GE", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().ge("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "LT", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+	});
+
+	describe("scan.beginsWith", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().beginsWith).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().beginsWith()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").beginsWith("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "BEGINS_WITH", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should throw error with not()", () => {
+			const scan = () => Model.scan().filter("id").not().beginsWith("test");
+			expect(scan).to.throw("BEGINS_WITH can not follow not()");
+		});
+	});
+
+	describe("scan.contains", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().contains).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().contains()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").contains("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "CONTAINS", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().contains("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_CONTAINS", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+	});
+
+	describe("scan.in", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().in).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().in()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").in("test");
+			expect(scan.settings.filters).to.eql({"id": {"type": "IN", "value": "test"}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should throw error with not()", () => {
+			const scan = () => Model.scan().filter("id").not().in("test");
+			expect(scan).to.throw("IN can not follow not()");
+		});
+	});
+
+	describe("scan.between", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().between).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().between()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").between(1, 2);
+			expect(scan.settings.filters).to.eql({"id": {"type": "BETWEEN", "value": [1, 2]}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should throw error with not()", () => {
+			const scan = () => Model.scan().filter("id").not().between(1, 2);
+			expect(scan).to.throw("BETWEEN can not follow not()");
+		});
+	});
+
+	describe("scan.limit", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().limit).to.be.a("function");
+		});
+
+		it("Should set correct setting on scan instance", async () => {
+			const scan = Model.scan().limit(5);
+			expect(scan.settings.limit).to.eql(5);
+		});
+
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().limit(5).exec();
+			expect(scanParams.Limit).to.eql(5);
+		});
+	});
+
+	describe("scan.startAt", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().startAt).to.be.a("function");
+		});
+
+		it("Should set correct setting on scan instance", async () => {
+			const scan = Model.scan().startAt({"id": 5});
+			expect(scan.settings.startAt).to.eql({"id": 5});
+		});
+
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().startAt({"id": 5}).exec();
+			expect(scanParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
+		});
+
+		it("Should set correct setting on scan instance if passing in DynamoDB object", async () => {
+			const scan = Model.scan().startAt({"id": {"N": "5"}});
+			expect(scan.settings.startAt).to.eql({"id": {"N": "5"}});
+		});
+
+		it("Should send correct request on scan.exec if passing in DynamoDB object", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().startAt({"id": {"N": "5"}}).exec();
+			expect(scanParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
+		});
+	});
+
+	describe("scan.attributes", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().attributes).to.be.a("function");
+		});
+
+		it("Should set correct setting on scan instance", async () => {
+			const scan = Model.scan().attributes(["id"]);
+			expect(scan.settings.attributes).to.eql(["id"]);
+		});
+
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().attributes(["id"]).exec();
+			expect(scanParams.AttributesToGet).to.eql(["id"]);
+		});
+	});
+
+	describe("scan.parallel", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().parallel).to.be.a("function");
+		});
+
+		it("Should set correct setting on scan instance", async () => {
+			const scan = Model.scan().parallel(5);
+			expect(scan.settings.parallel).to.eql(5);
+		});
+
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().parallel(5).exec();
+			expect(scanParams.TotalSegments).to.eql(5);
+		});
+
+		it("Should return correct result on scan.exec", async () => {
+			let count = 0;
+			scanPromiseResolver = () => ({"Items": [{"id": count * 50, "name": "Test"}, {"id": count * 100, "name": "Test 2"}], "Count": 2, "ScannedCount": 3, "LastEvaluatedKey": {"id": {"N": `${count++}`}}});
+			const result = await Model.scan().parallel(5).exec();
+			expect(count).to.eql(5);
+			expect(result.lastKey).to.eql([{"id": 0}, {"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}]);
+			expect(result.scannedCount).to.eql(15);
+			expect(result.count).to.eql(10);
+			expect(result.timesScanned).to.eql(5);
+			expect(scanParams.Segment).to.eql(4);
+		});
+	});
+
+	describe("scan.count", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().count).to.be.a("function");
+		});
+
+		it("Should set correct setting on scan instance", async () => {
+			const scan = Model.scan().count();
+			expect(scan.settings.count).to.be.true;
+		});
+
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().count().exec();
+			expect(scanParams.Select).to.eql("COUNT");
+		});
+
+		it("Should return correct result on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+			const result = await Model.scan().count().exec();
+			expect(result).to.eql({"count": 1, "scannedCount": 1});
+		});
+	});
+
+	describe("scan.consistent", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().consistent).to.be.a("function");
+		});
+
+		it("Should set correct setting on scan instance", async () => {
+			const scan = Model.scan().consistent();
+			expect(scan.settings.consistent).to.be.true;
+		});
+
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().consistent().exec();
+			expect(scanParams.ConsistentRead).to.be.true;
+		});
+	});
+
+	describe("scan.using", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().using).to.be.a("function");
+		});
+
+		it("Should set correct setting on scan instance", async () => {
+			const scan = Model.scan().using("customIndex");
+			expect(scan.settings.index).to.eql("customIndex");
+		});
+
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().using("customIndex").exec();
+			expect(scanParams.IndexName).to.eql("customIndex");
+		});
+	});
+
+	describe("scan.all", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().all).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().all()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct default options", () => {
+			expect(Model.scan().all().settings.all).to.eql({"delay": 0, "max": 0});
+		});
+
+		it("Should set correct option for delay", () => {
+			expect(Model.scan().all(5).settings.all).to.eql({"delay": 5, "max": 0});
+		});
+
+		it("Should set correct option for max", () => {
+			expect(Model.scan().all(0, 5).settings.all).to.eql({"delay": 0, "max": 5});
+		});
+
+		it("Should handle delay correctly on scan.exec", async () => {
+			scanPromiseResolver = async () => ({"Items": [], "LastEvaluatedKey": {"id": {"S": "test"}}});
+
+			const start = Date.now();
+			await Model.scan().all(50, 2).exec();
+			const end = Date.now();
+			expect(end - start).to.be.above(99);
+		});
+
+		it("Should send correct result on scan.exec", async () => {
+			let count = 0;
+			scanPromiseResolver = async () => {
+				const obj = ({"Items": [{"id": ++count}], "Count": 1, "ScannedCount": 2});
+				if (count < 2) {
+					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
+				}
+				return obj;
+			};
+
+			const result = await Model.scan().all().exec();
+			expect(result.map((item) => ({...item}))).to.eql([{"id": 1}, {"id": 2}]);
+			expect(result.count).to.eql(2);
+			expect(result.scannedCount).to.eql(4);
+			expect(result.lastKey).to.not.exist;
+		});
+	});
 });
