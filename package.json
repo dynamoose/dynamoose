@@ -20,7 +20,7 @@
     "test-nocoverage": "mocha --recursive",
     "lint": "eslint .",
     "report-coverage": "nyc report --reporter=html",
-    "report-coverage-text": "nyc report --reporter=text-lcov > ./coverage/lcov.info"
+    "report-coverage-text": "mkdir -p ./coverage; nyc report --reporter=text-lcov > ./coverage/lcov.info"
   },
   "repository": {
     "type": "git",
