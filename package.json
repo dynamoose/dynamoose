@@ -29,5 +29,6 @@
   "homepage": "https://github.com/dynamoosejs/dynamoose#readme",
   "dependencies": {
     "aws-sdk": "^2.610.0"
-  }
+  },
+  "license": "Unlicense"
 }
