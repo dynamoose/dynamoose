@@ -500,7 +500,7 @@ describe("Document", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob";
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).to.eql("User");
@@ -529,7 +529,7 @@ describe("Document", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob";
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).to.eql("User");
@@ -557,7 +557,7 @@ describe("Document", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob";
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).to.eql("User");
@@ -583,7 +583,7 @@ describe("Document", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob";
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).to.eql("User");
