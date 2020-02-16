@@ -413,7 +413,7 @@ describe("Model", () => {
 					beforeEach(() => {
 						updateTableParams = [];
 						dynamoose.aws.ddb.set({
-							"describeTable": (params) => {
+							"describeTable": () => {
 								return {
 									"promise": describeTableFunction
 								};
