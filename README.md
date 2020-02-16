@@ -12,5 +12,5 @@ Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http:
 ### Installation
 
 ```sh
-$ npm i dynamoose@2.0.0-beta.0
+$ npm i dynamoose@2.0.0-beta.1
 ```
