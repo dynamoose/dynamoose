@@ -65,6 +65,26 @@ describe("AWS", () => {
 				expect(second).to.not.eql(first);
 			});
 		});
+
+		describe("Local", () => {
+			afterEach(() => {
+				dynamoose.aws.ddb.revert();
+			});
+
+			it("Should be a function", () => {
+				expect(dynamoose.aws.ddb.local).to.be.a("function");
+			});
+
+			it("Should set correct default endpoint if nothing passed in", () => {
+				dynamoose.aws.ddb.local();
+				expect(dynamoose.aws.ddb().endpoint.href).to.eql("http://localhost:8000/");
+			});
+
+			it("Should set correct custom endpoint if custom string passed in", () => {
+				dynamoose.aws.ddb.local("http://localhost:9000");
+				expect(dynamoose.aws.ddb().endpoint.href).to.eql("http://localhost:9000/");
+			});
+		});
 	});
 
 	describe("Converter", () => {
