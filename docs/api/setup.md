@@ -55,6 +55,18 @@ This function is used to revert the `AWS.DynamoDB()` instance that Dynamoose use
 dynamoose.aws.ddb.revert();
 ```
 
+## dynamoose.aws.ddb.local([endpoint])
+
+This function is used to set the `AWS.DynamoDB()` instance to use the a local endpoint as opposed to the production instance of DynamoDB. By default the endpoint used will be `http://localhost:8000`. You can pass in a string for the `endpoint` parameter to change what endpoint will be used.
+
+```js
+dynamoose.aws.ddb.local();
+
+dynamoose.aws.ddb.local("http://localhost:9000");
+```
+
+This function has the same behavior as running `dynamoose.aws.ddb.set` and passing in an `AWS.DynamoDB()` instance with the custom endpoint set. Therefore this function will overwrite any existing custom `dynamoose.aws.ddb` instance that was set previously.
+
 ## dynamoose.aws.converter
 
 The `dynamoose.aws.converter` property has a couple of custom settings for managing the `AWS.DynamoDB.Converter` instance that Dynamoose uses. This is especially helpful for mocking the `AWS.DynamoDB.Converter` instance when running automated tests against your applications.
