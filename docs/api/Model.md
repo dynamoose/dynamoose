@@ -135,7 +135,7 @@ User.get({"id": 1, "name": "Tim"}, (error, myUser) => {
 });
 ```
 
-### Model.create(document, [settings], [callback])
+## Model.create(document, [settings], [callback])
 
 This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
 
@@ -162,7 +162,7 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 });
 ```
 
-### Model.update(keyObj[, updateObj],[ callback])
+## Model.update(keyObj[, updateObj],[ callback])
 
 This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
 
