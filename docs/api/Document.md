@@ -52,3 +52,16 @@ myUser.save((error) => {
 	}
 });
 ```
+
+## document.original()
+
+This function returns the original item that was received from DynamoDB. This function will return a JSON object that represents the original item. In the event no item has been retrieved from DynamoDB `null` will be returned.
+
+```js
+const user = await User.get(1);
+console.log(user); // {"id": 1, "name": "Bob"}
+user.name = "Tim";
+
+console.log(user); // {"id": 1, "name": "Tim"}
+console.log(user.original()); // {"id": 1, "name": "Bob"}
+```
