@@ -1816,6 +1816,34 @@ describe("Model", () => {
 			});
 		});
 	});
+
+	describe("Model.table.create.request", () => {
+		it("Should be a function", () => {
+			expect(new dynamoose.Model("User", {"id": String}).table.create.request).to.be.a("function");
+		});
+
+		it("Should return correct result", async () => {
+			expect(await new dynamoose.Model("User", {"id": String}).table.create.request()).to.eql({
+				"TableName": "User",
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 5,
+					"WriteCapacityUnits": 5
+				},
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				]
+			});
+		});
+	});
 });
 
 describe("model", () => {
