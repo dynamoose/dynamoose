@@ -933,6 +933,35 @@ describe("Document", () => {
 		});
 	});
 
+	describe("document.original", () => {
+		let model;
+		beforeEach(() => {
+			model = new Model("User", {"id": Number}, {"create": false, "waitForActive": false});
+		});
+		afterEach(() => {
+			model = null;
+		});
+
+		it("Should be a function", () => {
+			expect(new model({}).original).to.be.a("function");
+		});
+
+		it("Should return null if not retrieving from database", () => {
+			expect(new model({}).original()).to.eql(null);
+		});
+
+		it("Should return original object if retrieving from database", () => {
+			expect(new model({"id": 1}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
+		});
+
+		it("Should return original object if retrieving from database even after modifying document", () => {
+			const document = new model({"id": 1}, {"type": "fromDynamo"});
+			document.id = 2;
+			expect(document.original()).to.eql({"id": 1});
+			expect({...document}).to.eql({"id": 2});
+		});
+	});
+
 	describe("conformToSchema", () => {
 		beforeEach(() => {
 			Model.defaults = {
