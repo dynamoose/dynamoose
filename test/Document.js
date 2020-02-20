@@ -79,7 +79,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("save", () => {
+	describe("document.save", () => {
 		let User, user, putParams = [], putItemFunction;
 		beforeEach(() => {
 			Model.defaults = {
