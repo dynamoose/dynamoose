@@ -9,3 +9,7 @@
 	- `$DELETE` now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
 - `dynamoose.model` has been renamed to `dynamoose.Model`
 - `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
+- `Model.getTableReq` has been renamed to `Model.table.create.request`
+- `Model.table.create.request` (formerly `Model.getTableReq`) is now an async function
+- `model.originalItem` has been renamed to `model.original` (or `Document.original`)
+- `Document.original` formerly (`model.originalItem`) no longer returns the last item saved, but the item first retrieved from DynamoDB
