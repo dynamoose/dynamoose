@@ -85,6 +85,39 @@ In order to revert to the default and remove custom defaults you can set it to a
 dynamoose.Model.defaults = {};
 ```
 
+## Model.table.create.request()
+
+This function will return the object used to create the table with AWS. You can use this to create the table manually, for things like the Serverless deployment toolkit, or just to peak behind the scenes and see what Dynamoose is doing to create the table.
+
+This function is an async function so you must wait for the promise to resolve before you are able to access the result.
+
+```js
+const User = dynamoose.Model("User", {"id": Number, "name": String});
+
+async function printTableRequest() {
+	console.log(await User.table.create.request());
+	// {
+	// 	"TableName": "User",
+	// 	"ProvisionedThroughput": {
+	// 		"ReadCapacityUnits": 5,
+	// 		"WriteCapacityUnits": 5
+	// 	},
+	// 	"AttributeDefinitions": [
+	// 		{
+	// 			"AttributeName": "id",
+	// 			"AttributeType": "N"
+	// 		}
+	// 	],
+	// 	"KeySchema": [
+	// 		{
+	// 			"AttributeName": "id",
+	// 			"KeyType": "HASH"
+	// 		}
+	// 	]
+	// }
+}
+```
+
 ## Model.get(hashKey[, callback])
 
 You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
@@ -135,7 +168,7 @@ User.get({"id": 1, "name": "Tim"}, (error, myUser) => {
 });
 ```
 
-### Model.create(document, [settings], [callback])
+## Model.create(document, [settings], [callback])
 
 This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
 
@@ -162,7 +195,7 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 });
 ```
 
-### Model.update(keyObj[, updateObj],[ callback])
+## Model.update(keyObj[, updateObj],[ callback])
 
 This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
 
