@@ -85,6 +85,39 @@ In order to revert to the default and remove custom defaults you can set it to a
 dynamoose.Model.defaults = {};
 ```
 
+## Model.table.create.request()
+
+This function will return the object used to create the table with AWS. You can use this to create the table manually, for things like the Serverless deployment toolkit, or just to peak behind the scenes and see what Dynamoose is doing to create the table.
+
+This function is an async function so you must wait for the promise to resolve before you are able to access the result.
+
+```js
+const User = dynamoose.Model("User", {"id": Number, "name": String});
+
+async function printTableRequest() {
+	console.log(await User.table.create.request());
+	// {
+	// 	"TableName": "User",
+	// 	"ProvisionedThroughput": {
+	// 		"ReadCapacityUnits": 5,
+	// 		"WriteCapacityUnits": 5
+	// 	},
+	// 	"AttributeDefinitions": [
+	// 		{
+	// 			"AttributeName": "id",
+	// 			"AttributeType": "N"
+	// 		}
+	// 	],
+	// 	"KeySchema": [
+	// 		{
+	// 			"AttributeName": "id",
+	// 			"KeyType": "HASH"
+	// 		}
+	// 	]
+	// }
+}
+```
+
 ## Model.get(hashKey[, callback])
 
 You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
