@@ -508,6 +508,77 @@ describe("Model", () => {
 						}]);
 					});
 				});
+
+				describe("Time To Live", () => {
+					let updateTTLParams = [];
+					beforeEach(() => {
+						dynamoose.Model.defaults = {
+							"create": false,
+							"update": true
+						};
+					});
+					beforeEach(() => {
+						updateTTLParams = [];
+						dynamoose.aws.ddb.set({
+							"describeTable": () => {
+								return {
+									"promise": () => Promise.resolve({
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 5,
+												"WriteCapacityUnits": 5
+											},
+											"TableStatus": "ACTIVE"
+										}
+									})
+								};
+							},
+							"updateTimeToLive": (params) => {
+								updateTTLParams.push(params);
+								return {
+									"promise": Promise.resolve()
+								};
+							}
+						});
+					});
+					afterEach(() => {
+						updateTTLParams = [];
+						dynamoose.aws.ddb.revert();
+					});
+
+					it("Should call updateTimeToLive with correct parameters", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String}, {"expires": 1000});
+						await utils.set_immediate_promise();
+						expect(updateTTLParams).to.eql([{
+							"TableName": tableName,
+							"TimeToLiveSpecification": {
+								"Enabled": true,
+								"AttributeName": "ttl"
+							}
+						}]);
+					});
+
+					it("Should call updateTimeToLive with correct parameters for custom attribute", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
+						await utils.set_immediate_promise();
+						expect(updateTTLParams).to.eql([{
+							"TableName": tableName,
+							"TimeToLiveSpecification": {
+								"Enabled": true,
+								"AttributeName": "expires"
+							}
+						}]);
+					});
+
+					it("Should not call updateTimeToLive if no expires", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String});
+						await utils.set_immediate_promise();
+						expect(updateTTLParams).to.eql([]);
+					});
+				});
 			});
 		});
 	});
@@ -583,6 +654,23 @@ describe("Model", () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an.instanceof(User);
+				});
+
+				it("Should return null for expired object", async () => {
+					User = new dynamoose.Model("User", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "ttl": {"N": "1"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.eql(null);
+				});
+
+				it("Should return expired object if returnExpired is not set", async () => {
+					User = new dynamoose.Model("User", {"id": Number}, {"expires": 1000});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "ttl": {"N": "1"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "ttl"]);
+					expect(user.id).to.eql(1);
+					expect(user.ttl).to.eql(new Date(1000));
 				});
 
 				it("Should return object with correct values with saveUnknown", async () => {

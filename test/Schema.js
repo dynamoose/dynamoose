@@ -1,5 +1,6 @@
 const {expect} = require("chai");
 const Schema = require("../lib/Schema");
+const Error = require("../lib/Error");
 
 describe("Schema", () => {
 	it("Should be a function", () => {
@@ -708,6 +709,46 @@ describe("Schema", () => {
 			it(test.name, () => {
 				expect(new Schema({"id": String}, test.settings).getSettingValue(test.input)).to.eql(test.output);
 			});
+		});
+	});
+
+	describe("getAttributeTypeDetails", () => {
+		it("Should throw for invalid attribute", () => {
+			const func = () => new Schema({"id": String}).getAttributeTypeDetails("random");
+			expect(func).to.throw(Error.UnknownAttribute);
+			expect(func).to.throw("Invalid Attribute: random");
+		});
+
+		it("Should have correct custom type for date", () => {
+			const functions = new Schema({"id": Date}).getAttributeTypeDetails("id").customType.functions;
+			expect(functions.toDynamo).to.exist;
+			expect(functions.fromDynamo).to.exist;
+			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653000);
+			expect(functions.fromDynamo(1582246653000)).to.eql(new Date(1582246653000));
+		});
+
+		it("Should have correct custom type for date with type object and no settings", () => {
+			const functions = new Schema({"id": {"type": {"value": Date}}}).getAttributeTypeDetails("id").customType.functions;
+			expect(functions.toDynamo).to.exist;
+			expect(functions.fromDynamo).to.exist;
+			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653000);
+			expect(functions.fromDynamo(1582246653000)).to.eql(new Date(1582246653000));
+		});
+
+		it("Should have correct custom type for date with custom storage settings as miliseconds", () => {
+			const functions = new Schema({"id": {"type": {"value": Date, "settings": {"storage": "miliseconds"}}}}).getAttributeTypeDetails("id").customType.functions;
+			expect(functions.toDynamo).to.exist;
+			expect(functions.fromDynamo).to.exist;
+			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653000);
+			expect(functions.fromDynamo(1582246653000)).to.eql(new Date(1582246653000));
+		});
+
+		it("Should have correct custom type for date with custom storage settings as seconds", () => {
+			const functions = new Schema({"id": {"type": {"value": Date, "settings": {"storage": "seconds"}}}}).getAttributeTypeDetails("id").customType.functions;
+			expect(functions.toDynamo).to.exist;
+			expect(functions.fromDynamo).to.exist;
+			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653);
+			expect(functions.fromDynamo(1582246653)).to.eql(new Date(1582246653000));
 		});
 	});
 

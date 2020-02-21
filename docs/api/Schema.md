@@ -43,15 +43,15 @@ const schema = new dynamoose.Schema({
 
 ## Attribute Types
 
-| Type    | Set Allowed | DynamoDB Type | Custom Dynamoose Type | Nested Type | Notes                                                                                               |
-|---------|-------------|---------------|-----------------------|-------------|-----------------------------------------------------------------------------------------------------|
-| String  | True        | S             | False                 | False       |                                                                                                     |
-| Boolean | False       | BOOL          | False                 | False       |                                                                                                     |
-| Number  | True        | N             | False                 | False       |                                                                                                     |
-| Buffer  | True        | B             | False                 | False       |                                                                                                     |
-| Date    | True        | N             | True                  | False       | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
-| Object  | False       | M             | False                 | True        |                                                                                                     |
-| Array   | False       | L             | False                 | True        |                                                                                                     |
+| Type | Set Allowed | DynamoDB Type | Custom Dynamoose Type | Nested Type | Settings | Notes |
+|---|---|---|---|---|---|---|
+| String | True | S | False | False |   |   |
+| Boolean | False | BOOL | False | False |   |   |
+| Number | True | N | False | False |   |   |
+| Buffer | True | B | False | False |   |   |
+| Date | True | N | True | False | **storage** - miliseconds \| seconds (default: miliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
+| Object | False | M | False | True |   |   |
+| Array | False | L | False | True |   |   |
 
 If you use a set you will define the type surrounded by brackets. For example a String Set would be defined as a type of `[String]`. Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array.
 
@@ -62,6 +62,31 @@ Custom Dynamoose Types are not supported with the `saveUnknown` property. For ex
 For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute.
 
 ## Attribute Settings
+
+### type: type | object
+
+The type attribute can either be a type (ex. `Object`, `Number`, etc.) or an object that has additional information for the type. In the event you set it as an object you must pass in a `value` for the type, and can optionally pass in a `settings` object.
+
+```js
+{
+	"address": {
+		"type": Object
+	}
+}
+```
+
+```js
+{
+	"deletedAt": {
+		"type": {
+			"value": Date,
+			"settings": {
+				"storage": "seconds" // Default: miliseconds (as shown above)
+			}
+		}
+	}
+}
+```
 
 ### schema: object | array
 

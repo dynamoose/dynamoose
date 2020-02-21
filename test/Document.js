@@ -489,6 +489,45 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.ValidationError("friends.1.addresses.1.country is a required property but has no value when trying to save document"));
 				});
 
+				it("Should save with correct object with expires set to a number", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}), {"create": false, "waitForActive": false, "expires": 10000});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					const expectedTTL = (Date.now() + 10000) / 1000;
+					expect(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+				});
+
+				it("Should save with correct object with expires set to object", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}), {"create": false, "waitForActive": false, "expires": {"attribute": "expires", "ttl": 10000}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					const expectedTTL = (Date.now() + 10000) / 1000;
+					expect(parseInt(putParams[0].Item.expires.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+				});
+
+				it("Should save with correct object with expires set to object with no attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}), {"create": false, "waitForActive": false, "expires": {"ttl": 10000}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					const expectedTTL = (Date.now() + 10000) / 1000;
+					expect(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+				});
+
 				it("Should save with correct object with timestamps set to true", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": true}), {"create": false, "waitForActive": false});
@@ -665,6 +704,33 @@ describe("Document", () => {
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw type mismatch error if passing in wrong type for default value", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "default": () => true}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type boolean."));
+				});
+
+				it("Should save with correct object with default value as custom type", async () => {
+					putItemFunction = () => Promise.resolve();
+					const date = new Date();
+					User = new Model("User", {"id": Number, "timestamp": {"type": Date, "default": () => date}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "timestamp": {"N": `${date.getTime()}`}},
 						"TableName": "User"
 					}]);
 				});
@@ -1357,10 +1423,25 @@ describe("Document", () => {
 				"output": {"id": "ID_test"},
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
 			},
+			{
+				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
+				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
+				"output": {"id": 1, "ttl": new Date(1000)}
+			},
+			{
+				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
+				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": {"ttl": 1000, "attribute": "ttl", "items": {"returnExpired": false}}}],
+				"output": null
+			}
 		];
 
 		tests.forEach((test) => {
-			const model = new Model("User", test.schema, {"create": false, "waitForActive": false});
+			let model;
+			if (test.model) {
+				model = new Model(...test.model);
+			} else {
+				model = new Model("User", test.schema, {"create": false, "waitForActive": false});
+			}
 
 			if (test.error) {
 				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, async () => {
