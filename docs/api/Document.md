@@ -53,6 +53,34 @@ myUser.save((error) => {
 });
 ```
 
+## document.delete([callback])
+
+This deletes the given document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete your object in the given table associated with the model.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
+
+```js
+//...
+const myUser = User.get("1");
+
+try {
+	await myUser.delete();
+	console.log("Delete operation was successful.");
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+myUser.delete((error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log("Delete operation was successful.");
+	}
+});
+```
+
 ## document.original()
 
 This function returns the original item that was received from DynamoDB. This function will return a JSON object that represents the original item. In the event no item has been retrieved from DynamoDB `null` will be returned.

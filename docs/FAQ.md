@@ -13,6 +13,7 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 | Model.create | `putItem` |  |
 | Model.update | `updateItem` |  |
 | document.save | `putItem` |  |
+| document.delete | `deleteItem` |  |
 
 ## Why is it recommended to set `create` & `waitForActive` model options to false for production environments?
 
