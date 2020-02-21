@@ -39,6 +39,8 @@ The config parameter is an object used to customize settings for the model.
 | expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
 | expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | null |
 | expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
+| expires.items | The options for items with ttl. | Object | {} |
+| expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
 
 The default object is listed below.
 

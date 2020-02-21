@@ -16,3 +16,4 @@
 - `expires` has been moved from the Schema settings to the Model settings
 - `expires.ttl` is now milliseconds as opposed to seconds
 - `expires.defaultExpires` is no longer an option
+- `expires.returnExpiredItems` has been renamed to `expires.items.returnExpired`
