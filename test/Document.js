@@ -669,6 +669,21 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should throw type mismatch error if passing in wrong type for default value", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "age": {"type": Number, "default": () => true}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type boolean."));
+				});
+
 				it("Should save with correct object with validation value", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": 5}}, {"create": false, "waitForActive": false});
