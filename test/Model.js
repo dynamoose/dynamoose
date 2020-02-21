@@ -537,7 +537,7 @@ describe("Model", () => {
 								updateTTLParams.push(params);
 								return {
 									"promise": Promise.resolve()
-								}
+								};
 							}
 						});
 					});
