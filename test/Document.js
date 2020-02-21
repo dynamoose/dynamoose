@@ -104,6 +104,10 @@ describe("Document", () => {
 			putParams = [];
 		});
 
+		it("Should be a function", async () => {
+			expect(user.save).to.be.a("function");
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (document) => document.save},
 			{"name": "Callback", "func": (document) => util.promisify(document.save)}
@@ -959,6 +963,65 @@ describe("Document", () => {
 			document.id = 2;
 			expect(document.original()).to.eql({"id": 1});
 			expect({...document}).to.eql({"id": 2});
+		});
+	});
+
+	describe("document.save", () => {
+		let User, user, deleteParams, deleteItemFunction;
+		beforeEach(() => {
+			Model.defaults = {
+				"create": false,
+				"waitForActive": false
+			};
+			aws.ddb.set({
+				"deleteItem": (params) => {
+					deleteParams = params;
+					return {"promise": deleteItemFunction};
+				}
+			});
+			User = new Model("User", {"id": Number, "name": String});
+			user = new User({"id": 1, "name": "Charlie"});
+		});
+		afterEach(() => {
+			Model.defaults = {};
+			aws.ddb.revert();
+			User = null;
+			user = null;
+			deleteParams = null;
+			deleteItemFunction = null;
+		});
+
+		it("Should be a function", async () => {
+			expect(user.delete).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (document) => document.delete},
+			{"name": "Callback", "func": (document) => util.promisify(document.delete)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should deleteItem with correct parameters", async () => {
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(user).bind(user)();
+					expect(deleteParams).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					});
+				});
+
+				it("Should throw error if DynamoDB API returns an error", async () => {
+					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
+					let result, error;
+					try {
+						result = await callType.func(user).bind(user)();
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql({"error": "ERROR"});
+				});
+			});
 		});
 	});
 
