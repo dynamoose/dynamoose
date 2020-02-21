@@ -489,6 +489,32 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.ValidationError("friends.1.addresses.1.country is a required property but has no value when trying to save document"));
 				});
 
+				it("Should save with correct object with expires set to a number", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}), {"create": false, "waitForActive": false, "expires": 10000});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					const expectedTTL = (Date.now() + 10000) / 1000;
+					expect(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+				});
+
+				it("Should save with correct object with expires set to object", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}), {"create": false, "waitForActive": false, "expires": {"attribute": "expires", "ttl": 10000}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					const expectedTTL = (Date.now() + 10000) / 1000;
+					expect(parseInt(putParams[0].Item.expires.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+				});
+
 				it("Should save with correct object with timestamps set to true", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", new Schema({"id": Number, "name": String}, {"timestamps": true}), {"create": false, "waitForActive": false});
