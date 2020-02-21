@@ -508,6 +508,77 @@ describe("Model", () => {
 						}]);
 					});
 				});
+
+				describe("Time To Live", () => {
+					let updateTTLParams = [];
+					beforeEach(() => {
+						dynamoose.Model.defaults = {
+							"create": false,
+							"update": true
+						};
+					});
+					beforeEach(() => {
+						updateTTLParams = [];
+						dynamoose.aws.ddb.set({
+							"describeTable": () => {
+								return {
+									"promise": () => Promise.resolve({
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 5,
+												"WriteCapacityUnits": 5
+											},
+											"TableStatus": "ACTIVE"
+										}
+									})
+								};
+							},
+							"updateTimeToLive": (params) => {
+								updateTTLParams.push(params);
+								return {
+									"promise": Promise.resolve()
+								}
+							}
+						});
+					});
+					afterEach(() => {
+						updateTTLParams = [];
+						dynamoose.aws.ddb.revert();
+					});
+
+					it("Should call updateTimeToLive with correct parameters", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String}, {"expires": 1000});
+						await utils.set_immediate_promise();
+						expect(updateTTLParams).to.eql([{
+							"TableName": tableName,
+							"TimeToLiveSpecification": {
+								"Enabled": true,
+								"AttributeName": "ttl"
+							}
+						}]);
+					});
+
+					it("Should call updateTimeToLive with correct parameters for custom attribute", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
+						await utils.set_immediate_promise();
+						expect(updateTTLParams).to.eql([{
+							"TableName": tableName,
+							"TimeToLiveSpecification": {
+								"Enabled": true,
+								"AttributeName": "expires"
+							}
+						}]);
+					});
+
+					it("Should not call updateTimeToLive if no expires", async () => {
+						const tableName = "Cat";
+						option.func(tableName, {"id": String});
+						await utils.set_immediate_promise();
+						expect(updateTTLParams).to.eql([]);
+					});
+				});
 			});
 		});
 	});
