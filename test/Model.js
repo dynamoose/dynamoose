@@ -1817,6 +1817,82 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Model.delete", () => {
+		let User, deleteItemParams, deleteItemFunction;
+		beforeEach(() => {
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
+			dynamoose.aws.ddb.set({
+				"deleteItem": (params) => {
+					deleteItemParams = params;
+					return {"promise": deleteItemFunction};
+				}
+			});
+		});
+		afterEach(() => {
+			User = null;
+			deleteItemParams = null;
+			deleteItemFunction = null;
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should be a function", () => {
+			expect(User.delete).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (Model) => Model.delete},
+			{"name": "Callback", "func": (Model) => util.promisify(Model.delete)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should should send correct parameters to deleteItem", async () => {
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)(1);
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to deleteItem if we pass in an object", async () => {
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should throw error if error is returned from DynamoDB", async () => {
+					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
+					let result, error;
+					try {
+						result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					} catch (e) {
+						error = e;
+					}
+					expect(result).to.not.exist;
+					expect(error).to.eql({
+						"error": "ERROR"
+					});
+				});
+			});
+		});
+	});
+
 	describe("Model.table.create.request", () => {
 		it("Should be a function", () => {
 			expect(new dynamoose.Model("User", {"id": String}).table.create.request).to.be.a("function");
