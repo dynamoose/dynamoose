@@ -250,3 +250,53 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 ```
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
+
+## Model.delete(hashKey[, callback])
+
+You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to retrieve the object.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
+
+```js
+const User = dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	await User.delete(1);
+	console.log("Successfully deleted item");
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.delete(1, (error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log("Successfully deleted item");
+	}
+});
+```
+
+In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+
+```js
+const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+
+try {
+	await User.get({"id": 1, "name": "Tim"});
+	console.log("Successfully deleted item");
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.get({"id": 1, "name": "Tim"}, (error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log("Successfully deleted item");
+	}
+});
+```
