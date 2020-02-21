@@ -104,6 +104,10 @@ describe("Document", () => {
 			putParams = [];
 		});
 
+		it("Should be a function", async () => {
+			expect(user.save).to.be.a("function");
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (document) => document.save},
 			{"name": "Callback", "func": (document) => util.promisify(document.save)}
