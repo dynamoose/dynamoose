@@ -684,6 +684,18 @@ describe("Document", () => {
 					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type boolean."));
 				});
 
+				it("Should save with correct object with default value as custom type", async () => {
+					putItemFunction = () => Promise.resolve();
+					const date = new Date();
+					User = new Model("User", {"id": Number, "timestamp": {"type": Date, "default": () => date}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "timestamp": {"N": `${date.getTime()}`}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with validation value", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": 5}}, {"create": false, "waitForActive": false});
