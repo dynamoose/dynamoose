@@ -12,6 +12,7 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 | Model.query | `query` | This permission is only required on `query.exec` |
 | Model.create | `putItem` |  |
 | Model.update | `updateItem` |  |
+| Model.delete | `deleteItem` |  |
 | document.save | `putItem` |  |
 | document.delete | `deleteItem` |  |
 
