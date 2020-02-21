@@ -1423,10 +1423,25 @@ describe("Document", () => {
 				"output": {"id": "ID_test"},
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
 			},
+			{
+				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
+				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
+				"output": {"id": 1, "ttl": new Date(1000)}
+			},
+			{
+				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
+				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": {"ttl": 1000, "attribute": "ttl", "items": {"returnExpired": false}}}],
+				"output": null
+			}
 		];
 
 		tests.forEach((test) => {
-			const model = new Model("User", test.schema, {"create": false, "waitForActive": false});
+			let model;
+			if (test.model) {
+				model = new Model(...test.model);
+			} else {
+				model = new Model("User", test.schema, {"create": false, "waitForActive": false});
+			}
 
 			if (test.error) {
 				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, async () => {

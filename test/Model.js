@@ -656,6 +656,23 @@ describe("Model", () => {
 					expect(user).to.be.an.instanceof(User);
 				});
 
+				it("Should return null for expired object", async () => {
+					User = new dynamoose.Model("User", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "ttl": {"N": "1"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.eql(null);
+				});
+
+				it("Should return expired object if returnExpired is not set", async () => {
+					User = new dynamoose.Model("User", {"id": Number}, {"expires": 1000});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "ttl": {"N": "1"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "ttl"]);
+					expect(user.id).to.eql(1);
+					expect(user.ttl).to.eql(new Date(1000));
+				});
+
 				it("Should return object with correct values with saveUnknown", async () => {
 					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "hello": {"S": "world"}}});
