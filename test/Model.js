@@ -587,6 +587,8 @@ describe("Model", () => {
 		let User, getItemParams, getItemFunction;
 		beforeEach(() => {
 			User = new dynamoose.Model("User", {"id": Number, "name": String});
+			getItemParams = null;
+			getItemFunction = null;
 			dynamoose.aws.ddb.set({
 				"getItem": (params) => {
 					getItemParams = params;
@@ -596,6 +598,8 @@ describe("Model", () => {
 		});
 		afterEach(() => {
 			User = null;
+			getItemParams = null;
+			getItemFunction = null;
 			dynamoose.aws.ddb.revert();
 		});
 
@@ -654,6 +658,15 @@ describe("Model", () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an.instanceof(User);
+				});
+
+				it("Should return request if return request setting is set", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request"});
+					expect(getItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					});
 				});
 
 				it("Should return null for expired object", async () => {
