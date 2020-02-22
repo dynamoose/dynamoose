@@ -124,11 +124,17 @@ async function printTableRequest() {
 }
 ```
 
-## Model.get(hashKey[, callback])
+## Model.get(hashKey[, settings][, callback])
 
 You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
+
+You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
 
 ```js
 const User = dynamoose.Model("User", {"id": Number, "name": String});
@@ -148,6 +154,22 @@ User.get(1, (error, myUser) => {
 	} else {
 		console.log(myUser);
 	}
+});
+```
+
+```js
+const User = dynamoose.Model("User", {"id": Number, "name": String});
+
+const retrieveUserRequest = User.get(1, {"return": "request"});
+// {
+// 	"Key": {"id": {"N": "1"}},
+// 	"TableName": "User"
+// }
+
+// OR
+
+User.get(1, {"return": "request"}, (error, request) => {
+	console.log(request);
 });
 ```
 
