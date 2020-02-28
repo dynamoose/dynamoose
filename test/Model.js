@@ -1977,6 +1977,15 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should return request if return request setting is set", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request"});
+					expect(deleteItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					});
+				});
+
 				it("Should throw error if error is returned from DynamoDB", async () => {
 					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
 					let result, error;
