@@ -223,7 +223,7 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 });
 ```
 
-## Model.update(keyObj[, updateObj],[ callback])
+## Model.update(keyObj[, updateObj[, settings]],[ callback])
 
 This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
 
@@ -232,6 +232,12 @@ await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob
 ```
 
 If you do not pass in a `callback` parameter a promise will be returned.
+
+You can also pass in a `settings` object parameter to define extra settings for the update call. If you pass in a `settings` parameter, the `updateObj` parameter is required. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `document` |
 
 There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
