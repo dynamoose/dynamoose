@@ -185,7 +185,7 @@ describe("Query", () => {
 					}, "TableName": "Cat", "QueryFilter": {}});
 				});
 
-				it("Should throw error from AWS", async () => {
+				it("Should throw error from AWS", () => {
 					queryPromiseResolver = () => {
 						throw {"error": "Error"};
 					};
@@ -205,7 +205,7 @@ describe("Query", () => {
 			expect(Model.query().and()).to.be.a.instanceof(Model.query.carrier);
 		});
 
-		it("Should return same object as Model.query()", async () => {
+		it("Should return same object as Model.query()", () => {
 			expect(Model.query().and()).to.eql(Model.query());
 		});
 	});
@@ -491,7 +491,7 @@ describe("Query", () => {
 			expect(Model.query().limit).to.be.a("function");
 		});
 
-		it("Should set correct setting on query instance", async () => {
+		it("Should set correct setting on query instance", () => {
 			const query = Model.query().limit(5);
 			expect(query.settings.limit).to.eql(5);
 		});
@@ -508,7 +508,7 @@ describe("Query", () => {
 			expect(Model.query().startAt).to.be.a("function");
 		});
 
-		it("Should set correct setting on query instance", async () => {
+		it("Should set correct setting on query instance", () => {
 			const query = Model.query().startAt({"id": 5});
 			expect(query.settings.startAt).to.eql({"id": 5});
 		});
@@ -519,7 +519,7 @@ describe("Query", () => {
 			expect(queryParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
 		});
 
-		it("Should set correct setting on query instance if passing in DynamoDB object", async () => {
+		it("Should set correct setting on query instance if passing in DynamoDB object", () => {
 			const query = Model.query().startAt({"id": {"N": "5"}});
 			expect(query.settings.startAt).to.eql({"id": {"N": "5"}});
 		});
@@ -536,7 +536,7 @@ describe("Query", () => {
 			expect(Model.query().attributes).to.be.a("function");
 		});
 
-		it("Should set correct setting on query instance", async () => {
+		it("Should set correct setting on query instance", () => {
 			const query = Model.query().attributes(["id"]);
 			expect(query.settings.attributes).to.eql(["id"]);
 		});
@@ -553,7 +553,7 @@ describe("Query", () => {
 			expect(Model.query().parallel).to.not.be.a("function");
 		});
 
-		it("Should not exist", async () => {
+		it("Should not exist", () => {
 			expect(Model.query().parallel).to.not.exist;
 		});
 	});
@@ -563,7 +563,7 @@ describe("Query", () => {
 			expect(Model.query().count).to.be.a("function");
 		});
 
-		it("Should set correct setting on query instance", async () => {
+		it("Should set correct setting on query instance", () => {
 			const query = Model.query().count();
 			expect(query.settings.count).to.be.true;
 		});
@@ -586,7 +586,7 @@ describe("Query", () => {
 			expect(Model.query().consistent).to.be.a("function");
 		});
 
-		it("Should set correct setting on query instance", async () => {
+		it("Should set correct setting on query instance", () => {
 			const query = Model.query().consistent();
 			expect(query.settings.consistent).to.be.true;
 		});
@@ -603,7 +603,7 @@ describe("Query", () => {
 			expect(Model.query().using).to.be.a("function");
 		});
 
-		it("Should set correct setting on query instance", async () => {
+		it("Should set correct setting on query instance", () => {
 			const query = Model.query().using("customIndex");
 			expect(query.settings.index).to.eql("customIndex");
 		});
