@@ -30,15 +30,15 @@ describe("Transaction", () => {
 				ModelStore.clear();
 			});
 
-			it("Should throw an error if nothing passed in", async () => {
+			it("Should throw an error if nothing passed in", () => {
 				return expect(callType.func(dynamoose.transaction)()).to.be.rejectedWith("You must pass in an array with items for the transactions parameter.");
 			});
 
-			it("Should throw an error if empty array passed in", async () => {
+			it("Should throw an error if empty array passed in", () => {
 				return expect(callType.func(dynamoose.transaction)([])).to.be.rejectedWith("You must pass in an array with items for the transactions parameter.");
 			});
 
-			it("Should return request if return setting is set to request", async () => {
+			it("Should return request if return setting is set to request", () => {
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}], {"return": "request"})).to.eventually.eql({
 					"TransactItems": [
 						{
@@ -53,11 +53,11 @@ describe("Transaction", () => {
 				});
 			});
 
-			it("Should throw error if invalid custom type passed in", async () => {
+			it("Should throw error if invalid custom type passed in", () => {
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}], {"type": "random"})).to.be.rejectedWith("Invalid type option, please pass in \"get\" or \"write\".");
 			});
 
-			it("Should throw error if model hasn't been created", async () => {
+			it("Should throw error if model hasn't been created", () => {
 				new Model("User", {"id": Number, "name": String});
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.be.rejectedWith("Model \"Credit\" not found. Please register the model with dynamoose before using it in transactions.");
 			});
@@ -134,7 +134,7 @@ describe("Transaction", () => {
 				});
 			});
 
-			it("Should use correct response from AWS", async () => {
+			it("Should use correct response from AWS", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => ({
 						"promise": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}, {"Item": {"id": {"N": "2"}, "name": {"S": "My Credit"}}}]})
@@ -149,7 +149,7 @@ describe("Transaction", () => {
 				]);
 			});
 
-			it("Should return null if no response from AWS", async () => {
+			it("Should return null if no response from AWS", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => ({
 						"promise": () => Promise.resolve({})
