@@ -2054,6 +2054,191 @@ describe("Model", () => {
 			});
 		});
 	});
+
+	describe("Model.transaction", () => {
+		let User;
+		beforeEach(() => {
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
+		});
+		afterEach(() => {
+			User = null;
+		});
+
+		it("Should be an object", () => {
+			expect(User.transaction).to.be.an("object");
+		});
+
+		describe("Model.transaction.get", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.get).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.get(1)).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.get(1)).to.eql({
+					"Get": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.get(1, () => {});
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.create", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.create).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.create({"id": 1})).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.create({"id": 1})).to.eql({
+					"Put": {
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result with overwrite set to false", async () => {
+				expect(await User.transaction.create({"id": 1}, {"overwrite": false})).to.eql({
+					"Put": {
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.create({"id": 1}, {"overwrite": false}, () => {});
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.delete", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.delete).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.delete(1)).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.delete(1)).to.eql({
+					"Delete": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.delete(1, () => {});
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.update", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.update).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.update({"id": 1, "name": "Bob"})).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.update({"id": 1, "name": "Bob"})).to.eql({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "Bob"}
+						},
+						"ReturnValues": "ALL_NEW",
+						"UpdateExpression": "SET #a0 = :v0",
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.update({"id": 1, "name": "Bob"}, () => {});
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.condition", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.condition).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.condition(1)).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.condition(1)).to.eql({
+					"ConditionCheck": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result with options", async () => {
+				expect(await User.transaction.condition(1, {"hello": "world"})).to.eql({
+					"ConditionCheck": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"hello": "world"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.condition(1, () => {});
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+	});
 });
 
 describe("model", () => {
