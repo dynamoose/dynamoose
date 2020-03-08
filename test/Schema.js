@@ -8,11 +8,11 @@ describe("Schema", () => {
 	});
 
 	it("Should throw an error if nothing passed in", () => {
-		expect(() => new Schema()).to.throw();
+		expect(() => new Schema()).to.throw("Schema initalization parameter must be an object.");
 	});
 
 	it("Should throw an error if empty object passed in", () => {
-		expect(() => new Schema({})).to.throw();
+		expect(() => new Schema({})).to.throw("Schema initalization parameter must not be an empty object.");
 	});
 
 	it("Shouldn't throw an error if object passed in", () => {
