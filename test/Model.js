@@ -2086,6 +2086,7 @@ describe("Model", () => {
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
 				User.transaction.get(1, () => {});
+				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -2127,6 +2128,7 @@ describe("Model", () => {
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
 				User.transaction.create({"id": 1}, {"overwrite": false}, () => {});
+				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -2155,6 +2157,7 @@ describe("Model", () => {
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
 				User.transaction.delete(1, () => {});
+				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -2191,6 +2194,7 @@ describe("Model", () => {
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
 				User.transaction.update({"id": 1, "name": "Bob"}, () => {});
+				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -2229,6 +2233,7 @@ describe("Model", () => {
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
 				User.transaction.condition(1, () => {});
+				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
