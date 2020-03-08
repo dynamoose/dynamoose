@@ -1,4 +1,7 @@
-const {expect} = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+const chai = require("chai");
+chai.use(chaiAsPromised);
+const {expect} = chai;
 const utils = require("../../lib/utils");
 
 describe("Timeout", () => {
@@ -19,13 +22,6 @@ describe("Timeout", () => {
 	});
 
 	it("Should reject if invalid number passed in", async () => {
-		let error;
-		try {
-			await utils.timeout("test");
-		} catch (e) {
-			error = e;
-		}
-
-		expect(error).to.exist;
+		return expect(utils.timeout("test")).to.be.rejected;
 	});
 });

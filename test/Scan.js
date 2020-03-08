@@ -1,4 +1,7 @@
-const {expect} = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+const chai = require("chai");
+chai.use(chaiAsPromised);
+const {expect} = chai;
 const dynamoose = require("../lib");
 const util = require("util");
 
@@ -157,14 +160,8 @@ describe("Scan", () => {
 					scanPromiseResolver = () => {
 						throw {"error": "Error"};
 					};
-					let result, error;
-					try {
-						result = await callType.func(Model.scan().exec).bind(Model.scan())();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql({"error": "Error"});
+
+					return expect(callType.func(Model.scan().exec).bind(Model.scan())()).to.be.rejectedWith({"error": "Error"});
 				});
 			});
 		});
