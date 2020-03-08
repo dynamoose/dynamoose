@@ -2,6 +2,7 @@
 
 ## 2.0 - incomplete list
 
+- Everything in Dynamoose are now classes. This includes `Model` and `Schema`. This means to initalize a new instance of one of these items, you must use the `new` keyword before it
 - `scan.count()` has been removed, and `scan.counts()` has been renamed to `scan.count()`.
 - Schema `default` value does not pass the model instance into `default` functions any more.
 - `Model.update`
