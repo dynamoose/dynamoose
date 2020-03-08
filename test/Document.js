@@ -148,6 +148,18 @@ describe("Document", () => {
 					expect(result).to.eql(user);
 				});
 
+				it("Should return request if return request is set as setting", async () => {
+					const result = await callType.func(user).bind(user)({"return": "request"});
+					expect(putParams).to.eql([]);
+					expect(result).to.eql({
+						"Item": {
+							"id": {"N": "1"},
+							"name": {"S": "Charlie"}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it("Should save with correct object with string set", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "friends": [String]});

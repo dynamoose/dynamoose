@@ -7,7 +7,7 @@ A document represents an item for a given model in DynamoDB. This item can creat
 In order to create a new document you just pass in your object into an instance of your model.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 const myUser = new User({
 	"id": 1,
 	"name": "Tim"
@@ -25,6 +25,7 @@ This method returns a promise that will resolve when the operation is complete, 
 You can also pass a settings object in as the first parameter. The following options are available for settings are:
 
 - `overwrite` (default: true) - If an existing document with the same hash key should be overwritten in the database. You can set this to false to not overwrite an existing document with the same hash key.
+- `return` (default: `document`) - If the function should return the `document` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB.
 
 Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 

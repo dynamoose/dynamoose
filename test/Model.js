@@ -25,560 +25,555 @@ describe("Model", () => {
 	});
 
 	describe("Initialization", () => {
-		const options = [
-			{"name": "Using new keyword", "func": (...args) => new dynamoose.Model(...args)},
-			{"name": "Without new keyword", "func": (...args) => dynamoose.Model(...args)}
+		it("Should throw an error if not using `new` keyword", () => {
+			expect(() => dynamoose.Model()).to.throw("Class constructor Model cannot be invoked without 'new'");
+		});
+
+		it("Should throw an error if no schema is passed in", () => {
+			expect(() => new dynamoose.Model("Cat")).to.throw(Error.MissingSchemaError);
+		});
+
+		it("Should throw same error as no schema if nothing passed in", () => {
+			expect(() => new dynamoose.Model()).to.throw(Error.MissingSchemaError);
+		});
+
+		it("Should create a schema if not passing in schema instance", () => {
+			const schema = {"name": String};
+			const Cat = new dynamoose.Model("Cat", schema);
+			expect(Cat.Model.schema).to.not.eql(schema);
+			expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
+		});
+
+		it("Should use schema instance if passed in", () => {
+			const schema = new dynamoose.Schema({"name": String});
+			const Cat = new dynamoose.Model("Cat", schema);
+			expect(Cat.Model.schema).to.eql(schema);
+			expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
+		});
+
+		// Prefixes & Suffixes
+		const optionsB = [
+			{"name": "Prefix", "value": "prefix", "check": (val, result) => expect(result).to.match(new RegExp(`^${val}`))},
+			{"name": "Suffix", "value": "suffix", "check": (val, result) => expect(result).to.match(new RegExp(`${val}$`))}
 		];
-
-		options.forEach((option) => {
-			describe(option.name, () => {
-				it("Should throw an error if no schema is passed in", () => {
-					expect(() => option.func("Cat")).to.throw(Error.MissingSchemaError);
-				});
-
-				it("Should throw same error as no schema if nothing passed in", () => {
-					expect(() => option.func()).to.throw(Error.MissingSchemaError);
-				});
-
-				it("Should create a schema if not passing in schema instance", () => {
-					const schema = {"name": String};
-					const Cat = option.func("Cat", schema);
-					expect(Cat.Model.schema).to.not.eql(schema);
-					expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
-				});
-
-				it("Should use schema instance if passed in", () => {
-					const schema = new dynamoose.Schema({"name": String});
-					const Cat = option.func("Cat", schema);
-					expect(Cat.Model.schema).to.eql(schema);
-					expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
-				});
-
-				// Prefixes & Suffixes
-				const optionsB = [
-					{"name": "Prefix", "value": "prefix", "check": (val, result) => expect(result).to.match(new RegExp(`^${val}`))},
-					{"name": "Suffix", "value": "suffix", "check": (val, result) => expect(result).to.match(new RegExp(`${val}$`))}
-				];
-				const optionsC = [
-					{"name": "Defaults", "func": (type, value, ...args) => {
-						dynamoose.Model.defaults = {...dynamoose.Model.defaults, [type]: value};
-						return option.func(...args);
-					}},
-					{"name": "Options", "func": (type, value, ...args) => option.func(...args, {[type]: value})}
-				];
-				optionsB.forEach((optionB) => {
-					describe(optionB.name, () => {
-						optionsC.forEach((optionC) => {
-							describe(optionC.name, () => {
-								it("Should result in correct model name", () => {
-									const extension = "MyApp";
-									const tableName = "Users";
-									const model = optionC.func(optionB.value, extension, tableName, {"id": String});
-									expect(model.Model.name).to.include(extension);
-									expect(model.Model.name).to.not.eql(tableName);
-								});
-							});
+		const optionsC = [
+			{"name": "Defaults", "func": (type, value, ...args) => {
+				dynamoose.Model.defaults = {...dynamoose.Model.defaults, [type]: value};
+				return new dynamoose.Model(...args);
+			}},
+			{"name": "Options", "func": (type, value, ...args) => new dynamoose.Model(...args, {[type]: value})}
+		];
+		optionsB.forEach((optionB) => {
+			describe(optionB.name, () => {
+				optionsC.forEach((optionC) => {
+					describe(optionC.name, () => {
+						it("Should result in correct model name", () => {
+							const extension = "MyApp";
+							const tableName = "Users";
+							const model = optionC.func(optionB.value, extension, tableName, {"id": String});
+							expect(model.Model.name).to.include(extension);
+							expect(model.Model.name).to.not.eql(tableName);
 						});
 					});
 				});
+			});
+		});
 
-				describe("Model.ready", () => {
-					it("Should not be ready to start", () => {
-						expect(option.func("Cat", {"id": String}, {"create": false}).Model.ready).to.be.false;
-					});
+		describe("Model.ready", () => {
+			it("Should not be ready to start", () => {
+				expect(new dynamoose.Model("Cat", {"id": String}, {"create": false}).Model.ready).to.be.false;
+			});
 
-					it("Should set ready after setup flow", async () => {
-						const model = option.func("Cat", {"id": String}, {"create": false});
-						await utils.set_immediate_promise();
-						expect(model.Model.ready).to.be.true;
-					});
+			it("Should set ready after setup flow", async () => {
+				const model = new dynamoose.Model("Cat", {"id": String}, {"create": false});
+				await utils.set_immediate_promise();
+				expect(model.Model.ready).to.be.true;
+			});
 
-					it("Should resolve pendingTaskPromises after model is ready", async () => {
-						let describeTableResponse = {
-							"Table": {"TableStatus": "CREATING"}
+			it("Should resolve pendingTaskPromises after model is ready", async () => {
+				let describeTableResponse = {
+					"Table": {"TableStatus": "CREATING"}
+				};
+				dynamoose.aws.ddb.set({
+					"describeTable": () => ({
+						"promise": () => Promise.resolve(describeTableResponse)
+					})
+				});
+				const model = new dynamoose.Model("Cat", {"id": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0}}});
+				await utils.set_immediate_promise();
+
+				let pendingTaskPromiseResolved = false;
+				model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+
+				await utils.set_immediate_promise();
+				expect(pendingTaskPromiseResolved).to.be.false;
+
+				describeTableResponse = {
+					"Table": {"TableStatus": "ACTIVE"}
+				};
+				await utils.set_immediate_promise();
+				expect(pendingTaskPromiseResolved).to.be.true;
+				expect(model.Model.pendingTasks).to.eql([]);
+			});
+
+			it("Should immediately resolve pendingTaskPromises promise if table is already ready", async () => {
+				const model = new dynamoose.Model("Cat", {"id": String}, {"create": false});
+				await utils.set_immediate_promise();
+
+				let pendingTaskPromiseResolved = false;
+				model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+
+				await utils.set_immediate_promise();
+
+				expect(pendingTaskPromiseResolved).to.be.true;
+			});
+		});
+
+		describe("Creation", () => {
+			let createTableParams = null;
+			beforeEach(() => {
+				dynamoose.Model.defaults = {
+					"waitForActive": false
+				};
+			});
+			beforeEach(() => {
+				createTableParams = null;
+				dynamoose.aws.ddb.set({
+					"createTable": (params) => {
+						createTableParams = params;
+						return {
+							"promise": () => Promise.resolve()
 						};
-						dynamoose.aws.ddb.set({
-							"describeTable": () => ({
-								"promise": () => Promise.resolve(describeTableResponse)
+					},
+					"describeTable": () => ({"promise": () => Promise.resolve()})
+				});
+			});
+			afterEach(() => {
+				createTableParams = null;
+				dynamoose.aws.ddb.revert();
+			});
+
+			it("Should call createTable with correct parameters", async () => {
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String});
+				await utils.set_immediate_promise();
+				expect(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 5,
+						"WriteCapacityUnits": 5
+					},
+					"TableName": tableName
+				});
+			});
+
+			it("Should call createTable with correct parameters with capacity as number", async () => {
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String}, {"throughput": 1});
+				await utils.set_immediate_promise();
+				expect(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"TableName": tableName
+				});
+			});
+
+			it("Should call createTable with correct parameters with capacity as object", async () => {
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String}, {"throughput": {"read": 2, "write": 3}});
+				await utils.set_immediate_promise();
+				expect(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 2,
+						"WriteCapacityUnits": 3
+					},
+					"TableName": tableName
+				});
+			});
+
+			it("Should call createTable with correct parameters with capacity as ON_DEMAND", async () => {
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String}, {"throughput": "ON_DEMAND"});
+				await utils.set_immediate_promise();
+				expect(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"BillingMode": "PAY_PER_REQUEST",
+					"TableName": tableName
+				});
+			});
+
+			it("Shouldn't call createTable if table already exists", async () => {
+				dynamoose.aws.ddb.set({
+					"createTable": (params) => {
+						createTableParams = params;
+						return {
+							"promise": () => Promise.resolve()
+						};
+					},
+					"describeTable": () => ({"promise": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})})
+				});
+
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String});
+				await utils.set_immediate_promise();
+				expect(createTableParams).to.eql(null);
+			});
+
+			it("Should not call createTable if create option set to false", async () => {
+				new dynamoose.Model("Cat", {"id": String}, {"create": false});
+				await utils.set_immediate_promise();
+				expect(createTableParams).to.eql(null);
+			});
+
+			it("Should bind request to function being called", async () => {
+				let self;
+				dynamoose.aws.ddb.set({
+					"createTable": (params) => {
+						createTableParams = params;
+						return {
+							"promise": function() {
+								self = this;
+								return Promise.resolve();
+							}
+						};
+					},
+					"describeTable": () => ({"promise": () => Promise.resolve()})
+				});
+
+				new dynamoose.Model("Cat", {"id": String});
+				await utils.set_immediate_promise();
+				expect(self).to.be.an("object");
+				expect(Object.keys(self)).to.eql(["promise"]);
+				expect(self.promise).to.exist;
+			});
+		});
+
+		describe("Wait For Active", () => {
+			let describeTableParams = [], describeTableFunction;
+			beforeEach(() => {
+				dynamoose.Model.defaults = {
+					"create": false,
+					"waitForActive": {
+						"enabled": true,
+						"check": {
+							"timeout": 10,
+							"frequency": 1
+						}
+					}
+				};
+			});
+			beforeEach(() => {
+				describeTableParams = [];
+				dynamoose.aws.ddb.set({
+					"describeTable": (params) => {
+						describeTableParams.push(params);
+						return {
+							"promise": describeTableFunction
+						};
+					}
+				});
+			});
+			afterEach(() => {
+				describeTableParams = [];
+				describeTableFunction = null;
+				dynamoose.aws.ddb.revert();
+			});
+
+			it("Should call describeTable with correct parameters", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE"
+					}
+				});
+				new dynamoose.Model(tableName, {"id": String});
+				await utils.set_immediate_promise();
+				expect(describeTableParams).to.eql([{
+					"TableName": tableName
+				}]);
+			});
+
+			it("Should call describeTable with correct parameters multiple times", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"TableStatus": describeTableParams.length > 1 ? "ACTIVE" : "CREATING"
+					}
+				});
+				new dynamoose.Model(tableName, {"id": String});
+				await utils.timeout(5);
+				expect(describeTableParams).to.eql([{
+					"TableName": tableName
+				}, {
+					"TableName": tableName
+				}]);
+			});
+
+			it("Should timeout according to waitForActive timeout rules", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"TableStatus": "CREATING"
+					}
+				});
+				new dynamoose.Model(tableName, {"id": String});
+				const errorHandler = () => {};
+				process.on("unhandledRejection", errorHandler);
+				await utils.timeout(15);
+				expect(describeTableParams.length).to.be.above(5);
+				process.removeListener("unhandledRejection", errorHandler);
+			});
+
+			it("Should throw error if AWS throws error", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.reject({"error": "ERROR"});
+
+				let error;
+				new dynamoose.Model(tableName, {"id": String});
+				const errorHandler = (err) => error = err;
+				process.on("unhandledRejection", errorHandler);
+				await utils.timeout(15);
+				expect(error).to.eql({"error": "ERROR"});
+				process.removeListener("unhandledRejection", errorHandler);
+			});
+
+			it("Should not call describeTable if table already created and already attempted to createTable again", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => {
+					return Promise.resolve({"Table": {"TableStatus": "ACTIVE"}});
+				};
+
+				new dynamoose.Model(tableName, {"id": String}, {"create": true});
+				await utils.timeout(5);
+				expect(describeTableParams).to.eql([{
+					"TableName": tableName
+				}]);
+			});
+		});
+
+		describe("Update", () => {
+			let describeTableFunction, updateTableParams = [];
+			beforeEach(() => {
+				dynamoose.Model.defaults = {
+					"create": false,
+					"update": true
+				};
+			});
+			beforeEach(() => {
+				updateTableParams = [];
+				dynamoose.aws.ddb.set({
+					"describeTable": () => {
+						return {
+							"promise": describeTableFunction
+						};
+					},
+					"updateTable": (params) => {
+						updateTableParams.push(params);
+						return {
+							"promise": Promise.resolve()
+						};
+					}
+				});
+			});
+			afterEach(() => {
+				updateTableParams = [];
+				describeTableFunction = null;
+				dynamoose.aws.ddb.revert();
+			});
+
+			it("Should not call updateTable if throughput matches", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "ACTIVE"
+					}
+				});
+				new dynamoose.Model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([]);
+			});
+
+			it("Should call updateTable with correct parameters if throughput doesn't match", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "ACTIVE"
+					}
+				});
+				new dynamoose.Model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([{
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 2
+					},
+					"TableName": tableName
+				}]);
+			});
+
+			it("Should call updateTable with correct parameters if switching from provisioned to on demand", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "ACTIVE"
+					}
+				});
+				new dynamoose.Model(tableName, {"id": String}, {"throughput": "ON_DEMAND"});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([{
+					"BillingMode": "PAY_PER_REQUEST",
+					"TableName": tableName
+				}]);
+			});
+
+			it("Should call updateTable with correct parameters if switching from on demand to provisioned", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"BillingMode": "PAY_PER_REQUEST",
+						"TableStatus": "ACTIVE"
+					}
+				});
+				new dynamoose.Model(tableName, {"id": String}, {"throughput": 5});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([{
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 5,
+						"WriteCapacityUnits": 5
+					},
+					"TableName": tableName
+				}]);
+			});
+		});
+
+		describe("Time To Live", () => {
+			let updateTTLParams = [];
+			beforeEach(() => {
+				dynamoose.Model.defaults = {
+					"create": false,
+					"update": true
+				};
+			});
+			beforeEach(() => {
+				updateTTLParams = [];
+				dynamoose.aws.ddb.set({
+					"describeTable": () => {
+						return {
+							"promise": () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 5,
+										"WriteCapacityUnits": 5
+									},
+									"TableStatus": "ACTIVE"
+								}
 							})
-						});
-						const model = option.func("Cat", {"id": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0}}});
-						await utils.set_immediate_promise();
-
-						let pendingTaskPromiseResolved = false;
-						model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
-
-						await utils.set_immediate_promise();
-						expect(pendingTaskPromiseResolved).to.be.false;
-
-						describeTableResponse = {
-							"Table": {"TableStatus": "ACTIVE"}
 						};
-						await utils.set_immediate_promise();
-						expect(pendingTaskPromiseResolved).to.be.true;
-						expect(model.Model.pendingTasks).to.eql([]);
-					});
-
-					it("Should immediately resolve pendingTaskPromises promise if table is already ready", async () => {
-						const model = option.func("Cat", {"id": String}, {"create": false});
-						await utils.set_immediate_promise();
-
-						let pendingTaskPromiseResolved = false;
-						model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
-
-						await utils.set_immediate_promise();
-
-						expect(pendingTaskPromiseResolved).to.be.true;
-					});
+					},
+					"updateTimeToLive": (params) => {
+						updateTTLParams.push(params);
+						return {
+							"promise": Promise.resolve()
+						};
+					}
 				});
+			});
+			afterEach(() => {
+				updateTTLParams = [];
+				dynamoose.aws.ddb.revert();
+			});
 
-				describe("Creation", () => {
-					let createTableParams = null;
-					beforeEach(() => {
-						dynamoose.Model.defaults = {
-							"waitForActive": false
-						};
-					});
-					beforeEach(() => {
-						createTableParams = null;
-						dynamoose.aws.ddb.set({
-							"createTable": (params) => {
-								createTableParams = params;
-								return {
-									"promise": () => Promise.resolve()
-								};
-							},
-							"describeTable": () => ({"promise": () => Promise.resolve()})
-						});
-					});
-					afterEach(() => {
-						createTableParams = null;
-						dynamoose.aws.ddb.revert();
-					});
+			it("Should call updateTimeToLive with correct parameters", async () => {
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String}, {"expires": 1000});
+				await utils.set_immediate_promise();
+				expect(updateTTLParams).to.eql([{
+					"TableName": tableName,
+					"TimeToLiveSpecification": {
+						"Enabled": true,
+						"AttributeName": "ttl"
+					}
+				}]);
+			});
 
-					it("Should call createTable with correct parameters", async () => {
-						const tableName = "Cat";
-						option.func(tableName, {"id": String});
-						await utils.set_immediate_promise();
-						expect(createTableParams).to.eql({
-							"AttributeDefinitions": [
-								{
-									"AttributeName": "id",
-									"AttributeType": "S"
-								}
-							],
-							"KeySchema": [
-								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								}
-							],
-							"ProvisionedThroughput": {
-								"ReadCapacityUnits": 5,
-								"WriteCapacityUnits": 5
-							},
-							"TableName": tableName
-						});
-					});
+			it("Should call updateTimeToLive with correct parameters for custom attribute", async () => {
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
+				await utils.set_immediate_promise();
+				expect(updateTTLParams).to.eql([{
+					"TableName": tableName,
+					"TimeToLiveSpecification": {
+						"Enabled": true,
+						"AttributeName": "expires"
+					}
+				}]);
+			});
 
-					it("Should call createTable with correct parameters with capacity as number", async () => {
-						const tableName = "Cat";
-						option.func(tableName, {"id": String}, {"throughput": 1});
-						await utils.set_immediate_promise();
-						expect(createTableParams).to.eql({
-							"AttributeDefinitions": [
-								{
-									"AttributeName": "id",
-									"AttributeType": "S"
-								}
-							],
-							"KeySchema": [
-								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								}
-							],
-							"ProvisionedThroughput": {
-								"ReadCapacityUnits": 1,
-								"WriteCapacityUnits": 1
-							},
-							"TableName": tableName
-						});
-					});
-
-					it("Should call createTable with correct parameters with capacity as object", async () => {
-						const tableName = "Cat";
-						option.func(tableName, {"id": String}, {"throughput": {"read": 2, "write": 3}});
-						await utils.set_immediate_promise();
-						expect(createTableParams).to.eql({
-							"AttributeDefinitions": [
-								{
-									"AttributeName": "id",
-									"AttributeType": "S"
-								}
-							],
-							"KeySchema": [
-								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								}
-							],
-							"ProvisionedThroughput": {
-								"ReadCapacityUnits": 2,
-								"WriteCapacityUnits": 3
-							},
-							"TableName": tableName
-						});
-					});
-
-					it("Should call createTable with correct parameters with capacity as ON_DEMAND", async () => {
-						const tableName = "Cat";
-						option.func(tableName, {"id": String}, {"throughput": "ON_DEMAND"});
-						await utils.set_immediate_promise();
-						expect(createTableParams).to.eql({
-							"AttributeDefinitions": [
-								{
-									"AttributeName": "id",
-									"AttributeType": "S"
-								}
-							],
-							"KeySchema": [
-								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								}
-							],
-							"BillingMode": "PAY_PER_REQUEST",
-							"TableName": tableName
-						});
-					});
-
-					it("Shouldn't call createTable if table already exists", async () => {
-						dynamoose.aws.ddb.set({
-							"createTable": (params) => {
-								createTableParams = params;
-								return {
-									"promise": () => Promise.resolve()
-								};
-							},
-							"describeTable": () => ({"promise": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})})
-						});
-
-						const tableName = "Cat";
-						option.func(tableName, {"id": String});
-						await utils.set_immediate_promise();
-						expect(createTableParams).to.eql(null);
-					});
-
-					it("Should not call createTable if create option set to false", async () => {
-						option.func("Cat", {"id": String}, {"create": false});
-						await utils.set_immediate_promise();
-						expect(createTableParams).to.eql(null);
-					});
-
-					it("Should bind request to function being called", async () => {
-						let self;
-						dynamoose.aws.ddb.set({
-							"createTable": (params) => {
-								createTableParams = params;
-								return {
-									"promise": function() {
-										self = this;
-										return Promise.resolve();
-									}
-								};
-							},
-							"describeTable": () => ({"promise": () => Promise.resolve()})
-						});
-
-						option.func("Cat", {"id": String});
-						await utils.set_immediate_promise();
-						expect(self).to.be.an("object");
-						expect(Object.keys(self)).to.eql(["promise"]);
-						expect(self.promise).to.exist;
-					});
-				});
-
-				describe("Wait For Active", () => {
-					let describeTableParams = [], describeTableFunction;
-					beforeEach(() => {
-						dynamoose.Model.defaults = {
-							"create": false,
-							"waitForActive": {
-								"enabled": true,
-								"check": {
-									"timeout": 10,
-									"frequency": 1
-								}
-							}
-						};
-					});
-					beforeEach(() => {
-						describeTableParams = [];
-						dynamoose.aws.ddb.set({
-							"describeTable": (params) => {
-								describeTableParams.push(params);
-								return {
-									"promise": describeTableFunction
-								};
-							}
-						});
-					});
-					afterEach(() => {
-						describeTableParams = [];
-						describeTableFunction = null;
-						dynamoose.aws.ddb.revert();
-					});
-
-					it("Should call describeTable with correct parameters", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"TableStatus": "ACTIVE"
-							}
-						});
-						option.func(tableName, {"id": String});
-						await utils.set_immediate_promise();
-						expect(describeTableParams).to.eql([{
-							"TableName": tableName
-						}]);
-					});
-
-					it("Should call describeTable with correct parameters multiple times", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"TableStatus": describeTableParams.length > 1 ? "ACTIVE" : "CREATING"
-							}
-						});
-						option.func(tableName, {"id": String});
-						await utils.timeout(5);
-						expect(describeTableParams).to.eql([{
-							"TableName": tableName
-						}, {
-							"TableName": tableName
-						}]);
-					});
-
-					it("Should timeout according to waitForActive timeout rules", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"TableStatus": "CREATING"
-							}
-						});
-						option.func(tableName, {"id": String});
-						const errorHandler = () => {};
-						process.on("unhandledRejection", errorHandler);
-						await utils.timeout(15);
-						expect(describeTableParams.length).to.be.above(5);
-						process.removeListener("unhandledRejection", errorHandler);
-					});
-
-					it("Should throw error if AWS throws error", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.reject({"error": "ERROR"});
-
-						let error;
-						option.func(tableName, {"id": String});
-						const errorHandler = (err) => error = err;
-						process.on("unhandledRejection", errorHandler);
-						await utils.timeout(15);
-						expect(error).to.eql({"error": "ERROR"});
-						process.removeListener("unhandledRejection", errorHandler);
-					});
-
-					it("Should not call describeTable if table already created and already attempted to createTable again", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => {
-							return Promise.resolve({"Table": {"TableStatus": "ACTIVE"}});
-						};
-
-						option.func(tableName, {"id": String}, {"create": true});
-						await utils.timeout(5);
-						expect(describeTableParams).to.eql([{
-							"TableName": tableName
-						}]);
-					});
-				});
-
-				describe("Update", () => {
-					let describeTableFunction, updateTableParams = [];
-					beforeEach(() => {
-						dynamoose.Model.defaults = {
-							"create": false,
-							"update": true
-						};
-					});
-					beforeEach(() => {
-						updateTableParams = [];
-						dynamoose.aws.ddb.set({
-							"describeTable": () => {
-								return {
-									"promise": describeTableFunction
-								};
-							},
-							"updateTable": (params) => {
-								updateTableParams.push(params);
-								return {
-									"promise": Promise.resolve()
-								};
-							}
-						});
-					});
-					afterEach(() => {
-						updateTableParams = [];
-						describeTableFunction = null;
-						dynamoose.aws.ddb.revert();
-					});
-
-					it("Should not call updateTable if throughput matches", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"ProvisionedThroughput": {
-									"ReadCapacityUnits": 1,
-									"WriteCapacityUnits": 2
-								},
-								"TableStatus": "ACTIVE"
-							}
-						});
-						option.func(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
-						await utils.set_immediate_promise();
-						expect(updateTableParams).to.eql([]);
-					});
-
-					it("Should call updateTable with correct parameters if throughput doesn't match", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"ProvisionedThroughput": {
-									"ReadCapacityUnits": 2,
-									"WriteCapacityUnits": 2
-								},
-								"TableStatus": "ACTIVE"
-							}
-						});
-						option.func(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
-						await utils.set_immediate_promise();
-						expect(updateTableParams).to.eql([{
-							"ProvisionedThroughput": {
-								"ReadCapacityUnits": 1,
-								"WriteCapacityUnits": 2
-							},
-							"TableName": tableName
-						}]);
-					});
-
-					it("Should call updateTable with correct parameters if switching from provisioned to on demand", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"ProvisionedThroughput": {
-									"ReadCapacityUnits": 2,
-									"WriteCapacityUnits": 2
-								},
-								"TableStatus": "ACTIVE"
-							}
-						});
-						option.func(tableName, {"id": String}, {"throughput": "ON_DEMAND"});
-						await utils.set_immediate_promise();
-						expect(updateTableParams).to.eql([{
-							"BillingMode": "PAY_PER_REQUEST",
-							"TableName": tableName
-						}]);
-					});
-
-					it("Should call updateTable with correct parameters if switching from on demand to provisioned", async () => {
-						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"BillingMode": "PAY_PER_REQUEST",
-								"TableStatus": "ACTIVE"
-							}
-						});
-						option.func(tableName, {"id": String}, {"throughput": 5});
-						await utils.set_immediate_promise();
-						expect(updateTableParams).to.eql([{
-							"ProvisionedThroughput": {
-								"ReadCapacityUnits": 5,
-								"WriteCapacityUnits": 5
-							},
-							"TableName": tableName
-						}]);
-					});
-				});
-
-				describe("Time To Live", () => {
-					let updateTTLParams = [];
-					beforeEach(() => {
-						dynamoose.Model.defaults = {
-							"create": false,
-							"update": true
-						};
-					});
-					beforeEach(() => {
-						updateTTLParams = [];
-						dynamoose.aws.ddb.set({
-							"describeTable": () => {
-								return {
-									"promise": () => Promise.resolve({
-										"Table": {
-											"ProvisionedThroughput": {
-												"ReadCapacityUnits": 5,
-												"WriteCapacityUnits": 5
-											},
-											"TableStatus": "ACTIVE"
-										}
-									})
-								};
-							},
-							"updateTimeToLive": (params) => {
-								updateTTLParams.push(params);
-								return {
-									"promise": Promise.resolve()
-								};
-							}
-						});
-					});
-					afterEach(() => {
-						updateTTLParams = [];
-						dynamoose.aws.ddb.revert();
-					});
-
-					it("Should call updateTimeToLive with correct parameters", async () => {
-						const tableName = "Cat";
-						option.func(tableName, {"id": String}, {"expires": 1000});
-						await utils.set_immediate_promise();
-						expect(updateTTLParams).to.eql([{
-							"TableName": tableName,
-							"TimeToLiveSpecification": {
-								"Enabled": true,
-								"AttributeName": "ttl"
-							}
-						}]);
-					});
-
-					it("Should call updateTimeToLive with correct parameters for custom attribute", async () => {
-						const tableName = "Cat";
-						option.func(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
-						await utils.set_immediate_promise();
-						expect(updateTTLParams).to.eql([{
-							"TableName": tableName,
-							"TimeToLiveSpecification": {
-								"Enabled": true,
-								"AttributeName": "expires"
-							}
-						}]);
-					});
-
-					it("Should not call updateTimeToLive if no expires", async () => {
-						const tableName = "Cat";
-						option.func(tableName, {"id": String});
-						await utils.set_immediate_promise();
-						expect(updateTTLParams).to.eql([]);
-					});
-				});
+			it("Should not call updateTimeToLive if no expires", async () => {
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String});
+				await utils.set_immediate_promise();
+				expect(updateTTLParams).to.eql([]);
 			});
 		});
 	});
@@ -587,6 +582,8 @@ describe("Model", () => {
 		let User, getItemParams, getItemFunction;
 		beforeEach(() => {
 			User = new dynamoose.Model("User", {"id": Number, "name": String});
+			getItemParams = null;
+			getItemFunction = null;
 			dynamoose.aws.ddb.set({
 				"getItem": (params) => {
 					getItemParams = params;
@@ -596,6 +593,8 @@ describe("Model", () => {
 		});
 		afterEach(() => {
 			User = null;
+			getItemParams = null;
+			getItemFunction = null;
 			dynamoose.aws.ddb.revert();
 		});
 
@@ -654,6 +653,15 @@ describe("Model", () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an.instanceof(User);
+				});
+
+				it("Should return request if return request setting is set", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request"});
+					expect(getItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					});
 				});
 
 				it("Should return null for expired object", async () => {
@@ -1079,6 +1087,30 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should return request if settings passed in", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					const response = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+					expect(response).to.be.an("object");
+					expect(response).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem for single object update", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
@@ -1964,6 +1996,15 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should return request if return request setting is set", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request"});
+					expect(deleteItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					});
+				});
+
 				it("Should throw error if error is returned from DynamoDB", async () => {
 					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
 					let result, error;
@@ -2008,6 +2049,196 @@ describe("Model", () => {
 			});
 		});
 	});
+
+	describe("Model.transaction", () => {
+		let User;
+		beforeEach(() => {
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
+		});
+		afterEach(() => {
+			User = null;
+		});
+
+		it("Should be an object", () => {
+			expect(User.transaction).to.be.an("object");
+		});
+
+		describe("Model.transaction.get", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.get).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.get(1)).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.get(1)).to.eql({
+					"Get": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.get(1, () => {});
+				console.warn = oldWarn;
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.create", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.create).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.create({"id": 1})).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.create({"id": 1})).to.eql({
+					"Put": {
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result with overwrite set to false", async () => {
+				expect(await User.transaction.create({"id": 1}, {"overwrite": false})).to.eql({
+					"Put": {
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.create({"id": 1}, {"overwrite": false}, () => {});
+				console.warn = oldWarn;
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.delete", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.delete).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.delete(1)).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.delete(1)).to.eql({
+					"Delete": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.delete(1, () => {});
+				console.warn = oldWarn;
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.update", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.update).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.update({"id": 1, "name": "Bob"})).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.update({"id": 1, "name": "Bob"})).to.eql({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "Bob"}
+						},
+						"ReturnValues": "ALL_NEW",
+						"UpdateExpression": "SET #a0 = :v0",
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.update({"id": 1, "name": "Bob"}, () => {});
+				console.warn = oldWarn;
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+
+		describe("Model.transaction.condition", () => {
+			it("Should be a function", () => {
+				expect(User.transaction.condition).to.be.a("function");
+			});
+
+			it("Should return an object", async () => {
+				expect(await User.transaction.condition(1)).to.be.an("object");
+			});
+
+			it("Should return correct result", async () => {
+				expect(await User.transaction.condition(1)).to.eql({
+					"ConditionCheck": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result with options", async () => {
+				expect(await User.transaction.condition(1, {"hello": "world"})).to.eql({
+					"ConditionCheck": {
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"hello": "world"
+					}
+				});
+			});
+
+			it("Should print warning if passing callback", async () => {
+				let result;
+				const oldWarn = console.warn;
+				console.warn = (warning) => result = warning;
+				User.transaction.condition(1, () => {});
+				console.warn = oldWarn;
+
+				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+		});
+	});
 });
 
 describe("model", () => {
@@ -2021,7 +2252,7 @@ describe("model", () => {
 	let Cat;
 	beforeEach(() => {
 		const schema = new dynamoose.Schema({"name": String});
-		Cat = dynamoose.Model("Cat", schema);
+		Cat = new dynamoose.Model("Cat", schema);
 	});
 
 	it("Should allow creating instance of Model", () => {

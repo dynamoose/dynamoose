@@ -2,7 +2,7 @@
 
 The Model object represents one DynamoDB table. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
 
-## dynamoose.Model(name, schema[, config])
+## new dynamoose.Model(name, schema[, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
@@ -11,13 +11,13 @@ The `schema` parameter can either be an object OR a Schema instance. If you pass
 ```js
 const dynamoose = require("dynamoose");
 
-const Cat = dynamoose.Model("Cat", {"name": String});
+const Cat = new dynamoose.Model("Cat", {"name": String});
 ```
 
 ```js
 const dynamoose = require("dynamoose");
 
-const Cat = dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
+const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
 ```
 
 The config parameter is an object used to customize settings for the model.
@@ -98,7 +98,7 @@ This function will return the object used to create the table with AWS. You can 
 This function is an async function so you must wait for the promise to resolve before you are able to access the result.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 async function printTableRequest() {
 	console.log(await User.table.create.request());
@@ -124,14 +124,20 @@ async function printTableRequest() {
 }
 ```
 
-## Model.get(hashKey[, callback])
+## Model.get(hashKey[, settings][, callback])
 
 You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
+You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
+
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 try {
 	const myUser = await User.get(1);
@@ -151,10 +157,26 @@ User.get(1, (error, myUser) => {
 });
 ```
 
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+const retrieveUserRequest = User.get(1, {"return": "request"});
+// {
+// 	"Key": {"id": {"N": "1"}},
+// 	"TableName": "User"
+// }
+
+// OR
+
+User.get(1, {"return": "request"}, (error, request) => {
+	console.log(request);
+});
+```
+
 In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	const myUser = await User.get({"id": 1, "name": "Tim"});
@@ -181,7 +203,7 @@ This function lets you create a new document for a given model. This function is
 If you do not pass in a `callback` parameter a promise will be returned.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	const user = await User.create({"id": 1, "name": "Tim"}); // If a user with `id=1` already exists in the table, an error will be thrown.
@@ -201,7 +223,7 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 });
 ```
 
-## Model.update(keyObj[, updateObj],[ callback])
+## Model.update(keyObj[, updateObj[, settings]],[ callback])
 
 This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
 
@@ -210,6 +232,12 @@ await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob
 ```
 
 If you do not pass in a `callback` parameter a promise will be returned.
+
+You can also pass in a `settings` object parameter to define extra settings for the update call. If you pass in a `settings` parameter, the `updateObj` parameter is required. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `document` |
 
 There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
@@ -257,14 +285,20 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
-## Model.delete(hashKey[, callback])
+## Model.delete(hashKey[, settings][, callback])
 
 You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to retrieve the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
 
+You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be null, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String \| null | null |
+
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 try {
 	await User.delete(1);
@@ -284,10 +318,26 @@ User.delete(1, (error) => {
 });
 ```
 
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+const deleteUserRequest = User.delete(1, {"return": "request"});
+// {
+// 	"Key": {"id": {"N": "1"}},
+// 	"TableName": "User"
+// }
+
+// OR
+
+User.delete(1, {"return": "request"}, (error, request) => {
+	console.log(request);
+});
+```
+
 In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	await User.get({"id": 1, "name": "Tim"});
@@ -306,3 +356,23 @@ User.get({"id": 1, "name": "Tim"}, (error) => {
 	}
 });
 ```
+
+## Model.transaction
+
+This object has the following methods that you can call.
+
+- Model.transaction.get
+- Model.transaction.create
+- Model.transaction.delete
+- Model.transaction.update
+- Model.transaction.condition
+
+You can pass in the same parameters into each method that you do for the normal (non-transaction) methods, except for the callback parameter.
+
+These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
+
+### Model.transaction.condition(key, additionalParameters)
+
+This method allows you to run a conditionCheck when running a DynamoDB transaction.
+
+The `additionalParameters` property will be appended to the result to allow you to set custom conditions.
