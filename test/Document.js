@@ -1,4 +1,7 @@
-const {expect} = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+const chai = require("chai");
+chai.use(chaiAsPromised);
+const {expect} = chai;
 const Document = require("../lib/Document");
 const Model = require("../lib/Model");
 const Schema = require("../lib/Schema");
@@ -104,7 +107,7 @@ describe("Document", () => {
 			putParams = [];
 		});
 
-		it("Should be a function", async () => {
+		it("Should be a function", () => {
 			expect(user.save).to.be.a("function");
 		});
 
@@ -319,49 +322,28 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if required property inside object doesn't exist", async () => {
+				it("Should throw error if required property inside object doesn't exist", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "address": {"street": "hello"}});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("address.country is a required property but has no value when trying to save document"));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("address.country is a required property but has no value when trying to save document");
 				});
 
-				it("Should throw type mismatch error if passing in wrong type with custom type for object", async () => {
+				it("Should throw type mismatch error if passing in wrong type with custom type for object", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "address": "test"});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected address to be of type object, instead found type string."));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected address to be of type object, instead found type string.");
 				});
 
-				it("Should throw type mismatch error if passing in wrong type for nested object attribute", async () => {
+				it("Should throw type mismatch error if passing in wrong type for nested object attribute", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "address": {"country": true}});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected address.country to be of type string, instead found type boolean."));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected address.country to be of type string, instead found type boolean.");
 				});
 
 				it("Should save correct object with nested objects and saveUnknown set to true", async () => {
@@ -441,64 +423,36 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw type mismatch error if passing in wrong type for nested array object", async () => {
+				it("Should throw type mismatch error if passing in wrong type for nested array object", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": Number, "name": String}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [true]});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected friends.0 to be of type object, instead found type boolean."));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected friends.0 to be of type object, instead found type boolean.");
 				});
 
-				it("Should throw error if not passing in required property in array", async () => {
+				it("Should throw error if not passing in required property in array", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob"}]});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("friends.0.id is a required property but has no value when trying to save document"));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.0.id is a required property but has no value when trying to save document");
 				});
 
-				it("Should throw error if not passing in required property in array for second item", async () => {
+				it("Should throw error if not passing in required property in array for second item", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("friends.1.id is a required property but has no value when trying to save document"));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.id is a required property but has no value when trying to save document");
 				});
 
-				it("Should throw error if not passing in required property in array for second item with multi nested objects", async () => {
+				it("Should throw error if not passing in required property in array for second item with multi nested objects", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}}}]}}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}]});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("friends.1.addresses.1.country is a required property but has no value when trying to save document"));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.addresses.1.country is a required property but has no value when trying to save document");
 				});
 
 				it("Should save with correct object with expires set to a number", async () => {
@@ -651,19 +605,12 @@ describe("Document", () => {
 					expect(putParams[1].Item.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
 				});
 
-				it("Should throw type mismatch error if passing in wrong type with custom type", async () => {
+				it("Should throw type mismatch error if passing in wrong type with custom type", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "name": "Charlie", "birthday": "test"});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected birthday to be of type number, instead found type string."));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected birthday to be of type number, instead found type string.");
 				});
 
 				it("Should save with correct object with more properties than in schema", async () => {
@@ -720,19 +667,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw type mismatch error if passing in wrong type for default value", async () => {
+				it("Should throw type mismatch error if passing in wrong type for default value", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "default": () => true}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type boolean."));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected age to be of type number, instead found type boolean.");
 				});
 
 				it("Should save with correct object with default value as custom type", async () => {
@@ -758,18 +698,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if invalid value for validation value", async () => {
+				it("Should throw error if invalid value for validation value", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": 5}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "age": 4});
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("age with a value of 4 had a validation error when trying to save the document"));
+
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
 				});
 
 				it("Should save with correct object with validation function", async () => {
@@ -783,18 +717,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if invalid value for validation function", async () => {
+				it("Should throw error if invalid value for validation function", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => val > 5}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "age": 4});
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("age with a value of 4 had a validation error when trying to save the document"));
+
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
 				});
 
 				it("Should save with correct object with validation async function", async () => {
@@ -808,18 +736,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if invalid value for validation async function", async () => {
+				it("Should throw error if invalid value for validation async function", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": async (val) => val > 5}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "age": 4});
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("age with a value of 4 had a validation error when trying to save the document"));
+
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
 				});
 
 				it("Should save with correct object with validation RegExp", async () => {
@@ -833,18 +755,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if invalid value for validation RegExp", async () => {
+				it("Should throw error if invalid value for validation RegExp", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": {"type": String, "validate": /.../gu}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "name": "a"});
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("name with a value of a had a validation error when trying to save the document"));
+
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name with a value of a had a validation error when trying to save the document");
 				});
 
 				it("Should save with correct object with required property", async () => {
@@ -858,18 +774,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if required property not passed in", async () => {
+				it("Should throw error if required property not passed in", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": {"type": String, "required": true}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1});
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("name is a required property but has no value when trying to save document"));
+
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name is a required property but has no value when trying to save document");
 				});
 
 				it("Should save with correct object with enum property", async () => {
@@ -883,18 +793,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if value does not match value in enum property", async () => {
+				it("Should throw error if value does not match value in enum property", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": {"type": String, "enum": ["Tim", "Tom"]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "name": "Bob"});
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("name must equal [\"Tim\",\"Tom\"], but is set to Bob"));
+
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name must equal [\"Tim\",\"Tom\"], but is set to Bob");
 				});
 
 				it("Should save with correct object with forceDefault property", async () => {
@@ -941,19 +845,12 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should throw error if object contains properties that have type mismatch with schema", async () => {
+				it("Should throw error if object contains properties that have type mismatch with schema", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": String, "age": Number}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "name": "Charlie", "age": "test"});
 
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type string."));
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
 				});
 
 				it("Should throw error if DynamoDB API returns an error", async () => {
@@ -1069,7 +966,7 @@ describe("Document", () => {
 			deleteItemFunction = null;
 		});
 
-		it("Should be a function", async () => {
+		it("Should be a function", () => {
 			expect(user.delete).to.be.a("function");
 		});
 
@@ -1088,16 +985,9 @@ describe("Document", () => {
 					});
 				});
 
-				it("Should throw error if DynamoDB API returns an error", async () => {
+				it("Should throw error if DynamoDB API returns an error", () => {
 					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
-					let result, error;
-					try {
-						result = await callType.func(user).bind(user)();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql({"error": "ERROR"});
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith({"error": "ERROR"});
 				});
 			});
 		});
@@ -1122,19 +1012,11 @@ describe("Document", () => {
 
 		tests.forEach((test) => {
 			if (test.error) {
-				it(`Should throw error ${test.error} correctly for input ${JSON.stringify(test.input)} and schema ${JSON.stringify(test.schema)}`, async () => {
+				it(`Should throw error ${test.error} correctly for input ${JSON.stringify(test.input)} and schema ${JSON.stringify(test.schema)}`, () => {
 					const User = new Model("User", test.schema);
 					const user = new User(test.input);
 
-					let result, error;
-					try {
-						result = await user.conformToSchema();
-					} catch (e) {
-						error = e;
-					}
-
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type string."));
+					return expect(user.conformToSchema()).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
 				});
 			} else {
 				it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
@@ -1456,15 +1338,8 @@ describe("Document", () => {
 			}
 
 			if (test.error) {
-				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, async () => {
-					let result, error;
-					try {
-						result = await model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input));
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(test.error);
+				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
+					return expect(model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input))).to.be.rejectedWith(test.error.message);
 				});
 			} else {
 				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {

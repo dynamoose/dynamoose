@@ -1,4 +1,7 @@
-const {expect} = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+const chai = require("chai");
+chai.use(chaiAsPromised);
+const {expect} = chai;
 const dynamoose = require("../lib");
 const Error = require("../lib/Error");
 const utils = require("../lib/utils");
@@ -794,17 +797,11 @@ describe("Model", () => {
 					expect(user.birthday).to.not.exist;
 				});
 
-				it("Should throw type mismatch error if passing in wrong type with custom type", async () => {
+				it("Should throw type mismatch error if passing in wrong type with custom type", () => {
 					User = new dynamoose.Model("User", {"id": Number, "name": String, "birthday": Date});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": "Hello World"}}});
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)(1);
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected birthday to be of type number, instead found type string."));
+
+					return expect(callType.func(User).bind(User)(1)).to.be.rejectedWith("Expected birthday to be of type number, instead found type string.");
 				});
 
 				it("Should return object with correct values with object property", async () => {
@@ -827,32 +824,18 @@ describe("Model", () => {
 					expect(user.address).to.eql({"country": "world"});
 				});
 
-				it("Should throw type mismatch error if passing in wrong type with custom type for object", async () => {
+				it("Should throw type mismatch error if passing in wrong type with custom type for object", () => {
 					User = new dynamoose.Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"S": "test"}}});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)(1);
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected address to be of type object, instead found type string."));
+					return expect(callType.func(User).bind(User)(1)).to.be.rejectedWith("Expected address to be of type object, instead found type string.");
 				});
 
-				it("Should throw type mismatch error if passing in wrong type for nested object attribute", async () => {
+				it("Should throw type mismatch error if passing in wrong type for nested object attribute", () => {
 					User = new dynamoose.Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"BOOL": true}}}}});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)(1);
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected address.country to be of type string, instead found type boolean."));
+					return expect(callType.func(User).bind(User)(1)).to.be.rejectedWith("Expected address.country to be of type string, instead found type boolean.");
 				});
 
 				it("Should return object with correct values with object property and saveUnknown set to true", async () => {
@@ -905,16 +888,10 @@ describe("Model", () => {
 					expect(user.friends).to.eql([{"name": "Tim", "id": 1}, {"name": "Bob", "id": 2}]);
 				});
 
-				it("Should throw error if DynamoDB responds with error", async () => {
+				it("Should throw error if DynamoDB responds with error", () => {
 					getItemFunction = () => Promise.reject({"error": "Error"});
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)(1);
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql({"error": "Error"});
+
+					return expect(callType.func(User).bind(User)(1)).to.be.rejectedWith({"error": "Error"});
 				});
 
 				it("Should return undefined if no object exists in DynamoDB", async () => {
@@ -932,17 +909,11 @@ describe("Model", () => {
 					expect(user.name).to.eql("Charlie");
 				});
 
-				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", async () => {
+				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", () => {
 					User = new dynamoose.Model("User", {"id": Number, "name": String, "age": Number});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}});
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)(1);
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected age to be of type number, instead found type string."));
+
+					return expect(callType.func(User).bind(User)(1)).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
 				});
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
@@ -1553,166 +1524,87 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should not throw error if validation passes", async () => {
+				it("Should not throw error if validation passes", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
 
-					let error;
-					try {
-						await callType.func(User).bind(User)({"id": 1}, {"myNumber": 11});
-					} catch (e) {
-						error = e;
-					}
-					expect(error).to.not.exist;
+					return expect(callType.func(User).bind(User)({"id": 1}, {"myNumber": 11})).to.not.be.rejected;
 				});
 
-				it("Should not throw error if validation doesn't pass when using $ADD", async () => {
+				it("Should not throw error if validation doesn't pass when using $ADD", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "myNumber": {"type": Number, "validate": (val) => val > 10}});
 
-					let error;
-					try {
-						await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"myNumber": 5}});
-					} catch (e) {
-						error = e;
-					}
-					expect(error).to.not.exist;
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$ADD": {"myNumber": 5}})).to.not.be.rejected;
 				});
 
-				it("Should throw error if validation doesn't pass", async () => {
+				it("Should throw error if validation doesn't pass", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "validate": (val) => val.length > 10}});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("name with a value of Bob had a validation error when trying to save the document"));
+					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Bob"})).to.be.rejectedWith("name with a value of Bob had a validation error when trying to save the document");
 				});
 
-				it("Should throw error if value not in enum", async () => {
+				it("Should throw error if value not in enum", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"name": "Todd"});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("name must equal [\"Bob\",\"Tim\"], but is set to Todd"));
+					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Todd"})).to.be.rejectedWith("name must equal [\"Bob\",\"Tim\"], but is set to Todd");
 				});
 
-				it("Should not throw error if value is in enum", async () => {
+				it("Should not throw error if value is in enum", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
 
-					let error;
-					try {
-						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
-					} catch (e) {
-						error = e;
-					}
-					expect(error).to.not.exist;
+					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Bob"})).to.not.be.rejected;
 				});
 
-				it("Should throw error for type mismatch for set", async () => {
+				it("Should throw error for type mismatch for set", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"name": false});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected name to be of type string, instead found type boolean."));
+					return expect(callType.func(User).bind(User)({"id": 1}, {"name": false})).to.be.rejectedWith("Expected name to be of type string, instead found type boolean.");
 				});
 
-				it("Should throw error for type mismatch for add", async () => {
+				it("Should throw error for type mismatch for add", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = new dynamoose.Model("User", {"id": Number, "myNumber": Number});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"myNumber": false}});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected myNumber to be of type number, instead found type boolean."));
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$ADD": {"myNumber": false}})).to.be.rejectedWith("Expected myNumber to be of type number, instead found type boolean.");
 				});
 
-				it("Should throw error for one item list append type mismatch", async () => {
+				it("Should throw error for one item list append type mismatch", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = new dynamoose.Model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": false}});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected friends.0 to be of type string, instead found type boolean."));
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": false}})).to.be.rejectedWith("Expected friends.0 to be of type string, instead found type boolean.");
 				});
 
-				it("Should throw error for multiple item list append type mismatch", async () => {
+				it("Should throw error for multiple item list append type mismatch", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = new dynamoose.Model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": [1, 5]}});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.TypeMismatch("Expected friends.0 to be of type string, instead found type number."));
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": [1, 5]}})).to.be.rejectedWith("Expected friends.0 to be of type string, instead found type number.");
 				});
 
-				it("Should throw error if trying to remove required property", async () => {
+				it("Should throw error if trying to remove required property", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "required": true}});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql(new Error.ValidationError("name is a required property but has no value when trying to save document"));
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]})).to.be.rejectedWith("name is a required property but has no value when trying to save document");
 				});
 
-				it("Should not throw error if trying to modify required property", async () => {
+				it("Should not throw error if trying to modify required property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "required": true}});
 
-					let error;
-					try {
-						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
-					} catch (e) {
-						error = e;
-					}
-					expect(error).to.not.exist;
+					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Bob"})).to.not.be.rejected;
 				});
 
-				it("Should not throw error if not modifying required property", async () => {
+				it("Should not throw error if not modifying required property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "required": true}, "friends": [String]});
 
-					let error;
-					try {
-						await callType.func(User).bind(User)({"id": 1}, {"friends": ["Bob"]});
-					} catch (e) {
-						error = e;
-					}
-					expect(error).to.not.exist;
+					return expect(callType.func(User).bind(User)({"id": 1}, {"friends": ["Bob"]})).to.not.be.rejected;
 				});
 
 				it("Should use default value if deleting property", async () => {
@@ -1921,17 +1813,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should throw error if AWS throws error", async () => {
+				it("Should throw error if AWS throws error", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}, "name": "Bob"});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql({"error": "ERROR"});
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}, "name": "Bob"})).to.be.rejectedWith({"error": "ERROR"});
 				});
 			});
 		});
@@ -2005,18 +1890,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should throw error if error is returned from DynamoDB", async () => {
+				it("Should throw error if error is returned from DynamoDB", () => {
 					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
-					let result, error;
-					try {
-						result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql({
-						"error": "ERROR"
-					});
+
+					return expect(callType.func(User).bind(User)({"id": 1, "name": "Charlie"})).to.be.rejectedWith({"error": "ERROR"});
 				});
 			});
 		});
@@ -2081,7 +1958,7 @@ describe("Model", () => {
 				});
 			});
 
-			it("Should print warning if passing callback", async () => {
+			it("Should print warning if passing callback", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
@@ -2123,7 +2000,7 @@ describe("Model", () => {
 				});
 			});
 
-			it("Should print warning if passing callback", async () => {
+			it("Should print warning if passing callback", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
@@ -2152,7 +2029,7 @@ describe("Model", () => {
 				});
 			});
 
-			it("Should print warning if passing callback", async () => {
+			it("Should print warning if passing callback", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
@@ -2189,7 +2066,7 @@ describe("Model", () => {
 				});
 			});
 
-			it("Should print warning if passing callback", async () => {
+			it("Should print warning if passing callback", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
@@ -2228,7 +2105,7 @@ describe("Model", () => {
 				});
 			});
 
-			it("Should print warning if passing callback", async () => {
+			it("Should print warning if passing callback", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;

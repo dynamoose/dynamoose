@@ -156,7 +156,7 @@ describe("Scan", () => {
 					}, "TableName": "Cat"});
 				});
 
-				it("Should throw error from AWS", async () => {
+				it("Should throw error from AWS", () => {
 					scanPromiseResolver = () => {
 						throw {"error": "Error"};
 					};
@@ -176,7 +176,7 @@ describe("Scan", () => {
 			expect(Model.scan().and()).to.be.a.instanceof(Model.scan.carrier);
 		});
 
-		it("Should return same object as Model.scan()", async () => {
+		it("Should return same object as Model.scan()", () => {
 			expect(Model.scan().and()).to.eql(Model.scan());
 		});
 	});
@@ -456,7 +456,7 @@ describe("Scan", () => {
 			expect(Model.scan().limit).to.be.a("function");
 		});
 
-		it("Should set correct setting on scan instance", async () => {
+		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().limit(5);
 			expect(scan.settings.limit).to.eql(5);
 		});
@@ -473,7 +473,7 @@ describe("Scan", () => {
 			expect(Model.scan().startAt).to.be.a("function");
 		});
 
-		it("Should set correct setting on scan instance", async () => {
+		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().startAt({"id": 5});
 			expect(scan.settings.startAt).to.eql({"id": 5});
 		});
@@ -484,7 +484,7 @@ describe("Scan", () => {
 			expect(scanParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
 		});
 
-		it("Should set correct setting on scan instance if passing in DynamoDB object", async () => {
+		it("Should set correct setting on scan instance if passing in DynamoDB object", () => {
 			const scan = Model.scan().startAt({"id": {"N": "5"}});
 			expect(scan.settings.startAt).to.eql({"id": {"N": "5"}});
 		});
@@ -501,7 +501,7 @@ describe("Scan", () => {
 			expect(Model.scan().attributes).to.be.a("function");
 		});
 
-		it("Should set correct setting on scan instance", async () => {
+		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().attributes(["id"]);
 			expect(scan.settings.attributes).to.eql(["id"]);
 		});
@@ -518,7 +518,7 @@ describe("Scan", () => {
 			expect(Model.scan().parallel).to.be.a("function");
 		});
 
-		it("Should set correct setting on scan instance", async () => {
+		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().parallel(5);
 			expect(scan.settings.parallel).to.eql(5);
 		});
@@ -547,7 +547,7 @@ describe("Scan", () => {
 			expect(Model.scan().count).to.be.a("function");
 		});
 
-		it("Should set correct setting on scan instance", async () => {
+		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().count();
 			expect(scan.settings.count).to.be.true;
 		});
@@ -570,7 +570,7 @@ describe("Scan", () => {
 			expect(Model.scan().consistent).to.be.a("function");
 		});
 
-		it("Should set correct setting on scan instance", async () => {
+		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().consistent();
 			expect(scan.settings.consistent).to.be.true;
 		});
@@ -587,7 +587,7 @@ describe("Scan", () => {
 			expect(Model.scan().using).to.be.a("function");
 		});
 
-		it("Should set correct setting on scan instance", async () => {
+		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().using("customIndex");
 			expect(scan.settings.index).to.eql("customIndex");
 		});
