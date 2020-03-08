@@ -7,6 +7,10 @@ describe("Schema", () => {
 		expect(Schema).to.be.a("function");
 	});
 
+	it("Should throw an error if not using `new` keyword", () => {
+		expect(() => Schema()).to.throw("Class constructor Schema cannot be invoked without 'new'");
+	});
+
 	it("Should throw an error if nothing passed in", () => {
 		expect(() => new Schema()).to.throw("Schema initalization parameter must be an object.");
 	});
