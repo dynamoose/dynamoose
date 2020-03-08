@@ -1,4 +1,7 @@
-const {expect} = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+const chai = require("chai");
+chai.use(chaiAsPromised);
+const {expect} = chai;
 const dynamoose = require("../lib");
 const util = require("util");
 
@@ -186,14 +189,8 @@ describe("Query", () => {
 					queryPromiseResolver = () => {
 						throw {"error": "Error"};
 					};
-					let result, error;
-					try {
-						result = await callType.func(Model.query().exec).bind(Model.query())();
-					} catch (e) {
-						error = e;
-					}
-					expect(result).to.not.exist;
-					expect(error).to.eql({"error": "Error"});
+
+					return expect(callType.func(Model.query().exec).bind(Model.query())()).to.be.rejectedWith({"error": "Error"});
 				});
 			});
 		});
