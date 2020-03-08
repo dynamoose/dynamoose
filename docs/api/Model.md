@@ -356,3 +356,23 @@ User.get({"id": 1, "name": "Tim"}, (error) => {
 	}
 });
 ```
+
+## Model.transaction
+
+This object has the following methods that you can call.
+
+- Model.transaction.get
+- Model.transaction.create
+- Model.transaction.delete
+- Model.transaction.update
+- Model.transaction.condition
+
+You can pass in the same parameters into each method that you do for the normal (non-transaction) methods, except for the callback parameter.
+
+These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
+
+### Model.transaction.condition(key, additionalParameters)
+
+This method allows you to run a conditionCheck when running a DynamoDB transaction.
+
+The `additionalParameters` property will be appended to the result to allow you to set custom conditions.
