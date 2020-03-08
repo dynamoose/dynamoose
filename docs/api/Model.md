@@ -2,7 +2,7 @@
 
 The Model object represents one DynamoDB table. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
 
-## dynamoose.Model(name, schema[, config])
+## new dynamoose.Model(name, schema[, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
@@ -11,13 +11,13 @@ The `schema` parameter can either be an object OR a Schema instance. If you pass
 ```js
 const dynamoose = require("dynamoose");
 
-const Cat = dynamoose.Model("Cat", {"name": String});
+const Cat = new dynamoose.Model("Cat", {"name": String});
 ```
 
 ```js
 const dynamoose = require("dynamoose");
 
-const Cat = dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
+const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
 ```
 
 The config parameter is an object used to customize settings for the model.
@@ -98,7 +98,7 @@ This function will return the object used to create the table with AWS. You can 
 This function is an async function so you must wait for the promise to resolve before you are able to access the result.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 async function printTableRequest() {
 	console.log(await User.table.create.request());
@@ -137,7 +137,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 try {
 	const myUser = await User.get(1);
@@ -158,7 +158,7 @@ User.get(1, (error, myUser) => {
 ```
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 const retrieveUserRequest = User.get(1, {"return": "request"});
 // {
@@ -176,7 +176,7 @@ User.get(1, {"return": "request"}, (error, request) => {
 In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	const myUser = await User.get({"id": 1, "name": "Tim"});
@@ -203,7 +203,7 @@ This function lets you create a new document for a given model. This function is
 If you do not pass in a `callback` parameter a promise will be returned.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	const user = await User.create({"id": 1, "name": "Tim"}); // If a user with `id=1` already exists in the table, an error will be thrown.
@@ -298,7 +298,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | return | What the function should return. Can be null, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String \| null | null |
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 try {
 	await User.delete(1);
@@ -319,7 +319,7 @@ User.delete(1, (error) => {
 ```
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 const deleteUserRequest = User.delete(1, {"return": "request"});
 // {
@@ -337,7 +337,7 @@ User.delete(1, {"return": "request"}, (error, request) => {
 In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
 	await User.get({"id": 1, "name": "Tim"});

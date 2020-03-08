@@ -7,7 +7,7 @@ A document represents an item for a given model in DynamoDB. This item can creat
 In order to create a new document you just pass in your object into an instance of your model.
 
 ```js
-const User = dynamoose.Model("User", {"id": Number, "name": String});
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
 const myUser = new User({
 	"id": 1,
 	"name": "Tim"
