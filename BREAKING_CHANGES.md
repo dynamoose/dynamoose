@@ -2,6 +2,7 @@
 
 ## 2.0 - incomplete list
 
+- Everything in Dynamoose are now classes. This includes `Model` and `Schema`. This means to initalize a new instance of one of these items, you must use the `new` keyword before it
 - `scan.count()` has been removed, and `scan.counts()` has been renamed to `scan.count()`.
 - Schema `default` value does not pass the model instance into `default` functions any more.
 - `Model.update`
@@ -17,3 +18,5 @@
 - `expires.ttl` is now milliseconds as opposed to seconds
 - `expires.defaultExpires` is no longer an option
 - `expires.returnExpiredItems` has been renamed to `expires.items.returnExpired`
+- `Model.transaction.conditionCheck` has been renamed to `Model.transaction.condition`
+- `Model.transaction.condition` options parameter now gets appended to the object returned. This means you can no longer use the helpers that Dynamoose provided to make conditions. Instead, pass in the DynamoDB API level conditions you wish to use
