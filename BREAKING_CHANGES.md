@@ -16,7 +16,7 @@
 - `Document.original` formerly (`model.originalItem`) no longer returns the last item saved, but the item first retrieved from DynamoDB
 - `expires` has been moved from the Schema settings to the Model settings
 - `expires.ttl` is now milliseconds as opposed to seconds
-- `expires.defaultExpires` is no longer an option
+- `expires.defaultExpires` is no longer an option (most behavior from this option can be replicated by using the new `dynamoose.undefined` feature)
 - `expires.returnExpiredItems` has been renamed to `expires.items.returnExpired`
 - `Model.transaction.conditionCheck` has been renamed to `Model.transaction.condition`
 - `Model.transaction.condition` options parameter now gets appended to the object returned. This means you can no longer use the helpers that Dynamoose provided to make conditions. Instead, pass in the DynamoDB API level conditions you wish to use
