@@ -941,7 +941,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("document.save", () => {
+	describe("document.delete", () => {
 		let User, user, deleteParams, deleteItemFunction;
 		beforeEach(() => {
 			Model.defaults = {
