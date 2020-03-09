@@ -2,10 +2,9 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
+const dynamoose = require("../lib");
+const {Model, Schema, aws} = dynamoose;
 const Document = require("../lib/Document");
-const Model = require("../lib/Model");
-const Schema = require("../lib/Schema");
-const aws = require("../lib/aws");
 const util = require("util");
 const Error = require("../lib/Error");
 const utils = require("../lib/utils");
@@ -141,6 +140,18 @@ describe("Document", () => {
 						"TableName": "User"
 					}, {
 						"Item": {"id": {"N": "2"}, "built": {"N": `${date}`}},
+						"TableName": "Robot"
+					}]);
+				});
+
+				it("Should not use default if dynamoose.undefined used as value for that property", async () => {
+					const Robot = new Model("Robot", {"id": Number, "age": {"type": Number, "default": 1}});
+					const robot = new Robot({"id": 2, "age": dynamoose.undefined});
+
+					putItemFunction = () => Promise.resolve();
+					await callType.func(robot).bind(robot)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "2"}},
 						"TableName": "Robot"
 					}]);
 				});
@@ -941,7 +952,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("document.save", () => {
+	describe("document.delete", () => {
 		let User, user, deleteParams, deleteItemFunction;
 		beforeEach(() => {
 			Model.defaults = {
