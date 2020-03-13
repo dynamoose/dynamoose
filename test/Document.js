@@ -1124,6 +1124,14 @@ describe("Document", () => {
 			{
 				"input": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}},
 				"output": true
+			},
+			{
+				"input": {"data": {"M": {}}},
+				"output": true
+			},
+			{
+				"input": {"data": {"L": []}},
+				"output": true
 			}
 		];
 
