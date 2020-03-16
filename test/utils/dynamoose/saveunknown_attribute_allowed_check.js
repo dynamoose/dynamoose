@@ -22,7 +22,64 @@ describe("utils.dynamoose.saveunknown_attribute_allowed_check", () => {
 		{
 			"input": [["other"], "random"],
 			"output": false
-		}
+		},
+		{
+			"input": [["random"], "random.test"],
+			"output": false
+		},
+		{
+			"input": [["random.test"], "random"],
+			"output": true
+		},
+		{
+			"input": [["random.*"], "random"],
+			"output": true
+		},
+		{
+			"input": [["random.*"], "random.test"],
+			"output": true
+		},
+		{
+			"input": [["random.*"], "random.test.random"],
+			"output": false
+		},
+		{
+			"input": [["random.*"], "random.0.random"],
+			"output": true
+		},
+		{
+			"input": [["random.*"], "random.1.random"],
+			"output": true
+		},
+		{
+			"input": [["random.*.hello"], "random.test.hello"],
+			"output": true
+		},
+		{
+			"input": [["random.*.hello"], "random.test.random"],
+			"output": false
+		},
+		{
+			"input": [["random.*.hello"], "random.test.hello.test"],
+			"output": false
+		},
+		{
+			"input": [["random.**"], "random.test.random"],
+			"output": true
+		},
+		{
+			"input": [["**"], "random.test.random"],
+			"output": true
+		},
+		// TODO: add support for this later
+		// {
+		// 	"input": [["random.**.hello"], "random.test.random"],
+		// 	"output": false
+		// },
+		// {
+		// 	"input": [["random.**.hello"], "random.test.random.hello"],
+		// 	"output": true
+		// }
 	];
 
 	tests.forEach((test) => {
