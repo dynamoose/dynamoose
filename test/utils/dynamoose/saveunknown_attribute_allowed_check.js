@@ -1,7 +1,7 @@
 const {expect} = require("chai");
 const utils = require("../../../lib/utils");
 
-describe.only("utils.dynamoose.saveunknown_attribute_allowed_check", () => {
+describe("utils.dynamoose.saveunknown_attribute_allowed_check", () => {
 	it("Should be a function", () => {
 		expect(utils.dynamoose.saveunknown_attribute_allowed_check).to.be.a("function");
 	});
