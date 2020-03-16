@@ -57,6 +57,12 @@ describe("Schema", () => {
 		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
 	});
 
+	it.skip("Should throw error if attribute names contains star", () => {
+		expect(() => new Schema({"*": String})).to.throw("Attributes names must not include stars.");
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
+		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
+	});
+
 	it("Should not throw error if valid schema passed in", () => {
 		expect(() => new Schema({"id": Number, "friends": [String]})).to.not.throw();
 	});
