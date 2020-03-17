@@ -54,6 +54,39 @@ describe("Model", () => {
 			expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
 		});
 
+		it("Should not fail with initialization if table doesn't exist", async () => {
+			dynamoose.Model.defaults = {};
+			const itemsCalled = [];
+			dynamoose.aws.ddb.set({
+				"createTable": () => {
+					return {
+						"promise": () => new Promise((resolve) => {
+							itemsCalled.push("createTable");
+							setTimeout(() => {
+								itemsCalled.push("createTableDone");
+								resolve();
+							}, 100);
+						})
+					};
+				},
+				"describeTable": () => ({"promise": () => {
+					itemsCalled.push("describeTable");
+					return itemsCalled.includes("createTableDone") ? Promise.resolve({"Table": {"TableStatus": "ACTIVE"}}) : Promise.reject();
+				}})
+			});
+
+			const tableName = "Cat";
+			let failed = false;
+			const errorHandler = () => {
+				failed = true;
+			};
+			process.on("unhandledRejection", errorHandler);
+			new dynamoose.Model(tableName, {"id": String});
+			await utils.timeout(100);
+			expect(failed).to.be.false;
+			process.removeListener("unhandledRejection", errorHandler);
+		});
+
 		// Prefixes & Suffixes
 		const optionsB = [
 			{"name": "Prefix", "value": "prefix", "check": (val, result) => expect(result).to.match(new RegExp(`^${val}`))},
