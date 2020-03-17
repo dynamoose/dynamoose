@@ -106,6 +106,12 @@ describe("Scan", () => {
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
 				});
 
+				it("Should return correct result for saveUnknown", async () => {
+					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
 				it("Should return correct metadata in result", async () => {
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1});
 					const result = await callType.func(Model.scan().exec).bind(Model.scan())();
