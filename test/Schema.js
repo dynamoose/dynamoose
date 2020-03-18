@@ -301,12 +301,8 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						}
@@ -345,12 +341,8 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						},
@@ -361,12 +353,8 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "name",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						}
@@ -401,12 +389,8 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						}
@@ -482,12 +466,44 @@ describe("Schema", () => {
 							"IndexName": "ageIndex",
 							"KeySchema": [
 								{
-									"AttributeName": "id",
+									"AttributeName": "age",
 									"KeyType": "HASH"
-								},
+								}
+							],
+							"Projection": {
+								"ProjectionType": "ALL"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Should return correct result with index and project as true",
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "project": null}}},
+				"output": {
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						},
+						{
+							"AttributeName": "age",
+							"AttributeType": "N"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"GlobalSecondaryIndexes": [
+						{
+							"IndexName": "ageIndex",
+							"KeySchema": [
 								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							],
 							"Projection": {
@@ -522,12 +538,8 @@ describe("Schema", () => {
 							"IndexName": "ageIndex",
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							],
 							"Projection": {
@@ -562,12 +574,8 @@ describe("Schema", () => {
 							"IndexName": "ageIndex",
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							],
 							"Projection": {
@@ -603,12 +611,8 @@ describe("Schema", () => {
 							"IndexName": "ageLocalIndex",
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							],
 							"Projection": {
@@ -643,12 +647,8 @@ describe("Schema", () => {
 							"IndexName": "ageGlobalIndex",
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							],
 							"Projection": {
