@@ -2,7 +2,7 @@
 
 ## 2.0 - incomplete list
 
-- Everything in Dynamoose are now classes. This includes `Model` and `Schema`. This means to initalize a new instance of one of these items, you must use the `new` keyword before it
+- Everything in Dynamoose are now classes. This includes `Model` and `Schema`. This means to initialize a new instance of one of these items, you must use the `new` keyword before it
 - `scan.count()` has been removed, and `scan.counts()` has been renamed to `scan.count()`.
 - Schema `default` value does not pass the model instance into `default` functions any more.
 - `Model.update`
@@ -10,6 +10,7 @@
 	- `$DELETE` now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
 - `dynamoose.model` has been renamed to `dynamoose.Model`
 - `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
+- `dynamoose.setDDB` has been renamed to `dynamoose.aws.ddb.set`
 - `Model.getTableReq` has been renamed to `Model.table.create.request`
 - `Model.table.create.request` (formerly `Model.getTableReq`) is now an async function
 - `model.originalItem` has been renamed to `model.original` (or `Document.original`)
@@ -21,3 +22,6 @@
 - `Model.transaction.conditionCheck` has been renamed to `Model.transaction.condition`
 - `Model.transaction.condition` options parameter now gets appended to the object returned. This means you can no longer use the helpers that Dynamoose provided to make conditions. Instead, pass in the DynamoDB API level conditions you wish to use
 - In the past the `saveUnknown` option for attribute names would handle all nested properties. Now you must use `*` to indicate one level of wildcard or `**` to indicate infinate levels of wildcard. So if you have an object property (`address`) and want to parse one level of values (no sub objects) you can use `address.*`, or `address.**` to all for infinate levels of values (including sub objects)
+- `useNativeBooleans` & `useDocumentTypes` have been removed from the Model settings
+- `Map` attribute type has been replaced with `Object`
+- `List` attribute type has been replaced with `Array`
