@@ -8,6 +8,7 @@
 - `Model.update`
 	- `$LISTAPPEND` has been removed, and `$ADD` now includes the behavior of `$LISTAPPEND`
 	- `$DELETE` now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
+	- `$PUT` has been replaced with `$SET`
 - `dynamoose.model` has been renamed to `dynamoose.Model`
 - `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
 - `dynamoose.setDDB` has been renamed to `dynamoose.aws.ddb.set`
@@ -26,3 +27,4 @@
 - `Map` attribute type has been replaced with `Object`
 - `List` attribute type has been replaced with `Array`
 - `Scan.null` & `Query.null` have been removed
+- DynamoDB set types are now returned as JavaScript Set's instead of Array's
