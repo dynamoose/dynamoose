@@ -900,6 +900,28 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with set function for attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with async set function for attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "set": async (val) => `${val}-set`}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should throw error if object contains properties that have type mismatch with schema", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": String, "age": Number}, {"create": false, "waitForActive": false});

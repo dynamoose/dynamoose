@@ -921,6 +921,26 @@ describe("Model", () => {
 					expect(user.friends).to.eql([{"name": "Tim", "id": 1}, {"name": "Bob", "id": 2}]);
 				});
 
+				it("Should return correct object if attribute has a get function", async () => {
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "get": (val) => `${val}-get`}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "name"]);
+					expect(user.id).to.eql(1);
+					expect(user.name).to.eql("Charlie-get");
+				});
+
+				it("Should return correct object if attribute has an async get function", async () => {
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "get": async (val) => `${val}-get`}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "name"]);
+					expect(user.id).to.eql(1);
+					expect(user.name).to.eql("Charlie-get");
+				});
+
 				it("Should throw error if DynamoDB responds with error", () => {
 					getItemFunction = () => Promise.reject({"error": "Error"});
 
@@ -1056,6 +1076,50 @@ describe("Model", () => {
 							},
 							"name": {
 								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to putItem with set function", async () => {
+					createItemFunction = () => Promise.resolve();
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie-set"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to putItem with async set function", async () => {
+					createItemFunction = () => Promise.resolve();
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "set": async (val) => `${val}-set`}});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie-set"
 							}
 						},
 						"TableName": "User"
