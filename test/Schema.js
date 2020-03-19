@@ -431,8 +431,56 @@ describe("Schema", () => {
 								}
 							],
 							"ProvisionedThroughput": {
-								"ReadCapacityUnits": "5",
-								"WriteCapacityUnits": "5"
+								"ReadCapacityUnits": 5,
+								"WriteCapacityUnits": 5
+							},
+							"Projection": {
+								"ProjectionType": "ALL"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Should return correct result with global index as object with rangeKey as different property",
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "rangeKey": "type", "project": true, "throughput": 5}}, "type": String},
+				"output": {
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						},
+						{
+							"AttributeName": "age",
+							"AttributeType": "N"
+						},
+						{
+							"AttributeName": "type",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"GlobalSecondaryIndexes": [
+						{
+							"IndexName": "ageIndex",
+							"KeySchema": [
+								{
+									"AttributeName": "age",
+									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "type",
+									"KeyType": "RANGE"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 5,
+								"WriteCapacityUnits": 5
 							},
 							"Projection": {
 								"ProjectionType": "ALL"
@@ -662,7 +710,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				expect(await (new Schema(test.input).getCreateTableAttributeParams())).to.eql(test.output);
+				expect(await (new Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}}))).to.eql(test.output);
 			});
 		});
 	});
