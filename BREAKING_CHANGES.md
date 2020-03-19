@@ -25,3 +25,4 @@
 - `useNativeBooleans` & `useDocumentTypes` have been removed from the Model settings
 - `Map` attribute type has been replaced with `Object`
 - `List` attribute type has been replaced with `Array`
+- `Scan.null` & `Query.null` have been removed
