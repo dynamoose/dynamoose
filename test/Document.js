@@ -900,6 +900,28 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with set function for attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with async set function for attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": {"type": String, "set": async (val) => `${val}-set`}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should work correctly if attributes added to document after initalization", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
@@ -1402,6 +1424,11 @@ describe("Document", () => {
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": {"ttl": 1000, "attribute": "ttl", "items": {"returnExpired": false}}}],
 				"output": null
+			},
+			{
+				"input": [{"id": 1, "items": ["test"]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number, "items": Array}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": ["test"]}
 			}
 		];
 

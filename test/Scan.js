@@ -130,36 +130,52 @@ describe("Scan", () => {
 				it("Should send correct request on scan.exec", async () => {
 					scanPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.scan().exec).bind(Model.scan())();
-					expect(scanParams).to.eql({"ScanFilter": {}, "TableName": "Cat"});
+					expect(scanParams).to.eql({"TableName": "Cat"});
 				});
 
 				it("Should send correct request on scan.exec with filters", async () => {
 					scanPromiseResolver = () => ({"Items": []});
 					const scan = Model.scan().filter("id").eq("test");
 					await callType.func(scan.exec).bind(scan)();
-					expect(scanParams).to.eql({"ScanFilter": {
-						"id": {
-							"ComparisonOperator": "EQ",
-							"AttributeValueList": [
-								{"S": "test"}
-							]
-						}
-					}, "TableName": "Cat"});
+					expect(scanParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "id"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "test"}
+						},
+						"FilterExpression": "#a0 = :v0",
+						"TableName": "Cat"
+					});
 				});
 
 				it("Should send correct request on scan.exec with filters and multiple values", async () => {
 					scanPromiseResolver = () => ({"Items": []});
 					const scan = Model.scan().filter("id").between(1, 3);
 					await callType.func(scan.exec).bind(scan)();
-					expect(scanParams).to.eql({"ScanFilter": {
-						"id": {
-							"ComparisonOperator": "BETWEEN",
-							"AttributeValueList": [
-								{"N": "1"},
-								{"N": "3"}
-							]
-						}
-					}, "TableName": "Cat"});
+					expect(scanParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "id"
+						},
+						"ExpressionAttributeValues": {
+							":v0-1": {"N": "1"},
+							":v0-2": {"N": "3"}
+						},
+						"FilterExpression": "#a0 BETWEEN :v0-1 AND :v0-2",
+						"TableName": "Cat"
+					});
+				});
+
+				it("Should return correct result for get function on attribute", async () => {
+					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": (val) => `${val}-get`}}));
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
+				});
+
+				it("Should return correct result for async get function on attribute", async () => {
+					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": async (val) => `${val}-get`}}));
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
 
 				it("Should throw error from AWS", () => {
@@ -233,28 +249,6 @@ describe("Scan", () => {
 		});
 	});
 
-	describe("scan.null", () => {
-		it("Should be a function", () => {
-			expect(Model.scan().null).to.be.a("function");
-		});
-
-		it("Should return an instance of scan", () => {
-			expect(Model.scan().null()).to.be.a.instanceof(Model.scan.carrier);
-		});
-
-		it("Should set correct settings on the scan object", () => {
-			const scan = Model.scan().filter("id").null();
-			expect(scan.settings.filters).to.eql({"id": {"type": "NULL", "value": []}});
-			expect(scan.settings.pending).to.eql({});
-		});
-
-		it("Should set correct settings on the scan object with not()", () => {
-			const scan = Model.scan().filter("id").not().null();
-			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_NULL", "value": []}});
-			expect(scan.settings.pending).to.eql({});
-		});
-	});
-
 	describe("scan.eq", () => {
 		it("Should be a function", () => {
 			expect(Model.scan().eq).to.be.a("function");
@@ -274,13 +268,6 @@ describe("Scan", () => {
 			const scan = Model.scan().filter("id").not().eq("test");
 			expect(scan.settings.filters).to.eql({"id": {"type": "NE", "value": "test"}});
 			expect(scan.settings.pending).to.eql({});
-		});
-
-		it("Should have same options as scan.null for empty string, null, or undefined as value", () => {
-			expect(Model.scan().filter("id").eq().settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
-			expect(Model.scan().filter("id").eq("").settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
-			expect(Model.scan().filter("id").eq(null).settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
-			expect(Model.scan().filter("id").eq(undefined).settings.filters).to.eql(Model.scan().filter("id").null().settings.filters);
 		});
 	});
 

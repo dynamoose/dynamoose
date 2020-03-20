@@ -98,22 +98,12 @@ Cat.query().where("id"); // Currently this query has no behavior and will query 
 Cat.query().where("id").eq(1); // Since this query has a comparison function (eq) after the conditional it will complete the conditional and only query items where `id` = 1
 ```
 
-## query.null()
-
-This comparison function will check to see if the given filter key is null.
-
-```js
-Cat.query().filter("name").null(); // Return all items where `name` is null
-```
-
 ## query.eq(value)
 
-This comparison function will check to see if the given filter key is equal to the value you pass in as a parameter. If `null`, `undefined`, or an empty string is passed as the value parameter, this function will behave just like [`query.null()`](#querynull).
+This comparison function will check to see if the given filter key is equal to the value you pass in as a parameter.
 
 ```js
 Cat.query().filter("name").eq("Tom"); // Return all items where `name` equals `Tom`
-
-Cat.query().filter("name").eq(); // Same as `Cat.query().filter("name").null()`
 ```
 
 ## query.lt(value)
