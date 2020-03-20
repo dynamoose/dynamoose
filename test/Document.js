@@ -1345,6 +1345,11 @@ describe("Document", () => {
 				"schema": {"id": {"type": String, "default": async () => "id"}}
 			},
 			{
+				"input": [{}, {"defaults": true}],
+				"output": {"id": 0},
+				"schema": {"id": {"type": Number, "default": 0}}
+			},
+			{
 				"input": [{"id": "test"}, {"validate": true}],
 				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
