@@ -922,6 +922,19 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should work correctly if attributes added to document after initalization", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+					user = new User();
+					user.id = 1;
+					user.name = "Charlie";
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should throw error if object contains properties that have type mismatch with schema", () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "name": String, "age": Number}, {"create": false, "waitForActive": false});
