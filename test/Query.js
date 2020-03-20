@@ -30,7 +30,7 @@ describe("Query", () => {
 
 	let Model;
 	beforeEach(() => {
-		Model = new dynamoose.Model("Cat", {"id": Number, "name": String});
+		Model = new dynamoose.Model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}});
 	});
 
 	describe("Model.query", () => {
@@ -49,7 +49,7 @@ describe("Query", () => {
 		it("Should set pending key if string passed into query function", () => {
 			const id = "id";
 			const query = Model.query(id);
-			expect(query.settings.pending).to.eql({"key": id});
+			expect(query.settings.pending).to.eql({"key": id, "queryCondition": "hash"});
 		});
 
 		it("Should set filters correctly for object passed into query function", () => {
@@ -59,6 +59,14 @@ describe("Query", () => {
 
 		it("Should throw error if unknown comparison operator is passed in", () => {
 			expect(() => Model.query({"name": {"unknown": "Charlie"}})).to.throw("The type: unknown is invalid for the query operation.");
+		});
+
+		it("Should throw error if pending hash key isn't followed by equals", async () => {
+			expect(() => Model.query("age").gt(5)).to.throw("Equals must follow range or hash key when querying data");
+		});
+
+		it("Should throw error if pending range key isn't followed by equals", async () => {
+			expect(() => Model.query("age").eq(5).where("type").gt(5)).to.throw("Equals must follow range or hash key when querying data");
 		});
 	});
 
@@ -80,41 +88,41 @@ describe("Query", () => {
 			describe(callType.name, () => {
 				it("Should return correct result", async () => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
-					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
 				it("Should return null for expired object", async () => {
-					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "ttl": {"N": "1"}}]});
-					Model = new dynamoose.Model("Cat", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
-					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([]);
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "ttl": {"N": "1"}}]});
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([]);
 				});
 
 				it("Should return expired object if returnExpired is not set", async () => {
-					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "ttl": {"N": "1"}}]});
-					Model = new dynamoose.Model("Cat", {"id": Number}, {"expires": {"ttl": 1000}});
-					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "ttl": new Date(1000)}]);
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "ttl": {"N": "1"}}]});
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}}, {"expires": {"ttl": 1000}});
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "ttl": new Date(1000)}]);
 				});
 
 				it("Should return correct result if unknown properties are in DynamoDB", async () => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
-					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
 				it("Should return correct result if using custom types", async () => {
-					Model = new dynamoose.Model("Cat", {"id": Number, "name": String, "birthday": Date});
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "birthday": Date});
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}]});
-					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
 				});
 
 				it("Should return correct result for saveUnknown", async () => {
-					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
-					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
-					expect((await callType.func(Model.query().exec).bind(Model.query())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "index": {"global": true}}}, {"saveUnknown": true}));
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": 10}}]});
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "age": 10}]);
 				});
 
 				it("Should return correct metadata in result", async () => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1});
-					const result = await callType.func(Model.query().exec).bind(Model.query())();
+					const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
 					expect(result.lastKey).to.eql(undefined);
 					expect(result.count).to.eql(1);
 					expect(result.queriedCount).to.eql(1);
@@ -123,72 +131,108 @@ describe("Query", () => {
 
 				it("Should return correct lastKey", async () => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
-					const result = await callType.func(Model.query().exec).bind(Model.query())();
+					const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
 					expect(result.lastKey).to.eql({"id": 5});
 				});
 
 				it("Should send correct request on query.exec", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					await callType.func(Model.query().exec).bind(Model.query())();
-					expect(queryParams).to.eql({"QueryFilter": {}, "TableName": "Cat", "KeyConditions": {}});
+					await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"}
+						},
+						"KeyConditionExpression": "#qha = :qhv"
+					});
 				});
 
 				it("Should send correct request on query.exec with filters", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					const query = Model.query().filter("id").eq("test");
+					const query = Model.query("name").eq("Charlie").filter("id").eq("test");
 					await callType.func(query.exec).bind(query)();
-					expect(queryParams).to.eql({"QueryFilter": {
-						"id": {
-							"ComparisonOperator": "EQ",
-							"AttributeValueList": [
-								{"S": "test"}
-							]
-						}
-					}, "TableName": "Cat", "KeyConditions": {}});
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#a1": "id"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":v1": {"S": "test"}
+						},
+						"FilterExpression": "#a1 = :v1",
+						"KeyConditionExpression": "#qha = :qhv"
+					});
+				});
+
+				it("Should send correct request on query.exec with multiple filters", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "age": Number, "breed": String});
+					const query = Model.query("name").eq("Charlie").filter("breed").eq("Cat").and().filter("age").gt(2);
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#a1": "breed",
+							"#a2": "age"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":v1": {"S": "Cat"},
+							":v2": {"N": "2"}
+						},
+						"FilterExpression": "#a1 = :v1 AND #a2 > :v2",
+						"KeyConditionExpression": "#qha = :qhv"
+					});
 				});
 
 				it("Should send correct request on query.exec with filters and multiple values", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					const query = Model.query().filter("id").between(1, 3);
+					const query = Model.query("name").eq("Charlie").filter("id").between(1, 3);
 					await callType.func(query.exec).bind(query)();
-					expect(queryParams).to.eql({"QueryFilter": {
-						"id": {
-							"ComparisonOperator": "BETWEEN",
-							"AttributeValueList": [
-								{"N": "1"},
-								{"N": "3"}
-							]
-						}
-					}, "TableName": "Cat", "KeyConditions": {}});
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#a1": "id"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":v1-1": {"N": "1"},
+							":v1-2": {"N": "3"}
+						},
+						"FilterExpression": "#a1 BETWEEN :v1-1 AND :v1-2",
+						"KeyConditionExpression": "#qha = :qhv"
+					});
 				});
 
 				it("Should send correct request on query.exec with query condition", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					const query = Model.query().where("id").eq("test");
+					Model = new dynamoose.Model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
+					const query = Model.query("name").eq("Charlie").where("age").eq(10);
 					await callType.func(query.exec).bind(query)();
-					expect(queryParams).to.eql({"KeyConditions": {
-						"id": {
-							"ComparisonOperator": "EQ",
-							"AttributeValueList": [
-								{"S": "test"}
-							]
-						}
-					}, "TableName": "Cat", "QueryFilter": {}});
-				});
-
-				it("Should send correct request on query.exec with query condition and multiple values", async () => {
-					queryPromiseResolver = () => ({"Items": []});
-					const query = Model.query().where("id").between(1, 3);
-					await callType.func(query.exec).bind(query)();
-					expect(queryParams).to.eql({"KeyConditions": {
-						"id": {
-							"ComparisonOperator": "BETWEEN",
-							"AttributeValueList": [
-								{"N": "1"},
-								{"N": "3"}
-							]
-						}
-					}, "TableName": "Cat", "QueryFilter": {}});
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#qra": "age"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":qrv": {"N": "10"}
+						},
+						"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+					});
 				});
 
 				it("Should return correct result with get function for attribute", async () => {
@@ -259,8 +303,8 @@ describe("Query", () => {
 
 		it("Should set correct property", () => {
 			expect(Model.query().settings.pending).to.eql({});
-			expect(Model.query().where("id").settings.pending).to.eql({"key": "id", "queryCondition": true});
-			expect(Model.query().where("id").where("name").settings.pending).to.eql({"key": "name", "queryCondition": true});
+			expect(Model.query().where("id").settings.pending).to.eql({"key": "id", "queryCondition": "range"});
+			expect(Model.query().where("id").where("name").settings.pending).to.eql({"key": "name", "queryCondition": "range"});
 		});
 	});
 
@@ -277,28 +321,6 @@ describe("Query", () => {
 			expect(Model.query().settings.pending).to.eql({});
 			expect(Model.query().filter("id").settings.pending).to.eql({"key": "id"});
 			expect(Model.query().filter("id").filter("name").settings.pending).to.eql({"key": "name"});
-		});
-	});
-
-	describe("query.null", () => {
-		it("Should be a function", () => {
-			expect(Model.query().null).to.be.a("function");
-		});
-
-		it("Should return an instance of query", () => {
-			expect(Model.query().null()).to.be.a.instanceof(Model.query.carrier);
-		});
-
-		it("Should set correct settings on the query object", () => {
-			const query = Model.query().filter("id").null();
-			expect(query.settings.filters).to.eql({"id": {"type": "NULL", "value": []}});
-			expect(query.settings.pending).to.eql({});
-		});
-
-		it("Should set correct settings on the query object with not()", () => {
-			const query = Model.query().filter("id").not().null();
-			expect(query.settings.filters).to.eql({"id": {"type": "NOT_NULL", "value": []}});
-			expect(query.settings.pending).to.eql({});
 		});
 	});
 
@@ -323,11 +345,42 @@ describe("Query", () => {
 			expect(query.settings.pending).to.eql({});
 		});
 
-		it("Should have same options as query.null for empty string, null, or undefined as value", () => {
-			expect(Model.query().filter("id").eq().settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
-			expect(Model.query().filter("id").eq("").settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
-			expect(Model.query().filter("id").eq(null).settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
-			expect(Model.query().filter("id").eq(undefined).settings.filters).to.eql(Model.query().filter("id").null().settings.filters);
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").eq(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "#a1 = :v1",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
+
+		it("Should send correct request with not()", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").not().eq(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "#a1 <> :v1",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
 		});
 	});
 
@@ -351,6 +404,25 @@ describe("Query", () => {
 			expect(query.settings.filters).to.eql({"id": {"type": "GE", "value": "test"}});
 			expect(query.settings.pending).to.eql({});
 		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").lt(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "#a1 < :v1",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
 	});
 
 	describe("query.le", () => {
@@ -372,6 +444,25 @@ describe("Query", () => {
 			const query = Model.query().filter("id").not().le("test");
 			expect(query.settings.filters).to.eql({"id": {"type": "GT", "value": "test"}});
 			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").le(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "#a1 <= :v1",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
 		});
 	});
 
@@ -395,6 +486,25 @@ describe("Query", () => {
 			expect(query.settings.filters).to.eql({"id": {"type": "LE", "value": "test"}});
 			expect(query.settings.pending).to.eql({});
 		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").gt(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "#a1 > :v1",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
 	});
 
 	describe("query.ge", () => {
@@ -417,6 +527,25 @@ describe("Query", () => {
 			expect(query.settings.filters).to.eql({"id": {"type": "LT", "value": "test"}});
 			expect(query.settings.pending).to.eql({});
 		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").ge(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "#a1 >= :v1",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
 	});
 
 	describe("query.beginsWith", () => {
@@ -437,6 +566,25 @@ describe("Query", () => {
 		it("Should throw error with not()", () => {
 			const query = () => Model.query().filter("id").not().beginsWith("test");
 			expect(query).to.throw("BEGINS_WITH can not follow not()");
+		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").beginsWith("test").exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"S": "test"}
+				},
+				"FilterExpression": "begins_with (#a1, :v1)",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
 		});
 	});
 
@@ -460,6 +608,44 @@ describe("Query", () => {
 			expect(query.settings.filters).to.eql({"id": {"type": "NOT_CONTAINS", "value": "test"}});
 			expect(query.settings.pending).to.eql({});
 		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").contains(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "contains (#a1, :v1)",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
+
+		it("Should send correct request with not()", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").not().contains(5).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1": {"N": "5"}
+				},
+				"FilterExpression": "NOT contains (#a1, :v1)",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
 	});
 
 	describe("query.in", () => {
@@ -472,14 +658,56 @@ describe("Query", () => {
 		});
 
 		it("Should set correct settings on the query object", () => {
-			const query = Model.query().filter("id").in("test");
-			expect(query.settings.filters).to.eql({"id": {"type": "IN", "value": "test"}});
+			const query = Model.query().filter("id").in(["test", "other"]);
+			expect(query.settings.filters).to.eql({"id": {"type": "IN", "value": ["test", "other"]}});
 			expect(query.settings.pending).to.eql({});
 		});
 
 		it("Should throw error with not()", () => {
-			const query = () => Model.query().filter("id").not().in("test");
+			const query = () => Model.query().filter("id").not().in(["test", "other"]);
 			expect(query).to.throw("IN can not follow not()");
+		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").in([10, 20]).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1-1": {"N": "10"},
+					":v1-2": {"N": "20"}
+				},
+				"FilterExpression": "#a1 IN (:v1-1, :v1-2)",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
+
+		it("Should send correct request for many values", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").in([10, 20, 30, 40]).exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+					":v1-1": {"N": "10"},
+					":v1-2": {"N": "20"},
+					":v1-3": {"N": "30"},
+					":v1-4": {"N": "40"}
+				},
+				"FilterExpression": "#a1 IN (:v1-1, :v1-2, :v1-3, :v1-4)",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
 		});
 	});
 
@@ -516,7 +744,7 @@ describe("Query", () => {
 
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			await Model.query().limit(5).exec();
+			await Model.query("name").eq("Charlie").limit(5).exec();
 			expect(queryParams.Limit).to.eql(5);
 		});
 	});
@@ -533,7 +761,7 @@ describe("Query", () => {
 
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			await Model.query().startAt({"id": 5}).exec();
+			await Model.query("name").eq("Charlie").startAt({"id": 5}).exec();
 			expect(queryParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
 		});
 
@@ -544,7 +772,7 @@ describe("Query", () => {
 
 		it("Should send correct request on query.exec if passing in DynamoDB object", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			await Model.query().startAt({"id": {"N": "5"}}).exec();
+			await Model.query("name").eq("Charlie").startAt({"id": {"N": "5"}}).exec();
 			expect(queryParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
 		});
 	});
@@ -561,7 +789,7 @@ describe("Query", () => {
 
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			await Model.query().attributes(["id"]).exec();
+			await Model.query("name").eq("Charlie").attributes(["id"]).exec();
 			expect(queryParams.AttributesToGet).to.eql(["id"]);
 		});
 	});
@@ -588,13 +816,13 @@ describe("Query", () => {
 
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			await Model.query().count().exec();
+			await Model.query("name").eq("Charlie").count().exec();
 			expect(queryParams.Select).to.eql("COUNT");
 		});
 
 		it("Should return correct result on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
-			const result = await Model.query().count().exec();
+			const result = await Model.query("name").eq("Charlie").count().exec();
 			expect(result).to.eql({"count": 1, "queriedCount": 1});
 		});
 	});
@@ -611,7 +839,7 @@ describe("Query", () => {
 
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			await Model.query().consistent().exec();
+			await Model.query("name").eq("Charlie").consistent().exec();
 			expect(queryParams.ConsistentRead).to.be.true;
 		});
 	});
@@ -628,7 +856,7 @@ describe("Query", () => {
 
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			await Model.query().using("customIndex").exec();
+			await Model.query("name").eq("Charlie").using("customIndex").exec();
 			expect(queryParams.IndexName).to.eql("customIndex");
 		});
 	});
@@ -658,7 +886,7 @@ describe("Query", () => {
 			queryPromiseResolver = async () => ({"Items": [], "LastEvaluatedKey": {"id": {"S": "test"}}});
 
 			const start = Date.now();
-			await Model.query().all(50, 2).exec();
+			await Model.query("name").eq("Charlie").all(50, 2).exec();
 			const end = Date.now();
 			expect(end - start).to.be.above(99);
 		});
@@ -673,7 +901,7 @@ describe("Query", () => {
 				return obj;
 			};
 
-			const result = await Model.query().all().exec();
+			const result = await Model.query("name").eq("Charlie").all().exec();
 			expect(result.map((item) => ({...item}))).to.eql([{"id": 1}, {"id": 2}]);
 			expect(result.count).to.eql(2);
 			expect(result.queriedCount).to.eql(4);
