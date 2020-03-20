@@ -91,22 +91,12 @@ Cat.scan().filter("id").eq(1); // Since this scan has a comparison function (eq)
 
 This function is identical to [`scan.filter(key)`](#scanfilterkey) and just used as an alias.
 
-## scan.null()
-
-This comparison function will check to see if the given filter key is null.
-
-```js
-Cat.scan().filter("name").null(); // Return all items where `name` is null
-```
-
 ## scan.eq(value)
 
-This comparison function will check to see if the given filter key is equal to the value you pass in as a parameter. If `null`, `undefined`, or an empty string is passed as the value parameter, this function will behave just like [`scan.null()`](#scannull).
+This comparison function will check to see if the given filter key is equal to the value you pass in as a parameter.
 
 ```js
 Cat.scan().filter("name").eq("Tom"); // Return all items where `name` equals `Tom`
-
-Cat.scan().filter("name").eq(); // Same as `Cat.scan().filter("name").null()`
 ```
 
 ## scan.lt(value)
