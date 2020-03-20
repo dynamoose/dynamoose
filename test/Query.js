@@ -77,7 +77,7 @@ describe("Query", () => {
 
 		it("Should return a promise", () => {
 			queryPromiseResolver = () => ({"Items": []});
-			expect(Model.query().exec()).to.be.a("promise");
+			expect(Model.query("name").eq("Charlie").exec()).to.be.a("promise");
 		});
 
 		const functionCallTypes = [
