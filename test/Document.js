@@ -905,7 +905,7 @@ describe("Document", () => {
 					User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
 					user = new User();
 					user.id = 1;
-					user.name = "Charlie"
+					user.name = "Charlie";
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
