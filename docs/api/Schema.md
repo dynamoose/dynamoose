@@ -266,6 +266,32 @@ You can set an attribute to have an enum array, which means it must match one of
 }
 ```
 
+### get: function | async function
+
+You can use a get function on an attribute to be run whenever retrieving a document from DynamoDB. This function will only be run if the item exists in the document. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
+
+```js
+{
+	"id": {
+		"type": String,
+		"get": (value) => `applicationid-${value}` // This will prepend `applicationid-` to all values for this attribute when returning from the database
+	}
+}
+```
+
+### set: function | async function
+
+You can use a set function on an attribute to be run whenever saving a document to DynamoDB. This function will only be run if the item exists in the document. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
+
+```js
+{
+	"name": {
+		"type": String,
+		"set": (value) => `${value.charAt(0).toUpperCase()}${value.slice(1)}` // Capitalize first letter of name when saving to database
+	}
+}
+```
+
 ### index: boolean | object | array
 
 You can define indexes on properties to be created or updated upon model initialization. If you pass in an array for the value of this setting it must be an array of index objects. By default no indexes are specified on the attribute.
