@@ -133,6 +133,38 @@ describe("Scan", () => {
 					expect(scanParams).to.eql({"TableName": "Cat"});
 				});
 
+				it("Should send correct request on query.exec for one object passed in", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.scan({"name": "Charlie"}).exec).bind(Model.scan({"name": "Charlie"}))();
+					expect(scanParams).to.eql({
+						"TableName": "Cat",
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "Charlie"}
+						},
+						"FilterExpression": "#a0 = :v0"
+					});
+				});
+
+				it("Should send correct request on query.exec for one object passed in", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.scan({"id": {"le": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.scan({"id": {"le": 5}, "name": {"eq": "Charlie"}}))();
+					expect(scanParams).to.eql({
+						"TableName": "Cat",
+						"ExpressionAttributeNames": {
+							"#a0": "id",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"N": "5"},
+							":v1": {"S": "Charlie"}
+						},
+						"FilterExpression": "#a0 <= :v0 AND #a1 = :v1"
+					});
+				});
+
 				it("Should send correct request on scan.exec with filters", async () => {
 					scanPromiseResolver = () => ({"Items": []});
 					const scan = Model.scan().filter("id").eq("test");
