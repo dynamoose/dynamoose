@@ -151,6 +151,81 @@ describe("Query", () => {
 					});
 				});
 
+				it("Should send correct request on query.exec for one object passed in", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.query({"name": "Charlie"}).exec).bind(Model.query({"name": "Charlie"}))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"}
+						},
+						"KeyConditionExpression": "#qha = :qhv"
+					});
+				});
+
+				it("Should send correct request on query.exec for one object passed in", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.query({"id": {"le": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.query({"id": {"le": 5}, "name": {"eq": "Charlie"}}))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#a0": "id"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":v0": {"N": "5"}
+						},
+						"KeyConditionExpression": "#qha = :qhv",
+						"FilterExpression": "#a0 <= :v0"
+					});
+				});
+
+				it("Should send correct request on query.exec for one object passed in and multiple indexes but only one equals", async () => {
+					Model = new dynamoose.Model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true}}, "name": {"type": String, "index": {"global": true}}});
+					queryPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.query({"age": {"le": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.query({"age": {"le": 5}, "name": {"eq": "Charlie"}}))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#a0": "age"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":v0": {"N": "5"}
+						},
+						"KeyConditionExpression": "#qha = :qhv",
+						"FilterExpression": "#a0 <= :v0"
+					});
+				});
+
+				it("Should send correct request on query.exec for one object passed in and multiple indexes and multiple equals", async () => {
+					Model = new dynamoose.Model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true}}, "name": {"type": String, "index": {"global": true}}});
+					queryPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.query({"age": {"eq": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.query({"age": {"eq": 5}, "name": {"eq": "Charlie"}}))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "ageGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "age",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"N": "5"},
+							":v1": {"S": "Charlie"}
+						},
+						"KeyConditionExpression": "#qha = :qhv",
+						"FilterExpression": "#a1 = :v1"
+					});
+				});
+
 				it("Should send correct request on query.exec with filters", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					const query = Model.query("name").eq("Charlie").filter("id").eq("test");
