@@ -196,6 +196,27 @@ User.get({"id": 1, "name": "Tim"}, (error, myUser) => {
 });
 ```
 
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const myUser = await User.get({"id": 1});
+	console.log(myUser);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.get({"id": 1}, (error, myUser) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUser);
+	}
+});
+```
+
 ## Model.create(document, [settings], [callback])
 
 This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
@@ -349,6 +370,27 @@ try {
 // OR
 
 User.get({"id": 1, "name": "Tim"}, (error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log("Successfully deleted item");
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	await User.get({"id": 1});
+	console.log("Successfully deleted item");
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.get({"id": 1}, (error) => {
 	if (error) {
 		console.error(error);
 	} else {
