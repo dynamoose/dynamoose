@@ -1287,6 +1287,21 @@ describe("Document", () => {
 				"output": {"id": 1, "name": "Charlie"},
 				"schema": {"id": Number, "name": String}
 			},
+			{
+				"input": [{"id": 1, "name": undefined}, {"defaults": true}],
+				"output": {"id": 1, "name": undefined},
+				"schema": {"id": Number, "name": String}
+			},
+			{
+				"input": [{"id": 1, "name": undefined}, {"defaults": true}],
+				"output": {"id": 1, "name": "Charlie"},
+				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
+			},
+			{
+				"input": [{"id": 1, "name": dynamoose.undefined}, {"defaults": true}],
+				"output": {"id": 1, "name": undefined},
+				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
+			},
 			// TODO: uncomment these lines below
 			// {
 			// 	"input": {"id": "1"},
