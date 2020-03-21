@@ -64,6 +64,7 @@ This function sets the scan to use the opposite comparison type for the given fi
 - less than (LT) - greater than or equals (GE)
 - null (NULL) - not null (NOT_NULL)
 - contains (CONTAINS) - not contains (NOT_CONTAINS)
+- exists (EXISTS) - not exists (NOT_EXISTS)
 
 As well the following comparisons do not have an opposite comparison type, and will throw an error if you try to use scan.not() with them.
 
@@ -97,6 +98,16 @@ This comparison function will check to see if the given filter key is equal to t
 
 ```js
 Cat.scan().filter("name").eq("Tom"); // Return all items where `name` equals `Tom`
+```
+
+## scan.exists()
+
+This comparison function will check to see if the given filter key exists in the document.
+
+```js
+Cat.scan().filter("phoneNumber").exists(); // Return all items where `phoneNumber` exists in the document
+
+Cat.scan().filter("phoneNumber").not().exists(); // Return all items where `phoneNumber` does not exist in the document
 ```
 
 ## scan.lt(value)
