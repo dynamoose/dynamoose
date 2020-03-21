@@ -661,6 +661,21 @@ describe("Model", () => {
 
 				it("Should send correct params to getItem if we pass in an object", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass in an object with range key", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
 					expect(getItemParams).to.be.an("object");
 					expect(getItemParams).to.eql({
@@ -670,6 +685,20 @@ describe("Model", () => {
 							},
 							"name": {
 								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass in an entire object with unnecessary attributes", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
 							}
 						},
 						"TableName": "User"
@@ -2079,6 +2108,21 @@ describe("Model", () => {
 
 				it("Should send correct params to deleteItem if we pass in an object", async () => {
 					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to deleteItem if we pass in an object with range key", async () => {
+					deleteItemFunction = () => Promise.resolve();
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
 					expect(deleteItemParams).to.be.an("object");
 					expect(deleteItemParams).to.eql({
@@ -2093,6 +2137,21 @@ describe("Model", () => {
 						"TableName": "User"
 					});
 				});
+
+				it("Should send correct params to deleteItem if we pass in an entire object with unnecessary attributes", async () => {
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 
 				it("Should return request if return request setting is set", async () => {
 					const result = await callType.func(User).bind(User)(1, {"return": "request"});
