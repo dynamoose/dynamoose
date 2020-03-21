@@ -1208,6 +1208,141 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem for trying to update unknown properties with saveUnknown", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number, "name": String, "age": Number}, {"saveUnknown": true}));
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "random": "hello world"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "random"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"S": "hello world"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for trying to update unknown properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "random": "hello world"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for trying to update unknown list properties with saveUnknown", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number, "name": String, "age": Number}, {"saveUnknown": true}));
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "random": ["hello world"]});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "random"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"L": [{"S": "hello world"}]
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for trying to update unknown list properties with saveUnknown as $ADD", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number, "name": String, "age": Number}, {"saveUnknown": true}));
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "Charlie"}, "$ADD": {"random": ["hello world"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "random"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"L": [{"S": "hello world"}]
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = list_append(#a1, :v1)",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for trying to update unknown list properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "random": ["hello world"]});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem for single object update", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
@@ -1302,6 +1437,52 @@ describe("Model", () => {
 							}
 						},
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using undefined to restore to default property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
+					await callType.func(User).bind(User)({"id": 1, "name": undefined});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using undefined to delete default property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"id": 1, "name": undefined});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {},
+						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
 								"N": "1"
