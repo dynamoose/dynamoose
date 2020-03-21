@@ -242,13 +242,30 @@ You can set a validation on an attribute to ensure the value passes a given vali
 
 ### required: boolean
 
-You can set an attribute to be required when saving documents to DynamoDB. By default this setting is false.
+You can set an attribute to be required when saving documents to DynamoDB. By default this setting is `false`.
+
+In the event the parent object is undefined and `required` is set to `false` on that parent attribute, the required check will not be run on child attributes.
 
 ```js
 {
 	"email": {
 		"type": String,
 		"required": true
+	}
+}
+```
+
+```js
+{
+	"data": {
+		"type": Object,
+		"schema": {
+			"name": {
+				"type": String,
+				"required": true // Required will only be checked if `data` exists and is not undefined
+			}
+		}
+		"required": false
 	}
 }
 ```
