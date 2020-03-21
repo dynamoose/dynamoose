@@ -1421,6 +1421,16 @@ describe("Document", () => {
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
 			},
 			{
+				"input": [{"id": "test"}, {"enum": true}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "age": {"type": Number, "enum": [10, 20]}}
+			},
+			{
+				"input": [{"id": "test"}, {"enum": true, "required": true}],
+				"error": new Error.ValidationError("age is a required property but has no value when trying to save document"),
+				"schema": {"id": {"type": String}, "age": {"type": Number, "enum": [10, 20], "required": true}}
+			},
+			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
 				"output": {"id": 1, "ttl": new Date(1000)}
