@@ -1910,6 +1910,31 @@ describe("Model", () => {
 					});
 				});
 
+				it("Shouldn't conform to enum if property isn't being updated", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}, "data": String});
+					await callType.func(User).bind(User)({"id": 1}, {"data": "test"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "test"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should throw error if AWS throws error", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
