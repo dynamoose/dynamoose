@@ -257,6 +257,8 @@ You can set an attribute to be required when saving documents to DynamoDB. By de
 
 You can set an attribute to have an enum array, which means it must match one of the values specified in the enum array. By default this setting is undefined and not set to anything.
 
+This property is not a replacement for `required`. If the value is undefined or null, the enum will not be checked. If you want to require the property and also have an `enum` you must use both `enum` & `required`.
+
 ```js
 {
 	"name": {
