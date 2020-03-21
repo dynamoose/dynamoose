@@ -1447,6 +1447,52 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem when using undefined to restore to default property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
+					await callType.func(User).bind(User)({"id": 1, "name": undefined});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using undefined to delete default property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"id": 1, "name": undefined});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem when using dynamoose.undefined to delete default property", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
