@@ -28,3 +28,4 @@
 - `List` attribute type has been replaced with `Array`
 - `Scan.null` & `Query.null` have been removed. In most cases this can be replaced with `.not().exists()`.
 - DynamoDB set types are now returned as JavaScript Set's instead of Array's
+- Trying to save a Document with a property set to `null` will now throw an error. If you would like to remove the property set it to `dynamoose.undefined` to set it to undefined without taking into account the `default` setting, or `undefined` to set it to undefined while taking into account the `default` setting.
