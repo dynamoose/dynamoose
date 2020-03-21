@@ -1307,6 +1307,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem with $SET update expression and multiple property updates", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "Charlie", "age": 5}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem with $SET update expression for list", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}});
