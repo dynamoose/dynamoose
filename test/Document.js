@@ -1431,6 +1431,36 @@ describe("Document", () => {
 				"schema": {"id": {"type": String}, "age": {"type": Number, "enum": [10, 20], "required": true}}
 			},
 			{
+				"input": [{"id": "test"}, {"required": true}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": false}}
+			},
+			{
+				"input": [{"id": "test"}, {"required": true}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": false}}, "required": false}}
+			},
+			{
+				"input": [{"id": "test"}, {"required": true}],
+				"error": new Error.ValidationError("data is a required property but has no value when trying to save document"),
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": false}}, "required": true}}
+			},
+			{
+				"input": [{"id": "test", "data": {}}, {"required": true}],
+				"output": {"id": "test", "data": {}},
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": false}}, "required": true}}
+			},
+			{
+				"input": [{"id": "test", "data": {"email": "test@test.com"}}, {"required": true}],
+				"error": new Error.ValidationError("data.name is a required property but has no value when trying to save document"),
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
+			},
+			{
+				"input": [{"id": "test"}, {"required": true}],
+				"error": new Error.ValidationError("data is a required property but has no value when trying to save document"),
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
+			},
+			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
 				"output": {"id": 1, "ttl": new Date(1000)}
