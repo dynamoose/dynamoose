@@ -26,5 +26,5 @@
 - `useNativeBooleans` & `useDocumentTypes` have been removed from the Model settings
 - `Map` attribute type has been replaced with `Object`
 - `List` attribute type has been replaced with `Array`
-- `Scan.null` & `Query.null` have been removed
+- `Scan.null` & `Query.null` have been removed. In most cases this can be replaced with `.not().exists()`.
 - DynamoDB set types are now returned as JavaScript Set's instead of Array's

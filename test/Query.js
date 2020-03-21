@@ -384,6 +384,64 @@ describe("Query", () => {
 		});
 	});
 
+	describe("query.exists", () => {
+		it("Should be a function", () => {
+			expect(Model.query().exists).to.be.a("function");
+		});
+
+		it("Should return an instance of query", () => {
+			expect(Model.query().exists()).to.be.a.instanceof(Model.query.carrier);
+		});
+
+		it("Should set correct settings on the query object", () => {
+			const query = Model.query().filter("id").exists("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "EXISTS", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the query object with not()", () => {
+			const query = Model.query().filter("id").not().exists("test");
+			expect(query.settings.filters).to.eql({"id": {"type": "NOT_EXISTS", "value": "test"}});
+			expect(query.settings.pending).to.eql({});
+		});
+
+		it("Should send correct request", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").exists().exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+				},
+				"FilterExpression": "attribute_exists (#a1)",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
+
+		it("Should send correct request with not()", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").filter("age").not().exists().exec();
+			expect(queryParams).to.eql({
+				"TableName": "Cat",
+				"IndexName": "nameGlobalIndex",
+				"ExpressionAttributeNames": {
+					"#qha": "name",
+					"#a1": "age"
+				},
+				"ExpressionAttributeValues": {
+					":qhv": {"S": "Charlie"},
+				},
+				"FilterExpression": "attribute_not_exists (#a1)",
+				"KeyConditionExpression": "#qha = :qhv"
+			});
+		});
+	});
+
 	describe("query.lt", () => {
 		it("Should be a function", () => {
 			expect(Model.query().lt).to.be.a("function");
