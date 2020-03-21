@@ -64,6 +64,7 @@ This function sets the query to use the opposite comparison type for the given f
 - less than (LT) - greater than or equals (GE)
 - null (NULL) - not null (NOT_NULL)
 - contains (CONTAINS) - not contains (NOT_CONTAINS)
+- exists (EXISTS) - not exists (NOT_EXISTS)
 
 As well the following comparisons do not have an opposite comparison type, and will throw an error if you try to use query.not() with them.
 
@@ -104,6 +105,16 @@ This comparison function will check to see if the given filter key is equal to t
 
 ```js
 Cat.query().filter("name").eq("Tom"); // Return all items where `name` equals `Tom`
+```
+
+## query.exists()
+
+This comparison function will check to see if the given filter key exists in the document.
+
+```js
+Cat.query().filter("phoneNumber").exists(); // Return all items where `phoneNumber` exists in the document
+
+Cat.query().filter("phoneNumber").not().exists(); // Return all items where `phoneNumber` does not exist in the document
 ```
 
 ## query.lt(value)

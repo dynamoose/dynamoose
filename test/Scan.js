@@ -271,6 +271,28 @@ describe("Scan", () => {
 		});
 	});
 
+	describe("scan.exists", () => {
+		it("Should be a function", () => {
+			expect(Model.scan().exists).to.be.a("function");
+		});
+
+		it("Should return an instance of scan", () => {
+			expect(Model.scan().exists()).to.be.a.instanceof(Model.scan.carrier);
+		});
+
+		it("Should set correct settings on the scan object", () => {
+			const scan = Model.scan().filter("id").exists();
+			expect(scan.settings.filters).to.eql({"id": {"type": "EXISTS", "value": undefined}});
+			expect(scan.settings.pending).to.eql({});
+		});
+
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().exists();
+			expect(scan.settings.filters).to.eql({"id": {"type": "NOT_EXISTS", "value": undefined}});
+			expect(scan.settings.pending).to.eql({});
+		});
+	});
+
 	describe("scan.lt", () => {
 		it("Should be a function", () => {
 			expect(Model.scan().lt).to.be.a("function");
