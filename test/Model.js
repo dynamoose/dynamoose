@@ -2156,7 +2156,6 @@ describe("Model", () => {
 						"ExpressionAttributeValues": {
 							":v0": {"S": "Bob"}
 						},
-						"ReturnValues": "ALL_NEW",
 						"UpdateExpression": "SET #a0 = :v0",
 						"TableName": "User"
 					}
