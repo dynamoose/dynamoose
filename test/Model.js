@@ -700,11 +700,11 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should return null for expired object", async () => {
+				it("Should return undefined for expired object", async () => {
 					User = new dynamoose.Model("User", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "ttl": {"N": "1"}}});
 					const user = await callType.func(User).bind(User)(1);
-					expect(user).to.eql(null);
+					expect(user).to.eql(undefined);
 				});
 
 				it("Should return expired object if returnExpired is not set", async () => {

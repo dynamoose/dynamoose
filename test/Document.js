@@ -1438,7 +1438,7 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": {"ttl": 1000, "attribute": "ttl", "items": {"returnExpired": false}}}],
-				"output": null
+				"output": undefined
 			},
 			{
 				"input": [{"id": 1, "items": ["test"]}, {"type": "toDynamo", "saveUnknown": true}],
