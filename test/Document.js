@@ -289,6 +289,18 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with custom type passed in as underlying type", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
+					const birthday = new Date();
+					user = new User({"id": 1, "name": "Charlie", "birthday": birthday.getTime()});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${birthday.getTime()}`}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with object type in schema", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
