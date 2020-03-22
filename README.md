@@ -6,6 +6,8 @@
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](http://mongoosejs.com/))
 
+Documentation: https://dynamoosejs.com
+
 
 ## Getting Started
 
