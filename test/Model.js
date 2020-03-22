@@ -543,7 +543,7 @@ describe("Model", () => {
 		});
 
 		describe("Time To Live", () => {
-			let updateTTLParams = [];
+			let updateTTLParams = [], describeTTL, describeTTLFunction;
 			beforeEach(() => {
 				dynamoose.Model.defaults = {
 					"create": false,
@@ -571,15 +571,23 @@ describe("Model", () => {
 						return {
 							"promise": Promise.resolve()
 						};
+					},
+					"describeTimeToLive": () => {
+						return describeTTLFunction ? describeTTLFunction() : {
+							"promise": () => Promise.resolve(describeTTL)
+						};
 					}
 				});
 			});
 			afterEach(() => {
 				updateTTLParams = [];
+				describeTTL = null;
+				describeTTLFunction = null;
 				dynamoose.aws.ddb.revert();
 			});
 
-			it("Should call updateTimeToLive with correct parameters", async () => {
+			it("Should call updateTimeToLive with correct parameters if TTL is disabled", async () => {
+				describeTTL = {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLED"}};
 				const tableName = "Cat";
 				new dynamoose.Model(tableName, {"id": String}, {"expires": 1000});
 				await utils.set_immediate_promise();
@@ -592,7 +600,49 @@ describe("Model", () => {
 				}]);
 			});
 
-			it("Should call updateTimeToLive with correct parameters for custom attribute", async () => {
+			it("Should not call updateTimeToLive with correct parameters if TTL is enabled", async () => {
+				describeTTL = {"TimeToLiveDescription": {"TimeToLiveStatus": "ENABLED"}};
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String}, {"expires": 1000});
+				await utils.set_immediate_promise();
+				expect(updateTTLParams).to.eql([]);
+			});
+
+			it("Should not call updateTimeToLive with correct parameters if TTL is enabling", async () => {
+				describeTTL = {"TimeToLiveDescription": {"TimeToLiveStatus": "ENABLING"}};
+				const tableName = "Cat";
+				new dynamoose.Model(tableName, {"id": String}, {"expires": 1000});
+				await utils.set_immediate_promise();
+				expect(updateTTLParams).to.eql([]);
+			});
+
+			it("Should call updateTimeToLive with correct parameters for custom attribute if TTL is disabling", async () => {
+				const startTime = Date.now();
+				let timesCalledDescribeTTL = 0;
+				describeTTLFunction = () => {
+					return {
+						"promise": async () => {
+							timesCalledDescribeTTL++;
+							return Promise.resolve(timesCalledDescribeTTL < 2 ? {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLING"}} : {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLED"}});
+						}
+					};
+				};
+				const tableName = "Cat";
+				const model = new dynamoose.Model(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
+				await model.Model.pendingTaskPromise();
+				expect(updateTTLParams).to.eql([{
+					"TableName": tableName,
+					"TimeToLiveSpecification": {
+						"Enabled": true,
+						"AttributeName": "expires"
+					}
+				}]);
+				expect(timesCalledDescribeTTL).to.eql(2);
+				expect(Date.now() - startTime).to.be.at.least(1000);
+			});
+
+			it("Should call updateTimeToLive with correct parameters for custom attribute if TTL is disabled", async () => {
+				describeTTL = {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLED"}};
 				const tableName = "Cat";
 				new dynamoose.Model(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
 				await utils.set_immediate_promise();
