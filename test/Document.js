@@ -1488,7 +1488,7 @@ describe("Document", () => {
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
 			},
 			{
-				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
+				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true, "customTypesDynamo": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
 				"output": {"id": 1, "ttl": new Date(1000)}
 			},
