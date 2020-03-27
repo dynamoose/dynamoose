@@ -1501,6 +1501,31 @@ describe("Document", () => {
 				"input": [{"id": 1, "items": ["test"]}, {"type": "toDynamo", "saveUnknown": true}],
 				"schema": new Schema({"id": Number, "items": Array}, {"saveUnknown": true}),
 				"output": {"id": 1, "items": ["test"]}
+			},
+			{
+				"input": [{"id": 1, "items": ["hello", "world"]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number, "items": Array}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "items": ["hello", "world"]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}
+			},
+			{
+				"input": [{"id": 1, "items": [new Date(1), new Date(10000)]}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
+				"output": {"id": 1, "items": [1, 10000]}
+			},
+			{
+				"input": [{"id": 1, "items": [1, 10000]}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
+				"output": {"id": 1, "items": [new Date(1), new Date(10000)]}
 			}
 		];
 
