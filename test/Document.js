@@ -805,6 +805,25 @@ describe("Document", () => {
 					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
 				});
 
+				// This test is here since if you want to enforce that the property exists, you must use both `required` & `validate`, not just `validate`
+				it("Should not run validation function if property doesn't exist", async () => {
+					putItemFunction = () => Promise.resolve();
+					let didRun = false;
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(didRun).to.be.false;
+				});
+
+				it("Should run validation function if property is falsy", async () => {
+					putItemFunction = () => Promise.resolve();
+					let didRun = false;
+					User = new Model("User", {"id": Number, "data": {"type": Boolean, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data": false});
+					await callType.func(user).bind(user)();
+					expect(didRun).to.be.true;
+				});
+
 				it("Should save with correct object with validation function", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => val > 5}}, {"create": false, "waitForActive": false});
@@ -1523,6 +1542,21 @@ describe("Document", () => {
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true, "customTypesDynamo": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
 				"output": {"id": 1, "ttl": new Date(1000)}
+			},
+			{
+				"input": [{"id": 1, "birthday": new Date(0)}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": 0}
+			},
+			{
+				"input": [{"id": 1, "birthday": 0}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": 0}
+			},
+			{
+				"input": [{"id": 1, "birthday": 0}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": new Date(0)}
 			},
 			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
