@@ -1517,6 +1517,21 @@ describe("Document", () => {
 				"output": {"id": 1, "ttl": new Date(1000)}
 			},
 			{
+				"input": [{"id": 1, "birthday": new Date(0)}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": 0}
+			},
+			{
+				"input": [{"id": 1, "birthday": 0}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": 0}
+			},
+			{
+				"input": [{"id": 1, "birthday": 0}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": new Date(0)}
+			},
+			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": {"ttl": 1000, "attribute": "ttl", "items": {"returnExpired": false}}}],
 				"output": undefined
