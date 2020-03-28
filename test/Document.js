@@ -807,6 +807,15 @@ describe("Document", () => {
 					expect(didRun).to.be.false;
 				});
 
+				it("Should run validation function if property is falsy", async () => {
+					putItemFunction = () => Promise.resolve();
+					let didRun = false;
+					User = new Model("User", {"id": Number, "data": {"type": Boolean, "validate": (val) => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data": false});
+					await callType.func(user).bind(user)();
+					expect(didRun).to.be.true;
+				});
+
 				it("Should save with correct object with validation function", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => val > 5}}, {"create": false, "waitForActive": false});
