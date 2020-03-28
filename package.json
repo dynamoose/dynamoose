@@ -26,7 +26,16 @@
     "type": "git",
     "url": "git+https://github.com/dynamoosejs/dynamoose.git"
   },
-  "author": "Charlie Fish & Brandon Goode",
+  "author": {
+    "name": "Charlie Fish",
+    "email": "fishcharlie.code@gmail.com",
+    "url": "https://charlie.fish"
+  },
+  "contributors": [
+    {
+      "name": "Brandon Goode"
+    }
+  ],
   "bugs": {
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
@@ -55,7 +64,8 @@
     "store",
     "document store",
     "table",
-    "json"
+    "json",
+    "object"
   ],
   "engines": {
     "node": ">=8.0.0"
