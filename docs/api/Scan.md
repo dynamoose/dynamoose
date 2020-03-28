@@ -38,7 +38,9 @@ const results = await Cat.scan().exec();
 // `results` is identical to what is listed in the callback version of this function.
 ```
 
-The results array will have some special parameters attached to it to give you more information about the scan operation:
+The `results` array you receive back is a standard JavaScript array of objects. However, the array has some special properties with extra information about your scan operation that you can access. This does not prevent the ability do running loops or accessing the objects within the array.
+
+The extra properties attached to the array are:
 
 - `lastKey` - In the event there are more items to scan in DynamoDB this property will be equal to an object that you can pass into [`scan.startAt(key)`](#scanstartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
 - `count` - The count property from DynamoDB, which represents how many items were returned from DynamoDB. This should always equal the number of items in the array.
