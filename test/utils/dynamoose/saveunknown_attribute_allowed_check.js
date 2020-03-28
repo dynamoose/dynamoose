@@ -28,6 +28,14 @@ describe("utils.dynamoose.saveunknown_attribute_allowed_check", () => {
 			"output": false
 		},
 		{
+			"input": [["random.1"], "random.1"],
+			"output": true
+		},
+		{
+			"input": [["random.1"], "random.2"],
+			"output": false
+		},
+		{
 			"input": [["random.test"], "random"],
 			"output": true
 		},
@@ -45,11 +53,11 @@ describe("utils.dynamoose.saveunknown_attribute_allowed_check", () => {
 		},
 		{
 			"input": [["random.*"], "random.0.random"],
-			"output": true
+			"output": false
 		},
 		{
 			"input": [["random.*"], "random.1.random"],
-			"output": true
+			"output": false
 		},
 		{
 			"input": [["random.*.hello"], "random.test.hello"],
