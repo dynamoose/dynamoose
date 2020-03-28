@@ -559,6 +559,14 @@ describe("Document", () => {
 					expect(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
 				});
 
+				it("Should store whole number for expires", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}), {"create": false, "waitForActive": false, "expires": 10000});
+					user = new User({"id": 1, "name": "Charlie", "ttl": new Date(1002)});
+					await callType.func(user).bind(user)();
+					expect(parseFloat(putParams[0].Item.ttl.N) % 1).to.eql(0);
+				});
+
 				it("Should save with correct object with expires set to object", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", new Schema({"id": Number, "name": String}), {"create": false, "waitForActive": false, "expires": {"attribute": "expires", "ttl": 10000}});
