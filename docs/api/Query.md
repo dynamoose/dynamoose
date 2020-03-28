@@ -28,6 +28,7 @@ Cat.query("name").eq("Will").exec((error, results) => {
 		//   count: 1,
 		//   queriedCount: 2,
 		//   timesQueried: 1 ]
+		console.log(Array.isArray(results)); // true
 	}
 });
 ```
