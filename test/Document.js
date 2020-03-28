@@ -801,7 +801,7 @@ describe("Document", () => {
 				it("Should not run validation function if property doesn't exist", async () => {
 					putItemFunction = () => Promise.resolve();
 					let didRun = false;
-					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
 					expect(didRun).to.be.false;
@@ -810,7 +810,7 @@ describe("Document", () => {
 				it("Should run validation function if property is falsy", async () => {
 					putItemFunction = () => Promise.resolve();
 					let didRun = false;
-					User = new Model("User", {"id": Number, "data": {"type": Boolean, "validate": (val) => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					User = new Model("User", {"id": Number, "data": {"type": Boolean, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "data": false});
 					await callType.func(user).bind(user)();
 					expect(didRun).to.be.true;
