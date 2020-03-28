@@ -196,6 +196,18 @@ describe("Document", () => {
 					}]);
 				});
 
+				// TODO: reenable this test
+				it.skip("Should save with correct object with string set and saveUnknown with specific values", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": ["friends", "friends.1"]}));
+					user = new User({"id": 1, "friends": new Set(["Charlie", "Tim", "Bob"])});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"SS": ["Tim"]}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with number set", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "numbers": [Number]});
@@ -1542,6 +1554,34 @@ describe("Document", () => {
 				"schema": new Schema({"id": Number}, {"saveUnknown": ["data", "data.1", "data.3"]}),
 				"output": {"id": 1, "data": ["world", "galaxy"]}
 			},
+
+			// TODO: uncomment these
+			// {
+			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo"}],
+			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo", "saveUnknown": true}],
+			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": ["hello", 1]}}, {"type": "toDynamo"}],
+			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo"}],
+			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo", "saveUnknown": true}],
+			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+
 			{
 				"input": [{"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}, {"type": "toDynamo", "saveUnknown": true}],
 				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
