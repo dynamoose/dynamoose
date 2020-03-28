@@ -430,7 +430,7 @@ describe("Document", () => {
 					user = new User({"id": 1, "addresses": [{"country": "world", "zip": 12345, "metadata": [{"name": "Home"}]}]});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
-						"Item": {"id": {"N": "1"}, "addresses": {"L": [{"M": {"country": {"S": "world"}, "zip": {"N": "12345"}, "metadata": {"L": [{"M": {}}]}}}]}},
+						"Item": {"id": {"N": "1"}, "addresses": {"L": [{"M": {}}]}},
 						"TableName": "User"
 					}]);
 				});
@@ -1536,6 +1536,11 @@ describe("Document", () => {
 				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo", "saveUnknown": true}],
 				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
 				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world", "universe", "galaxy"]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": ["data", "data.1", "data.3"]}),
+				"output": {"id": 1, "data": ["world", "galaxy"]}
 			},
 			{
 				"input": [{"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}, {"type": "toDynamo", "saveUnknown": true}],
