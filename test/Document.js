@@ -797,6 +797,16 @@ describe("Document", () => {
 					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
 				});
 
+				// This test is here since if you want to enforce that the property exists, you must use both `required` & `validate`, not just `validate`
+				it("Should not run validation function if property doesn't exist", async () => {
+					putItemFunction = () => Promise.resolve();
+					let didRun = false;
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(didRun).to.be.false;
+				});
+
 				it("Should save with correct object with validation function", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": (val) => val > 5}}, {"create": false, "waitForActive": false});
