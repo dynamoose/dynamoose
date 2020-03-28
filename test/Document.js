@@ -1513,6 +1513,31 @@ describe("Document", () => {
 				"output": {"id": 1, "items": ["hello", "world"]}
 			},
 			{
+				"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}, {"type": "fromDynamo"}],
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}, {"type": "fromDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": ["hello", "world"]}}, {"type": "toDynamo"}],
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo"}],
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+			},
+			{
 				"input": [{"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}, {"type": "toDynamo", "saveUnknown": true}],
 				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
 				"output": {"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}
@@ -1526,6 +1551,16 @@ describe("Document", () => {
 				"input": [{"id": 1, "items": [1, 10000]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
 				"output": {"id": 1, "items": [new Date(1), new Date(10000)]}
+			},
+			{
+				"input": [{"id": 1, "items": [1, 10000, "test"]}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
+				"error": new Error.ValidationError("Expected items.2 to be of type number, instead found type string.")
+			},
+			{
+				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
+				"error": new Error.ValidationError("Expected items.2.birthday to be of type number, instead found type string.")
 			}
 		];
 
