@@ -40,7 +40,7 @@
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "dependencies": {
-    "aws-sdk": "^2.643.0",
+    "aws-sdk": "^2.648.0",
     "chai-as-promised": "^7.1.1"
   },
   "license": "Unlicense",
