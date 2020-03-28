@@ -29,6 +29,7 @@ Cat.scan().exec((error, results) => {
 		//   count: 1,
 		//   scannedCount: 2,
 		//   timesScanned: 1 ]
+		console.log(Array.isArray(results)); // true
 	}
 });
 ```
