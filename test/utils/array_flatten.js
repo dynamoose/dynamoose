@@ -28,6 +28,10 @@ describe("utils.array_flatten", () => {
 			"output": [1, 2, 3, 4]
 		},
 		{
+			"input": [[1, 2], [3, 4]],
+			"output": [1, 2, 3, 4]
+		},
+		{
 			"input": [[1, [2, 3]], 4],
 			"output": [1, [2, 3], 4]
 		},
