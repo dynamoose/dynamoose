@@ -196,6 +196,18 @@ describe("Document", () => {
 					}]);
 				});
 
+				// TODO: reenable this test
+				it.skip("Should save with correct object with string set and saveUnknown with specific values", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number}, {"saveUnknown": ["friends", "friends.1"]}));
+					user = new User({"id": 1, "friends": new Set(["Charlie", "Tim", "Bob"])});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "friends": {"SS": ["Tim"]}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with number set", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = new Model("User", {"id": Number, "numbers": [Number]});
@@ -297,6 +309,18 @@ describe("Document", () => {
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${birthday.getTime()}`}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with custom type passed in as underlying type mixed with custom type in array", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", {"id": Number, "name": String, "birthday": {"type": Array, "schema": [Date]}}, {"create": false, "waitForActive": false});
+					const birthday = new Date();
+					user = new User({"id": 1, "name": "Charlie", "birthday": [birthday.getTime(), birthday]});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"L": [{"N": `${birthday.getTime()}`}, {"N": `${birthday.getTime()}`}]}},
 						"TableName": "User"
 					}]);
 				});
@@ -430,7 +454,7 @@ describe("Document", () => {
 					user = new User({"id": 1, "addresses": [{"country": "world", "zip": 12345, "metadata": [{"name": "Home"}]}]});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
-						"Item": {"id": {"N": "1"}, "addresses": {"L": [{"M": {"country": {"S": "world"}, "zip": {"N": "12345"}, "metadata": {"L": [{"M": {}}]}}}]}},
+						"Item": {"id": {"N": "1"}, "addresses": {"L": [{"M": {}}]}},
 						"TableName": "User"
 					}]);
 				});
@@ -771,6 +795,25 @@ describe("Document", () => {
 					user = new User({"id": 1, "age": 4});
 
 					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
+				});
+
+				// This test is here since if you want to enforce that the property exists, you must use both `required` & `validate`, not just `validate`
+				it("Should not run validation function if property doesn't exist", async () => {
+					putItemFunction = () => Promise.resolve();
+					let didRun = false;
+					User = new Model("User", {"id": Number, "age": {"type": Number, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(didRun).to.be.false;
+				});
+
+				it("Should run validation function if property is falsy", async () => {
+					putItemFunction = () => Promise.resolve();
+					let didRun = false;
+					User = new Model("User", {"id": Number, "data": {"type": Boolean, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data": false});
+					await callType.func(user).bind(user)();
+					expect(didRun).to.be.true;
 				});
 
 				it("Should save with correct object with validation function", async () => {
@@ -1488,9 +1531,24 @@ describe("Document", () => {
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
 			},
 			{
-				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
+				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true, "customTypesDynamo": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
 				"output": {"id": 1, "ttl": new Date(1000)}
+			},
+			{
+				"input": [{"id": 1, "birthday": new Date(0)}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": 0}
+			},
+			{
+				"input": [{"id": 1, "birthday": 0}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": 0}
+			},
+			{
+				"input": [{"id": 1, "birthday": 0}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"model": ["User", {"id": Number, "birthday": Date}, {"create": false, "waitForActive": false}],
+				"output": {"id": 1, "birthday": new Date(0)}
 			},
 			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true}],
@@ -1501,6 +1559,99 @@ describe("Document", () => {
 				"input": [{"id": 1, "items": ["test"]}, {"type": "toDynamo", "saveUnknown": true}],
 				"schema": new Schema({"id": Number, "items": Array}, {"saveUnknown": true}),
 				"output": {"id": 1, "items": ["test"]}
+			},
+			{
+				"input": [{"id": 1, "items": ["hello", "world"]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number, "items": Array}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "items": ["hello", "world"]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}, {"type": "fromDynamo"}],
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}, {"type": "fromDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": ["hello", "world"]}}, {"type": "toDynamo"}],
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo"}],
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+			},
+			{
+				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world", "universe", "galaxy"]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": ["data", "data.1", "data.3"]}),
+				"output": {"id": 1, "data": ["world", "galaxy"]}
+			},
+
+			// TODO: uncomment these
+			// {
+			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo"}],
+			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo", "saveUnknown": true}],
+			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": ["hello", 1]}}, {"type": "toDynamo"}],
+			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo"}],
+			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+			// {
+			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo", "saveUnknown": true}],
+			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// },
+
+			{
+				"input": [{"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}, {"type": "toDynamo", "saveUnknown": true}],
+				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
+				"output": {"id": 1, "items": [{"name": "Charlie"}, {"name": "Bob"}]}
+			},
+			{
+				"input": [{"id": 1, "items": [new Date(1), new Date(10000)]}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
+				"output": {"id": 1, "items": [1, 10000]}
+			},
+			{
+				"input": [{"id": 1, "items": [1, 10000]}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
+				"output": {"id": 1, "items": [new Date(1), new Date(10000)]}
+			},
+			{
+				"input": [{"id": 1, "items": [1, 10000, "test"]}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
+				"error": new Error.ValidationError("Expected items.2 to be of type number, instead found type string.")
+			},
+			{
+				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
+				"error": new Error.ValidationError("Expected items.2.birthday to be of type number, instead found type string.")
 			}
 		];
 
