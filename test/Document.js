@@ -8,10 +8,18 @@ const Document = require("../lib/Document");
 const util = require("util");
 const Error = require("../lib/Error");
 const utils = require("../lib/utils");
+const Internal = require("../lib/Internal");
 
 describe("Document", () => {
 	it("Should be a function", () => {
 		expect(Document).to.be.an("function");
+	});
+
+	it("Should not have internalProperties if use spread operator on object", () => {
+		const User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+		const user = new User({"id": 1, "name": "Bob"});
+		expect(user[Internal.internalProperties]).to.exist;
+		expect({...user}[Internal.internalProperties]).to.not.exist;
 	});
 
 	describe("DynamoDB Conversation Methods", () => {
