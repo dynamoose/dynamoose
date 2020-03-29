@@ -2618,6 +2618,122 @@ describe("Model", () => {
 			});
 		});
 	});
+
+	describe("Model.methods", () => {
+		let User;
+		beforeEach(() => {
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
+		});
+		afterEach(() => {
+			User = null;
+		});
+
+		it("Should be an object", () => {
+			expect(User.methods).to.be.an("object");
+		});
+
+		describe("Model.methods.set", () => {
+			it("Should be a function", () => {
+				expect(User.methods.set).to.be.a("function");
+			});
+
+			it("Should not throw an error when being called", () => {
+				expect(() => User.methods.set("random", () => {})).to.not.throw();
+			});
+
+			it("Should set correct method on model", () => {
+				User.methods.set("random", () => {});
+				expect(User.random).to.be.a("function");
+			});
+
+			const methodTypes = [
+				{"name": "Callback", "func": (func) => {
+					return function (...args) {
+						const cb = args[args.length - 1];
+						func.bind(this)(...args).then((result) => cb(null, result)).catch((err) => cb(err));
+					};
+				}},
+				{"name": "Promise", "func": (func) => func}
+			];
+			methodTypes.forEach((methodType) => {
+				describe(`Method Type - ${methodType.name}`, () => {
+					const callerTypes = [
+						{"name": "Callback", "func": util.promisify},
+						{"name": "Promise", "func": (func) => func}
+					];
+					callerTypes.forEach((callerType) => {
+						describe(`Caller Type - ${callerType.name}`, () => {
+							let methodTypeCallDetails = [], methodTypeCallResult = {};
+							beforeEach(() => {
+								User.methods.set("action", methodType.func(async function (...args) {
+									methodTypeCallDetails.push({"arguments": [...args], "this": this});
+									if (methodTypeCallResult.error) {
+										throw methodTypeCallResult.error;
+									} else if (methodTypeCallResult.result) {
+										return methodTypeCallResult.result;
+									}
+								}));
+							});
+							afterEach(() => {
+								methodTypeCallDetails = [];
+								methodTypeCallResult = {};
+							});
+
+							it("Should call custom method with correct arguments", async () => {
+								methodTypeCallResult.result = "Success";
+								await callerType.func(User.action)();
+								expect(methodTypeCallDetails.length).to.eql(1);
+								expect(methodTypeCallDetails[0].arguments.length).to.eql(1);
+								expect(methodTypeCallDetails[0].arguments[0]).to.be.a("function");
+							});
+
+							it("Should call custom method with correct `this`", async () => {
+								methodTypeCallResult.result = "Success";
+								await callerType.func(User.action)();
+								expect(methodTypeCallDetails[0].this).to.eql(User);
+							});
+
+							it("Should return correct response that custom method returns", async () => {
+								methodTypeCallResult.result = "Success";
+								const result = await callerType.func(User.action)();
+								expect(result).to.eql("Success");
+							});
+
+							it("Should throw error if custom method throws error", async () => {
+								methodTypeCallResult.error = "ERROR";
+								let result, error;
+								try {
+									result = await callerType.func(User.action)();
+								} catch (e) {
+									error = e;
+								}
+								expect(result).to.not.exist;
+								expect(error).to.eql("ERROR");
+							});
+						});
+					});
+				});
+			});
+		});
+
+		describe("Model.methods.delete", () => {
+			it("Should be a function", () => {
+				expect(User.methods.delete).to.be.a("function");
+			});
+
+			it("Should not delete internal methods", () => {
+				User.methods.delete("get");
+				expect(User.get).to.be.a("function");
+			});
+
+			it("Should delete custom method", () => {
+				User.methods.set("myMethod", () => {});
+				expect(User.myMethod).to.be.a("function");
+				User.methods.delete("myMethod");
+				expect(User.myMethod).to.eql(undefined);
+			});
+		});
+	});
 });
 
 describe("model", () => {
