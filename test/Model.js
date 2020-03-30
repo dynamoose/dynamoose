@@ -2726,6 +2726,10 @@ describe("Model", () => {
 				expect(User.get).to.be.a("function");
 			});
 
+			it("Should not throw error for deleting unknown method", () => {
+				expect(() => User.methods.delete("randomHere123")).to.not.throw();
+			});
+
 			it("Should delete custom method", () => {
 				User.methods.set("myMethod", () => {});
 				expect(User.myMethod).to.be.a("function");
