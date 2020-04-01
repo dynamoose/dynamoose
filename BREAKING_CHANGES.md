@@ -9,9 +9,13 @@
 	- `$LISTAPPEND` has been removed, and `$ADD` now includes the behavior of `$LISTAPPEND`
 	- `$DELETE` now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
 	- `$PUT` has been replaced with `$SET`
+- `dynamoose.setDefaults` has been renamed to `dynamoose.Model.defaults`, and is now a property that you set, vs a method that you pass the object into
 - `dynamoose.model` has been renamed to `dynamoose.Model`
 - `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
 - `dynamoose.setDDB` has been renamed to `dynamoose.aws.ddb.set`
+- `dynamoose.revertDDB` has been renamed to `dynamoose.aws.ddb.revert`
+- `dynamoose.AWS.config.update` has been renamed to `dynamoose.aws.sdk.config.update`
+- `dynamoose.ddb` has been renamed to `dynamoose.aws.ddb`
 - `Model.getTableReq` has been renamed to `Model.table.create.request`
 - `Model.table.create.request` (formerly `Model.getTableReq`) is now an async function
 - `model.originalItem` has been renamed to `model.original` (or `Document.original`)
@@ -26,6 +30,7 @@
 - `useNativeBooleans` & `useDocumentTypes` have been removed from the Model settings
 - `Map` attribute type has been replaced with `Object`
 - `List` attribute type has been replaced with `Array`
+- The attribute types `Array` & `Object` in Dynamoose v1 don't work without a `schema` option in v2
 - `Scan.null` & `Query.null` have been removed. In most cases this can be replaced with `.not().exists()`.
 - DynamoDB set types are now returned as JavaScript Set's instead of Array's
 - Trying to save a Document with a property set to `null` will now throw an error. If you would like to remove the property set it to `dynamoose.undefined` to set it to undefined without taking into account the `default` setting, or `undefined` to set it to undefined while taking into account the `default` setting.
