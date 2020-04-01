@@ -30,3 +30,7 @@
 - DynamoDB set types are now returned as JavaScript Set's instead of Array's
 - Trying to save a Document with a property set to `null` will now throw an error. If you would like to remove the property set it to `dynamoose.undefined` to set it to undefined without taking into account the `default` setting, or `undefined` to set it to undefined while taking into account the `default` setting.
 - Expires TTL value is set to be a default value. In Dynamoose v1 there were cases where expires TTL wouldn't be set, in Dynamoose v2, the behavior of if the Expires TTL is set behaves the same as any default value
+- Custom methods have changed behavior:
+	- `schema.method` is now `model.methods.document`
+	- `schema.statics` is now `model.methods`
+	- Both `model.methods` & `model.methods` have two functions that you call to add & remove methods. `set` & `delete` methods exist on both objects that you can use to add your methods. This is compared to the old system of calling the function for `schema.method` or setting the object for `schema.statics`.
