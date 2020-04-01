@@ -4,6 +4,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../lib");
 const Error = require("../lib/Error");
+const Internal = require("../lib/Internal");
 const utils = require("../lib/utils");
 const util = require("util");
 
@@ -2644,6 +2645,24 @@ describe("Model", () => {
 			it("Should set correct method on model", () => {
 				User.methods.set("random", () => {});
 				expect(User.random).to.be.a("function");
+			});
+
+			it("Should not overwrite internal methods", () => {
+				const originalMethod = User.get;
+				const newMethod = () => {};
+				User.methods.set("get", newMethod);
+				expect(User.get).to.eql(originalMethod);
+				expect(User.get).to.not.eql(newMethod);
+			});
+
+			it("Should overwrite methods if Internal.internalProperties exists but type doesn't", () => {
+				const originalMethod = User.get;
+				const newMethod = () => {};
+				User.random = originalMethod;
+				User.random[Internal.internalProperties] = {};
+				User.methods.set("random", newMethod);
+				expect(User.random).to.eql(originalMethod);
+				expect(User.random).to.not.eql(newMethod);
 			});
 
 			const methodTypes = [
