@@ -418,3 +418,112 @@ These methods are only meant to only be called to instantiate the `dynamoose.tra
 This method allows you to run a conditionCheck when running a DynamoDB transaction.
 
 The `additionalParameters` property will be appended to the result to allow you to set custom conditions.
+
+## Model.methods.set(name, function)
+
+This function allows you to add a method to the given model that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying model. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
+
+```js
+// Setup:
+const User = new dynamoose.model("Model", ModelSchema);
+User.methods.set("scanAll", async function () {
+	let results = await this.scan().exec();
+	lastKey = results.lastKey;
+	do {
+		const newResult = await this.scan().startKey(lastKey).exec();
+		results = [...results, ...newResult];
+		lastKey = newResult.lastKey;
+	} while (lastKey)
+	return results;
+});
+// OR
+User.methods.set("scanAll", function (cb) {
+	let result = [];
+	const main = (lastKey) => {
+		this.scan().exec((err, newResult) => {
+			if (err) {
+				cb(err);
+			} else {
+				result = [...result, ...newResult];
+				if (newResult.lastKey) {
+					main(newResult.lastKey);
+				} else {
+					cb(result);
+				}
+			}
+		});
+	};
+	main();
+});
+
+// Using:
+User.scanAll((err, models) => {
+	models.forEach((model) => {
+		console.log(model);
+	});
+});
+// OR
+const models = await User.scanAll();
+models.forEach((model) => {
+	console.log(model);
+});
+```
+
+## Model.methods.delete(name)
+
+This allows you to delete an existing method from the model. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
+
+```js
+User.methods.delete("scanAll");
+// The following lines will throw an error
+const models = await User.scanAll();
+// OR
+User.scanAll((err, models) => {});
+```
+
+## Model.methods.document.set(name, function)
+
+This function allows you to add a method to the model documents that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying document. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
+
+```js
+// Setup:
+const User = new dynamoose.model("Model", ModelSchema);
+User.methods.document.set("setName", async function () {
+	this.name = await getRandomName();
+});
+// OR
+User.methods.set("scanAll", function (cb) {
+	getRandomName((err, name) => {
+		if (err) {
+			cb(err);
+		} else {
+			this.name = name;
+			cb();
+		}
+	});
+});
+
+// Using:
+const user = new User();
+
+user.setName((err) => {
+	console.log("Set name");
+});
+// OR
+await user.setName();
+console.log("Set name");
+```
+
+## Model.methods.document.delete(name)
+
+This allows you to delete an existing method from the document. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
+
+```js
+User.methods.document.delete("setName");
+
+const user = new User();
+// The following lines will throw an error
+await user.setName();
+// OR
+user.setName((err) => {});
+```
