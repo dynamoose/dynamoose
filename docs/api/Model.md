@@ -421,7 +421,7 @@ The `additionalParameters` property will be appended to the result to allow you 
 
 ## Model.methods.set(name, function)
 
-This function allows you to add a method to the given model that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying model. If an existing method exists with the given name, it will be overwritten.
+This function allows you to add a method to the given model that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying model. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
 
 ```js
 // Setup:
