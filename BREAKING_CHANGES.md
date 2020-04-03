@@ -7,7 +7,8 @@
 - Schema `default` value does not pass the model instance into `default` functions any more.
 - `Model.update`
 	- `$LISTAPPEND` has been removed, and `$ADD` now includes the behavior of `$LISTAPPEND`
-	- `$DELETE` now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
+	- `$DELETE` has been renamed to `$REMOVE`
+	- `$REMOVE` (previously `$DELETE`) now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
 	- `$PUT` has been replaced with `$SET`
 - `dynamoose.setDefaults` has been renamed to `dynamoose.Model.defaults`, and is now a property that you set, vs a method that you pass the object into
 - `dynamoose.model` has been renamed to `dynamoose.Model`
