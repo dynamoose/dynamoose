@@ -473,6 +473,62 @@ models.forEach((model) => {
 });
 ```
 
+You can also pass parameters into your custom method. It is important to note that if you decide to pass custom parameters into your custom method, the `callback` parameter will always be passed in as the last parameter. This means it's highly recommended that you always pass in the same number of parameters every time to your custom method. In the event you are unable to do this (dynamic/custom parameter length), you can use the JavaScript `arguments` variable to retrieve the last argument that was passed into the function.
+
+```js
+// Setup:
+const User = new dynamoose.model("Model", ModelSchema);
+User.methods.set("scanAll", async function (startAt) {
+	let scan = this.scan();
+	if (startAt) {
+		scan.startAt(startAt);
+	}
+	let results = await scan.exec();
+	lastKey = results.lastKey;
+	do {
+		const newResult = await this.scan().startAt(lastKey).exec();
+		results = [...results, ...newResult];
+		lastKey = newResult.lastKey;
+	} while (lastKey)
+	return results;
+});
+// OR
+User.methods.set("scanAll", function (startAt, cb) {
+	let result = [];
+	const main = (lastKey) => {
+		let scan = this.scan();
+		if (lastKey) {
+			scan.startAt(lastKey);
+		}
+		scan.exec((err, newResult) => {
+			if (err) {
+				cb(err);
+			} else {
+				result = [...result, ...newResult];
+				if (newResult.lastKey) {
+					main(newResult.lastKey);
+				} else {
+					cb(result);
+				}
+			}
+		});
+	};
+	main(startAt);
+});
+
+// Using:
+User.scanAll({"id": 1024}, (err, models) => {
+	models.forEach((model) => {
+		console.log(model);
+	});
+});
+// OR
+const models = await User.scanAll({"id": 1024});
+models.forEach((model) => {
+	console.log(model);
+});
+```
+
 ## Model.methods.delete(name)
 
 This allows you to delete an existing method from the model. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
@@ -515,6 +571,37 @@ user.setName((err) => {
 });
 // OR
 await user.setName();
+console.log("Set name");
+```
+
+You can also pass parameters into your custom method. It is important to note that if you decide to pass custom parameters into your custom method, the `callback` parameter will always be passed in as the last parameter. This means it's highly recommended that you always pass in the same number of parameters every time to your custom method. In the event you are unable to do this (dynamic/custom parameter length), you can use the JavaScript `arguments` variable to retrieve the last argument that was passed into the function.
+
+```js
+// Setup:
+const User = new dynamoose.model("Model", ModelSchema);
+User.methods.document.set("setName", async function (firstName, lastName) {
+	this.name = await verifyName(`${firstName} ${lastName}`);
+});
+// OR
+User.methods.document.set("scanAll", function (firstName, lastName, cb) {
+	verifyName(`${firstName} ${lastName}`, (err, name) => {
+		if (err) {
+			cb(err);
+		} else {
+			this.name = name;
+			cb();
+		}
+	});
+});
+
+// Using:
+const user = new User();
+
+user.setName("Charlie", "Fish", (err) => {
+	console.log("Set name");
+});
+// OR
+await user.setName("Charlie", "Fish");
 console.log("Set name");
 ```
 
