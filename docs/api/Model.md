@@ -349,6 +349,54 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 });
 ```
 
+## Model.batchPut(documents, [settings], [callback])
+
+This saves documents to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
+
+You can also pass a settings object in as the second parameter. The following options are available for settings are:
+
+- `return` (default: `response`) - If the function should return the `response` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB.
+
+Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in your array of objects as the first parameter, and the second argument as the `callback` function. You are not required to pass in `settings` if you just want to pass in a `callback`.
+
+```js
+//...
+
+try {
+	const result = await User.batchPut([
+		{"id": 1, "name": "Charlie"},
+		{"id": 2, "name": "Bob"}
+	]);
+	console.log(result);
+	// {
+	// 	"unprocessedItems": []
+	// }
+
+	// OR
+
+	// {
+	// 	"unprocessedItems": [{"id": 1, "name": "Charlie"}]
+	// }
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+await User.batchPut([
+	{"id": 1, "name": "Charlie"},
+	{"id": 2, "name": "Bob"}
+], (error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(result);
+	}
+});
+```
+
 ## Model.update(keyObj[, updateObj[, settings]],[ callback])
 
 This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
