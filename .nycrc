@@ -2,6 +2,7 @@
 	"exclude": [
 		"test",
 		"coverage",
-		".eslintrc.js"
+		".eslintrc.js",
+		".mocharc.js"
 	]
 }
