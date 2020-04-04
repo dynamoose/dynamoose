@@ -1134,6 +1134,7 @@ describe("Model", () => {
 				it("Should return correct request if setting option return to request", async () => {
 					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
 					const paramsB = await callType.func(User).bind(User)([1], {"return": "request"});
+					expect(params).to.not.exist;
 					expect(paramsB).to.be.an("object");
 					expect(paramsB).to.eql({
 						"RequestItems": {
