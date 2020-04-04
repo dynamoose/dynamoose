@@ -48,6 +48,38 @@ describe("Condition", () => {
 				"error": "The type: random is invalid."
 			},
 			{
+				"input": () => new Condition().group(new Condition("id").eq("5")),
+				"output": {"ConditionExpression": "(#ca0 = :cv0)", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition().parenthesis(new Condition("id").eq("5")),
+				"output": {"ConditionExpression": "(#ca0 = :cv0)", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition().group(new Condition().where("id").eq("5")),
+				"output": {"ConditionExpression": "(#ca0 = :cv0)", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition().group(new Condition().group(new Condition().group(new Condition().where("id").eq("5")))),
+				"output": {"ConditionExpression": "(((#ca0 = :cv0)))", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition().group((condition) => condition.where("id").eq("5")),
+				"output": {"ConditionExpression": "(#ca0 = :cv0)", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition().group(new Condition().where("id").eq("5")).and().group(new Condition().where("name").eq("Charlie")),
+				"output": {"ConditionExpression": "(#ca0 = :cv0) AND (#ca1 = :cv1)", "ExpressionAttributeNames": {"#ca0": "id", "#ca1": "name"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}, ":cv1": {"S": "Charlie"}}}
+			},
+			{
+				"input": () => new Condition().group(new Condition().where("id").eq("5").group(new Condition().where("name").eq("Charlie"))),
+				"output": {"ConditionExpression": "(#ca0 = :cv0 AND (#ca1 = :cv1))", "ExpressionAttributeNames": {"#ca0": "id", "#ca1": "name"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}, ":cv1": {"S": "Charlie"}}}
+			},
+			{
+				"input": () => new Condition().group(new Condition().where("id").eq("5").group(new Condition().where("name").eq("Charlie").and().where("power").eq(10))),
+				"output": {"ConditionExpression": "(#ca0 = :cv0 AND (#ca1 = :cv1 AND #ca2 = :cv2))", "ExpressionAttributeNames": {"#ca0": "id", "#ca1": "name", "#ca2": "power"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}, ":cv1": {"S": "Charlie"}, ":cv2": {"N": "10"}}}
+			},
+			{
 				"input": () => new Condition().where("id").eq("5"),
 				"output": {"ConditionExpression": "#ca0 = :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
 			},
