@@ -1423,6 +1423,110 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Model.batchPut", () => {
+		let User, params, promiseFunction;
+		beforeEach(() => {
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
+			dynamoose.aws.ddb.set({
+				"batchWriteItem": (paramsB) => {
+					params = paramsB;
+					return {"promise": promiseFunction};
+				}
+			});
+		});
+		afterEach(() => {
+			User = null;
+			params = null;
+			promiseFunction = null;
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should be a function", () => {
+			expect(User.batchPut).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (Model) => Model.batchPut},
+			{"name": "Callback", "func": (Model) => util.promisify(Model.batchPut)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should should send correct parameters to batchWriteItem", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}]);
+					expect(params).to.be.an("object");
+					expect(params).to.eql({
+						"RequestItems": {
+							"User": [
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}
+									}
+								},
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it("Should return correct result from batchPut with no UnprocessedItems", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}]);
+					expect(result).to.eql({
+						"unprocessedItems": []
+					});
+				});
+
+				it("Should return correct result from batchPut with UnprocessedItems", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"PutRequest": {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}}}]}});
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}]);
+					expect(result).to.eql({
+						"unprocessedItems": [{"id": 1, "name": "Charlie"}]
+					});
+				});
+
+				it("Should return correct result from batchPut with UnprocessedItems in wrong order", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"PutRequest": {"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}}}, {"PutRequest": {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}}}]}});
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}, {"id": 3, "name": "Tim"}]);
+					expect(result).to.eql({
+						"unprocessedItems": [{"id": 1, "name": "Charlie"}, {"id": 3, "name": "Tim"}]
+					});
+				});
+
+				it("Should return request if return request setting is set", async () => {
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}], {"return": "request"});
+					expect(params).to.not.exist;
+					expect(result).to.eql({
+						"RequestItems": {
+							"User": [
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}
+									}
+								},
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it("Should throw error if error is returned from DynamoDB", () => {
+					promiseFunction = () => Promise.reject({"error": "ERROR"});
+
+					return expect(callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}])).to.be.rejectedWith({"error": "ERROR"});
+				});
+			});
+		});
+	});
+
 	describe("Model.update", () => {
 		let User, updateItemParams, updateItemFunction;
 		beforeEach(() => {
