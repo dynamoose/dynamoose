@@ -504,6 +504,120 @@ User.delete({"id": 1}, (error) => {
 });
 ```
 
+## Model.batchDelete(keys[, settings][, callback])
+
+You can use Model.batchDelete to delete documents from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, an object with the `unprocessedItems` will be returned to you. Otherwise an error will be thrown.
+
+You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `response`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `response` |
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const response = await User.batchDelete([1, 2]);
+	console.log(response);
+	// {
+	// 	"unprocessedItems": []
+	// }
+
+	// OR
+
+	// {
+	// 	"unprocessedItems": [{"id": 1}]
+	// }
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchDelete([1, 2], (error, response) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(`Successfully deleted items. ${response.unprocessedItems.count} of unprocessed items.`);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+const deleteUserRequest = User.batchDelete([1, 2], {"return": "request"});
+// {
+// 	"RequestItems": {
+// 		"User": [
+// 			{
+// 				"DeleteRequest": {
+// 					"Key": {"id": {"N": "1"}}
+// 				}
+// 			},
+// 			{
+// 				"DeleteRequest": {
+// 					"Key": {"id": {"N": "2"}}
+// 				}
+// 			}
+// 		]
+// 	}
+// }
+
+// OR
+
+User.batchDelete([1, 2], {"return": "request"}, (error, request) => {
+	console.log(request);
+});
+```
+
+In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+
+try {
+	const response = await User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}]);
+	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}], (error, response) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const response = await User.batchDelete([{"id": 1}, {"id": 2}]);
+	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchDelete([{"id": 1}, {"id": 2}], (error, response) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+	}
+});
+```
+
 ## Model.transaction
 
 This object has the following methods that you can call.

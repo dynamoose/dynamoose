@@ -14,6 +14,7 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 | Model.create | `putItem` |  |
 | Model.update | `updateItem` |  |
 | Model.delete | `deleteItem` |  |
+| Model.batchDelete | `batchWriteItem` |  |
 | document.save | `putItem` |  |
 | document.delete | `deleteItem` |  |
 | dynamoose.transaction | `transactGetItems`, `transactWriteItems` |  |
