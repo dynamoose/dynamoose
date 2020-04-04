@@ -2617,6 +2617,110 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Model.batchDelete", () => {
+		let User, params, promiseFunction;
+		beforeEach(() => {
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
+			dynamoose.aws.ddb.set({
+				"batchWriteItem": (paramsB) => {
+					params = paramsB;
+					return {"promise": promiseFunction};
+				}
+			});
+		});
+		afterEach(() => {
+			User = null;
+			params = null;
+			promiseFunction = null;
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should be a function", () => {
+			expect(User.batchDelete).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (Model) => Model.batchDelete},
+			{"name": "Callback", "func": (Model) => util.promisify(Model.batchDelete)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should should send correct parameters to batchWriteItem", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					await callType.func(User).bind(User)([1, 2]);
+					expect(params).to.be.an("object");
+					expect(params).to.eql({
+						"RequestItems": {
+							"User": [
+								{
+									"DeleteRequest": {
+										"Key": {"id": {"N": "1"}}
+									}
+								},
+								{
+									"DeleteRequest": {
+										"Key": {"id": {"N": "2"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it("Should return correct result from batchDelete with no UnprocessedItems", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result).to.eql({
+						"unprocessedItems": []
+					});
+				});
+
+				it("Should return correct result from batchDelete with UnprocessedItems", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"DeleteRequest": {"Key": {"id": {"N": "1"}}}}]}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result).to.eql({
+						"unprocessedItems": [{"id": 1}]
+					});
+				});
+
+				it("Should return correct result from batchDelete with UnprocessedItems in wrong order", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"DeleteRequest": {"Key": {"id": {"N": "3"}}}}, {"DeleteRequest": {"Key": {"id": {"N": "1"}}}}]}});
+					const result = await callType.func(User).bind(User)([1, 2, 3]);
+					expect(result).to.eql({
+						"unprocessedItems": [{"id": 1}, {"id": 3}]
+					});
+				});
+
+				it("Should return request if return request setting is set", async () => {
+					const result = await callType.func(User).bind(User)([1, 2], {"return": "request"});
+					expect(params).to.not.exist;
+					expect(result).to.eql({
+						"RequestItems": {
+							"User": [
+								{
+									"DeleteRequest": {
+										"Key": {"id": {"N": "1"}}
+									}
+								},
+								{
+									"DeleteRequest": {
+										"Key": {"id": {"N": "2"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it("Should throw error if error is returned from DynamoDB", () => {
+					promiseFunction = () => Promise.reject({"error": "ERROR"});
+
+					return expect(callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}])).to.be.rejectedWith({"error": "ERROR"});
+				});
+			});
+		});
+	});
+
 	describe("Model.table.create.request", () => {
 		it("Should be a function", () => {
 			expect(new dynamoose.Model("User", {"id": String}).table.create.request).to.be.a("function");
