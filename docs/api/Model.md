@@ -466,7 +466,7 @@ In the event you have a rangeKey for your model, you can pass in an object for t
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
-	await User.get({"id": 1, "name": "Tim"});
+	await User.delete({"id": 1, "name": "Tim"});
 	console.log("Successfully deleted item");
 } catch (error) {
 	console.error(error);
@@ -474,7 +474,7 @@ try {
 
 // OR
 
-User.get({"id": 1, "name": "Tim"}, (error) => {
+User.delete({"id": 1, "name": "Tim"}, (error) => {
 	if (error) {
 		console.error(error);
 	} else {
@@ -487,7 +487,7 @@ User.get({"id": 1, "name": "Tim"}, (error) => {
 const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 try {
-	await User.get({"id": 1});
+	await User.delete({"id": 1});
 	console.log("Successfully deleted item");
 } catch (error) {
 	console.error(error);
@@ -495,7 +495,7 @@ try {
 
 // OR
 
-User.get({"id": 1}, (error) => {
+User.delete({"id": 1}, (error) => {
 	if (error) {
 		console.error(error);
 	} else {
