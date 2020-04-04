@@ -217,6 +217,111 @@ User.get({"id": 1}, (error, myUser) => {
 });
 ```
 
+## Model.batchGet(keys[, settings][, callback])
+
+You can use Model.batchGet to retrieve multiple documents from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
+
+The array you receive back is a standard JavaScript array of objects. However, the array has some special properties with extra information about your scan operation that you can access. This does not prevent the ability do running loops or accessing the objects within the array.
+
+The extra properties attached to the array are:
+
+- `unprocessedKeys` - In the event there are more items to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
+
+You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `documents`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `documents` |
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const myUsers = await User.batchGet([1, 2]);
+	console.log(myUsers);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchGet([1, 2], (error, myUsers) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUsers);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+const retrieveUsersRequest = User.batchGet([1, 2], {"return": "request"});
+// {
+// 	"RequestItems": {
+// 		"User": {
+// 			"Keys": [
+// 				{"id": {"N": "1"}},
+// 				{"id": {"N": "2"}}
+// 			]
+// 		}
+// 	}
+// }
+
+// OR
+
+User.batchGet([1, 2], {"return": "request"}, (error, request) => {
+	console.log(request);
+});
+```
+
+In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+
+try {
+	const myUsers = await User.batchGet([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}]);
+	console.log(myUsers);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchGet({"id": 1, "name": "Tim"}, (error, myUsers) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUsers);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const myUsers = await User.batchGet([{"id": 1}, {"id": 2}]);
+	console.log(myUsers);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchGet([{"id": 1}, {"id": 2}], (error, myUsers) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUsers);
+	}
+});
+```
+
 ## Model.create(document, [settings], [callback])
 
 This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
