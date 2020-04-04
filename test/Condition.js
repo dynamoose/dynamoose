@@ -23,7 +23,40 @@ describe("Condition", () => {
 				"output": {}
 			},
 			{
+				"input": () => new Condition("id").eq("5"),
+				"output": {"ConditionExpression": "#ca0 = :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition({"id": "5"}),
+				"output": {"ConditionExpression": "#ca0 = :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition({"id": {"eq": "5"}}),
+				"output": {"ConditionExpression": "#ca0 = :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition({"id": {"lt": "5"}}),
+				"output": {"ConditionExpression": "#ca0 < :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			// TODO: fix the test below
+			// {
+			// 	"input": () => new Condition({"id": {"ne": "5"}}),
+			// 	"output": {"ConditionExpression": "#ca0 <> :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			// },
+			{
+				"input": () => new Condition({"id": {"random": "5"}}),
+				"error": "The type: random is invalid."
+			},
+			{
 				"input": () => new Condition().where("id").eq("5"),
+				"output": {"ConditionExpression": "#ca0 = :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition().filter("id").eq("5"),
+				"output": {"ConditionExpression": "#ca0 = :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition().attribute("id").eq("5"),
 				"output": {"ConditionExpression": "#ca0 = :cv0", "ExpressionAttributeNames": {"#ca0": "id"}, "ExpressionAttributeValues": {":cv0": {"S": "5"}}}
 			},
 			{
