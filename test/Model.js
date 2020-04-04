@@ -1195,7 +1195,7 @@ describe("Model", () => {
 				});
 
 				it("Should return correct result from batchGet with unprocessed keys", async () => {
-					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 2}]}}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": {"N": 2}}]}}});
 					const result = await callType.func(User).bind(User)([1, 2]);
 					expect(result).to.be.an("array");
 					expect(result.unprocessedKeys).to.eql([{"id": 2}]);
@@ -1205,7 +1205,7 @@ describe("Model", () => {
 				});
 
 				it("Should return correct result from batchGet for multiple items with unprocessed keys", async () => {
-					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}, {"id": {"N": "3"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 2}]}}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}, {"id": {"N": "3"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": {"N": 2}}]}}});
 					const result = await callType.func(User).bind(User)([1, 2, 3]);
 					expect(result).to.be.an("array");
 					expect(result.unprocessedKeys).to.eql([{"id": 2}]);
@@ -1216,7 +1216,7 @@ describe("Model", () => {
 				});
 
 				it("Should return correct result from batchGet for multiple items that aren't sorted with unprocessed keys", async () => {
-					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "3"}, "name": {"S": "Bob"}}, {"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 2}]}}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "3"}, "name": {"S": "Bob"}}, {"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": {"N": 2}}]}}});
 					const result = await callType.func(User).bind(User)([1, 2, 3]);
 					expect(result).to.be.an("array");
 					expect(result.unprocessedKeys).to.eql([{"id": 2}]);
@@ -1227,7 +1227,7 @@ describe("Model", () => {
 				});
 
 				it("Should return correct result from batchGet for multiple unprocessed keys that aren't sorted", async () => {
-					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 3}, {"id": 2}]}}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": {"N": 3}}, {"id": {"N": 2}}]}}});
 					const result = await callType.func(User).bind(User)([1, 2, 3]);
 					expect(result).to.be.an("array");
 					expect(result.unprocessedKeys).to.eql([{"id": 2}, {"id": 3}]);
@@ -1237,7 +1237,7 @@ describe("Model", () => {
 				});
 
 				it("Should handle correctly if item not in Responses or UnprocessedKeys", async () => {
-					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 3}, {"id": 2}]}}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": {"N": 3}}, {"id": {"N": 2}}]}}});
 					const result = await callType.func(User).bind(User)([1, 2, 3, 4]);
 					expect(result).to.be.an("array");
 					expect(result.unprocessedKeys).to.eql([{"id": 2}, {"id": 3}]);
