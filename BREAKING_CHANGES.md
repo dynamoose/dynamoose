@@ -21,7 +21,9 @@
 - `Model.table.create.request` (formerly `Model.getTableReq`) is now an async function
 - `model.originalItem` has been renamed to `model.original` (or `Document.original`)
 - `Document.original` formerly (`model.originalItem`) no longer returns the last item saved, but the item first retrieved from DynamoDB
-- `expires` has been moved from the Schema settings to the Model settings
+- The following Schema settings have been moved to Model settings:
+	 - `expires`
+	 - `throughput`
 - `expires.ttl` is now milliseconds as opposed to seconds
 - `expires.defaultExpires` is no longer an option (most behavior from this option can be replicated by using the new `dynamoose.undefined` feature)
 - `expires.returnExpiredItems` has been renamed to `expires.items.returnExpired`
