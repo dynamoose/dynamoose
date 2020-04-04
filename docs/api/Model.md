@@ -430,7 +430,7 @@ User.methods.set("scanAll", async function () {
 	let results = await this.scan().exec();
 	lastKey = results.lastKey;
 	do {
-		const newResult = await this.scan().startKey(lastKey).exec();
+		const newResult = await this.scan().startAt(lastKey).exec();
 		results = [...results, ...newResult];
 		lastKey = newResult.lastKey;
 	} while (lastKey)
@@ -440,7 +440,11 @@ User.methods.set("scanAll", async function () {
 User.methods.set("scanAll", function (cb) {
 	let result = [];
 	const main = (lastKey) => {
-		this.scan().exec((err, newResult) => {
+		let scan = this.scan();
+		if (lastKey) {
+			scan.startAt(lastKey);
+		}
+		scan.exec((err, newResult) => {
 			if (err) {
 				cb(err);
 			} else {
@@ -492,7 +496,7 @@ User.methods.document.set("setName", async function () {
 	this.name = await getRandomName();
 });
 // OR
-User.methods.set("scanAll", function (cb) {
+User.methods.document.set("setName", function (cb) {
 	getRandomName((err, name) => {
 		if (err) {
 			cb(err);
