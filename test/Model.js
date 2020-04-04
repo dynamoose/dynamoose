@@ -83,7 +83,7 @@ describe("Model", () => {
 			};
 			process.on("unhandledRejection", errorHandler);
 			new dynamoose.Model(tableName, {"id": String});
-			await utils.timeout(100);
+			await utils.timeout(10);
 			expect(failed).to.be.false;
 			process.removeListener("unhandledRejection", errorHandler);
 		});
