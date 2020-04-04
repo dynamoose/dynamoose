@@ -15,7 +15,7 @@ describe("Timeout", () => {
 	});
 
 	it("Should resolve in x milliseconds", async () => {
-		const ms = 50;
+		const ms = 10;
 		const timeA = Date.now();
 		await utils.timeout(ms);
 		expect(Date.now() - timeA).to.be.at.least(ms - 1); // Doing -1 here due to https://github.com/nodejs/node/issues/26578
