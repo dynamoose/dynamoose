@@ -217,6 +217,111 @@ User.get({"id": 1}, (error, myUser) => {
 });
 ```
 
+## Model.batchGet(keys[, settings][, callback])
+
+You can use Model.batchGet to retrieve multiple documents from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
+
+The array you receive back is a standard JavaScript array of objects. However, the array has some special properties with extra information about your scan operation that you can access. This does not prevent the ability do running loops or accessing the objects within the array.
+
+The extra properties attached to the array are:
+
+- `unprocessedKeys` - In the event there are more items to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
+
+You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `documents`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `documents` |
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const myUsers = await User.batchGet([1, 2]);
+	console.log(myUsers);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchGet([1, 2], (error, myUsers) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUsers);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+const retrieveUsersRequest = User.batchGet([1, 2], {"return": "request"});
+// {
+// 	"RequestItems": {
+// 		"User": {
+// 			"Keys": [
+// 				{"id": {"N": "1"}},
+// 				{"id": {"N": "2"}}
+// 			]
+// 		}
+// 	}
+// }
+
+// OR
+
+User.batchGet([1, 2], {"return": "request"}, (error, request) => {
+	console.log(request);
+});
+```
+
+In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+
+try {
+	const myUsers = await User.batchGet([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}]);
+	console.log(myUsers);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchGet({"id": 1, "name": "Tim"}, (error, myUsers) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUsers);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const myUsers = await User.batchGet([{"id": 1}, {"id": 2}]);
+	console.log(myUsers);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchGet([{"id": 1}, {"id": 2}], (error, myUsers) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(myUsers);
+	}
+});
+```
+
 ## Model.create(document, [settings], [callback])
 
 This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
@@ -240,6 +345,54 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 		console.error(error);
 	} else {
 		console.log(user);
+	}
+});
+```
+
+## Model.batchPut(documents, [settings], [callback])
+
+This saves documents to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
+
+You can also pass a settings object in as the second parameter. The following options are available for settings are:
+
+- `return` (default: `response`) - If the function should return the `response` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB.
+
+Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in your array of objects as the first parameter, and the second argument as the `callback` function. You are not required to pass in `settings` if you just want to pass in a `callback`.
+
+```js
+//...
+
+try {
+	const result = await User.batchPut([
+		{"id": 1, "name": "Charlie"},
+		{"id": 2, "name": "Bob"}
+	]);
+	console.log(result);
+	// {
+	// 	"unprocessedItems": []
+	// }
+
+	// OR
+
+	// {
+	// 	"unprocessedItems": [{"id": 1, "name": "Charlie"}]
+	// }
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+await User.batchPut([
+	{"id": 1, "name": "Charlie"},
+	{"id": 2, "name": "Bob"}
+], (error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(result);
 	}
 });
 ```
@@ -308,7 +461,7 @@ The `validate` Schema attribute property will only be run on `$SET` values. This
 
 ## Model.delete(hashKey[, settings][, callback])
 
-You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to retrieve the object.
+You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
 
@@ -361,7 +514,7 @@ In the event you have a rangeKey for your model, you can pass in an object for t
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 
 try {
-	await User.get({"id": 1, "name": "Tim"});
+	await User.delete({"id": 1, "name": "Tim"});
 	console.log("Successfully deleted item");
 } catch (error) {
 	console.error(error);
@@ -369,7 +522,7 @@ try {
 
 // OR
 
-User.get({"id": 1, "name": "Tim"}, (error) => {
+User.delete({"id": 1, "name": "Tim"}, (error) => {
 	if (error) {
 		console.error(error);
 	} else {
@@ -382,7 +535,7 @@ User.get({"id": 1, "name": "Tim"}, (error) => {
 const User = new dynamoose.Model("User", {"id": Number, "name": String});
 
 try {
-	await User.get({"id": 1});
+	await User.delete({"id": 1});
 	console.log("Successfully deleted item");
 } catch (error) {
 	console.error(error);
@@ -390,11 +543,125 @@ try {
 
 // OR
 
-User.get({"id": 1}, (error) => {
+User.delete({"id": 1}, (error) => {
 	if (error) {
 		console.error(error);
 	} else {
 		console.log("Successfully deleted item");
+	}
+});
+```
+
+## Model.batchDelete(keys[, settings][, callback])
+
+You can use Model.batchDelete to delete documents from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, an object with the `unprocessedItems` will be returned to you. Otherwise an error will be thrown.
+
+You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
+
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | What the function should return. Can be `response`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `response` |
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const response = await User.batchDelete([1, 2]);
+	console.log(response);
+	// {
+	// 	"unprocessedItems": []
+	// }
+
+	// OR
+
+	// {
+	// 	"unprocessedItems": [{"id": 1}]
+	// }
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchDelete([1, 2], (error, response) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(`Successfully deleted items. ${response.unprocessedItems.count} of unprocessed items.`);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+const deleteUserRequest = User.batchDelete([1, 2], {"return": "request"});
+// {
+// 	"RequestItems": {
+// 		"User": [
+// 			{
+// 				"DeleteRequest": {
+// 					"Key": {"id": {"N": "1"}}
+// 				}
+// 			},
+// 			{
+// 				"DeleteRequest": {
+// 					"Key": {"id": {"N": "2"}}
+// 				}
+// 			}
+// 		]
+// 	}
+// }
+
+// OR
+
+User.batchDelete([1, 2], {"return": "request"}, (error, request) => {
+	console.log(request);
+});
+```
+
+In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+
+try {
+	const response = await User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}]);
+	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}], (error, response) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+	}
+});
+```
+
+```js
+const User = new dynamoose.Model("User", {"id": Number, "name": String});
+
+try {
+	const response = await User.batchDelete([{"id": 1}, {"id": 2}]);
+	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+User.batchDelete([{"id": 1}, {"id": 2}], (error, response) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
 	}
 });
 ```
