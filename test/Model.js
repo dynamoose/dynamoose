@@ -1085,6 +1085,219 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Model.batchGet", () => {
+		let User, params, promiseFunction;
+		beforeEach(() => {
+			User = new dynamoose.Model("User", {"id": Number, "name": String});
+			params = null;
+			promiseFunction = null;
+			dynamoose.aws.ddb.set({
+				"batchGetItem": (paramsB) => {
+					params = paramsB;
+					return {"promise": promiseFunction};
+				}
+			});
+		});
+		afterEach(() => {
+			User = null;
+			params = null;
+			promiseFunction = null;
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should be a function", () => {
+			expect(User.batchGet).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (Model) => Model.batchGet},
+			{"name": "Callback", "func": (Model) => util.promisify(Model.batchGet)}
+		];
+
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should send correct params to batchGetItem", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([1]);
+					expect(params).to.be.an("object");
+					expect(params).to.eql({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should return correct request if setting option return to request", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					const paramsB = await callType.func(User).bind(User)([1], {"return": "request"});
+					expect(paramsB).to.be.an("object");
+					expect(paramsB).to.eql({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should send correct params to batchGetItem for multiple items", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}, {"id": {"N": "2"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([1, 2]);
+					expect(params).to.be.an("object");
+					expect(params).to.eql({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}},
+									{"id": {"N": "2"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should return correct result from batchGet", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([1]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"}
+					]);
+				});
+
+				it("Should return correct result from batchGet for multiple items", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}, {"id": {"N": "2"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"},
+						{"id": 2, "name": "Bob"}
+					]);
+				});
+
+				it("Should return correct result from batchGet for multiple items that aren't sorted correctly", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "2"}, "name": {"S": "Bob"}}, {"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"},
+						{"id": 2, "name": "Bob"}
+					]);
+				});
+
+				it("Should return correct result from batchGet with unprocessed keys", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 2}]}}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([{"id": 2}]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"}
+					]);
+				});
+
+				it("Should return correct result from batchGet for multiple items with unprocessed keys", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}, {"id": {"N": "3"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 2}]}}});
+					const result = await callType.func(User).bind(User)([1, 2, 3]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([{"id": 2}]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"},
+						{"id": 3, "name": "Bob"}
+					]);
+				});
+
+				it("Should return correct result from batchGet for multiple items that aren't sorted with unprocessed keys", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "3"}, "name": {"S": "Bob"}}, {"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 2}]}}});
+					const result = await callType.func(User).bind(User)([1, 2, 3]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([{"id": 2}]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"},
+						{"id": 3, "name": "Bob"}
+					]);
+				});
+
+				it("Should return correct result from batchGet for multiple unprocessed keys that aren't sorted", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 3}, {"id": 2}]}}});
+					const result = await callType.func(User).bind(User)([1, 2, 3]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([{"id": 2}, {"id": 3}]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"}
+					]);
+				});
+
+				it("Should handle correctly if item not in Responses or UnprocessedKeys", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": 3}, {"id": 2}]}}});
+					const result = await callType.func(User).bind(User)([1, 2, 3, 4]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([{"id": 2}, {"id": 3}]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"}
+					]);
+				});
+
+				it("Should handle correctly if item not in Responses", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result).to.be.an("array");
+					expect(result.unprocessedKeys).to.eql([]);
+					expect(result.map((item) => ({...item}))).to.eql([
+						{"id": 1, "name": "Charlie"}
+					]);
+				});
+
+				it("Should throw error if DynamoDB responds with error", () => {
+					promiseFunction = () => Promise.reject({"error": "Error"});
+
+					return expect(callType.func(User).bind(User)([1, 2, 3])).to.be.rejectedWith({"error": "Error"});
+				});
+
+				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
+					let calledBatchGetItem = false;
+					promiseFunction = () => {calledBatchGetItem = true; return Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});};
+					let describeTableResponse = {
+						"Table": {"TableStatus": "CREATING"}
+					};
+					dynamoose.aws.ddb.set({
+						"describeTable": () => ({
+							"promise": () => Promise.resolve(describeTableResponse)
+						}),
+						"batchGetItem": () => ({
+							"promise": promiseFunction
+						})
+					});
+					const model = new dynamoose.Model("User", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
+					await utils.set_immediate_promise();
+
+					let users;
+					callType.func(model).bind(model)([1]).then((item) => users = item);
+
+					await utils.set_immediate_promise();
+					expect(calledBatchGetItem).to.be.false;
+					expect(users).to.not.exist;
+					expect(model.Model.pendingTasks.length).to.eql(1);
+
+					describeTableResponse = {
+						"Table": {"TableStatus": "ACTIVE"}
+					};
+					await utils.set_immediate_promise();
+					expect(calledBatchGetItem).to.be.true;
+					expect(users.map((user) => ({...user}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+			});
+		});
+	});
+
 	describe("Model.create", () => {
 		let User, createItemParams, createItemFunction;
 		beforeEach(() => {
