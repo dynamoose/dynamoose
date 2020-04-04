@@ -1963,6 +1963,37 @@ describe("Model", () => {
 					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
 				});
 
+				it("Should send correct params to updateItem with conditional", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
+					const condition = new dynamoose.Condition("active").eq(true);
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {condition});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#ca0": "active"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":cv0": {
+								"BOOL": true
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"ConditionExpression": "#ca0 = :cv0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should return updated document upon success", async () => {
 					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
@@ -2495,9 +2526,22 @@ describe("Model", () => {
 				});
 			});
 
+			it("Should return correct result with overwrite set to true", async () => {
+				expect(await User.transaction.create({"id": 1}, {"overwrite": true})).to.eql({
+					"Put": {
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}
+				});
+			});
+
 			it("Should return correct result with overwrite set to false", async () => {
 				expect(await User.transaction.create({"id": 1}, {"overwrite": false})).to.eql({
 					"Put": {
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
 						"Item": {"id": {"N": "1"}},
 						"TableName": "User"
 					}
