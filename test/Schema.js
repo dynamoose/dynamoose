@@ -853,7 +853,7 @@ describe("Schema", () => {
 				"name": "Should return default as string for attribute if default is a function that returns a promise",
 				"input": ["default", "id"],
 				"schema": {"id": {"type": String, "default": () => {
-					return new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100));
+					return new Promise((resolve) => setTimeout(() => resolve("Hello World"), 10));
 				}}},
 				"output": "Hello World"
 			},
@@ -897,8 +897,8 @@ describe("Schema", () => {
 			{
 				"name": "Should return validator as function for attribute if validator is a function that returns a promise",
 				"input": ["validate", "id", {"returnFunction": true}],
-				"schema": {"id": {"type": String, "validate": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))}},
-				"output": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 100))
+				"schema": {"id": {"type": String, "validate": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 10))}},
+				"output": () => new Promise((resolve) => setTimeout(() => resolve("Hello World"), 10))
 			},
 			// Required
 			{
