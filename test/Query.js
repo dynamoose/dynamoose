@@ -1019,9 +1019,9 @@ describe("Query", () => {
 			queryPromiseResolver = async () => ({"Items": [], "LastEvaluatedKey": {"id": {"S": "test"}}});
 
 			const start = Date.now();
-			await Model.query("name").eq("Charlie").all(50, 2).exec();
+			await Model.query("name").eq("Charlie").all(10, 2).exec();
 			const end = Date.now();
-			expect(end - start).to.be.above(99);
+			expect(end - start).to.be.above(19);
 		});
 
 		it("Should send correct result on query.exec", async () => {
