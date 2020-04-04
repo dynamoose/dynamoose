@@ -413,7 +413,7 @@ The `validate` Schema attribute property will only be run on `$SET` values. This
 
 ## Model.delete(hashKey[, settings][, callback])
 
-You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to retrieve the object.
+You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
 
