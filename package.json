@@ -16,12 +16,9 @@
     "nyc": "^15.0.1"
   },
   "scripts": {
-    "test": "nyc --all mocha && npm run report-coverage",
-    "test-ci": "nyc --all mocha && npm run report-coverage-text",
-    "test-nocoverage": "mocha",
+    "test": "nyc --all mocha && nyc report --reporter=html",
     "lint": "eslint .",
-    "report-coverage": "nyc report --reporter=html",
-    "report-coverage-text": "mkdir -p ./coverage; nyc report --reporter=text-lcov > ./coverage/lcov.info"
+    "test-nocoverage": "mocha"
   },
   "repository": {
     "type": "git",
