@@ -105,7 +105,7 @@ describe("Schema", () => {
 					"friends": "ARRay",
 					"picture": "buffer"
 				}
-			},
+			}
 		];
 		const tests = [
 			{"input": undefined, "output": undefined},
