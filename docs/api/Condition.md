@@ -45,6 +45,20 @@ new dynamoose.Condition().where("id").not().eq(1); // Retrieve all objects where
 new dynamoose.Condition().where("id").not().between(1, 2); // Will throw error since between does not have an opposite comparison type
 ```
 
+## condition.parenthesis(condition)
+
+This function takes in a `Condition` instance as a parameter and uses that as a group. This lets you specify the priority of the conditional. You can also pass a function into the `condition` parameter and Dynamoose will call your function with one argument which is a condition instance that you can return to specify the group.
+
+```js
+// The two condition objects below are identical
+new dynamoose.Condition().where("id").eq(1).and().parenthesis(new dynamoose.Condition().where("name").eq("Bob")); // id = 1 AND (name = Bob)
+new dynamoose.Condition().where("id").eq(1).and().parenthesis((condition) => condition.where("name").eq("Bob")); // id = 1 AND (name = Bob)
+```
+
+## condition.group(condition)
+
+This function is identical to [`condition.parenthesis(condition)`](#conditionparenthesiscondition) and just used as an alias.
+
 ## condition.filter(key)
 
 This function prepares a new conditional to be used with the request. If you have not finished your previous filter conditional before using this function again it will wipe out the previous pending conditional filter. The `key` parameter is a string that you pass in representing which attribute you would like to filter on.
