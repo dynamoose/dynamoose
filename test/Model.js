@@ -878,7 +878,7 @@ describe("Model", () => {
 					expect(user.data).to.eql(new Set([Buffer.from("testdata"), Buffer.from("testdata2")]));
 				});
 
-				it("Should return object with correct values for buffer set", async () => {
+				it("Should return object with correct values for buffer set with saveUnknown", async () => {
 					User = new dynamoose.Model("User", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}}});
 					const user = await callType.func(User).bind(User)(1);
