@@ -357,7 +357,9 @@ This method returns a promise that will resolve when the operation is complete, 
 
 You can also pass a settings object in as the second parameter. The following options are available for settings are:
 
-- `return` (default: `response`) - If the function should return the `response` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB.
+| Name | Description | Type | Default |
+|------|-------------|------|---------|
+| return | If the function should return the `response` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB. | String | `response` |
 
 Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in your array of objects as the first parameter, and the second argument as the `callback` function. You are not required to pass in `settings` if you just want to pass in a `callback`.
 
