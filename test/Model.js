@@ -3138,11 +3138,11 @@ describe("Model", () => {
 					expect(settings.testObject()[settings.existingMethod]).to.not.eql(newMethod);
 				});
 
-				it("Should overwrite methods if Internal.internalProperties exists but type doesn't", () => {
+				it("Should overwrite methods if Internal.General.internalProperties exists but type doesn't", () => {
 					const originalMethod = settings.testObject()[settings.existingMethod];
 					const newMethod = () => {};
 					settings.testObject().random = originalMethod;
-					settings.testObject().random[Internal.internalProperties] = {};
+					settings.testObject().random[Internal.General.internalProperties] = {};
 					settings.methodEntryPoint().set(settings.existingMethod, newMethod);
 					expect(settings.testObject().random).to.eql(originalMethod);
 					expect(settings.testObject().random).to.not.eql(newMethod);
