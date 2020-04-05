@@ -1547,6 +1547,21 @@ describe("Document", () => {
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
 			},
 			{
+				"input": [{"id": "test"}, {"required": true}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
+			},
+			{
+				"input": [{"id": "test"}, {"required": true}],
+				"error": new Error.ValidationError("hash is a required property but has no value when trying to save document"),
+				"schema": {"id": {"type": String}, "hash": {"type": String, "required": true}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
+			},
+			{
+				"input": [{"id": "test"}, {"required": "nested"}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "hash": {"type": String, "required": true}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
+			},
+			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true, "customTypesDynamo": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
 				"output": {"id": 1, "ttl": new Date(1000)}
