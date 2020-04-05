@@ -3189,6 +3189,23 @@ describe("Model", () => {
 									expect(methodTypeCallDetails[0].arguments[0]).to.be.a("function");
 								});
 
+								it("Should call custom method with correct arguments if passing in one argument", async () => {
+									await callerType.func(settings.testObject().action)("Hello World");
+									expect(methodTypeCallDetails.length).to.eql(1);
+									expect(methodTypeCallDetails[0].arguments.length).to.eql(2);
+									expect(methodTypeCallDetails[0].arguments[0]).to.eql("Hello World");
+									expect(methodTypeCallDetails[0].arguments[1]).to.be.a("function");
+								});
+
+								it("Should call custom method with correct arguments if passing in two arguments", async () => {
+									await callerType.func(settings.testObject().action)("Hello", "World");
+									expect(methodTypeCallDetails.length).to.eql(1);
+									expect(methodTypeCallDetails[0].arguments.length).to.eql(3);
+									expect(methodTypeCallDetails[0].arguments[0]).to.eql("Hello");
+									expect(methodTypeCallDetails[0].arguments[1]).to.eql("World");
+									expect(methodTypeCallDetails[0].arguments[2]).to.be.a("function");
+								});
+
 								it("Should call custom method with correct `this`", async () => {
 									methodTypeCallResult.result = "Success";
 									// Not sure why we have to bind here
