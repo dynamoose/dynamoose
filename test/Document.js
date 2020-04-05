@@ -18,8 +18,8 @@ describe("Document", () => {
 	it("Should not have internalProperties if use spread operator on object", () => {
 		const User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
 		const user = new User({"id": 1, "name": "Bob"});
-		expect(user[Internal.internalProperties]).to.exist;
-		expect({...user}[Internal.internalProperties]).to.not.exist;
+		expect(user[Internal.General.internalProperties]).to.exist;
+		expect({...user}[Internal.General.internalProperties]).to.not.exist;
 	});
 
 	describe("DynamoDB Conversation Methods", () => {
