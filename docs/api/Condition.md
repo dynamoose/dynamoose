@@ -23,6 +23,14 @@ new dynamoose.Condition().where("id").eq(1).and().where("name").eq("Bob");
 new dynamoose.Condition().where("id").eq(1).where("name").eq("Bob");
 ```
 
+## condition.and()
+
+This function specifies an `OR` join between two conditions, as opposed to the default `AND`. The condition will return `true` if either condition is met.
+
+```js
+new dynamoose.Condition().where("id").eq(1).or().where("name").eq("Bob"); // id = 1 OR name = Bob
+```
+
 ## condition.not()
 
 This function sets the condition to use the opposite comparison type for the given condition. You can find the list opposite comparison types below.
