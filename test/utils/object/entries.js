@@ -12,6 +12,14 @@ describe("utils.object.entries", () => {
 			"output": [["hello", "world"]]
 		},
 		{
+			"input": {"hello": undefined},
+			"output": [["hello", undefined]]
+		},
+		{
+			"input": {"hello": null},
+			"output": [["hello", null]]
+		},
+		{
 			"input": {"hello": "world", "test": "data"},
 			"output": [["hello", "world"], ["test", "data"]]
 		},

@@ -12,7 +12,7 @@ const Internal = require("../lib/Internal");
 
 describe("Document", () => {
 	it("Should be a function", () => {
-		expect(Document).to.be.an("function");
+		expect(Document).to.be.a("function");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
