@@ -2405,6 +2405,20 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"friends": ["Bob"]})).to.not.be.rejected;
 				});
 
+				it("Should throw error if trying to replace object without nested required property", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
+
+					return expect(callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}})).to.be.rejectedWith("data.age is a required property but has no value when trying to save document");
+				});
+
+				it("Should throw error if trying to replace object with $SET without nested required property", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
+
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"name": "Charlie"}}})).to.be.rejectedWith("data.age is a required property but has no value when trying to save document");
+				});
+
 				it("Should use default value if deleting property", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "default": "Bob"}});
