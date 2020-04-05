@@ -914,7 +914,7 @@ describe("Model", () => {
 					User = new dynamoose.Model("User", {"id": Number, "name": String, "birthday": Date});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": "Hello World"}}});
 
-					return expect(callType.func(User).bind(User)(1)).to.be.rejectedWith("Expected birthday to be of type number, instead found type string.");
+					return expect(callType.func(User).bind(User)(1)).to.be.rejectedWith("Expected birthday to be of type date, instead found type string.");
 				});
 
 				it("Should return object with correct values with object property", async () => {
