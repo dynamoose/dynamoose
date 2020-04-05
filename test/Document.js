@@ -18,8 +18,8 @@ describe("Document", () => {
 	it("Should not have internalProperties if use spread operator on object", () => {
 		const User = new Model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
 		const user = new User({"id": 1, "name": "Bob"});
-		expect(user[Internal.internalProperties]).to.exist;
-		expect({...user}[Internal.internalProperties]).to.not.exist;
+		expect(user[Internal.General.internalProperties]).to.exist;
+		expect({...user}[Internal.General.internalProperties]).to.not.exist;
 	});
 
 	describe("DynamoDB Conversation Methods", () => {
@@ -717,7 +717,7 @@ describe("Document", () => {
 					User = new Model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "name": "Charlie", "birthday": "test"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected birthday to be of type number, instead found type string.");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected birthday to be of type date, instead found type string.");
 				});
 
 				it("Should save with correct object with more properties than in schema", async () => {
@@ -1547,6 +1547,21 @@ describe("Document", () => {
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
 			},
 			{
+				"input": [{"id": "test"}, {"required": true}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
+			},
+			{
+				"input": [{"id": "test"}, {"required": true}],
+				"error": new Error.ValidationError("hash is a required property but has no value when trying to save document"),
+				"schema": {"id": {"type": String}, "hash": {"type": String, "required": true}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
+			},
+			{
+				"input": [{"id": "test"}, {"required": "nested"}],
+				"output": {"id": "test"},
+				"schema": {"id": {"type": String}, "hash": {"type": String, "required": true}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
+			},
+			{
 				"input": [{"id": 1, "ttl": 1}, {"type": "fromDynamo", "checkExpiredItem": true, "customTypesDynamo": true}],
 				"model": ["User", {"id": Number}, {"create": false, "waitForActive": false, "expires": 1000}],
 				"output": {"id": 1, "ttl": new Date(1000)}
@@ -1662,12 +1677,12 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "items": [1, 10000, "test"]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
-				"error": new Error.ValidationError("Expected items.2 to be of type number, instead found type string.")
+				"error": new Error.ValidationError("Expected items.2 to be of type date, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
-				"error": new Error.ValidationError("Expected items.2.birthday to be of type number, instead found type string.")
+				"error": new Error.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
 			}
 		];
 

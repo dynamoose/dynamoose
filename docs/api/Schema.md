@@ -6,8 +6,10 @@ You can use this method to create a schema. The `schema` parameter is an object 
 
 The `options` parameter is an optional object with the following options:
 
-- `saveUnknown` array | boolean (default: false) - This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep. If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
-- `timestamps` boolean | object (default: false) - This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
+| Name | Type | Default | Information
+|---|---|---|---|
+| `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep. If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
+| `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
 const schema = new dynamoose.Schema({
@@ -317,11 +319,14 @@ You can define indexes on properties to be created or updated upon model initial
 
 Your index object can contain the following properties:
 
-- name: string - Name of index (default: `${attribute}${global ? "GlobalIndex" : "LocalIndex"}`)
-- global: boolean - If the index should be a global secondary index or not. Attribute will be the hash key for the index. (default: `false`)
-- rangeKey: string - The range key attribute name for a global secondary index. (default: undefined)
-- project: boolean | [string] - Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. (default: `true`)
-- throughput: number | {read: number, write: number} - Sets the throughput for the global secondary index. (default: undefined)
+| Name | Type | Default | Notes |
+|---|---|---|---|
+| name | string | `${attribute}${global ? "GlobalIndex" : "LocalIndex"}` | Name of index |
+| global | boolean | false | If the index should be a global secondary index or not. Attribute will be the hash key for the index. |
+| rangeKey | string | undefined | The range key attribute name for a global secondary index. |
+| project | boolean \| [string] | true | Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. |
+| throughput | number \| {read: number, write: number} | undefined | Sets the throughput for the global secondary index. |
+
 
 If you set `index` to `true`, it will create an index with all of the default settings.
 
@@ -333,6 +338,46 @@ If you set `index` to `true`, it will create an index with all of the default se
 			"name": "emailIndex",
 			"global": true
 		} // creates a global index with the name `emailIndex`
+	}
+}
+```
+
+```js
+{
+	"email": {
+		"type": String,
+		"index": {
+			"name": "emailIndex",
+			"throughput": {"read": 5, "write": 10}
+		} // creates a global index with the name `emailIndex`
+	}
+}
+```
+
+### hashKey: boolean
+
+You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object.
+
+```js
+{
+	"id": String,
+	"key": {
+		"type": String,
+		"hashKey": true
+	}
+}
+```
+
+### rangeKey: boolean
+
+You can set this to true to overwrite what the `rangeKey` for the Model will be. By default the `rangeKey` won't exist.
+
+```js
+{
+	"id": String,
+	"email": {
+		"type": String,
+		"rangeKey": true
 	}
 }
 ```

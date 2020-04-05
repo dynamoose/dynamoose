@@ -35,18 +35,22 @@ new dynamoose.Condition().where("id").eq(1).or().where("name").eq("Bob"); // id 
 
 This function sets the condition to use the opposite comparison type for the given condition. You can find the list opposite comparison types below.
 
-- equals (EQ) - not equals (NE)
-- less than or equals (LE) - greater than (GT)
-- less than (LT) - greater than or equals (GE)
-- null (NULL) - not null (NOT_NULL)
-- contains (CONTAINS) - not contains (NOT_CONTAINS)
-- exists (EXISTS) - not exists (NOT_EXISTS)
+| Original | Opposite |
+|---|---|
+| equals (EQ) | not equals (NE) |
+| less than or equals (LE) | greater than (GT) |
+| less than (LT) | greater than or equals (GE) |
+| null (NULL) | not null (NOT_NULL) |
+| contains (CONTAINS) | not contains (NOT_CONTAINS) |
+| exists (EXISTS) | not exists (NOT_EXISTS) |
 
 The following comparisons do not have an opposite comparison type, and will throw an error if you try to use condition.not() with them.
 
-- in (IN)
-- between (BETWEEN)
-- begins with (BEGINS_WITH)
+| Original |
+|---|
+| in (IN) |
+| between (BETWEEN) |
+| begins with (BEGINS_WITH) |
 
 ```js
 new dynamoose.Condition().where("id").not().eq(1); // Retrieve all objects where id does NOT equal 1
