@@ -336,3 +336,31 @@ If you set `index` to `true`, it will create an index with all of the default se
 	}
 }
 ```
+
+### hashKey: boolean
+
+You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object.
+
+```js
+{
+	"id": String,
+	"key": {
+		"type": String,
+		"hashKey": true
+	}
+}
+```
+
+### rangeKey: boolean
+
+You can set this to true to overwrite what the `rangeKey` for the Model will be. By default the `rangeKey` won't exist.
+
+```js
+{
+	"id": String,
+	"email": {
+		"type": String,
+		"rangeKey": true
+	}
+}
+```
