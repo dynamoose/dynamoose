@@ -717,7 +717,7 @@ describe("Document", () => {
 					User = new Model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "name": "Charlie", "birthday": "test"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected birthday to be of type number, instead found type string.");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected birthday to be of type date, instead found type string.");
 				});
 
 				it("Should save with correct object with more properties than in schema", async () => {
@@ -1677,12 +1677,12 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "items": [1, 10000, "test"]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
-				"error": new Error.ValidationError("Expected items.2 to be of type number, instead found type string.")
+				"error": new Error.ValidationError("Expected items.2 to be of type date, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
-				"error": new Error.ValidationError("Expected items.2.birthday to be of type number, instead found type string.")
+				"error": new Error.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
 			}
 		];
 
