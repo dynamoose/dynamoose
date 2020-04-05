@@ -412,6 +412,7 @@ You can also pass in a `settings` object parameter to define extra settings for 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `document` |
+| condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 
 There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
@@ -423,6 +424,25 @@ await User.update({"id": 1}, {"name": "Bob"});
 // OR
 
 User.update({"id": 1}, {"name": "Bob"}, (error, user) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(user);
+	}
+});
+```
+
+```js
+// The following code below will only update the item if the `active` property on the existing document is set to true
+
+const condition = new dynamoose.Condition().where("active").eq(true);
+
+
+await User.update({"id": 1}, {"name": "Bob"}, {"condition": condition});
+
+// OR
+
+User.update({"id": 1}, {"name": "Bob"}, {"condition": condition}, (error, user) => {
 	if (error) {
 		console.error(error);
 	} else {

@@ -24,6 +24,21 @@ describe("utils.merge_objects", () => {
 			"output": {"a": [{"b": "c"}, {"d": "e"}, {"f": "g"}, {"h": "i"}, {"j": "k"}]}
 		},
 		{
+			"input": [{"a": {"b": "c"}}, {"a": {"d": "e"}}],
+			"output": {"a": {"b": "c", "d": "e"}},
+			"main": {"combineMethod": "object_combine"}
+		},
+		{
+			"input": [{"a": {"d": "c"}}, {"a": {"d": "e"}}],
+			"output": {"a": {"d": "e"}},
+			"main": {"combineMethod": "object_combine"}
+		},
+		{
+			"input": [{"a": {"d": "c"}}, {"a": {"z": "e", "d": "b"}}, {"a": {"z": "y"}}],
+			"output": {"a": {"d": "b", "z": "y"}},
+			"main": {"combineMethod": "object_combine"}
+		},
+		{
 			"input": [[1, 2], {"a": "b"}],
 			"error": "You can't mix value types for the merge_objects method."
 		},
@@ -38,13 +53,14 @@ describe("utils.merge_objects", () => {
 	];
 
 	tests.forEach((test) => {
+		const func = test.main ? utils.merge_objects.main(test.main) : utils.merge_objects;
 		if (test.error) {
 			it(`Should throw error for ${JSON.stringify(test.input)}`, () => {
-				expect(() => utils.merge_objects(...test.input)).to.throw(test.error);
+				expect(() => func(...test.input)).to.throw(test.error);
 			});
 		} else {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-				expect(utils.merge_objects(...test.input)).to.eql(test.output);
+				expect(func(...test.input)).to.eql(test.output);
 			});
 		}
 	});
