@@ -3115,161 +3115,37 @@ describe("Model", () => {
 			expect(User.methods).to.be.an("object");
 		});
 
-		describe("Model.methods.set", () => {
-			it("Should be a function", () => {
-				expect(User.methods.set).to.be.a("function");
-			});
-
-			it("Should not throw an error when being called", () => {
-				expect(() => User.methods.set("random", () => {})).to.not.throw();
-			});
-
-			it("Should set correct method on model", () => {
-				User.methods.set("random", () => {});
-				expect(User.random).to.be.a("function");
-			});
-
-			it("Should not overwrite internal methods", () => {
-				const originalMethod = User.get;
-				const newMethod = () => {};
-				User.methods.set("get", newMethod);
-				expect(User.get).to.eql(originalMethod);
-				expect(User.get).to.not.eql(newMethod);
-			});
-
-			it("Should overwrite methods if Internal.internalProperties exists but type doesn't", () => {
-				const originalMethod = User.get;
-				const newMethod = () => {};
-				User.random = originalMethod;
-				User.random[Internal.internalProperties] = {};
-				User.methods.set("random", newMethod);
-				expect(User.random).to.eql(originalMethod);
-				expect(User.random).to.not.eql(newMethod);
-			});
-
-			const methodTypes = [
-				{"name": "Callback", "func": (func) => {
-					return function (...args) {
-						const cb = args[args.length - 1];
-						func.bind(this)(...args).then((result) => cb(null, result)).catch((err) => cb(err));
-					};
-				}},
-				{"name": "Promise", "func": (func) => func}
-			];
-			methodTypes.forEach((methodType) => {
-				describe(`Method Type - ${methodType.name}`, () => {
-					const callerTypes = [
-						{"name": "Callback", "func": util.promisify},
-						{"name": "Promise", "func": (func) => func}
-					];
-					callerTypes.forEach((callerType) => {
-						describe(`Caller Type - ${callerType.name}`, () => {
-							let methodTypeCallDetails = [], methodTypeCallResult = {};
-							beforeEach(() => {
-								User.methods.set("action", methodType.func(async function (...args) {
-									methodTypeCallDetails.push({"arguments": [...args], "this": this});
-									if (methodTypeCallResult.error) {
-										throw methodTypeCallResult.error;
-									} else if (methodTypeCallResult.result) {
-										return methodTypeCallResult.result;
-									}
-								}));
-							});
-							afterEach(() => {
-								methodTypeCallDetails = [];
-								methodTypeCallResult = {};
-							});
-
-							it("Should call custom method with correct arguments", async () => {
-								methodTypeCallResult.result = "Success";
-								await callerType.func(User.action)();
-								expect(methodTypeCallDetails.length).to.eql(1);
-								expect(methodTypeCallDetails[0].arguments.length).to.eql(1);
-								expect(methodTypeCallDetails[0].arguments[0]).to.be.a("function");
-							});
-
-							it("Should call custom method with correct `this`", async () => {
-								methodTypeCallResult.result = "Success";
-								await callerType.func(User.action)();
-								expect(methodTypeCallDetails[0].this).to.eql(User);
-							});
-
-							it("Should return correct response that custom method returns", async () => {
-								methodTypeCallResult.result = "Success";
-								const result = await callerType.func(User.action)();
-								expect(result).to.eql("Success");
-							});
-
-							it("Should throw error if custom method throws error", async () => {
-								methodTypeCallResult.error = "ERROR";
-								let result, error;
-								try {
-									result = await callerType.func(User.action)();
-								} catch (e) {
-									error = e;
-								}
-								expect(result).to.not.exist;
-								expect(error).to.eql("ERROR");
-							});
-						});
-					});
-				});
-			});
-		});
-
-		describe("Model.methods.delete", () => {
-			it("Should be a function", () => {
-				expect(User.methods.delete).to.be.a("function");
-			});
-
-			it("Should not delete internal methods", () => {
-				User.methods.delete("get");
-				expect(User.get).to.be.a("function");
-			});
-
-			it("Should not throw error for deleting unknown method", () => {
-				expect(() => User.methods.delete("randomHere123")).to.not.throw();
-			});
-
-			it("Should delete custom method", () => {
-				User.methods.set("myMethod", () => {});
-				expect(User.myMethod).to.be.a("function");
-				User.methods.delete("myMethod");
-				expect(User.myMethod).to.eql(undefined);
-			});
-		});
-
-		describe("Model.methods.document", () => {
-			describe("Model.methods.document.set", () => {
+		function customMethodTests(settings) {
+			describe(`${settings.prefixName}.set`, () => {
 				it("Should be a function", () => {
-					expect(User.methods.document.set).to.be.a("function");
+					expect(settings.methodEntryPoint().set).to.be.a("function");
 				});
 
 				it("Should not throw an error when being called", () => {
-					expect(() => User.methods.document.set("random", () => {})).to.not.throw();
+					expect(() => settings.methodEntryPoint().set("random", () => {})).to.not.throw();
 				});
 
 				it("Should set correct method on model", () => {
-					User.methods.document.set("random", () => {});
-					expect(user.random).to.be.a("function");
+					settings.methodEntryPoint().set("random", () => {});
+					expect(settings.testObject().random).to.be.a("function");
 				});
 
 				it("Should not overwrite internal methods", () => {
-					const originalMethod = user.save;
+					const originalMethod = settings.testObject()[settings.existingMethod];
 					const newMethod = () => {};
-					User.methods.document.set("save", newMethod);
-					expect(user.save).to.eql(originalMethod);
-					expect(user.save).to.not.eql(newMethod);
+					settings.methodEntryPoint().set(settings.existingMethod, newMethod);
+					expect(settings.testObject()[settings.existingMethod]).to.eql(originalMethod);
+					expect(settings.testObject()[settings.existingMethod]).to.not.eql(newMethod);
 				});
 
 				it("Should overwrite methods if Internal.internalProperties exists but type doesn't", () => {
-					const originalMethod = user.save;
+					const originalMethod = settings.testObject()[settings.existingMethod];
 					const newMethod = () => {};
-					User.prototype.random = originalMethod;
-					User.prototype.random[Internal.internalProperties] = {};
-					User.methods.document.set("random", newMethod);
-					expect(user.random).to.eql(originalMethod);
-					expect(user.random).to.not.eql(newMethod);
+					settings.testObject().random = originalMethod;
+					settings.testObject().random[Internal.internalProperties] = {};
+					settings.methodEntryPoint().set(settings.existingMethod, newMethod);
+					expect(settings.testObject().random).to.eql(originalMethod);
+					expect(settings.testObject().random).to.not.eql(newMethod);
 				});
 
 				const methodTypes = [
@@ -3291,7 +3167,7 @@ describe("Model", () => {
 							describe(`Caller Type - ${callerType.name}`, () => {
 								let methodTypeCallDetails = [], methodTypeCallResult = {};
 								beforeEach(() => {
-									User.methods.document.set("action", methodType.func(async function (...args) {
+									settings.methodEntryPoint().set("action", methodType.func(async function (...args) {
 										methodTypeCallDetails.push({"arguments": [...args], "this": this});
 										if (methodTypeCallResult.error) {
 											throw methodTypeCallResult.error;
@@ -3307,7 +3183,7 @@ describe("Model", () => {
 
 								it("Should call custom method with correct arguments", async () => {
 									methodTypeCallResult.result = "Success";
-									await callerType.func(user.action)();
+									await callerType.func(settings.testObject().action)();
 									expect(methodTypeCallDetails.length).to.eql(1);
 									expect(methodTypeCallDetails[0].arguments.length).to.eql(1);
 									expect(methodTypeCallDetails[0].arguments[0]).to.be.a("function");
@@ -3315,16 +3191,16 @@ describe("Model", () => {
 
 								it("Should call custom method with correct `this`", async () => {
 									methodTypeCallResult.result = "Success";
-									// Not sure why we have to bind `user` here, when we don't have to bind anything for Model.methods.set
+									// Not sure why we have to bind here
 									// Through manual testing tho, you do not need to bind anything and in production use this works as described in the documentation
 									// Would be nice to figure out why this is only necessary for our test suite and fix it
-									await callerType.func(user.action).bind(user)();
-									expect(methodTypeCallDetails[0].this).to.eql(user);
+									await callerType.func(settings.testObject().action).bind(settings.testObject())();
+									expect(methodTypeCallDetails[0].this).to.eql(settings.testObject());
 								});
 
 								it("Should return correct response that custom method returns", async () => {
 									methodTypeCallResult.result = "Success";
-									const result = await callerType.func(user.action)();
+									const result = await callerType.func(settings.testObject().action)();
 									expect(result).to.eql("Success");
 								});
 
@@ -3332,7 +3208,7 @@ describe("Model", () => {
 									methodTypeCallResult.error = "ERROR";
 									let result, error;
 									try {
-										result = await callerType.func(user.action)();
+										result = await callerType.func(settings.testObject().action)();
 									} catch (e) {
 										error = e;
 									}
@@ -3344,28 +3220,32 @@ describe("Model", () => {
 					});
 				});
 			});
-
-			describe("Model.methods.document.delete", () => {
+			describe(`${settings.prefixName}.delete`, () => {
 				it("Should be a function", () => {
-					expect(User.methods.document.delete).to.be.a("function");
+					expect(settings.methodEntryPoint().delete).to.be.a("function");
 				});
 
 				it("Should not delete internal methods", () => {
-					User.methods.document.delete("save");
-					expect(user.save).to.be.a("function");
+					settings.methodEntryPoint().delete(settings.existingMethod);
+					expect(settings.testObject()[settings.existingMethod]).to.be.a("function");
 				});
 
 				it("Should not throw error for deleting unknown method", () => {
-					expect(() => User.methods.document.delete("randomHere123")).to.not.throw();
+					expect(() => settings.methodEntryPoint().delete("randomHere123")).to.not.throw();
 				});
 
 				it("Should delete custom method", () => {
-					User.methods.document.set("myMethod", () => {});
-					expect(user.myMethod).to.be.a("function");
-					User.methods.document.delete("myMethod");
-					expect(user.myMethod).to.eql(undefined);
+					settings.methodEntryPoint().set("myMethod", () => {});
+					expect(settings.testObject().myMethod).to.be.a("function");
+					settings.methodEntryPoint().delete("myMethod");
+					expect(settings.testObject().myMethod).to.eql(undefined);
 				});
 			});
+		}
+
+		customMethodTests({"prefixName": "Model.methods", "methodEntryPoint": () => User.methods, "testObject": () => User, "existingMethod": "get"});
+		describe("Model.methods.document", () => {
+			customMethodTests({"prefixName": "Model.methods.document", "methodEntryPoint": () => User.methods.document, "testObject": () => user, "existingMethod": "save"});
 		});
 	});
 });
