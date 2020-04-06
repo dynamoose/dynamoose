@@ -14,6 +14,12 @@ Cat.scan({"breed": {"contains": "Terrier"}}).exec() // will scan all items and f
 
 If you pass an object into `Model.scan` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
+## Conditionals
+
+On top of all of the methods listed below, every `Scan` instance has all of the methods that a `Condition` instance has. This means you can use methods like `where`, `filter`, `eq`, `lt` and more.
+
+Please check the [Condition documentation](Condition.md) to find the rest of the methods you can use with Scan.
+
 ## scan.exec([callback])
 
 This will execute the scan you constructed. If you pass in a callback the callback function will be executed upon completion passing in an error (if exists), and the results array. In the event you didn't pass in a callback parameter, a promise will be returned that will resolve to the results array upon completion.
@@ -29,7 +35,10 @@ Cat.scan().exec((error, results) => {
 		//   count: 1,
 		//   scannedCount: 2,
 		//   timesScanned: 1 ]
+		console.log(results[0]); // { name: 'Will', breed: 'Terrier', id: 1 }
+		console.log(results.count); // 1
 		console.log(Array.isArray(results)); // true
+		console.log(results.scannedCount); // 2
 	}
 });
 ```
@@ -43,139 +52,12 @@ The `results` array you receive back is a standard JavaScript array of objects. 
 
 The extra properties attached to the array are:
 
-- `lastKey` - In the event there are more items to scan in DynamoDB this property will be equal to an object that you can pass into [`scan.startAt(key)`](#scanstartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
-- `count` - The count property from DynamoDB, which represents how many items were returned from DynamoDB. This should always equal the number of items in the array.
-- `scannedCount` - How many items DynamoDB scanned. This doesn't necessarily represent how many items were returned from DynamoDB due to filters that might have been applied to the scan request.
-- `timesScanned` - How many times Dynamoose made a scan request to DynamoDB. This will always equal 1, unless you used the `scan.all` or `scan.parallel` method.
-
-## scan.and()
-
-This function has no behavior and is only used to increase readability of your scan object. This function can be omitted with no behavior change to your code.
-
-```js
-// The two scan objects below are identical
-Cat.scan().filter("id").eq(1).and().filter("name").eq("Bob");
-Cat.scan().filter("id").eq(1).filter("name").eq("Bob");
-```
-
-## scan.not()
-
-This function sets the scan to use the opposite comparison type for the given filter condition. You can find the list opposite comparison types below.
-
-- equals (EQ) - not equals (NE)
-- less than or equals (LE) - greater than (GT)
-- less than (LT) - greater than or equals (GE)
-- null (NULL) - not null (NOT_NULL)
-- contains (CONTAINS) - not contains (NOT_CONTAINS)
-- exists (EXISTS) - not exists (NOT_EXISTS)
-
-As well the following comparisons do not have an opposite comparison type, and will throw an error if you try to use scan.not() with them.
-
-- in (IN)
-- between (BETWEEN)
-- begins with (BEGINS_WITH)
-
-```js
-Cat.scan().filter("id").not().eq(1); // Retrieve all objects where id does NOT equal 1
-Cat.scan().filter("id").not().between(1, 2); // Will throw error since between does not have an opposite comparison type
-```
-
-## scan.filter(key)
-
-This function prepares a new filter conditional to be used with the request. If you have not finished your previous filter conditional before using this function again it will wipe out the previous pending conditional filter. The `key` parameter is a string that you pass in representing which attribute you would like to filter on.
-
-You will use this function with a comparison function which will complete the filter conditional and allow you to start another filter conditional if you wish.
-
-```js
-Cat.scan().filter("id"); // Currently this scan has no filter behavior and will scan all items in the table
-Cat.scan().filter("id").eq(1); // Since this scan has a comparison function (eq) after the filter it will complete the filter conditional and only scan items where `id` = 1
-```
-
-## scan.where(key)
-
-This function is identical to [`scan.filter(key)`](#scanfilterkey) and just used as an alias.
-
-## scan.eq(value)
-
-This comparison function will check to see if the given filter key is equal to the value you pass in as a parameter.
-
-```js
-Cat.scan().filter("name").eq("Tom"); // Return all items where `name` equals `Tom`
-```
-
-## scan.exists()
-
-This comparison function will check to see if the given filter key exists in the document.
-
-```js
-Cat.scan().filter("phoneNumber").exists(); // Return all items where `phoneNumber` exists in the document
-
-Cat.scan().filter("phoneNumber").not().exists(); // Return all items where `phoneNumber` does not exist in the document
-```
-
-## scan.lt(value)
-
-This comparison function will check to see if the given filter key is less than the value you pass in as a parameter.
-
-```js
-Cat.scan().filter("age").lt(5); // Return all items where `age` is less than 5
-```
-
-## scan.le(value)
-
-This comparison function will check to see if the given filter key is less than or equal to the value you pass in as a parameter.
-
-```js
-Cat.scan().filter("age").le(5); // Return all items where `age` is less than or equal to 5
-```
-
-## scan.gt(value)
-
-This comparison function will check to see if the given filter key is greater than the value you pass in as a parameter.
-
-```js
-Cat.scan().filter("age").gt(5); // Return all items where `age` is greater than 5
-```
-
-## scan.ge(value)
-
-This comparison function will check to see if the given filter key is greater than or equal to the value you pass in as a parameter.
-
-```js
-Cat.scan().filter("age").ge(5); // Return all items where `age` is greater than or equal to 5
-```
-
-## scan.beginsWith(value)
-
-This comparison function will check to see if the given filter key begins with the value you pass in as a parameter.
-
-```js
-Cat.scan().filter("name").beginsWith("T"); // Return all items where `name` begins with `T`
-```
-
-## scan.contains(value)
-
-This comparison function will check to see if the given filter key contains the value you pass in as a parameter.
-
-```js
-Cat.scan().filter("name").contains("om"); // Return all items where `name` contains `om`
-```
-
-## scan.in(values)
-
-This comparison function will check to see if the given filter key equals any of the items you pass in in the values array you pass in. The `values` parameter must be an array and will only return results where the value for the given key exists in the array you pass in.
-
-```js
-Cat.scan("name").in(["Charlie", "Bob"]) // Return all items where `name` = `Charlie` OR `Bob`
-```
-
-## scan.between(a, b)
-
-This comparison function will check to see if the given filter key is between the two values you pass in as parameters.
-
-```js
-Cat.scan().filter("age").between(5, 9); // Return all items where `age` is between 5 and 9
-```
+| Name | Description |
+|---|---|
+| `lastKey` | In the event there are more items to scan in DynamoDB this property will be equal to an object that you can pass into [`scan.startAt(key)`](#scanstartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types. |
+| `count` | The count property from DynamoDB, which represents how many items were returned from DynamoDB. This should always equal the number of items in the array. |
+| `scannedCount` | How many items DynamoDB scanned. This doesn't necessarily represent how many items were returned from DynamoDB due to filters that might have been applied to the scan request. |
+| `timesScanned` | How many times Dynamoose made a scan request to DynamoDB. This will always equal 1, unless you used the `scan.all` or `scan.parallel` method. |
 
 ## scan.limit(count)
 
