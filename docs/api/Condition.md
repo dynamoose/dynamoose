@@ -9,6 +9,7 @@ This is the basic entry point to construct a conditional. The filter property is
 ```js
 new dynamoose.Condition("breed").contains("Terrier") // will condition for where the key `breed` contains `Terrier`
 new dynamoose.Condition({"breed": {"contains": "Terrier"}}) // will condition for where the key `breed` contains `Terrier`
+new dynamoose.Condition(new dynamoose.Condition({"breed": {"contains": "Terrier"}})) // will condition for where the key `breed` contains `Terrier`
 ```
 
 If you pass an object into `new dynamoose.Condition()` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
