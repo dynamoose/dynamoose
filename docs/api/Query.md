@@ -13,6 +13,12 @@ Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all items and
 
 If you pass an object into `Model.query` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
+## Conditionals
+
+On top of all of the methods listed below, every `Query` instance has all of the methods that a `Condition` instance has. This means you can use methods like `where`, `filter`, `eq`, `lt` and more.
+
+Please check the [Condition documentation](Condition.md) to find the rest of the methods you can use with Query.
+
 ## query.exec([callback])
 
 This will execute the query you constructed. If you pass in a callback the callback function will be executed upon completion passing in an error (if exists), and the results array. In the event you didn't pass in a callback parameter, a promise will be returned that will resolve to the results array upon completion.
@@ -28,7 +34,10 @@ Cat.query("name").eq("Will").exec((error, results) => {
 		//   count: 1,
 		//   queriedCount: 2,
 		//   timesQueried: 1 ]
+		console.log(results[0]); // { name: 'Will', breed: 'Terrier', id: 1 }
+		console.log(results.count); // 1
 		console.log(Array.isArray(results)); // true
+		console.log(results.scannedCount); // 2
 	}
 });
 ```
@@ -42,146 +51,12 @@ The `results` array you receive back is a standard JavaScript array of objects. 
 
 The extra properties attached to the array are:
 
-- `lastKey` - In the event there are more items to query in DynamoDB this property will be equal to an object that you can pass into [`query.startAt(key)`](#querystartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
-- `count` - The count property from DynamoDB, which represents how many items were returned from DynamoDB. This should always equal the number of items in the array.
-- `queriedCount` - How many items DynamoDB queried. This doesn't necessarily represent how many items were returned from DynamoDB due to filters that might have been applied to the query request.
-- `timesQueried` - How many times Dynamoose made a query request to DynamoDB. This will always equal 1, unless you used the `query.all` or `query.parallel` method.
-
-## query.and()
-
-This function has no behavior and is only used to increase readability of your query object. This function can be omitted with no behavior change to your code.
-
-```js
-// The two query objects below are identical
-Animal.query("name").eq("Will").filter("age").eq(1).and().filter("type").eq("Dog");
-Animal.query("name").eq("Will").filter("age").eq(1).filter("type").eq("Dog");
-```
-
-## query.not()
-
-This function sets the query to use the opposite comparison type for the given filter condition. You can find the list opposite comparison types below.
-
-- equals (EQ) - not equals (NE)
-- less than or equals (LE) - greater than (GT)
-- less than (LT) - greater than or equals (GE)
-- null (NULL) - not null (NOT_NULL)
-- contains (CONTAINS) - not contains (NOT_CONTAINS)
-- exists (EXISTS) - not exists (NOT_EXISTS)
-
-As well the following comparisons do not have an opposite comparison type, and will throw an error if you try to use query.not() with them.
-
-- in (IN)
-- between (BETWEEN)
-- begins with (BEGINS_WITH)
-
-```js
-Cat.query("name").eq("Will").filter("age").not().eq(1); // Retrieve all objects where id does NOT equal 1
-Cat.query("name").eq("Will").filter("age").not().between(1, 2); // Will throw error since between does not have an opposite comparison type
-```
-
-## query.filter(key)
-
-This function prepares a new filter conditional to be used with the request. If you have not finished your previous conditional before using this function again it will wipe out the previous pending conditional. The `key` parameter is a string that you pass in representing which attribute you would like to filter on.
-
-You will use this function with a comparison function which will complete the filter conditional and allow you to start another filter conditional if you wish.
-
-```js
-Cat.query("name").eq("Will").filter("age"); // Currently this query has no filter behavior and will query all items in the table
-Cat.query("name").eq("Will").filter("age").eq(1); // Since this query has a comparison function (eq) after the filter it will complete the filter conditional and only query items where `id` = 1
-```
-
-## query.where(key)
-
-This function prepares a new range key conditional to query with the request. If you have not finished your previous conditional before using this function again it will wipe out the previous pending conditional. The `key` parameter is a string that you pass in representing which range key you would like to add a conditional to.
-
-You will use this function with a comparison function which will complete the conditional and allow you to start another conditional if you wish.
-
-```js
-Cat.query("name").eq("Will"); // Currently this query has no behavior and will query all items in the table
-Cat.query("name").eq("Will"); // Since this query has a comparison function (eq) after the conditional it will complete the conditional and only query items where `id` = 1
-```
-
-## query.eq(value)
-
-This comparison function will check to see if the given filter key is equal to the value you pass in as a parameter.
-
-```js
-Cat.query("name").eq("Will").filter("name").eq("Tom"); // Return all items where `name` equals `Tom`
-```
-
-## query.exists()
-
-This comparison function will check to see if the given filter key exists in the document.
-
-```js
-Cat.query("name").eq("Will").filter("phoneNumber").exists(); // Return all items where `phoneNumber` exists in the document
-
-Cat.query("name").eq("Will").filter("phoneNumber").not().exists(); // Return all items where `phoneNumber` does not exist in the document
-```
-
-## query.lt(value)
-
-This comparison function will check to see if the given filter key is less than the value you pass in as a parameter.
-
-```js
-Cat.query("name").eq("Will").filter("age").lt(5); // Return all items where `age` is less than 5
-```
-
-## query.le(value)
-
-This comparison function will check to see if the given filter key is less than or equal to the value you pass in as a parameter.
-
-```js
-Cat.query("name").eq("Will").filter("age").le(5); // Return all items where `age` is less than or equal to 5
-```
-
-## query.gt(value)
-
-This comparison function will check to see if the given filter key is greater than the value you pass in as a parameter.
-
-```js
-Cat.query("name").eq("Will").filter("age").gt(5); // Return all items where `age` is greater than 5
-```
-
-## query.ge(value)
-
-This comparison function will check to see if the given filter key is greater than or equal to the value you pass in as a parameter.
-
-```js
-Cat.query("name").eq("Will").filter("age").ge(5); // Return all items where `age` is greater than or equal to 5
-```
-
-## query.beginsWith(value)
-
-This comparison function will check to see if the given filter key begins with the value you pass in as a parameter.
-
-```js
-Cat.query("name").eq("Will").filter("name").beginsWith("T"); // Return all items where `name` begins with `T`
-```
-
-## query.contains(value)
-
-This comparison function will check to see if the given filter key contains the value you pass in as a parameter.
-
-```js
-Cat.query("name").eq("Will").filter("name").contains("om"); // Return all items where `name` contains `om`
-```
-
-## query.in(values)
-
-This comparison function will check to see if the given filter key equals any of the items you pass in in the values array you pass in. The `values` parameter must be an array and will only return results where the value for the given key exists in the array you pass in.
-
-```js
-Animal.query("name").eq("Will").filter("type").in(["Dog", "Cat"]) // Return all items where `name` = `Will` and filter where type = `Dog` OR `Cat`
-```
-
-## query.between(a, b)
-
-This comparison function will check to see if the given filter key is between the two values you pass in as parameters.
-
-```js
-Cat.query("name").eq("Will").filter("age").between(5, 9); // Return all items where `age` is between 5 and 9
-```
+| Name | Description |
+|---|---|
+| `lastKey` | In the event there are more items to query in DynamoDB this property will be equal to an object that you can pass into [`query.startAt(key)`](#querystartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types. |
+| `count` | The count property from DynamoDB, which represents how many items were returned from DynamoDB. This should always equal the number of items in the array. |
+| `queriedCount` | How many items DynamoDB queried. This doesn't necessarily represent how many items were returned from DynamoDB due to filters that might have been applied to the query request. |
+| `timesQueried` | How many times Dynamoose made a query request to DynamoDB. This will always equal 1, unless you used the `query.all` or `query.parallel` method. |
 
 ## query.limit(count)
 
