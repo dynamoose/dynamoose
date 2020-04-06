@@ -402,7 +402,7 @@ describe("Model", () => {
 					}
 				});
 				new dynamoose.Model(tableName, {"id": String});
-				const errorHandler = () => {};
+				const errorHandler = utils.empty_function;
 				process.on("unhandledRejection", errorHandler);
 				await utils.timeout(15);
 				expect(describeTableParams.length).to.be.above(5);
@@ -2289,19 +2289,19 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "name",
-							"#ca0": "active"
+							"#a1": "name",
+							"#a0": "active"
 						},
 						"ExpressionAttributeValues": {
-							":v0": {
+							":v1": {
 								"S": "Charlie"
 							},
-							":cv0": {
+							":v0": {
 								"BOOL": true
 							}
 						},
-						"UpdateExpression": "SET #a0 = :v0",
-						"ConditionExpression": "#ca0 = :cv0",
+						"UpdateExpression": "SET #a1 = :v1",
+						"ConditionExpression": "#a0 = :v0",
 						"Key": {
 							"id": {
 								"N": "1"
@@ -2933,7 +2933,7 @@ describe("Model", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
-				User.transaction.get(1, () => {});
+				User.transaction.get(1, utils.empty_function);
 				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
@@ -2988,7 +2988,7 @@ describe("Model", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
-				User.transaction.create({"id": 1}, {"overwrite": false}, () => {});
+				User.transaction.create({"id": 1}, {"overwrite": false}, utils.empty_function);
 				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
@@ -3017,7 +3017,7 @@ describe("Model", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
-				User.transaction.delete(1, () => {});
+				User.transaction.delete(1, utils.empty_function);
 				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
@@ -3053,7 +3053,7 @@ describe("Model", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
-				User.transaction.update({"id": 1, "name": "Bob"}, () => {});
+				User.transaction.update({"id": 1, "name": "Bob"}, utils.empty_function);
 				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
@@ -3092,7 +3092,7 @@ describe("Model", () => {
 				let result;
 				const oldWarn = console.warn;
 				console.warn = (warning) => result = warning;
-				User.transaction.condition(1, () => {});
+				User.transaction.condition(1, utils.empty_function);
 				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
@@ -3122,17 +3122,17 @@ describe("Model", () => {
 				});
 
 				it("Should not throw an error when being called", () => {
-					expect(() => settings.methodEntryPoint().set("random", () => {})).to.not.throw();
+					expect(() => settings.methodEntryPoint().set("random", utils.empty_function)).to.not.throw();
 				});
 
 				it("Should set correct method on model", () => {
-					settings.methodEntryPoint().set("random", () => {});
+					settings.methodEntryPoint().set("random", utils.empty_function);
 					expect(settings.testObject().random).to.be.a("function");
 				});
 
 				it("Should not overwrite internal methods", () => {
 					const originalMethod = settings.testObject()[settings.existingMethod];
-					const newMethod = () => {};
+					const newMethod = utils.empty_function;
 					settings.methodEntryPoint().set(settings.existingMethod, newMethod);
 					expect(settings.testObject()[settings.existingMethod]).to.eql(originalMethod);
 					expect(settings.testObject()[settings.existingMethod]).to.not.eql(newMethod);
@@ -3140,7 +3140,7 @@ describe("Model", () => {
 
 				it("Should overwrite methods if Internal.General.internalProperties exists but type doesn't", () => {
 					const originalMethod = settings.testObject()[settings.existingMethod];
-					const newMethod = () => {};
+					const newMethod = utils.empty_function;
 					settings.testObject().random = originalMethod;
 					settings.testObject().random[Internal.General.internalProperties] = {};
 					settings.methodEntryPoint().set(settings.existingMethod, newMethod);
@@ -3252,7 +3252,7 @@ describe("Model", () => {
 				});
 
 				it("Should delete custom method", () => {
-					settings.methodEntryPoint().set("myMethod", () => {});
+					settings.methodEntryPoint().set("myMethod", utils.empty_function);
 					expect(settings.testObject().myMethod).to.be.a("function");
 					settings.methodEntryPoint().delete("myMethod");
 					expect(settings.testObject().myMethod).to.eql(undefined);
