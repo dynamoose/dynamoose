@@ -31,6 +31,10 @@ describe("Condition", () => {
 				"output": {"ConditionExpression": "#a0 = :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
 			},
 			{
+				"input": () => new Condition(new Condition({"id": "5"})),
+				"output": {"ConditionExpression": "#a0 = :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
+			},
+			{
 				"input": () => new Condition({"id": {"eq": "5"}}),
 				"output": {"ConditionExpression": "#a0 = :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
 			},
