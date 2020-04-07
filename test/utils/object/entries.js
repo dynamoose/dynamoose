@@ -34,6 +34,10 @@ describe("utils.object.entries", () => {
 		{
 			"input": {"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]},
 			"output": [["id", 1], ["friends", [{"name": "Bob", "id": 1}, {"name": "Tim"}]], ["friends.0", {"name": "Bob", "id": 1}], ["friends.0.name", "Bob"], ["friends.0.id", 1], ["friends.1", {"name": "Tim"}], ["friends.1.name", "Tim"]]
+		},
+		{
+			"input": {"hello": Buffer.from("world")},
+			"output": [["hello", Buffer.from("world")]]
 		}
 	];
 
