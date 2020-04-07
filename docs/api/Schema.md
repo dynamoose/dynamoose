@@ -59,7 +59,7 @@ If you use a set you will define the type surrounded by brackets. For example a 
 
 When using `saveUnknown` with a set, the type recognized by Dynamoose will be the underlying JavaScript Set constructor. If you have a set type defined in your schema the underlying type will be an Array.
 
-Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
+Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a item with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
 For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute.
 
@@ -201,7 +201,7 @@ You can set this property to always use the `default` value, even if a value is 
 
 ### validate: value | RegExp | function | async function
 
-You can set a validation on an attribute to ensure the value passes a given validation before saving the document. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the item exists in the document. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the document) you can enable `required`.
+You can set a validation on an attribute to ensure the value passes a given validation before saving the item. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the item exists in the item. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the item) you can enable `required`.
 
 ```js
 {
@@ -237,14 +237,14 @@ You can set a validation on an attribute to ensure the value passes a given vali
 		"validate": async (val) => {
 			const networkRequest = await axios(`https://emailvalidator.com/${val}`);
 			return networkRequest.data.isValid;
-		} // Any object that is saved will call this function and run the network request with `val` equal to the value set for the `email` property, and only allow the document to be saved if the `isValid` property in the response is true
+		} // Any object that is saved will call this function and run the network request with `val` equal to the value set for the `email` property, and only allow the item to be saved if the `isValid` property in the response is true
 	}
 }
 ```
 
 ### required: boolean
 
-You can set an attribute to be required when saving documents to DynamoDB. By default this setting is `false`.
+You can set an attribute to be required when saving items to DynamoDB. By default this setting is `false`.
 
 In the event the parent object is undefined and `required` is set to `false` on that parent attribute, the required check will not be run on child attributes.
 
@@ -289,7 +289,7 @@ This property is not a replacement for `required`. If the value is undefined or 
 
 ### get: function | async function
 
-You can use a get function on an attribute to be run whenever retrieving a document from DynamoDB. This function will only be run if the item exists in the document. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
+You can use a get function on an attribute to be run whenever retrieving a item from DynamoDB. This function will only be run if the item exists in the item. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
 
 ```js
 {
@@ -302,7 +302,7 @@ You can use a get function on an attribute to be run whenever retrieving a docum
 
 ### set: function | async function
 
-You can use a set function on an attribute to be run whenever saving a document to DynamoDB. This function will only be run if the item exists in the document. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
+You can use a set function on an attribute to be run whenever saving a item to DynamoDB. This function will only be run if the item exists in the item. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
 
 ```js
 {
@@ -322,8 +322,8 @@ Your index object can contain the following properties:
 | Name | Type | Default | Notes |
 |---|---|---|---|
 | name | string | `${attribute}${global ? "GlobalIndex" : "LocalIndex"}` | Name of index |
-| global | boolean | false | If the index should be a global secondary index or not. Attribute will be the hash key for the index. |
-| rangeKey | string | undefined | The range key attribute name for a global secondary index. |
+| global | boolean | false | If the index should be a global secondary index or not. Attribute will be the hash key (partition key) for the index. |
+| rangeKey | string | undefined | The range key (sort key) attribute name for a global secondary index. |
 | project | boolean \| [string] | true | Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. |
 | throughput | number \| {read: number, write: number} | undefined | Sets the throughput for the global secondary index. |
 
@@ -356,7 +356,7 @@ If you set `index` to `true`, it will create an index with all of the default se
 
 ### hashKey: boolean
 
-You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object.
+You can set this to true to overwrite what the `hashKey` (partition key) for the Model will be. By default the `hashKey` will be the first key in the Schema object.
 
 ```js
 {
@@ -370,7 +370,7 @@ You can set this to true to overwrite what the `hashKey` for the Model will be. 
 
 ### rangeKey: boolean
 
-You can set this to true to overwrite what the `rangeKey` for the Model will be. By default the `rangeKey` won't exist.
+You can set this to true to overwrite what the `rangeKey` (sort key) for the Model will be. By default the `rangeKey` won't exist.
 
 ```js
 {

@@ -1,10 +1,10 @@
 # Model
 
-The Model object represents one DynamoDB table. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
+The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
 
 ## new dynamoose.Model(name, schema[, config])
 
-This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
+This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns an initializer that you can use to create instances of the given model.
 
 The `schema` parameter can either be an object OR a Schema instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
@@ -36,9 +36,9 @@ The config parameter is an object used to customize settings for the model.
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
 | update | If Dynamoose should update the capacity of the existing table to match the model throughput. | Boolean | false |
-| expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
-| expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | null |
-| expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
+| expires | The setting to describe the time to live for items created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
+| expires.ttl | The default amount of time the item should stay alive from creation time in milliseconds. | Number | null |
+| expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` |
 | expires.items | The options for items with ttl. | Object | {} |
 | expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
 
@@ -126,7 +126,7 @@ async function printTableRequest() {
 
 ## Model.get(hashKey[, settings][, callback])
 
-You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
+You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
@@ -173,7 +173,7 @@ User.get(1, {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rangeKey (sort key) for your model, you can pass in an object for the `hashKey` (partition key) parameter.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -219,7 +219,7 @@ User.get({"id": 1}, (error, myUser) => {
 
 ## Model.batchGet(keys[, settings][, callback])
 
-You can use Model.batchGet to retrieve multiple documents from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
 
@@ -278,7 +278,7 @@ User.batchGet([1, 2], {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rageKey (sort key) for your model, you can pass in an object for the `hashKey` (partition key) parameter.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -324,7 +324,7 @@ User.batchGet([{"id": 1}, {"id": 2}], (error, myUsers) => {
 
 ## Model.create(document, [settings], [callback])
 
-This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
+This function lets you create a new item for a given model. This function is almost identical to creating a new item and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
 
 If you do not pass in a `callback` parameter a promise will be returned.
 
@@ -351,7 +351,7 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 
 ## Model.batchPut(documents, [settings], [callback])
 
-This saves documents to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+This saves items to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
 
@@ -401,7 +401,7 @@ await User.batchPut([
 
 ## Model.update(keyObj[, updateObj[, settings]],[ callback])
 
-This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
+This function lets you update an existing item in the database. You can either pass in one object combining both the hashKey (partition key) you wish to update along with the update object, or keep them separate by passing in two objects.
 
 ```js
 await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
@@ -416,7 +416,7 @@ You can also pass in a `settings` object parameter to define extra settings for 
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `document` |
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 
-There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
+There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
 ```js
 // The code below will set `name` to Bob for the user where `id` = 1
@@ -435,7 +435,7 @@ User.update({"id": 1}, {"name": "Bob"}, (error, user) => {
 ```
 
 ```js
-// The following code below will only update the item if the `active` property on the existing document is set to true
+// The following code below will only update the item if the `active` property on the existing item is set to true
 
 const condition = new dynamoose.Condition().where("active").eq(true);
 
@@ -457,15 +457,15 @@ The other method you can use is by using specific update types. These update typ
 
 - `$SET` - This method will set the attribute to the new value (as shown above)
 - `$ADD` - This method will add the value to the attribute. If the attribute is a number it will add the value to the existing number. If the attribute is a list, it will add the value to the list. Although this method only works for sets in DynamoDB, Dynamoose will automatically update this method to work for lists/arrays as well according to your schema. This update type does not work for any other attribute type.
-- `$REMOVE` - This method will remove the attribute from the document. Since this method doesn't require values you can pass in an array of attribute names.
+- `$REMOVE` - This method will remove the attribute from the item. Since this method doesn't require values you can pass in an array of attribute names.
 
 ```js
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"age": 1}});
-// This will set the document name to Bob and increase the age by 1 for the user where id = 1
+// This will set the item name to Bob and increase the age by 1 for the user where id = 1
 
 await User.update({"id": 1}, {"$REMOVE": ["address"]});
 await User.update({"id": 1}, {"$REMOVE": {"address": null}});
-// These two function calls will delete the `address` attribute for the document where id = 1
+// These two function calls will delete the `address` attribute for the item where id = 1
 
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": "Tim"}});
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": ["Tim"]}});
@@ -483,7 +483,7 @@ The `validate` Schema attribute property will only be run on `$SET` values. This
 
 ## Model.delete(hashKey[, settings][, callback])
 
-You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
+You can use Model.delete to delete a item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
 
@@ -530,7 +530,7 @@ User.delete(1, {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rageKey (sort key) for your model, you can pass in an object for the `hashKey` (partition key) parameter.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -576,7 +576,7 @@ User.delete({"id": 1}, (error) => {
 
 ## Model.batchDelete(keys[, settings][, callback])
 
-You can use Model.batchDelete to delete documents from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, an object with the `unprocessedItems` will be returned to you. Otherwise an error will be thrown.
 
@@ -644,7 +644,7 @@ User.batchDelete([1, 2], {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rageKey (sort key) for your model, you can pass in an object for the `hashKey` (partition key) parameter.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -832,7 +832,7 @@ User.scanAll((err, models) => {});
 
 ## Model.methods.document.set(name, function)
 
-This function allows you to add a method to the model documents that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying document. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
+This function allows you to add a method to the model items that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying item. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
 
 ```js
 // Setup:
@@ -896,7 +896,7 @@ console.log("Set name");
 
 ## Model.methods.document.delete(name)
 
-This allows you to delete an existing method from the document. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
+This allows you to delete an existing method from the item. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
 
 ```js
 User.methods.document.delete("setName");
