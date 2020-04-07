@@ -127,7 +127,7 @@ Cat.scan().using("name-index"); // Run the scan on the `name-index` index
 
 If a scan result is more than 1 MB (before filtering!), DynamoDB paginates the results so you would have to send multiple requests. Please see the [AWS DynamoDB documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html) for further informations.
 
-Unlike most other scan functions that directly change the DynamoDB scan request, this function is purely internal and unique to Dynamoose. This function sends continuous scan requests upon receiving the response so long as the `lastKey` property exists on the response. This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new scan request yourself.
+This function sends continuous scan requests upon receiving the response so long as the `lastKey` property exists on the response. This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new scan request yourself.
 
 Two parameters can be specified on this setting:
 
