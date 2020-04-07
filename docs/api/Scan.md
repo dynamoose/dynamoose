@@ -1,8 +1,8 @@
 # Scan
 
-Dynamoose provides the ability to scan a model by using the `Model.scan` function. This function acts as a builder to construct your scan with the appropriate settings before executing it (`scan.exec`).
+Dynamoose provides the ability to scan a table (model) by using the `Model.scan` function. This function acts as a builder to construct your scan with the appropriate settings before executing it (`scan.exec`).
 
-*Please note:* The Scan operation operates on your entire table. For tables of real size, this can quickly use up all of your Read Capacity. If you're using it in your application's critical path, it will be very slow in returning a response to your users. The best option is not never use `scan()` unless you know what you are doing! 
+**Please note:** The Scan operation operates on your entire table. For tables of real size, this can quickly use up all of your Read Capacity. If you're using it in your application's critical path, it will be very slow in returning a response to your users. The best option is not never use `scan()` unless you know what you are doing! 
 
 ## Model.scan([filter])
 
