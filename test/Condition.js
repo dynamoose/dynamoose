@@ -1,6 +1,6 @@
 const chai = require("chai");
 const {expect} = chai;
-const dynamoose = require("../lib");
+const dynamoose = require("../dist");
 const {Condition} = dynamoose;
 
 describe("Condition", () => {

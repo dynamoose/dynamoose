@@ -1,5 +1,5 @@
 const {expect} = require("chai");
-const utils = require("../../lib/utils");
+const utils = require("../../dist/utils");
 
 describe("utils.array_flatten", () => {
 	it("Should be a function", () => {

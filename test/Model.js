@@ -2,10 +2,10 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
-const Error = require("../lib/Error");
-const Internal = require("../lib/Internal");
-const utils = require("../lib/utils");
+const dynamoose = require("../dist");
+const Error = require("../dist/Error");
+const Internal = require("../dist/Internal");
+const utils = require("../dist/utils");
 const util = require("util");
 
 describe("Model", () => {
@@ -21,7 +21,7 @@ describe("Model", () => {
 	});
 
 	it("Should resolve to correct file for dynamoose object", () => {
-		expect(dynamoose.Model).to.eql(require("../lib/Model"));
+		expect(dynamoose.Model).to.eql(require("../dist/Model"));
 	});
 
 	it("Should be a function", () => {

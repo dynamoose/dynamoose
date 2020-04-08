@@ -2,10 +2,10 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
+const dynamoose = require("../dist");
 const util = require("util");
-const Model = require("../lib/Model");
-const ModelStore = require("../lib/ModelStore");
+const Model = require("../dist/Model");
+const ModelStore = require("../dist/ModelStore");
 
 describe("Transaction", () => {
 	it("Should be a function", () => {

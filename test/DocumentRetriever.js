@@ -1,5 +1,5 @@
 const {expect} = require("chai");
-const DocumentRetriever = require("../lib/DocumentRetriever");
+const DocumentRetriever = require("../dist/DocumentRetriever");
 
 describe("DocumentRetriever", () => {
 	it("Should be a function", () => {

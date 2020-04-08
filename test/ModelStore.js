@@ -1,6 +1,6 @@
 const chai = require("chai");
 const {expect} = chai;
-const ModelStore = require("../lib/ModelStore");
+const ModelStore = require("../dist/ModelStore");
 
 describe("ModelStore", () => {
 	it("Should be a function", () => {
