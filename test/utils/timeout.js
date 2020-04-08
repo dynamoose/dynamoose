@@ -2,7 +2,7 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const utils = require("../../lib/utils");
+const utils = require("../../dist/utils");
 
 describe("Timeout", () => {
 	it("Should be a function", () => {

@@ -2,7 +2,7 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
+const dynamoose = require("../dist");
 const util = require("util");
 
 describe("Scan", () => {
