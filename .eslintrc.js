@@ -5,6 +5,14 @@ module.exports = {
 		"node": true
 	},
 	"extends": "eslint:recommended",
+	"overrides": [
+		{
+			"files": ["**/*.ts"],
+			"parser": "@typescript-eslint/parser",
+			"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+			"plugins": ["@typescript-eslint"]
+		}
+	],
 	"globals": {
 		"Atomics": "readonly",
 		"SharedArrayBuffer": "readonly"
