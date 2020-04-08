@@ -124,7 +124,7 @@ async function printTableRequest() {
 }
 ```
 
-## Model.get(hashKey[, settings][, callback])
+## Model.get(key[, settings][, callback])
 
 You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
