@@ -1,6 +1,6 @@
 // This function is meant to combine objects for providing default options. Values will be overwritten as opposed to merged.
-const main = module.exports = (...args) => {
-	let returnObject;
+const main = (...args: object[]) => {
+	let returnObject: any;
 
 	args.forEach((arg, index) => {
 		if (typeof arg !== "object") {
@@ -30,3 +30,5 @@ const main = module.exports = (...args) => {
 
 	return returnObject;
 };
+
+export = main;
