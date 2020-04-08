@@ -9,15 +9,10 @@ This method is the basic entry point for creating a model in Dynamoose. When you
 The `schema` parameter can either be an object OR a Schema instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
 ```js
-const dynamoose = require("dynamoose");
-
 const Cat = new dynamoose.Model("Cat", {"name": String});
-```
-
-```js
-const dynamoose = require("dynamoose");
-
+const Cat = new dynamoose.Model("Cat", {"name": String}, { create: false });
 const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
+const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}), { create: false });
 ```
 
 The config parameter is an object used to customize settings for the model.
