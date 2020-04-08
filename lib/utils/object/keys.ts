@@ -1,3 +1,4 @@
 import entries from "./entries";
+import {GeneralObject} from "./types";
 
-export = (object: object, existingKey = "") => entries(object, existingKey).map((a) => a[0]);
+export = <T>(object: GeneralObject<T>, existingKey = "") => entries(object, existingKey).map((a) => a[0]);
