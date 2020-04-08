@@ -1059,6 +1059,7 @@ describe("Document", () => {
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
+					await model.Model.pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(putParams).to.eql([{
 						"Item": {
