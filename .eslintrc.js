@@ -10,7 +10,10 @@ module.exports = {
 			"files": ["**/*.ts"],
 			"parser": "@typescript-eslint/parser",
 			"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-			"plugins": ["@typescript-eslint"]
+			"plugins": ["@typescript-eslint"],
+			"rules": {
+				"@typescript-eslint/camelcase": "off"
+			}
 		}
 	],
 	"globals": {

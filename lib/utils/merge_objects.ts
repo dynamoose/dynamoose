@@ -9,7 +9,7 @@ interface MergeObjectsSettings {
 	combineMethod: MergeObjectsCombineMethod;
 }
 
-const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombineMethod.ArrayMerge}) => (...args: object[]) => {
+const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombineMethod.ArrayMerge}) => (...args: object[]): object[] => {
 	let returnObject: { [x: string]: any };
 
 	args.forEach((arg, index) => {
