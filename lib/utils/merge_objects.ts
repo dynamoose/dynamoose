@@ -1,6 +1,16 @@
 // This function is used to merge objects for combining multiple responses.
-const main = (settings = {}) => (...args) => {
-	let returnObject;
+
+enum MergeObjectsCombineMethod {
+	ObjectCombine = "object_combine",
+	ArrayMerge = "array_merge"
+}
+
+interface MergeObjectsSettings {
+	combineMethod: MergeObjectsCombineMethod
+}
+
+const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombineMethod.ArrayMerge}) => (...args: object[]) => {
+	let returnObject: { [x: string]: any; };
 
 	args.forEach((arg, index) => {
 		if (typeof arg !== "object") {
@@ -16,7 +26,7 @@ const main = (settings = {}) => (...args) => {
 
 			Object.keys(arg).forEach((key) => {
 				if (typeof returnObject[key] === "object" && typeof arg[key] === "object" && !Array.isArray(returnObject[key]) && !Array.isArray(arg[key]) && returnObject[key] !== null) {
-					if (settings.combineMethod === "object_combine") {
+					if (settings.combineMethod === MergeObjectsCombineMethod.ObjectCombine) {
 						returnObject[key] = {...returnObject[key], ...arg[key]};
 					} else {
 						returnObject[key] = [returnObject[key], arg[key]];
@@ -37,5 +47,7 @@ const main = (settings = {}) => (...args) => {
 	return returnObject;
 };
 
-module.exports = main();
-module.exports.main = main;
+const returnObject: any = main();
+returnObject.main = main;
+
+export = returnObject;
