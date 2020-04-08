@@ -1,7 +1,7 @@
 import Model from "./Model";
 import Schema from "./Schema";
 import Condition from "./Condition";
-import transaction from "./transaction";
+import transaction from "./Transaction";
 import aws from "./aws";
 
 export = {
