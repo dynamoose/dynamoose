@@ -1,16 +1,15 @@
-let customDDB;
+import AWS from "./sdk";
 
+let customDDB: AWS.DynamoDB;
 function main() {
-	const aws = require("./index");
-	return customDDB || new aws.sdk.DynamoDB();
+	return customDDB || new AWS.DynamoDB();
 }
-main.set = (ddb) => customDDB = ddb;
+main.set = (ddb: AWS.DynamoDB) => customDDB = ddb;
 main.revert = () => customDDB = null;
 main.local = (endpoint = "http://localhost:8000") => {
-	const aws = require("./index");
-	main.set(new aws.sdk.DynamoDB({
+	main.set(new AWS.DynamoDB({
 		endpoint
 	}));
 };
 
-module.exports = main;
+export = main;
