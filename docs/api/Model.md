@@ -530,7 +530,7 @@ User.delete(1, {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rageKey (sort key) for your model, you can pass in an object for the `hashKey` (partition key) parameter.
+In the event you have a range key/sort key for your model, you can pass in an object for the `key` parameter which includes the range key/sort key & the hash key/partition key.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
