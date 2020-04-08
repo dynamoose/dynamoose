@@ -1,4 +1,6 @@
-module.exports = (object, key) => {
+import {GeneralObjectOrValue} from "./types";
+
+export = <T>(object: GeneralObjectOrValue<T>, key: string): GeneralObjectOrValue<T> => {
 	const keys = key.split(".");
 
 	if (keys.length === 1) {

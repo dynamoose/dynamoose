@@ -1,4 +1,6 @@
-const main = module.exports = (object, existingKey = "") => {
+import {GeneralObjectOrValue} from "./types";
+
+const main = <T>(object: GeneralObjectOrValue<T>, existingKey = ""): [string, GeneralObjectOrValue<T>][] => {
 	return Object.entries(object).reduce((accumulator, entry) => {
 		const [key, value] = entry;
 		const keyWithExisting = `${existingKey ? `${existingKey}.` : ""}${key}`;
@@ -11,3 +13,5 @@ const main = module.exports = (object, existingKey = "") => {
 		return accumulator;
 	}, []);
 };
+
+export = main;
