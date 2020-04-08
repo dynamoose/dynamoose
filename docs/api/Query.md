@@ -13,7 +13,7 @@ Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all items whe
 
 If you pass an object into `Model.query` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
-**Please note:** `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey (partition key) or rangeKey (sort key) DynamoDB will use `KeyConditionExpression`. This is the most performant and cost efficient way and we highly recommend setting hashKey (partition key) and rangeKey (sortKey) that you can query for. If you query for attributes that are not defined as your hashKey (partition key) or rangeKey (sortKey) DynamoDB might select more items at first which could have a bad impact on performance and costs. Also consider using secondary indexes instead.    
+Please note: `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey (partition key) or rangeKey (sort key) DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey/partition key or rangeKey/sort key DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.    
 
 ## Conditionals
 
@@ -114,9 +114,7 @@ Cat.query("name").eq("Will").using("name-index"); // Run the query on the `name-
 
 ## query.all([delay[, max]])
 
-If a query result is more than 1 MB (before filtering!), DynamoDB paginates the results so you would have to send multiple requests. Please see the [AWS DynamoDB documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html) for further informations.
-
-This function sends continuous query requests upon receiving the response so long as the `lastKey` property exists on the response. This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
+If a query result is more than the limit of your DynamoDB table (before filtering!), DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests until all items have been received (as long as the `lastKey` property exists on the response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
 
 Two parameters can be specified on this setting:
 
