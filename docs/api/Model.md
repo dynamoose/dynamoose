@@ -119,9 +119,11 @@ async function printTableRequest() {
 }
 ```
 
-## Model.get(key[, settings][, callback])
+## Model.get(primaryKey[, settings][, callback])
 
 You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
+
+`keys` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
@@ -212,9 +214,11 @@ User.get({"id": 1}, (error, myUser) => {
 });
 ```
 
-## Model.batchGet(keys[, settings][, callback])
+## Model.batchGet(primaryKeys[, settings][, callback])
 
 You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+
+`primaryKeys` can be an array of strings representing the hashKey/partition key and/or an array of objects containing the hashKey/partition key AND rangeKey/sort key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
 
@@ -394,9 +398,11 @@ await User.batchPut([
 });
 ```
 
-## Model.update(keyObj[, updateObj[, settings]],[ callback])
+## Model.update(primaryKey[, updateObj[, settings]],[ callback])
 
 This function lets you update an existing item in the database. You can either pass in one object combining both the hashKey (partition key) you wish to update along with the update object, or keep them separate by passing in two objects.
+
+`primaryKey` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
 
 ```js
 await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
@@ -476,9 +482,11 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
-## Model.delete(key[, settings][, callback])
+## Model.delete(primaryKey[, settings][, callback])
 
 You can use Model.delete to delete a item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
+
+`primaryKey` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
 
@@ -569,9 +577,11 @@ User.delete({"id": 1}, (error) => {
 });
 ```
 
-## Model.batchDelete(keys[, settings][, callback])
+## Model.batchDelete(primaryKeys[, settings][, callback])
 
 You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+
+`primaryKeys` can be an array of strings representing the hashKey/partition key and/or an array of objects containing the hashKey/partition key AND rangeKey/sort key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, an object with the `unprocessedItems` will be returned to you. Otherwise an error will be thrown.
 
