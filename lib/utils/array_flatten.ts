@@ -1,2 +1,2 @@
 // This function flattens an array non recursively
-module.exports = (array) => Array.prototype.concat.apply([], array);
+export = <T>(array: T[]): any[] => Array.prototype.concat.apply([], array);
