@@ -338,6 +338,12 @@ describe("Query", () => {
 					return expect(callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).to.be.rejectedWith("Index can't be found for query.");
 				});
 
+				it("Should throw error if not querying index hash key", async () => {
+					Model = new dynamoose.Model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true, "rangeKey": "name"}}, "name": String});
+					queryPromiseResolver = () => ({"Items": []});
+					return expect(callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).to.be.rejectedWith("Index can't be found for query.");
+				});
+
 				it("Should throw error from AWS", () => {
 					queryPromiseResolver = () => {
 						throw {"error": "Error"};
