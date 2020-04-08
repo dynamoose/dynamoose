@@ -2,7 +2,7 @@
   "name": "dynamoose",
   "version": "2.1.0-alpha.0",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "homepage": "https://github.com/dynamoosejs/dynamoose#readme",
   "directories": {
     "doc": "docs"
@@ -18,9 +18,12 @@
     "typescript": "^3.8.3"
   },
   "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "prepare": "npm run build",
     "test": "nyc --all mocha && nyc report --reporter=html",
-    "lint": "eslint .",
-    "test-nocoverage": "mocha"
+    "test-nocoverage": "mocha",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -70,6 +73,6 @@
     "node": ">=8.0.0"
   },
   "files": [
-    "lib"
+    "dist"
   ]
 }
