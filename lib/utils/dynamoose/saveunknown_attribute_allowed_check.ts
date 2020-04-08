@@ -1,4 +1,4 @@
-module.exports = (saveUnknown, checkKey) => {
+export = (saveUnknown: string[] | boolean, checkKey: string): boolean => {
 	if (Array.isArray(saveUnknown)) {
 		return Boolean(saveUnknown.find((key) => {
 			const keyParts = key.split(".");
