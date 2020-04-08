@@ -1,5 +1,6 @@
 {
 	"exclude": [
+		"dist",
 		"test",
 		"coverage",
 		".eslintrc.js",
