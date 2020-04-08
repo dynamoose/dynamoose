@@ -481,7 +481,7 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
-## Model.delete(hashKey[, settings][, callback])
+## Model.delete(key[, settings][, callback])
 
 You can use Model.delete to delete a item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
 
