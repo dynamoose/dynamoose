@@ -1,4 +1,4 @@
-module.exports = {
+export = {
 	"Schema": {
 		"internalCache": Symbol("internalCache")
 	},
