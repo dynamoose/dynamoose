@@ -1,10 +1,10 @@
-let customConverter;
+import AWS from "./sdk";
 
-function main() {
-	const aws = require("./index");
-	return customConverter || aws.sdk.DynamoDB.Converter;
+let customConverter: AWS.DynamoDB.Converter | undefined;
+function main(): AWS.DynamoDB.Converter {
+	return customConverter || AWS.DynamoDB.Converter;
 }
-main.set = (converter) => customConverter = converter;
-main.revert = () => customConverter = null;
+main.set = (converter: AWS.DynamoDB.Converter) => customConverter = converter;
+main.revert = () => customConverter = undefined;
 
-module.exports = main;
+export = main;
