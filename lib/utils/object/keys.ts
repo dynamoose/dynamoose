@@ -1,3 +1,3 @@
-const entries = require("./entries");
+import entries from "./entries";
 
-module.exports = (object, existingKey = "") => entries(object, existingKey).map((a) => a[0]);
+export = (object: object, existingKey = "") => entries(object, existingKey).map((a) => a[0]);
