@@ -1,9 +1,9 @@
-const AWS = require("aws-sdk");
-const ddb = require("./ddb");
-const converter = require("./converter");
+import sdk from "./sdk";
+import ddb from "./ddb";
+import converter from "./converter";
 
-module.exports = {
-	"sdk": AWS,
+export = {
+	sdk,
 	ddb,
 	converter
 };
