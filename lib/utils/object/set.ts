@@ -1,7 +1,7 @@
-module.exports = (object, key, value) => {
+export = (object: object, key: string, value: any): object => {
 	const keyParts = key.split(".");
 	let objectRef = object;
-	keyParts.forEach((part, index) => {
+	keyParts.forEach((part: string | number, index: number) => {
 		if (keyParts.length - 1 === index) {
 			return;
 		}
