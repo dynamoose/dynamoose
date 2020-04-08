@@ -148,6 +148,7 @@ describe("Model", () => {
 				describeTableResponse = {
 					"Table": {"TableStatus": "ACTIVE"}
 				};
+				await model.Model.pendingTaskPromise();
 				await utils.set_immediate_promise();
 				expect(pendingTaskPromiseResolved).to.be.true;
 				expect(model.Model.pendingTasks).to.eql([]);
@@ -1077,6 +1078,7 @@ describe("Model", () => {
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
+					await model.Model.pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(calledGetItem).to.be.true;
 					expect({...user}).to.eql({"id": 1, "name": "Charlie"});
@@ -1291,6 +1293,7 @@ describe("Model", () => {
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
+					await model.Model.pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(calledBatchGetItem).to.be.true;
 					expect(users.map((user) => ({...user}))).to.eql([{"id": 1, "name": "Charlie"}]);
