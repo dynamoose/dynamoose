@@ -2,7 +2,7 @@
 
 Dynamoose provides the ability to scan a table (model) by using the `Model.scan` function. This function acts as a builder to construct your scan with the appropriate settings before executing it (`scan.exec`).
 
-**Please note:** The Scan operation operates on your entire table. For tables of real size, this can quickly use up all of your Read Capacity. If you're using it in your application's critical path, it will be very slow in returning a response to your users. The best option is not never use `scan()` unless you know what you are doing! 
+Please note: The Scan operation operates on your entire table. For tables of real size, this can quickly use up all of your Read Capacity. If you're using it in your application's critical path, it will be very slow in returning a response to your users. The best option is not never use `scan()` unless you know what you are doing! 
 
 ## Model.scan([filter])
 
@@ -125,9 +125,7 @@ Cat.scan().using("name-index"); // Run the scan on the `name-index` index
 
 ## scan.all([delay[, max]])
 
-If a scan result is more than 1 MB (before filtering!), DynamoDB paginates the results so you would have to send multiple requests. Please see the [AWS DynamoDB documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html) for further informations.
-
-This function sends continuous scan requests upon receiving the response so long as the `lastKey` property exists on the response. This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new scan request yourself.
+If a query result is more than the limit of your DynamoDB table (before filtering!), DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous scan requests until all items have been received (as long as the `lastKey` property exists on the response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new scan request yourself.
 
 Two parameters can be specified on this setting:
 
