@@ -1,1 +1,1 @@
-module.exports = (array) => array.filter((value, index, self) => self.indexOf(value) === index);
+export = <T>(array: T[]): T[] => array.filter((value, index, self) => self.indexOf(value) === index);
