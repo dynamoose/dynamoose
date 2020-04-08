@@ -1,16 +1,20 @@
-const Error = require("./Error");
-let models = {};
+import CustomError from "./Error";
+import Model from "./Model";
 
-module.exports = (input) => {
-	const Model = require("./Model");
+let models: {[name: string]: Model} = {};
+
+const returnObject = (input: Model | string): Model | never => {
 	if (input instanceof Model) {
 		models[input.name] = input;
+		return input;
 	} else if (typeof input === "string") {
 		return models[input];
 	} else {
-		throw new Error.InvalidParameter("You must pass in a Model or table name as a string.");
+		throw new CustomError.InvalidParameter("You must pass in a Model or table name as a string.");
 	}
 };
-module.exports.clear = () => {
+returnObject.clear = (): void => {
 	models = {};
 };
+
+export = returnObject;
