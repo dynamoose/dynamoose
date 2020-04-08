@@ -1,2 +1,2 @@
 /* istanbul ignore file */
-module.exports = () => {};
+export = () => {};
