@@ -1,4 +1,7 @@
-module.exports = {
-	"saveunknown_attribute_allowed_check": require("./saveunknown_attribute_allowed_check"),
-	"get_provisioned_throughput": require("./get_provisioned_throughput")
+import get_provisioned_throughput from "./get_provisioned_throughput";
+import saveunknown_attribute_allowed_check from "./saveunknown_attribute_allowed_check";
+
+export = {
+	get_provisioned_throughput,
+	saveunknown_attribute_allowed_check
 };
