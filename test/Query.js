@@ -302,6 +302,23 @@ describe("Query", () => {
 					});
 				});
 
+				it("Should send correct request on query.exec for index with hash and range key but only querying hash key", async () => {
+					Model = new dynamoose.Model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true, "rangeKey": "name"}}, "name": String});
+					queryPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.query("age").eq(1).exec).bind(Model.query("age").eq(1))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "ageGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "age"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"N": "1"}
+						},
+						"KeyConditionExpression": "#qha = :qhv"
+					});
+				});
+
 				it("Should return correct result with get function for attribute", async () => {
 					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "index": {"global": true}, "get": (val) => `${val}-get`}}));
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
