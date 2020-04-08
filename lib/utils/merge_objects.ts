@@ -6,11 +6,11 @@ enum MergeObjectsCombineMethod {
 }
 
 interface MergeObjectsSettings {
-	combineMethod: MergeObjectsCombineMethod
+	combineMethod: MergeObjectsCombineMethod;
 }
 
 const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombineMethod.ArrayMerge}) => (...args: object[]) => {
-	let returnObject: { [x: string]: any; };
+	let returnObject: { [x: string]: any };
 
 	args.forEach((arg, index) => {
 		if (typeof arg !== "object") {
