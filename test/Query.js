@@ -54,7 +54,7 @@ describe("Query", () => {
 
 		it("Should set filters correctly for object passed into query function", () => {
 			const query = Model.query({"name": {"eq": "Charlie"}, "id": {"le": 5}});
-			expect(query.settings.condition.settings.conditions).to.eql([["name", {"type": "EQ", "value": "Charlie"}], ["id", {"type": "LE", "value": 5}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
 		});
 
 		it("Should throw error if unknown comparison operator is passed in", () => {
@@ -432,13 +432,13 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").eq("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "EQ", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().eq("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "NE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -492,13 +492,13 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").exists("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "EXISTS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().exists("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "NOT_EXISTS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -550,13 +550,13 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").lt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().lt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -591,13 +591,13 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").le("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().le("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -632,13 +632,13 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").gt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().gt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -673,13 +673,13 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").ge("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().ge("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -714,7 +714,7 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").beginsWith("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "BEGINS_WITH", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -754,13 +754,13 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").contains("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "CONTAINS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().contains("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "NOT_CONTAINS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -814,7 +814,7 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").in(["test", "other"]);
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "IN", "value": ["test", "other"]}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "IN", "value": ["test", "other"]}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -877,7 +877,7 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").between(1, 2);
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "BETWEEN", "value": [1, 2]}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 

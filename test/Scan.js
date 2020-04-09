@@ -54,7 +54,7 @@ describe("Scan", () => {
 
 		it("Should set filters correctly for object passed into scan function", () => {
 			const scan = Model.scan({"name": {"eq": "Charlie"}, "id": {"le": 5}});
-			expect(scan.settings.condition.settings.conditions).to.eql([["name", {"type": "EQ", "value": "Charlie"}], ["id", {"type": "LE", "value": 5}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
 		});
 
 		it("Should throw error if unknown comparison operator is passed in", () => {
@@ -294,12 +294,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").eq("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "EQ", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().eq("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "NE", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
 		});
 	});
 
@@ -314,12 +314,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").exists();
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "EXISTS", "value": undefined}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": undefined}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().exists();
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "NOT_EXISTS", "value": undefined}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": undefined}}]);
 		});
 	});
 
@@ -334,12 +334,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").lt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "LT", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().lt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "GE", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 		});
 	});
 
@@ -354,12 +354,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").le("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "LE", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().le("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "GT", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 		});
 	});
 
@@ -374,12 +374,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").gt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "GT", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().gt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "LE", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 		});
 	});
 
@@ -394,12 +394,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").ge("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "GE", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().ge("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "LT", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 		});
 	});
 
@@ -414,7 +414,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").beginsWith("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "BEGINS_WITH", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -434,12 +434,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").contains("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "CONTAINS", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().contains("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "NOT_CONTAINS", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
 		});
 	});
 
@@ -454,7 +454,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").in("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "IN", "value": "test"}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "IN", "value": "test"}}]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -474,7 +474,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").between(1, 2);
-			expect(scan.settings.condition.settings.conditions).to.eql([["id", {"type": "BETWEEN", "value": [1, 2]}]]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
 		});
 
 		it("Should throw error with not()", () => {
