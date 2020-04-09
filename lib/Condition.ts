@@ -57,6 +57,7 @@ const types: ConditionComparisonType[] = [
 	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in},
 	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true}
 ];
+type ConditionInitalizer = Condition | {[key: string]: any} | string;
 
 class Condition {
 	settings: {
@@ -79,7 +80,7 @@ class Condition {
 	attribute: (key: string) => Condition;
 	requestObject: (settings?: ConditionRequestObjectSettings) => ConditionRequestObjectResult;
 
-	constructor(object?: Condition | {[key: string]: any} | string) {
+	constructor(object?: ConditionInitalizer) {
 		if (object instanceof Condition) {
 			Object.entries(object).forEach((entry) => {
 				const [key, value] = entry;
