@@ -163,6 +163,7 @@ Condition.prototype.where = Condition.prototype.filter = Condition.prototype.att
 	this.settings.pending = {key};
 	return this;
 };
+// TODO: I don't think this prototypes are being exposed which is gonna cause a lot of problems with our type definition file. Need to figure out a better way to do this since they aren't defined and are dynamic.
 types.forEach((type) => {
 	Condition.prototype[type.name] = function(...args: any[]): Condition {
 		this.settings.pending.value = type.multipleArguments ? args : args[0];
