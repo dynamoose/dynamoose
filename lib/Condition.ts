@@ -122,7 +122,7 @@ interface ConditionsConditionStorageObject {
 	value: any;
 }
 
-function finalizePending(instance: Condition) {
+function finalizePending(instance: Condition): void {
 	const pending = instance.settings.pending;
 
 	let dynamoNameType: ConditionComparisonComparatorDynamoName;
@@ -150,21 +150,21 @@ Condition.prototype.parenthesis = Condition.prototype.group = function (value: C
 	this.settings.conditions.push(value.settings.conditions);
 	return this;
 };
-Condition.prototype.or = function() {
+Condition.prototype.or = function(): Condition {
 	this.settings.conditions.push(OR);
 	return this;
 };
-Condition.prototype.and = function() { return this; };
-Condition.prototype.not = function() {
+Condition.prototype.and = function(): Condition { return this; };
+Condition.prototype.not = function(): Condition {
 	this.settings.pending.not = !this.settings.pending.not;
 	return this;
 };
-Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function(key: string) {
+Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function(key: string): Condition {
 	this.settings.pending = {key};
 	return this;
 };
 types.forEach((type) => {
-	Condition.prototype[type.name] = function(...args) {
+	Condition.prototype[type.name] = function(...args: any[]): Condition {
 		this.settings.pending.value = type.multipleArguments ? args : args[0];
 		this.settings.pending.type = type;
 		finalizePending(this);
@@ -185,9 +185,9 @@ Condition.prototype.requestObject = function(settings: ConditionRequestObjectSet
 	}
 
 	let index = (settings.index || {}).starting || 0;
-	const setIndex = (i: number) => {index = i; (settings.index || {"set": utils.empty_function}).set(i);};
-	function main(input: ConditionStorageSettingsConditions) {
-		return input.reduce((object: any, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {
+	const setIndex = (i: number): void => {index = i; (settings.index || {"set": utils.empty_function}).set(i);};
+	function main(input: ConditionStorageSettingsConditions): ConditionRequestObjectResult {
+		return input.reduce((object: ConditionRequestObjectResult, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {
 			let expression = "";
 			if (Array.isArray(entry)) {
 				const result = main(entry);
