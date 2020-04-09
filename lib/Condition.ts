@@ -5,13 +5,14 @@ const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
 
 type ConditionFunction = (condition: Condition) => Condition;
-type ConditionStorageType = [string, ConditionsConditionStorageObject] | typeof OR;
+type ConditionStorageType = {[key: string]: ConditionsConditionStorageObject} | typeof OR;
 type ConditionStorageTypeNested = ConditionStorageType | Array<ConditionStorageTypeNested>;
+type ConditionStorageSettingsConditions = ConditionStorageTypeNested[];
 
 class Condition {
 	settings: {
 		// TODO: fix this below, it should be a reference to `OR` not Symbol, you are only allowed to pass in OR here, not any other Symbol.
-		conditions: ConditionStorageTypeNested[];
+		conditions: ConditionStorageSettingsConditions;
 		pending: {
 			key?: string;
 			type?: ConditionComparisonType;
@@ -51,7 +52,12 @@ class Condition {
 						throw CustomError.InvalidFilterComparison(`The type: ${valueType} is invalid.`);
 					}
 
-					this.settings.conditions.push([key, {"type": comparisonType.typeName, "value": typeof value[valueType] !== "undefined" && value[valueType] !== null ? value[valueType] : value}]);
+					this.settings.conditions.push({
+						[key]: {
+							"type": comparisonType.typeName,
+							"value": typeof value[valueType] !== "undefined" && value[valueType] !== null ? value[valueType] : value
+						}
+					});
 				});
 			} else if (object) {
 				this.settings.pending.key = object;
@@ -80,10 +86,12 @@ function finalizePending(instance: Condition) {
 		dynamoNameType = pending.type.typeName;
 	}
 
-	instance.settings.conditions.push([pending.key, {
-		"type": dynamoNameType,
-		"value": pending.value
-	}]);
+	instance.settings.conditions.push({
+		[pending.key]: {
+			"type": dynamoNameType,
+			"value": pending.value
+		}
+	});
 
 	instance.settings.pending = {};
 }
@@ -174,10 +182,11 @@ Condition.prototype.requestObject = function(settings: ConditionRequestObjectSet
 
 	let index = (settings.index || {}).starting || 0;
 	const setIndex = (i: number) => {index = i; (settings.index || {"set": utils.empty_function}).set(i);};
-	function main(input: any) {
+	function main(input: ConditionStorageSettingsConditions) {
 		return input.reduce((object: any, entry: any, i: number, arr: any[]) => {
 			let expression = "";
-			if (Array.isArray(entry[0])) {
+			console.log(entry, entry[0], Array.isArray(entry[0]));
+			if (Array.isArray(entry)) {
 				const result = main(entry);
 				const newData = utils.merge_objects.main({"combineMethod": "object_combine"})({...result}, {...object});
 				const returnObject = utils.object.pick(newData, ["ExpressionAttributeNames", "ExpressionAttributeValues"]);
@@ -185,8 +194,8 @@ Condition.prototype.requestObject = function(settings: ConditionRequestObjectSet
 				expression = `(${result[settings.conditionString]})`;
 				object = {...object, ...returnObject};
 			} else if (entry !== OR) {
-				const [key, condition] = entry;
-				const {value} = condition;
+				const [key, condition] = (Object.entries(entry)[0] as any);
+				const {value} = (condition as any);
 				const keys = {"name": `#a${index}`, "value": `:v${index}`};
 				setIndex(++index);
 
