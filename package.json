@@ -26,7 +26,8 @@
     "prepare": "npm run build:clean; npm run build",
     "test": "nyc --all mocha && nyc report --reporter=html",
     "test-nocoverage": "mocha",
-    "lint": "eslint . --ext .ts,.js"
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "npm run lint -- --fix"
   },
   "repository": {
     "type": "git",
