@@ -773,7 +773,6 @@ describe("Schema", () => {
 	describe("getAttributeTypeDetails", () => {
 		it("Should throw for invalid attribute", () => {
 			const func = () => new Schema({"id": String}).getAttributeTypeDetails("random");
-			expect(func).to.throw(Error.UnknownAttribute);
 			expect(func).to.throw("Invalid Attribute: random");
 		});
 

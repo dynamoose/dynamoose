@@ -34,11 +34,11 @@ describe("Model", () => {
 		});
 
 		it("Should throw an error if no schema is passed in", () => {
-			expect(() => new dynamoose.Model("Cat")).to.throw(Error.MissingSchemaError);
+			expect(() => new dynamoose.Model("Cat")).to.throw("Schema hasn't been registered for model \"Cat\".\nUse \"new dynamoose.Model(name, schema)\"");
 		});
 
 		it("Should throw same error as no schema if nothing passed in", () => {
-			expect(() => new dynamoose.Model()).to.throw(Error.MissingSchemaError);
+			expect(() => new dynamoose.Model()).to.throw("Schema hasn't been registered for model \"undefined\".\nUse \"new dynamoose.Model(name, schema)\"");
 		});
 
 		it("Should create a schema if not passing in schema instance", () => {
