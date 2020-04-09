@@ -1,25 +1,25 @@
-const util = require("util");
+class CustomError extends Error {
+	name: string;
+	message: string;
 
-function ErrorType(defaultMessage, errorName) {
-	function newError(message) {
-		Error.call(this);
-		Error.captureStackTrace(this, this.constructor);
-
+	constructor(message: string, defaultMessage: string, errorName: string) {
+		super();
 		this.name = errorName;
 		this.message = message || defaultMessage;
+		return this;
 	}
-	util.inherits(newError, Error);
-	return newError;
 }
 
-module.exports = {
-	"MissingSchemaError": new ErrorType("Missing Schema", "MissingSchemaError"),
-	"InvalidParameter": new ErrorType("Invalid Parameter", "InvalidParameter"),
-	"InvalidParameterType": new ErrorType("Invalid Parameter Type", "InvalidParameterType"),
-	"UnknownAttribute": new ErrorType("The attribute can not be found", "UnknownAttribute"),
-	"InvalidType": new ErrorType("Invalid Type", "InvalidType"),
-	"WaitForActiveTimeout": new ErrorType("Waiting for table to be active has timed out", "WaitForActiveTimeout"),
-	"TypeMismatch": new ErrorType("There was a type mismatch between the schema and document", "TypeMismatch"),
-	"InvalidFilterComparison": new ErrorType("That filter comparison is invalid", "InvalidFilterComparison"),
-	"ValidationError": new ErrorType("There was an validation error with the document", "ValidationError"),
+const makeError = (defaultMessage: string, errorName: string) => (message: string): CustomError => new CustomError(message, defaultMessage, errorName);
+
+export = {
+	"MissingSchemaError": makeError("Missing Schema", "MissingSchemaError"),
+	"InvalidParameter": makeError("Invalid Parameter", "InvalidParameter"),
+	"InvalidParameterType": makeError("Invalid Parameter Type", "InvalidParameterType"),
+	"UnknownAttribute": makeError("The attribute can not be found", "UnknownAttribute"),
+	"InvalidType": makeError("Invalid Type", "InvalidType"),
+	"WaitForActiveTimeout": makeError("Waiting for table to be active has timed out", "WaitForActiveTimeout"),
+	"TypeMismatch": makeError("There was a type mismatch between the schema and document", "TypeMismatch"),
+	"InvalidFilterComparison": makeError("That filter comparison is invalid", "InvalidFilterComparison"),
+	"ValidationError": makeError("There was an validation error with the document", "ValidationError")
 };
