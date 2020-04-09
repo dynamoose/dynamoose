@@ -1,6 +1,5 @@
 const {expect} = require("chai");
 const Schema = require("../dist/Schema");
-const Error = require("../dist/Error");
 
 describe("Schema", () => {
 	it("Should be a function", () => {
