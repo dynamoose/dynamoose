@@ -5,9 +5,58 @@ const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
 
 type ConditionFunction = (condition: Condition) => Condition;
+// TODO: There is a problem where you can have multiple keys in one `ConditionStorageType`, which will cause problems. We need to fix that. Likely be refactoring it so that the key is part of `ConditionsConditionStorageObject`.
 type ConditionStorageType = {[key: string]: ConditionsConditionStorageObject} | typeof OR;
 type ConditionStorageTypeNested = ConditionStorageType | Array<ConditionStorageTypeNested>;
 type ConditionStorageSettingsConditions = ConditionStorageTypeNested[];
+// TODO: the return value of the function below is incorrect. We need to add a property to the object that is a required string, where the property/key name is always equal to `settings.conditionString`
+type ConditionRequestObjectResult = {ExpressionAttributeNames?: DynamoDB.Types.ExpressionAttributeNameMap; ExpressionAttributeValues?: DynamoDB.Types.ExpressionAttributeValueMap};
+
+interface ConditionComparisonType {
+	name: ConditionComparisonComparatorName;
+	typeName: ConditionComparisonComparatorDynamoName;
+	not?: ConditionComparisonComparatorDynamoName;
+	multipleArguments?: boolean;
+}
+enum ConditionComparisonComparatorName {
+	equals = "eq",
+	lessThan = "lt",
+	lessThanEquals = "le",
+	greaterThan = "gt",
+	greaterThanEquals = "ge",
+	beginsWith = "beginsWith",
+	contains = "contains",
+	exists = "exists",
+	in = "in",
+	between = "between"
+}
+enum ConditionComparisonComparatorDynamoName {
+	equals = "EQ",
+	notEquals = "NE",
+	lessThan = "LT",
+	lessThanEquals = "LE",
+	greaterThan = "GT",
+	greaterThanEquals = "GE",
+	beginsWith = "BEGINS_WITH",
+	contains = "CONTAINS",
+	notContains = "NOT_CONTAINS",
+	exists = "EXISTS",
+	notExists = "NOT_EXISTS",
+	in = "IN",
+	between = "BETWEEN"
+}
+const types: ConditionComparisonType[] = [
+	{"name": ConditionComparisonComparatorName.equals, "typeName": ConditionComparisonComparatorDynamoName.equals, "not": ConditionComparisonComparatorDynamoName.notEquals},
+	{"name": ConditionComparisonComparatorName.lessThan, "typeName": ConditionComparisonComparatorDynamoName.lessThan, "not": ConditionComparisonComparatorDynamoName.greaterThanEquals},
+	{"name": ConditionComparisonComparatorName.lessThanEquals, "typeName": ConditionComparisonComparatorDynamoName.lessThanEquals, "not": ConditionComparisonComparatorDynamoName.greaterThan},
+	{"name": ConditionComparisonComparatorName.greaterThan, "typeName": ConditionComparisonComparatorDynamoName.greaterThan, "not": ConditionComparisonComparatorDynamoName.lessThanEquals},
+	{"name": ConditionComparisonComparatorName.greaterThanEquals, "typeName": ConditionComparisonComparatorDynamoName.greaterThanEquals, "not": ConditionComparisonComparatorDynamoName.lessThan},
+	{"name": ConditionComparisonComparatorName.beginsWith, "typeName": ConditionComparisonComparatorDynamoName.beginsWith},
+	{"name": ConditionComparisonComparatorName.contains, "typeName": ConditionComparisonComparatorDynamoName.contains, "not": ConditionComparisonComparatorDynamoName.notContains},
+	{"name": ConditionComparisonComparatorName.exists, "typeName": ConditionComparisonComparatorDynamoName.exists, "not": ConditionComparisonComparatorDynamoName.notExists},
+	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in},
+	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true}
+];
 
 class Condition {
 	settings: {
@@ -28,7 +77,7 @@ class Condition {
 	where: (key: string) => Condition;
 	filter: (key: string) => Condition;
 	attribute: (key: string) => Condition;
-	requestObject: (settings?: ConditionRequestObjectSettings) => any;
+	requestObject: (settings?: ConditionRequestObjectSettings) => ConditionRequestObjectResult;
 
 	constructor(object?: Condition | {[key: string]: any} | string) {
 		if (object instanceof Condition) {
@@ -114,54 +163,9 @@ Condition.prototype.where = Condition.prototype.filter = Condition.prototype.att
 	this.settings.pending = {key};
 	return this;
 };
-interface ConditionComparisonType {
-	name: ConditionComparisonComparatorName;
-	typeName: ConditionComparisonComparatorDynamoName;
-	not?: ConditionComparisonComparatorDynamoName;
-	multipleArguments?: boolean;
-}
-enum ConditionComparisonComparatorName {
-	equals = "eq",
-	lessThan = "lt",
-	lessThanEquals = "le",
-	greaterThan = "gt",
-	greaterThanEquals = "ge",
-	beginsWith = "beginsWith",
-	contains = "contains",
-	exists = "exists",
-	in = "in",
-	between = "between"
-}
-enum ConditionComparisonComparatorDynamoName {
-	equals = "EQ",
-	notEquals = "NE",
-	lessThan = "LT",
-	lessThanEquals = "LE",
-	greaterThan = "GT",
-	greaterThanEquals = "GE",
-	beginsWith = "BEGINS_WITH",
-	contains = "CONTAINS",
-	notContains = "NOT_CONTAINS",
-	exists = "EXISTS",
-	notExists = "NOT_EXISTS",
-	in = "IN",
-	between = "BETWEEN"
-}
-const types: ConditionComparisonType[] = [
-	{"name": ConditionComparisonComparatorName.equals, "typeName": ConditionComparisonComparatorDynamoName.equals, "not": ConditionComparisonComparatorDynamoName.notEquals},
-	{"name": ConditionComparisonComparatorName.lessThan, "typeName": ConditionComparisonComparatorDynamoName.lessThan, "not": ConditionComparisonComparatorDynamoName.greaterThanEquals},
-	{"name": ConditionComparisonComparatorName.lessThanEquals, "typeName": ConditionComparisonComparatorDynamoName.lessThanEquals, "not": ConditionComparisonComparatorDynamoName.greaterThan},
-	{"name": ConditionComparisonComparatorName.greaterThan, "typeName": ConditionComparisonComparatorDynamoName.greaterThan, "not": ConditionComparisonComparatorDynamoName.lessThanEquals},
-	{"name": ConditionComparisonComparatorName.greaterThanEquals, "typeName": ConditionComparisonComparatorDynamoName.greaterThanEquals, "not": ConditionComparisonComparatorDynamoName.lessThan},
-	{"name": ConditionComparisonComparatorName.beginsWith, "typeName": ConditionComparisonComparatorDynamoName.beginsWith},
-	{"name": ConditionComparisonComparatorName.contains, "typeName": ConditionComparisonComparatorDynamoName.contains, "not": ConditionComparisonComparatorDynamoName.notContains},
-	{"name": ConditionComparisonComparatorName.exists, "typeName": ConditionComparisonComparatorDynamoName.exists, "not": ConditionComparisonComparatorDynamoName.notExists},
-	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in},
-	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true}
-];
 types.forEach((type) => {
-	Condition.prototype[type.name] = function(value: any) {
-		this.settings.pending.value = type.multipleArguments ? [...arguments] : value;
+	Condition.prototype[type.name] = function(...args) {
+		this.settings.pending.value = type.multipleArguments ? args : args[0];
 		this.settings.pending.type = type;
 		finalizePending(this);
 		return this;
@@ -175,7 +179,7 @@ interface ConditionRequestObjectSettings {
 		set: (newIndex: number) => void;
 	};
 }
-Condition.prototype.requestObject = function(settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression"}): {ExpressionAttributeNames?: DynamoDB.Types.ExpressionAttributeNameMap; ExpressionAttributeValues?: DynamoDB.Types.ExpressionAttributeValueMap} {
+Condition.prototype.requestObject = function(settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression"}): ConditionRequestObjectResult {
 	if (this.settings.conditions.length === 0) {
 		return {};
 	}
@@ -183,9 +187,8 @@ Condition.prototype.requestObject = function(settings: ConditionRequestObjectSet
 	let index = (settings.index || {}).starting || 0;
 	const setIndex = (i: number) => {index = i; (settings.index || {"set": utils.empty_function}).set(i);};
 	function main(input: ConditionStorageSettingsConditions) {
-		return input.reduce((object: any, entry: any, i: number, arr: any[]) => {
+		return input.reduce((object: any, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {
 			let expression = "";
-			console.log(entry, entry[0], Array.isArray(entry[0]));
 			if (Array.isArray(entry)) {
 				const result = main(entry);
 				const newData = utils.merge_objects.main({"combineMethod": "object_combine"})({...result}, {...object});
@@ -194,8 +197,8 @@ Condition.prototype.requestObject = function(settings: ConditionRequestObjectSet
 				expression = `(${result[settings.conditionString]})`;
 				object = {...object, ...returnObject};
 			} else if (entry !== OR) {
-				const [key, condition] = (Object.entries(entry)[0] as any);
-				const {value} = (condition as any);
+				const [key, condition] = Object.entries(entry)[0];
+				const {value} = condition;
 				const keys = {"name": `#a${index}`, "value": `:v${index}`};
 				setIndex(++index);
 
