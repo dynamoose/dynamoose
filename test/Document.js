@@ -45,7 +45,7 @@ describe("Document", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-					expect(User.toDynamo(test.input)).to.eql(test.output);
+					expect(User.objectToDynamo(test.input)).to.eql(test.output);
 				});
 			});
 		});

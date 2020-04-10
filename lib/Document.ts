@@ -1,13 +1,15 @@
-const aws = require("./aws");
-const utils = require("./utils");
-const Error = require("./Error");
-const {internalProperties} = require("./Internal").General;
+import aws from "./aws";
+import utils from "./utils";
+import Error from "./Error";
+import Internal from "./Internal";
+const {internalProperties} = Internal.General;
+const dynamooseUndefined = Internal.Public.undefined;
 
 const staticMethods = {
-	"toDynamo": (object, settings = {"type": "object"}) => (settings.type === "value" ? aws.converter().input : aws.converter().marshall)(object),
-	"fromDynamo": (object) => aws.converter().unmarshall(object)
+	"objectToDynamo": (object, settings = {"type": "object"}) => (settings.type === "value" ? (aws.converter() as any).input : (aws.converter() as any).marshall)(object),
+	"fromDynamo": (object) => (aws.converter() as any).unmarshall(object)
 };
-function applyStaticMethods(item) {
+function applyStaticMethods(item: object) {
 	Object.entries(staticMethods).forEach((entry) => {
 		const [key, value] = entry;
 		item[key] = value;
@@ -20,8 +22,21 @@ function applyStaticMethods(item) {
 function DocumentCarrier(model) {
 	// Document represents an item in a Model that is either pending (not saved) or saved
 	class Document {
-		constructor(object = {}, settings = {}) {
-			const documentObject = Document.isDynamoObject(object) ? aws.converter().unmarshall(object) : object;
+		static objectToDynamo: (object: any, settings?: {type: "object" | "value"}) => any;
+		static fromDynamo: (object: any) => any;
+		static isDynamoObject: (object: any, recurrsive?: boolean) => boolean | null;
+		static attributesWithSchema: (document: Document) => string[];
+		static Model: any;
+		original: () => any;
+		static objectFromSchema: (object: any, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
+		static prepareForObjectFromSchema: (object: any, settings: DocumentObjectFromSchemaSettings) => any;
+		conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
+		toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
+		delete: (this: Document, callback: any) => any;
+		save: (this: Document, settings: DocumentSaveSettings, callback: any) => Promise<any>;
+
+		constructor(object = {}, settings: any = {}) {
+			const documentObject = Document.isDynamoObject(object) ? (aws.converter() as any).unmarshall(object) : object;
 			Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
 			Object.defineProperty(this, internalProperties, {
 				"configurable": false,
@@ -38,7 +53,7 @@ function DocumentCarrier(model) {
 
 	applyStaticMethods(Document);
 	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
-	Document.isDynamoObject = (object, recurrsive = false) => {
+	Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 		// This function will check to see if a nested object is valid by calling Document.isDynamoObject recursively
 		function isValid(value) {
 			const keys = Object.keys(value);
@@ -58,7 +73,7 @@ function DocumentCarrier(model) {
 		}
 	};
 	// This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
-	Document.prepareForObjectFromSchema = function(object, settings) {
+	Document.prepareForObjectFromSchema = function(object, settings: DocumentObjectFromSchemaSettings) {
 		if (settings.updateTimestamps) {
 			if (model.schema.settings.timestamps && settings.type === "toDynamo") {
 				const date = new Date();
@@ -75,11 +90,12 @@ function DocumentCarrier(model) {
 	};
 	// This function will return a list of attributes combining both the schema attributes with the document attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in document), adding the indexes for each item in the document set.
 	// https://stackoverflow.com/a/59928314/894067
-	const attributesWithSchemaCache = {};
-	Document.attributesWithSchema = function(document) {
+	const attributesWithSchemaCache: {[key: string]: any} = {};
+	Document.attributesWithSchema = function(document: Document): string[] {
 		const attributes = model.schema.attributes();
-		if (attributesWithSchemaCache[document] && attributesWithSchemaCache[document][attributes]) {
-			return attributesWithSchemaCache[document][attributes];
+		const documentID = utils.object.keys(document as any).join("");
+		if (attributesWithSchemaCache[documentID] && attributesWithSchemaCache[documentID][attributes]) {
+			return attributesWithSchemaCache[documentID][attributes];
 		}
 		// build a tree out of schema attributes
 		const root = {};
@@ -120,23 +136,35 @@ function DocumentCarrier(model) {
 		const out = [];
 		traverse(document, root, [], (val) => out.push(val.join(".")));
 		const result = out.slice(1);
-		attributesWithSchemaCache[document] = {[attributes]: result};
+		attributesWithSchemaCache[documentID] = {[attributes]: result};
 		return result;
 	};
 	// This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
-	Document.objectFromSchema = async function(object, settings = {"type": "toDynamo"}) {
+	interface DocumentObjectFromSchemaSettings {
+		type: "toDynamo" | "fromDynamo";
+		checkExpiredItem?: boolean;
+		saveUnknown?: boolean;
+		defaults?: boolean;
+		forceDefault?: boolean;
+		customTypesDynamo?: boolean;
+		validate?: boolean;
+		required?: boolean | "nested";
+		enum?: boolean;
+		modifiers?: ("set" | "get")[];
+		updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
+	}
+	Document.objectFromSchema = async function(object, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}) {
 		if (settings.checkExpiredItem && model.options.expires && (model.options.expires.items || {}).returnExpired === false && object[model.options.expires.attribute] && (object[model.options.expires.attribute] * 1000) < Date.now()) {
 			return undefined;
 		}
 
 		const returnObject = {...object};
 		const schemaAttributes = model.schema.attributes();
-		const dynamooseUndefined = require("./index").undefined;
 
 		// Type check
 		const validParents = []; // This array is used to allow for set contents to not be type checked
 		const keysToDelete = [];
-		const getValueTypeCheckResult = (value, key, options = {}) => {
+		const getValueTypeCheckResult = (value, key: string, options = {}) => {
 			const typeDetails = model.schema.getAttributeTypeDetails(key, options);
 			const isValidType = [((typeDetails.customType || {}).functions || {}).isOfType, typeDetails.isOfType].filter((a) => Boolean(a)).some((func) => func(value, settings.type));
 			return {typeDetails, isValidType};
@@ -156,7 +184,7 @@ function DocumentCarrier(model) {
 					validParents.push({key, "infinite": true});
 				} else if (/*typeDetails.dynamodbType === "M" || */typeDetails.dynamodbType === "L") {
 					// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
-					value.forEach((subValue, index, array) => {
+					value.forEach((subValue, index: number, array: any[]) => {
 						if (index === 0 || typeof subValue !== typeof array[0]) {
 							checkTypeFunction([`${key}.${index}`, subValue]);
 						}
@@ -233,7 +261,8 @@ function DocumentCarrier(model) {
 					if (validator) {
 						let result;
 						if (validator instanceof RegExp) {
-							result = validator.test(value);
+							// TODO: fix the line below to not use `as`. This will cause a weird issue even in vanilla JS, where if your validator is a Regular Expression but the type isn't a string, it will throw a super random error.
+							result = validator.test(value as string);
 						} else {
 							result = typeof validator === "function" ? await validator(value) : validator === value;
 						}
@@ -295,20 +324,27 @@ function DocumentCarrier(model) {
 
 		return returnObject;
 	};
-	Document.prototype.toDynamo = async function(settings = {}) {
-		settings.type = "toDynamo";
-		Document.prepareForObjectFromSchema(this, settings);
-		const object = await Document.objectFromSchema(this, settings);
-		return Document.toDynamo(object);
+	Document.prototype.toDynamo = async function(this: Document, settings: Partial<DocumentObjectFromSchemaSettings> = {}) {
+		const newSettings: DocumentObjectFromSchemaSettings = {
+			...settings,
+			"type": "toDynamo"
+		};
+		Document.prepareForObjectFromSchema(this, newSettings);
+		const object = await Document.objectFromSchema(this, newSettings);
+		return Document.objectToDynamo(object);
 	};
-	Document.prototype.save = function(settings = {}, callback) {
+	interface DocumentSaveSettings {
+		overwrite?: boolean;
+		return?: "request" | "document";
+	}
+	Document.prototype.save = function(this: Document, settings: DocumentSaveSettings = {}, callback) {
 		if (typeof settings === "function" && !callback) {
 			callback = settings;
 			settings = {};
 		}
 
 		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
-			const putItemObj = {
+			const putItemObj: any = {
 				"Item": item,
 				"TableName": Document.Model.name
 			};
@@ -343,13 +379,13 @@ function DocumentCarrier(model) {
 			})();
 		}
 	};
-	Document.prototype.delete = function(callback) {
+	Document.prototype.delete = function(this: Document, callback) {
 		return model.delete({
 			[model.schema.getHashKey()]: this[model.schema.getHashKey()]
 		}, callback);
 	};
 	// This function will modify the document to conform to the Schema
-	Document.prototype.conformToSchema = async function(settings = {"type": "fromDynamo"}) {
+	Document.prototype.conformToSchema = async function(this: Document, settings: DocumentObjectFromSchemaSettings = {"type": "fromDynamo"}) {
 		Document.prepareForObjectFromSchema(this, settings);
 		const expectedObject = await Document.objectFromSchema(this, settings);
 		if (!expectedObject) {
@@ -382,14 +418,14 @@ function DocumentCarrier(model) {
 			Document[key] = (...args) => new carrier(...args);
 			Document[key].carrier = carrier;
 		} else if (typeof Document.Model[key] === "object") {
-			const main = (key) => {
-				utils.object.set(Document, key, {});
+			const main = (key: string) => {
+				utils.object.set(Document as any, key, {});
 				Object.keys(utils.object.get(Document.Model, key)).forEach((subKey) => {
 					const newKey = `${key}.${subKey}`;
 					if (typeof utils.object.get(Document.Model, newKey) === "object") {
 						main(newKey);
 					} else {
-						utils.object.set(Document, newKey, utils.object.get(Document.Model, newKey).bind(Document.Model));
+						utils.object.set(Document as any, newKey, (utils.object.get(Document.Model, newKey) as any).bind(Document.Model));
 					}
 				});
 			};
@@ -404,4 +440,4 @@ function DocumentCarrier(model) {
 
 applyStaticMethods(DocumentCarrier);
 
-module.exports = DocumentCarrier;
+export = DocumentCarrier;
