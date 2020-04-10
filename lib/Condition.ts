@@ -146,27 +146,27 @@ function finalizePending(instance: Condition): void {
 	instance.settings.pending = {};
 }
 
-Condition.prototype.parenthesis = Condition.prototype.group = function (value: Condition | ConditionFunction): Condition {
+Condition.prototype.parenthesis = Condition.prototype.group = function (this: Condition, value: Condition | ConditionFunction): Condition {
 	value = typeof value === "function" ? value(new Condition()) : value;
 	this.settings.conditions.push(value.settings.conditions);
 	return this;
 };
-Condition.prototype.or = function(): Condition {
+Condition.prototype.or = function(this: Condition): Condition {
 	this.settings.conditions.push(OR);
 	return this;
 };
-Condition.prototype.and = function(): Condition { return this; };
-Condition.prototype.not = function(): Condition {
+Condition.prototype.and = function(this: Condition): Condition { return this; };
+Condition.prototype.not = function(this: Condition): Condition {
 	this.settings.pending.not = !this.settings.pending.not;
 	return this;
 };
-Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function(key: string): Condition {
+Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function(this: Condition, key: string): Condition {
 	this.settings.pending = {key};
 	return this;
 };
 // TODO: I don't think this prototypes are being exposed which is gonna cause a lot of problems with our type definition file. Need to figure out a better way to do this since they aren't defined and are dynamic.
 types.forEach((type) => {
-	Condition.prototype[type.name] = function(...args: any[]): Condition {
+	Condition.prototype[type.name] = function(this: Condition, ...args: any[]): Condition {
 		this.settings.pending.value = type.multipleArguments ? args : args[0];
 		this.settings.pending.type = type;
 		finalizePending(this);
@@ -181,7 +181,7 @@ interface ConditionRequestObjectSettings {
 		set: (newIndex: number) => void;
 	};
 }
-Condition.prototype.requestObject = function(settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression"}): ConditionRequestObjectResult {
+Condition.prototype.requestObject = function(this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression"}): ConditionRequestObjectResult {
 	if (this.settings.conditions.length === 0) {
 		return {};
 	}
@@ -205,7 +205,7 @@ Condition.prototype.requestObject = function(settings: ConditionRequestObjectSet
 				setIndex(++index);
 
 				object.ExpressionAttributeNames[keys.name] = key;
-				const toDynamo: (value: any, settings: {}) => {} = (Document as any).toDynamo;
+				const toDynamo: (value: any, settings: {}) => {} = (Document as any).objectToDynamo;
 				object.ExpressionAttributeValues[keys.value] = toDynamo(value, {"type": "value"});
 
 				switch (condition.type) {

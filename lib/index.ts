@@ -3,6 +3,7 @@ import Schema from "./Schema";
 import Condition from "./Condition";
 import transaction from "./Transaction";
 import aws from "./aws";
+import Internal from "./Internal";
 
 export = {
 	Model,
@@ -10,5 +11,5 @@ export = {
 	Condition,
 	transaction,
 	aws,
-	"undefined": Symbol("dynamoose.undefined")
+	"undefined": Internal.Public.undefined
 };
