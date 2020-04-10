@@ -4,7 +4,7 @@ import Internal from "./Internal";
 import Document from "./Document";
 const internalCache = Internal.Schema.internalCache;
 
-// TODO: move this to Document.ts
+// TODO: copied from Document.ts, should be a reference instead
 interface DocumentObjectFromSchemaSettings {
 	type: "toDynamo" | "fromDynamo";
 	checkExpiredItem?: boolean;
@@ -13,9 +13,9 @@ interface DocumentObjectFromSchemaSettings {
 	forceDefault?: boolean;
 	customTypesDynamo?: boolean;
 	validate?: boolean;
-	required?: boolean;
+	required?: boolean | "nested";
 	enum?: boolean;
-	modifiers?: boolean;
+	modifiers?: ("set" | "get")[];
 }
 
 
@@ -62,7 +62,7 @@ class Schema {
 	schemaObject: SchemaDefinition;
 	attributes: () => string[];
 	getCreateTableAttributeParams: (model: any) => any;
-	getAttributeType: (key: string, value?: ValueType, settings?: any) => any;
+	getAttributeType: (key: string, value?: ValueType, settings?: any) => string;
 	static attributeTypes: { findDynamoDBType: (type: any) => any; findTypeForValue: (...args: any[]) => any };
 	getHashKey: () => string;
 	getRangeKey: () => string | void;
@@ -71,8 +71,8 @@ class Schema {
 	getAttributeSettingValue: (setting: any, key: string, settings?: any) => any;
 	getIndexAttributes: () => Promise<{ index: IndexDefinition; attribute: string }[]>;
 	getSettingValue: (setting: string) => any;
-	getAttributeTypeDetails: (key: string, settings?: { standardKey?: string }) => DynamoDBTypeResult;
-	getAttributeValue: (key: string, settings?: { standardKey?: string }) => AttributeDefinition;
+	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean }) => DynamoDBTypeResult;
+	getAttributeValue: (key: string, settings?: { standardKey?: boolean }) => AttributeDefinition;
 	getIndexes: (model: any) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
 
@@ -124,7 +124,7 @@ class Schema {
 		checkAttributeNameDots(this.schemaObject);
 
 		const checkMultipleArraySchemaElements = (key: string): void => {
-			let attributeType;
+			let attributeType: string;
 			try {
 				attributeType = this.getAttributeType(key);
 			} catch (e) {} // eslint-disable-line no-empty
@@ -137,27 +137,28 @@ class Schema {
 	}
 }
 
-Schema.prototype.getHashKey = function(): string {
-	return Object.keys(this.schemaObject).find((key) => this.schemaObject[key].hashKey) || Object.keys(this.schemaObject)[0];
+// TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
+Schema.prototype.getHashKey = function(this: Schema): string {
+	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.schemaObject)[0];
 };
-Schema.prototype.getRangeKey = function(): string | void {
-	return Object.keys(this.schemaObject).find((key) => this.schemaObject[key].rangeKey);
+Schema.prototype.getRangeKey = function(this: Schema): string | void {
+	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).rangeKey);
 };
 
-Schema.prototype.getAttributeSettingValue = function(setting, key: string, settings: any = {}): any {
+Schema.prototype.getAttributeSettingValue = function(this: Schema, setting, key: string, settings: any = {}): any {
 	const defaultPropertyValue = (this.getAttributeValue(key) || {})[setting];
 	return typeof defaultPropertyValue === "function" && !settings.returnFunction ? defaultPropertyValue() : defaultPropertyValue;
 };
 
 // This function will take in an attribute and value, and throw an error if the property is required and the value is undefined or null.
-Schema.prototype.requiredCheck = async function(key: string, value: ValueType): Promise<void> {
+Schema.prototype.requiredCheck = async function(this: Schema, key: string, value: ValueType): Promise<void> {
 	const isRequired = await this.getAttributeSettingValue("required", key);
 	if ((typeof value === "undefined" || value === null) && isRequired) {
 		throw CustomError.ValidationError(`${key} is a required property but has no value when trying to save document`);
 	}
 };
 // This function will take in an attribute and value, and returns the default value if it should be applied.
-Schema.prototype.defaultCheck = async function(key: string, value: ValueType, settings: any): Promise<ValueType | void> {
+Schema.prototype.defaultCheck = async function(this: Schema, key: string, value: ValueType, settings: any): Promise<ValueType | void> {
 	const isValueUndefined = typeof value === "undefined" || value === null;
 	if ((settings.defaults && isValueUndefined) || (settings.forceDefault && await this.getAttributeSettingValue("forceDefault", key))) {
 		const defaultValue = await this.getAttributeSettingValue("default", key);
@@ -168,12 +169,10 @@ Schema.prototype.defaultCheck = async function(key: string, value: ValueType, se
 	}
 };
 
-Schema.prototype.getIndexAttributes = async function(): Promise<{index: IndexDefinition; attribute: string}[]> {
-	const attributes: string[] = this.attributes();
-	// TODO: if I change the line below from `attributes.map` to `this.attributes()` it throws an error. We need to figure out why and fix it.
-	return (await Promise.all(attributes.map(async (attribute: string) => ({"index": (await this.getAttributeSettingValue("index", attribute) as IndexDefinition), attribute})))).filter((obj) => obj.index);
+Schema.prototype.getIndexAttributes = async function(this: Schema): Promise<{index: IndexDefinition; attribute: string}[]> {
+	return (await Promise.all(this.attributes().map(async (attribute: string) => ({"index": (await this.getAttributeSettingValue("index", attribute) as IndexDefinition), attribute})))).filter((obj) => obj.index);
 };
-Schema.prototype.getIndexRangeKeyAttributes = async function(): Promise<{attribute: string}[]> {
+Schema.prototype.getIndexRangeKeyAttributes = async function(this: Schema): Promise<{attribute: string}[]> {
 	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getIndexAttributes();
 	return indexes.map((index) => index.index.rangeKey).filter((a) => Boolean(a)).map((a) => ({"attribute": a}));
 };
@@ -183,7 +182,7 @@ interface IndexItem {
 	Projection: {ProjectionType: "KEYS_ONLY" | "INCLUDE" | "ALL"; NonKeyAttributes?: string[]};
 	ProvisionedThroughput?: {"ReadCapacityUnits": number; "WriteCapacityUnits": number}; // TODO: this was copied from get_provisioned_throughput. We should change this to be an actual interface
 }
-Schema.prototype.getIndexes = async function(model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+Schema.prototype.getIndexes = async function(this: Schema, model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
 	return (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
@@ -215,11 +214,11 @@ Schema.prototype.getIndexes = async function(model): Promise<{GlobalSecondaryInd
 	}, {});
 };
 
-Schema.prototype.getSettingValue = function(setting: string): any {
+Schema.prototype.getSettingValue = function(this: Schema, setting: string): any {
 	return this.settings[setting];
 };
 
-function attributesAction(): string[] {
+function attributesAction(this: Schema): string[] {
 	const main = (object: SchemaDefinition, existingKey = ""): string[] => {
 		return Object.keys(object).reduce((accumulator: string[], key) => {
 			const keyWithExisting = `${existingKey ? `${existingKey}.` : ""}${key}`;
@@ -241,7 +240,7 @@ function attributesAction(): string[] {
 
 	return main(this.schemaObject);
 }
-Schema.prototype.attributes = function(): string[] {
+Schema.prototype.attributes = function(this: Schema): string[] {
 	if (!this[internalCache].attributes) {
 		this[internalCache].attributes = attributesAction.call(this);
 	}
@@ -249,8 +248,10 @@ Schema.prototype.attributes = function(): string[] {
 	return this[internalCache].attributes;
 };
 
-Schema.prototype.getAttributeValue = function(key: string, settings?: {standardKey?: string}): AttributeDefinition {
-	return (settings?.standardKey ? key : key.replace(/\d+/gu, "0")).split(".").reduce((result, part) => utils.object.get(result.schema, part), {"schema": this.schemaObject});
+Schema.prototype.getAttributeValue = function(this: Schema, key: string, settings?: {standardKey?: boolean}): AttributeDefinition {
+	return (settings?.standardKey ? key : key.replace(/\d+/gu, "0")).split(".").reduce((result, part) => {
+		return (utils.object.get(result.schema, part));
+	}, ({"schema": this.schemaObject} as any));
 };
 
 interface DynamoDBTypeResult {
@@ -391,7 +392,8 @@ function retrieveTypeInfo(type: string, isSet: boolean, key: string, typeSetting
 	// TODO: the line below probably shouldn't use `as DynamoDBTypeResult`
 	return isSet ? (parentType.set as DynamoDBTypeResult) : parentType;
 }
-Schema.prototype.getAttributeTypeDetails = function(key: string, settings: {standardKey?: string} = {}): DynamoDBTypeResult {
+// TODO: using too many `as` statements in the function below. We should clean this up.
+Schema.prototype.getAttributeTypeDetails = function(this: Schema, key: string, settings: {standardKey?: boolean} = {}): DynamoDBTypeResult {
 	const standardKey = (settings.standardKey ? key : key.replace(/\d+/gu, "0"));
 	if (this[internalCache].getAttributeTypeDetails[standardKey]) {
 		return this[internalCache].getAttributeTypeDetails[standardKey];
@@ -403,7 +405,7 @@ Schema.prototype.getAttributeTypeDetails = function(key: string, settings: {stan
 	let typeVal = typeof val === "object" && !Array.isArray(val) ? val.type : val;
 	let typeSettings = {};
 	if (typeof typeVal === "object" && !Array.isArray(typeVal)) {
-		typeSettings = typeVal.settings || {};
+		typeSettings = (typeVal as {value: DateConstructor; settings?: AttributeDefinitionTypeSettings}).settings || {};
 		typeVal = typeVal.value;
 	}
 
@@ -416,26 +418,26 @@ Schema.prototype.getAttributeTypeDetails = function(key: string, settings: {stan
 		const regexFuncName = /^Function ([^(]+)\(/iu;
 		[, type] = typeVal.toString().match(regexFuncName);
 	} else {
-		type = typeVal;
+		type = (typeVal as string);
 	}
 
 	const returnObject = retrieveTypeInfo(type, isSet, key, typeSettings);
 	this[internalCache].getAttributeTypeDetails[standardKey] = returnObject;
 	return returnObject;
 };
-Schema.prototype.getAttributeType = function(key: string, value?: ValueType, settings?: any): string {
+Schema.prototype.getAttributeType = function(this: Schema, key: string, value?: ValueType, settings?: any): string {
 	try {
 		return this.getAttributeTypeDetails(key).dynamodbType;
 	} catch (e) {
 		if (settings?.unknownAttributeAllowed && e.message === `Invalid Attribute: ${key}` && value) {
-			return Object.keys((Document as any).toDynamo(value, {"type": "value"}))[0];
+			return Object.keys((Document as any).objectToDynamo(value, {"type": "value"}))[0];
 		} else {
 			throw e;
 		}
 	}
 };
 
-Schema.prototype.getCreateTableAttributeParams = async function(model): Promise<any> {
+Schema.prototype.getCreateTableAttributeParams = async function(this: Schema, model): Promise<any> {
 	const hashKey = this.getHashKey();
 	const AttributeDefinitions = [
 		{
