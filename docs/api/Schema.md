@@ -356,7 +356,7 @@ If you set `index` to `true`, it will create an index with all of the default se
 
 ### hashKey: boolean
 
-You can set this to true to overwrite what the `hashKey` (partition key) for the Model will be. By default the `hashKey` will be the first key in the Schema object.
+You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object. `hashKey` is commonly called a partition key in the AWS documentation.
 
 ```js
 {
