@@ -58,13 +58,13 @@ export class Model {
 	Document: typeof DocumentCarrier;
 	scan: (this: Model, object?: ConditionInitalizer) => Scan;
 	query: (this: Model, object?: ConditionInitalizer) => Query;
-	get: (this: Model, key: string, settings: ModelGetSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.GetItemInput, AWSError>) => void | DynamoDB.GetItemInput | Promise<DocumentCarrier>;
-	delete: (this: Model, key: InputKey, settings: ModelDeleteSettings, callback?: CallbackType<DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
-	batchDelete: (this: Model, keys: InputKey[], settings: ModelBatchDeleteSettings, callback?: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
-	create: (this: Model, document: any, settings: {}, callback?: any) => void | Promise<any>;
-	batchPut: (this: Model, items: any, settings: {}, callbac?: any) => void | Promise<any>;
-	update: (this: Model, keyObj: any, updateObj: any, settings: ModelUpdateSettings, callback?: any) => void | Promise<any>;
-	batchGet: (this: Model, keys: InputKey[], settings: ModelBatchGetSettings, callback?: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
+	get: (this: Model, key: InputKey, settings?: ModelGetSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.GetItemInput, AWSError>) => void | DynamoDB.GetItemInput | Promise<DocumentCarrier>;
+	delete: (this: Model, key: InputKey, settings?: ModelDeleteSettings, callback?: CallbackType<DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
+	batchDelete: (this: Model, keys: InputKey[], settings?: ModelBatchDeleteSettings, callback?: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
+	create: (this: Model, document: any, settings?: {}, callback?: any) => void | Promise<any>;
+	batchPut: (this: Model, items: any, settings?: {}, callbac?: any) => void | Promise<any>;
+	update: (this: Model, keyObj: any, updateObj: any, settings?: ModelUpdateSettings, callback?: any) => void | Promise<any>;
+	batchGet: (this: Model, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
 
 	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}) {

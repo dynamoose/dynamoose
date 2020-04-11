@@ -10,7 +10,7 @@ interface DocumentRetrieverTypeInformation {
 	pastTense: string;
 }
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
-class DocumentRetriever {
+abstract class DocumentRetriever {
 	internalSettings?: {
 		model: Model;
 		typeInformation: DocumentRetrieverTypeInformation;
@@ -27,7 +27,7 @@ class DocumentRetriever {
 		parallel?: number;
 	};
 	getRequest: (this: DocumentRetriever) => Promise<any>;
-	exec: (this: DocumentRetriever, callback) => any;
+	exec: (this: DocumentRetriever, callback?: any) => any;
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
 
 	constructor(model: Model, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
