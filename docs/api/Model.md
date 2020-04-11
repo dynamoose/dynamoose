@@ -121,7 +121,7 @@ async function printTableRequest() {
 
 ## Model.get(primaryKey[, settings][, callback])
 
-You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
+You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
 `keys` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
 
