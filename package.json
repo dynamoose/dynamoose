@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsc",
     "build:clean": "rm -rf dist",
-    "build:watch": "tsc -w",
+    "build:watch": "npm run build -- -w",
     "prepare": "npm run build:clean; npm run build",
     "test": "nyc --all mocha && nyc report --reporter=html",
     "test-nocoverage": "mocha",
