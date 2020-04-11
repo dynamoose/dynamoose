@@ -32,7 +32,6 @@ export class Document {
 		this[internalProperties].originalObject = {...object};
 		this[internalProperties].originalSettings = {...settings};
 
-		// this.model = model;
 		Object.defineProperty(this, "model", {
 			"configurable": false,
 			"value": model
