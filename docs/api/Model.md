@@ -119,7 +119,7 @@ async function printTableRequest() {
 }
 ```
 
-## Model.get(primaryKey[, settings][, callback])
+## Model.get(key[, settings][, callback])
 
 You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
@@ -214,7 +214,7 @@ User.get({"id": 1}, (error, myUser) => {
 });
 ```
 
-## Model.batchGet(primaryKeys[, settings][, callback])
+## Model.batchGet(keys[, settings][, callback])
 
 You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
 
@@ -396,11 +396,11 @@ await User.batchPut([
 });
 ```
 
-## Model.update(primaryKey[, updateObj[, settings]],[ callback])
+## Model.update(key[, updateObj[, settings]],[ callback])
 
 This function lets you update an existing item in the database. You can either pass in one object combining both the hashKey (partition key) you wish to update along with the update object, or keep them separate by passing in two objects.
 
-`primaryKey` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
+`key` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
 
 ```js
 await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
@@ -480,11 +480,11 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
-## Model.delete(primaryKey[, settings][, callback])
+## Model.delete(key[, settings][, callback])
 
 You can use Model.delete to delete a item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
 
-`primaryKey` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
+`key` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
 
@@ -575,11 +575,11 @@ User.delete({"id": 1}, (error) => {
 });
 ```
 
-## Model.batchDelete(primaryKeys[, settings][, callback])
+## Model.batchDelete(keys[, settings][, callback])
 
 You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
 
-`primaryKeys` can be an array of strings representing the hashKey/partition key and/or an array of objects containing the hashKey/partition key AND rangeKey/sort key.
+`keys` can be an array of strings representing the hashKey/partition key and/or an array of objects containing the hashKey/partition key AND rangeKey/sort key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, an object with the `unprocessedItems` will be returned to you. Otherwise an error will be thrown.
 
