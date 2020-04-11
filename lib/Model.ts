@@ -10,6 +10,191 @@ import {CallbackType} from "./General";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
 
+// Defaults
+interface ModelWaitForActiveSettings {
+	enabled: boolean;
+	check: {timeout: number; frequency: number};
+}
+export interface ModelExpiresSettings {
+	ttl: number;
+	attribute: string;
+	items?: {
+		returnExpired: boolean;
+	};
+}
+interface ModelOptions {
+	create: boolean;
+	throughput: number | {read: number; write: number};
+	prefix: string;
+	suffix: string;
+	waitForActive: ModelWaitForActiveSettings;
+	update: boolean;
+	expires?: number | ModelExpiresSettings;
+}
+type ModelOptionsOptional = Partial<ModelOptions>;
+const defaults: ModelOptions = {
+	"create": true,
+	"throughput": {
+		"read": 5,
+		"write": 5
+	},
+	"prefix": "",
+	"suffix": "",
+	"waitForActive": {
+		"enabled": true,
+		"check": {
+			"timeout": 180000,
+			"frequency": 1000
+		}
+	},
+	"update": false,
+	"expires": undefined
+	// "streamOptions": {
+	// 	"enabled": false,
+	// 	"type": undefined
+	// },
+	// "serverSideEncryption": false,
+	// "defaultReturnValues": "ALL_NEW",
+};
+
+
+
+
+
+type InputKey = string | {[attribute: string]: string};
+function convertObjectToKey(this: Model, key: InputKey): {[key: string]: string} {
+	let keyObject: {[key: string]: string};
+	const hashKey = this.schema.getHashKey();
+	if (typeof key === "object") {
+		const rangeKey = this.schema.getRangeKey();
+		keyObject = {
+			[hashKey]: key[hashKey]
+		};
+		if (rangeKey && key[rangeKey]) {
+			keyObject[rangeKey] = key[rangeKey];
+		}
+	} else {
+		keyObject = {
+			[hashKey]: key
+		};
+	}
+
+	return keyObject;
+}
+
+
+
+// Utility functions
+async function getTableDetails(model: Model, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
+	const func = async (): Promise<void> => {
+		const tableDetails: DynamoDB.DescribeTableOutput = await aws.ddb().describeTable({"TableName": model.name}).promise();
+		model.latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
+	};
+	if (settings.forceRefresh || !model.latestTableDetails) {
+		if (settings.allowError) {
+			try {
+				await func();
+			} catch (e) {} // eslint-disable-line no-empty
+		} else {
+			await func();
+		}
+	}
+
+	return model.latestTableDetails;
+}
+async function createTableRequest(model: Model): Promise<DynamoDB.CreateTableInput> {
+	return {
+		"TableName": model.name,
+		...utils.dynamoose.get_provisioned_throughput(model.options),
+		...await model.schema.getCreateTableAttributeParams(model)
+	};
+}
+async function createTable(model: Model): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | {promise: () => Promise<void>}> {
+	if ((((await getTableDetails(model, {"allowError": true})) || {}).Table || {}).TableStatus === "ACTIVE") {
+		return {"promise": (): Promise<void> => Promise.resolve()};
+	}
+
+	return aws.ddb().createTable(await createTableRequest(model));
+}
+function updateTimeToLive(model: Model): {promise: () => Promise<void>} {
+	return {
+		"promise": async (): Promise<void> => {
+			let ttlDetails;
+
+			async function updateDetails(): Promise<void> {
+				ttlDetails = await aws.ddb().describeTimeToLive({
+					"TableName": model.name
+				}).promise();
+			}
+			await updateDetails();
+
+			function updateTTL(): Request<DynamoDB.UpdateTimeToLiveOutput, AWSError> {
+				return aws.ddb().updateTimeToLive({
+					"TableName": model.name,
+					"TimeToLiveSpecification": {
+						"AttributeName": (model.options.expires as any).attribute,
+						"Enabled": true
+					}
+				});
+			}
+
+			switch (ttlDetails.TimeToLiveDescription.TimeToLiveStatus) {
+			case "DISABLING":
+				while (ttlDetails.TimeToLiveDescription.TimeToLiveStatus === "DISABLING") {
+					await utils.timeout(1000);
+					await updateDetails();
+				}
+				// fallthrough
+			case "DISABLED":
+				await updateTTL();
+				break;
+			default:
+				break;
+			}
+		}
+	};
+}
+function waitForActive(model: Model) {
+	return (): Promise<void> => new Promise((resolve, reject) => {
+		const start = Date.now();
+		async function check(count): Promise<void> {
+			try {
+				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
+				if ((await getTableDetails(model, {"forceRefresh": count > 0})).Table.TableStatus === "ACTIVE") {
+					return resolve();
+				}
+			} catch (e) {
+				return reject(e);
+			}
+
+			if (count > 0) {
+				model.options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model.options.waitForActive.check.frequency);
+			}
+			if ((Date.now() - start) >= model.options.waitForActive.check.timeout) {
+				return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
+			} else {
+				check(++count);
+			}
+		}
+		check(0);
+	});
+}
+async function updateTable(model: Model): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | {promise: () => Promise<void>}> {
+	const currentThroughput = (await getTableDetails(model)).Table;
+	const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
+	if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary?.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
+	// if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
+		return {"promise": (): Promise<void> => Promise.resolve()};
+	}
+
+	const object: DynamoDB.UpdateTableInput = {
+		"TableName": model.name,
+		...expectedThroughput
+	};
+	return aws.ddb().updateTable(object);
+}
+
+
 // Model represents one DynamoDB table
 export class Model {
 	name: string;
@@ -184,136 +369,7 @@ export class Model {
 	}
 }
 
-// Utility functions
-async function createTable(model: Model): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | {promise: () => Promise<void>}> {
-	if ((((await getTableDetails(model, {"allowError": true})) || {}).Table || {}).TableStatus === "ACTIVE") {
-		return {"promise": (): Promise<void> => Promise.resolve()};
-	}
-
-	return aws.ddb().createTable(await createTableRequest(model));
-}
-async function createTableRequest(model: Model): Promise<DynamoDB.CreateTableInput> {
-	return {
-		"TableName": model.name,
-		...utils.dynamoose.get_provisioned_throughput(model.options),
-		...await model.schema.getCreateTableAttributeParams(model)
-	};
-}
-function updateTimeToLive(model: Model): {promise: () => Promise<void>} {
-	return {
-		"promise": async (): Promise<void> => {
-			let ttlDetails;
-
-			async function updateDetails(): Promise<void> {
-				ttlDetails = await aws.ddb().describeTimeToLive({
-					"TableName": model.name
-				}).promise();
-			}
-			await updateDetails();
-
-			function updateTTL(): Request<DynamoDB.UpdateTimeToLiveOutput, AWSError> {
-				return aws.ddb().updateTimeToLive({
-					"TableName": model.name,
-					"TimeToLiveSpecification": {
-						"AttributeName": (model.options.expires as any).attribute,
-						"Enabled": true
-					}
-				});
-			}
-
-			switch (ttlDetails.TimeToLiveDescription.TimeToLiveStatus) {
-			case "DISABLING":
-				while (ttlDetails.TimeToLiveDescription.TimeToLiveStatus === "DISABLING") {
-					await utils.timeout(1000);
-					await updateDetails();
-				}
-				// fallthrough
-			case "DISABLED":
-				await updateTTL();
-				break;
-			default:
-				break;
-			}
-		}
-	};
-}
-function waitForActive(model: Model) {
-	return (): Promise<void> => new Promise((resolve, reject) => {
-		const start = Date.now();
-		async function check(count): Promise<void> {
-			try {
-				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
-				if ((await getTableDetails(model, {"forceRefresh": count > 0})).Table.TableStatus === "ACTIVE") {
-					return resolve();
-				}
-			} catch (e) {
-				return reject(e);
-			}
-
-			if (count > 0) {
-				model.options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model.options.waitForActive.check.frequency);
-			}
-			if ((Date.now() - start) >= model.options.waitForActive.check.timeout) {
-				return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
-			} else {
-				check(++count);
-			}
-		}
-		check(0);
-	});
-}
-async function getTableDetails(model: Model, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
-	const func = async (): Promise<void> => {
-		const tableDetails: DynamoDB.DescribeTableOutput = await aws.ddb().describeTable({"TableName": model.name}).promise();
-		model.latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
-	};
-	if (settings.forceRefresh || !model.latestTableDetails) {
-		if (settings.allowError) {
-			try {
-				await func();
-			} catch (e) {} // eslint-disable-line no-empty
-		} else {
-			await func();
-		}
-	}
-
-	return model.latestTableDetails;
-}
-async function updateTable(model: Model): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | {promise: () => Promise<void>}> {
-	const currentThroughput = (await getTableDetails(model)).Table;
-	const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
-	if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary?.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
-	// if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
-		return {"promise": (): Promise<void> => Promise.resolve()};
-	}
-
-	const object: DynamoDB.UpdateTableInput = {
-		"TableName": model.name,
-		...expectedThroughput
-	};
-	return aws.ddb().updateTable(object);
-}
-
-type InputKey = string | {[attribute: string]: string};
-function convertObjectToKey(this: Model, key: InputKey): {[key: string]: string} {
-	let keyObject: {[key: string]: string};
-	const hashKey = this.schema.getHashKey();
-	if (typeof key === "object") {
-		const rangeKey = this.schema.getRangeKey();
-		keyObject = {
-			[hashKey]: key[hashKey]
-		};
-		if (rangeKey && key[rangeKey]) {
-			keyObject[rangeKey] = key[rangeKey];
-		}
-	} else {
-		keyObject = {
-			[hashKey]: key
-		};
-	}
-
-	return keyObject;
-}
+Model.defaults = defaults;
 
 
 interface ModelGetSettings {
@@ -359,6 +415,8 @@ Model.prototype.batchGet = function (this: Model, keys: InputKey[], settings: Mo
 		settings = {"return": "documents"};
 	}
 
+	const keyObjects = keys.map((key) => convertObjectToKey.bind(this)(key));
+
 	const documentify = (document): Promise<any> => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 	const prepareResponse = async (response): Promise<any> => {
 		const tmpResult = await Promise.all(response.Responses[this.name].map((item) => documentify(item)));
@@ -381,7 +439,6 @@ Model.prototype.batchGet = function (this: Model, keys: InputKey[], settings: Mo
 		}, startArray);
 	};
 
-	const keyObjects = keys.map((key) => convertObjectToKey.bind(this)(key));
 	const params = {
 		"RequestItems": {
 			[this.name]: {
@@ -693,6 +750,9 @@ Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings:
 		settings = {"return": "response"};
 	}
 
+	const keyObjects = keys.map((key) => convertObjectToKey.bind(this)(key));
+
+
 	const prepareResponse = async (response): Promise<{unprocessedItems: any[]}> => {
 		const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this.name] ? response.UnprocessedItems[this.name] : [];
 		const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item.DeleteRequest.Key)));
@@ -705,7 +765,6 @@ Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings:
 		}, {"unprocessedItems": []});
 	};
 
-	const keyObjects = keys.map((key) => convertObjectToKey.bind(this)(key));
 	const params: DynamoDB.BatchWriteItemInput = {
 		"RequestItems": {
 			[this.name]: keyObjects.map((key) => ({
@@ -786,51 +845,3 @@ Model.prototype.methods = {
 	...customMethodFunctions("model"),
 	"document": customMethodFunctions("document")
 };
-
-// Defaults
-interface ModelWaitForActiveSettings {
-	enabled: boolean;
-	check: {timeout: number; frequency: number};
-}
-export interface ModelExpiresSettings {
-	ttl: number;
-	attribute: string;
-	items?: {
-		returnExpired: boolean;
-	};
-}
-interface ModelOptions {
-	create: boolean;
-	throughput: number | {read: number; write: number};
-	prefix: string;
-	suffix: string;
-	waitForActive: ModelWaitForActiveSettings;
-	update: boolean;
-	expires?: number | ModelExpiresSettings;
-}
-type ModelOptionsOptional = Partial<ModelOptions>;
-const defaults: ModelOptions = {
-	"create": true,
-	"throughput": {
-		"read": 5,
-		"write": 5
-	},
-	"prefix": "",
-	"suffix": "",
-	"waitForActive": {
-		"enabled": true,
-		"check": {
-			"timeout": 180000,
-			"frequency": 1000
-		}
-	},
-	"update": false,
-	// "expires": null
-	// "streamOptions": {
-	// 	"enabled": false,
-	// 	"type": undefined
-	// },
-	// "serverSideEncryption": false,
-	// "defaultReturnValues": "ALL_NEW",
-};
-Model.defaults = defaults;

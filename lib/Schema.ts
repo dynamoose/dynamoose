@@ -486,7 +486,8 @@ Schema.prototype.getCreateTableAttributeParams = async function(this: Schema, mo
 };
 
 
-Schema.attributeTypes = {
+const exportAttributeTypes = {
 	"findDynamoDBType": (type): any => attributeTypes.find((checkType) => checkType.dynamodbType === type),
 	"findTypeForValue": (...args): any => attributeTypes.find((checkType) => checkType.isOfType(...args))
 };
+Schema.attributeTypes = exportAttributeTypes;
