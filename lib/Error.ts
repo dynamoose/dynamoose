@@ -1,4 +1,4 @@
-const makeError = (defaultMessage: string, errorName: string) => class CustomError extends Error {
+const makeError = (defaultMessage: string, errorName: string) => class CustomError extends Error { // eslint-disable-line @typescript-eslint/explicit-function-return-type
 	name: string;
 	message: string;
 
