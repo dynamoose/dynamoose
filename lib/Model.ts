@@ -51,20 +51,20 @@ class Model {
 	schema: Schema;
 	ready: boolean;
 	pendingTasks: any[];
-	latestTableDetails: any;
+	latestTableDetails: DynamoDB.DescribeTableOutput;
 	pendingTaskPromise: () => Promise<void>;
 	static defaults: ModelOptions;
 	Document: ReturnType<typeof DocumentCarrier>;
 	get: (this: Model, key: string, settings: {}, callback: any) => void | DynamoDB.GetItemInput | Promise<any>;
-	scan: { carrier: any; };
-	query: { carrier: any; };
-	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void; }; set: (name: string, fn: any) => void; delete: (name: string) => void; };
+	scan: { carrier: any };
+	query: { carrier: any };
+	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
 	delete: (this: Model, key: InputKey, settings: ModelDeleteSettings, callback: any) => void | DynamoDB.DeleteItemInput | Promise<any>;
 	batchDelete: (this: Model, keys: InputKey[], settings: ModelBatchDeleteSettings, callback: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
 	create: (this: Model, document: any, settings: {}, callback: any) => void | Promise<any>;
 	batchPut: (this: Model, items: any, settings: {}, callback: any) => void | Promise<any>;
 	update: (this: Model, keyObj: any, updateObj: any, settings: ModelUpdateSettings, callback: any) => void | Promise<any>;
-    batchGet: (this: Model, keys: InputKey[], settings: { return: string; }, callback: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
+	batchGet: (this: Model, keys: InputKey[], settings: { return: string }, callback: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
 
 	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}) {
 		this.options = (utils.combine_objects(options, Model.defaults, defaults) as ModelOptions);
@@ -91,7 +91,7 @@ class Model {
 						"storage": "seconds"
 					}
 				},
-				"default": () => new Date(Date.now() + (options.expires as any).ttl)
+				"default": (): Date => new Date(Date.now() + (options.expires as any).ttl)
 			};
 			schema[Internal.Schema.internalCache].attributes = undefined;
 		}
@@ -101,7 +101,7 @@ class Model {
 		this.ready = false; // Represents if model is ready to be used for actions such as "get", "put", etc. This property being true does not guarantee anything on the DynamoDB server. It only guarantees that Dynamoose has finished the initalization steps required to allow the model to function as expected on the client side.
 		this.pendingTasks = []; // Represents an array of promise resolver functions to be called when Model.ready gets set to true (at the end of the setup flow)
 		this.latestTableDetails = null; // Stores the latest result from `describeTable` for the given table
-		this.pendingTaskPromise = () => { // Returns a promise that will be resolved after the Model is ready. This is used in all Model operations (Model.get, Document.save) to `await` at the beginning before running the AWS SDK method to ensure the Model is setup before running actions on it.
+		this.pendingTaskPromise = (): Promise<void> => { // Returns a promise that will be resolved after the Model is ready. This is used in all Model operations (Model.get, Document.save) to `await` at the beginning before running the AWS SDK method to ensure the Model is setup before running actions on it.
 			return this.ready ? Promise.resolve() : new Promise((resolve) => {
 				this.pendingTasks.push(resolve);
 			});
@@ -137,7 +137,7 @@ class Model {
 		const returnObject: any = this.Document;
 		returnObject.table = {
 			"create": {
-				"request": () => createTableRequest(this)
+				"request": (): Promise<DynamoDB.CreateTableInput> => createTableRequest(this)
 			}
 		};
 
@@ -148,7 +148,7 @@ class Model {
 			{"key": "get"},
 			{"key": "create", "dynamoKey": "Put"},
 			{"key": "delete"},
-			{"key": "update", "settingsIndex": 2, "modifier": (response) => {
+			{"key": "update", "settingsIndex": 2, "modifier": (response: DynamoDB.UpdateItemInput) => {
 				delete response.ReturnValues;
 				return response;
 			}},
@@ -163,7 +163,7 @@ class Model {
 			const settingsIndex = currentValue.settingsIndex || 1;
 			const func = currentValue.function || this[key].bind(this);
 
-			accumulator[key] = async (...args) => {
+			accumulator[key] = async (...args): Promise<DynamoDB.TransactWriteItem> => {
 				if (typeof args[args.length - 1] === "function") {
 					console.warn("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 					args.pop();
@@ -190,9 +190,9 @@ class Model {
 }
 
 // Utility functions
-async function createTable(model: Model) {
+async function createTable(model: Model): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | {promise: () => Promise<void>}> {
 	if ((((await getTableDetails(model, {"allowError": true})) || {}).Table || {}).TableStatus === "ACTIVE") {
-		return {"promise": () => Promise.resolve()};
+		return {"promise": (): Promise<void> => Promise.resolve()};
 	}
 
 	return aws.ddb().createTable(await createTableRequest(model));
@@ -204,19 +204,19 @@ async function createTableRequest(model: Model): Promise<DynamoDB.CreateTableInp
 		...await model.schema.getCreateTableAttributeParams(model)
 	};
 }
-function updateTimeToLive(model: Model) {
+function updateTimeToLive(model: Model): {promise: () => Promise<void>} {
 	return {
-		"promise": async () => {
+		"promise": async (): Promise<void> => {
 			let ttlDetails;
 
-			async function updateDetails() {
+			async function updateDetails(): Promise<void> {
 				ttlDetails = await aws.ddb().describeTimeToLive({
 					"TableName": model.name
 				}).promise();
 			}
 			await updateDetails();
 
-			function updateTTL() {
+			function updateTTL(): Request<DynamoDB.UpdateTimeToLiveOutput, AWSError> {
 				return aws.ddb().updateTimeToLive({
 					"TableName": model.name,
 					"TimeToLiveSpecification": {
@@ -243,9 +243,9 @@ function updateTimeToLive(model: Model) {
 	};
 }
 function waitForActive(model: Model) {
-	return () => new Promise((resolve, reject) => {
+	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
-		async function check(count) {
+		async function check(count): Promise<void> {
 			try {
 				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
 				if ((await getTableDetails(model, {"forceRefresh": count > 0})).Table.TableStatus === "ACTIVE") {
@@ -267,9 +267,9 @@ function waitForActive(model: Model) {
 		check(0);
 	});
 }
-async function getTableDetails(model: Model, settings: {allowError?: boolean, forceRefresh?: boolean} = {}) {
-	const func = async () => {
-		const tableDetails = await aws.ddb().describeTable({"TableName": model.name}).promise();
+async function getTableDetails(model: Model, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
+	const func = async (): Promise<void> => {
+		const tableDetails: DynamoDB.DescribeTableOutput = await aws.ddb().describeTable({"TableName": model.name}).promise();
 		model.latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
 	};
 	if (settings.forceRefresh || !model.latestTableDetails) {
@@ -284,12 +284,12 @@ async function getTableDetails(model: Model, settings: {allowError?: boolean, fo
 
 	return model.latestTableDetails;
 }
-async function updateTable(model: Model): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | {promise: () => Promise<void>;}> {
+async function updateTable(model: Model): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | {promise: () => Promise<void>}> {
 	const currentThroughput = (await getTableDetails(model)).Table;
 	const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
-	if ((expectedThroughput.BillingMode === currentThroughput.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
+	if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
 	// if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
-		return {"promise": () => Promise.resolve()};
+		return {"promise": (): Promise<void> => Promise.resolve()};
 	}
 
 	const object: DynamoDB.UpdateTableInput = {
@@ -300,7 +300,7 @@ async function updateTable(model: Model): Promise<Request<DynamoDB.UpdateTableOu
 }
 
 type InputKey = string | {[attribute: string]: string};
-function convertObjectToKey(this: Model, key: InputKey) {
+function convertObjectToKey(this: Model, key: InputKey): {[key: string]: string} {
 	let keyObject: {[key: string]: string};
 	const hashKey = this.schema.getHashKey();
 	if (typeof key === "object") {
@@ -330,7 +330,7 @@ Model.prototype.get = function (this: Model, key: InputKey, settings: ModelGetSe
 		settings = {"return": "document"};
 	}
 
-	const documentify = (document: DynamoDB.AttributeMap) => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+	const documentify = (document: DynamoDB.AttributeMap): Promise<any> => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 
 	const getItemParams = {
 		"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
@@ -349,7 +349,7 @@ Model.prototype.get = function (this: Model, key: InputKey, settings: ModelGetSe
 	if (callback) {
 		promise.then((response) => response.Item ? documentify(response.Item) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
 	} else {
-		return (async () => {
+		return (async (): Promise<any> => {
 			const response = await promise;
 			return response.Item ? await documentify(response.Item) : undefined;
 		})();
@@ -358,14 +358,14 @@ Model.prototype.get = function (this: Model, key: InputKey, settings: ModelGetSe
 interface ModelBatchGetSettings {
 	return: "documents" | "request";
 }
-Model.prototype.batchGet = function (this: Model, keys: InputKey[], settings = {"return": "documents"}, callback): void | DynamoDB.BatchGetItemInput | Promise<any> {
+Model.prototype.batchGet = function (this: Model, keys: InputKey[], settings: ModelBatchGetSettings = {"return": "documents"}, callback): void | DynamoDB.BatchGetItemInput | Promise<any> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": "documents"};
 	}
 
-	const documentify = (document) => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
-	const prepareResponse = async (response) => {
+	const documentify = (document): Promise<any> => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+	const prepareResponse = async (response): Promise<any> => {
 		const tmpResult = await Promise.all(response.Responses[this.name].map((item) => documentify(item)));
 		const unprocessedArray = response.UnprocessedKeys[this.name] ? response.UnprocessedKeys[this.name].Keys : [];
 		const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item)));
@@ -407,7 +407,7 @@ Model.prototype.batchGet = function (this: Model, keys: InputKey[], settings = {
 	if (callback) {
 		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response)).catch((error) => callback(error));
 	} else {
-		return (async () => {
+		return (async (): Promise<any> => {
 			const response = await promise;
 			return prepareResponse(response);
 		})();
@@ -431,7 +431,7 @@ Model.prototype.batchPut = function (this: Model, items, settings: ModelBatchPut
 		settings = {"return": "response"};
 	}
 
-	const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput) => {
+	const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: any[]}> => {
 		const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this.name] ? response.UnprocessedItems[this.name] : [];
 		const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item.PutRequest.Item)));
 		return items.reduce((result, document) => {
@@ -443,7 +443,7 @@ Model.prototype.batchPut = function (this: Model, items, settings: ModelBatchPut
 		}, {"unprocessedItems": []});
 	};
 
-	const paramsPromise: Promise<DynamoDB.BatchWriteItemInput> = (async () => ({
+	const paramsPromise: Promise<DynamoDB.BatchWriteItemInput> = (async (): Promise<DynamoDB.BatchWriteItemInput> => ({
 		"RequestItems": {
 			[this.name]: await Promise.all(items.map(async (item) => ({
 				"PutRequest": {
@@ -465,7 +465,7 @@ Model.prototype.batchPut = function (this: Model, items, settings: ModelBatchPut
 	if (callback) {
 		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response)).catch((error) => callback(error));
 	} else {
-		return (async () => {
+		return (async (): Promise<{unprocessedItems: any[]}> => {
 			const response = await promise;
 			return prepareResponse(response);
 		})();
@@ -568,7 +568,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 			}
 
 			return accumulator;
-		}, Promise.resolve((async () => {
+		}, Promise.resolve((async (): Promise<{ExpressionAttributeNames: any; ExpressionAttributeValues: any; UpdateExpression: any}> => {
 			const obj = {
 				"ExpressionAttributeNames": {},
 				"ExpressionAttributeValues": {},
@@ -631,11 +631,11 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 		return returnObject;
 	};
 
-	const documentify = (document) => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"});
+	const documentify = (document): Promise<any> => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"});
 	const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async () => ({
 		"Key": this.Document.objectToDynamo(keyObj),
 		"ReturnValues": "ALL_NEW",
-		...utils.merge_objects.main({"combineMethod": "object_combine"})((settings.condition ? settings.condition.requestObject({"index": {"start": index, "set": (i) => index = i}, "conditionString": "ConditionExpression"}) : {}), await getUpdateExpressionObject()),
+		...utils.merge_objects.main({"combineMethod": "object_combine"})((settings.condition ? settings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression"}) : {}), await getUpdateExpressionObject()),
 		"TableName": this.name
 	}));
 	if (settings.return === "request") {
@@ -651,7 +651,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 	if (callback) {
 		promise.then((response) => response.Attributes ? documentify(response.Attributes) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
 	} else {
-		return (async () => {
+		return (async (): Promise<any> => {
 			const response = await promise;
 			return response.Attributes ? await documentify(response.Attributes) : undefined;
 		})();
@@ -696,7 +696,7 @@ Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings:
 		settings = {"return": "response"};
 	}
 
-	const prepareResponse = async (response) => {
+	const prepareResponse = async (response): Promise<{unprocessedItems: any[]}> => {
 		const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this.name] ? response.UnprocessedItems[this.name] : [];
 		const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item.DeleteRequest.Key)));
 		return keyObjects.reduce((result, key) => {
@@ -731,7 +731,7 @@ Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings:
 	if (callback) {
 		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response)).catch((error) => callback(error));
 	} else {
-		return (async () => {
+		return (async (): Promise<{unprocessedItems: any[]}> => {
 			const response = await promise;
 			return prepareResponse(response);
 		})();
@@ -742,13 +742,13 @@ Model.prototype.scan = {"carrier": require("./DocumentRetriever")("scan")};
 Model.prototype.query = {"carrier": require("./DocumentRetriever")("query")};
 
 // Methods
-const customMethodFunctions = (type: "model" | "document") => {
+const customMethodFunctions = (type: "model" | "document"): {set: (name: string, fn: any) => void; delete: (name: string) => void} => {
 	const entryPoint = (self) => type === "document" ? self.Document.prototype : self.Document;
 	return {
-		"set": function (name: string, fn) {
+		"set": function (name: string, fn): void {
 			const self: any = this;
 			if (!entryPoint(this)[name] || (entryPoint(this)[name][Internal.General.internalProperties] && entryPoint(this)[name][Internal.General.internalProperties].type === "customMethod")) {
-				entryPoint(this)[name] = function (...args) {
+				entryPoint(this)[name] = function (...args): Promise<any> {
 					const bindObject = type === "document" ? this : self.Document;
 					const cb = typeof args[args.length - 1] === "function" ? args[args.length - 1] : undefined;
 					if (cb) {
@@ -774,7 +774,7 @@ const customMethodFunctions = (type: "model" | "document") => {
 				entryPoint(this)[name][Internal.General.internalProperties] = {"type": "customMethod"};
 			}
 		},
-		"delete": function (name: string) {
+		"delete": function (name: string): void {
 			if (entryPoint(this)[name] && entryPoint(this)[name][Internal.General.internalProperties] && entryPoint(this)[name][Internal.General.internalProperties].type === "customMethod") {
 				entryPoint(this)[name] = undefined;
 			}
@@ -789,18 +789,18 @@ Model.prototype.methods = {
 // Defaults
 interface ModelWaitForActiveSettings {
 	enabled: boolean;
-	check: {timeout: number; frequency: number;};
+	check: {timeout: number; frequency: number};
 }
 interface ModelExpiresSettings {
 	ttl: number;
 	attribute: string;
 	items?: {
 		returnExpired: boolean;
-	}
+	};
 }
 interface ModelOptions {
 	create: boolean;
-	throughput: number | {read: number; write: number;};
+	throughput: number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
 	waitForActive: ModelWaitForActiveSettings;
