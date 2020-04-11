@@ -3,11 +3,11 @@ interface ThroughputSettings {
 	write: number;
 }
 
-interface ModelSettings {
+export interface ModelSettings {
 	throughput: ThroughputSettings | number | "ON_DEMAND";
 }
 
-export = (options: ModelSettings): {"BillingMode": "PAY_PER_REQUEST"} | {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}} => {
+export default (options: ModelSettings): {"BillingMode": "PAY_PER_REQUEST"} | {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}} => {
 	if (options.throughput === "ON_DEMAND") {
 		return {
 			"BillingMode": "PAY_PER_REQUEST"

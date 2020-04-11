@@ -11,14 +11,14 @@ enum TransactionType {
 	get = "get",
 	write = "write"
 }
-interface TransactionSettings {
+export interface TransactionSettings {
 	return: TransactionReturnOptions;
 	type?: TransactionType;
 }
 
 type CallbackType = (error: any, result?: any) => void;
 // TODO: seems like when using this method as a consumer of Dynamoose that it will get confusing with the different parameter names. For example, if you pass in an array of transactions and a callback, the callback parameter name when using this method will be `settings` (I THINK). Which is super confusing to the user. Not sure how to fix this tho.
-export = (transactions: any[] | CallbackType, settings: TransactionSettings | CallbackType = {"return": TransactionReturnOptions.documents}, callback: CallbackType) => {
+export default (transactions: any[] | CallbackType, settings: TransactionSettings | CallbackType = {"return": TransactionReturnOptions.documents}, callback: CallbackType) => {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": TransactionReturnOptions.documents};
