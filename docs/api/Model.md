@@ -31,9 +31,9 @@ The `config` parameter is an object used to customize settings for the model.
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
 | update | If Dynamoose should update the capacity of the existing table to match the model throughput. | Boolean | false |
-| expires | The setting to describe the time to live for items created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
-| expires.ttl | The default amount of time the item should stay alive from creation time in milliseconds. | Number | null |
-| expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` |
+| expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
+| expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | null |
+| expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
 | expires.items | The options for items with ttl. | Object | {} |
 | expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
 
@@ -121,9 +121,8 @@ async function printTableRequest() {
 
 ## Model.get(key[, settings][, callback])
 
-You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
+You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
-`keys` can be a string representing the hashKey/partition key or an object containing the hashKey/partition key AND rangeKey/sort key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
@@ -170,7 +169,7 @@ User.get(1, {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey/sort key for your model, you can pass in an object for the `key` parameter which includes the range key/sort key & the hash key/partition key.
+In the event you have a `rangeKey` for your model, you can pass in an object for the `key` parameter which includes the `hashKey` & `rangeKey`.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -216,7 +215,7 @@ User.get({"id": 1}, (error, myUser) => {
 
 ## Model.batchGet(keys[, settings][, callback])
 
-You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+You can use Model.batchGet to retrieve multiple documents from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
 
@@ -321,7 +320,7 @@ User.batchGet([{"id": 1}, {"id": 2}], (error, myUsers) => {
 
 ## Model.create(document, [settings], [callback])
 
-This function lets you create a new item for a given model. This function is almost identical to creating a new item and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
+This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
 
 If you do not pass in a `callback` parameter a promise will be returned.
 
@@ -647,7 +646,7 @@ User.batchDelete([1, 2], {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rageKey (sort key) for your model, you can pass in an object for the `hashKey` (partition key) parameter.
+In the event you have a range key/sort key for your model, you can pass in an object for the `key` parameter which includes the range key/sort key & the hash key/partition key.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
