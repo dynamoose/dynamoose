@@ -4,7 +4,7 @@ The Model object represents a table in DynamoDB. It takes in both a name and a s
 
 ## new dynamoose.Model(name, schema[, config])
 
-This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns an initializer that you can use to create instances of the given model.
+This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
 The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
