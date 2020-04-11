@@ -99,7 +99,7 @@ class Condition {
 					const comparisonType = types.find((item) => item.name === valueType);
 
 					if (!comparisonType) {
-						throw CustomError.InvalidFilterComparison(`The type: ${valueType} is invalid.`);
+						throw new CustomError.InvalidFilterComparison(`The type: ${valueType} is invalid.`);
 					}
 
 					this.settings.conditions.push({
@@ -129,7 +129,7 @@ function finalizePending(instance: Condition): void {
 	let dynamoNameType: ConditionComparisonComparatorDynamoName;
 	if (pending.not === true) {
 		if (!pending.type.not) {
-			throw CustomError.InvalidFilterComparison(`${pending.type.typeName} can not follow not()`);
+			throw new CustomError.InvalidFilterComparison(`${pending.type.typeName} can not follow not()`);
 		}
 		dynamoNameType = pending.type.not;
 	} else {

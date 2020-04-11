@@ -17,7 +17,7 @@ function main(documentRetrieverTypeString: "scan" | "query") {
 	const documentRetrieverType = documentRetrieverTypes.find((a) => a.type === documentRetrieverTypeString);
 
 	if (!documentRetrieverType) {
-		throw CustomError.InvalidType(`The type: ${documentRetrieverTypeString} for setting up a document retriever is invalid.`);
+		throw new CustomError.InvalidType(`The type: ${documentRetrieverTypeString} for setting up a document retriever is invalid.`);
 	}
 
 	function Carrier(model) {
@@ -94,7 +94,7 @@ function main(documentRetrieverTypeString: "scan" | "query") {
 					return (comparisonChart[hash] || {}).type === "EQ" && (!range || !comparisonChart[range] || comparisonChart[range].type === "EQ");
 				});
 				if (!index) {
-					throw CustomError.InvalidParameter("Index can't be found for query.");
+					throw new CustomError.InvalidParameter("Index can't be found for query.");
 				}
 				object.IndexName = index.IndexName;
 			}

@@ -1387,7 +1387,7 @@ describe("Document", () => {
 			// },
 			{
 				"input": {"id": "hello"},
-				"error": Error.TypeMismatch("Expected id to be of type number, instead found type string."),
+				"error": new Error.TypeMismatch("Expected id to be of type number, instead found type string."),
 				"schema": {"id": Number}
 			},
 			// Defaults
@@ -1438,7 +1438,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
 			},
 			// Validations
@@ -1454,7 +1454,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
 				"schema": {"id": {"type": String, "validate": async (val) => val.length > 5}}
 			},
 			{
@@ -1469,7 +1469,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
 			},
 			{
@@ -1484,7 +1484,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
 				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
 			},
 			{
@@ -1499,7 +1499,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
 			},
 			{
@@ -1514,7 +1514,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"enum": true, "required": true}],
-				"error": Error.ValidationError("age is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("age is a required property but has no value when trying to save document"),
 				"schema": {"id": {"type": String}, "age": {"type": Number, "enum": [10, 20], "required": true}}
 			},
 			{
@@ -1529,7 +1529,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": Error.ValidationError("data is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("data is a required property but has no value when trying to save document"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": false}}, "required": true}}
 			},
 			{
@@ -1539,12 +1539,12 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test", "data": {"email": "test@test.com"}}, {"required": true}],
-				"error": Error.ValidationError("data.name is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("data.name is a required property but has no value when trying to save document"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": Error.ValidationError("data is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("data is a required property but has no value when trying to save document"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
 			},
 			{
@@ -1554,7 +1554,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": Error.ValidationError("hash is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("hash is a required property but has no value when trying to save document"),
 				"schema": {"id": {"type": String}, "hash": {"type": String, "required": true}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
 			},
 			{
@@ -1637,27 +1637,27 @@ describe("Document", () => {
 			// {
 			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo"}],
 			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
-			// 	"error": Error.ValidationError("data.1 should be a string")
+			// 	"error": new Error.ValidationError("data.1 should be a string")
 			// },
 			// {
 			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo", "saveUnknown": true}],
 			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
-			// 	"error": Error.ValidationError("data.1 should be a string")
+			// 	"error": new Error.ValidationError("data.1 should be a string")
 			// },
 			// {
 			// 	"input": [{"id": 1, "items": {"data": ["hello", 1]}}, {"type": "toDynamo"}],
 			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
-			// 	"error": Error.ValidationError("data.1 should be a string")
+			// 	"error": new Error.ValidationError("data.1 should be a string")
 			// },
 			// {
 			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo"}],
 			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
-			// 	"error": Error.ValidationError("data.1 should be a string")
+			// 	"error": new Error.ValidationError("data.1 should be a string")
 			// },
 			// {
 			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo", "saveUnknown": true}],
 			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
-			// 	"error": Error.ValidationError("data.1 should be a string")
+			// 	"error": new Error.ValidationError("data.1 should be a string")
 			// },
 
 			{
@@ -1678,12 +1678,12 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "items": [1, 10000, "test"]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
-				"error": Error.ValidationError("Expected items.2 to be of type date, instead found type string.")
+				"error": new Error.ValidationError("Expected items.2 to be of type date, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
-				"error": Error.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
+				"error": new Error.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
 			}
 		];
 

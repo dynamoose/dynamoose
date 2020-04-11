@@ -8,12 +8,12 @@ describe("Error", () => {
 
 	it("Should use custom message if passed in", () => {
 		const message = "Test";
-		const error = Error.MissingSchemaError(message);
+		const error = new Error.MissingSchemaError(message);
 		expect(error.message).to.eql(message);
 	});
 
 	it("Should use default message if nothing passed in", () => {
-		const error = Error.MissingSchemaError();
+		const error = new Error.MissingSchemaError();
 		expect(error.message).to.eql("Missing Schema");
 	});
 });

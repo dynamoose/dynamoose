@@ -78,10 +78,10 @@ class Schema {
 
 	constructor(object: SchemaDefinition, settings: SchemaSettings = {}) {
 		if (!object || typeof object !== "object" || Array.isArray(object)) {
-			throw CustomError.InvalidParameterType("Schema initalization parameter must be an object.");
+			throw new CustomError.InvalidParameterType("Schema initalization parameter must be an object.");
 		}
 		if (Object.keys(object).length === 0) {
-			throw CustomError.InvalidParameter("Schema initalization parameter must not be an empty object.");
+			throw new CustomError.InvalidParameter("Schema initalization parameter must not be an empty object.");
 		}
 
 		if (settings.timestamps === true) {
@@ -92,7 +92,7 @@ class Schema {
 		}
 		if (settings.timestamps) {
 			if (object[settings.timestamps.createdAt] || object[settings.timestamps.updatedAt]) {
-				throw CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
+				throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
 			}
 
 			object[settings.timestamps.createdAt] = Date;
@@ -112,7 +112,7 @@ class Schema {
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
 			Object.keys(object).forEach((key) => {
 				if (key.includes(".")) {
-					throw CustomError.InvalidParameter("Attributes must not contain dots.");
+					throw new CustomError.InvalidParameter("Attributes must not contain dots.");
 				}
 
 				// TODO: lots of `as` statements in the two lines below. We should clean that up.
@@ -130,7 +130,7 @@ class Schema {
 			} catch (e) {} // eslint-disable-line no-empty
 
 			if (attributeType === "L" && (this.getAttributeValue(key).schema || []).length > 1) {
-				throw CustomError.InvalidParameter("You must only pass one element into schema array.");
+				throw new CustomError.InvalidParameter("You must only pass one element into schema array.");
 			}
 		};
 		this.attributes().forEach((key) => checkMultipleArraySchemaElements(key));
@@ -154,7 +154,7 @@ Schema.prototype.getAttributeSettingValue = function(this: Schema, setting, key:
 Schema.prototype.requiredCheck = async function(this: Schema, key: string, value: ValueType): Promise<void> {
 	const isRequired = await this.getAttributeSettingValue("required", key);
 	if ((typeof value === "undefined" || value === null) && isRequired) {
-		throw CustomError.ValidationError(`${key} is a required property but has no value when trying to save document`);
+		throw new CustomError.ValidationError(`${key} is a required property but has no value when trying to save document`);
 	}
 };
 // This function will take in an attribute and value, and returns the default value if it should be applied.
@@ -383,11 +383,11 @@ const attributeTypes = utils.array_flatten(attributeTypesMain.filter((checkType)
 function retrieveTypeInfo(type: string, isSet: boolean, key: string, typeSettings: AttributeDefinitionTypeSettings): DynamoDBTypeResult {
 	const foundType = attributeTypesMain.find((checkType) => checkType.name.toLowerCase() === type.toLowerCase());
 	if (!foundType) {
-		throw CustomError.InvalidType(`${key} contains an invalid type: ${type}`);
+		throw new CustomError.InvalidType(`${key} contains an invalid type: ${type}`);
 	}
 	const parentType = foundType.result(typeSettings);
 	if (!parentType.set && isSet) {
-		throw CustomError.InvalidType(`${key} with type: ${type} is not allowed to be a set`);
+		throw new CustomError.InvalidType(`${key} with type: ${type} is not allowed to be a set`);
 	}
 	// TODO: the line below probably shouldn't use `as DynamoDBTypeResult`
 	return isSet ? (parentType.set as DynamoDBTypeResult) : parentType;
@@ -400,7 +400,7 @@ Schema.prototype.getAttributeTypeDetails = function(this: Schema, key: string, s
 	}
 	const val = this.getAttributeValue(standardKey, {"standardKey": true});
 	if (!val) {
-		throw CustomError.UnknownAttribute(`Invalid Attribute: ${key}`);
+		throw new CustomError.UnknownAttribute(`Invalid Attribute: ${key}`);
 	}
 	let typeVal = typeof val === "object" && !Array.isArray(val) ? val.type : val;
 	let typeSettings = {};

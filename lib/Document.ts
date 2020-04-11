@@ -179,7 +179,7 @@ function DocumentCarrier(model) {
 			if (existsInSchema) {
 				const {isValidType, typeDetails} = getValueTypeCheckResult(value, genericKey, {"standardKey": true});
 				if (!isValidType) {
-					throw Error.TypeMismatch(`Expected ${key} to be of type ${typeDetails.name.toLowerCase()}, instead found type ${typeof value}.`);
+					throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetails.name.toLowerCase()}, instead found type ${typeof value}.`);
 				} else if (typeDetails.isSet) {
 					validParents.push({key, "infinite": true});
 				} else if (/*typeDetails.dynamodbType === "M" || */typeDetails.dynamodbType === "L") {
@@ -212,7 +212,7 @@ function DocumentCarrier(model) {
 					if (!isDefaultValueUndefined) {
 						const {isValidType, typeDetails} = getValueTypeCheckResult(defaultValue, key);
 						if (!isValidType) {
-							throw Error.TypeMismatch(`Expected ${key} to be of type ${typeDetails.name.toLowerCase()}, instead found type ${typeof defaultValue}.`);
+							throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetails.name.toLowerCase()}, instead found type ${typeof defaultValue}.`);
 						} else {
 							utils.object.set(returnObject, key, defaultValue);
 						}
@@ -268,7 +268,7 @@ function DocumentCarrier(model) {
 						}
 
 						if (!result) {
-							throw Error.ValidationError(`${key} with a value of ${value} had a validation error when trying to save the document`);
+							throw new Error.ValidationError(`${key} with a value of ${value} had a validation error when trying to save the document`);
 						}
 					}
 				}
@@ -305,7 +305,7 @@ function DocumentCarrier(model) {
 				if (!isValueUndefined) {
 					const enumArray = await model.schema.getAttributeSettingValue("enum", key);
 					if (enumArray && !enumArray.includes(value)) {
-						throw Error.ValidationError(`${key} must equal ${JSON.stringify(enumArray)}, but is set to ${value}`);
+						throw new Error.ValidationError(`${key} must equal ${JSON.stringify(enumArray)}, but is set to ${value}`);
 					}
 				}
 			}));

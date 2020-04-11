@@ -30,7 +30,7 @@ export = (transactions: any[] | CallbackType, settings: TransactionSettings | Ca
 
 	const promise = (async () => {
 		if (!Array.isArray(transactions) || transactions.length <= 0) {
-			throw Error.InvalidParameter("You must pass in an array with items for the transactions parameter.");
+			throw new Error.InvalidParameter("You must pass in an array with items for the transactions parameter.");
 		}
 
 		const transactionObjects = await Promise.all(transactions);
@@ -53,7 +53,7 @@ export = (transactions: any[] | CallbackType, settings: TransactionSettings | Ca
 				transactionType = "transactWriteItems";
 				break;
 			default:
-				throw Error.InvalidParameter("Invalid type option, please pass in \"get\" or \"write\".");
+				throw new Error.InvalidParameter("Invalid type option, please pass in \"get\" or \"write\".");
 			}
 		} else {
 			transactionType = transactionObjects.map((a) => Object.keys(a)[0]).every((key) => key === "Get") ? "transactGetItems" : "transactWriteItems";
@@ -64,7 +64,7 @@ export = (transactions: any[] | CallbackType, settings: TransactionSettings | Ca
 		const models = uniqueModelNames.map((name) => ModelStore(name));
 		models.forEach((model, index) => {
 			if (!model) {
-				throw Error.InvalidParameter(`Model "${uniqueModelNames[index]}" not found. Please register the model with dynamoose before using it in transactions.`);
+				throw new Error.InvalidParameter(`Model "${uniqueModelNames[index]}" not found. Please register the model with dynamoose before using it in transactions.`);
 			}
 		});
 		await Promise.all(models.map((model) => model.pendingTaskPromise()));
