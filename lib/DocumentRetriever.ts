@@ -160,7 +160,7 @@ DocumentRetriever.prototype.exec = function(this: DocumentRetriever, callback): 
 	const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
 		const ddb = aws.ddb();
 
-		const allRequest = (extraParameters = {}) => {
+		const allRequest = (extraParameters = {}): any => {
 			let promise = ddb[this.internalSettings.typeInformation.type]({...request, ...extraParameters}).promise();
 			timesRequested++;
 
