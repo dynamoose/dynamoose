@@ -1,5 +1,5 @@
 const {expect} = require("chai");
-const Schema = require("../dist/Schema");
+const {Schema} = require("../dist");
 
 describe("Schema", () => {
 	it("Should be a function", () => {
