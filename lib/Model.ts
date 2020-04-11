@@ -1,5 +1,5 @@
 import CustomError from "./Error";
-import {Schema} from "./Schema";
+import {Schema, SchemaDefinition} from "./Schema";
 import {Document as DocumentCarrier} from "./Document";
 import utils from "./utils";
 import aws from "./aws";
@@ -9,41 +9,6 @@ import {Scan, Query, ConditionInitalizer} from "./DocumentRetriever";
 import {CallbackType} from "./General";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
-
-// TODO: fix this, it shouldn't be copied from Schema.js
-/* ***********************************     COPIED FROM SCHEMA.ts     *********************************** */
-type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
-type GeneralValueType = string | boolean | number | Buffer | Date;
-type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor;
-interface IndexDefinition {
-	name?: string;
-	global?: boolean;
-	rangeKey?: string;
-	project?: boolean | string[];
-	throughput: number | {read: number; write: number};
-}
-interface AttributeDefinitionTypeSettings {
-	storage?: "miliseconds" | "seconds";
-}
-interface AttributeDefinition {
-	type: AttributeType | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType}; // TODO add support for this being an object
-	schema?: SchemaDefinition | SchemaDefinition[];
-	default?: ValueType | (() => ValueType);
-	forceDefault?: boolean;
-	validate?: ValueType | RegExp | ((value: ValueType) => boolean);
-	required?: boolean;
-	enum?: ValueType[];
-	get?: ((value: ValueType) => ValueType);
-	set?: ((value: ValueType) => ValueType);
-	index?: boolean | IndexDefinition | IndexDefinition[];
-	hashKey?: boolean;
-	rangeKey?: boolean;
-}
-interface SchemaDefinition {
-	[attribute: string]: AttributeType | AttributeDefinition;
-}
-/* ***********************************                               *********************************** */
 
 // Model represents one DynamoDB table
 export class Model {
