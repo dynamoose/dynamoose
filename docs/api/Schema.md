@@ -332,24 +332,33 @@ If you set `index` to `true`, it will create an index with all of the default se
 
 ```js
 {
+    "id" : {
+      "hashKey": true,
+      "type": String,
+    },
 	"email": {
 		"type": String,
 		"index": {
-			"name": "emailIndex",
-			"global": true
-		} // creates a global index with the name `emailIndex`
+          "name": "emailIndex",
+          "global": true
+        } // creates a global secondary index with the name `emailIndex` and hashKey `email`
 	}
 }
 ```
 
 ```js
 {
+    "id" : {
+      "hashKey": true,
+      "type": String,
+      "index": {
+        "name": "emailIndex",
+        "rangeKey": "email",
+        "throughput": {"read": 5, "write": 10}
+      } // creates a local secondary index with the name `emailIndex`, hashKey `id`, rangeKey `email`
+    },
 	"email": {
-		"type": String,
-		"index": {
-			"name": "emailIndex",
-			"throughput": {"read": 5, "write": 10}
-		} // creates a global index with the name `emailIndex`
+		"type": String
 	}
 }
 ```
