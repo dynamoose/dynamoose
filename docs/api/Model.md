@@ -10,7 +10,7 @@ The `schema` parameter can either be an object OR a [Schema](Schema.md) instance
 
 ```js
 const Cat = new dynamoose.Model("Cat", {"name": String});
-const Cat = new dynamoose.Model("Cat", {"name": String}, { create: false });
+const Cat = new dynamoose.Model("Cat", {"name": String}, {"create": false});
 const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}), { create: false });
 ```
