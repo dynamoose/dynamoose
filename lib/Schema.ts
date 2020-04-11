@@ -1,7 +1,7 @@
 import CustomError from "./Error";
 import utils from "./utils";
 import Internal from "./Internal";
-import Document from "./Document";
+import {Document} from "./Document";
 const internalCache = Internal.Schema.internalCache;
 
 // TODO: copied from Document.ts, should be a reference instead

@@ -11,8 +11,8 @@ const utils = require("../dist/utils");
 const Internal = require("../dist/Internal");
 
 describe("Document", () => {
-	it("Should be a function", () => {
-		expect(Document).to.be.a("function");
+	it("Should be an object", () => {
+		expect(Document).to.be.an("object");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
@@ -1333,7 +1333,8 @@ describe("Document", () => {
 
 		tests.forEach((test) => {
 			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
-				expect((new Model("User", test.schema, {"create": false, "waitForActive": false})).attributesWithSchema(test.input).sort()).to.eql(test.output.sort());
+				const model = new Model("User", test.schema, {"create": false, "waitForActive": false});
+				expect(model.attributesWithSchema(test.input, model.Model).sort()).to.eql(test.output.sort());
 			});
 		});
 	});
@@ -1695,13 +1696,15 @@ describe("Document", () => {
 				model = new Model("User", test.schema, {"create": false, "waitForActive": false});
 			}
 
+			const input = (!Array.isArray(test.input) ? [test.input] : test.input);
+			input.splice(1, 0, model.Model);
 			if (test.error) {
 				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
-					return expect(model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input))).to.be.rejectedWith(test.error.message);
+					return expect(model.objectFromSchema(...input)).to.be.rejectedWith(test.error.message);
 				});
 			} else {
 				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
-					expect(await model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input))).to.eql(test.output);
+					expect(await model.objectFromSchema(...input)).to.eql(test.output);
 				});
 			}
 		});

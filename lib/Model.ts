@@ -1,6 +1,6 @@
 import CustomError from "./Error";
 import Schema from "./Schema";
-import DocumentCarrier from "./Document";
+import {Document as DocumentCarrier} from "./Document";
 import utils from "./utils";
 import aws from "./aws";
 import Internal from "./Internal";
@@ -55,7 +55,7 @@ class Model {
 	latestTableDetails: DynamoDB.DescribeTableOutput;
 	pendingTaskPromise: () => Promise<void>;
 	static defaults: ModelOptions;
-	Document: ReturnType<typeof DocumentCarrier>;
+	Document: typeof DocumentCarrier;
 	get: (this: Model, key: string, settings: {}, callback: any) => void | DynamoDB.GetItemInput | Promise<any>;
 	scan: (this: Model, ...args) => Scan;
 	query: (this: Model, ...args) => Query;
@@ -134,7 +134,36 @@ class Model {
 		}, Promise.resolve());
 		setupFlowPromise.then(() => this.ready = true).then(() => {this.pendingTasks.forEach((task) => task()); this.pendingTasks = [];});
 
-		this.Document = DocumentCarrier(this);
+		const self: Model = this;
+		class Document extends DocumentCarrier {
+			static Model: any;
+			constructor(object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
+				super(self, object, settings);
+			}
+		}
+		Document.Model = self;
+		// TODO: figure out if there is a better way to do this below.
+		// This is needed since when creating a Model we return a Document. But we want to be able to call Model.get and other functions on the model itself. This feels like a really messy solution, but it the only way I can think of how to do it for now.
+		// Without this things like Model.get wouldn't work. You would have to do Model.Model.get instead which would be referencing the `Document.Model = model` line above.
+		Object.keys(Object.getPrototypeOf(this)).forEach((key) => {
+			if (typeof this[key] === "object") {
+				const main = (key: string) => {
+					utils.object.set(DocumentCarrier as any, key, {});
+					Object.keys(utils.object.get((this as any), key)).forEach((subKey) => {
+						const newKey = `${key}.${subKey}`;
+						if (typeof utils.object.get((this as any), newKey) === "object") {
+							main(newKey);
+						} else {
+							utils.object.set(DocumentCarrier as any, newKey, (utils.object.get(this, newKey) as any).bind(this));
+						}
+					});
+				};
+				main(key);
+			} else {
+				Document[key] = this[key].bind(this);
+			}
+		});
+		this.Document = Document;
 		const returnObject: any = this.Document;
 		returnObject.table = {
 			"create": {
@@ -527,7 +556,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 				const attributeExists = this.schema.attributes().includes(subKey);
 				const dynamooseUndefined = require("./index").undefined;
 				if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
-					subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
+					subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
 				}
 
 				if (subValue === dynamooseUndefined || subValue === undefined) {
@@ -580,7 +609,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 			};
 
 			const documentFunctionSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo"};
-			const defaultObjectFromSchema = await this.Document.objectFromSchema(this.Document.prepareForObjectFromSchema({}, (documentFunctionSettings as any)), (documentFunctionSettings as any));
+			const defaultObjectFromSchema = await this.Document.objectFromSchema(this.Document.prepareForObjectFromSchema({}, this, (documentFunctionSettings as any)), this, (documentFunctionSettings as any));
 			Object.keys(defaultObjectFromSchema).forEach((key) => {
 				const value = defaultObjectFromSchema[key];
 				const updateType = updateTypes.find((a) => a.name === "$SET");
