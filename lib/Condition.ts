@@ -1,4 +1,4 @@
-import Document from "./Document";
+import {Document} from "./Document";
 import CustomError from "./Error";
 import utils from "./utils";
 const OR = Symbol("OR");
