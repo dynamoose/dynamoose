@@ -322,8 +322,8 @@ Your index object can contain the following properties:
 | Name | Type | Default | Notes |
 |---|---|---|---|
 | name | string | `${attribute}${global ? "GlobalIndex" : "LocalIndex"}` | Name of index |
-| global | boolean | false | If the index should be a global secondary index or not. Attribute will be the hash key (partition key) for the index. |
-| rangeKey | string | undefined | The range key (sort key) attribute name for a global secondary index. |
+| global | boolean | false | If the index should be a global secondary index or not. Attribute will be the hashKey for the index. |
+| rangeKey | string | undefined | The range key attribute name for a global secondary index. |
 | project | boolean \| [string] | true | Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. |
 | throughput | number \| {read: number, write: number} | undefined | Sets the throughput for the global secondary index. |
 
@@ -365,7 +365,9 @@ If you set `index` to `true`, it will create an index with all of the default se
 
 ### hashKey: boolean
 
-You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object. `hashKey` is commonly called a partition key in the AWS documentation.
+You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object.
+
+`hashKey` is commonly called a `partition key` in the AWS documentation.
 
 ```js
 {
@@ -379,7 +381,9 @@ You can set this to true to overwrite what the `hashKey` for the Model will be. 
 
 ### rangeKey: boolean
 
-You can set this to true to overwrite what the `rangeKey` (sort key) for the Model will be. By default the `rangeKey` won't exist.
+You can set this to true to overwrite what the `rangeKey` for the Model will be. By default the `rangeKey` won't exist.
+
+`rangeKey` is commonly called a `sort key` in the AWS documentation.
 
 ```js
 {
