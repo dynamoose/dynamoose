@@ -4,6 +4,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../dist");
 const util = require("util");
+const {Query} = require("../dist/DocumentRetriever");
 
 describe("Query", () => {
 	beforeEach(() => {
@@ -39,7 +40,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query()).to.be.a.instanceof(Query);
 		});
 
 		it("Should have correct class name", () => {
@@ -361,7 +362,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().and()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().and()).to.be.a.instanceof(Query);
 		});
 
 		it("Should return same object as Model.query()", () => {
@@ -375,7 +376,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().not()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().not()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct property", () => {
@@ -391,7 +392,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().where()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().where()).to.be.a.instanceof(Query);
 		});
 
 		it("Should not be an alias of query.filter", () => {
@@ -411,7 +412,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().filter()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().filter()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct property", () => {
@@ -427,7 +428,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().eq()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().eq()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -487,7 +488,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().exists()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().exists()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -545,7 +546,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().lt()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().lt()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -586,7 +587,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().le()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().le()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -627,7 +628,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().gt()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().gt()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -668,7 +669,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().ge()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().ge()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -709,7 +710,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().beginsWith()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().beginsWith()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -749,7 +750,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().contains()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().contains()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -809,7 +810,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().in()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().in()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -872,7 +873,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().between()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().between()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
@@ -1022,7 +1023,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().all()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().all()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct default options", () => {

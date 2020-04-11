@@ -4,6 +4,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../dist");
 const util = require("util");
+const {Scan} = require("../dist/DocumentRetriever");
 
 describe("Scan", () => {
 	beforeEach(() => {
@@ -39,7 +40,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should have correct class name", () => {
@@ -227,7 +228,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().and()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().and()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should return same object as Model.scan()", () => {
@@ -241,7 +242,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().not()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().not()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct property", () => {
@@ -257,7 +258,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().where()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().where()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct property", () => {
@@ -273,7 +274,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().filter()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().filter()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct property", () => {
@@ -289,7 +290,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().eq()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().eq()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -309,7 +310,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().exists()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().exists()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -329,7 +330,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().lt()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().lt()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -349,7 +350,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().le()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().le()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -369,7 +370,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().gt()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().gt()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -389,7 +390,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().ge()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().ge()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -409,7 +410,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().beginsWith()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().beginsWith()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -429,7 +430,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().contains()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().contains()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -449,7 +450,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().in()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().in()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -469,7 +470,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().between()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().between()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct settings on the scan object", () => {
@@ -637,7 +638,7 @@ describe("Scan", () => {
 		});
 
 		it("Should return an instance of scan", () => {
-			expect(Model.scan().all()).to.be.a.instanceof(Model.scan.carrier);
+			expect(Model.scan().all()).to.be.a.instanceof(Scan);
 		});
 
 		it("Should set correct default options", () => {
