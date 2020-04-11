@@ -38,7 +38,6 @@ interface IndexDefinition {
 interface AttributeDefinitionTypeSettings {
 	storage?: "miliseconds" | "seconds";
 }
-// TODO: fix this by adding more valid types
 interface AttributeDefinition {
 	type: AttributeType | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType}; // TODO add support for this being an object
 	schema?: SchemaDefinition | SchemaDefinition[];

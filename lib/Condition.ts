@@ -177,7 +177,7 @@ types.forEach((type) => {
 interface ConditionRequestObjectSettings {
 	conditionString: string;
 	index?: {
-		starting: number;
+		start: number;
 		set: (newIndex: number) => void;
 	};
 }
@@ -186,7 +186,7 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 		return {};
 	}
 
-	let index = (settings.index || {}).starting || 0;
+	let index = (settings.index || {}).start || 0;
 	const setIndex = (i: number): void => {index = i; (settings.index || {"set": utils.empty_function}).set(i);};
 	function main(input: ConditionStorageSettingsConditions): ConditionRequestObjectResult {
 		return input.reduce((object: ConditionRequestObjectResult, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {

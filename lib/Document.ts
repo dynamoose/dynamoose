@@ -5,6 +5,8 @@ import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
+import {DynamoDB} from "aws-sdk";
+
 const staticMethods = {
 	"objectToDynamo": (object, settings = {"type": "object"}) => (settings.type === "value" ? (aws.converter() as any).input : (aws.converter() as any).marshall)(object),
 	"fromDynamo": (object) => (aws.converter() as any).unmarshall(object)
@@ -35,7 +37,7 @@ function DocumentCarrier(model) {
 		delete: (this: Document, callback: any) => any;
 		save: (this: Document, settings: DocumentSaveSettings, callback: any) => Promise<any>;
 
-		constructor(object = {}, settings: any = {}) {
+		constructor(object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
 			const documentObject = Document.isDynamoObject(object) ? (aws.converter() as any).unmarshall(object) : object;
 			Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
 			Object.defineProperty(this, internalProperties, {

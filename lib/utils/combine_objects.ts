@@ -1,5 +1,5 @@
 // This function is meant to combine objects for providing default options. Values will be overwritten as opposed to merged.
-const main = (...args: object[]): object[] => {
+const main = <T>(...args: T[]): T => {
 	let returnObject: any;
 
 	args.forEach((arg, index) => {
