@@ -415,11 +415,7 @@ function DocumentCarrier(model) {
 	// This is needed since when creating a Model we return a Document. But we want to be able to call Model.get and other functions on the model itself. This feels like a really messy solution, but it the only way I can think of how to do it for now.
 	// Without this things like Model.get wouldn't work. You would have to do Model.Model.get instead which would be referencing the `Document.Model = model` line above.
 	Object.keys(Object.getPrototypeOf(Document.Model)).forEach((key) => {
-		if (typeof Document.Model[key] === "object" && Document.Model[key].carrier) {
-			const carrier = Document.Model[key].carrier(Document.Model);
-			Document[key] = (...args) => new carrier(...args);
-			Document[key].carrier = carrier;
-		} else if (typeof Document.Model[key] === "object") {
+		if (typeof Document.Model[key] === "object") {
 			const main = (key: string) => {
 				utils.object.set(Document as any, key, {});
 				Object.keys(utils.object.get(Document.Model, key)).forEach((subKey) => {

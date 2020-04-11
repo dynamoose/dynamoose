@@ -5,6 +5,7 @@ import utils from "./utils";
 import aws from "./aws";
 import Internal from "./Internal";
 import Condition from "./Condition";
+import {Scan, Query} from "./DocumentRetriever";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
 
@@ -56,8 +57,8 @@ class Model {
 	static defaults: ModelOptions;
 	Document: ReturnType<typeof DocumentCarrier>;
 	get: (this: Model, key: string, settings: {}, callback: any) => void | DynamoDB.GetItemInput | Promise<any>;
-	scan: { carrier: any };
-	query: { carrier: any };
+	scan: (this: Model, ...args) => Scan;
+	query: (this: Model, ...args) => Query;
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
 	delete: (this: Model, key: InputKey, settings: ModelDeleteSettings, callback: any) => void | DynamoDB.DeleteItemInput | Promise<any>;
 	batchDelete: (this: Model, keys: InputKey[], settings: ModelBatchDeleteSettings, callback: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
@@ -738,8 +739,12 @@ Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings:
 	}
 };
 
-Model.prototype.scan = {"carrier": require("./DocumentRetriever")("scan")};
-Model.prototype.query = {"carrier": require("./DocumentRetriever")("query")};
+Model.prototype.scan = function (this: Model, ...args): Scan {
+	return new Scan(this, ...args);
+};
+Model.prototype.query = function (this: Model, ...args): Query {
+	return new Query(this, ...args);
+};
 
 // Methods
 const customMethodFunctions = (type: "model" | "document"): {set: (name: string, fn: any) => void; delete: (name: string) => void} => {
