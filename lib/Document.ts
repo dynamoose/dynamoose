@@ -277,7 +277,7 @@ Document.objectFromSchema = async function(object, model: any, settings: Documen
 			const check = async () => {
 				const value = utils.object.get(returnObject, key);
 				await model.schema.requiredCheck(key, value);
-			}
+			};
 
 			const keyParts = key.split(".");
 			const parentKey = keyParts.slice(0, -1).join(".");
