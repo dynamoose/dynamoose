@@ -1,16 +1,14 @@
-class CustomError extends Error {
+const makeError = (defaultMessage: string, errorName: string) => class CustomError extends Error {
 	name: string;
 	message: string;
 
-	constructor(message: string, defaultMessage: string, errorName: string) {
+	constructor(message: string) {
 		super();
 		this.name = errorName;
 		this.message = message || defaultMessage;
 		return this;
 	}
-}
-
-const makeError = (defaultMessage: string, errorName: string) => (message: string): CustomError => new CustomError(message, defaultMessage, errorName);
+};
 
 export = {
 	"MissingSchemaError": makeError("Missing Schema", "MissingSchemaError"),

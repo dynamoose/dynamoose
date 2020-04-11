@@ -10,7 +10,7 @@ const returnObject = (input: Model | string): Model | never => {
 	} else if (typeof input === "string") {
 		return models[input];
 	} else {
-		throw CustomError.InvalidParameter("You must pass in a Model or table name as a string.");
+		throw new CustomError.InvalidParameter("You must pass in a Model or table name as a string.");
 	}
 };
 returnObject.clear = (): void => {
