@@ -45,8 +45,8 @@ export class Document {
 	}
 }
 
-Document.objectToDynamo = (object, settings = {"type": "object"}) => (settings.type === "value" ? (aws.converter() as any).input : (aws.converter() as any).marshall)(object);
-Document.fromDynamo = (object) => (aws.converter() as any).unmarshall(object);
+Document.objectToDynamo = (object, settings = {"type": "object"}): any => (settings.type === "value" ? (aws.converter() as any).input : (aws.converter() as any).marshall)(object);
+Document.fromDynamo = (object): any => (aws.converter() as any).unmarshall(object);
 
 // This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
 Document.isDynamoObject = (object, recurrsive = false): boolean | null => {

@@ -286,7 +286,7 @@ export class Model {
 
 		const self: Model = this;
 		class Document extends DocumentCarrier {
-			static Model: any;
+			static Model: Model;
 			constructor(object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
 				super(self, object, settings);
 			}
@@ -297,7 +297,7 @@ export class Model {
 		// Without this things like Model.get wouldn't work. You would have to do Model.Model.get instead which would be referencing the `Document.Model = model` line above.
 		Object.keys(Object.getPrototypeOf(this)).forEach((key) => {
 			if (typeof this[key] === "object") {
-				const main = (key: string) => {
+				const main = (key: string): void => {
 					utils.object.set(DocumentCarrier as any, key, {});
 					Object.keys(utils.object.get((this as any), key)).forEach((subKey) => {
 						const newKey = `${key}.${subKey}`;
@@ -736,7 +736,7 @@ Model.prototype.delete = function (this: Model, key: InputKey, settings: ModelDe
 	if (callback) {
 		promise.then(() => callback()).catch((error) => callback(error));
 	} else {
-		return (async () => {
+		return (async (): Promise<void> => {
 			await promise;
 		})();
 	}
@@ -803,7 +803,7 @@ Model.prototype.query = function (this: Model, object?: ConditionInitalizer): Qu
 
 // Methods
 const customMethodFunctions = (type: "model" | "document"): {set: (name: string, fn: any) => void; delete: (name: string) => void} => {
-	const entryPoint = (self) => type === "document" ? self.Document.prototype : self.Document;
+	const entryPoint = (self): any => type === "document" ? self.Document.prototype : self.Document;
 	return {
 		"set": function (name: string, fn): void {
 			const self: any = this;
