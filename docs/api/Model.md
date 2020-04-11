@@ -899,7 +899,7 @@ console.log("Set name");
 
 ## Model.methods.document.delete(name)
 
-This allows you to delete an existing method from the item. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
+This allows you to delete an existing method from the document. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
 
 ```js
 User.methods.document.delete("setName");
