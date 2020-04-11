@@ -4,16 +4,16 @@ Dynamoose provides the ability to query a model by using the `Model.query` funct
 
 ## Model.query([filter])
 
-This is the basic entry point to construct a query request. It requires to set at least the hashKey (partition key) of the item(s). The filter property is optional and can either be an object or a string representing the key you which to first filter on. In the event you don't pass in any parameters and don't call any other methods on the query object it will query with no filters or options.
+This is the basic entry point to construct a query request. It requires to set at least the hashKey of the item(s). The filter property is optional and can either be an object or a string representing the key you which to first filter on. In the event you don't pass in any parameters and don't call any other methods on the query object it will query with no filters or options.
 
 ```js
-Cat.query("breed").contains("Terrier").exec() // will query all items where the hashKey (partition key) `breed` contains `Terrier`
-Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all items where the hashKey (partition key) `breed` contains `Terrier`
+Cat.query("breed").contains("Terrier").exec() // will query all items where the hashKey `breed` contains `Terrier`
+Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all items where the hashKey `breed` contains `Terrier`
 ```
 
 If you pass an object into `Model.query` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
-Please note: `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey (partition key) or rangeKey (sort key) DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey/partition key or rangeKey/sort key DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.    
+Please note: `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.    
 
 ## Conditionals
 
