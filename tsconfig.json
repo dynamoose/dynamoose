@@ -9,7 +9,8 @@
 		"allowJs": true,
 		"sourceMap": false,
 		"declaration": true,
-		"noImplicitThis": true
+		"noImplicitThis": true,
+		"strict": false
 	},
 	"include": ["./lib/**/*"]
 }
