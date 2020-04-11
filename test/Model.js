@@ -20,7 +20,7 @@ describe("Model", () => {
 	});
 
 	it("Should resolve to correct file for dynamoose object", () => {
-		expect(dynamoose.Model).to.eql(require("../dist/Model"));
+		expect(dynamoose.Model).to.eql(require("../dist/Model").Model);
 	});
 
 	it("Should be a function", () => {

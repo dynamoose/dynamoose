@@ -1,5 +1,5 @@
 import CustomError from "./Error";
-import Model from "./Model";
+import {Model} from "./Model";
 
 let models: {[name: string]: Model} = {};
 

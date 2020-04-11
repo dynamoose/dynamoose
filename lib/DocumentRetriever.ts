@@ -2,16 +2,17 @@ import aws from "./aws";
 import CustomError from "./Error";
 import utils from "./utils";
 import Condition from "./Condition";
-// DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
+import {Model} from "./Model";
 
-type ConditionInitalizer = Condition | {[key: string]: any} | string;
+export type ConditionInitalizer = Condition | {[key: string]: any} | string;
 interface DocumentRetrieverTypeInformation {
 	type: string;
 	pastTense: string;
 }
+// DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
 class DocumentRetriever {
 	internalSettings?: {
-		model: any;
+		model: Model;
 		typeInformation: DocumentRetrieverTypeInformation;
 	};
 	settings: {
@@ -29,7 +30,7 @@ class DocumentRetriever {
 	exec: (this: DocumentRetriever, callback) => any;
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
 
-	constructor(model: any, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
+	constructor(model: Model, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
 		this.internalSettings = {model, typeInformation};
 
 		let condition: Condition;
@@ -238,19 +239,19 @@ DocumentRetriever.prototype.all = function(this: DocumentRetriever, delay = 0, m
 
 
 export class Scan extends DocumentRetriever {
-	parallel: (value: any) => Scan;
+	parallel: (value: number) => Scan;
 
-	constructor(model: any, object?: ConditionInitalizer) {
+	constructor(model: Model, object?: ConditionInitalizer) {
 		super(model, {"type": "scan", "pastTense": "scanned"}, object);
 	}
 }
-Scan.prototype.parallel = function(value): Scan {
+Scan.prototype.parallel = function(value: number): Scan {
 	this.settings.parallel = value;
 	return this;
 };
 
 export class Query extends DocumentRetriever {
-	constructor(model: any, object?: ConditionInitalizer) {
+	constructor(model: Model, object?: ConditionInitalizer) {
 		super(model, {"type": "query", "pastTense": "queried"}, object);
 	}
 }

@@ -1,11 +1,11 @@
 import CustomError from "./Error";
-import Schema from "./Schema";
+import {Schema} from "./Schema";
 import {Document as DocumentCarrier} from "./Document";
 import utils from "./utils";
 import aws from "./aws";
 import Internal from "./Internal";
 import Condition from "./Condition";
-import {Scan, Query} from "./DocumentRetriever";
+import {Scan, Query, ConditionInitalizer} from "./DocumentRetriever";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
 
@@ -43,10 +43,10 @@ interface SchemaDefinition {
 }
 /* ***********************************                               *********************************** */
 
-
+type CallbackType<R, E> = (err?: E | null, response?: R) => void;
 
 // Model represents one DynamoDB table
-class Model {
+export class Model {
 	name: string;
 	options: ModelOptions;
 	schema: Schema;
@@ -56,16 +56,16 @@ class Model {
 	pendingTaskPromise: () => Promise<void>;
 	static defaults: ModelOptions;
 	Document: typeof DocumentCarrier;
-	get: (this: Model, key: string, settings: {}, callback: any) => void | DynamoDB.GetItemInput | Promise<any>;
-	scan: (this: Model, ...args) => Scan;
-	query: (this: Model, ...args) => Query;
+	scan: (this: Model, object?: ConditionInitalizer) => Scan;
+	query: (this: Model, object?: ConditionInitalizer) => Query;
+	get: (this: Model, key: string, settings: ModelGetSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.GetItemInput, AWSError>) => void | DynamoDB.GetItemInput | Promise<DocumentCarrier>;
+	delete: (this: Model, key: InputKey, settings: ModelDeleteSettings, callback?: CallbackType<DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
+	batchDelete: (this: Model, keys: InputKey[], settings: ModelBatchDeleteSettings, callback?: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
+	create: (this: Model, document: any, settings: {}, callback?: any) => void | Promise<any>;
+	batchPut: (this: Model, items: any, settings: {}, callbac?: any) => void | Promise<any>;
+	update: (this: Model, keyObj: any, updateObj: any, settings: ModelUpdateSettings, callback?: any) => void | Promise<any>;
+	batchGet: (this: Model, keys: InputKey[], settings: ModelBatchGetSettings, callback?: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
-	delete: (this: Model, key: InputKey, settings: ModelDeleteSettings, callback: any) => void | DynamoDB.DeleteItemInput | Promise<any>;
-	batchDelete: (this: Model, keys: InputKey[], settings: ModelBatchDeleteSettings, callback: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
-	create: (this: Model, document: any, settings: {}, callback: any) => void | Promise<any>;
-	batchPut: (this: Model, items: any, settings: {}, callback: any) => void | Promise<any>;
-	update: (this: Model, keyObj: any, updateObj: any, settings: ModelUpdateSettings, callback: any) => void | Promise<any>;
-	batchGet: (this: Model, keys: InputKey[], settings: { return: string }, callback: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
 
 	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}) {
 		this.options = (utils.combine_objects(options, Model.defaults, defaults) as ModelOptions);
@@ -354,13 +354,13 @@ function convertObjectToKey(this: Model, key: InputKey): {[key: string]: string}
 interface ModelGetSettings {
 	return: "document" | "request";
 }
-Model.prototype.get = function (this: Model, key: InputKey, settings: ModelGetSettings = {"return": "document"}, callback): void | DynamoDB.GetItemInput | Promise<any> {
+Model.prototype.get = function (this: Model, key: InputKey, settings: ModelGetSettings = {"return": "document"}, callback): void | DynamoDB.GetItemInput | Promise<DocumentCarrier> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": "document"};
 	}
 
-	const documentify = (document: DynamoDB.AttributeMap): Promise<any> => (new this.Document(document, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+	const documentify = (document: DynamoDB.AttributeMap): Promise<DocumentCarrier> => (new this.Document((document as any), {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 
 	const getItemParams = {
 		"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
@@ -691,7 +691,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 interface ModelDeleteSettings {
 	return: null | "request";
 }
-Model.prototype.delete = function (this: Model, key: InputKey, settings: ModelDeleteSettings = {"return": null}, callback): void | DynamoDB.DeleteItemInput | Promise<any> {
+Model.prototype.delete = function (this: Model, key: InputKey, settings: ModelDeleteSettings = {"return": null}, callback): void | DynamoDB.DeleteItemInput | Promise<void> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": null};
@@ -714,7 +714,9 @@ Model.prototype.delete = function (this: Model, key: InputKey, settings: ModelDe
 	if (callback) {
 		promise.then(() => callback()).catch((error) => callback(error));
 	} else {
-		return promise;
+		return (async () => {
+			await promise;
+		})();
 	}
 };
 interface ModelBatchDeleteSettings {
@@ -768,11 +770,11 @@ Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings:
 	}
 };
 
-Model.prototype.scan = function (this: Model, ...args): Scan {
-	return new Scan(this, ...args);
+Model.prototype.scan = function (this: Model, object?: ConditionInitalizer): Scan {
+	return new Scan(this, object);
 };
-Model.prototype.query = function (this: Model, ...args): Query {
-	return new Query(this, ...args);
+Model.prototype.query = function (this: Model, object?: ConditionInitalizer): Query {
+	return new Query(this, object);
 };
 
 // Methods
@@ -825,7 +827,7 @@ interface ModelWaitForActiveSettings {
 	enabled: boolean;
 	check: {timeout: number; frequency: number};
 }
-interface ModelExpiresSettings {
+export interface ModelExpiresSettings {
 	ttl: number;
 	attribute: string;
 	items?: {
@@ -867,5 +869,3 @@ const defaults: ModelOptions = {
 	// "defaultReturnValues": "ALL_NEW",
 };
 Model.defaults = defaults;
-
-export = Model;

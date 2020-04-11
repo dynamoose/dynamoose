@@ -2,27 +2,29 @@ import aws from "./aws";
 import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
+import {Model, ModelExpiresSettings} from "./Model";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
 import {DynamoDB} from "aws-sdk";
+import { ValueType } from "./Schema";
 
 // Document represents an item in a Model that is either pending (not saved) or saved
 export class Document {
 	static objectToDynamo: (object: any, settings?: {type: "object" | "value"}) => any;
 	static fromDynamo: (object: any) => any;
 	static isDynamoObject: (object: any, recurrsive?: boolean) => boolean | null;
-	static attributesWithSchema: (document: Document, model: any) => string[];
-	original: () => any;
-	static objectFromSchema: (object: any, model: any, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
-	static prepareForObjectFromSchema: (object: any, model: any, settings: DocumentObjectFromSchemaSettings) => any;
-	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
+	static attributesWithSchema: (document: Document, model: Model) => string[];
+	original: () => DynamoDB.AttributeMap | {[key: string]: any} | null;
+	static objectFromSchema: (object: any, model: Model, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
+	static prepareForObjectFromSchema: (object: any, model: Model, settings: DocumentObjectFromSchemaSettings) => any;
+	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<Document>;
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
 	delete: (this: Document, callback: any) => any;
 	save: (this: Document, settings: DocumentSaveSettings, callback: any) => Promise<any>;
-	model?: any;
+	model?: Model;
 
-	constructor(model: any, object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
+	constructor(model: Model, object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
 		const documentObject = Document.isDynamoObject(object) ? (aws.converter() as any).unmarshall(object) : object;
 		Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
 		Object.defineProperty(this, internalProperties, {
@@ -53,7 +55,7 @@ Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 		const keys = Object.keys(value);
 		const key = keys[0];
 		const nestedResult = (typeof value[key] === "object" && !(value[key] instanceof Buffer) ? (Array.isArray(value[key]) ? value[key].every((value) => Document.isDynamoObject(value, true)) : Document.isDynamoObject(value[key])) : true);
-		const Schema = require("./Schema");
+		const {Schema} = require("./Schema");
 		const attributeType = Schema.attributeTypes.findDynamoDBType(key);
 		return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
 	}
@@ -67,16 +69,16 @@ Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 	}
 };
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
-Document.prepareForObjectFromSchema = function(object, model: any, settings: DocumentObjectFromSchemaSettings) {
+Document.prepareForObjectFromSchema = function(object, model: Model, settings: DocumentObjectFromSchemaSettings) {
 	if (settings.updateTimestamps) {
 		if (model.schema.settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
 			// TODO: The last condition of the following is commented out until we can add automated tests for it
-			if (model.schema.settings.timestamps.createdAt && (object[internalProperties] && !object[internalProperties].storedInDynamo)/* && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)*/) {
-				object[model.schema.settings.timestamps.createdAt] = date;
+			if ((model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt && (object[internalProperties] && !object[internalProperties].storedInDynamo)/* && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)*/) {
+				object[(model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt] = date;
 			}
-			if (model.schema.settings.timestamps.updatedAt && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt)) {
-				object[model.schema.settings.timestamps.updatedAt] = date;
+			if ((model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt)) {
+				object[(model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt] = date;
 			}
 		}
 	}
@@ -85,11 +87,11 @@ Document.prepareForObjectFromSchema = function(object, model: any, settings: Doc
 // This function will return a list of attributes combining both the schema attributes with the document attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in document), adding the indexes for each item in the document set.
 // https://stackoverflow.com/a/59928314/894067
 const attributesWithSchemaCache: {[key: string]: any} = {};
-Document.attributesWithSchema = function(document: Document, model: any): string[] {
+Document.attributesWithSchema = function(document: Document, model: Model): string[] {
 	const attributes = model.schema.attributes();
 	const documentID = utils.object.keys(document as any).join("");
-	if (attributesWithSchemaCache[documentID] && attributesWithSchemaCache[documentID][attributes]) {
-		return attributesWithSchemaCache[documentID][attributes];
+	if (attributesWithSchemaCache[documentID] && attributesWithSchemaCache[documentID][attributes.join()]) {
+		return attributesWithSchemaCache[documentID][attributes.join()];
 	}
 	// build a tree out of schema attributes
 	const root = {};
@@ -130,7 +132,7 @@ Document.attributesWithSchema = function(document: Document, model: any): string
 	const out = [];
 	traverse(document, root, [], (val) => out.push(val.join(".")));
 	const result = out.slice(1);
-	attributesWithSchemaCache[documentID] = {[attributes]: result};
+	attributesWithSchemaCache[documentID] = {[attributes.join()]: result};
 	return result;
 };
 // This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
@@ -147,8 +149,8 @@ interface DocumentObjectFromSchemaSettings {
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
-Document.objectFromSchema = async function(object, model: any, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}) {
-	if (settings.checkExpiredItem && model.options.expires && (model.options.expires.items || {}).returnExpired === false && object[model.options.expires.attribute] && (object[model.options.expires.attribute] * 1000) < Date.now()) {
+Document.objectFromSchema = async function(object, model: Model, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}) {
+	if (settings.checkExpiredItem && model.options.expires && ((model.options.expires as ModelExpiresSettings).items || {}).returnExpired === false && object[(model.options.expires as ModelExpiresSettings).attribute] && (object[(model.options.expires as ModelExpiresSettings).attribute] * 1000) < Date.now()) {
 		return undefined;
 	}
 
@@ -201,7 +203,7 @@ Document.objectFromSchema = async function(object, model: any, settings: Documen
 			if (value === dynamooseUndefined) {
 				utils.object.set(returnObject, key, undefined);
 			} else {
-				const defaultValue = await model.schema.defaultCheck(key, value, settings);
+				const defaultValue = await model.schema.defaultCheck(key, value as ValueType, settings);
 				const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
 				if (!isDefaultValueUndefined) {
 					const {isValidType, typeDetails} = getValueTypeCheckResult(defaultValue, key);
@@ -222,7 +224,7 @@ Document.objectFromSchema = async function(object, model: any, settings: Documen
 			if (!isValueUndefined) {
 				const typeDetails = model.schema.getAttributeTypeDetails(key);
 				const {customType} = typeDetails;
-				const {type: typeInfo} = typeDetails.isOfType(value);
+				const {type: typeInfo} = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
 				if (customType && !isCorrectTypeAlready) {
 					const customValue = customType.functions[settings.type](value);
@@ -238,7 +240,7 @@ Document.objectFromSchema = async function(object, model: any, settings: Documen
 		try {
 			typeDetails = model.schema.getAttributeTypeDetails(key);
 		} catch (e) {
-			const Schema = require("./Schema");
+			const {Schema} = require("./Schema");
 			typeDetails = Schema.attributeTypes.findTypeForValue(value, settings.type, settings);
 		}
 
@@ -276,7 +278,7 @@ Document.objectFromSchema = async function(object, model: any, settings: Documen
 		await Promise.all(attributesToCheck.map(async (key) => {
 			const check = async () => {
 				const value = utils.object.get(returnObject, key);
-				await model.schema.requiredCheck(key, value);
+				await model.schema.requiredCheck(key, (value as ValueType));
 			};
 
 			const keyParts = key.split(".");
@@ -379,7 +381,7 @@ Document.prototype.delete = function(this: Document, callback) {
 	}, callback);
 };
 // This function will modify the document to conform to the Schema
-Document.prototype.conformToSchema = async function(this: Document, settings: DocumentObjectFromSchemaSettings = {"type": "fromDynamo"}) {
+Document.prototype.conformToSchema = async function(this: Document, settings: DocumentObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Document> {
 	Document.prepareForObjectFromSchema(this, this.model, settings);
 	const expectedObject = await Document.objectFromSchema(this, this.model, settings);
 	if (!expectedObject) {
@@ -397,6 +399,6 @@ Document.prototype.conformToSchema = async function(this: Document, settings: Do
 	return this;
 };
 
-Document.prototype.original = function() {
+Document.prototype.original = function(): DynamoDB.AttributeMap | {[key: string]: any} | null {
 	return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
 };

@@ -2,6 +2,7 @@ import CustomError from "./Error";
 import utils from "./utils";
 import Internal from "./Internal";
 import {Document} from "./Document";
+import {Model} from "./Model";
 const internalCache = Internal.Schema.internalCache;
 
 // TODO: copied from Document.ts, should be a reference instead
@@ -21,7 +22,7 @@ interface DocumentObjectFromSchemaSettings {
 
 type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
 type GeneralValueType = string | boolean | number | Buffer | Date;
-type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
+export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
 type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor;
 
 interface SchemaSettings {
@@ -56,23 +57,23 @@ interface SchemaDefinition {
 	[attribute: string]: AttributeType | AttributeDefinition;
 }
 
-class Schema {
+export class Schema {
 	settings: SchemaSettings;
 	schemaObject: SchemaDefinition;
 	attributes: () => string[];
-	getCreateTableAttributeParams: (model: any) => any;
+	getCreateTableAttributeParams: (model: Model) => any;
 	getAttributeType: (key: string, value?: ValueType, settings?: any) => string;
 	static attributeTypes: { findDynamoDBType: (type: any) => any; findTypeForValue: (...args: any[]) => any };
 	getHashKey: () => string;
 	getRangeKey: () => string | void;
 	defaultCheck: (key: string, value: ValueType, settings: any) => Promise<ValueType | void>;
-	requiredCheck: (key: string, value: ValueType) => void;
+	requiredCheck: (key: string, value: ValueType) => Promise<void>;
 	getAttributeSettingValue: (setting: any, key: string, settings?: any) => any;
 	getIndexAttributes: () => Promise<{ index: IndexDefinition; attribute: string }[]>;
 	getSettingValue: (setting: string) => any;
 	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean }) => DynamoDBTypeResult;
 	getAttributeValue: (key: string, settings?: { standardKey?: boolean }) => AttributeDefinition;
-	getIndexes: (model: any) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
+	getIndexes: (model: Model) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
 
 	constructor(object: SchemaDefinition, settings: SchemaSettings = {}) {
@@ -181,7 +182,7 @@ interface IndexItem {
 	Projection: {ProjectionType: "KEYS_ONLY" | "INCLUDE" | "ALL"; NonKeyAttributes?: string[]};
 	ProvisionedThroughput?: {"ReadCapacityUnits": number; "WriteCapacityUnits": number}; // TODO: this was copied from get_provisioned_throughput. We should change this to be an actual interface
 }
-Schema.prototype.getIndexes = async function(this: Schema, model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+Schema.prototype.getIndexes = async function(this: Schema, model: Model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
 	return (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
@@ -257,7 +258,7 @@ interface DynamoDBTypeResult {
 	name: string;
 	dynamodbType: string; // TODO: This should probably be an enum
 	nestedType: boolean;
-	isOfType: (value: ValueType) => ValueType;
+	isOfType: (value: ValueType) => {value: ValueType; type: string};
 	set?: any;
 	isSet?: boolean;
 	customType?: any;
@@ -436,7 +437,7 @@ Schema.prototype.getAttributeType = function(this: Schema, key: string, value?: 
 	}
 };
 
-Schema.prototype.getCreateTableAttributeParams = async function(this: Schema, model): Promise<any> {
+Schema.prototype.getCreateTableAttributeParams = async function(this: Schema, model: Model): Promise<any> {
 	const hashKey = this.getHashKey();
 	const AttributeDefinitions = [
 		{
@@ -489,4 +490,3 @@ Schema.attributeTypes = {
 	"findDynamoDBType": (type): any => attributeTypes.find((checkType) => checkType.dynamodbType === type),
 	"findTypeForValue": (...args): any => attributeTypes.find((checkType) => checkType.isOfType(...args))
 };
-export = Schema;

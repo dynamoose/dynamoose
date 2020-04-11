@@ -1,5 +1,5 @@
-import Model from "./Model";
-import Schema from "./Schema";
+import {Model} from "./Model";
+import {Schema} from "./Schema";
 import Condition from "./Condition";
 import transaction from "./Transaction";
 import aws from "./aws";
