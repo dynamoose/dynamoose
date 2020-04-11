@@ -215,7 +215,7 @@ User.get({"id": 1}, (error, myUser) => {
 
 ## Model.batchGet(keys[, settings][, callback])
 
-You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+You can use Model.batchGet to retrieve multiple documents from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
 
