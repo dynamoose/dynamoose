@@ -8,7 +8,7 @@
 		"outDir": "dist",
 		"allowJs": true,
 		"sourceMap": false,
-		"declaration": false,
+		"declaration": true,
 		"noImplicitThis": true
 	},
 	"include": ["./lib/**/*"]
