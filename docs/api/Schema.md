@@ -201,7 +201,7 @@ You can set this property to always use the `default` value, even if a value is 
 
 ### validate: value | RegExp | function | async function
 
-You can set a validation on an attribute to ensure the value passes a given validation before saving the document. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the document exists in the item. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the document) you can enable `required`.
+You can set a validation on an attribute to ensure the value passes a given validation before saving the document. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the document exists in the document. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the document) you can enable `required`.
 
 ```js
 {
@@ -244,7 +244,7 @@ You can set a validation on an attribute to ensure the value passes a given vali
 
 ### required: boolean
 
-You can set an attribute to be required when saving items to DynamoDB. By default this setting is `false`.
+You can set an attribute to be required when saving documents to DynamoDB. By default this setting is `false`.
 
 In the event the parent object is undefined and `required` is set to `false` on that parent attribute, the required check will not be run on child attributes.
 
