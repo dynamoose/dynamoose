@@ -1,6 +1,6 @@
 # Document
 
-A document (also called item in DynamoDB) represents an item for a given model in DynamoDB. This item can created locally (meaning it's not yet saved in DynamoDB), or created from an item already stored in DynamoDB (ex. `Model.get`).
+A document represents an item for a given model in DynamoDB. This item can created locally (meaning it's not yet saved in DynamoDB), or created from an item already stored in DynamoDB (ex. `Model.get`).
 
 _Info: An item is similar to a row in a relational database or a document in MongoDB._
 
