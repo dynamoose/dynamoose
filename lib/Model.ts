@@ -15,8 +15,8 @@ export class Model {
 	name: string;
 	options: ModelOptions;
 	schema: Schema;
-	ready: boolean;
-	pendingTasks: any[];
+	private ready: boolean;
+	private pendingTasks: any[];
 	latestTableDetails: DynamoDB.DescribeTableOutput;
 	pendingTaskPromise: () => Promise<void>;
 	static defaults: ModelOptions;
