@@ -835,7 +835,7 @@ User.scanAll((err, models) => {});
 
 ## Model.methods.document.set(name, function)
 
-This function allows you to add a method to the model items that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying item. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
+This function allows you to add a method to the model documents that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying document. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
 
 ```js
 // Setup:
