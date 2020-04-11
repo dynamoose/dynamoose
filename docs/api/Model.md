@@ -432,7 +432,7 @@ User.update({"id": 1}, {"name": "Bob"}, (error, user) => {
 ```
 
 ```js
-// The following code below will only update the document if the `active` property on the existing item is set to true
+// The following code below will only update the document if the `active` property on the existing document is set to true
 
 const condition = new dynamoose.Condition().where("active").eq(true);
 
@@ -458,7 +458,7 @@ The other method you can use is by using specific update types. These update typ
 
 ```js
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"age": 1}});
-// This will set the item name to Bob and increase the age by 1 for the user where id = 1
+// This will set the document name to Bob and increase the age by 1 for the user where id = 1
 
 await User.update({"id": 1}, {"$REMOVE": ["address"]});
 await User.update({"id": 1}, {"$REMOVE": {"address": null}});
