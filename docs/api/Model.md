@@ -414,7 +414,7 @@ You can also pass in a `settings` object parameter to define extra settings for 
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `document` |
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 
-There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
+There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
 ```js
 // The code below will set `name` to Bob for the user where `id` = 1
@@ -433,7 +433,7 @@ User.update({"id": 1}, {"name": "Bob"}, (error, user) => {
 ```
 
 ```js
-// The following code below will only update the item if the `active` property on the existing item is set to true
+// The following code below will only update the document if the `active` property on the existing item is set to true
 
 const condition = new dynamoose.Condition().where("active").eq(true);
 
@@ -455,7 +455,7 @@ The other method you can use is by using specific update types. These update typ
 
 - `$SET` - This method will set the attribute to the new value (as shown above)
 - `$ADD` - This method will add the value to the attribute. If the attribute is a number it will add the value to the existing number. If the attribute is a list, it will add the value to the list. Although this method only works for sets in DynamoDB, Dynamoose will automatically update this method to work for lists/arrays as well according to your schema. This update type does not work for any other attribute type.
-- `$REMOVE` - This method will remove the attribute from the item. Since this method doesn't require values you can pass in an array of attribute names.
+- `$REMOVE` - This method will remove the attribute from the document. Since this method doesn't require values you can pass in an array of attribute names.
 
 ```js
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"age": 1}});
@@ -463,7 +463,7 @@ await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"age": 1}});
 
 await User.update({"id": 1}, {"$REMOVE": ["address"]});
 await User.update({"id": 1}, {"$REMOVE": {"address": null}});
-// These two function calls will delete the `address` attribute for the item where id = 1
+// These two function calls will delete the `address` attribute for the document where id = 1
 
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": "Tim"}});
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": ["Tim"]}});
