@@ -320,7 +320,7 @@ User.batchGet([{"id": 1}, {"id": 2}], (error, myUsers) => {
 
 ## Model.create(document, [settings], [callback])
 
-This function lets you create a new item for a given model. This function is almost identical to creating a new item and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
+This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
 
 If you do not pass in a `callback` parameter a promise will be returned.
 
