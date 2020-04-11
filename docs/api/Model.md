@@ -213,7 +213,7 @@ User.get({"id": 1}, (error, myUser) => {
 });
 ```
 
-## Model.batchGet(primaryKeys[, settings][, callback])
+## Model.batchGet(keys[, settings][, callback])
 
 You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
 
