@@ -53,7 +53,7 @@ interface AttributeDefinition {
 	hashKey?: boolean;
 	rangeKey?: boolean;
 }
-interface SchemaDefinition {
+export interface SchemaDefinition {
 	[attribute: string]: AttributeType | AttributeDefinition;
 }
 
