@@ -6,9 +6,11 @@ import aws from "./aws";
 import Internal from "./Internal";
 import Condition from "./Condition";
 import {Scan, Query, ConditionInitalizer} from "./DocumentRetriever";
+import {CallbackType} from "./General";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
 
+// TODO: fix this, it shouldn't be copied from Schema.js
 /* ***********************************     COPIED FROM SCHEMA.ts     *********************************** */
 type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
 type GeneralValueType = string | boolean | number | Buffer | Date;
@@ -42,8 +44,6 @@ interface SchemaDefinition {
 	[attribute: string]: AttributeType | AttributeDefinition;
 }
 /* ***********************************                               *********************************** */
-
-type CallbackType<R, E> = (err?: E | null, response?: R) => void;
 
 // Model represents one DynamoDB table
 export class Model {
