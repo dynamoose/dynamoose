@@ -8,7 +8,7 @@ The `options` parameter is an optional object with the following options:
 
 | Name | Type | Default | Information
 |---|---|---|---|
-| `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep. If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
+| `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep. If you retrieve documents from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
 | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
@@ -59,7 +59,7 @@ If you use a set you will define the type surrounded by brackets. For example a 
 
 When using `saveUnknown` with a set, the type recognized by Dynamoose will be the underlying JavaScript Set constructor. If you have a set type defined in your schema the underlying type will be an Array.
 
-Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a item with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
+Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
 For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute.
 
@@ -201,7 +201,7 @@ You can set this property to always use the `default` value, even if a value is 
 
 ### validate: value | RegExp | function | async function
 
-You can set a validation on an attribute to ensure the value passes a given validation before saving the item. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the item exists in the item. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the item) you can enable `required`.
+You can set a validation on an attribute to ensure the value passes a given validation before saving the document. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the document exists in the item. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the document) you can enable `required`.
 
 ```js
 {
@@ -237,7 +237,7 @@ You can set a validation on an attribute to ensure the value passes a given vali
 		"validate": async (val) => {
 			const networkRequest = await axios(`https://emailvalidator.com/${val}`);
 			return networkRequest.data.isValid;
-		} // Any object that is saved will call this function and run the network request with `val` equal to the value set for the `email` property, and only allow the item to be saved if the `isValid` property in the response is true
+		} // Any object that is saved will call this function and run the network request with `val` equal to the value set for the `email` property, and only allow the document to be saved if the `isValid` property in the response is true
 	}
 }
 ```
@@ -289,7 +289,7 @@ This property is not a replacement for `required`. If the value is undefined or 
 
 ### get: function | async function
 
-You can use a get function on an attribute to be run whenever retrieving a item from DynamoDB. This function will only be run if the item exists in the item. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
+You can use a get function on an attribute to be run whenever retrieving a document from DynamoDB. This function will only be run if the document exists in the document. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
 
 ```js
 {
@@ -302,7 +302,7 @@ You can use a get function on an attribute to be run whenever retrieving a item 
 
 ### set: function | async function
 
-You can use a set function on an attribute to be run whenever saving a item to DynamoDB. This function will only be run if the item exists in the item. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
+You can use a set function on an attribute to be run whenever saving a document to DynamoDB. This function will only be run if the document exists in the document. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
 
 ```js
 {
