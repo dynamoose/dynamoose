@@ -31,7 +31,7 @@ describe("Serializer", () => {
 		expect(User.serializer._serializers).to.have.property("hideSecure").to.be.an("object");
 		expect(User.serializer._serializers).to.have.property("isActiveNoStatus").to.be.an("object");
 		expect(User.serializer._serializers).to.have.property("isActive").to.be.an("object");
-		expect(User.serializer._defaultSerializer).eql("contactInfoOnly");
+		expect(User.serializer._defaultSerializer).eql("_default");
 	});
 
 	it("Should remove an existing serializer from the instance and change _defaultSerializer accordingly", () => {
