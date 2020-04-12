@@ -41,11 +41,15 @@ describe("Serializer", () => {
 		expect(User.serializer._serializers).to.have.property("isActiveNoStatus").to.be.an("object");
 		expect(User.serializer._serializers).to.have.property("isActive").to.be.an("object");
 		expect(User.serializer._serializers).to.not.have.property("hideSecure");
+		expect(User.serializer._defaultSerializer).eql("_default");
+
+		User.serializer.setDefault("contactInfoOnly");
+		User.serializer.setDefault("doesntExist");
 		expect(User.serializer._defaultSerializer).eql("contactInfoOnly");
 
 		User.serializer.remove("contactInfoOnly");
 		expect(User.serializer._serializers).to.not.have.property("contactInfoOnly");
-		expect(User.serializer._defaultSerializer).eql(null);
+		expect(User.serializer._defaultSerializer).eql("_default");
 
 		User.serializer.remove("nonExistent");
 	});
@@ -90,12 +94,12 @@ describe("Serializer", () => {
 		addSerializers();
 		const docs = createDocuments();
 		const result = docs[0].serialize();
+		expect(result).to.have.property("id");
 		expect(result).to.have.property("name");
 		expect(result).to.have.property("email");
 		expect(result).to.have.property("phone");
-		expect(result).to.not.have.property("id");
-		expect(result).to.not.have.property("passwordHash");
-		expect(result).to.not.have.property("status");
+		expect(result).to.have.property("passwordHash");
+		expect(result).to.have.property("status");
 	});
 
 	it("Should run a serializer with both include and exclude statements", () => {
