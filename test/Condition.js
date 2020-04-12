@@ -191,6 +191,14 @@ describe("Condition", () => {
 				"input": () => new Condition().where("userID").eq("1").and().where("userID").exists(),
 				"output": {"ConditionExpression": "#a0 = :v0 AND attribute_exists (#a1)", "ExpressionAttributeNames": {"#a0": "userID", "#a1": "userID"}, "ExpressionAttributeValues": {":v0": {"S": "1"}}}
 			},
+			{
+				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
 		];
 
 		tests.forEach((test) => {
