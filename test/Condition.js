@@ -193,20 +193,39 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"settings": {"conditionString": "FilterExpression"},
 				"output": {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
 			},
 			{
 				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"settings": {"conditionString": "FilterExpression"},
 				"output": {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {}
+			},
+			{
+				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"settings": {"conditionString": "FilterExpression"},
+				"output": {}
 			},
 		];
 
 		tests.forEach((test) => {
 			it(`Should ${test.error ? "throw" : "return"} ${JSON.stringify(test.error || test.output)} for ${JSON.stringify(test.input)}`, () => {
 				if (test.error) {
-					expect(() => test.input().requestObject()).to.throw(test.error);
+					expect(() => test.input().requestObject(test.settings)).to.throw(test.error);
 				} else {
-					expect(test.input().requestObject()).to.eql(test.output);
+					expect(test.input().requestObject(test.settings)).to.eql(test.output);
 				}
 			});
 		});
