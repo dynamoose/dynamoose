@@ -3,8 +3,7 @@ const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../lib");
-const {Model, Schema, aws} = dynamoose;
-const Document = require("../lib/Document");
+const {Model} = dynamoose;
 const Serializer = require("../lib/Serializer");
 
 describe("Serializer", () => {
