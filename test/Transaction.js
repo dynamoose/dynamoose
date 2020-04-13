@@ -18,13 +18,13 @@ describe("Transaction", () => {
 	functionCallTypes.forEach((callType) => {
 		describe(callType.name, () => {
 			beforeEach(() => {
-				dynamoose.Model.defaults = {
+				dynamoose.model.defaults.set({
 					"create": false,
 					"waitForActive": false
-				};
+				});
 			});
 			afterEach(() => {
-				dynamoose.Model.defaults = {};
+				dynamoose.model.defaults.set({});
 				dynamoose.aws.ddb.revert();
 				ModelStore.clear();
 			});
@@ -57,7 +57,7 @@ describe("Transaction", () => {
 			});
 
 			it("Should throw error if model hasn't been created", () => {
-				new dynamoose.Model("User", {"id": Number, "name": String});
+				dynamoose.model("User", {"id": Number, "name": String});
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.be.rejectedWith("Model \"Credit\" not found. Please register the model with dynamoose before using it in transactions.");
 			});
 
@@ -72,8 +72,8 @@ describe("Transaction", () => {
 					}
 				});
 
-				new dynamoose.Model("User", {"id": Number, "name": String});
-				new dynamoose.Model("Credit", {"id": Number, "name": String});
+				dynamoose.model("User", {"id": Number, "name": String});
+				dynamoose.model("Credit", {"id": Number, "name": String});
 				await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}]);
 				expect(transactParams).to.eql({
 					"TransactItems": [
@@ -108,8 +108,8 @@ describe("Transaction", () => {
 					}
 				});
 
-				new dynamoose.Model("User", {"id": Number, "name": String});
-				new dynamoose.Model("Credit", {"id": Number, "name": String});
+				dynamoose.model("User", {"id": Number, "name": String});
+				dynamoose.model("Credit", {"id": Number, "name": String});
 				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}]);
 				expect(transactParams).to.eql({
 					"TransactItems": [
@@ -140,8 +140,8 @@ describe("Transaction", () => {
 					})
 				});
 
-				new dynamoose.Model("User", {"id": Number, "name": String});
-				new dynamoose.Model("Credit", {"id": Number, "name": String});
+				dynamoose.model("User", {"id": Number, "name": String});
+				dynamoose.model("Credit", {"id": Number, "name": String});
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}]).then((res) => res.map((a) => ({...a})))).to.eventually.eql([
 					{"id": 1, "name": "Bob"},
 					{"id": 2, "name": "My Credit"}
@@ -155,8 +155,8 @@ describe("Transaction", () => {
 					})
 				});
 
-				new dynamoose.Model("User", {"id": Number, "name": String});
-				new dynamoose.Model("Credit", {"id": Number, "name": String});
+				dynamoose.model("User", {"id": Number, "name": String});
+				dynamoose.model("Credit", {"id": Number, "name": String});
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.eventually.eql(null);
 			});
 
@@ -171,8 +171,8 @@ describe("Transaction", () => {
 					}
 				});
 
-				new dynamoose.Model("User", {"id": Number, "name": String});
-				new dynamoose.Model("Credit", {"id": Number, "name": String});
+				dynamoose.model("User", {"id": Number, "name": String});
+				dynamoose.model("Credit", {"id": Number, "name": String});
 				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}], {"type": "write"});
 				expect(transactParams).to.be.an("object");
 			});
@@ -188,8 +188,8 @@ describe("Transaction", () => {
 					}
 				});
 
-				new dynamoose.Model("User", {"id": Number, "name": String});
-				new dynamoose.Model("Credit", {"id": Number, "name": String});
+				dynamoose.model("User", {"id": Number, "name": String});
+				dynamoose.model("Credit", {"id": Number, "name": String});
 				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}], {"type": "get"});
 				expect(transactParams).to.be.an("object");
 			});

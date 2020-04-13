@@ -1,12 +1,13 @@
-import CustomError from "./Error";
-import {Schema, SchemaDefinition} from "./Schema";
-import {Document as DocumentCarrier} from "./Document";
-import utils from "./utils";
-import aws from "./aws";
-import Internal from "./Internal";
-import Condition from "./Condition";
-import {Scan, Query, ConditionInitalizer} from "./DocumentRetriever";
-import {CallbackType} from "./General";
+import CustomError from "../Error";
+import {Schema, SchemaDefinition} from "../Schema";
+import {Document as DocumentCarrier} from "../Document";
+import utils from "../utils";
+import aws from "../aws";
+import Internal from "../Internal";
+import Condition from "../Condition";
+import {Scan, Query, ConditionInitalizer} from "../DocumentRetriever";
+import {CallbackType} from "../General";
+import {custom as customDefaults, original as originalDefaults} from "./defaults";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
 
@@ -22,7 +23,7 @@ export interface ModelExpiresSettings {
 		returnExpired: boolean;
 	};
 }
-interface ModelOptions {
+export interface ModelOptions {
 	create: boolean;
 	throughput: number | {read: number; write: number};
 	prefix: string;
@@ -31,31 +32,31 @@ interface ModelOptions {
 	update: boolean;
 	expires?: number | ModelExpiresSettings;
 }
-type ModelOptionsOptional = Partial<ModelOptions>;
-const defaults: ModelOptions = {
-	"create": true,
-	"throughput": {
-		"read": 5,
-		"write": 5
-	},
-	"prefix": "",
-	"suffix": "",
-	"waitForActive": {
-		"enabled": true,
-		"check": {
-			"timeout": 180000,
-			"frequency": 1000
-		}
-	},
-	"update": false,
-	"expires": undefined
-	// "streamOptions": {
-	// 	"enabled": false,
-	// 	"type": undefined
-	// },
-	// "serverSideEncryption": false,
-	// "defaultReturnValues": "ALL_NEW",
-};
+export type ModelOptionsOptional = Partial<ModelOptions>;
+// const defaults: ModelOptions = {
+// 	"create": true,
+// 	"throughput": {
+// 		"read": 5,
+// 		"write": 5
+// 	},
+// 	"prefix": "",
+// 	"suffix": "",
+// 	"waitForActive": {
+// 		"enabled": true,
+// 		"check": {
+// 			"timeout": 180000,
+// 			"frequency": 1000
+// 		}
+// 	},
+// 	"update": false,
+// 	"expires": undefined
+// 	// "streamOptions": {
+// 	// 	"enabled": false,
+// 	// 	"type": undefined
+// 	// },
+// 	// "serverSideEncryption": false,
+// 	// "defaultReturnValues": "ALL_NEW",
+// };
 
 
 
@@ -218,7 +219,7 @@ export class Model {
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
 
 	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}) {
-		this.options = (utils.combine_objects(options, Model.defaults, defaults) as ModelOptions);
+		this.options = (utils.combine_objects(options, customDefaults.get(), originalDefaults) as ModelOptions);
 		this.name = `${this.options.prefix}${name}${this.options.suffix}`;
 
 		if (!schema) {
@@ -362,14 +363,12 @@ export class Model {
 			return accumulator;
 		}, {});
 
-		const ModelStore = require("./ModelStore");
+		const ModelStore = require("../ModelStore");
 		ModelStore(this);
-
-		return returnObject;
 	}
 }
 
-Model.defaults = defaults;
+Model.defaults = originalDefaults;
 
 
 interface ModelGetSettings {
@@ -576,7 +575,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 
 				const dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 				const attributeExists = this.schema.attributes().includes(subKey);
-				const dynamooseUndefined = require("./index").undefined;
+				const dynamooseUndefined = require("../index").undefined;
 				if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
 					subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
 				}
