@@ -61,7 +61,7 @@ export class Schema {
 	settings: SchemaSettings;
 	schemaObject: SchemaDefinition;
 	attributes: () => string[];
-	getCreateTableAttributeParams: (model: Model) => any;
+	getCreateTableAttributeParams: (model) => any;
 	getAttributeType: (key: string, value?: ValueType, settings?: any) => string;
 	static attributeTypes: { findDynamoDBType: (type: any) => any; findTypeForValue: (...args: any[]) => any };
 	getHashKey: () => string;
@@ -73,7 +73,7 @@ export class Schema {
 	getSettingValue: (setting: string) => any;
 	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean }) => DynamoDBTypeResult;
 	getAttributeValue: (key: string, settings?: { standardKey?: boolean }) => AttributeDefinition;
-	getIndexes: (model: Model) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
+	getIndexes: (model: Model<Document>) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
 
 	constructor(object: SchemaDefinition, settings: SchemaSettings = {}) {
@@ -182,7 +182,7 @@ interface IndexItem {
 	Projection: {ProjectionType: "KEYS_ONLY" | "INCLUDE" | "ALL"; NonKeyAttributes?: string[]};
 	ProvisionedThroughput?: {"ReadCapacityUnits": number; "WriteCapacityUnits": number}; // TODO: this was copied from get_provisioned_throughput. We should change this to be an actual interface
 }
-Schema.prototype.getIndexes = async function(this: Schema, model: Model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+Schema.prototype.getIndexes = async function(this: Schema, model: Model<Document>): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
 	return (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
@@ -437,7 +437,7 @@ Schema.prototype.getAttributeType = function(this: Schema, key: string, value?: 
 	}
 };
 
-Schema.prototype.getCreateTableAttributeParams = async function(this: Schema, model: Model): Promise<any> {
+Schema.prototype.getCreateTableAttributeParams = async function(this: Schema, model: Model<Document>): Promise<any> {
 	const hashKey = this.getHashKey();
 	const AttributeDefinitions = [
 		{

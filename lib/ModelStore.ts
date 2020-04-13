@@ -1,9 +1,10 @@
 import CustomError from "./Error";
 import {Model} from "./Model";
+import {Document} from "./Document";
 
-let models: {[name: string]: Model} = {};
+let models: {[name: string]: Model<Document>} = {};
 
-const returnObject = (input: Model | string): Model | never => {
+const returnObject = (input: Model<Document> | string): Model<Document> | never => {
 	if (input instanceof Model) {
 		models[input.name] = input;
 		return input;
