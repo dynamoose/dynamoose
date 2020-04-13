@@ -3,6 +3,7 @@ import CustomError from "./Error";
 import utils from "./utils";
 import Condition from "./Condition";
 import {Model} from "./Model";
+import {Document} from "./Document";
 
 export type ConditionInitalizer = Condition | {[key: string]: any} | string;
 interface DocumentRetrieverTypeInformation {
@@ -12,7 +13,7 @@ interface DocumentRetrieverTypeInformation {
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
 abstract class DocumentRetriever {
 	internalSettings?: {
-		model: Model;
+		model: Model<Document>;
 		typeInformation: DocumentRetrieverTypeInformation;
 	};
 	settings: {
@@ -30,7 +31,7 @@ abstract class DocumentRetriever {
 	exec: (this: DocumentRetriever, callback?: any) => any;
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
 
-	constructor(model: Model, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
+	constructor(model: Model<Document>, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
 		this.internalSettings = {model, typeInformation};
 
 		let condition: Condition;
@@ -241,7 +242,7 @@ DocumentRetriever.prototype.all = function(this: DocumentRetriever, delay = 0, m
 export class Scan extends DocumentRetriever {
 	parallel: (value: number) => Scan;
 
-	constructor(model: Model, object?: ConditionInitalizer) {
+	constructor(model: Model<Document>, object?: ConditionInitalizer) {
 		super(model, {"type": "scan", "pastTense": "scanned"}, object);
 	}
 }
@@ -251,7 +252,7 @@ Scan.prototype.parallel = function(value: number): Scan {
 };
 
 export class Query extends DocumentRetriever {
-	constructor(model: Model, object?: ConditionInitalizer) {
+	constructor(model: Model<Document>, object?: ConditionInitalizer) {
 		super(model, {"type": "query", "pastTense": "queried"}, object);
 	}
 }
