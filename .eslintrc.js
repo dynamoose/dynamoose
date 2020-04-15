@@ -9,10 +9,16 @@ module.exports = {
 		{
 			"files": ["**/*.ts"],
 			"parser": "@typescript-eslint/parser",
-			"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+			"extends": [
+				"eslint:recommended",
+				"plugin:@typescript-eslint/eslint-recommended",
+				"plugin:@typescript-eslint/recommended"
+			],
 			"plugins": ["@typescript-eslint"],
 			"rules": {
-				"@typescript-eslint/camelcase": "off"
+				"@typescript-eslint/camelcase": "off",
+				"@typescript-eslint/no-this-alias": "off",
+				"@typescript-eslint/no-var-requires": "off"
 			}
 		}
 	],
