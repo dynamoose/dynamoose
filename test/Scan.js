@@ -191,12 +191,19 @@ describe("Scan", () => {
 							"#a0": "id"
 						},
 						"ExpressionAttributeValues": {
-							":v0-1": {"N": "1"},
-							":v0-2": {"N": "3"}
+							":v0_1": {"N": "1"},
+							":v0_2": {"N": "3"}
 						},
-						"FilterExpression": "#a0 BETWEEN :v0-1 AND :v0-2",
+						"FilterExpression": "#a0 BETWEEN :v0_1 AND :v0_2",
 						"TableName": "Cat"
 					});
+				});
+
+				it("Should not include - in filter expression", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const scan = Model.scan().filter("id").between(1, 3);
+					await callType.func(scan.exec).bind(scan)();
+					expect(scanParams.FilterExpression).to.not.include("-");
 				});
 
 				it("Should return correct result for get function on attribute", async () => {
