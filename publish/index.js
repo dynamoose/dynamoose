@@ -11,6 +11,7 @@ const octokit = new Octokit({
 	"log": console,
 	"auth": process.env.GITHUBAUTH
 });
+const path = require("path");
 const ora = require("ora");
 const npmFetch = require("npm-registry-fetch");
 let package = require("../package.json");
@@ -71,19 +72,19 @@ let package = require("../package.json");
 	branchSpinner.succeed(`Created branch ${branch}`);
 	// Update version in package.json
 	const updateVersion = async (file) => {
-		const path = `../${file}`;
-		let fileContents = await fs.readFile(path);
+		const currentPath = path.join(__dirname, "..", file);
+		let fileContents = await fs.readFile(currentPath);
 		const fileContentsJSON = JSON.parse(fileContents);
 		fileContentsJSON.version = results.version;
 		fileContents = JSON.stringify(fileContentsJSON, null, 2);
-		await fs.writeFile(path, `${fileContents}\n`);
+		await fs.writeFile(currentPath, `${fileContents}\n`);
 	};
 	const packageUpdateVersionsSpinner = ora("Updating versions in package.json & package-lock.json files").start();
 	await Promise.all(["package.json", "package-lock.json"].map(updateVersion));
 	packageUpdateVersionsSpinner.succeed("Updated versions in package.json & package-lock.json files");
 	// Add, Commit & Push files to Git
 	const gitCommit = ora("Committing files to Git").start();
-	await git.commit(`Bumping version to ${results.version}`, ["../package.json", "../package-lock.json"]);
+	await git.commit(`Bumping version to ${results.version}`, ["package.json", "package-lock.json"].map((file) => path.join(__dirname, "..", file)));
 	gitCommit.succeed("Committed files to Git");
 	const gitPush = ora("Pushing files to GitHub").start();
 	await git.push("origin", branch);
@@ -102,12 +103,12 @@ let package = require("../package.json");
 	pendingChangelogSpinner.succeed("Finished changelog");
 	const versionChangelog = await fs.readFile(`${results.version}-changelog.md`);
 	if (!versionInfo.tag) {
-		const existingChangelog = await fs.readFile("../CHANGELOG.md", "utf8");
+		const existingChangelog = await fs.readFile(path.join(__dirname, "..", "CHANGELOG.md"), "utf8");
 		const existingChangelogArray = existingChangelog.split("\n---\n");
 		existingChangelogArray.splice(1, 0, `\n${versionChangelog}\n`);
-		await fs.writeFile("../CHANGELOG.md", existingChangelogArray.join("\n---\n"));
+		await fs.writeFile(path.join(__dirname, "..", "CHANGELOG.md"), existingChangelogArray.join("\n---\n"));
 		const gitCommit2 = ora("Committing files to Git").start();
-		await git.commit(`Adding changelog for ${results.version}`, ["../CHANGELOG.md"]);
+		await git.commit(`Adding changelog for ${results.version}`, [path.join(__dirname, "..", "CHANGELOG.md")]);
 		gitCommit2.succeed("Committed files to Git");
 		const gitPush2 = ora("Pushing files to GitHub").start();
 		await git.push("origin", branch);
