@@ -101,16 +101,18 @@ let package = require("../package.json");
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
 	const versionChangelog = await fs.readFile(`${results.version}-changelog.md`);
-	const existingChangelog = await fs.readFile("../CHANGELOG.md", "utf8");
-	const existingChangelogArray = existingChangelog.split("\n---\n");
-	existingChangelogArray.splice(1, 0, `\n${versionChangelog}\n`);
-	await fs.writeFile("../CHANGELOG.md", existingChangelogArray.join("\n---\n"));
-	const gitCommit2 = ora("Committing files to Git").start();
-	await git.commit(`Adding changelog for ${results.version}`, ["../CHANGELOG.md"]);
-	gitCommit2.succeed("Committed files to Git");
-	const gitPush2 = ora("Pushing files to GitHub").start();
-	await git.push("origin", branch);
-	gitPush2.succeed("Pushed files to GitHub");
+	if (!versionInfo.tag) {
+		const existingChangelog = await fs.readFile("../CHANGELOG.md", "utf8");
+		const existingChangelogArray = existingChangelog.split("\n---\n");
+		existingChangelogArray.splice(1, 0, `\n${versionChangelog}\n`);
+		await fs.writeFile("../CHANGELOG.md", existingChangelogArray.join("\n---\n"));
+		const gitCommit2 = ora("Committing files to Git").start();
+		await git.commit(`Adding changelog for ${results.version}`, ["../CHANGELOG.md"]);
+		gitCommit2.succeed("Committed files to Git");
+		const gitPush2 = ora("Pushing files to GitHub").start();
+		await git.push("origin", branch);
+		gitPush2.succeed("Pushed files to GitHub");
+	}
 	// Create PR
 	const gitPR = ora("Creating PR on GitHub").start();
 	const pr = (await octokit.pulls.create({"owner": "dynamoosejs", "repo": "dynamoose", "title": versionFriendlyTitle, "head": branch, "base": results.branch})).data;
