@@ -12,6 +12,7 @@ const octokit = new Octokit({
 	"auth": process.env.GITHUBAUTH
 });
 const ora = require("ora");
+const npmFetch = require("npm-registry-fetch");
 let package = require("../package.json");
 
 (async function main() {
@@ -32,7 +33,7 @@ let package = require("../package.json");
 	]);
 	await git.checkout(results.branch);
 	package = require("../package.json");
-	results = {
+	results = { // eslint-disable-line require-atomic-updates
 		...results,
 		...await inquirer.prompt([
 			{
@@ -77,9 +78,9 @@ let package = require("../package.json");
 		fileContents = JSON.stringify(fileContentsJSON, null, 2);
 		await fs.writeFile(path, `${fileContents}\n`);
 	};
-	const packageUpdateVersionsSpinner = ora(`Updating versions in package.json & package-lock.json files`).start();
+	const packageUpdateVersionsSpinner = ora("Updating versions in package.json & package-lock.json files").start();
 	await Promise.all(["package.json", "package-lock.json"].map(updateVersion));
-	packageUpdateVersionsSpinner.succeed(`Updated versions in package.json & package-lock.json files`)
+	packageUpdateVersionsSpinner.succeed("Updated versions in package.json & package-lock.json files");
 	// Add, Commit & Push files to Git
 	const gitCommit = ora("Committing files to Git").start();
 	await git.commit(`Bumping version to ${results.version}`, ["../package.json", "../package-lock.json"]);
@@ -94,16 +95,16 @@ let package = require("../package.json");
 	openurl.open(`https://github.com/dynamoosejs/dynamoose/compare/v${package.version}...${results.branch}`);
 	const versionInfo = retrieveInformation(results.version);
 	const versionFriendlyTitle = `Version ${[versionInfo.main, utils.capitalize_first_letter(versionInfo.tag || ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
-	await fs.writeFile(`${results.version}-changelog.md`, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`)
+	await fs.writeFile(`${results.version}-changelog.md`, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`);
 	await exec(`code ${results.version}-changelog.md`);
-	const pendingChangelogSpinner = org("Waiting for user to finish changelog, press enter to continue.").start();
+	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
 	const versionChangelog = await fs.readFile(`${results.version}-changelog.md`);
 	const existingChangelog = await fs.readFile("../CHANGELOG.md", "utf8");
 	const existingChangelogArray = existingChangelog.split("\n---\n");
 	existingChangelogArray.splice(1, 0, `\n${versionChangelog}\n`);
-	await fs.writeFile(`../CHANGELOG.md`, existingChangelogArray.join("\n---\n"));
+	await fs.writeFile("../CHANGELOG.md", existingChangelogArray.join("\n---\n"));
 	const gitCommit2 = ora("Committing files to Git").start();
 	await git.commit(`Adding changelog for ${results.version}`, ["../CHANGELOG.md"]);
 	gitCommit2.succeed("Committed files to Git");
@@ -121,7 +122,7 @@ let package = require("../package.json");
 	gitPRPoll.succeed(`PR ${pr.number} has been merged`);
 	console.log("PR has been merged.");
 	// Create release
-	const gitRelease = ora(`Creating release on GitHub`).start();
+	const gitRelease = ora("Creating release on GitHub").start();
 	await octokit.repos.createRelease({
 		"owner": "dynamoosejs",
 		"repo": "dynamoose",
@@ -147,7 +148,7 @@ async function checkCleanWorkingDir() {
 function keypress() {
 	process.stdin.setRawMode(true);
 	return new Promise((resolve) => {
-		const stream = process.stdin.once("data", () => {
+		process.stdin.once("data", () => {
 			process.stdin.setRawMode(false);
 			resolve();
 			process.stdin.pause();
@@ -167,11 +168,10 @@ async function isPRMerged(pr) {
 	} while (!data.merged);
 }
 async function isReleaseSubmiitted(release) {
-	while (true) {
-		try {
-			await fetch(`/dynamoose/${release}`);
-			await utils.timeout(5000);
-			return;
-		} catch (e) {}
+	try {
+		await npmFetch(`/dynamoose/${release}`);
+	} catch (e) {
+		await utils.timeout(5000);
+		isReleaseSubmiitted(release);
 	}
 }
