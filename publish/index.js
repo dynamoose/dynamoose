@@ -147,8 +147,8 @@ let package = require("../package.json");
 async function checkCleanWorkingDir() {
 	return (await git.status()).isClean();
 }
-
 function keypress() {
+	process.stdin.resume();
 	process.stdin.setRawMode(true);
 	return new Promise((resolve) => {
 		process.stdin.once("data", () => {
@@ -158,7 +158,6 @@ function keypress() {
 		});
 	});
 }
-
 async function isPRMerged(pr) {
 	let data;
 	do {
