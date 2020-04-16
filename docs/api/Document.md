@@ -4,7 +4,6 @@ A document represents an item for a given model in DynamoDB. This item can creat
 
 _Info: An item is similar to a row in a relational database or a document in MongoDB._
 
-
 ## new Model(object)
 
 In order to create a new document you just pass in your object into an instance of your model.
