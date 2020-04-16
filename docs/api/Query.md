@@ -114,7 +114,7 @@ Cat.query("name").eq("Will").using("name-index"); // Run the query on the `name-
 
 ## query.all([delay[, max]])
 
-If a query result is more than the limit of your DynamoDB table (before filtering!), DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests until all items have been received (as long as the `lastKey` property exists on the response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
+If a query result is more than the limit of your DynamoDB table, DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests until all items have been received (as long as the `lastKey` property exists on the response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
 
 Two parameters can be specified on this setting:
 
