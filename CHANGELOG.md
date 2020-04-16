@@ -2,18 +2,6 @@
 
 ---
 
-## Version 2.0.0 (Not Complete)
-
-This is the working changelog for version 2.0.0. It is a full rewrite of Dynamoose from the ground up. It is very likely throughout this beta that breaking changes will occur.
-
-Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
-
-### General
-
-- License changed from MIT to Unlicense
-
----
-
 ## [1.11.1](https://github.com/dynamoosejs/dynamoose/compare/v1.11.0...v1.11.1) (2019-09-05)
 
 
