@@ -100,7 +100,7 @@ let package = require("../package.json");
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
-	const versionChangelog = await fs.readFile(`${results.version}-changelog.md`);
+	const versionChangelog = await fs.readFile(`${results.version}-changelog.md`, "utf8");
 	if (!versionInfo.tag) {
 		const existingChangelog = await fs.readFile(path.join(__dirname, "..", "CHANGELOG.md"), "utf8");
 		const existingChangelogArray = existingChangelog.split("\n---\n");
@@ -116,13 +116,12 @@ let package = require("../package.json");
 	// Create PR
 	const gitPR = ora("Creating PR on GitHub").start();
 	const pr = (await octokit.pulls.create({"owner": "dynamoosejs", "repo": "dynamoose", "title": versionFriendlyTitle, "head": branch, "base": results.branch})).data;
-	gitPR.succeed(`Created PR: ${pr.number} on GitHub`);
+	gitPR.succeed(`Created PR ${pr.number} on GitHub`);
 	openurl.open(`https://github.com/dynamoosejs/dynamoose/pull/${pr.number}`);
 	// Poll for PR to be merged
 	const gitPRPoll = ora(`Polling GitHub for PR ${pr.number} to be merged`).start();
 	await isPRMerged(pr.number);
 	gitPRPoll.succeed(`PR ${pr.number} has been merged`);
-	console.log("PR has been merged.");
 	// Create release
 	const gitRelease = ora("Creating release on GitHub").start();
 	await octokit.repos.createRelease({
