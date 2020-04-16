@@ -141,7 +141,6 @@ let package = require("../package.json");
 })();
 
 async function checkCleanWorkingDir() {
-	// TODO: uncomment this
 	return (await git.status()).isClean();
 }
 
