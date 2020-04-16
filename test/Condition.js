@@ -173,7 +173,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("name").in(["Charlie", "Bob"]),
-				"output": {"ConditionExpression": "#a0 IN (:v0-1, :v0-2)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0-1": {"S": "Charlie"}, ":v0-2": {"S": "Bob"}}}
+				"output": {"ConditionExpression": "#a0 IN (:v0_1, :v0_2)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0_1": {"S": "Charlie"}, ":v0_2": {"S": "Bob"}}}
 			},
 			{
 				"input": () => new Condition().where("name").not().in(["Charlie", "Bob"]),
@@ -181,7 +181,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("age").between(13, 18),
-				"output": {"ConditionExpression": "#a0 BETWEEN :v0-1 AND :v0-2", "ExpressionAttributeNames": {"#a0": "age"}, "ExpressionAttributeValues": {":v0-1": {"N": "13"}, ":v0-2": {"N": "18"}}}
+				"output": {"ConditionExpression": "#a0 BETWEEN :v0_1 AND :v0_2", "ExpressionAttributeNames": {"#a0": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "13"}, ":v0_2": {"N": "18"}}}
 			},
 			{
 				"input": () => new Condition().where("age").not().between(13, 18),
