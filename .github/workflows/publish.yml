@@ -1,0 +1,45 @@
+name: Publish
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  getinfo:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.data.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: node publish/information.js
+        id: data
+
+  publish-npm:
+    needs: get-info
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
+      - run: npm ci
+      - run: npm publish --tag $TAG
+        env:
+          TAG: ${{ needs.getinfo.outputs.tag }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-gpr:
+    needs: get-info
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://npm.pkg.github.com/
+      - run: npm ci
+      - run: npm publish --tag $TAG
+        env:
+          TAG: ${{ needs.getinfo.outputs.tag }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

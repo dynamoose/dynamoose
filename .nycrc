@@ -3,6 +3,7 @@
 		"test",
 		"coverage",
 		".eslintrc.js",
-		".mocharc.js"
+		".mocharc.js",
+		"publish"
 	]
 }
