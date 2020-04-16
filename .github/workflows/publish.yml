@@ -11,6 +11,8 @@ jobs:
       tag: ${{ steps.data.outputs.tag }}
     steps:
       - uses: actions/checkout@v2
+      - run: npm i
+        working-directory: ./publish
       - run: node publish/information/index.js
         id: data
 
