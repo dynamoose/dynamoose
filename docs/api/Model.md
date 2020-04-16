@@ -398,7 +398,7 @@ await User.batchPut([
 
 This function lets you update an existing item in the database. You can either pass in one object combining both the hashKey (partition key) you wish to update along with the update object, or keep them separate by passing in two objects.
 
-`key` can be a string representing the hashKey or an object containing the hashKey AND rangeKey.
+`key` can be a string representing the hashKey or an object containing the hashKey & rangeKey.
 
 ```js
 await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
