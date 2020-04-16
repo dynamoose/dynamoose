@@ -529,7 +529,7 @@ User.delete(1, {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & the hashKey.
+In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & hashKey.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
