@@ -4,7 +4,7 @@ The Condition object represents a conditional that you can attach to various set
 
 ## new dynamoose.Condition([filter])
 
-This is the basic entry point to construct a conditional. The filter property is optional and can either be an object or a string representing the key you which to first filter on.
+This is the basic entry point to construct a conditional. The filter property is optional and can either be an object, existing conditional instance or a string representing the key you which to first filter on.
 
 ```js
 new dynamoose.Condition("breed").contains("Terrier") // will condition for where the key `breed` contains `Terrier`
@@ -12,7 +12,30 @@ new dynamoose.Condition({"breed": {"contains": "Terrier"}}) // will condition fo
 new dynamoose.Condition(new dynamoose.Condition({"breed": {"contains": "Terrier"}})) // will condition for where the key `breed` contains `Terrier`
 ```
 
-If you pass an object into `new dynamoose.Condition()` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
+For a more advanced use case you pass an object into `new dynamoose.Condition()` the object for each key should contain the comparison type. For example, in the second to last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
+
+You can also pass in a raw DynamoDB condition object. Which has properties for `ExpressionAttributeNames`, `ExpressionAttributeValues` & either `FilterExpression` or `ComparisonExpression`. In the event you do this, all future condition methods called on this condition instance will be ignored. In the event you don't pass in DynamoDB objects for the `ExpressionAttributeValues` values, Dynamoose will automatically convert them to DynamoDB compatible objects to make the request.
+
+```js
+new dynamoose.Condition({
+	"FilterExpression": "#id = :id",
+	"ExpressionAttributeValues": {
+		":id": 100
+	},
+	"ExpressionAttributeNames": {
+		"#id": "id"
+	}
+})
+new dynamoose.Condition({
+	"FilterExpression": "#id = :id",
+	"ExpressionAttributeValues": {
+		":id": {"N": 100}
+	},
+	"ExpressionAttributeNames": {
+		"#id": "id"
+	}
+})
+```
 
 ## condition.and()
 

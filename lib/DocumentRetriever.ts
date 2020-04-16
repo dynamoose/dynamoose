@@ -3,6 +3,7 @@ import CustomError from "./Error";
 import utils from "./utils";
 import Condition from "./Condition";
 import {Model} from "./Model";
+import {Document} from "./Document";
 
 export type ConditionInitalizer = Condition | {[key: string]: any} | string;
 interface DocumentRetrieverTypeInformation {
@@ -66,7 +67,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		object.Limit = this.settings.limit;
 	}
 	if (this.settings.startAt) {
-		object.ExclusiveStartKey = this.internalSettings.model.Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
+		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	if (this.settings.attributes) {
 		object.AttributesToGet = this.settings.attributes;

@@ -4,6 +4,8 @@ import utils from "./utils";
 const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
 
+const isRawConditionObject = (object) => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
+
 type ConditionFunction = (condition: Condition) => Condition;
 // TODO: There is a problem where you can have multiple keys in one `ConditionStorageType`, which will cause problems. We need to fix that. Likely be refactoring it so that the key is part of `ConditionsConditionStorageObject`.
 type ConditionStorageType = {[key: string]: ConditionsConditionStorageObject} | typeof OR;
@@ -69,6 +71,7 @@ class Condition {
 			value?: any;
 			not?: boolean;
 		};
+		raw?: ConditionInitalizer;
 	};
 	and: () => Condition;
 	or: () => Condition;
@@ -93,26 +96,29 @@ class Condition {
 			};
 
 			if (typeof object === "object") {
-				Object.keys(object).forEach((key) => {
-					const value = object[key];
-					const valueType = typeof value === "object" && Object.keys(value).length > 0 ? Object.keys(value)[0] : "eq";
-					const comparisonType = types.find((item) => item.name === valueType);
+				if (!isRawConditionObject(object)) {
+					Object.keys(object).forEach((key) => {
+						const value = object[key];
+						const valueType = typeof value === "object" && Object.keys(value).length > 0 ? Object.keys(value)[0] : "eq";
+						const comparisonType = types.find((item) => item.name === valueType);
 
-					if (!comparisonType) {
-						throw new CustomError.InvalidFilterComparison(`The type: ${valueType} is invalid.`);
-					}
-
-					this.settings.conditions.push({
-						[key]: {
-							"type": comparisonType.typeName,
-							"value": typeof value[valueType] !== "undefined" && value[valueType] !== null ? value[valueType] : value
+						if (!comparisonType) {
+							throw new CustomError.InvalidFilterComparison(`The type: ${valueType} is invalid.`);
 						}
+
+						this.settings.conditions.push({
+							[key]: {
+								"type": comparisonType.typeName,
+								"value": typeof value[valueType] !== "undefined" && value[valueType] !== null ? value[valueType] : value
+							}
+						});
 					});
-				});
+				}
 			} else if (object) {
 				this.settings.pending.key = object;
 			}
 		}
+		this.settings.raw = object;
 
 		return this;
 	}
@@ -182,7 +188,16 @@ interface ConditionRequestObjectSettings {
 	};
 }
 Condition.prototype.requestObject = function(this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression"}): ConditionRequestObjectResult {
-	if (this.settings.conditions.length === 0) {
+	if (this.settings.raw && utils.object.equals(Object.keys(this.settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
+		return Object.entries((this.settings.raw as any).ExpressionAttributeValues).reduce((obj, entry) => {
+			const [key, value] = entry;
+			// TODO: we should fix this so that we can do `isDynamoItem(value)`
+			if (!Document.isDynamoObject({"key": value})) {
+				obj.ExpressionAttributeValues[key] = Document.objectToDynamo(value, {"type": "value"});
+			}
+			return obj;
+		}, (this.settings.raw as any));
+	} else if (this.settings.conditions.length === 0) {
 		return {};
 	}
 
@@ -215,9 +230,9 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 					break;
 				case "IN":
 					delete object.ExpressionAttributeValues[keys.value];
-					expression = `${keys.name} IN (${value.map((_v: any, i: number) => `${keys.value}-${i + 1}`).join(", ")})`;
+					expression = `${keys.name} IN (${value.map((_v: any, i: number) => `${keys.value}_${i + 1}`).join(", ")})`;
 					value.forEach((valueItem: any, i: number) => {
-						object.ExpressionAttributeValues[`${keys.value}-${i + 1}`] = toDynamo(valueItem, {"type": "value"});
+						object.ExpressionAttributeValues[`${keys.value}_${i + 1}`] = toDynamo(valueItem, {"type": "value"});
 					});
 					break;
 				case "GT":
@@ -227,9 +242,9 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 					expression = `${keys.name} ${condition.type.startsWith("G") ? ">" : "<"}${condition.type.endsWith("E") ? "=" : ""} ${keys.value}`;
 					break;
 				case "BETWEEN":
-					expression = `${keys.name} BETWEEN ${keys.value}-1 AND ${keys.value}-2`;
-					object.ExpressionAttributeValues[`${keys.value}-1`] = toDynamo(value[0], {"type": "value"});
-					object.ExpressionAttributeValues[`${keys.value}-2`] = toDynamo(value[1], {"type": "value"});
+					expression = `${keys.name} BETWEEN ${keys.value}_1 AND ${keys.value}_2`;
+					object.ExpressionAttributeValues[`${keys.value}_1`] = toDynamo(value[0], {"type": "value"});
+					object.ExpressionAttributeValues[`${keys.value}_2`] = toDynamo(value[1], {"type": "value"});
 					delete object.ExpressionAttributeValues[keys.value];
 					break;
 				case "CONTAINS":
