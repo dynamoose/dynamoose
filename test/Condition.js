@@ -173,7 +173,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("name").in(["Charlie", "Bob"]),
-				"output": {"ConditionExpression": "#a0 IN (:v0-1, :v0-2)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0-1": {"S": "Charlie"}, ":v0-2": {"S": "Bob"}}}
+				"output": {"ConditionExpression": "#a0 IN (:v0_1, :v0_2)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0_1": {"S": "Charlie"}, ":v0_2": {"S": "Bob"}}}
 			},
 			{
 				"input": () => new Condition().where("name").not().in(["Charlie", "Bob"]),
@@ -181,7 +181,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("age").between(13, 18),
-				"output": {"ConditionExpression": "#a0 BETWEEN :v0-1 AND :v0-2", "ExpressionAttributeNames": {"#a0": "age"}, "ExpressionAttributeValues": {":v0-1": {"N": "13"}, ":v0-2": {"N": "18"}}}
+				"output": {"ConditionExpression": "#a0 BETWEEN :v0_1 AND :v0_2", "ExpressionAttributeNames": {"#a0": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "13"}, ":v0_2": {"N": "18"}}}
 			},
 			{
 				"input": () => new Condition().where("age").not().between(13, 18),
@@ -191,14 +191,41 @@ describe("Condition", () => {
 				"input": () => new Condition().where("userID").eq("1").and().where("userID").exists(),
 				"output": {"ConditionExpression": "#a0 = :v0 AND attribute_exists (#a1)", "ExpressionAttributeNames": {"#a0": "userID", "#a1": "userID"}, "ExpressionAttributeValues": {":v0": {"S": "1"}}}
 			},
+			{
+				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"settings": {"conditionString": "FilterExpression"},
+				"output": {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"settings": {"conditionString": "FilterExpression"},
+				"output": {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {}
+			},
+			{
+				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"output": {"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
+			},
+			{
+				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
+				"settings": {"conditionString": "FilterExpression"},
+				"output": {}
+			},
 		];
 
 		tests.forEach((test) => {
 			it(`Should ${test.error ? "throw" : "return"} ${JSON.stringify(test.error || test.output)} for ${JSON.stringify(test.input)}`, () => {
 				if (test.error) {
-					expect(() => test.input().requestObject()).to.throw(test.error);
+					expect(() => test.input().requestObject(test.settings)).to.throw(test.error);
 				} else {
-					expect(test.input().requestObject()).to.eql(test.output);
+					expect(test.input().requestObject(test.settings)).to.eql(test.output);
 				}
 			});
 		});
