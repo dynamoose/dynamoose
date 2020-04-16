@@ -24,10 +24,10 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
       - run: npm ci
-      - run: npm publish --tag $TAG --dry-run
+      - run: npm publish --tag $TAG
         env:
           TAG: ${{ needs.getinfo.outputs.tag }}
-          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-gpr:
     needs: get-info
@@ -39,7 +39,7 @@ jobs:
           node-version: 12
           registry-url: https://npm.pkg.github.com/
       - run: npm ci
-      - run: npm publish --tag $TAG --dry-run
+      - run: npm publish --tag $TAG
         env:
           TAG: ${{ needs.getinfo.outputs.tag }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
