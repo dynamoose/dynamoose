@@ -15,7 +15,7 @@ jobs:
         id: data
 
   publish-npm:
-    needs: get-info
+    needs: getinfo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,7 +30,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-gpr:
-    needs: get-info
+    needs: getinfo
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
