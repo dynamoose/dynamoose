@@ -8,7 +8,6 @@ const exec = util.promisify(require("child_process").exec);
 const retrieveInformation = require("./information/retrieve");
 const { Octokit } = require("@octokit/rest");
 const octokit = new Octokit({
-	"log": console,
 	"auth": process.env.GITHUBAUTH
 });
 const path = require("path");
