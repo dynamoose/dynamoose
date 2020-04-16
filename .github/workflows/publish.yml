@@ -31,17 +31,18 @@ jobs:
           TAG: ${{ needs.getinfo.outputs.tag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  publish-gpr:
-    needs: getinfo
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-          registry-url: https://npm.pkg.github.com/
-      - run: npm ci
-      - run: npm publish --tag $TAG
-        env:
-          TAG: ${{ needs.getinfo.outputs.tag }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # TODO: I'm pretty sure this is failing because the package.json name is not scoped (ex. `@dynamoosejs/dynamoose`). We should maybe add a step in here to scope it just for publishing this one package.
+  # publish-gpr:
+  #   needs: getinfo
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: 12
+  #         registry-url: https://npm.pkg.github.com/
+  #     - run: npm ci
+  #     - run: npm publish --tag $TAG
+  #       env:
+  #         TAG: ${{ needs.getinfo.outputs.tag }}
+  #         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
