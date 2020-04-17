@@ -421,12 +421,19 @@ describe("Query", () => {
 						},
 						"ExpressionAttributeValues": {
 							":qhv": {"S": "Charlie"},
-							":v1-1": {"N": "1"},
-							":v1-2": {"N": "3"}
+							":v1_1": {"N": "1"},
+							":v1_2": {"N": "3"}
 						},
-						"FilterExpression": "#a1 BETWEEN :v1-1 AND :v1-2",
+						"FilterExpression": "#a1 BETWEEN :v1_1 AND :v1_2",
 						"KeyConditionExpression": "#qha = :qhv"
 					});
+				});
+
+				it("Should not include - in filter expression", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query("name").eq("Charlie").filter("id").between(1, 3);
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams.FilterExpression).to.not.include("-");
 				});
 
 				it("Should send correct request on query.exec with query condition", async () => {
@@ -982,10 +989,10 @@ describe("Query", () => {
 				},
 				"ExpressionAttributeValues": {
 					":qhv": {"S": "Charlie"},
-					":v1-1": {"N": "10"},
-					":v1-2": {"N": "20"}
+					":v1_1": {"N": "10"},
+					":v1_2": {"N": "20"}
 				},
-				"FilterExpression": "#a1 IN (:v1-1, :v1-2)",
+				"FilterExpression": "#a1 IN (:v1_1, :v1_2)",
 				"KeyConditionExpression": "#qha = :qhv"
 			});
 		});
@@ -1002,12 +1009,12 @@ describe("Query", () => {
 				},
 				"ExpressionAttributeValues": {
 					":qhv": {"S": "Charlie"},
-					":v1-1": {"N": "10"},
-					":v1-2": {"N": "20"},
-					":v1-3": {"N": "30"},
-					":v1-4": {"N": "40"}
+					":v1_1": {"N": "10"},
+					":v1_2": {"N": "20"},
+					":v1_3": {"N": "30"},
+					":v1_4": {"N": "40"}
 				},
-				"FilterExpression": "#a1 IN (:v1-1, :v1-2, :v1-3, :v1-4)",
+				"FilterExpression": "#a1 IN (:v1_1, :v1_2, :v1_3, :v1_4)",
 				"KeyConditionExpression": "#qha = :qhv"
 			});
 		});
