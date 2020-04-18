@@ -1684,6 +1684,11 @@ describe("Document", () => {
 				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
 				"error": new Error.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
+			},
+			{
+				"schema": {"id": Number, "name": {"type": String, "set": (val) => val === "" ? undefined : val}},
+				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"]}],
+				"output": {"id": 1, "name": undefined}
 			}
 		];
 
