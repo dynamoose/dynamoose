@@ -214,7 +214,7 @@ describe("Query", () => {
 					});
 				});
 
-				it.skip("Should send correct request on query.exec using range key as between comparison", async () => {
+				it("Should send correct request on query.exec using range key as between comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").between(10, 20).exec).bind(Model.query("name").eq("Charlie").where("age").between(10, 20))();
@@ -227,14 +227,14 @@ describe("Query", () => {
 						},
 						"ExpressionAttributeValues": {
 							":qhv": {"S": "Charlie"},
-							":qrv-1": {"N": "10"},
-							":qrv-2": {"N": "20"}
+							":qrv_1": {"N": "10"},
+							":qrv_2": {"N": "20"}
 						},
-						"KeyConditionExpression": "#qha = :qhv AND #qra BETWEEN :qrv-1 AND :qrv-2"
+						"KeyConditionExpression": "#qha = :qhv AND #qra BETWEEN :qrv_1 AND :qrv_2"
 					});
 				});
 
-				it.skip("Should send correct request on query.exec using range key as exists comparison", async () => {
+				it("Should send correct request on query.exec using range key as exists comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").exists().exec).bind(Model.query("name").eq("Charlie").where("age").exists())();
@@ -243,16 +243,17 @@ describe("Query", () => {
 						"IndexName": "nameGlobalIndex",
 						"ExpressionAttributeNames": {
 							"#qha": "name",
-							"#qra": "age"
+							"#a1": "age"
 						},
 						"ExpressionAttributeValues": {
 							":qhv": {"S": "Charlie"}
 						},
-						"KeyConditionExpression": "#qha = :qhv AND #qra EXISTS"
+						"KeyConditionExpression": "#qha = :qhv",
+						"FilterExpression": "attribute_exists (#a1)"
 					});
 				});
 
-				it.skip("Should send correct request on query.exec using range key as contains comparison", async () => {
+				it("Should send correct request on query.exec using range key as contains comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").contains(10).exec).bind(Model.query("name").eq("Charlie").where("age").contains(10))();
@@ -261,17 +262,18 @@ describe("Query", () => {
 						"IndexName": "nameGlobalIndex",
 						"ExpressionAttributeNames": {
 							"#qha": "name",
-							"#qra": "age"
+							"#a1": "age"
 						},
 						"ExpressionAttributeValues": {
 							":qhv": {"S": "Charlie"},
-							":qrv": {"N": "10"}
+							":v1": {"N": "10"}
 						},
-						"KeyConditionExpression": "#qha = :qhv AND contains(#qra, :qrv)"
+						"KeyConditionExpression": "#qha = :qhv",
+						"FilterExpression": "contains (#a1, :v1)"
 					});
 				});
 
-				it.skip("Should send correct request on query.exec using range key as beginsWith comparison", async () => {
+				it("Should send correct request on query.exec using range key as beginsWith comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").beginsWith(10).exec).bind(Model.query("name").eq("Charlie").where("age").beginsWith(10))();
@@ -286,7 +288,7 @@ describe("Query", () => {
 							":qhv": {"S": "Charlie"},
 							":qrv": {"N": "10"}
 						},
-						"KeyConditionExpression": "#qha = :qhv AND beginsWith(#qra, :qrv)"
+						"KeyConditionExpression": "#qha = :qhv AND begins_with (#qra, :qrv)"
 					});
 				});
 
