@@ -144,6 +144,30 @@ This function returns an array of all the log providers Dynamoose is currently u
 dynamoose.logger.providers.list();
 ```
 
+## dynamoose.logger.pause()
+
+This function pauses all output of log events to all log providers.
+
+```js
+dynamoose.logger.pause();
+```
+
+## dynamoose.logger.resume()
+
+This function resumes all output of log events to all log providers.
+
+```js
+dynamoose.logger.resume();
+```
+
+## dynamoose.logger.status()
+
+This function returns `active` if log events are being emitted to log providers, or `paused` if log events have been paused from being emitted to log providers.
+
+```js
+dynamoose.logger.status(); // "active" || "paused"
+```
+
 ## dynamoose.undefined
 
 Setting an attribute value to this will cause it to bypass the `default` value, and set it to `undefined` in the database.
