@@ -251,6 +251,18 @@ Document.objectFromSchema = async function(object, model: Model, settings: Docum
 			utils.object.set(returnObject, key, typeDetails[settings.type](value));
 		}
 	});
+	if (settings.modifiers) {
+		await Promise.all(settings.modifiers.map((modifier) => {
+			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
+				const value = utils.object.get(returnObject, key);
+				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
+				const isValueUndefined = typeof value === "undefined" || value === null;
+				if (modifierFunction && !isValueUndefined) {
+					utils.object.set(returnObject, key, await modifierFunction(value));
+				}
+			}));
+		}));
+	}
 	if (settings.validate) {
 		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
@@ -307,17 +319,6 @@ Document.objectFromSchema = async function(object, model: Model, settings: Docum
 					throw new Error.ValidationError(`${key} must equal ${JSON.stringify(enumArray)}, but is set to ${value}`);
 				}
 			}
-		}));
-	}
-	if (settings.modifiers) {
-		await Promise.all(settings.modifiers.map((modifier) => {
-			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
-				const value = utils.object.get(returnObject, key);
-				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
-				if (modifierFunction && value) {
-					utils.object.set(returnObject, key, await modifierFunction(value));
-				}
-			}));
 		}));
 	}
 
