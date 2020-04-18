@@ -4,10 +4,51 @@ const dynamoose = require("../lib");
 describe("Logger", () => {
 	beforeEach(() => {
 		dynamoose.logger.providers.clear();
+		dynamoose.logger.resume();
 	});
 
 	it("Should be an object", () => {
 		expect(dynamoose.logger).to.be.an("object");
+	});
+
+	describe("Status", () => {
+		describe("dynamoose.logger.status", () => {
+			it("Should be a function", () => {
+				expect(dynamoose.logger.status).to.be.a("function");
+			});
+
+			it("Should return paused if status is paused", () => {
+				dynamoose.logger.pause();
+				expect(dynamoose.logger.status()).to.eql("paused");
+			});
+
+			it("Should return active if status is paused", () => {
+				dynamoose.logger.resume();
+				expect(dynamoose.logger.status()).to.eql("active");
+			});
+		});
+
+		describe("dynamoose.logger.pause", () => {
+			it("Should be a function", () => {
+				expect(dynamoose.logger.pause).to.be.a("function");
+			});
+
+			it("Should set status to paused", () => {
+				dynamoose.logger.pause();
+				expect(dynamoose.logger.status()).to.eql("paused");
+			});
+		});
+
+		describe("dynamoose.logger.resume", () => {
+			it("Should be a function", () => {
+				expect(dynamoose.logger.resume).to.be.a("function");
+			});
+
+			it("Should set status to active", () => {
+				dynamoose.logger.resume();
+				expect(dynamoose.logger.status()).to.eql("active");
+			});
+		});
 	});
 
 	describe("dynamoose.logger.providers", () => {
