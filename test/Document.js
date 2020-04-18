@@ -1689,6 +1689,11 @@ describe("Document", () => {
 				"schema": {"id": Number, "name": {"type": String, "set": (val) => val === "" ? undefined : val}},
 				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"]}],
 				"output": {"id": 1, "name": undefined}
+			},
+			{
+				"schema": {"id": Number, "name": {"type": String, "required": true, "set": (val) => val === "" ? undefined : val}},
+				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"], "required": true}],
+				"error": new Error.ValidationError("name is a required property but has no value when trying to save document")
 			}
 		];
 
