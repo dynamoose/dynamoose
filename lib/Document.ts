@@ -52,6 +52,9 @@ Document.fromDynamo = (object): any => (aws.converter() as any).unmarshall(objec
 Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 	// This function will check to see if a nested object is valid by calling Document.isDynamoObject recursively
 	function isValid(value) {
+		if (typeof value === "undefined" || value === null) {
+			return false;
+		}
 		const keys = Object.keys(value);
 		const key = keys[0];
 		const nestedResult = (typeof value[key] === "object" && !(value[key] instanceof Buffer) ? (Array.isArray(value[key]) ? value[key].every((value) => Document.isDynamoObject(value, true)) : Document.isDynamoObject(value[key])) : true);

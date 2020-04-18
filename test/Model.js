@@ -1348,6 +1348,42 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to putItem with value as undefined as first property", async () => {
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"name": undefined, "id": 1});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to putItem with value as undefined as second property", async () => {
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1, "name": undefined});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it("Should not include attributes that do not exist in schema", async () => {
 					createItemFunction = () => Promise.resolve();
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "hello": "world"});
