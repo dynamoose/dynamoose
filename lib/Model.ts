@@ -551,7 +551,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 	// TODO: change the line below to not be partial
 	const getUpdateExpressionObject: () => Promise<any> = async () => {
 		const updateTypes = [
-			{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested"}},
+			{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 			{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
 			{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}}
 		].reverse();
