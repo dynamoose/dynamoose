@@ -102,6 +102,48 @@ This function is used to revert the `AWS.DynamoDB.Converter` instance that Dynam
 dynamoose.aws.converter.revert();
 ```
 
+## dynamoose.logger.providers.set([provider])
+
+This function allows you to set a provider(s) to receive logged events in Dynamoose. The `provider` parameter can either be a provider object, or an array of provider projects. This function will overwrite all existing providers set. If you pass `undefined`, `null`, or an empty array in as the `provider` parameter all existing providers will be removed. By default there are no providers setup with the Dynamoose logger.
+
+```js
+dynamoose.logger.providers.set(console);
+```
+
+## dynamoose.logger.providers.clear()
+
+This function clears all existing log providers from Dynamooose. This function behaves the same as `dynamoose.logger.providers.set([])`.
+
+```js
+dynamoose.logger.providers.clear();
+```
+
+## dynamoose.logger.providers.add(provider)
+
+This function allows you to add a provider(s) to receive logged events in Dynamoose. The `provider` parameter can either be a provider object or an array of provider objects.
+
+Unlike `dynamoose.logger.providers.set` this function appends the new providers to the existing providers and does not overwrite any existing providers.
+
+```js
+dynamoose.logger.providers.add(console);
+```
+
+## dynamoose.logger.providers.delete(id)
+
+This function allows you to pass in an `id` parameter to delete an existing provider.
+
+```js
+dynamoose.logger.providers.delete(id);
+```
+
+## dynamoose.logger.providers.list()
+
+This function returns an array of all the log providers Dynamoose is currently using.
+
+```js
+dynamoose.logger.providers.list();
+```
+
 ## dynamoose.undefined
 
 Setting an attribute value to this will cause it to bypass the `default` value, and set it to `undefined` in the database.
