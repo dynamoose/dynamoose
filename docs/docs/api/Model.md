@@ -1,5 +1,3 @@
-# Model
-
 The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
 
 ## dynamoose.model(name, schema[, config])

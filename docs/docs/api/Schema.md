@@ -1,5 +1,3 @@
-# Schema
-
 ## new dynamoose.Schema(schema[, options])
 
 You can use this method to create a schema. The `schema` parameter is an object defining your schema, each value should be a type or object defining the type with additional settings (listed below).
