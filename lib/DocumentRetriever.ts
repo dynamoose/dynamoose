@@ -59,7 +59,7 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 
 DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever): Promise<any> {
 	const object: any = {
-		...this.settings.condition.requestObject({"conditionString": "FilterExpression"}),
+		...this.settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
 		"TableName": this.internalSettings.model.name
 	};
 
@@ -82,16 +82,20 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 			return res;
 		}, {});
 		const index = utils.array_flatten(Object.values(indexes)).find((index) => {
-			const {hash, range} = index.KeySchema.reduce((res, item) => {
+			const {hash/*, range*/} = index.KeySchema.reduce((res, item) => {
 				res[item.KeyType.toLowerCase()] = item.AttributeName;
 				return res;
 			}, {});
-			return (comparisonChart[hash] || {}).type === "EQ" && (!range || !comparisonChart[range] || comparisonChart[range].type === "EQ");
+			// TODO: we need to write logic here to prioritize indexes with a range key that is being queried.
+			return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
 		});
 		if (!index) {
-			throw new CustomError.InvalidParameter("Index can't be found for query.");
+			if ((comparisonChart[this.internalSettings.model.schema.getHashKey()] || {}).type !== "EQ") {
+				throw new CustomError.InvalidParameter("Index can't be found for query.");
+			}
+		} else {
+			object.IndexName = index.IndexName;
 		}
-		object.IndexName = index.IndexName;
 	}
 	function moveParameterNames(val, prefix): void {
 		const entry = Object.entries(object.ExpressionAttributeNames).find((entry) => entry[1] === val);
@@ -99,15 +103,28 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 			return;
 		}
 		const [key, value] = entry;
+		const filterExpressionIndex = object.FilterExpression.findIndex((item) => item.includes(key));
+		const filterExpression = object.FilterExpression[filterExpressionIndex];
+		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains")) {
+			return;
+		}
 		object.ExpressionAttributeNames[`#${prefix}a`] = value;
 		delete object.ExpressionAttributeNames[key];
 
 		const valueKey = key.replace("#a", ":v");
-		object.ExpressionAttributeValues[`:${prefix}v`] = object.ExpressionAttributeValues[valueKey];
-		delete object.ExpressionAttributeValues[valueKey];
-		object.KeyConditionExpression = `${object.KeyConditionExpression || ""}${object.KeyConditionExpression ? " AND " : ""}#${prefix}a = :${prefix}v`;
 
-		object.FilterExpression = object.FilterExpression.replace(`${key} = ${valueKey} AND `, "").replace(` AND ${key} = ${valueKey}`, "").replace(`${key} = ${valueKey}`, "");
+		Object.keys(object.ExpressionAttributeValues).filter((key) => key.startsWith(valueKey)).forEach((key) => {
+			object.ExpressionAttributeValues[key.replace(new RegExp(":v\\d"), `:${prefix}v`)] = object.ExpressionAttributeValues[key];
+			delete object.ExpressionAttributeValues[key];
+		});
+		const newExpression = filterExpression.replace(key, `#${prefix}a`).replace(new RegExp(valueKey, "g"), `:${prefix}v`);
+
+		object.KeyConditionExpression = `${object.KeyConditionExpression || ""}${object.KeyConditionExpression ? " AND " : ""}${newExpression}`;
+		utils.object.delete(object.FilterExpression, filterExpressionIndex);
+		const previousElementIndex = filterExpressionIndex === 0 ? 0 : filterExpressionIndex - 1;
+		if (object.FilterExpression[previousElementIndex] === "AND") {
+			utils.object.delete(object.FilterExpression, previousElementIndex);
+		}
 	}
 	if (this.internalSettings.typeInformation.type === "query") {
 		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName);
@@ -121,9 +138,10 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 			if (range) {
 				moveParameterNames(range, "qr");
 			}
-
-			if (!object.FilterExpression) {
-				delete object.FilterExpression;
+		} else {
+			moveParameterNames(this.internalSettings.model.schema.getHashKey(), "qh");
+			if (this.internalSettings.model.schema.getRangeKey()) {
+				moveParameterNames(this.internalSettings.model.schema.getRangeKey(), "qr");
 			}
 		}
 	}
@@ -135,6 +153,13 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 	}
 	if (this.settings.parallel) {
 		object.TotalSegments = this.settings.parallel;
+	}
+
+	if (object.FilterExpression) {
+		object.FilterExpression = object.FilterExpression.join(" ");
+	}
+	if (object.FilterExpression === "") {
+		delete object.FilterExpression;
 	}
 
 	return object;

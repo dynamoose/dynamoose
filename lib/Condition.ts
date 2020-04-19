@@ -186,8 +186,9 @@ interface ConditionRequestObjectSettings {
 		start: number;
 		set: (newIndex: number) => void;
 	};
+	conditionStringType: "array" | "string";
 }
-Condition.prototype.requestObject = function(this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression"}): ConditionRequestObjectResult {
+Condition.prototype.requestObject = function(this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): ConditionRequestObjectResult {
 	if (this.settings.raw && utils.object.equals(Object.keys(this.settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
 		return Object.entries((this.settings.raw as any).ExpressionAttributeValues).reduce((obj, entry) => {
 			const [key, value] = entry;
@@ -264,10 +265,20 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 				return object;
 			}
 
-			object[settings.conditionString] = `${object[settings.conditionString]}${object[settings.conditionString] !== "" ? ` ${arr[i - 1] === OR ? "OR" : "AND"} ` : ""}${expression}`;
+			const conditionStringNewItems: string[] = [expression];
+ 			if (object[settings.conditionString].length > 0) {
+ 				conditionStringNewItems.unshift(` ${arr[i - 1] === OR ? "OR" : "AND"} `);
+ 			}
+ 			conditionStringNewItems.forEach((item) => {
+ 				if (typeof object[settings.conditionString] === "string") {
+ 					object[settings.conditionString] = `${object[settings.conditionString]}${item}`;
+ 				} else {
+ 					object[settings.conditionString].push(item.trim());
+ 				}
+ 			});
 
 			return object;
-		}, {[settings.conditionString]: "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
+		}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
 	}
 	return main(this.settings.conditions);
 };

@@ -687,7 +687,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 	const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async () => ({
 		"Key": this.Document.objectToDynamo(keyObj),
 		"ReturnValues": "ALL_NEW",
-		...utils.merge_objects.main({"combineMethod": "object_combine"})((settings.condition ? settings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression"}) : {}), await getUpdateExpressionObject()),
+		...utils.merge_objects.main({"combineMethod": "object_combine"})((settings.condition ? settings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}), await getUpdateExpressionObject()),
 		"TableName": this.name
 	}));
 	if (settings.return === "request") {
