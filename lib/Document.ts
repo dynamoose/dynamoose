@@ -8,8 +8,9 @@ import {DynamoDBTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
-import {DynamoDB} from "aws-sdk";
+import {DynamoDB, AWSError} from "aws-sdk";
 import { ValueType } from "./Schema";
+import { CallbackType } from "./General";
 
 // Document represents an item in a Model that is either pending (not saved) or saved
 export class Document {
@@ -17,13 +18,13 @@ export class Document {
 	static fromDynamo: (object: any) => any;
 	static isDynamoObject: (object: any, recurrsive?: boolean) => boolean | null;
 	static attributesWithSchema: (document: Document, model: Model<Document>) => string[];
-	original: () => DynamoDB.AttributeMap | {[key: string]: any} | null;
+	original: () => {[key: string]: any} | null;
 	static objectFromSchema: (object: any, model: Model<Document>, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
 	static prepareForObjectFromSchema: (object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) => any;
 	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<Document>;
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
-	delete: (this: Document, callback: any) => any;
-	save: (this: Document, settings: DocumentSaveSettings, callback: any) => Promise<any>;
+	delete: (this: Document, callback: CallbackType<void, AWSError>) => void | Promise<void>;
+	save: (this: Document, settings: DocumentSaveSettings, callback: CallbackType<Document, AWSError>) => Promise<Document>;
 	model?: Model<Document>;
 
 	constructor(model: Model<Document>, object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
@@ -384,7 +385,7 @@ Document.prototype.save = function(this: Document, settings: DocumentSaveSetting
 Document.prototype.delete = function(this: Document, callback): any {
 	return this.model.delete({
 		[this.model.schema.getHashKey()]: this[this.model.schema.getHashKey()]
-	}, callback);
+	}, callback as any);
 };
 // This function will modify the document to conform to the Schema
 Document.prototype.conformToSchema = async function(this: Document, settings: DocumentObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Document> {

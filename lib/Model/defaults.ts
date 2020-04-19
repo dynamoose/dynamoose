@@ -1,4 +1,6 @@
-export const original = {
+import { ModelOptions, ModelOptionsOptional } from ".";
+
+export const original: ModelOptions = {
 	"create": true,
 	"throughput": {
 		"read": 5,
@@ -21,10 +23,10 @@ export const original = {
 	// "serverSideEncryption": false,
 	// "defaultReturnValues": "ALL_NEW",
 };
-let customValue = {};
+let customValue: ModelOptionsOptional = {};
 const customObject = {
-	"set": (val): void => {customValue = val;},
-	"get": (): any => customValue
+	"set": (val: ModelOptionsOptional): void => {customValue = val;},
+	"get": (): ModelOptionsOptional => customValue
 };
 
 export {customObject as custom};
