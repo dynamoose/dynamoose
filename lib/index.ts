@@ -10,7 +10,7 @@ import {Document} from "./Document";
 import {DynamoDB} from "aws-sdk";
 
 interface ModelDocumentConstructor<T extends Document> {
-	new (object: {[key: string]: any}): T
+	new (object: {[key: string]: any}): T;
 }
 const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
 	const model: Model<T> = new Model(name, schema, options);
