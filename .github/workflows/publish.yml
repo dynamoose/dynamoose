@@ -8,7 +8,7 @@ jobs:
   getinfo:
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.data.outputs.tag }}
+      npmtag: ${{ steps.data.outputs.npmtag }}
     steps:
       - uses: actions/checkout@v2
       - run: npm i
@@ -28,7 +28,7 @@ jobs:
       - run: npm ci
       - run: npm publish --tag $TAG
         env:
-          TAG: ${{ needs.getinfo.outputs.tag }}
+          TAG: ${{ needs.getinfo.outputs.npmtag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # TODO: I'm pretty sure this is failing because the package.json name is not scoped (ex. `@dynamoosejs/dynamoose`). We should maybe add a step in here to scope it just for publishing this one package.
@@ -44,5 +44,5 @@ jobs:
   #     - run: npm ci
   #     - run: npm publish --tag $TAG
   #       env:
-  #         TAG: ${{ needs.getinfo.outputs.tag }}
+  #         TAG: ${{ needs.getinfo.outputs.npmtag }}
   #         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

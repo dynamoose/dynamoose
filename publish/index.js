@@ -12,6 +12,7 @@ const octokit = new Octokit({
 });
 const path = require("path");
 const ora = require("ora");
+const os = require("os");
 const npmFetch = require("npm-registry-fetch");
 let package = require("../package.json");
 
@@ -19,6 +20,11 @@ let package = require("../package.json");
 	console.log("Welcome to the Dynamoose Publisher!\n\n\n");
 	if (!await checkCleanWorkingDir()) {
 		console.error("You must have a clean working directory in order to use this tool.");
+		console.error("Exiting.\n");
+		process.exit(1);
+	}
+	if (!process.env.GITHUBAUTH) {
+		console.error("You must set `GITHUBAUTH` in order to use this tool.");
 		console.error("Exiting.\n");
 		process.exit(1);
 	}
@@ -47,7 +53,7 @@ let package = require("../package.json");
 				"name": "isPrerelease",
 				"type": "confirm",
 				"message": "Is this version a prerelease version?",
-				"default": (res) => Boolean(retrieveInformation(res.version).tag)
+				"default": (res) => retrieveInformation(res.version).isPrerelease
 			},
 			{
 				"name": "confirm",
@@ -95,13 +101,14 @@ let package = require("../package.json");
 	openurl.open(`https://github.com/dynamoosejs/dynamoose/compare/v${package.version}...${results.branch}`);
 	const versionInfo = retrieveInformation(results.version);
 	const versionFriendlyTitle = `Version ${[versionInfo.main, utils.capitalize_first_letter(versionInfo.tag || ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
-	await fs.writeFile(`${results.version}-changelog.md`, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`);
-	await exec(`code ${results.version}-changelog.md`);
+	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
+	await fs.writeFile(changelogFilePath, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`);
+	await exec(`code ${changelogFilePath}`);
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
-	const versionChangelog = await fs.readFile(`${results.version}-changelog.md`, "utf8");
-	if (!versionInfo.tag) {
+	const versionChangelog = await fs.readFile(changelogFilePath, "utf8");
+	if (!versionInfo.isPrerelease) {
 		const existingChangelog = await fs.readFile(path.join(__dirname, "..", "CHANGELOG.md"), "utf8");
 		const existingChangelogArray = existingChangelog.split("\n---\n");
 		existingChangelogArray.splice(1, 0, `\n${versionChangelog}\n`);
@@ -115,7 +122,15 @@ let package = require("../package.json");
 	}
 	// Create PR
 	const gitPR = ora("Creating PR on GitHub").start();
-	const pr = (await octokit.pulls.create({"owner": "dynamoosejs", "repo": "dynamoose", "title": versionFriendlyTitle, "head": branch, "base": results.branch})).data;
+	const pr = (await octokit.pulls.create({
+		"owner": "dynamoosejs",
+		"repo": "dynamoose",
+		"title": versionFriendlyTitle,
+		"body": versionChangelog,
+		"labels": ["version"],
+		"head": branch,
+		"base": results.branch
+	})).data;
 	gitPR.succeed(`Created PR ${pr.number} on GitHub`);
 	openurl.open(`https://github.com/dynamoosejs/dynamoose/pull/${pr.number}`);
 	// Poll for PR to be merged
@@ -131,7 +146,7 @@ let package = require("../package.json");
 		"target_commitish": results.branch,
 		"name": `v${results.version}`,
 		"body": versionChangelog,
-		"prerelease": Boolean(versionInfo.tag)
+		"prerelease": versionInfo.isPrerelease
 	});
 	gitRelease.succeed("GitHub release created");
 	// Poll NPM for release
