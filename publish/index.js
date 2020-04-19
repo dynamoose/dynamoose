@@ -23,6 +23,11 @@ let package = require("../package.json");
 		console.error("Exiting.\n");
 		process.exit(1);
 	}
+	if (!process.env.GITHUBAUTH) {
+		console.error("You must set `GITHUBAUTH` in order to use this tool.");
+		console.error("Exiting.\n");
+		process.exit(1);
+	}
 	let results = await inquirer.prompt([
 		{
 			"name": "branch",
