@@ -249,7 +249,7 @@ Schema.prototype.attributes = function(this: Schema): string[] {
 };
 
 Schema.prototype.getAttributeValue = function(this: Schema, key: string, settings?: {standardKey?: boolean}): AttributeDefinition {
-	return (settings?.standardKey ? key : key.replace(/\d+/gu, "0")).split(".").reduce((result, part) => {
+	return (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part) => {
 		return (utils.object.get(result.schema, part));
 	}, ({"schema": this.schemaObject} as any));
 };
@@ -394,7 +394,7 @@ function retrieveTypeInfo(type: string, isSet: boolean, key: string, typeSetting
 }
 // TODO: using too many `as` statements in the function below. We should clean this up.
 Schema.prototype.getAttributeTypeDetails = function(this: Schema, key: string, settings: {standardKey?: boolean} = {}): DynamoDBTypeResult {
-	const standardKey = (settings.standardKey ? key : key.replace(/\d+/gu, "0"));
+	const standardKey = (settings.standardKey ? key : key.replace(/\.\d+/gu, ".0"));
 	if (this[internalCache].getAttributeTypeDetails[standardKey]) {
 		return this[internalCache].getAttributeTypeDetails[standardKey];
 	}
