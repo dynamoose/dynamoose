@@ -4,6 +4,7 @@
 		"coverage",
 		".eslintrc.js",
 		".mocharc.js",
-		"publish"
+		"publish",
+		"docs"
 	]
 }
