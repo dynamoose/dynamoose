@@ -704,11 +704,15 @@ You can pass in the same parameters into each method that you do for the normal 
 
 These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
 
-### Model.transaction.condition(key, additionalParameters)
+### Model.transaction.condition(key, condition)
 
-This method allows you to run a conditionCheck when running a DynamoDB transaction.
+This method allows you to run a `conditionCheck` when running a DynamoDB transaction.
 
-The `additionalParameters` property will be appended to the result to allow you to set custom conditions.
+The `condition` parameter is a `dynamoose.Condition` instance that represents the conditional you want to run.
+
+```js
+User.transaction.condition(1, new dynamoose.Condition("age").gt(13));
+```
 
 ## Model.methods.set(name, function)
 
