@@ -1,10 +1,11 @@
 const core = require("@actions/core");
 const package = require("../../package.json");
 const version = package.version;
-const {main, tag, tagNumber} = require("./retrieve")(version);
+const obj = require("./retrieve")(version);
 
-core.setOutput("main", main);
-core.setOutput("tag", tag);
-core.setOutput("tagNumber", tagNumber);
+Object.entries(obj).forEach((entry) => {
+	const [key, value] = entry;
+	core.setOutput(key, value);
+});
 
-console.log({main, tag, tagNumber});
+console.log(obj);

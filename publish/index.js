@@ -53,7 +53,7 @@ let package = require("../package.json");
 				"name": "isPrerelease",
 				"type": "confirm",
 				"message": "Is this version a prerelease version?",
-				"default": (res) => Boolean(retrieveInformation(res.version).tag)
+				"default": (res) => retrieveInformation(res.version).isPrerelease
 			},
 			{
 				"name": "confirm",
@@ -108,7 +108,7 @@ let package = require("../package.json");
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
 	const versionChangelog = await fs.readFile(changelogFilePath, "utf8");
-	if (!versionInfo.tag) {
+	if (!versionInfo.isPrerelease) {
 		const existingChangelog = await fs.readFile(path.join(__dirname, "..", "CHANGELOG.md"), "utf8");
 		const existingChangelogArray = existingChangelog.split("\n---\n");
 		existingChangelogArray.splice(1, 0, `\n${versionChangelog}\n`);
@@ -146,7 +146,7 @@ let package = require("../package.json");
 		"target_commitish": results.branch,
 		"name": `v${results.version}`,
 		"body": versionChangelog,
-		"prerelease": Boolean(versionInfo.tag)
+		"prerelease": versionInfo.isPrerelease
 	});
 	gitRelease.succeed("GitHub release created");
 	// Poll NPM for release
