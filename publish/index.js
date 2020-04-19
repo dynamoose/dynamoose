@@ -117,7 +117,13 @@ let package = require("../package.json");
 	}
 	// Create PR
 	const gitPR = ora("Creating PR on GitHub").start();
-	const pr = (await octokit.pulls.create({"owner": "dynamoosejs", "repo": "dynamoose", "title": versionFriendlyTitle, "head": branch, "base": results.branch})).data;
+	const pr = (await octokit.pulls.create({
+		"owner": "dynamoosejs",
+		"repo": "dynamoose",
+		"title": versionFriendlyTitle,
+		"head": branch,
+		"base": results.branch
+	})).data;
 	gitPR.succeed(`Created PR ${pr.number} on GitHub`);
 	openurl.open(`https://github.com/dynamoosejs/dynamoose/pull/${pr.number}`);
 	// Poll for PR to be merged
