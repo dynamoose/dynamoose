@@ -31,3 +31,7 @@ No. Although Dynamoose was inspired by Mongoose, there are a lot of differences 
 ## Can I use an undocumented property, class, method or function in Dynamoose?
 
 Definitely not. Anything that is undocumented in Dynamoose can change at anytime without a breaking change version, and using anything that is undocumented can lead to unexpected behavior. If you notice something in the internal codebase that you would like to make publicly accessible to use in your own services, please create a PR or issue to add documentation to it, and it will be reviewed to ensure the functionality is able to remain stable.
+
+## Why am I getting strange behavior when an attribute value is `null` in my documents?
+
+Currently Dynamoose purposefully has weird behavior and throws errors when trying to use `null` as values in documents. This is due to the fact that Dynamoose currently does not support the DynamoDB `null` attribute type. Dynamoose has strange behavior for this type so that in a future release we can potientally add support for the `null` attribute type in a non breaking way.

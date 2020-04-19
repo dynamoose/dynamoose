@@ -1341,6 +1341,42 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to putItem with value as undefined as first property", async () => {
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"name": undefined, "id": 1});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to putItem with value as undefined as second property", async () => {
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1, "name": undefined});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it("Should not include attributes that do not exist in schema", async () => {
 					createItemFunction = () => Promise.resolve();
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "hello": "world"});
@@ -2635,6 +2671,81 @@ describe("Model", () => {
 							}
 						},
 						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should call set modifier if setting property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Bob-set"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should call set modifier if setting property using $SET", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "Bob"}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Bob-set"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should not call set modifier if adding to property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = new dynamoose.Model("User", {"id": Number, "age": {"type": Number, "set": (val) => val * 10}});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "ADD #a0 :v0",
 						"Key": {
 							"id": {
 								"N": "1"

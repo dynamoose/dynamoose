@@ -4,6 +4,7 @@ import deleteFunc from "./delete";
 import pick from "./pick";
 import keys from "./keys";
 import entries from "./entries";
+import equals from "./equals";
 
 export = {
 	get,
@@ -11,5 +12,6 @@ export = {
 	"delete": deleteFunc,
 	pick,
 	keys,
-	entries
+	entries,
+	equals
 };

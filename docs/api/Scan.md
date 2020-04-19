@@ -2,6 +2,8 @@
 
 Dynamoose provides the ability to scan a model by using the `Model.scan` function. This function acts as a builder to construct your scan with the appropriate settings before executing it (`scan.exec`).
 
+Scan operations run on every document in your table or index. This means that all filtering is done after the documents are read, and therefore is not the most performant method. Due to that, if possible, it is highly encouraged to use [`Model.query`](Query.md) as opposed to `Model.scan`.
+
 ## Model.scan([filter])
 
 This is the basic entry point to construct a scan request. The filter property is optional and can either be an object or a string representing the key you which to first filter on. In the event you don't pass in any parameters and don't call any other methods on the scan object it will scan with no filters or options.
@@ -100,6 +102,8 @@ Cat.scan().parallel(4); // Run 4 parallel scans on the table
 
 Instead of returning the items in the array this function will cause the scan operation to return a special object with the count information for the scan. The response you will receive from the scan operation with this setting will be an object with the properties `count` & `scannedCount`, which have the same values as described in [`scan.exec([callback])`](#scanexeccallback).
 
+Using this option will save bandwidth by setting the DynamoDB `Select` option to `COUNT`.
+
 ```js
 const response = await Cat.scan().count().exec();
 console.log(response); // {"count": 1, "scannedCount": 1}
@@ -123,7 +127,7 @@ Cat.scan().using("name-index"); // Run the scan on the `name-index` index
 
 ## scan.all([delay[, max]])
 
-Unlike most other scan functions that directly change the DynamoDB scan request, this function is purely internal and unique to Dynamoose. This function sends continuous scan requests upon receiving the response so long as the `lastKey` property exists on the response. This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new scan request yourself.
+Unlike most other scan functions that directly change the DynamoDB scan request, this function is purely internal and unique to Dynamoose. If a scan result is more than the AWS scan response limit, DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous scan requests upon receiving the response until all documents have been received (by checking and making new requests with the `lastKey` property from the previous response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new scan request yourself.
 
 Two parameters can be specified on this setting:
 

@@ -52,6 +52,9 @@ Document.fromDynamo = (object): any => (aws.converter() as any).unmarshall(objec
 Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 	// This function will check to see if a nested object is valid by calling Document.isDynamoObject recursively
 	function isValid(value) {
+		if (typeof value === "undefined" || value === null) {
+			return false;
+		}
 		const keys = Object.keys(value);
 		const key = keys[0];
 		const nestedResult = (typeof value[key] === "object" && !(value[key] instanceof Buffer) ? (Array.isArray(value[key]) ? value[key].every((value) => Document.isDynamoObject(value, true)) : Document.isDynamoObject(value[key])) : true);
@@ -170,7 +173,7 @@ Document.objectFromSchema = async function(object, model: Model<Document>, setti
 		if (validParents.find((parent) => key.startsWith(parent.key) && (parent.infinite || key.split(".").length === parent.key.split(".").length + 1))) {
 			return;
 		}
-		const genericKey = key.replace(/\d+/gu, "0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
+		const genericKey = key.replace(/\.\d+/gu, ".0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
 		const existsInSchema = schemaAttributes.includes(genericKey);
 		if (existsInSchema) {
 			const {isValidType, typeDetails} = getValueTypeCheckResult(value, genericKey, {"standardKey": true});
@@ -248,6 +251,18 @@ Document.objectFromSchema = async function(object, model: Model<Document>, setti
 			utils.object.set(returnObject, key, typeDetails[settings.type](value));
 		}
 	});
+	if (settings.modifiers) {
+		await Promise.all(settings.modifiers.map((modifier) => {
+			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
+				const value = utils.object.get(returnObject, key);
+				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
+				const isValueUndefined = typeof value === "undefined" || value === null;
+				if (modifierFunction && !isValueUndefined) {
+					utils.object.set(returnObject, key, await modifierFunction(value));
+				}
+			}));
+		}));
+	}
 	if (settings.validate) {
 		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
@@ -304,17 +319,6 @@ Document.objectFromSchema = async function(object, model: Model<Document>, setti
 					throw new Error.ValidationError(`${key} must equal ${JSON.stringify(enumArray)}, but is set to ${value}`);
 				}
 			}
-		}));
-	}
-	if (settings.modifiers) {
-		await Promise.all(settings.modifiers.map((modifier) => {
-			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
-				const value = utils.object.get(returnObject, key);
-				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
-				if (modifierFunction && value) {
-					utils.object.set(returnObject, key, await modifierFunction(value));
-				}
-			}));
 		}));
 	}
 

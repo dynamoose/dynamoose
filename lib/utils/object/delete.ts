@@ -1,7 +1,7 @@
 import {GeneralObjectOrValue} from "./types";
 
-export = <T>(object: GeneralObjectOrValue<T>, key: string): GeneralObjectOrValue<T> => {
-	const keys = key.split(".");
+export = <T>(object: GeneralObjectOrValue<T>, key: string | number): GeneralObjectOrValue<T> => {
+	const keys: string[] = (typeof key === "number" ? `${key}` : key).split(".");
 
 	if (keys.length === 1) {
 		if (Array.isArray(object)) {

@@ -777,6 +777,11 @@ describe("Schema", () => {
 			expect(func).to.throw("Invalid Attribute: random");
 		});
 
+		it("Should not throw for attribute with number in it (without . prefix)", () => {
+			const func = () => new Schema({"id": String, "ran2dom": String}).getAttributeTypeDetails("ran2dom");
+			expect(func).to.not.throw("Invalid Attribute: ran2dom");
+		});
+
 		it("Should have correct custom type for date", () => {
 			const functions = new dynamoose.Schema({"id": Date}).getAttributeTypeDetails("id").customType.functions;
 			expect(functions.toDynamo).to.exist;
