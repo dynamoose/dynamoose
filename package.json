@@ -20,12 +20,12 @@
     "typescript": "^3.8.3"
   },
   "scripts": {
+    "prepare": "npm run build:clean; npm run build",
     "build": "tsc",
     "build:clean": "rm -rf dist",
     "build:watch": "npm run build -- -w",
-    "prepare": "npm run build:clean; npm run build",
     "test": "nyc --all mocha && nyc report --reporter=html",
-    "test-nocoverage": "mocha",
+    "test:nocoverage": "mocha",
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "npm run lint -- --fix",
     "site:install": "cd docs && npm install",
