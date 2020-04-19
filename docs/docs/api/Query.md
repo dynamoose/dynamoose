@@ -1,5 +1,3 @@
-# Query
-
 Dynamoose provides the ability to query a model by using the `Model.query` function. This function acts as a builder to construct your query with the appropriate settings before executing it (`query.exec`).
 
 ## Model.query([filter])

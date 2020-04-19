@@ -1,5 +1,3 @@
-# FAQ
-
 ## What IAM permissions do I need to run Dynamoose?
 
 The following is a chart of IAM permissions you need in order to run Dynamoose for given actions.
