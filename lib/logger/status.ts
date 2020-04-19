@@ -1,13 +1,13 @@
-let status = true; // Indicated if log events are being emitted to log providers or not
+let status: boolean = true; // Indicated if log events are being emitted to log providers or not
 
-module.exports = {
+export = {
 	"pause": () => {
 		status = false;
 	},
 	"resume": () => {
 		status = true;
 	},
-	"status": () => {
+	"status": (): "active" | "paused" => {
 		return status ? "active" : "paused";
 	}
 };
