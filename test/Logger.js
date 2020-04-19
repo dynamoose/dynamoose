@@ -189,6 +189,14 @@ describe("Logger", () => {
 				events.push(event);
 			}
 		}
+		class CustomProviderMessage {
+			constructor() {
+				this.type = "string";
+			}
+			log(event) {
+				events.push(event);
+			}
+		}
 		beforeEach(() => {
 			dynamoose.logger.providers.set(new CustomProvider());
 		});
@@ -209,6 +217,12 @@ describe("Logger", () => {
 			expect(events[0].message).to.eql("Hello World");
 			expect(events[0].category).to.eql("test");
 			expect(events[0].metadata).to.eql({});
+		});
+
+		it("Should log event with string type", () => {
+			dynamoose.logger.providers.set(new CustomProviderMessage());
+			emitter({"level": "info", "message": "Hello World", "category": "test"});
+			expect(events).to.eql(["Hello World"]);
 		});
 
 		it("Should allow for no category", () => {
