@@ -220,7 +220,17 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 				const keys = {"name": `#a${index}`, "value": `:v${index}`};
 				setIndex(++index);
 
-				object.ExpressionAttributeNames[keys.name] = key;
+				const keyParts = key.split(".");
+				if (keyParts.length === 1) {
+					object.ExpressionAttributeNames[keys.name] = key;
+				} else {
+					keys.name = keyParts.reduce((finalName, part, index) => {
+						const name = `${keys.name}_${index}`;
+						object.ExpressionAttributeNames[name] = part;
+						finalName.push(name);
+						return finalName;
+					}, []).join(".");
+				}
 				const toDynamo: (value: any, settings: {}) => {} = (Document as any).objectToDynamo;
 				object.ExpressionAttributeValues[keys.value] = toDynamo(value, {"type": "value"});
 

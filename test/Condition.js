@@ -52,6 +52,10 @@ describe("Condition", () => {
 				"error": "The type: random is invalid."
 			},
 			{
+				"input": () => new Condition("name.first").eq("Charlie"),
+				"output": {"ConditionExpression": "#a0_0.#a0_1 = :v0", "ExpressionAttributeNames": {"#a0_0": "name", "#a0_1": "first"}, "ExpressionAttributeValues": {":v0": {"S": "Charlie"}}}
+			},
+			{
 				"input": () => new Condition().group(new Condition("id").eq("5")),
 				"output": {"ConditionExpression": "(#a0 = :v0)", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
 			},
