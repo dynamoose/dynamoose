@@ -33,32 +33,6 @@ export interface ModelOptions {
 	expires?: number | ModelExpiresSettings;
 }
 export type ModelOptionsOptional = Partial<ModelOptions>;
-// const defaults: ModelOptions = {
-// 	"create": true,
-// 	"throughput": {
-// 		"read": 5,
-// 		"write": 5
-// 	},
-// 	"prefix": "",
-// 	"suffix": "",
-// 	"waitForActive": {
-// 		"enabled": true,
-// 		"check": {
-// 			"timeout": 180000,
-// 			"frequency": 1000
-// 		}
-// 	},
-// 	"update": false,
-// 	"expires": undefined
-// 	// "streamOptions": {
-// 	// 	"enabled": false,
-// 	// 	"type": undefined
-// 	// },
-// 	// "serverSideEncryption": false,
-// 	// "defaultReturnValues": "ALL_NEW",
-// };
-
-
 
 
 
@@ -206,12 +180,12 @@ export class Model<T extends DocumentCarrier> {
 	scan: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Scan;
 	query: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Query;
 	get: (this: Model<DocumentCarrier>, key: InputKey, settings?: ModelGetSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.GetItemInput, AWSError>) => void | DynamoDB.GetItemInput | Promise<DocumentCarrier>;
-	delete: (this: Model<DocumentCarrier>, key: InputKey, settings?: ModelDeleteSettings, callback?: CallbackType<DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
-	batchDelete: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchDeleteSettings, callback?: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
-	create: (this: Model<DocumentCarrier>, document: any, settings?: {}, callback?: any) => void | Promise<any>;
-	batchPut: (this: Model<DocumentCarrier>, items: any, settings?: {}, callbac?: any) => void | Promise<any>;
-	update: (this: Model<DocumentCarrier>, keyObj: any, updateObj: any, settings?: ModelUpdateSettings, callback?: any) => void | Promise<any>;
-	batchGet: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
+	delete: (this: Model<DocumentCarrier>, key: InputKey, settings?: ModelDeleteSettings, callback?: CallbackType<void | DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
+	batchDelete: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchDeleteSettings, callback?: CallbackType<void | DynamoDB.BatchWriteItemInput, AWSError>) => void | DynamoDB.BatchWriteItemInput | Promise<void>;
+	create: (this: Model<DocumentCarrier>, document: any, settings?: {}, callback?: CallbackType<DocumentCarrier, AWSError>) => void | Promise<DocumentCarrier>;
+	batchPut: (this: Model<DocumentCarrier>, items: any, settings?: {}, callback?: CallbackType<DynamoDB.BatchWriteItemInput | {"unprocessedItems": any[]}, AWSError>) => void | Promise<DynamoDB.BatchWriteItemInput | {"unprocessedItems": any[]}>;
+	update: (this: Model<DocumentCarrier>, keyObj: any, updateObj: any, settings?: ModelUpdateSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.UpdateItemInput, AWSError>) => void | Promise<DocumentCarrier | DynamoDB.UpdateItemInput>;
+	batchGet: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: CallbackType<DocumentCarrier[], AWSError>) => void | DynamoDB.BatchGetItemInput | Promise<DocumentCarrier[]>;
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
 
 	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}) {
@@ -442,7 +416,7 @@ Model.prototype.batchGet = function (this: Model<DocumentCarrier>, keys: InputKe
 	};
 	if (settings.return === "request") {
 		if (callback) {
-			callback(null, params);
+			callback(null, params as any);
 			return;
 		} else {
 			return params;
@@ -462,7 +436,7 @@ Model.prototype.batchGet = function (this: Model<DocumentCarrier>, keys: InputKe
 
 Model.prototype.create = function (this: Model<DocumentCarrier>, document, settings = {}, callback): void | Promise<any> {
 	if (typeof settings === "function" && !callback) {
-		callback = settings;
+		callback = settings as any;
 		settings = {};
 	}
 
@@ -779,7 +753,7 @@ Model.prototype.batchDelete = function (this: Model<DocumentCarrier>, keys: Inpu
 	const promise = this.pendingTaskPromise().then(() => ddb("batchWriteItem", params));
 
 	if (callback) {
-		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response)).catch((error) => callback(error));
+		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response as any)).catch((error) => callback(error));
 	} else {
 		return (async (): Promise<{unprocessedItems: any[]}> => {
 			const response = await promise;

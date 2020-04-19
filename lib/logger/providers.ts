@@ -27,7 +27,7 @@ export = {
 		providers.push(...newProviders);
 	},
 	"delete": (id: string | string[]): void => {
-		const deleteFunction = (id: string) => {
+		const deleteFunction = (id: string): void => {
 			const index = providers.findIndex((provider) => provider.id === id);
 			utils.object.delete(providers, index);
 		};

@@ -22,7 +22,7 @@ const model = <T extends Document>(name: string, schema: Schema | SchemaDefiniti
 	Object.keys(Object.getPrototypeOf(model)).forEach((key) => {
 		if (model[key].carrier) {
 			const carrier = model[key].carrier(model);
-			returnObject[key] = (...args) => new carrier(...args);
+			returnObject[key] = (...args): any => new carrier(...args);
 			returnObject[key].carrier = carrier;
 		} else if (typeof model[key] === "object") {
 			const main = (key: string): void => {
