@@ -59,7 +59,16 @@ const schema = new dynamoose.Schema({
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
 
-If you use a set you will define the type surrounded by brackets. For example a String Set would be defined as a type of `[String]`. Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array.
+Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
+
+```js
+{
+	"friends": {
+		"type": Set,
+		"schema": [String]
+	}
+}
+```
 
 When using `saveUnknown` with a set, the type recognized by Dynamoose will be the underlying JavaScript Set constructor. If you have a set type defined in your schema the underlying type will be an Array.
 
