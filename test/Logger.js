@@ -1,5 +1,6 @@
 const {expect} = require("chai");
 const dynamoose = require("../lib");
+const emitter = require("../lib/logger/emitter");
 
 describe("Logger", () => {
 	beforeEach(() => {
@@ -182,7 +183,6 @@ describe("Logger", () => {
 	});
 
 	describe("Emitter", () => {
-		const emitter = require("../lib/logger/emitter");
 		let events = [];
 		class CustomProvider {
 			log(event) {
@@ -295,6 +295,52 @@ describe("Logger", () => {
 					});
 				});
 			});
+		});
+	});
+
+	describe("Console Logger", () => {
+		const originalConsole = console;
+		const consoleTypes = ["error", "warn", "info", "log"];
+		let logs = [];
+		beforeEach(() => {
+			dynamoose.logger.providers.set(console);
+			consoleTypes.forEach((type) => {
+				console[type] = (str) => logs.push({"message": str, type});
+			});
+		});
+		afterEach(() => {
+			console = originalConsole; // eslint-disable-line no-global-assign
+			logs = [];
+		});
+
+		it("Should print message to console.error for fatal", () => {
+			emitter({"level": "fatal", "message": "Hello World"});
+			expect(logs).to.eql([{"message": "Hello World", "type": "error"}]);
+		});
+
+		it("Should print message to console.error for error", () => {
+			emitter({"level": "error", "message": "Hello World"});
+			expect(logs).to.eql([{"message": "Hello World", "type": "error"}]);
+		});
+
+		it("Should print message to console.warn for warn", () => {
+			emitter({"level": "warn", "message": "Hello World"});
+			expect(logs).to.eql([{"message": "Hello World", "type": "warn"}]);
+		});
+
+		it("Should print message to console.info for info", () => {
+			emitter({"level": "info", "message": "Hello World"});
+			expect(logs).to.eql([{"message": "Hello World", "type": "info"}]);
+		});
+
+		it("Should print message to console.log for debug", () => {
+			emitter({"level": "debug", "message": "Hello World"});
+			expect(logs).to.eql([{"message": "Hello World", "type": "log"}]);
+		});
+
+		it("Should print message to console.log for trace", () => {
+			emitter({"level": "trace", "message": "Hello World"});
+			expect(logs).to.eql([{"message": "Hello World", "type": "log"}]);
 		});
 	});
 });
