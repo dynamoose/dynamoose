@@ -1,10 +1,10 @@
 let status = true; // Indicated if log events are being emitted to log providers or not
 
 export = {
-	"pause": () => {
+	"pause": (): void => {
 		status = false;
 	},
-	"resume": () => {
+	"resume": (): void => {
 		status = true;
 	},
 	"status": (): "active" | "paused" => {

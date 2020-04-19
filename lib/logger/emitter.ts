@@ -6,7 +6,7 @@ import {v4 as uuid} from "uuid";
 
 const validLevels = ["fatal", "error", "warn", "info", "debug", "trace"];
 
-export = (event) => {
+export = (event): void => {
 	if (status.status() === "active") {
 		if (!event.message || !validLevels.includes(event.level)) {
 			throw new CustomError.InvalidParameter("You must pass in a valid message, level, and category into your event object.");

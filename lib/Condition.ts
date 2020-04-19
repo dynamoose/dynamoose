@@ -4,7 +4,7 @@ import utils from "./utils";
 const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
 
-const isRawConditionObject = (object) => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
+const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
 type ConditionFunction = (condition: Condition) => Condition;
 // TODO: There is a problem where you can have multiple keys in one `ConditionStorageType`, which will cause problems. We need to fix that. Likely be refactoring it so that the key is part of `ConditionsConditionStorageObject`.
@@ -276,16 +276,16 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 			}
 
 			const conditionStringNewItems: string[] = [expression];
- 			if (object[settings.conditionString].length > 0) {
- 				conditionStringNewItems.unshift(` ${arr[i - 1] === OR ? "OR" : "AND"} `);
- 			}
- 			conditionStringNewItems.forEach((item) => {
- 				if (typeof object[settings.conditionString] === "string") {
- 					object[settings.conditionString] = `${object[settings.conditionString]}${item}`;
- 				} else {
- 					object[settings.conditionString].push(item.trim());
- 				}
- 			});
+			if (object[settings.conditionString].length > 0) {
+				conditionStringNewItems.unshift(` ${arr[i - 1] === OR ? "OR" : "AND"} `);
+			}
+			conditionStringNewItems.forEach((item) => {
+				if (typeof object[settings.conditionString] === "string") {
+					object[settings.conditionString] = `${object[settings.conditionString]}${item}`;
+				} else {
+					object[settings.conditionString].push(item.trim());
+				}
+			});
 
 			return object;
 		}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
