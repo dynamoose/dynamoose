@@ -1,4 +1,4 @@
-let status: boolean = true; // Indicated if log events are being emitted to log providers or not
+let status = true; // Indicated if log events are being emitted to log providers or not
 
 export = {
 	"pause": () => {
