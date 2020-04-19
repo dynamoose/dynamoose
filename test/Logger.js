@@ -313,17 +313,21 @@ describe("Logger", () => {
 	});
 
 	describe("Console Logger", () => {
-		const originalConsole = console;
 		const consoleTypes = ["error", "warn", "info", "log"];
 		let logs = [];
+		let originalConsole = {};
 		beforeEach(() => {
 			dynamoose.logger.providers.set(console);
 			consoleTypes.forEach((type) => {
+				originalConsole[type] = console[type];
 				console[type] = (str) => logs.push({"message": str, type});
 			});
 		});
 		afterEach(() => {
-			console = originalConsole; // eslint-disable-line no-global-assign
+			consoleTypes.forEach((type) => {
+				console[type] = originalConsole[type];
+			});
+			originalConsole = {};
 			logs = [];
 		});
 
