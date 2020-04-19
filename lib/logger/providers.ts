@@ -1,5 +1,5 @@
-const utils = require("../utils");
-const internalProviders = require("./internal_providers");
+import utils from "../utils";
+import internalProviders from "./internal_providers";
 let providers = [];
 
 // This method takes the provider and converts it to an internal provider if exists (ex. `console`)
@@ -11,7 +11,7 @@ const normalizeProvider = (provider) => {
 	}
 };
 
-module.exports = {
+export = {
 	"set": (provider) => {
 		if (typeof provider === "undefined" || provider === null) {
 			provider = [];
@@ -26,8 +26,8 @@ module.exports = {
 		const newProviders = (Array.isArray(provider) ? provider : [provider]).map(normalizeProvider);
 		providers.push(...newProviders);
 	},
-	"delete": (id) => {
-		const deleteFunction = (id) => {
+	"delete": (id: string | string[]) => {
+		const deleteFunction = (id: string) => {
 			const index = providers.findIndex((provider) => provider.id === id);
 			utils.object.delete(providers, index);
 		};
