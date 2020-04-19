@@ -106,6 +106,8 @@ dynamoose.aws.converter.revert();
 
 This function allows you to set a provider(s) to receive logged events in Dynamoose. The `provider` parameter can either be a provider object, or an array of provider projects. This function will overwrite all existing providers set. If you pass `undefined`, `null`, or an empty array in as the `provider` parameter all existing providers will be removed. By default there are no providers setup with the Dynamoose logger.
 
+The simplest way to add logging to see what Dynamoose is doing under the hood is to run the following command. `console` is a specical internal log provider that can be used to print debug events to the console. You can also create custom log providers or find 3rd party plugin log providers for Dynamoose.
+
 ```js
 dynamoose.logger.providers.set(console);
 ```
