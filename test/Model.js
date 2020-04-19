@@ -3184,12 +3184,28 @@ describe("Model", () => {
 				});
 			});
 
-			it("Should return correct result with options", async () => {
-				expect(await User.transaction.condition(1, {"hello": "world"})).to.eql({
+			it("Should return correct result for object based key", async () => {
+				User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+				expect(await User.transaction.condition({"id": 1, "name": "Bob"})).to.eql({
 					"ConditionCheck": {
+						"Key": {"id": {"N": "1"}, "name": {"S": "Bob"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result with conditional", async () => {
+				expect(await User.transaction.condition(1, new dynamoose.Condition("age").gt(13))).to.eql({
+					"ConditionCheck": {
+						"ConditionExpression": "#a0 > :v0",
+						"ExpressionAttributeNames": {
+							"#a0": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"N": "13"}
+						},
 						"Key": {"id": {"N": "1"}},
-						"TableName": "User",
-						"hello": "world"
+						"TableName": "User"
 					}
 				});
 			});
