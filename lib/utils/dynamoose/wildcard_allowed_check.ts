@@ -1,8 +1,8 @@
-export = (saveUnknown: string[] | boolean, checkKey: string): boolean => {
+export = (saveUnknown: string[] | boolean, checkKey: string, settings = {"splitString": ".", "prefixesDisallowed": true}): boolean => {
 	if (Array.isArray(saveUnknown)) {
 		return Boolean(saveUnknown.find((key) => {
-			const keyParts = key.split(".");
-			const checkKeyParts = checkKey.split(".");
+			const keyParts = key.split(settings.splitString);
+			const checkKeyParts = checkKey.split(settings.splitString);
 			let index = 0, keyPart = keyParts[0];
 			for (let i = 0; i < checkKeyParts.length; i++) {
 				if (keyPart === "**") {
@@ -12,6 +12,9 @@ export = (saveUnknown: string[] | boolean, checkKey: string): boolean => {
 					return false;
 				}
 				keyPart = keyParts[++index];
+			}
+			if (!settings.prefixesDisallowed && keyPart) {
+				return false;
 			}
 			return true;
 		}));

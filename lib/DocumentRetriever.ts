@@ -1,4 +1,4 @@
-import aws from "./aws";
+import ddb from "./aws/ddb/internal";
 import CustomError from "./Error";
 import utils from "./utils";
 import Condition from "./Condition";
@@ -184,10 +184,8 @@ DocumentRetriever.prototype.exec = function(this: DocumentRetriever, callback): 
 		return array;
 	};
 	const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
-		const ddb = aws.ddb();
-
 		const allRequest = (extraParameters = {}): any => {
-			let promise = ddb[this.internalSettings.typeInformation.type]({...request, ...extraParameters}).promise();
+			let promise = ddb(this.internalSettings.typeInformation.type, {...request, ...extraParameters});
 			timesRequested++;
 
 			if (this.settings.all) {
@@ -203,7 +201,7 @@ DocumentRetriever.prototype.exec = function(this: DocumentRetriever, callback): 
 							await utils.timeout(this.settings.all.delay);
 						}
 
-						const nextRequest = await ddb[this.internalSettings.typeInformation.type]({...request, ...extraParameters, "ExclusiveStartKey": lastKey}).promise();
+						const nextRequest = await ddb(this.internalSettings.typeInformation.type, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
 						timesRequested++;
 						result = utils.merge_objects(result, nextRequest);
 						// The operation below is safe because right above we are overwriting the entire `result` variable, so there is no chance it'll be reassigned based on an outdated value since it's already been overwritten. There might be a better way to do this than ignoring the rule on the line below.

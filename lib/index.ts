@@ -5,6 +5,7 @@ import transaction from "./Transaction";
 import aws from "./aws";
 import Internal from "./Internal";
 import utils from "./utils";
+import logger from "./logger";
 import {Document} from "./Document";
 
 import {DynamoDB} from "aws-sdk";
@@ -54,5 +55,6 @@ export = {
 	Condition,
 	transaction,
 	aws,
+	logger,
 	"undefined": Internal.Public.undefined
 };

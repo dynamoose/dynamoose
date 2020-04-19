@@ -448,7 +448,7 @@ describe("Model", () => {
 					"updateTable": (params) => {
 						updateTableParams.push(params);
 						return {
-							"promise": Promise.resolve()
+							"promise": () => Promise.resolve()
 						};
 					}
 				});
@@ -563,7 +563,7 @@ describe("Model", () => {
 					"updateTimeToLive": (params) => {
 						updateTTLParams.push(params);
 						return {
-							"promise": Promise.resolve()
+							"promise": () => Promise.resolve()
 						};
 					},
 					"describeTimeToLive": () => {

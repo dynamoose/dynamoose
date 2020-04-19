@@ -47,7 +47,8 @@
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "dependencies": {
-    "aws-sdk": "^2.657.0"
+    "aws-sdk": "^2.657.0",
+    "uuid": "^7.0.3"
   },
   "license": "Unlicense",
   "keywords": [

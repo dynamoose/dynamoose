@@ -2,7 +2,7 @@ import CustomError from "../Error";
 import {Schema, SchemaDefinition} from "../Schema";
 import {Document as DocumentCarrier} from "../Document";
 import utils from "../utils";
-import aws from "../aws";
+import ddb from "../aws/ddb/internal";
 import Internal from "../Internal";
 import Condition from "../Condition";
 import {Scan, Query, ConditionInitalizer} from "../DocumentRetriever";
@@ -88,7 +88,7 @@ function convertObjectToKey(this: Model<DocumentCarrier>, key: InputKey): {[key:
 // Utility functions
 async function getTableDetails(model: Model<DocumentCarrier>, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
 	const func = async (): Promise<void> => {
-		const tableDetails: DynamoDB.DescribeTableOutput = await aws.ddb().describeTable({"TableName": model.name}).promise();
+		const tableDetails: DynamoDB.DescribeTableOutput = (await ddb("describeTable", {"TableName": model.name}) as any);
 		model.latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
 	};
 	if (settings.forceRefresh || !model.latestTableDetails) {
@@ -110,50 +110,46 @@ async function createTableRequest(model: Model<DocumentCarrier>): Promise<Dynamo
 		...await model.schema.getCreateTableAttributeParams(model)
 	};
 }
-async function createTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | {promise: () => Promise<void>}> {
+async function createTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | (() => Promise<void>)> {
 	if ((((await getTableDetails(model, {"allowError": true})) || {}).Table || {}).TableStatus === "ACTIVE") {
-		return {"promise": (): Promise<void> => Promise.resolve()};
+		return (): Promise<void> => Promise.resolve.bind(Promise)();
 	}
 
-	return aws.ddb().createTable(await createTableRequest(model));
+	return ddb("createTable", await createTableRequest(model));
 }
-function updateTimeToLive(model: Model<DocumentCarrier>): {promise: () => Promise<void>} {
-	return {
-		"promise": async (): Promise<void> => {
-			let ttlDetails;
+async function updateTimeToLive(model: Model<DocumentCarrier>): Promise<void> {
+	let ttlDetails;
 
-			async function updateDetails(): Promise<void> {
-				ttlDetails = await aws.ddb().describeTimeToLive({
-					"TableName": model.name
-				}).promise();
+	async function updateDetails(): Promise<void> {
+		ttlDetails = await ddb("describeTimeToLive", {
+			"TableName": model.name
+		});
+	}
+	await updateDetails();
+
+	function updateTTL(): Request<DynamoDB.UpdateTimeToLiveOutput, AWSError> {
+		return (ddb("updateTimeToLive", {
+			"TableName": model.name,
+			"TimeToLiveSpecification": {
+				"AttributeName": (model.options.expires as any).attribute,
+				"Enabled": true
 			}
+		}) as any);
+	}
+
+	switch (ttlDetails.TimeToLiveDescription.TimeToLiveStatus) {
+	case "DISABLING":
+		while (ttlDetails.TimeToLiveDescription.TimeToLiveStatus === "DISABLING") {
+			await utils.timeout(1000);
 			await updateDetails();
-
-			function updateTTL(): Request<DynamoDB.UpdateTimeToLiveOutput, AWSError> {
-				return aws.ddb().updateTimeToLive({
-					"TableName": model.name,
-					"TimeToLiveSpecification": {
-						"AttributeName": (model.options.expires as any).attribute,
-						"Enabled": true
-					}
-				});
-			}
-
-			switch (ttlDetails.TimeToLiveDescription.TimeToLiveStatus) {
-			case "DISABLING":
-				while (ttlDetails.TimeToLiveDescription.TimeToLiveStatus === "DISABLING") {
-					await utils.timeout(1000);
-					await updateDetails();
-				}
-				// fallthrough
-			case "DISABLED":
-				await updateTTL();
-				break;
-			default:
-				break;
-			}
 		}
-	};
+		// fallthrough
+	case "DISABLED":
+		await updateTTL();
+		break;
+	default:
+		break;
+	}
 }
 function waitForActive(model: Model<DocumentCarrier>) {
 	return (): Promise<void> => new Promise((resolve, reject) => {
@@ -180,19 +176,19 @@ function waitForActive(model: Model<DocumentCarrier>) {
 		check(0);
 	});
 }
-async function updateTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | {promise: () => Promise<void>}> {
+async function updateTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | (() => Promise<void>)> {
 	const currentThroughput = (await getTableDetails(model)).Table;
 	const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
 	if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary?.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
 	// if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
-		return {"promise": (): Promise<void> => Promise.resolve()};
+		return (): Promise<void> => Promise.resolve.bind(Promise)();
 	}
 
 	const object: DynamoDB.UpdateTableInput = {
 		"TableName": model.name,
 		...expectedThroughput
 	};
-	return aws.ddb().updateTable(object);
+	return (ddb("updateTable", object) as any);
 }
 
 
@@ -279,8 +275,7 @@ export class Model<T extends DocumentCarrier> {
 		// Run setup flow
 		const setupFlowPromise = setupFlow.reduce((existingFlow, flow) => {
 			return existingFlow.then(() => flow()).then((flow) => {
-				const flowItem = typeof flow === "function" ? flow : flow.promise;
-				return flowItem instanceof Promise ? flowItem : flowItem.bind(flow)();
+				return typeof flow === "function" ? flow() : flow;
 			});
 		}, Promise.resolve());
 		setupFlowPromise.then(() => this.ready = true).then(() => {this.pendingTasks.forEach((task) => task()); this.pendingTasks = [];});
@@ -394,7 +389,7 @@ Model.prototype.get = function (this: Model<DocumentCarrier>, key: InputKey, set
 			return getItemParams;
 		}
 	}
-	const promise = this.pendingTaskPromise().then(() => aws.ddb().getItem(getItemParams).promise());
+	const promise = this.pendingTaskPromise().then(() => ddb("getItem", getItemParams));
 
 	if (callback) {
 		promise.then((response) => response.Item ? documentify(response.Item) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
@@ -453,7 +448,7 @@ Model.prototype.batchGet = function (this: Model<DocumentCarrier>, keys: InputKe
 			return params;
 		}
 	}
-	const promise = this.pendingTaskPromise().then(() => aws.ddb().batchGetItem(params).promise());
+	const promise = this.pendingTaskPromise().then(() => ddb("batchGetItem", params));
 
 	if (callback) {
 		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response)).catch((error) => callback(error));
@@ -511,7 +506,7 @@ Model.prototype.batchPut = function (this: Model<DocumentCarrier>, items, settin
 			return paramsPromise;
 		}
 	}
-	const promise = this.pendingTaskPromise().then(() => paramsPromise).then((params) => aws.ddb().batchWriteItem(params).promise());
+	const promise = this.pendingTaskPromise().then(() => paramsPromise).then((params) => ddb("batchWriteItem", params));
 
 	if (callback) {
 		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response)).catch((error) => callback(error));
@@ -697,7 +692,7 @@ Model.prototype.update = function (this: Model<DocumentCarrier>, keyObj, updateO
 			return updateItemParamsPromise;
 		}
 	}
-	const promise = updateItemParamsPromise.then((params) => aws.ddb().updateItem(params).promise());
+	const promise = updateItemParamsPromise.then((params) => ddb("updateItem", params));
 
 	if (callback) {
 		promise.then((response) => response.Attributes ? documentify(response.Attributes) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
@@ -730,7 +725,7 @@ Model.prototype.delete = function (this: Model<DocumentCarrier>, key: InputKey, 
 			return deleteItemParams;
 		}
 	}
-	const promise = this.pendingTaskPromise().then(() => aws.ddb().deleteItem(deleteItemParams).promise());
+	const promise = this.pendingTaskPromise().then(() => ddb("deleteItem", deleteItemParams));
 
 	if (callback) {
 		promise.then(() => callback()).catch((error) => callback(error));
@@ -781,7 +776,7 @@ Model.prototype.batchDelete = function (this: Model<DocumentCarrier>, keys: Inpu
 			return params;
 		}
 	}
-	const promise = this.pendingTaskPromise().then(() => aws.ddb().batchWriteItem(params).promise());
+	const promise = this.pendingTaskPromise().then(() => ddb("batchWriteItem", params));
 
 	if (callback) {
 		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response)).catch((error) => callback(error));
