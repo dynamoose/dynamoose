@@ -7,6 +7,9 @@ describe("Logger", () => {
 		dynamoose.logger.providers.clear();
 		dynamoose.logger.resume();
 	});
+	afterEach(() => {
+		dynamoose.logger.providers.clear();
+	});
 
 	it("Should be an object", () => {
 		expect(dynamoose.logger).to.be.an("object");
