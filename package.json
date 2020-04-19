@@ -8,9 +8,9 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "@types/node": "^13.11.0",
-    "@typescript-eslint/eslint-plugin": "^2.27.0",
-    "@typescript-eslint/parser": "^2.27.0",
+    "@types/node": "^13.13.0",
+    "@typescript-eslint/eslint-plugin": "^2.28.0",
+    "@typescript-eslint/parser": "^2.28.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "coveralls": "^3.0.11",
@@ -47,7 +47,7 @@
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "dependencies": {
-    "aws-sdk": "^2.657.0",
+    "aws-sdk": "^2.658.0",
     "uuid": "^7.0.3"
   },
   "license": "Unlicense",
