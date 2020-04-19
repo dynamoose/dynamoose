@@ -95,12 +95,13 @@ let package = require("../package.json");
 	openurl.open(`https://github.com/dynamoosejs/dynamoose/compare/v${package.version}...${results.branch}`);
 	const versionInfo = retrieveInformation(results.version);
 	const versionFriendlyTitle = `Version ${[versionInfo.main, utils.capitalize_first_letter(versionInfo.tag || ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
-	await fs.writeFile(`${results.version}-changelog.md`, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`);
-	await exec(`code ${results.version}-changelog.md`);
+	const changelogFilePath = `${results.version}-changelog.md`;
+	await fs.writeFile(changelogFilePath, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`);
+	await exec(`code ${changelogFilePath}`);
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
-	const versionChangelog = await fs.readFile(`${results.version}-changelog.md`, "utf8");
+	const versionChangelog = await fs.readFile(changelogFilePath, "utf8");
 	if (!versionInfo.tag) {
 		const existingChangelog = await fs.readFile(path.join(__dirname, "..", "CHANGELOG.md"), "utf8");
 		const existingChangelogArray = existingChangelog.split("\n---\n");
