@@ -34,6 +34,7 @@
 - The attribute types `Array` & `Object` in Dynamoose v1 don't work without a `schema` option in v2
 - `Scan.null` & `Query.null` have been removed. In most cases this can be replaced with `.not().exists()`.
 - DynamoDB set types are now returned as JavaScript Set's instead of Array's
+- DynamoDB set types are now defined as `{"type": Set, "schema": [String]}` as opposed to the former `[String]` or `{"type": [String]}`. This is more explict and makes it more clear that the type is a set.
 - Trying to save a Document with a property set to `null` will now throw an error. If you would like to remove the property set it to `dynamoose.undefined` to set it to undefined without taking into account the `default` setting, or `undefined` to set it to undefined while taking into account the `default` setting.
 - Expires TTL value is set to be a default value. In Dynamoose v1 there were cases where expires TTL wouldn't be set, in Dynamoose v2, the behavior of if the Expires TTL is set behaves the same as any default value
 - Custom methods have changed behavior:
