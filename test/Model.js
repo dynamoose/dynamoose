@@ -2683,7 +2683,7 @@ describe("Model", () => {
 
 				it("Should call set modifier if setting property", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
 					await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -2708,7 +2708,7 @@ describe("Model", () => {
 
 				it("Should call set modifier if setting property using $SET", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": (val) => `${val}-set`}});
 					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "Bob"}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -2733,7 +2733,7 @@ describe("Model", () => {
 
 				it("Should not call set modifier if adding to property", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = new dynamoose.Model("User", {"id": Number, "age": {"type": Number, "set": (val) => val * 10}});
+					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "set": (val) => val * 10}});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
