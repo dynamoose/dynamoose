@@ -1,6 +1,6 @@
 class ConsoleProvider {
 	log(message) {
-		let method;
+		let method: (message: string) => void;
 		switch(message.level) {
 		case "fatal":
 		case "error":
@@ -22,4 +22,4 @@ class ConsoleProvider {
 	}
 }
 
-module.exports = ConsoleProvider;
+export = ConsoleProvider;
