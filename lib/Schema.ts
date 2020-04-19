@@ -409,16 +409,20 @@ Schema.prototype.getAttributeTypeDetails = function(this: Schema, key: string, s
 		typeVal = typeVal.value;
 	}
 
-	const isSet = Array.isArray(typeVal);
+	const getType = (typeVal) => {
+		let type: string;
+		if (typeof typeVal === "function") {
+			const regexFuncName = /^Function ([^(]+)\(/iu;
+			[, type] = typeVal.toString().match(regexFuncName);
+		} else {
+			type = (typeVal as string);
+		}
+		return type;
+	};
+	let type = getType(typeVal);
+	const isSet = type.toLowerCase() === "set";
 	if (isSet) {
-		typeVal = typeVal[0];
-	}
-	let type: string;
-	if (typeof typeVal === "function") {
-		const regexFuncName = /^Function ([^(]+)\(/iu;
-		[, type] = typeVal.toString().match(regexFuncName);
-	} else {
-		type = (typeVal as string);
+		type = getType(this.getAttributeSettingValue("schema", key)[0]);
 	}
 
 	const returnObject = retrieveTypeInfo(type, isSet, key, typeSettings);
