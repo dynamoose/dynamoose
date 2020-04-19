@@ -121,6 +121,7 @@ let package = require("../package.json");
 		"owner": "dynamoosejs",
 		"repo": "dynamoose",
 		"title": versionFriendlyTitle,
+		"body": versionChangelog,
 		"head": branch,
 		"base": results.branch
 	})).data;
