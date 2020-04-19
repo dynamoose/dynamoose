@@ -8,8 +8,6 @@ import utils from "./utils";
 import logger from "./logger";
 import {Document} from "./Document";
 
-import {DynamoDB} from "aws-sdk";
-
 interface ModelDocumentConstructor<T extends Document> {
 	new (object: {[key: string]: any}): T;
 }
@@ -27,9 +25,9 @@ const model = <T extends Document>(name: string, schema: Schema | SchemaDefiniti
 			returnObject[key] = (...args) => new carrier(...args);
 			returnObject[key].carrier = carrier;
 		} else if (typeof model[key] === "object") {
-			const main = (key: string) => {
+			const main = (key: string): void => {
 				utils.object.set(returnObject, key, {});
-				Object.keys(utils.object.get(model as any, key)).forEach((subKey) => {
+				Object.keys(utils.object.get(model as any, key)).forEach((subKey): void => {
 					const newKey = `${key}.${subKey}`;
 					if (typeof utils.object.get(model as any, newKey) === "object") {
 						main(newKey);

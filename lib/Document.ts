@@ -4,6 +4,7 @@ import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
 import {Model, ModelExpiresSettings} from "./Model";
+import {DynamoDBTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
@@ -52,7 +53,7 @@ Document.fromDynamo = (object): any => (aws.converter() as any).unmarshall(objec
 // This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
 Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 	// This function will check to see if a nested object is valid by calling Document.isDynamoObject recursively
-	function isValid(value) {
+	function isValid(value): boolean {
 		if (typeof value === "undefined" || value === null) {
 			return false;
 		}
@@ -73,7 +74,7 @@ Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 	}
 };
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
-Document.prepareForObjectFromSchema = function(object, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) {
+Document.prepareForObjectFromSchema = function(object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings): any {
 	if (settings.updateTimestamps) {
 		if (model.schema.settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
@@ -107,7 +108,7 @@ Document.attributesWithSchema = function(document: Document, model: Model<Docume
 		});
 	});
 	// explore the tree
-	function traverse (node, treeNode, outPath, callback) {
+	function traverse (node, treeNode, outPath, callback): void {
 		callback(outPath);
 		if (Object.keys(treeNode).length === 0) { // a leaf
 			return;
@@ -153,7 +154,7 @@ interface DocumentObjectFromSchemaSettings {
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
-Document.objectFromSchema = async function(object, model: Model<Document>, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}) {
+Document.objectFromSchema = async function(object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<any> {
 	if (settings.checkExpiredItem && model.options.expires && ((model.options.expires as ModelExpiresSettings).items || {}).returnExpired === false && object[(model.options.expires as ModelExpiresSettings).attribute] && (object[(model.options.expires as ModelExpiresSettings).attribute] * 1000) < Date.now()) {
 		return undefined;
 	}
@@ -164,12 +165,12 @@ Document.objectFromSchema = async function(object, model: Model<Document>, setti
 	// Type check
 	const validParents = []; // This array is used to allow for set contents to not be type checked
 	const keysToDelete = [];
-	const getValueTypeCheckResult = (value, key: string, options = {}) => {
+	const getValueTypeCheckResult = (value: any, key: string, options = {}): {typeDetails: DynamoDBTypeResult; isValidType: boolean} => {
 		const typeDetails = model.schema.getAttributeTypeDetails(key, options);
 		const isValidType = [((typeDetails.customType || {}).functions || {}).isOfType, typeDetails.isOfType].filter((a) => Boolean(a)).some((func) => func(value, settings.type));
 		return {typeDetails, isValidType};
 	};
-	const checkTypeFunction = (item) => {
+	const checkTypeFunction = (item): void => {
 		const [key, value] = item;
 		if (validParents.find((parent) => key.startsWith(parent.key) && (parent.infinite || key.split(".").length === parent.key.split(".").length + 1))) {
 			return;
@@ -292,7 +293,7 @@ Document.objectFromSchema = async function(object, model: Model<Document>, setti
 			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute.startsWith(key)));
 		}
 		await Promise.all(attributesToCheck.map(async (key) => {
-			const check = async () => {
+			const check = async (): Promise<void> => {
 				const value = utils.object.get(returnObject, key);
 				await model.schema.requiredCheck(key, (value as ValueType));
 			};
@@ -325,7 +326,7 @@ Document.objectFromSchema = async function(object, model: Model<Document>, setti
 
 	return returnObject;
 };
-Document.prototype.toDynamo = async function(this: Document, settings: Partial<DocumentObjectFromSchemaSettings> = {}) {
+Document.prototype.toDynamo = async function(this: Document, settings: Partial<DocumentObjectFromSchemaSettings> = {}): Promise<any> {
 	const newSettings: DocumentObjectFromSchemaSettings = {
 		...settings,
 		"type": "toDynamo"
@@ -338,7 +339,7 @@ interface DocumentSaveSettings {
 	overwrite?: boolean;
 	return?: "request" | "document";
 }
-Document.prototype.save = function(this: Document, settings: DocumentSaveSettings = {}, callback) {
+Document.prototype.save = function(this: Document, settings: DocumentSaveSettings = {}, callback): Promise<any> {
 	if (typeof settings === "function" && !callback) {
 		callback = settings;
 		settings = {};
@@ -373,14 +374,14 @@ Document.prototype.save = function(this: Document, settings: DocumentSaveSetting
 	if (callback) {
 		promise.then(() => {this[internalProperties].storedInDynamo = true; return callback(null, this);}).catch((error) => callback(error));
 	} else {
-		return (async () => {
+		return (async (): Promise<Document> => {
 			await promise;
 			this[internalProperties].storedInDynamo = true;
 			return this;
 		})();
 	}
 };
-Document.prototype.delete = function(this: Document, callback) {
+Document.prototype.delete = function(this: Document, callback): any {
 	return this.model.delete({
 		[this.model.schema.getHashKey()]: this[this.model.schema.getHashKey()]
 	}, callback);

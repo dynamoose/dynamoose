@@ -3,7 +3,7 @@ import internalProviders from "./internal_providers";
 let providers = [];
 
 // This method takes the provider and converts it to an internal provider if exists (ex. `console`)
-const normalizeProvider = (provider) => {
+const normalizeProvider = (provider): any => {
 	if (provider === console) {
 		return new internalProviders.console();
 	} else {
@@ -12,21 +12,21 @@ const normalizeProvider = (provider) => {
 };
 
 export = {
-	"set": (provider) => {
+	"set": (provider): void => {
 		if (typeof provider === "undefined" || provider === null) {
 			provider = [];
 		}
 
 		providers = (Array.isArray(provider) ? provider : [provider]).map(normalizeProvider);
 	},
-	"clear": () => {
+	"clear": (): void => {
 		providers = [];
 	},
-	"add": (provider) => {
+	"add": (provider): void => {
 		const newProviders = (Array.isArray(provider) ? provider : [provider]).map(normalizeProvider);
 		providers.push(...newProviders);
 	},
-	"delete": (id: string | string[]) => {
+	"delete": (id: string | string[]): void => {
 		const deleteFunction = (id: string) => {
 			const index = providers.findIndex((provider) => provider.id === id);
 			utils.object.delete(providers, index);
@@ -37,5 +37,5 @@ export = {
 			deleteFunction(id);
 		}
 	},
-	"list": () => providers
+	"list": (): any[] => providers
 };

@@ -324,15 +324,15 @@ export class Model<T extends DocumentCarrier> {
 			{"key": "get"},
 			{"key": "create", "dynamoKey": "Put"},
 			{"key": "delete"},
-			{"key": "update", "settingsIndex": 2, "modifier": (response: DynamoDB.UpdateItemInput) => {
+			{"key": "update", "settingsIndex": 2, "modifier": (response: DynamoDB.UpdateItemInput): DynamoDB.UpdateItemInput => {
 				delete response.ReturnValues;
 				return response;
 			}},
-			{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": (key, condition) => ({
+			{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": (key: string, condition: Condition): DynamoDB.ConditionCheck => ({
 				"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
 				"TableName": this.name,
 				...(condition ? condition.requestObject() : {})
-			})}
+			} as any)}
 		].reduce((accumulator, currentValue) => {
 			const {key, modifier} = currentValue;
 			const dynamoKey = currentValue.dynamoKey || utils.capitalize_first_letter(key);

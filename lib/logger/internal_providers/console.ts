@@ -1,5 +1,5 @@
-class ConsoleProvider {
-	log(message) {
+export class ConsoleProvider {
+	log(message): void {
 		let method: (message: string) => void;
 		switch(message.level) {
 		case "fatal":
@@ -21,5 +21,3 @@ class ConsoleProvider {
 		method(message.category ? `${message.category} - ${message.message}` : message.message);
 	}
 }
-
-export = ConsoleProvider;

@@ -1,6 +1,6 @@
 import entries from "./entries";
 
-export = (a, b) => {
+export = (a, b): boolean => {
 	const aEntries = entries(a);
 	const bEntries = entries(b);
 	const bEntriesMap = bEntries.reduce((res, value) => {

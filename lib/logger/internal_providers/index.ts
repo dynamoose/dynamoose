@@ -1,3 +1,5 @@
+import {ConsoleProvider} from "./console";
+
 export = {
-	"console": require("./console")
+	"console": ConsoleProvider
 };

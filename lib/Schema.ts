@@ -254,7 +254,7 @@ Schema.prototype.getAttributeValue = function(this: Schema, key: string, setting
 	}, ({"schema": this.schemaObject} as any));
 };
 
-interface DynamoDBTypeResult {
+export interface DynamoDBTypeResult {
 	name: string;
 	dynamodbType: string; // TODO: This should probably be an enum
 	nestedType: boolean;
@@ -409,7 +409,7 @@ Schema.prototype.getAttributeTypeDetails = function(this: Schema, key: string, s
 		typeVal = typeVal.value;
 	}
 
-	const getType = (typeVal) => {
+	const getType = (typeVal): string => {
 		let type: string;
 		if (typeof typeVal === "function") {
 			const regexFuncName = /^Function ([^(]+)\(/iu;

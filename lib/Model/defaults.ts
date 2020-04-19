@@ -23,8 +23,8 @@ export const original = {
 };
 let customValue = {};
 const customObject = {
-	"set": (val) => {customValue = val;},
-	"get": () => customValue
+	"set": (val): void => {customValue = val;},
+	"get": (): any => customValue
 };
 
 export {customObject as custom};
