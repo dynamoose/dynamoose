@@ -1,12 +1,13 @@
-import CustomError from "./Error";
-import {Schema, SchemaDefinition} from "./Schema";
-import {Document as DocumentCarrier} from "./Document";
-import utils from "./utils";
-import aws from "./aws";
-import Internal from "./Internal";
-import Condition from "./Condition";
-import {Scan, Query, ConditionInitalizer} from "./DocumentRetriever";
-import {CallbackType} from "./General";
+import CustomError from "../Error";
+import {Schema, SchemaDefinition} from "../Schema";
+import {Document as DocumentCarrier} from "../Document";
+import utils from "../utils";
+import aws from "../aws";
+import Internal from "../Internal";
+import Condition from "../Condition";
+import {Scan, Query, ConditionInitalizer} from "../DocumentRetriever";
+import {CallbackType} from "../General";
+import {custom as customDefaults, original as originalDefaults} from "./defaults";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
 
@@ -22,7 +23,7 @@ export interface ModelExpiresSettings {
 		returnExpired: boolean;
 	};
 }
-interface ModelOptions {
+export interface ModelOptions {
 	create: boolean;
 	throughput: number | {read: number; write: number};
 	prefix: string;
@@ -31,38 +32,38 @@ interface ModelOptions {
 	update: boolean;
 	expires?: number | ModelExpiresSettings;
 }
-type ModelOptionsOptional = Partial<ModelOptions>;
-const defaults: ModelOptions = {
-	"create": true,
-	"throughput": {
-		"read": 5,
-		"write": 5
-	},
-	"prefix": "",
-	"suffix": "",
-	"waitForActive": {
-		"enabled": true,
-		"check": {
-			"timeout": 180000,
-			"frequency": 1000
-		}
-	},
-	"update": false,
-	"expires": undefined
-	// "streamOptions": {
-	// 	"enabled": false,
-	// 	"type": undefined
-	// },
-	// "serverSideEncryption": false,
-	// "defaultReturnValues": "ALL_NEW",
-};
+export type ModelOptionsOptional = Partial<ModelOptions>;
+// const defaults: ModelOptions = {
+// 	"create": true,
+// 	"throughput": {
+// 		"read": 5,
+// 		"write": 5
+// 	},
+// 	"prefix": "",
+// 	"suffix": "",
+// 	"waitForActive": {
+// 		"enabled": true,
+// 		"check": {
+// 			"timeout": 180000,
+// 			"frequency": 1000
+// 		}
+// 	},
+// 	"update": false,
+// 	"expires": undefined
+// 	// "streamOptions": {
+// 	// 	"enabled": false,
+// 	// 	"type": undefined
+// 	// },
+// 	// "serverSideEncryption": false,
+// 	// "defaultReturnValues": "ALL_NEW",
+// };
 
 
 
 
 
 type InputKey = string | {[attribute: string]: string};
-function convertObjectToKey(this: Model, key: InputKey): {[key: string]: string} {
+function convertObjectToKey(this: Model<DocumentCarrier>, key: InputKey): {[key: string]: string} {
 	let keyObject: {[key: string]: string};
 	const hashKey = this.schema.getHashKey();
 	if (typeof key === "object") {
@@ -85,7 +86,7 @@ function convertObjectToKey(this: Model, key: InputKey): {[key: string]: string}
 
 
 // Utility functions
-async function getTableDetails(model: Model, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
+async function getTableDetails(model: Model<DocumentCarrier>, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
 	const func = async (): Promise<void> => {
 		const tableDetails: DynamoDB.DescribeTableOutput = await aws.ddb().describeTable({"TableName": model.name}).promise();
 		model.latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
@@ -102,21 +103,21 @@ async function getTableDetails(model: Model, settings: {allowError?: boolean; fo
 
 	return model.latestTableDetails;
 }
-async function createTableRequest(model: Model): Promise<DynamoDB.CreateTableInput> {
+async function createTableRequest(model: Model<DocumentCarrier>): Promise<DynamoDB.CreateTableInput> {
 	return {
 		"TableName": model.name,
 		...utils.dynamoose.get_provisioned_throughput(model.options),
 		...await model.schema.getCreateTableAttributeParams(model)
 	};
 }
-async function createTable(model: Model): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | {promise: () => Promise<void>}> {
+async function createTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | {promise: () => Promise<void>}> {
 	if ((((await getTableDetails(model, {"allowError": true})) || {}).Table || {}).TableStatus === "ACTIVE") {
 		return {"promise": (): Promise<void> => Promise.resolve()};
 	}
 
 	return aws.ddb().createTable(await createTableRequest(model));
 }
-function updateTimeToLive(model: Model): {promise: () => Promise<void>} {
+function updateTimeToLive(model: Model<DocumentCarrier>): {promise: () => Promise<void>} {
 	return {
 		"promise": async (): Promise<void> => {
 			let ttlDetails;
@@ -154,7 +155,7 @@ function updateTimeToLive(model: Model): {promise: () => Promise<void>} {
 		}
 	};
 }
-function waitForActive(model: Model) {
+function waitForActive(model: Model<DocumentCarrier>) {
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check(count): Promise<void> {
@@ -179,7 +180,7 @@ function waitForActive(model: Model) {
 		check(0);
 	});
 }
-async function updateTable(model: Model): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | {promise: () => Promise<void>}> {
+async function updateTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | {promise: () => Promise<void>}> {
 	const currentThroughput = (await getTableDetails(model)).Table;
 	const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
 	if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary?.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
@@ -196,7 +197,7 @@ async function updateTable(model: Model): Promise<Request<DynamoDB.UpdateTableOu
 
 
 // Model represents one DynamoDB table
-export class Model {
+export class Model<T extends DocumentCarrier> {
 	name: string;
 	options: ModelOptions;
 	schema: Schema;
@@ -206,23 +207,23 @@ export class Model {
 	pendingTaskPromise: () => Promise<void>;
 	static defaults: ModelOptions;
 	Document: typeof DocumentCarrier;
-	scan: (this: Model, object?: ConditionInitalizer) => Scan;
-	query: (this: Model, object?: ConditionInitalizer) => Query;
-	get: (this: Model, key: InputKey, settings?: ModelGetSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.GetItemInput, AWSError>) => void | DynamoDB.GetItemInput | Promise<DocumentCarrier>;
-	delete: (this: Model, key: InputKey, settings?: ModelDeleteSettings, callback?: CallbackType<DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
-	batchDelete: (this: Model, keys: InputKey[], settings?: ModelBatchDeleteSettings, callback?: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
-	create: (this: Model, document: any, settings?: {}, callback?: any) => void | Promise<any>;
-	batchPut: (this: Model, items: any, settings?: {}, callbac?: any) => void | Promise<any>;
-	update: (this: Model, keyObj: any, updateObj: any, settings?: ModelUpdateSettings, callback?: any) => void | Promise<any>;
-	batchGet: (this: Model, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
+	scan: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Scan;
+	query: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Query;
+	get: (this: Model<DocumentCarrier>, key: InputKey, settings?: ModelGetSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.GetItemInput, AWSError>) => void | DynamoDB.GetItemInput | Promise<DocumentCarrier>;
+	delete: (this: Model<DocumentCarrier>, key: InputKey, settings?: ModelDeleteSettings, callback?: CallbackType<DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
+	batchDelete: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchDeleteSettings, callback?: any) => void | DynamoDB.BatchWriteItemInput | Promise<any>;
+	create: (this: Model<DocumentCarrier>, document: any, settings?: {}, callback?: any) => void | Promise<any>;
+	batchPut: (this: Model<DocumentCarrier>, items: any, settings?: {}, callbac?: any) => void | Promise<any>;
+	update: (this: Model<DocumentCarrier>, keyObj: any, updateObj: any, settings?: ModelUpdateSettings, callback?: any) => void | Promise<any>;
+	batchGet: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: any) => void | DynamoDB.BatchGetItemInput | Promise<any>;
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
 
 	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}) {
-		this.options = (utils.combine_objects(options, Model.defaults, defaults) as ModelOptions);
+		this.options = (utils.combine_objects(options, customDefaults.get(), originalDefaults) as ModelOptions);
 		this.name = `${this.options.prefix}${name}${this.options.suffix}`;
 
 		if (!schema) {
-			throw new CustomError.MissingSchemaError(`Schema hasn't been registered for model "${name}".\nUse "new dynamoose.Model(name, schema)"`);
+			throw new CustomError.MissingSchemaError(`Schema hasn't been registered for model "${name}".\nUse "dynamoose.model(name, schema)"`);
 		} else if (!(schema instanceof Schema)) {
 			schema = new Schema(schema);
 		}
@@ -284,9 +285,9 @@ export class Model {
 		}, Promise.resolve());
 		setupFlowPromise.then(() => this.ready = true).then(() => {this.pendingTasks.forEach((task) => task()); this.pendingTasks = [];});
 
-		const self: Model = this;
+		const self: Model<DocumentCarrier> = this;
 		class Document extends DocumentCarrier {
-			static Model: Model;
+			static Model: Model<DocumentCarrier>;
 			constructor(object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
 				super(self, object, settings);
 			}
@@ -362,20 +363,18 @@ export class Model {
 			return accumulator;
 		}, {});
 
-		const ModelStore = require("./ModelStore");
+		const ModelStore = require("../ModelStore");
 		ModelStore(this);
-
-		return returnObject;
 	}
 }
 
-Model.defaults = defaults;
+Model.defaults = originalDefaults;
 
 
 interface ModelGetSettings {
 	return: "document" | "request";
 }
-Model.prototype.get = function (this: Model, key: InputKey, settings: ModelGetSettings = {"return": "document"}, callback): void | DynamoDB.GetItemInput | Promise<DocumentCarrier> {
+Model.prototype.get = function (this: Model<DocumentCarrier>, key: InputKey, settings: ModelGetSettings = {"return": "document"}, callback): void | DynamoDB.GetItemInput | Promise<DocumentCarrier> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": "document"};
@@ -409,7 +408,7 @@ Model.prototype.get = function (this: Model, key: InputKey, settings: ModelGetSe
 interface ModelBatchGetSettings {
 	return: "documents" | "request";
 }
-Model.prototype.batchGet = function (this: Model, keys: InputKey[], settings: ModelBatchGetSettings = {"return": "documents"}, callback): void | DynamoDB.BatchGetItemInput | Promise<any> {
+Model.prototype.batchGet = function (this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchGetSettings = {"return": "documents"}, callback): void | DynamoDB.BatchGetItemInput | Promise<any> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": "documents"};
@@ -466,7 +465,7 @@ Model.prototype.batchGet = function (this: Model, keys: InputKey[], settings: Mo
 	}
 };
 
-Model.prototype.create = function (this: Model, document, settings = {}, callback): void | Promise<any> {
+Model.prototype.create = function (this: Model<DocumentCarrier>, document, settings = {}, callback): void | Promise<any> {
 	if (typeof settings === "function" && !callback) {
 		callback = settings;
 		settings = {};
@@ -477,7 +476,7 @@ Model.prototype.create = function (this: Model, document, settings = {}, callbac
 interface ModelBatchPutSettings {
 	return: "response" | "request";
 }
-Model.prototype.batchPut = function (this: Model, items, settings: ModelBatchPutSettings = {"return": "response"}, callback): void | Promise<any> {
+Model.prototype.batchPut = function (this: Model<DocumentCarrier>, items, settings: ModelBatchPutSettings = {"return": "response"}, callback): void | Promise<any> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": "response"};
@@ -528,7 +527,7 @@ interface ModelUpdateSettings {
 	return: "document" | "request";
 	condition?: Condition;
 }
-Model.prototype.update = function (this: Model, keyObj, updateObj, settings: ModelUpdateSettings = {"return": "document"}, callback): void | Promise<any> {
+Model.prototype.update = function (this: Model<DocumentCarrier>, keyObj, updateObj, settings: ModelUpdateSettings = {"return": "document"}, callback): void | Promise<any> {
 	if (typeof updateObj === "function") {
 		callback = updateObj;
 		updateObj = null;
@@ -576,7 +575,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 
 				const dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 				const attributeExists = this.schema.attributes().includes(subKey);
-				const dynamooseUndefined = require("./index").undefined;
+				const dynamooseUndefined = require("../index").undefined;
 				if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
 					subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
 				}
@@ -713,7 +712,7 @@ Model.prototype.update = function (this: Model, keyObj, updateObj, settings: Mod
 interface ModelDeleteSettings {
 	return: null | "request";
 }
-Model.prototype.delete = function (this: Model, key: InputKey, settings: ModelDeleteSettings = {"return": null}, callback): void | DynamoDB.DeleteItemInput | Promise<void> {
+Model.prototype.delete = function (this: Model<DocumentCarrier>, key: InputKey, settings: ModelDeleteSettings = {"return": null}, callback): void | DynamoDB.DeleteItemInput | Promise<void> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": null};
@@ -744,7 +743,7 @@ Model.prototype.delete = function (this: Model, key: InputKey, settings: ModelDe
 interface ModelBatchDeleteSettings {
 	return: "response" | "request";
 }
-Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings: ModelBatchDeleteSettings = {"return": "response"}, callback): void | DynamoDB.BatchWriteItemInput | Promise<any> {
+Model.prototype.batchDelete = function (this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchDeleteSettings = {"return": "response"}, callback): void | DynamoDB.BatchWriteItemInput | Promise<any> {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": "response"};
@@ -794,10 +793,10 @@ Model.prototype.batchDelete = function (this: Model, keys: InputKey[], settings:
 	}
 };
 
-Model.prototype.scan = function (this: Model, object?: ConditionInitalizer): Scan {
+Model.prototype.scan = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Scan {
 	return new Scan(this, object);
 };
-Model.prototype.query = function (this: Model, object?: ConditionInitalizer): Query {
+Model.prototype.query = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Query {
 	return new Query(this, object);
 };
 

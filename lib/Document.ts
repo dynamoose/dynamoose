@@ -14,17 +14,17 @@ export class Document {
 	static objectToDynamo: (object: any, settings?: {type: "object" | "value"}) => any;
 	static fromDynamo: (object: any) => any;
 	static isDynamoObject: (object: any, recurrsive?: boolean) => boolean | null;
-	static attributesWithSchema: (document: Document, model: Model) => string[];
+	static attributesWithSchema: (document: Document, model: Model<Document>) => string[];
 	original: () => DynamoDB.AttributeMap | {[key: string]: any} | null;
-	static objectFromSchema: (object: any, model: Model, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
-	static prepareForObjectFromSchema: (object: any, model: Model, settings: DocumentObjectFromSchemaSettings) => any;
+	static objectFromSchema: (object: any, model: Model<Document>, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
+	static prepareForObjectFromSchema: (object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) => any;
 	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<Document>;
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
 	delete: (this: Document, callback: any) => any;
 	save: (this: Document, settings: DocumentSaveSettings, callback: any) => Promise<any>;
-	model?: Model;
+	model?: Model<Document>;
 
-	constructor(model: Model, object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
+	constructor(model: Model<Document>, object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
 		const documentObject = Document.isDynamoObject(object) ? (aws.converter() as any).unmarshall(object) : object;
 		Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
 		Object.defineProperty(this, internalProperties, {
@@ -72,7 +72,7 @@ Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
 	}
 };
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
-Document.prepareForObjectFromSchema = function(object, model: Model, settings: DocumentObjectFromSchemaSettings) {
+Document.prepareForObjectFromSchema = function(object, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) {
 	if (settings.updateTimestamps) {
 		if (model.schema.settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
@@ -90,7 +90,7 @@ Document.prepareForObjectFromSchema = function(object, model: Model, settings: D
 // This function will return a list of attributes combining both the schema attributes with the document attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in document), adding the indexes for each item in the document set.
 // https://stackoverflow.com/a/59928314/894067
 const attributesWithSchemaCache: {[key: string]: any} = {};
-Document.attributesWithSchema = function(document: Document, model: Model): string[] {
+Document.attributesWithSchema = function(document: Document, model: Model<Document>): string[] {
 	const attributes = model.schema.attributes();
 	const documentID = utils.object.keys(document as any).join("");
 	if (attributesWithSchemaCache[documentID] && attributesWithSchemaCache[documentID][attributes.join()]) {
@@ -152,7 +152,7 @@ interface DocumentObjectFromSchemaSettings {
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
-Document.objectFromSchema = async function(object, model: Model, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}) {
+Document.objectFromSchema = async function(object, model: Model<Document>, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}) {
 	if (settings.checkExpiredItem && model.options.expires && ((model.options.expires as ModelExpiresSettings).items || {}).returnExpired === false && object[(model.options.expires as ModelExpiresSettings).attribute] && (object[(model.options.expires as ModelExpiresSettings).attribute] * 1000) < Date.now()) {
 		return undefined;
 	}

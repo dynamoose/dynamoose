@@ -4,6 +4,7 @@ import Error from "./Error";
 import {Model} from "./Model";
 import ModelStore from "./ModelStore";
 import {CallbackType} from "./General";
+import {Document} from "./Document";
 
 enum TransactionReturnOptions {
 	request = "request",
@@ -62,7 +63,7 @@ export default (transactions: any[], settings: TransactionSettings = {"return": 
 
 		const modelNames: string[] = transactionObjects.map((a) => (Object.values(a)[0] as any).TableName);
 		const uniqueModelNames = utils.unique_array_elements(modelNames);
-		const models: Model[] = uniqueModelNames.map((name) => ModelStore(name));
+		const models: Model<Document>[] = uniqueModelNames.map((name) => ModelStore(name));
 		models.forEach((model, index) => {
 			if (!model) {
 				throw new Error.InvalidParameter(`Model "${uniqueModelNames[index]}" not found. Please register the model with dynamoose before using it in transactions.`);
@@ -74,7 +75,7 @@ export default (transactions: any[], settings: TransactionSettings = {"return": 
 		const result = await (aws.ddb()[transactionType] as any)(transactionParams).promise();
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
-			const model: Model = models.find((model) => model.name === modelName);
+			const model: Model<Document> = models.find((model) => model.name === modelName);
 			return (new model.Document(item.Item, {"fromDynamo": true})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
 		})) : null;
 	})();
