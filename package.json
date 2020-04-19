@@ -27,7 +27,11 @@
     "test": "nyc --all mocha && nyc report --reporter=html",
     "test-nocoverage": "mocha",
     "lint": "eslint . --ext .ts,.js",
-    "lint:fix": "npm run lint -- --fix"
+    "lint:fix": "npm run lint -- --fix",
+    "site:install": "cd docs && npm install",
+    "site:start": "cd docs && npm start",
+    "site:build": "cd docs && npm run build",
+    "site:swizzle": "cd docs && npm run swizzle"
   },
   "repository": {
     "type": "git",
