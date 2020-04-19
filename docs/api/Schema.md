@@ -12,6 +12,8 @@ The `options` parameter is an optional object with the following options:
 | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
+const dynamoose = require("dynamoose");
+
 const schema = new dynamoose.Schema({
 	"id": String,
 	"age": Number
@@ -22,6 +24,8 @@ const schema = new dynamoose.Schema({
 ```
 
 ```js
+const dynamoose = require("dynamoose");
+
 const schema = new dynamoose.Schema({
 	"id": String,
 	"age": {
@@ -32,6 +36,8 @@ const schema = new dynamoose.Schema({
 ```
 
 ```js
+const dynamoose = require("dynamoose");
+
 const schema = new dynamoose.Schema({
 	"id": String,
 	"name": String
@@ -332,31 +338,31 @@ If you set `index` to `true`, it will create an index with all of the default se
 
 ```js
 {
-    "id" : {
-      "hashKey": true,
-      "type": String,
-    },
+	"id": {
+		"hashKey": true,
+		"type": String,
+	},
 	"email": {
 		"type": String,
 		"index": {
-          "name": "emailIndex",
-          "global": true
-        } // creates a global secondary index with the name `emailIndex` and hashKey `email`
+			"name": "emailIndex",
+			"global": true
+		} // creates a global secondary index with the name `emailIndex` and hashKey `email`
 	}
 }
 ```
 
 ```js
 {
-    "id" : {
-      "hashKey": true,
-      "type": String,
-      "index": {
-        "name": "emailIndex",
-        "rangeKey": "email",
-        "throughput": {"read": 5, "write": 10}
-      } // creates a local secondary index with the name `emailIndex`, hashKey `id`, rangeKey `email`
-    },
+	"id": {
+		"hashKey": true,
+		"type": String,
+		"index": {
+			"name": "emailIndex",
+			"rangeKey": "email",
+			"throughput": {"read": 5, "write": 10}
+		} // creates a local secondary index with the name `emailIndex`, hashKey `id`, rangeKey `email`
+	},
 	"email": {
 		"type": String
 	}
