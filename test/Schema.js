@@ -1,70 +1,70 @@
 const {expect} = require("chai");
-const Schema = require("../lib/Schema");
+const dynamoose = require("../lib");
 const Error = require("../lib/Error");
 
 describe("Schema", () => {
 	it("Should be a function", () => {
-		expect(Schema).to.be.a("function");
+		expect(dynamoose.Schema).to.be.a("function");
 	});
 
 	it("Should throw an error if not using `new` keyword", () => {
-		expect(() => Schema()).to.throw("Class constructor Schema cannot be invoked without 'new'");
+		expect(() => dynamoose.Schema()).to.throw("Class constructor Schema cannot be invoked without 'new'");
 	});
 
 	it("Should throw an error if nothing passed in", () => {
-		expect(() => new Schema()).to.throw("Schema initalization parameter must be an object.");
+		expect(() => new dynamoose.Schema()).to.throw("Schema initalization parameter must be an object.");
 	});
 
 	it("Should throw an error if empty object passed in", () => {
-		expect(() => new Schema({})).to.throw("Schema initalization parameter must not be an empty object.");
+		expect(() => new dynamoose.Schema({})).to.throw("Schema initalization parameter must not be an empty object.");
 	});
 
 	it("Shouldn't throw an error if object passed in", () => {
-		expect(() => new Schema({"id": String})).to.not.throw();
+		expect(() => new dynamoose.Schema({"id": String})).to.not.throw();
 	});
 
 	it("Should set correct settings value", () => {
-		expect(new Schema({"id": String}, {"saveUnknown": true}).settings).to.eql({"saveUnknown": true});
+		expect(new dynamoose.Schema({"id": String}, {"saveUnknown": true}).settings).to.eql({"saveUnknown": true});
 	});
 
 	it("Should set correct settings value default value of empty object", () => {
-		expect(new Schema({"id": String}).settings).to.eql({});
+		expect(new dynamoose.Schema({"id": String}).settings).to.eql({});
 	});
 
 	it("Should throw error if timestamps already exists in schema", () => {
-		expect(() => new Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true}).settings).to.throw("Timestamp attributes must not be defined in schema.");
-		expect(() => new Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true}).settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
 	});
 
 	it("Should throw error if passing multiple schema elements into array", () => {
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [String, Number]}})).to.throw("You must only pass one element into schema array.");
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("You must only pass one element into schema array.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [String, Number]}})).to.throw("You must only pass one element into schema array.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("You must only pass one element into schema array.");
 	});
 
 	it("Should not throw error if passing only one element into schema elements array", () => {
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [String]}})).to.not.throw();
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [String]}}}]}})).to.not.throw();
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [String]}})).to.not.throw();
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [String]}}}]}})).to.not.throw();
 	});
 
 	it("Should throw error if attribute names contain dots", () => {
-		expect(() => new Schema({"id.data": String})).to.throw("Attributes must not contain dots.");
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name.other": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes must not contain dots.");
+		expect(() => new dynamoose.Schema({"id.data": String})).to.throw("Attributes must not contain dots.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name.other": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes must not contain dots.");
 	});
 
 	it.skip("Should throw error if attribute names only contains number", () => {
-		expect(() => new Schema({"1": String})).to.throw("Attributes names must not be numbers.");
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
+		expect(() => new dynamoose.Schema({"1": String})).to.throw("Attributes names must not be numbers.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
 	});
 
 	it.skip("Should throw error if attribute names contains star", () => {
-		expect(() => new Schema({"*": String})).to.throw("Attributes names must not include stars.");
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
-		expect(() => new Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
+		expect(() => new dynamoose.Schema({"*": String})).to.throw("Attributes names must not include stars.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
 	});
 
 	it("Should not throw error if valid schema passed in", () => {
-		expect(() => new Schema({"id": Number, "friends": [String]})).to.not.throw();
+		expect(() => new dynamoose.Schema({"id": Number, "friends": [String]})).to.not.throw();
 	});
 
 	describe("getAttributeType", () => {
@@ -135,13 +135,13 @@ describe("Schema", () => {
 					let schema;
 					beforeEach(() => {
 						if (type === "standard") {
-							schema = new Schema({...schemaObj.schema});
+							schema = new dynamoose.Schema({...schemaObj.schema});
 						} else {
 							const schemaObject = {...schemaObj.schema};
 							Object.keys(schemaObject).forEach((key) => {
 								schemaObject[key] = {"type": schemaObject[key]};
 							});
-							schema = new Schema(schemaObject);
+							schema = new dynamoose.Schema(schemaObject);
 						}
 					});
 
@@ -165,21 +165,21 @@ describe("Schema", () => {
 
 	describe("getHashKey", () => {
 		it("Should return first attribute if no hash key defined", () => {
-			expect(new Schema({"id": String, "age": Number}).getHashKey()).to.eql("id");
+			expect(new dynamoose.Schema({"id": String, "age": Number}).getHashKey()).to.eql("id");
 		});
 
 		it("Should return hash key if set to true", () => {
-			expect(new Schema({"id": String, "age": {"type": Number, "hashKey": true}}).getHashKey()).to.eql("age");
+			expect(new dynamoose.Schema({"id": String, "age": {"type": Number, "hashKey": true}}).getHashKey()).to.eql("age");
 		});
 	});
 
 	describe("getRangeKey", () => {
 		it("Should return undefined if no range key defined", () => {
-			expect(new Schema({"id": String, "age": Number}).getRangeKey()).to.eql(undefined);
+			expect(new dynamoose.Schema({"id": String, "age": Number}).getRangeKey()).to.eql(undefined);
 		});
 
 		it("Should return range key if set to true", () => {
-			expect(new Schema({"id": String, "age": {"type": Number, "rangeKey": true}}).getRangeKey()).to.eql("age");
+			expect(new dynamoose.Schema({"id": String, "age": {"type": Number, "rangeKey": true}}).getRangeKey()).to.eql("age");
 		});
 	});
 
@@ -710,7 +710,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				expect(await (new Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}}))).to.eql(test.output);
+				expect(await (new dynamoose.Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}}))).to.eql(test.output);
 			});
 		});
 	});
@@ -751,7 +751,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, () => {
-				expect(new Schema(test.input).attributes()).to.eql(test.output);
+				expect(new dynamoose.Schema(test.input).attributes()).to.eql(test.output);
 			});
 		});
 	});
@@ -765,20 +765,26 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, () => {
-				expect(new Schema({"id": String}, test.settings).getSettingValue(test.input)).to.eql(test.output);
+				expect(new dynamoose.Schema({"id": String}, test.settings).getSettingValue(test.input)).to.eql(test.output);
 			});
 		});
 	});
 
 	describe("getAttributeTypeDetails", () => {
 		it("Should throw for invalid attribute", () => {
-			const func = () => new Schema({"id": String}).getAttributeTypeDetails("random");
+			const func = () => new dynamoose.Schema({"id": String}).getAttributeTypeDetails("random");
 			expect(func).to.throw(Error.UnknownAttribute);
 			expect(func).to.throw("Invalid Attribute: random");
 		});
 
+		it("Should not throw for attribute with number in it (without . prefix)", () => {
+			const func = () => new dynamoose.Schema({"id": String, "ran2dom": String}).getAttributeTypeDetails("ran2dom");
+			expect(func).to.not.throw(Error.UnknownAttribute);
+			expect(func).to.not.throw("Invalid Attribute: ran2dom");
+		});
+
 		it("Should have correct custom type for date", () => {
-			const functions = new Schema({"id": Date}).getAttributeTypeDetails("id").customType.functions;
+			const functions = new dynamoose.Schema({"id": Date}).getAttributeTypeDetails("id").customType.functions;
 			expect(functions.toDynamo).to.exist;
 			expect(functions.fromDynamo).to.exist;
 			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653000);
@@ -786,7 +792,7 @@ describe("Schema", () => {
 		});
 
 		it("Should have correct custom type for date with type object and no settings", () => {
-			const functions = new Schema({"id": {"type": {"value": Date}}}).getAttributeTypeDetails("id").customType.functions;
+			const functions = new dynamoose.Schema({"id": {"type": {"value": Date}}}).getAttributeTypeDetails("id").customType.functions;
 			expect(functions.toDynamo).to.exist;
 			expect(functions.fromDynamo).to.exist;
 			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653000);
@@ -794,7 +800,7 @@ describe("Schema", () => {
 		});
 
 		it("Should have correct custom type for date with custom storage settings as miliseconds", () => {
-			const functions = new Schema({"id": {"type": {"value": Date, "settings": {"storage": "miliseconds"}}}}).getAttributeTypeDetails("id").customType.functions;
+			const functions = new dynamoose.Schema({"id": {"type": {"value": Date, "settings": {"storage": "miliseconds"}}}}).getAttributeTypeDetails("id").customType.functions;
 			expect(functions.toDynamo).to.exist;
 			expect(functions.fromDynamo).to.exist;
 			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653000);
@@ -802,7 +808,7 @@ describe("Schema", () => {
 		});
 
 		it("Should have correct custom type for date with custom storage settings as seconds", () => {
-			const functions = new Schema({"id": {"type": {"value": Date, "settings": {"storage": "seconds"}}}}).getAttributeTypeDetails("id").customType.functions;
+			const functions = new dynamoose.Schema({"id": {"type": {"value": Date, "settings": {"storage": "seconds"}}}}).getAttributeTypeDetails("id").customType.functions;
 			expect(functions.toDynamo).to.exist;
 			expect(functions.fromDynamo).to.exist;
 			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653);
@@ -991,7 +997,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				const schema = new Schema(test.schema);
+				const schema = new dynamoose.Schema(test.schema);
 				const output = await (schema.getAttributeSettingValue(...test.input));
 				if (typeof output !== "function") {
 					expect(output).to.eql(test.output);

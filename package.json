@@ -1,6 +1,6 @@
 {
   "name": "dynamoose",
-  "version": "2.0.0-beta.9",
+  "version": "2.0.0-beta.11",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "main": "lib/index.js",
   "homepage": "https://github.com/dynamoosejs/dynamoose#readme",
@@ -38,7 +38,8 @@
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "dependencies": {
-    "aws-sdk": "^2.653.0"
+    "aws-sdk": "^2.658.0",
+    "uuid": "^7.0.3"
   },
   "license": "Unlicense",
   "keywords": [

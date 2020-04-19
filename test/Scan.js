@@ -7,10 +7,10 @@ const util = require("util");
 
 describe("Scan", () => {
 	beforeEach(() => {
-		dynamoose.Model.defaults = {"create": false, "waitForActive": false};
+		dynamoose.model.defaults.set({"create": false, "waitForActive": false});
 	});
 	afterEach(() => {
-		dynamoose.Model.defaults = {};
+		dynamoose.model.defaults.set({});
 	});
 
 	let scanPromiseResolver, scanParams;
@@ -30,7 +30,7 @@ describe("Scan", () => {
 
 	let Model;
 	beforeEach(() => {
-		Model = new dynamoose.Model("Cat", {"id": Number, "name": String});
+		Model = dynamoose.model("Cat", {"id": Number, "name": String});
 	});
 
 	describe("Model.scan", () => {
@@ -85,13 +85,13 @@ describe("Scan", () => {
 
 				it("Should return undefined for expired object", async () => {
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "ttl": {"N": "1"}}]});
-					Model = new dynamoose.Model("Cat", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
+					Model = dynamoose.model("Cat", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([]);
 				});
 
 				it("Should return expired object if returnExpired is not set", async () => {
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "ttl": {"N": "1"}}]});
-					Model = new dynamoose.Model("Cat", {"id": Number}, {"expires": {"ttl": 1000}});
+					Model = dynamoose.model("Cat", {"id": Number}, {"expires": {"ttl": 1000}});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "ttl": new Date(1000)}]);
 				});
 
@@ -101,13 +101,13 @@ describe("Scan", () => {
 				});
 
 				it("Should return correct result if using custom types", async () => {
-					Model = new dynamoose.Model("Cat", {"id": Number, "name": String, "birthday": Date});
+					Model = dynamoose.model("Cat", {"id": Number, "name": String, "birthday": Date});
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}]});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
 				});
 
 				it("Should return correct result for saveUnknown", async () => {
-					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
+					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
@@ -190,22 +190,29 @@ describe("Scan", () => {
 							"#a0": "id"
 						},
 						"ExpressionAttributeValues": {
-							":v0-1": {"N": "1"},
-							":v0-2": {"N": "3"}
+							":v0_1": {"N": "1"},
+							":v0_2": {"N": "3"}
 						},
-						"FilterExpression": "#a0 BETWEEN :v0-1 AND :v0-2",
+						"FilterExpression": "#a0 BETWEEN :v0_1 AND :v0_2",
 						"TableName": "Cat"
 					});
 				});
 
+				it("Should not include - in filter expression", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const scan = Model.scan().filter("id").between(1, 3);
+					await callType.func(scan.exec).bind(scan)();
+					expect(scanParams.FilterExpression).to.not.include("-");
+				});
+
 				it("Should return correct result for get function on attribute", async () => {
-					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": (val) => `${val}-get`}}));
+					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": (val) => `${val}-get`}}));
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
 
 				it("Should return correct result for async get function on attribute", async () => {
-					Model = new dynamoose.Model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": async (val) => `${val}-get`}}));
+					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": async (val) => `${val}-get`}}));
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});

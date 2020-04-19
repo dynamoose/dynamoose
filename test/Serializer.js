@@ -3,13 +3,13 @@ const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../lib");
-const {Model} = dynamoose;
+const {model} = dynamoose;
 const Serializer = require("../lib/Serializer");
 
 describe("Serializer", () => {
 	let User;
 	beforeEach(() => {
-		User = new Model("User",
+		User = model("User",
 			{id: Number, name: String, email: String, phone: String, passwordHash: String, status: String},
 			{"create": false, "waitForActive": false}
 		);
