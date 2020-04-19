@@ -334,6 +334,11 @@ describe("Logger", () => {
 			logs = [];
 		});
 
+		it("Should print message & category", () => {
+			emitter({"level": "fatal", "message": "Hello World", "category": "test"});
+			expect(logs).to.eql([{"message": "test - Hello World", "type": "error"}]);
+		});
+
 		it("Should print message to console.error for fatal", () => {
 			emitter({"level": "fatal", "message": "Hello World"});
 			expect(logs).to.eql([{"message": "Hello World", "type": "error"}]);
