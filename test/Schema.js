@@ -54,17 +54,17 @@ describe("Schema", () => {
 	it.skip("Should throw error if attribute names only contains number", () => {
 		expect(() => new dynamoose.Schema({"1": String})).to.throw("Attributes names must not be numbers.");
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
-		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": {"type": Set, "schema": [String]}, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
 	});
 
 	it.skip("Should throw error if attribute names contains star", () => {
 		expect(() => new dynamoose.Schema({"*": String})).to.throw("Attributes names must not include stars.");
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
-		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": [String], "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"*": {"type": Set, "schema": [String]}, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not include stars.");
 	});
 
 	it("Should not throw error if valid schema passed in", () => {
-		expect(() => new dynamoose.Schema({"id": Number, "friends": [String]})).to.not.throw();
+		expect(() => new dynamoose.Schema({"id": Number, "friends": {"type": Set, "schema": [String]}})).to.not.throw();
 	});
 
 	describe("getAttributeType", () => {
@@ -81,15 +81,15 @@ describe("Schema", () => {
 					"metadata": Object,
 					"friends": Array,
 					"picture": Buffer,
-					"favoriteFoods": [String],
-					"favoriteNumbers": [Number],
-					"favoriteDates": [Date],
-					"favoritePictures": [Buffer],
-					"favoriteTypes": [Boolean],
-					"favoriteObjects": [Object],
-					"favoriteFriends": [Array],
+					"favoriteFoods": {"type": Set, "schema": [String]},
+					"favoriteNumbers": {"type": Set, "schema": [Number]},
+					"favoriteDates": {"type": Set, "schema": [Date]},
+					"favoritePictures": {"type": Set, "schema": [Buffer]},
+					"favoriteTypes": {"type": Set, "schema": [Boolean]},
+					"favoriteObjects": {"type": Set, "schema": [Object]},
+					"favoriteFriends": {"type": Set, "schema": [Array]},
 					"emptyItem": Symbol,
-					"emptyItems": [Symbol]
+					"emptyItems": {"type": Set, "schema": [Symbol]}
 				}
 			},
 			{
@@ -139,7 +139,9 @@ describe("Schema", () => {
 						} else {
 							const schemaObject = {...schemaObj.schema};
 							Object.keys(schemaObject).forEach((key) => {
-								schemaObject[key] = {"type": schemaObject[key]};
+								if (!schemaObject[key].schema) {
+									schemaObject[key] = {"type": schemaObject[key]};
+								}
 							});
 							schema = new dynamoose.Schema(schemaObject);
 						}

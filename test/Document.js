@@ -206,7 +206,7 @@ describe("Document", () => {
 
 				it("Should save with correct object with string set", async () => {
 					putItemFunction = () => Promise.resolve();
-					User = dynamoose.model("User", {"id": Number, "friends": [String]});
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Set, "schema": [String]}});
 					user = new User({"id": 1, "friends": ["Charlie", "Tim", "Bob"]});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
@@ -240,7 +240,7 @@ describe("Document", () => {
 
 				it("Should save with correct object with number set", async () => {
 					putItemFunction = () => Promise.resolve();
-					User = dynamoose.model("User", {"id": Number, "numbers": [Number]});
+					User = dynamoose.model("User", {"id": Number, "numbers": {"type": Set, "schema": [Number]}});
 					user = new User({"id": 1, "numbers": [5, 7]});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
@@ -262,7 +262,7 @@ describe("Document", () => {
 
 				it("Should save with correct object with date set", async () => {
 					putItemFunction = () => Promise.resolve();
-					User = dynamoose.model("User", {"id": Number, "times": [Date]});
+					User = dynamoose.model("User", {"id": Number, "times": {"type": Set, "schema": [Date]}});
 					const time = new Date();
 					user = new User({"id": 1, "times": [time, new Date(0)]});
 					await callType.func(user).bind(user)();
@@ -285,7 +285,7 @@ describe("Document", () => {
 
 				it("Should save with correct object with buffer set", async () => {
 					putItemFunction = () => Promise.resolve();
-					User = dynamoose.model("User", {"id": Number, "data": [Buffer]});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Set, "schema": [Buffer]}});
 					user = new User({"id": 1, "data": [Buffer.from("testdata"), Buffer.from("testdata2")]});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
@@ -1635,7 +1635,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}, {"type": "fromDynamo"}],
-				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": {"type": Set, "schema": [String]}}}}),
 				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
 			},
 			{
@@ -1645,12 +1645,12 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": 1, "items": {"data": ["hello", "world"]}}, {"type": "toDynamo"}],
-				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": {"type": Set, "schema": [String]}}}}),
 				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
 			},
 			{
 				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo"}],
-				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
+				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": {"type": Set, "schema": [String]}}}}),
 				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
 			},
 			{
