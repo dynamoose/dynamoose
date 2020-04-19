@@ -778,10 +778,10 @@ describe("Schema", () => {
 		});
 
 		it("Should not throw for attribute with number in it (without . prefix)", () => {
-			const func = () => new Schema({"id": String, "ran2dom": String}).getAttributeTypeDetails("ran2dom");
+			const func = () => new dynamoose.Schema({"id": String, "ran2dom": String}).getAttributeTypeDetails("ran2dom");
 			expect(func).to.not.throw(Error.UnknownAttribute);
 			expect(func).to.not.throw("Invalid Attribute: ran2dom");
-		});		
+		});
 
 		it("Should have correct custom type for date", () => {
 			const functions = new dynamoose.Schema({"id": Date}).getAttributeTypeDetails("id").customType.functions;

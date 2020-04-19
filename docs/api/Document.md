@@ -9,7 +9,7 @@ A document/item is similar to a row in a relational database or a document in Mo
 In order to create a new document you just pass in your object into an instance of your model.
 
 ```js
-const User = new dynamoose.Model("User", {"id": Number, "name": String});
+const User = dynamoose.model("User", {"id": Number, "name": String});
 const myUser = new User({
 	"id": 1,
 	"name": "Tim"

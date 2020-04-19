@@ -145,7 +145,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec if querying main key", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": String, "age": Number});
+					Model = dynamoose.model("Cat", {"id": String, "name": String, "age": Number});
 					await callType.func(Model.query("id").eq("HelloWorld").exec).bind(Model.query("id").eq("HelloWorld"))();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
@@ -161,7 +161,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec if querying main key with range key", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "rangeKey": true}, "age": Number});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "rangeKey": true}, "age": Number});
 					await callType.func(Model.query("id").eq("HelloWorld").where("name").eq("Charlie").exec).bind(Model.query("id").eq("HelloWorld").where("name").eq("Charlie"))();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
@@ -179,7 +179,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec if querying main key with range key as less than comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": String, "age": {"type": Number, "rangeKey": true}});
+					Model = dynamoose.model("Cat", {"id": String, "name": String, "age": {"type": Number, "rangeKey": true}});
 					await callType.func(Model.query("id").eq("HelloWorld").where("age").lt(10).exec).bind(Model.query("id").eq("HelloWorld").where("age").lt(10))();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
@@ -197,7 +197,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec using range key as less than comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").lt(10).exec).bind(Model.query("name").eq("Charlie").where("age").lt(10))();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
@@ -216,7 +216,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec using range key as between comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").between(10, 20).exec).bind(Model.query("name").eq("Charlie").where("age").between(10, 20))();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
@@ -236,7 +236,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec using range key as exists comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").exists().exec).bind(Model.query("name").eq("Charlie").where("age").exists())();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
@@ -255,7 +255,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec using range key as contains comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").contains(10).exec).bind(Model.query("name").eq("Charlie").where("age").contains(10))();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
@@ -275,7 +275,7 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec using range key as beginsWith comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = new dynamoose.Model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").beginsWith(10).exec).bind(Model.query("name").eq("Charlie").where("age").beginsWith(10))();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",

@@ -184,7 +184,7 @@ describe("Document", () => {
 
 				it("Should save with correct object with undefined as value without required or default as first property", async () => {
 					putItemFunction = () => Promise.resolve();
-					User = new Model("User", new Schema({"id": Number, "name": String}));
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String}));
 					user = new User({"name": undefined, "id": 1});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
@@ -195,7 +195,7 @@ describe("Document", () => {
 
 				it("Should save with correct object with undefined as value without required or default as second property", async () => {
 					putItemFunction = () => Promise.resolve();
-					User = new Model("User", new Schema({"id": Number, "name": String}));
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String}));
 					user = new User({"id": 1, "name": undefined});
 					await callType.func(user).bind(user)();
 					expect(putParams).to.eql([{
