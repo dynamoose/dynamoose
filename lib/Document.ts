@@ -1,4 +1,5 @@
 import aws from "./aws";
+import ddb from "./aws/ddb/internal";
 import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
@@ -192,7 +193,7 @@ Document.objectFromSchema = async function(object, model: Model<Document>, setti
 			}
 		} else {
 			// Check saveUnknown
-			if (!settings.saveUnknown || !utils.dynamoose.saveunknown_attribute_allowed_check(model.schema.getSettingValue("saveUnknown"), key)) {
+			if (!settings.saveUnknown || !utils.dynamoose.wildcard_allowed_check(model.schema.getSettingValue("saveUnknown"), key)) {
 				keysToDelete.push(key);
 			}
 		}
@@ -366,7 +367,7 @@ Document.prototype.save = function(this: Document, settings: DocumentSaveSetting
 	}
 	const promise = Promise.all([paramsPromise, this.model.pendingTaskPromise()]).then((promises) => {
 		const [putItemObj] = promises;
-		return aws.ddb().putItem(putItemObj).promise();
+		return ddb("putItem", putItemObj);
 	});
 
 	if (callback) {

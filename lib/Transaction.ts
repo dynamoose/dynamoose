@@ -1,4 +1,4 @@
-import aws from "./aws";
+import ddb from "./aws/ddb/internal";
 import utils from "./utils";
 import Error from "./Error";
 import {Model} from "./Model";
@@ -72,7 +72,7 @@ export default (transactions: any[], settings: TransactionSettings = {"return": 
 		await Promise.all(models.map((model) => model.pendingTaskPromise()));
 
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-		const result = await (aws.ddb()[transactionType] as any)(transactionParams).promise();
+		const result = await ddb(transactionType, transactionParams);
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
 			const model: Model<Document> = models.find((model) => model.name === modelName);
