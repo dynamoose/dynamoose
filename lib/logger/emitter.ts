@@ -1,15 +1,15 @@
-const status = require("./status");
-const providers = require("./providers");
-const Error = require("../Error");
-const utils = require("../utils");
-const uuid = require("uuid").v4;
+import status from "./status";
+import providers from "./providers";
+import CustomError from "../Error";
+import utils from "../utils";
+import {v4 as uuid} from "uuid";
 
 const validLevels = ["fatal", "error", "warn", "info", "debug", "trace"];
 
 module.exports = (event) => {
 	if (status.status() === "active") {
 		if (!event.message || !validLevels.includes(event.level)) {
-			throw new Error.InvalidParameter("You must pass in a valid message, level, and category into your event object.");
+			throw new CustomError.InvalidParameter("You must pass in a valid message, level, and category into your event object.");
 		}
 
 		if (typeof event.category === "undefined" || event.category === null) {
