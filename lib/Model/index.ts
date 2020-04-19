@@ -328,10 +328,10 @@ export class Model<T extends DocumentCarrier> {
 				delete response.ReturnValues;
 				return response;
 			}},
-			{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": (key, options) => ({
-				...options,
+			{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": (key, condition) => ({
 				"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
-				"TableName": this.name
+				"TableName": this.name,
+				...(condition ? condition.requestObject() : {})
 			})}
 		].reduce((accumulator, currentValue) => {
 			const {key, modifier} = currentValue;
