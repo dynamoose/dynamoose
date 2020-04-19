@@ -9,8 +9,11 @@ This method is the basic entry point for creating a model in Dynamoose. When you
 The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
 ```js
+const dynamoose = require("dynamoose");
+
 const Cat = new dynamoose.Model("Cat", {"name": String});
 const Cat = new dynamoose.Model("Cat", {"name": String}, {"create": false});
+
 const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
 ```
@@ -273,7 +276,7 @@ User.batchGet([1, 2], {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & the hashKey.
+In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & hashKey.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -396,7 +399,7 @@ await User.batchPut([
 
 ## Model.update(key[, updateObj[, settings]],[ callback])
 
-This function lets you update an existing item in the database. You can either pass in one object combining both the hashKey (partition key) you wish to update along with the update object, or keep them separate by passing in two objects.
+This function lets you update an existing item in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
 
 `key` can be a string representing the hashKey or an object containing the hashKey & rangeKey.
 
@@ -577,7 +580,7 @@ User.delete({"id": 1}, (error) => {
 
 You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
 
-`keys` can be an array of strings representing the hashKey and/or an array of objects containing the hashKey AND rangeKey.
+`keys` can be an array of strings representing the hashKey and/or an array of objects containing the hashKey & rangeKey.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, an object with the `unprocessedItems` will be returned to you. Otherwise an error will be thrown.
 
@@ -645,7 +648,7 @@ User.batchDelete([1, 2], {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & the hashKey.
+In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & hashKey.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});

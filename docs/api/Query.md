@@ -4,7 +4,7 @@ Dynamoose provides the ability to query a model by using the `Model.query` funct
 
 ## Model.query([filter])
 
-This is the basic entry point to construct a query request. It requires to set at least the hashKey of the item(s). The filter property is optional and can either be an object or a string representing the key you which to first filter on. In the event you don't pass in any parameters and don't call any other methods on the query object it will query with no filters or options.
+This is the basic entry point to construct a query request. When running a query you must specify at least the hashKey of the document(s). This can either be the hashKey of the table, or the hashKey of an index. The filter property is optional and can either be an object or a string representing the key you which to first filter on. In the event you don't pass in any parameters and don't call any other methods on the query object it will query with no filters or options.
 
 ```js
 Cat.query("breed").contains("Terrier").exec() // will query all items where the hashKey `breed` contains `Terrier`
@@ -13,7 +13,7 @@ Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all items whe
 
 If you pass an object into `Model.query` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
-Please note: `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.    
+`Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.
 
 ## Conditionals
 
@@ -89,7 +89,9 @@ Cat.query("name").eq("Will").attributes(["id", "name"]); // Return all documents
 
 ## query.count()
 
-Query the number of matching documents, rather than the matching documents themselves(using `Select "COUNT"`) which saves band with. The response you will receive from the query operation with this setting will be an object with the properties `count` & `queriedCount`, which have the same values as described in [`query.exec([callback])`](#queryexeccallback).
+Instead of returning an array of documents this function will cause the query operation to return a special object with the count information for the query. The response you will receive from the query operation with this setting will be an object with the properties `count` & `queriedCount`, which have the same values as described in [`query.exec([callback])`](#queryexeccallback).
+
+Using this option will save bandwidth by setting the DynamoDB `Select` option to `COUNT`.
 
 ```js
 const response = await Cat.query("name").eq("Will").count().exec();
@@ -114,7 +116,7 @@ Cat.query("name").eq("Will").using("name-index"); // Run the query on the `name-
 
 ## query.all([delay[, max]])
 
-If a query result is more than the limit of your DynamoDB table, DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests until all items have been received (as long as the `lastKey` property exists on the response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
+Unlike most other query functions that directly change the DynamoDB query request, this function is purely internal and unique to Dynamoose. If a query result is more than the AWS query response limit, DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests upon receiving the response until all documents have been received (by checking and making new requests with the `lastKey` property from the previous response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
 
 Two parameters can be specified on this setting:
 
