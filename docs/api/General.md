@@ -177,7 +177,7 @@ Setting an attribute value to this will cause it to bypass the `default` value, 
 ```js
 const dynamoose = require("dynamoose");
 
-const User = new dynamoose.Model("User", {"id": String, "name": {"type": String, "default": "Bob"}});
+const User = dynamoose.model("User", {"id": String, "name": {"type": String, "default": "Bob"}});
 const user = new User({"id": 1, "name": dynamoose.undefined});
 await user.save();
 // {"id": 1}
