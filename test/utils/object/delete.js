@@ -28,6 +28,10 @@ describe("utils.object.delete", () => {
 			"output": ["universe"]
 		},
 		{
+			"input": [["world", "universe"], 0],
+			"output": ["universe"]
+		},
+		{
 			"input": [{"hello": ["world", "universe"]}, "hello.0"],
 			"output": {"hello": ["universe"]}
 		},

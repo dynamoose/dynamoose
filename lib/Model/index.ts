@@ -550,7 +550,7 @@ Model.prototype.update = function (this: Model<DocumentCarrier>, keyObj, updateO
 	// TODO: change the line below to not be partial
 	const getUpdateExpressionObject: () => Promise<any> = async () => {
 		const updateTypes = [
-			{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested"}},
+			{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 			{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
 			{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}}
 		].reverse();
@@ -686,7 +686,7 @@ Model.prototype.update = function (this: Model<DocumentCarrier>, keyObj, updateO
 	const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async () => ({
 		"Key": this.Document.objectToDynamo(keyObj),
 		"ReturnValues": "ALL_NEW",
-		...utils.merge_objects.main({"combineMethod": "object_combine"})((settings.condition ? settings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression"}) : {}), await getUpdateExpressionObject()),
+		...utils.merge_objects.main({"combineMethod": "object_combine"})((settings.condition ? settings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}), await getUpdateExpressionObject()),
 		"TableName": this.name
 	}));
 	if (settings.return === "request") {
