@@ -2,7 +2,6 @@
 
 ## 2.0 - incomplete list
 
-- Everything in Dynamoose are now classes. This includes `Model` and `Schema`. This means to initialize a new instance of one of these items, you must use the `new` keyword before it
 - `scan.count()` has been removed, and `scan.counts()` has been renamed to `scan.count()`.
 - Schema `default` value does not pass the model instance into `default` functions any more.
 - `Model.update`
@@ -10,8 +9,7 @@
 	- `$DELETE` has been renamed to `$REMOVE`
 	- `$REMOVE` (previously `$DELETE`) now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
 	- `$PUT` has been replaced with `$SET`
-- `dynamoose.setDefaults` has been renamed to `dynamoose.Model.defaults`, and is now a property that you set, vs a method that you pass the object into
-- `dynamoose.model` has been renamed to `dynamoose.Model`
+- `dynamoose.setDefaults` has been renamed to `dynamoose.model.defaults.set`
 - `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
 - `dynamoose.setDDB` has been renamed to `dynamoose.aws.ddb.set`
 - `dynamoose.revertDDB` has been renamed to `dynamoose.aws.ddb.revert`
