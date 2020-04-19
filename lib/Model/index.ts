@@ -223,7 +223,7 @@ export class Model<T extends DocumentCarrier> {
 		this.name = `${this.options.prefix}${name}${this.options.suffix}`;
 
 		if (!schema) {
-			throw new CustomError.MissingSchemaError(`Schema hasn't been registered for model "${name}".\nUse "new dynamoose.Model(name, schema)"`);
+			throw new CustomError.MissingSchemaError(`Schema hasn't been registered for model "${name}".\nUse "dynamoose.model(name, schema)"`);
 		} else if (!(schema instanceof Schema)) {
 			schema = new Schema(schema);
 		}
