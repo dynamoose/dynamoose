@@ -1,7 +1,7 @@
-const providers = require("./providers");
-const status = require("./status");
+import providers from "./providers";
+import status from "./status";
 
-module.exports = {
+export = {
 	providers,
 	...status
 };
