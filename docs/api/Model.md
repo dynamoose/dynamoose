@@ -1,26 +1,24 @@
 # Model
 
-The Model object represents one DynamoDB table. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
+The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
 
 ## new dynamoose.Model(name, schema[, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
-The `schema` parameter can either be an object OR a Schema instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
+The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
 ```js
 const dynamoose = require("dynamoose");
 
 const Cat = new dynamoose.Model("Cat", {"name": String});
-```
-
-```js
-const dynamoose = require("dynamoose");
+const Cat = new dynamoose.Model("Cat", {"name": String}, {"create": false});
 
 const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}));
+const Cat = new dynamoose.Model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
 ```
 
-The config parameter is an object used to customize settings for the model.
+The `config` parameter is an object used to customize settings for the model.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
@@ -124,7 +122,7 @@ async function printTableRequest() {
 }
 ```
 
-## Model.get(hashKey[, settings][, callback])
+## Model.get(key[, settings][, callback])
 
 You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
@@ -173,7 +171,7 @@ User.get(1, {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the hashKey & rangeKey.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -278,7 +276,7 @@ User.batchGet([1, 2], {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & hashKey.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -399,9 +397,11 @@ await User.batchPut([
 });
 ```
 
-## Model.update(keyObj[, updateObj[, settings]],[ callback])
+## Model.update(key[, updateObj[, settings]],[ callback])
 
-This function lets you update an existing document in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
+This function lets you update an existing item in the database. You can either pass in one object combining both the hashKey you wish to update along with the update object, or keep them separate by passing in two objects.
+
+`key` can be a string representing the hashKey or an object containing the hashKey & rangeKey.
 
 ```js
 await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
@@ -435,7 +435,7 @@ User.update({"id": 1}, {"name": "Bob"}, (error, user) => {
 ```
 
 ```js
-// The following code below will only update the item if the `active` property on the existing document is set to true
+// The following code below will only update the document if the `active` property on the existing document is set to true
 
 const condition = new dynamoose.Condition().where("active").eq(true);
 
@@ -481,9 +481,11 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
-## Model.delete(hashKey[, settings][, callback])
+## Model.delete(key[, settings][, callback])
 
-You can use Model.delete to delete a document from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
+You can use Model.delete to delete a item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
+
+`key` can be a string representing the hashKey or an object containing the hashKey & rangeKey.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, noting will be returned to you. Otherwise an error will be thrown.
 
@@ -530,7 +532,7 @@ User.delete(1, {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & hashKey.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
@@ -576,7 +578,9 @@ User.delete({"id": 1}, (error) => {
 
 ## Model.batchDelete(keys[, settings][, callback])
 
-You can use Model.batchDelete to delete documents from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+
+`keys` can be an array of strings representing the hashKey and/or an array of objects containing the hashKey & rangeKey.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. In the event the operation was successful, an object with the `unprocessedItems` will be returned to you. Otherwise an error will be thrown.
 
@@ -644,7 +648,7 @@ User.batchDelete([1, 2], {"return": "request"}, (error, request) => {
 });
 ```
 
-In the event you have a rangeKey for your model, you can pass in an object for the `hashKey` parameter.
+In the event you have a rangeKey for your model, you can pass in an object for the `key` parameter which includes the rangeKey & hashKey.
 
 ```js
 const User = new dynamoose.Model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});

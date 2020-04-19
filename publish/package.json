@@ -1,0 +1,15 @@
+{
+  "name": "publish",
+  "main": "index.js",
+  "license": "Unlicense",
+  "private": true,
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "@octokit/rest": "^17.3.0",
+    "inquirer": "^7.1.0",
+    "npm-registry-fetch": "^8.0.0",
+    "openurl": "^1.1.1",
+    "ora": "^4.0.3",
+    "simple-git": "^1.132.0"
+  }
+}

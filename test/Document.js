@@ -182,6 +182,28 @@ describe("Document", () => {
 					});
 				});
 
+				it("Should save with correct object with undefined as value without required or default as first property", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}));
+					user = new User({"name": undefined, "id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with undefined as value without required or default as second property", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = new Model("User", new Schema({"id": Number, "name": String}));
+					user = new User({"id": 1, "name": undefined});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with string set", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "friends": [String]});
@@ -1283,6 +1305,14 @@ describe("Document", () => {
 			{
 				"input": {"data": {"L": []}},
 				"output": true
+			},
+			{
+				"input": {"prop": undefined},
+				"output": false
+			},
+			{
+				"input": {"prop": null},
+				"output": false
 			}
 		];
 
@@ -1684,6 +1714,16 @@ describe("Document", () => {
 				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
 				"error": new Error.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
+			},
+			{
+				"schema": {"id": Number, "name": {"type": String, "set": (val) => val === "" ? undefined : val}},
+				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"]}],
+				"output": {"id": 1, "name": undefined}
+			},
+			{
+				"schema": {"id": Number, "name": {"type": String, "required": true, "set": (val) => val === "" ? undefined : val}},
+				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"], "required": true}],
+				"error": new Error.ValidationError("name is a required property but has no value when trying to save document")
 			}
 		];
 
