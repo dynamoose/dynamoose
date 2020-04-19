@@ -12,6 +12,8 @@ The `options` parameter is an optional object with the following options:
 | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
+const dynamoose = require("dynamoose");
+
 const schema = new dynamoose.Schema({
 	"id": String,
 	"age": Number
@@ -22,6 +24,8 @@ const schema = new dynamoose.Schema({
 ```
 
 ```js
+const dynamoose = require("dynamoose");
+
 const schema = new dynamoose.Schema({
 	"id": String,
 	"age": {
@@ -32,6 +36,8 @@ const schema = new dynamoose.Schema({
 ```
 
 ```js
+const dynamoose = require("dynamoose");
+
 const schema = new dynamoose.Schema({
 	"id": String,
 	"name": String
@@ -302,7 +308,7 @@ You can use a get function on an attribute to be run whenever retrieving a docum
 
 ### set: function | async function
 
-You can use a set function on an attribute to be run whenever saving a document to DynamoDB. This function will only be run if the item exists in the document. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
+You can use a set function on an attribute to be run whenever saving a document to DynamoDB. This function will only be run if the attribute exists in the document. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
 
 ```js
 {
@@ -322,7 +328,7 @@ Your index object can contain the following properties:
 | Name | Type | Default | Notes |
 |---|---|---|---|
 | name | string | `${attribute}${global ? "GlobalIndex" : "LocalIndex"}` | Name of index |
-| global | boolean | false | If the index should be a global secondary index or not. Attribute will be the hash key for the index. |
+| global | boolean | false | If the index should be a global secondary index or not. Attribute will be the hashKey for the index. |
 | rangeKey | string | undefined | The range key attribute name for a global secondary index. |
 | project | boolean \| [string] | true | Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. |
 | throughput | number \| {read: number, write: number} | undefined | Sets the throughput for the global secondary index. |
@@ -332,24 +338,33 @@ If you set `index` to `true`, it will create an index with all of the default se
 
 ```js
 {
+	"id": {
+		"hashKey": true,
+		"type": String,
+	},
 	"email": {
 		"type": String,
 		"index": {
 			"name": "emailIndex",
 			"global": true
-		} // creates a global index with the name `emailIndex`
+		} // creates a global secondary index with the name `emailIndex` and hashKey `email`
 	}
 }
 ```
 
 ```js
 {
-	"email": {
+	"id": {
+		"hashKey": true,
 		"type": String,
 		"index": {
 			"name": "emailIndex",
+			"rangeKey": "email",
 			"throughput": {"read": 5, "write": 10}
-		} // creates a global index with the name `emailIndex`
+		} // creates a local secondary index with the name `emailIndex`, hashKey `id`, rangeKey `email`
+	},
+	"email": {
+		"type": String
 	}
 }
 ```
@@ -357,6 +372,8 @@ If you set `index` to `true`, it will create an index with all of the default se
 ### hashKey: boolean
 
 You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object.
+
+`hashKey` is commonly called a `partition key` in the AWS documentation.
 
 ```js
 {
@@ -371,6 +388,8 @@ You can set this to true to overwrite what the `hashKey` for the Model will be. 
 ### rangeKey: boolean
 
 You can set this to true to overwrite what the `rangeKey` for the Model will be. By default the `rangeKey` won't exist.
+
+`rangeKey` is commonly called a `sort key` in the AWS documentation.
 
 ```js
 {
