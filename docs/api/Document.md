@@ -2,12 +2,14 @@
 
 A document represents an item for a given model in DynamoDB. This item can created locally (meaning it's not yet saved in DynamoDB), or created from an item already stored in DynamoDB (ex. `Model.get`).
 
+A document/item is similar to a row in a relational database or a document in MongoDB.
+
 ## new Model(object)
 
 In order to create a new document you just pass in your object into an instance of your model.
 
 ```js
-const User = new dynamoose.Model("User", {"id": Number, "name": String});
+const User = dynamoose.model("User", {"id": Number, "name": String});
 const myUser = new User({
 	"id": 1,
 	"name": "Tim"

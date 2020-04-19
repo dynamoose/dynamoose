@@ -47,7 +47,7 @@ new dynamoose.Condition().where("id").eq(1).and().where("name").eq("Bob");
 new dynamoose.Condition().where("id").eq(1).where("name").eq("Bob");
 ```
 
-## condition.and()
+## condition.or()
 
 This function specifies an `OR` join between two conditions, as opposed to the default `AND`. The condition will return `true` if either condition is met.
 
