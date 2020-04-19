@@ -5,6 +5,9 @@ const obj = require("./retrieve")(version);
 
 Object.entries(obj).forEach((entry) => {
 	const [key, value] = entry;
+	if (typeof value !== "string") {
+		return;
+	}
 	core.setOutput(key, value);
 });
 
