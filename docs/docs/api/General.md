@@ -1,5 +1,3 @@
-# Dynamoose Object
-
 You can access Dynamoose by requiring the library. For example:
 
 ```js
