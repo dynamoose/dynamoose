@@ -18,7 +18,11 @@
   "scripts": {
     "test": "nyc --all mocha && nyc report --reporter=html",
     "lint": "eslint .",
-    "test-nocoverage": "mocha"
+    "test-nocoverage": "mocha",
+    "site:install": "cd docs && npm install",
+    "site:start": "cd docs && npm start",
+    "site:build": "cd docs && npm run build",
+    "site:swizzle": "cd docs && npm run swizzle"
   },
   "repository": {
     "type": "git",
