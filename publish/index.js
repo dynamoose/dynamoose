@@ -12,6 +12,7 @@ const octokit = new Octokit({
 });
 const path = require("path");
 const ora = require("ora");
+const os = require("os");
 const npmFetch = require("npm-registry-fetch");
 let package = require("../package.json");
 
@@ -95,7 +96,7 @@ let package = require("../package.json");
 	openurl.open(`https://github.com/dynamoosejs/dynamoose/compare/v${package.version}...${results.branch}`);
 	const versionInfo = retrieveInformation(results.version);
 	const versionFriendlyTitle = `Version ${[versionInfo.main, utils.capitalize_first_letter(versionInfo.tag || ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
-	const changelogFilePath = `${results.version}-changelog.md`;
+	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
 	await fs.writeFile(changelogFilePath, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`);
 	await exec(`code ${changelogFilePath}`);
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
