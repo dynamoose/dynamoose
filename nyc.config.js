@@ -1,6 +1,5 @@
 module.exports = {
 	"exclude": [
-		"dist",
 		"test",
 		"coverage",
 		".eslintrc.js",
