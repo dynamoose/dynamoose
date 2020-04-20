@@ -63,6 +63,7 @@
 
 
 ### Other:
+- [ ] I have read through and followed the Contributing Guidelines
 - [ ] I have searched through the GitHub pull requests to ensure this PR has not already been submitted
 - [ ] I have updated the Dynamoose documentation (if required) given the changes I made
 - [ ] I have added/updated the Dynamoose test cases (if required) given the changes I made

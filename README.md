@@ -34,20 +34,32 @@
 
 ---
 
-# Dynamoose Version 2.0 is still In Development. Please [contact me](https://charlie.fish/contact) with any feedback or questions.
+Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](https://mongoosejs.com/)).
 
-Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](https://mongoosejs.com/))
+### Getting Started
 
+Take a look at our [website](https://dynamoosejs.com) for information about how to get started.
 
-## Getting Started
+### Resources
 
-### Installation
+#### General
 
-```sh
-$ npm i dynamoose@beta
-```
+- [Website](https://dynamoosejs.com)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+- [License](LICENSE)
 
-## Documentation
+#### Social
 
-- [v2](https://github.com/dynamoosejs/dynamoose/tree/master/docs)
-- [v1](https://dynamoosejs.com)
+- [Slack](https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY)
+- [Twitter](https://twitter.com/DynamooseJS)
+
+### Branch Strategy
+
+Below you will find the current branch strategy for the project. Work taking place on the branches listed below might be further ahead than the versions on NPM. All documentation links found below will also be reflective of the published version on NPM. If you would like to live dangouragely and run non released versions, you can run `npm install dynamoosejs/dynamoose#BRANCH` (replacing `BRANCH` with the branch listed below). You will also find the most up to date documentation in the `docs` folder of the branch.
+
+| Branch | Version | NPM Tag | Links |
+| --- | --- | --- | --- |
+| [`v1.11.1`](https://github.com/dynamoosejs/dynamoose/tree/v1.11.1) (tag) | 1.11.1 | latest | - [Documentation](https://dynamoosejs.com) |
+| [`master`](https://github.com/dynamoosejs/dynamoose/tree/master) | 2.0.0 | beta | - [Documentation](https://github.com/dynamoosejs/dynamoose/tree/master/docs/docs)<br>- [Issue](https://github.com/dynamoosejs/dynamoose/issues/709) |
+| [`alpha`](https://github.com/dynamoosejs/dynamoose/tree/alpha) | 2.1.0 | alpha | - [Documentation](https://github.com/dynamoosejs/dynamoose/tree/alpha/docs/docs)<br>- [Issue](https://github.com/dynamoosejs/dynamoose/issues/788) |
