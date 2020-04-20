@@ -1,5 +1,3 @@
-# Transaction
-
 DynamoDB supports running transactions in your database. These transactions are all or nothing, meaning the entire transaction will succeed, or the entire transaction will fail. In the event the transaction fails, the state of the database will be the exact same as if the transaction didn't take place at all.
 
 ## dynamoose.transaction(transactions[, settings][, callback])

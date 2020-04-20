@@ -1,5 +1,3 @@
-# Condition
-
 The Condition object represents a conditional that you can attach to various settings in other Dynamoose methods.
 
 ## new dynamoose.Condition([filter])

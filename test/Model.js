@@ -801,7 +801,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for string set", async () => {
-					User = dynamoose.model("User", {"id": Number, "friends": [String]});
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Set, "schema": [String]}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Bob"]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -821,7 +821,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for number set", async () => {
-					User = dynamoose.model("User", {"id": Number, "numbers": [Number]});
+					User = dynamoose.model("User", {"id": Number, "numbers": {"type": Set, "schema": [Number]}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -841,7 +841,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for date set", async () => {
-					User = dynamoose.model("User", {"id": Number, "times": [Date]});
+					User = dynamoose.model("User", {"id": Number, "times": {"type": Set, "schema": [Date]}});
 					const time = new Date();
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "times": {"NS": [time.getTime(), 0]}}});
 					const user = await callType.func(User).bind(User)(1);
@@ -862,7 +862,7 @@ describe("Model", () => {
 				});
 
 				it("Should return object with correct values for buffer set", async () => {
-					User = dynamoose.model("User", {"id": Number, "data": [Buffer]});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Set, "schema": [Buffer]}});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an("object");
@@ -2431,7 +2431,7 @@ describe("Model", () => {
 
 				it("Should not throw error if not modifying required property", () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "required": true}, "friends": [String]});
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "required": true}, "friends": {"type": Set, "schema": [String]}});
 
 					return expect(callType.func(User).bind(User)({"id": 1}, {"friends": ["Bob"]})).to.not.be.rejected;
 				});
@@ -2577,7 +2577,7 @@ describe("Model", () => {
 
 				it("Should use forceDefault value if adding to property that is a string set", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = dynamoose.model("User", {"id": Number, "friends": {"type": [String], "default": ["Bob"], "forceDefault": true}});
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Set, "schema": [String], "default": ["Bob"], "forceDefault": true}});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": ["Tim"]}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
@@ -3184,12 +3184,28 @@ describe("Model", () => {
 				});
 			});
 
-			it("Should return correct result with options", async () => {
-				expect(await User.transaction.condition(1, {"hello": "world"})).to.eql({
+			it("Should return correct result for object based key", async () => {
+				User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+				expect(await User.transaction.condition({"id": 1, "name": "Bob"})).to.eql({
 					"ConditionCheck": {
+						"Key": {"id": {"N": "1"}, "name": {"S": "Bob"}},
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result with conditional", async () => {
+				expect(await User.transaction.condition(1, new dynamoose.Condition("age").gt(13))).to.eql({
+					"ConditionCheck": {
+						"ConditionExpression": "#a0 > :v0",
+						"ExpressionAttributeNames": {
+							"#a0": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"N": "13"}
+						},
 						"Key": {"id": {"N": "1"}},
-						"TableName": "User",
-						"hello": "world"
+						"TableName": "User"
 					}
 				});
 			});

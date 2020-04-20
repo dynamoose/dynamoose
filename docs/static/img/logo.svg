@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024px" height="1024px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 64 (93537) - https://sketch.com -->
+    <title>Logo1024</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="438" height="553"></rect>
+        <filter x="-1.1%" y="-0.9%" width="104.1%" height="103.6%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="4" dy="6" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="2" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+        <linearGradient x1="0%" y1="0%" x2="50%" y2="50%" id="linearGradient-3">
+            <stop stop-color="#FFFFFF" offset="0%"></stop>
+            <stop stop-color="#F3F3F3" offset="100%"></stop>
+        </linearGradient>
+        <polygon id="path-4" points="0 0.018649292 126 0 0 126"></polygon>
+        <filter x="-7.1%" y="-5.6%" width="111.1%" height="111.1%" filterUnits="objectBoundingBox" id="filter-5">
+            <feOffset dx="-2" dy="0" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="2" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Logo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Background" fill="#4A90E2" x="0" y="0" width="1024" height="1024"></rect>
+        <g id="Page" transform="translate(293.000000, 236.000000)">
+            <g id="Background">
+                <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+                <use fill="#FFFFFF" fill-rule="evenodd" xlink:href="#path-1"></use>
+            </g>
+            <g id="PageFold">
+                <polygon id="outer" fill="#4A90E2" points="0 0.018649292 126 0 0 126"></polygon>
+                <g id="inner" transform="translate(63.000000, 63.000000) rotate(180.000000) translate(-63.000000, -63.000000) ">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-5)" xlink:href="#path-4"></use>
+                    <use fill="url(#linearGradient-3)" fill-rule="evenodd" xlink:href="#path-4"></use>
+                </g>
+            </g>
+            <text id="JSON-Data" font-family="SFUIText-Heavy, SF UI Text" font-size="20" font-weight="600" fill="#000000">
+                <tspan x="20" y="238">{</tspan>
+                <tspan x="20" y="262">	name: “dynamoose”,</tspan>
+                <tspan x="20" y="286">	website: “dynamoosejs.com”,</tspan>
+                <tspan x="20" y="310">	creator: “Brandon Goode”</tspan>
+                <tspan x="20" y="334">	language: “javascript”,</tspan>
+                <tspan x="20" y="358">	awesome: true,</tspan>
+                <tspan x="20" y="382">	open_source: true,</tspan>
+                <tspan x="20" y="406">	license: “Unlicense”,</tspan>
+                <tspan x="20" y="430">	github: “dynamoosejs/dynamoose”</tspan>
+                <tspan x="20" y="454">}</tspan>
+            </text>
+        </g>
+    </g>
+</svg>
