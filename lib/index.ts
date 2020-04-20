@@ -1,3 +1,5 @@
+import "source-map-support/register";
+
 import {Model, ModelOptionsOptional} from "./Model";
 import {Schema, SchemaDefinition} from "./Schema";
 import Condition from "./Condition";
