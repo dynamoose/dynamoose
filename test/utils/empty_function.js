@@ -7,6 +7,6 @@ describe("utils.empty_function", () => {
 	});
 
 	it("Should equal an empty function", () => {
-		expect(utils.empty_function.toString().replace(/\s/gu, "")).to.eql("()=>{}");
+		expect(utils.empty_function.toString().replace(/\s/gu, "").replace(/cov_11e9ag7pud\(\)\.f\[0\]\+\+;/gu, "")).to.eql("()=>{}");
 	});
 });
