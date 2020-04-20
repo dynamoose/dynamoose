@@ -46,3 +46,22 @@ jobs:
   #       env:
   #         TAG: ${{ needs.getinfo.outputs.npmtag }}
   #         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publishsite:
+    needs: getinfo
+    runs-on: ubuntu-latest
+    if: needs.getinfo.outputs.npmtag == 'latest'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - run: npm run site:install
+      - run: npm run site:build
+      - uses: jakejarvis/s3-sync-action@v0.5.1
+        with:
+          args: --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_SITE_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: 'us-west-2'
+          SOURCE_DIR: 'docs/build'
