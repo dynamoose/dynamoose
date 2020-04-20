@@ -8,8 +8,6 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "@types/node": "^13.13.0",
-    "@types/source-map-support": "^0.5.1",
     "@typescript-eslint/eslint-plugin": "^2.28.0",
     "@typescript-eslint/parser": "^2.28.0",
     "chai": "^4.2.0",
@@ -52,6 +50,8 @@
     "url": "https://github.com/dynamoosejs/dynamoose/issues"
   },
   "dependencies": {
+    "@types/node": "^13.13.0",
+    "@types/source-map-support": "^0.5.1",
     "aws-sdk": "^2.658.0",
     "source-map-support": "^0.5.17",
     "uuid": "^7.0.3"
