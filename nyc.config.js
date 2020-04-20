@@ -1,10 +1,11 @@
-{
+module.exports = {
 	"exclude": [
 		"test",
 		"coverage",
 		".eslintrc.js",
 		".mocharc.js",
 		"publish",
-		"docs"
+		"docs",
+		"nyc.config.js"
 	]
-}
+};
