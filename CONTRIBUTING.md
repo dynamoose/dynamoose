@@ -6,7 +6,7 @@ The following is a set of guidelines for contributing to Dynamoose and all proje
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [Dynamoose Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the email address in the [Code of Conduct](CODE_OF_CONDUCT.md).
+This project and everyone participating in it is governed by the [Dynamoose Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the contact method in the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## What should I know before I get started?
 
@@ -35,6 +35,7 @@ It is highly recommended (although not required) to follow the pattern below bef
 
 1. **Identify a need in the project** - This can be a bug, feature request, or other change.
 2. **Create a detailed issue to gauge interest** - Although most PRs are merged, we don't want you to waste time creating a PR that doesn't have the support of the community. *Please not this step is highly encouraged for larger contributions, but not required. For smaller contributions (typos, adding tests, updating documentaion, minor code changes, etc.) it is not necessary to create a seperate issue.*
+3. **Read through the `package.json`** - The `package.json` file in the root of the repository has a **lot** of useful information about the project. Especially read through the scripts section, as a lot of those scripts can help speed up your development process when working in Dynamoose.
 
 #### During
 
