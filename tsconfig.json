@@ -7,7 +7,7 @@
 		"target": "es6",
 		"outDir": "dist",
 		"allowJs": true,
-		"sourceMap": false,
+		"sourceMap": true,
 		"declaration": true,
 		"noImplicitThis": true,
 		"strict": false
