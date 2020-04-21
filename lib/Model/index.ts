@@ -153,7 +153,7 @@ function waitForActive(model: Model<DocumentCarrier>) {
 async function updateTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | (() => Promise<void>)> {
 	const currentThroughput = (await getTableDetails(model)).Table;
 	const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
-	if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary?.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
+	if ((expectedThroughput.BillingMode === (currentThroughput.BillingModeSummary || {}).BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
 	// if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
 		return (): Promise<void> => Promise.resolve.bind(Promise)();
 	}
@@ -188,7 +188,7 @@ export class Model<T extends DocumentCarrier> {
 	batchGet: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: CallbackType<DocumentCarrier[], AWSError>) => void | DynamoDB.BatchGetItemInput | Promise<DocumentCarrier[]>;
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
 
-	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}) {
+	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional) {
 		this.options = (utils.combine_objects(options, customDefaults.get(), originalDefaults) as ModelOptions);
 		this.name = `${this.options.prefix}${name}${this.options.suffix}`;
 

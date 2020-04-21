@@ -230,7 +230,7 @@ function attributesAction(this: Schema): string[] {
 			} catch (e) {} // eslint-disable-line no-empty
 
 			// TODO: using too many `as` statements in the two lines below. Clean that up.
-			if ((attributeType === "M" || attributeType === "L") && (object[key] as AttributeDefinition)?.schema) {
+			if ((attributeType === "M" || attributeType === "L") && (object[key] as AttributeDefinition).schema) {
 				accumulator.push(...main(((object[key] as AttributeDefinition).schema as SchemaDefinition), keyWithExisting));
 			}
 
