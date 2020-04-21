@@ -26,8 +26,7 @@ jobs:
         uses: rrainn/dynamodb-action@v1.0
       - name: Create coverage folder
         run: mkdir -p ./coverage
-      - name: Run tests
-        run: npx nyc --all mocha && npx nyc report --reporter=text-lcov > ./coverage/lcov.info
+      - run: npm test
       - name: Coveralls
         uses: coverallsapp/github-action@v1.0.1
         with:
