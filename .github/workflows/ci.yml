@@ -14,7 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [8.x, 10.x, 12.x, 13.x]
+        node-version: [
+          8.x,
+          10.x,
+          12.x,
+          13.x
+        ]
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
@@ -32,6 +37,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
   finalize:
     runs-on: ubuntu-latest
     needs: [lint, test]
