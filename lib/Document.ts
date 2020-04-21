@@ -27,7 +27,7 @@ export class Document {
 	save: (this: Document, settings: DocumentSaveSettings, callback: CallbackType<Document, AWSError>) => Promise<Document>;
 	model?: Model<Document>;
 
-	constructor(model: Model<Document>, object: DynamoDB.AttributeMap | {[key: string]: any} = {}, settings: any = {}) {
+	constructor(model: Model<Document>, object?: DynamoDB.AttributeMap | {[key: string]: any}, settings?: any) {
 		const documentObject = Document.isDynamoObject(object) ? (aws.converter() as any).unmarshall(object) : object;
 		Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
 		Object.defineProperty(this, internalProperties, {
