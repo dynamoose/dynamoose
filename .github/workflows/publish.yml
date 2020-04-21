@@ -58,10 +58,19 @@ jobs:
       - run: npm run site:build
       - uses: jakejarvis/s3-sync-action@v0.5.1
         with:
-          args: --follow-symlinks --delete
+          args: --follow-symlinks --delete --cache-control 's-maxage=604800, max-age=0'
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_SITE_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: 'us-west-2'
           SOURCE_DIR: 'docs/build'
+      - name: Purge Cloudflare Cache
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/purge_cache" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
+          ZONE: ${{ secrets.CLOUDFLARE_ZONE }}
