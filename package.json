@@ -81,7 +81,8 @@
     "document store",
     "table",
     "json",
-    "object"
+    "object",
+    "storage"
   ],
   "engines": {
     "node": ">=8.0.0"
