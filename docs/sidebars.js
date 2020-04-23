@@ -6,18 +6,18 @@ module.exports = {
 			"getting_started/Import",
 			"getting_started/Configure"
 		],
-		"API": [
-			"api/Schema",
-			"api/Model",
-			"api/Document",
-			"api/Condition",
-			"api/Query",
-			"api/Scan",
-			"api/Transaction",
-			"api/Dynamoose"
+		"Guide": [
+			"guide/Schema",
+			"guide/Model",
+			"guide/Document",
+			"guide/Condition",
+			"guide/Query",
+			"guide/Scan",
+			"guide/Transaction",
+			"guide/Dynamoose"
 		],
 		"Other": [
-			"FAQ"
+			"other/FAQ"
 		]
 	},
 };
