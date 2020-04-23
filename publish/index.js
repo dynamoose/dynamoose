@@ -28,13 +28,14 @@ let package = require("../package.json");
 		console.error("Exiting.\n");
 		process.exit(1);
 	}
+	const originalBranch = (await git.status()).current;
 	let results = await inquirer.prompt([
 		{
 			"name": "branch",
 			"type": "list",
 			"message": "What branch would you like to publish?",
 			"choices": (await git.branchLocal()).all,
-			"default": (await git.status()).current
+			"default": originalBranch
 		}
 	]);
 	await git.checkout(results.branch);
@@ -154,6 +155,13 @@ let package = require("../package.json");
 	const npmPoll = ora("Polling NPM for release").start();
 	await isReleaseSubmiitted(results.version);
 	npmPoll.succeed("Version successfully published to NPM");
+	// Restore Git to original state
+	const gitCheckoutOriginal = ora(`Checking out ${originalBranch} branch`).start();
+	await git.checkout(originalBranch);
+	gitCheckoutOriginal.succeed(`Checked out ${originalBranch} branch`);
+	const gitDeleteNewBranch = ora(`Deleting ${branch} branch`).start();
+	await git.deleteLocalBranch(branch);
+	gitDeleteNewBranch.succeed(`Deleted ${branch} branch`);
 	// Complete
 	process.exit(0);
 })();
