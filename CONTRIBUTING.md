@@ -66,3 +66,13 @@ It is highly recommended (although not required) to follow the pattern below bef
 #### Release
 
 Dynamoose does not currently have a release schedule that we conform to. We atttempt to batch work into a release every so often. If you have a need that requires us releasing a version sooner, please notify us, and we will attempt to cut a new release earlier (however this is not guaranteed, and you are still welcome to point to a branch in NPM if we are unable to release on your timeline).
+
+---
+
+The following section is unlikely to be useful to general contributors to Dynamoose, and is reserved for project maintainers.
+
+### Release
+
+In order to release a version of Dynamoose you can kick off this process by running `node publish`. This will kick off the release process. Following the steps it guides you through should lead to a successful release. Please [contact me](https://charlie.fish/contact) or message me on the Dynamoose Slack (Charlie Fish) if you have questions or run into any issues.
+
+It is important to note that you must have write permissions to the `master` branch in order for this process to be successful.
