@@ -153,7 +153,7 @@ let package = require("../package.json");
 	gitRelease.succeed("GitHub release created");
 	// Poll NPM for release
 	const npmPoll = ora("Polling NPM for release").start();
-	await isReleaseSubmiitted(results.version);
+	await isReleaseSubmitted(results.version);
 	npmPoll.succeed("Version successfully published to NPM");
 	// Restore Git to original state
 	const gitCheckoutOriginal = ora(`Checking out ${originalBranch} branch`).start();
@@ -191,11 +191,11 @@ async function isPRMerged(pr) {
 		await utils.timeout(5000);
 	} while (!data.merged);
 }
-async function isReleaseSubmiitted(release) {
+async function isReleaseSubmitted(release) {
 	try {
 		await npmFetch(`/dynamoose/${release}`);
 	} catch (e) {
 		await utils.timeout(5000);
-		isReleaseSubmiitted(release);
+		isReleaseSubmitted(release);
 	}
 }
