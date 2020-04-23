@@ -27,6 +27,16 @@ It is highly encouraged to read through the following resources before contribut
 
 When reporting bugs please fill out the issue template with as much detail as possible. If you do not fill out the issue template with enough detail for us to debug your issue, your issue is at risk for being closed.
 
+#### Minimal, Complete and Verifiable Example (MCVE)
+
+One of the most important things when submitting an issue is to provide a *Minimal, Complete and Verifiable Example* (or MCVE for short). If you are reporting a bug it is important for us to be able to test and debug your code as quickly as possible.
+
+- *Minimal* – Use as little code as possible that still produces the same problem
+- *Complete* – Provide all parts needed to reproduce your problem
+- *Reproducible* – Test the code to make sure it reproduces the problem
+
+Without following these steps when creating code examples it is nearly impossible for us to debug your issue. Help us help you by putting time and care into code examples. Not following this guideline puts your issue at risk for being closed.
+
 ### Submitting a PR
 
 It is highly recommended (although not required) to follow the pattern below before submitting a PR. Not every step below will be relevant to all PRs.
