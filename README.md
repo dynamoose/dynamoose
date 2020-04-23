@@ -46,6 +46,7 @@ Take a look at our [website](https://dynamoosejs.com) for information about how 
 
 - [Website](https://dynamoosejs.com)
 - [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](CHANGELOG.md)
 - [License](LICENSE)
 
