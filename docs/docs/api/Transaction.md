@@ -1,4 +1,4 @@
-DynamoDB supports running transactions in your database(s). These transactions are all or nothing, meaning the entire transaction will succeed, or the entire transaction will fail. In the event the transaction fails, the state of the database will be the exact same as if the transaction didn't take place at all (ex. no documents will have been modified).
+DynamoDB supports running DynamoDB Transactions in your database. Transactions are all or nothing, meaning the entire transaction will succeed, or the entire transaction will fail. In the event the transaction fails, the state of the database will be the exact same as if the transaction didn't take place at all (ex. no documents will have been modified). You are also able to run these Transactions across multiple tables.
 
 ## dynamoose.transaction(transactions[, settings][, callback])
 
