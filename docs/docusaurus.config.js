@@ -28,7 +28,7 @@ module.exports = {
 			"style": "dark",
 			"links": [
 				{
-					"title": "Resources",
+					"title": "Social",
 					"items": [
 						{
 							"label": "GitHub",
@@ -45,6 +45,27 @@ module.exports = {
 						{
 							"label": "Stack Overflow",
 							"href": "https://stackoverflow.com/questions/tagged/dynamoose",
+						}
+					],
+				},
+				{
+					"title": "Other Resources",
+					"items": [
+						{
+							"label": "Contributing Guidelines",
+							"href": "https://github.com/dynamoosejs/dynamoose/blob/master/CONTRIBUTING.md",
+						},
+						{
+							"label": "Code of Conduct",
+							"href": "https://github.com/dynamoosejs/dynamoose/blob/master/CODE_OF_CONDUCT.md",
+						},
+						{
+							"label": "Changelog",
+							"href": "https://github.com/dynamoosejs/dynamoose/blob/master/CHANGELOG.md",
+						},
+						{
+							"label": "License",
+							"href": "https://github.com/dynamoosejs/dynamoose/blob/master/LICENSE.md",
 						}
 					],
 				},
