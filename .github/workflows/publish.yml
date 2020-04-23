@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       npmtag: ${{ steps.data.outputs.npmtag }}
+      websites3bucket: ${{ steps.data.outputs.websites3bucket }}
     steps:
       - uses: actions/checkout@v2
       - run: npm i
@@ -50,7 +51,7 @@ jobs:
   publishsite:
     needs: getinfo
     runs-on: ubuntu-latest
-    if: needs.getinfo.outputs.npmtag == 'latest'
+    if: needs.getinfo.outputs.websites3bucket != ''
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -60,7 +61,7 @@ jobs:
         with:
           args: --follow-symlinks --delete --cache-control 's-maxage=604800, max-age=0'
         env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_SITE_S3_BUCKET }}
+          AWS_S3_BUCKET: ${{ needs.getinfo.outputs.websites3bucket }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: 'us-west-2'
