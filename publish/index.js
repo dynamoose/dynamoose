@@ -57,6 +57,13 @@ let package = require("../package.json");
 				"default": (res) => retrieveInformation(res.version).isPrerelease
 			},
 			{
+				"name": "textEditor",
+				"type": "input",
+				"message": "What is the command line bin to launch your favorite text editor? (ex. `code`, `atom`, `nano`, etc.)",
+				"default": "code" // TODO: use default from Git preference, or take it from a user configuration file
+				// "validate": // TODO: ensure the command line thing exists and is valid (maybe by using `which` and checking to see if the output of that exists and is not `_____ not found`)
+			},
+			{
 				"name": "confirm",
 				"type": "confirm",
 				"message": "Does all of the information look correct?",
@@ -105,7 +112,7 @@ let package = require("../package.json");
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
 	const changelogTemplate = `## ${versionFriendlyTitle}\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
 	await fs.writeFile(changelogFilePath, changelogTemplate);
-	await exec(`code ${changelogFilePath}`);
+	await exec(`${results.textEditor} ${changelogFilePath}`);
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
