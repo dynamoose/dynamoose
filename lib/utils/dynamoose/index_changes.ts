@@ -3,29 +3,34 @@ import { Model } from "../../Model";
 import { Document } from "../../Document";
 import { IndexItem } from "../../Schema";
 
-enum ModelIndexChangeType {
+export enum ModelIndexChangeType {
 	add = "add",
 	delete = "delete"
 }
 
-export interface ModelIndexChange {
-	type: ModelIndexChangeType;
-	spec?: IndexItem; // TODO: this is required if type = "add", and non existant otherwise, need to figure out how to better type that other than optional
-	name?: string; // TODO: this is required if type = "delete", and non existant otherwise, need to figure out how to better type that other than optional
+export interface ModelIndexAddChange {
+	type: ModelIndexChangeType.add;
+	spec: IndexItem;
+}
+export interface ModelIndexDeleteChange {
+	type: ModelIndexChangeType.delete;
+	name: string;
 }
 
 const index_changes = async (model: Model<Document>, existingIndexes = []) => {
-	const output: ModelIndexChange[] = [];
+	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
 	const expectedIndexes = await model.schema.getIndexes(model);
 
 	// Indexes to delete
-	output.push(...existingIndexes.filter((index) => !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(index, searchIndex))).map((index) => ({"name": (index.IndexName as string), "type": ModelIndexChangeType.delete})));
+	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(index, searchIndex))).map((index) => ({"name": (index.IndexName as string), "type": ModelIndexChangeType.delete}));
+	output.push(...deleteIndexes);
 
 	// Indexes to create
-	output.push(...(expectedIndexes.GlobalSecondaryIndexes || []).filter((index) => ![...output.map((i) => (i as {name: string; type: string}).name), ...existingIndexes.map((i) => i.IndexName)].includes(index.IndexName)).map((index) => ({
-		"spec": index,
-		"type": ModelIndexChangeType.add
-	})));
+	const createIndexes: ModelIndexAddChange[] = (expectedIndexes.GlobalSecondaryIndexes || []).filter((index) => ![...output.map((i) => (i as {name: string; type: string}).name), ...existingIndexes.map((i) => i.IndexName)].includes(index.IndexName)).map((index) => ({
+		"type": ModelIndexChangeType.add,
+		"spec": index
+	}));
+	output.push(...createIndexes);
 
 	return output;
 };
