@@ -9,6 +9,7 @@
 	- `$DELETE` has been renamed to `$REMOVE`
 	- `$REMOVE` (previously `$DELETE`) now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
 	- `$PUT` has been replaced with `$SET`
+- Model `update` setting now includes more update actions. To use the v1 update behavior change the value of `update` setting to be `["ttl", "indexes"]`.
 - `dynamoose.setDefaults` has been renamed to `dynamoose.model.defaults.set`
 - `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
 - `dynamoose.setDDB` has been renamed to `dynamoose.aws.ddb.set`

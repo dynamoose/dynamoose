@@ -3,8 +3,8 @@ import { ModelOptions, ModelOptionsOptional } from ".";
 export const original: ModelOptions = {
 	"create": true,
 	"throughput": {
-		"read": 5,
-		"write": 5
+		"read": 1,
+		"write": 1
 	},
 	"prefix": "",
 	"suffix": "",

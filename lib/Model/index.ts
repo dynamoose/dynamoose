@@ -23,13 +23,18 @@ export interface ModelExpiresSettings {
 		returnExpired: boolean;
 	};
 }
+enum ModelUpdateOptions {
+	ttl = "ttl",
+	indexes = "indexes",
+	throughput = "throughput"
+}
 export interface ModelOptions {
 	create: boolean;
 	throughput: number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
 	waitForActive: ModelWaitForActiveSettings;
-	update: boolean;
+	update: boolean | ModelUpdateOptions[];
 	expires?: number | ModelExpiresSettings;
 }
 export type ModelOptionsOptional = Partial<ModelOptions>;
@@ -86,6 +91,7 @@ async function createTableRequest(model: Model<DocumentCarrier>): Promise<Dynamo
 }
 async function createTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.CreateTableOutput, AWSError> | (() => Promise<void>)> {
 	if ((((await getTableDetails(model, {"allowError": true})) || {}).Table || {}).TableStatus === "ACTIVE") {
+		model.alreadyCreated = true;
 		return (): Promise<void> => Promise.resolve.bind(Promise)();
 	}
 
@@ -150,19 +156,43 @@ function waitForActive(model: Model<DocumentCarrier>) {
 		check(0);
 	});
 }
-async function updateTable(model: Model<DocumentCarrier>): Promise<Request<DynamoDB.UpdateTableOutput, AWSError> | (() => Promise<void>)> {
-	const currentThroughput = (await getTableDetails(model)).Table;
-	const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
-	if ((expectedThroughput.BillingMode === (currentThroughput.BillingModeSummary || {}).BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
-	// if ((expectedThroughput.BillingMode === currentThroughput.BillingModeSummary.BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits)) {
-		return (): Promise<void> => Promise.resolve.bind(Promise)();
-	}
+async function updateTable(model: Model<DocumentCarrier>): Promise<void> {
+	const updateAll = typeof model.options.update === "boolean" && model.options.update;
+	// Throughput
+	if (updateAll || (model.options.update as ModelUpdateOptions[]).includes(ModelUpdateOptions.throughput)) {
+		const currentThroughput = (await getTableDetails(model)).Table;
+		const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(model.options);
+		const isThroughputUpToDate = (expectedThroughput.BillingMode === (currentThroughput.BillingModeSummary || {}).BillingMode && expectedThroughput.BillingMode) || ((currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits);
 
-	const object: DynamoDB.UpdateTableInput = {
-		"TableName": model.name,
-		...expectedThroughput
-	};
-	return (ddb("updateTable", object) as any);
+		if (!isThroughputUpToDate) {
+			const object: DynamoDB.UpdateTableInput = {
+				"TableName": model.name,
+				...expectedThroughput
+			};
+			await ddb("updateTable", object);
+			await waitForActive(model)();
+		}
+	}
+	// Indexes
+	if (updateAll || (model.options.update as ModelUpdateOptions[]).includes(ModelUpdateOptions.indexes)) {
+		const tableDetails = await getTableDetails(model);
+		const existingIndexes = tableDetails.Table.GlobalSecondaryIndexes;
+		const updateIndexes = await utils.dynamoose.index_changes(model, existingIndexes);
+		await updateIndexes.reduce(async (existingFlow, index) => {
+			await existingFlow;
+			const params: DynamoDB.UpdateTableInput = {
+				"TableName": model.name
+			};
+			if (index.type === "add") {
+				params.AttributeDefinitions = (await model.schema.getCreateTableAttributeParams(model)).AttributeDefinitions;
+				params.GlobalSecondaryIndexUpdates = [{"Create": index.spec}];
+			} else {
+				params.GlobalSecondaryIndexUpdates = [{"Delete": {"IndexName": index.name}}];
+			}
+			await ddb("updateTable", params);
+			await waitForActive(model);
+		}, Promise.resolve());
+	}
 }
 
 
@@ -172,6 +202,7 @@ export class Model<T extends DocumentCarrier> {
 	options: ModelOptions;
 	schema: Schema;
 	private ready: boolean;
+	alreadyCreated: boolean;
 	private pendingTasks: any[];
 	latestTableDetails: DynamoDB.DescribeTableOutput;
 	pendingTaskPromise: () => Promise<void>;
@@ -221,6 +252,7 @@ export class Model<T extends DocumentCarrier> {
 
 		// Setup flow
 		this.ready = false; // Represents if model is ready to be used for actions such as "get", "put", etc. This property being true does not guarantee anything on the DynamoDB server. It only guarantees that Dynamoose has finished the initalization steps required to allow the model to function as expected on the client side.
+		this.alreadyCreated = false; // Represents if the table in DynamoDB was created prior to initalization. This will only be updated if `create` is true.
 		this.pendingTasks = []; // Represents an array of promise resolver functions to be called when Model.ready gets set to true (at the end of the setup flow)
 		this.latestTableDetails = null; // Stores the latest result from `describeTable` for the given table
 		this.pendingTaskPromise = (): Promise<void> => { // Returns a promise that will be resolved after the Model is ready. This is used in all Model operations (Model.get, Document.save) to `await` at the beginning before running the AWS SDK method to ensure the Model is setup before running actions on it.
@@ -238,11 +270,11 @@ export class Model<T extends DocumentCarrier> {
 			setupFlow.push(() => waitForActive(this));
 		}
 		// Update Time To Live
-		if ((this.options.create || this.options.update) && options.expires) {
+		if ((this.options.create || (Array.isArray(this.options.update) ? this.options.update.includes(ModelUpdateOptions.ttl) : this.options.update)) && options.expires) {
 			setupFlow.push(() => updateTimeToLive(this));
 		}
 		// Update
-		if (this.options.update) {
+		if (this.options.update && !this.alreadyCreated) {
 			setupFlow.push(() => updateTable(this));
 		}
 
