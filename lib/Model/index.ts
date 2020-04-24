@@ -8,6 +8,7 @@ import Condition from "../Condition";
 import {Scan, Query, ConditionInitalizer} from "../DocumentRetriever";
 import {CallbackType} from "../General";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
+import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 
 import {DynamoDB, Request, AWSError} from "aws-sdk";
 
@@ -183,7 +184,7 @@ async function updateTable(model: Model<DocumentCarrier>): Promise<void> {
 			const params: DynamoDB.UpdateTableInput = {
 				"TableName": model.name
 			};
-			if (index.type === "add") {
+			if (index.type === ModelIndexChangeType.add) {
 				params.AttributeDefinitions = (await model.schema.getCreateTableAttributeParams(model)).AttributeDefinitions;
 				params.GlobalSecondaryIndexUpdates = [{"Create": index.spec}];
 			} else {
