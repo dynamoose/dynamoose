@@ -176,7 +176,7 @@ Schema.prototype.getIndexRangeKeyAttributes = async function(this: Schema): Prom
 	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getIndexAttributes();
 	return indexes.map((index) => index.index.rangeKey).filter((a) => Boolean(a)).map((a) => ({"attribute": a}));
 };
-interface IndexItem {
+export interface IndexItem {
 	IndexName: string;
 	KeySchema: ({AttributeName: string; KeyType: "HASH" | "RANGE"})[];
 	Projection: {ProjectionType: "KEYS_ONLY" | "INCLUDE" | "ALL"; NonKeyAttributes?: string[]};
