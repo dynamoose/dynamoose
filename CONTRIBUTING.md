@@ -53,8 +53,14 @@ It is highly recommended (although not required) to follow the pattern below bef
 2. **Install dependencies** - Run `npm install` to install all the dependencies of the project.
 3. **Maintain consistency throughout** - While working in the project, we highly encourage you to maintain the same coding style that the rest of the project uses. This means looking around at similar code and trying to adopt the same style and conventions in your code.
 4. **Run tests & linter often** - It is highly encouraged to run `npm test` & `npm run lint` often to ensure you are conforming to the project guidelines. In order for a pull request to be merged all tests must pass, the linter must throw no errors, and test code coverage must not decrease.
-5. **Write tests** - While (or better yet, before) making changes you should write tests in the test suite to ensure things work as expected. While writing tests try to consider edge cases that might occur and write test for those edge cases (ex. what happens if you a user passes in no arguments, or what happens if the type passed in is not the type you expect). Your pull request will not be merged if it decreases the code coverage for tests, so it is important to write tests to ensure any code added or modified is covered by tests. It is also important that your tests do not print any output to the console or logs, this includes `console.log`, UncaughtPromiseExceptions, etc. All logs printed should come directly from Mocha.
-6. **Update documentation** - It is encouraged throughout
+5. **Write tests** - While (or better yet, before) making changes you should write tests in the test suite to ensure things work as expected.
+	1. **Test Edge Cases** - While writing tests try to consider edge cases that might occur and write test for those edge cases. For example, what happens if you a user passes in no arguments, or what happens if the type passed in is not the type you expect.
+	2. **Code Coverage Must Not Decrease** - Your pull request will not be merged if it decreases the code coverage for tests, so it is important to write tests to ensure any code added or modified is covered by tests.
+	3. **No Log Output** - It is also important that your tests do not print any output to the console or logs, this includes `console.log`, UncaughtPromiseExceptions, etc. All logs printed should come directly from Mocha.
+	4. **One Test Must Fail Prior to Code Changes** - At *least* one test you write should fail without the code changes you have made.
+	5. **Self Contained and Static** - All tests should be self contained and should not rely on each other in order to pass. All tests must also be static and have no potiental of failing based on random or outside factors.
+	6. **Logic inside Mocha Blocks** - All test logic should take place within Mocha blocks (ex. `it`, `before`, `beforeEach`, `after` or `afterEach`). No interaction with Dynamoose or outside references should take place outside of those blocks (ex. you should not create models or schemas in the global or `describe` scope).
+6. **Update documentation** - For anything that effects users using Dynamoose, documentation should be added/deleted/modified to reflect the changes you have made. It is important to ensure the documentation you write is as clear as possible, giving examples, and attempting to answer as many relevent questions as possible.
 7. **Commit small & often** - Please commit changes often and keep commit size to a minimum. It is highly discouraged from creating one massive commit with all of your changes in it. Every commit should also aim to pass the linter and tests. Commit messages should also be detailed enough to give a good explaination of the change made. Commit messages such as `changes` or `did stuff` are considered **poor** commit messages.
 
 #### After
@@ -67,7 +73,26 @@ It is highly recommended (although not required) to follow the pattern below bef
 
 Dynamoose does not currently have a release schedule that we conform to. We atttempt to batch work into a release every so often. If you have a need that requires us releasing a version sooner, please notify us, and we will attempt to cut a new release earlier (however this is not guaranteed, and you are still welcome to point to a branch in NPM if we are unable to release on your timeline).
 
+## How do I become a project maintainer?
+
+At this time we are pretty strict in terms of who gets write/merge access to Dynamoose. The following are general guidelines we look for before granting those permissions, but other factors may apply depending on the situation.
+
+1. **Activity** - Likely the most important factor is we need to see you remain active on the project for an extended period of time. We want maintainers to be active and although we don't require maintainers to dedicated all their time to Dynamoose, we are looking for maintainers to be active in the community.
+2. **Contributions** - We are looking for project maintainers to be active in contributing feedback, features, bug fixes, documentation improvements, and more to the project. Short verison: we want project maintainers to show that they are dedicated to improving the project.
+
+In short, some starting tips towards becoming a project maintainer include:
+
+1. Submit pull requests to improve the project
+2. Answer questions in Slack or Stack Overflow
+3. Reply to issues on GitHub
+
+If you believe you have a case for becoming a project maintainer and feel as tho you meet those requirements [contact me](https://charlie.fish/contact) or reach out on Slack (Charlie Fish) and I'd be happy to discuss next steps with you.
+
+It is also important to note that if you become a project maintainer, and become inactive on the project, your project maintainer status may be revoked.
+
 ---
+
+## What do project maintainers need to know?
 
 The following section is unlikely to be useful to general contributors to Dynamoose, and is reserved for project maintainers.
 
