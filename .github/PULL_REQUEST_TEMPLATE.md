@@ -70,6 +70,6 @@
 - [ ] I have ensured the following commands are successful from the root of the project directory
   - [ ] `npm test`
   - [ ] `npm run lint`
-- [ ] I agree that all changes made in this pull request may be distributed and are made available in accordance with the [Dynamoose license](https://github.com/dynamoosejs/dynamoose/blob/master/LICENSE)
+- [ ] I agree that all changes made in this pull request may be distributed and are made available in accordance with the [Dynamoose license](https://github.com/dynamoose/dynamoose/blob/master/LICENSE)
 - [ ] All of my commits and commit messages are detailed, explain what changes were made, and are easy to follow and understand
 - [ ] I have filled out all fields above
