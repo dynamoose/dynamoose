@@ -22,8 +22,8 @@ The `config` parameter is an object used to customize settings for the model.
 |------|-------------|------|---------|
 | create | If Dynamoose should attempt to create the table on DynamoDB. This function will run a `describeTable` call first to ensure the table doesn't already exist. For production environments we recommend setting this value to `false`. | Boolean | true |
 | throughput | An object with settings for what the throughput for the table should be on creation, or a number which will use the same throughput for both read and write. If this is set to `ON_DEMAND` the table will use the `PAY_PER_REQUEST` billing mode. If the table is not created by Dynamoose, this object has no effect. | Object \| Number \| String |  |
-| throughput.read | What the read throughput should be set to. Only valid if `throughput` is an object. | Number | 5 |
-| throughput.write | What the write throughput should be set to. Only valid if `throughput` is an object. | Number | 5 |
+| throughput.read | What the read throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
+| throughput.write | What the write throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
 | prefix | A string that should be prepended to every model name. | String | "" |
 | suffix | A string that should be appended to every model name. | String | "" |
 | waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. For production environments we recommend setting this value to `false`. | Object |  |
@@ -31,7 +31,7 @@ The `config` parameter is an object used to customize settings for the model.
 | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
-| update | If Dynamoose should update the capacity of the existing table to match the model throughput. | Boolean | false |
+| update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following items to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
 | expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
 | expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | null |
 | expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
