@@ -2,7 +2,7 @@
 
 :+1::tada: **THANK YOU** for taking the time to contribute! :tada::+1:
 
-The following is a set of guidelines for contributing to Dynamoose and all projects in the [dynamoosejs Organization](https://github.com/dynamoosejs) on GitHub. Although these are strongly encouraged guidelines, nothing about this project is set in stone, if you believe something here should be edited, open a pull request to start a discussion about it.
+The following is a set of guidelines for contributing to Dynamoose and all projects in the [dynamoose Organization](https://github.com/dynamoose) on GitHub. Although these are strongly encouraged guidelines, nothing about this project is set in stone, if you believe something here should be edited, open a pull request to start a discussion about it.
 
 ## Code of Conduct
 
@@ -49,7 +49,7 @@ It is highly recommended (although not required) to follow the pattern below bef
 
 #### During
 
-1. **Create a fork & branch** - Before contributing to Dynamoose you must create a fork of the [main repository](https://github.com/dynamoosejs/dynamoose) and create a branch on your fork. It is highly discouraged from using a primary branch (ex. `master` or `alpha`) to make your changes. This is due to the fact that if you enable `Allow edits from maintainers` option, maintainers might commit directly to your primary branch which could cause problems if others are using your fork in their applications.
+1. **Create a fork & branch** - Before contributing to Dynamoose you must create a fork of the [main repository](https://github.com/dynamoose/dynamoose) and create a branch on your fork. It is highly discouraged from using a primary branch (ex. `master` or `alpha`) to make your changes. This is due to the fact that if you enable `Allow edits from maintainers` option, maintainers might commit directly to your primary branch which could cause problems if others are using your fork in their applications.
 2. **Install dependencies** - Run `npm install` to install all the dependencies of the project.
 3. **Maintain consistency throughout** - While working in the project, we highly encourage you to maintain the same coding style that the rest of the project uses. This means looking around at similar code and trying to adopt the same style and conventions in your code.
 4. **Run tests & linter often** - It is highly encouraged to run `npm test` & `npm run lint` often to ensure you are conforming to the project guidelines. In order for a pull request to be merged all tests must pass, the linter must throw no errors, and test code coverage must not decrease.
