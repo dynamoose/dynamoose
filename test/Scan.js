@@ -30,7 +30,7 @@ describe("Scan", () => {
 
 	let Model;
 	beforeEach(() => {
-		Model = dynamoose.model("Cat", {"id": Number, "name": String});
+		Model = dynamoose.model("Cat", {"id": Number, "name": String, "favoriteNumber": Number});
 	});
 
 	describe("Model.scan", () => {
@@ -133,7 +133,7 @@ describe("Scan", () => {
 					expect(scanParams).to.eql({"TableName": "Cat"});
 				});
 
-				it("Should send correct request on query.exec for one object passed in", async () => {
+				it("Should send correct request on scan.exec for one object passed in", async () => {
 					scanPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.scan({"name": "Charlie"}).exec).bind(Model.scan({"name": "Charlie"}))();
 					expect(scanParams).to.eql({
@@ -148,7 +148,7 @@ describe("Scan", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec for one object passed in", async () => {
+				it("Should send correct request on scan.exec for one object passed in", async () => {
 					scanPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.scan({"id": {"le": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.scan({"id": {"le": 5}, "name": {"eq": "Charlie"}}))();
 					expect(scanParams).to.eql({
@@ -194,6 +194,66 @@ describe("Scan", () => {
 							":v0_2": {"N": "3"}
 						},
 						"FilterExpression": "#a0 BETWEEN :v0_1 AND :v0_2",
+						"TableName": "Cat"
+					});
+				});
+
+				it("Should send correct request on scan.exec when using nested groups with OR", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const scan = Model.scan({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).or().where("id").eq(2));
+					await callType.func(scan.exec).bind(scan)();
+					expect(scanParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "favoriteNumber",
+							"#a2": "id",
+							"#a3": "id"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "18"
+							},
+							":v2": {
+								"N": "1"
+							},
+							":v3": {
+								"N": "2"
+							}
+						},
+						"FilterExpression": "#a0 = :v0 AND #a1 <= :v1 AND (#a2 = :v2 OR #a3 = :v3)",
+						"TableName": "Cat"
+					});
+				});
+
+				it("Should send correct request on scan.exec when using nested groups with AND", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const scan = Model.scan({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).and().where("id").eq(2));
+					await callType.func(scan.exec).bind(scan)();
+					expect(scanParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "favoriteNumber",
+							"#a2": "id",
+							"#a3": "id"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "18"
+							},
+							":v2": {
+								"N": "1"
+							},
+							":v3": {
+								"N": "2"
+							}
+						},
+						"FilterExpression": "#a0 = :v0 AND #a1 <= :v1 AND (#a2 = :v2 AND #a3 = :v3)",
 						"TableName": "Cat"
 					});
 				});
