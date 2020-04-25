@@ -2018,10 +2018,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.undefined to delete default property", async () => {
+				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
-					await callType.func(User).bind(User)({"id": 1, "name": dynamoose.undefined});
+					await callType.func(User).bind(User)({"id": 1, "name": dynamoose.UNDEFINED});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -2039,10 +2039,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.undefined to delete default property using $REMOVE", async () => {
+				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property using $REMOVE", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
-					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"name": dynamoose.undefined}});
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"name": dynamoose.UNDEFINED}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -2060,10 +2060,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.undefined to delete default property using $SET", async () => {
+				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property using $SET", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
-					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": dynamoose.undefined}});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": dynamoose.UNDEFINED}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
