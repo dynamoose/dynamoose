@@ -17,7 +17,7 @@ export interface ModelIndexDeleteChange {
 	name: string;
 }
 
-const index_changes = async (model: Model<Document>, existingIndexes = []) => {
+const index_changes = async (model: Model<Document>, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
 	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
 	const expectedIndexes = await model.schema.getIndexes(model);
 

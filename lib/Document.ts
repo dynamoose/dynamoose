@@ -10,7 +10,12 @@ const dynamooseUndefined = Internal.Public.undefined;
 
 import {DynamoDB, AWSError} from "aws-sdk";
 import { ValueType } from "./Schema";
-import { CallbackType } from "./General";
+import { CallbackType, ObjectType } from "./General";
+
+interface DocumentSaveSettings {
+	overwrite?: boolean;
+	return?: "request" | "document";
+}
 
 // Document represents an item in a Model that is either pending (not saved) or saved
 export class Document {
@@ -18,16 +23,71 @@ export class Document {
 	static fromDynamo: (object: any) => any;
 	static isDynamoObject: (object: any, recurrsive?: boolean) => boolean | null;
 	static attributesWithSchema: (document: Document, model: Model<Document>) => string[];
-	original: () => {[key: string]: any} | null;
+	original: () => ObjectType | null;
 	static objectFromSchema: (object: any, model: Model<Document>, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
 	static prepareForObjectFromSchema: (object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) => any;
 	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<Document>;
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
 	delete: (this: Document, callback: CallbackType<void, AWSError>) => void | Promise<void>;
-	save: (this: Document, settings: DocumentSaveSettings, callback: CallbackType<Document, AWSError>) => Promise<Document>;
+
+	save(this: Document): Promise<Document>;
+	save(this: Document, callback: CallbackType<Document, AWSError>): void;
+	save(this: Document, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
+	save(this: Document, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, AWSError>): void;
+	save(this: Document, settings: DocumentSaveSettings & {return: "document"}): Promise<Document>;
+	save(this: Document, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<Document, AWSError>): void;
+	save(this: Document, settings?: DocumentSaveSettings | CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>, callback?: CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>): void | Promise<Document | DynamoDB.PutItemInput> {
+		if (typeof settings !== "object" && typeof settings !== "undefined") {
+			callback = settings;
+			settings = {};
+		}
+		if (typeof settings === "undefined") {
+			settings = {};
+		}
+
+		const localSettings: DocumentSaveSettings = settings;
+		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
+			const putItemObj: DynamoDB.PutItemInput = {
+				"Item": item,
+				"TableName": this.model.name
+			};
+
+			if (localSettings.overwrite === false) {
+				putItemObj.ConditionExpression = "attribute_not_exists(#__hash_key)";
+				putItemObj.ExpressionAttributeNames = {"#__hash_key": this.model.schema.getHashKey()};
+			}
+
+			return putItemObj;
+		});
+		if (settings.return === "request") {
+			if (callback) {
+				const localCallback: CallbackType<DynamoDB.PutItemInput, AWSError> = callback as CallbackType<DynamoDB.PutItemInput, AWSError>;
+				paramsPromise.then((result) => localCallback(null, result));
+				return;
+			} else {
+				return paramsPromise;
+			}
+		}
+		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.model.pendingTaskPromise()]).then((promises) => {
+			const [putItemObj] = promises;
+			return ddb("putItem", putItemObj);
+		});
+
+		if (callback) {
+			const localCallback: CallbackType<Document, AWSError> = callback as CallbackType<Document, AWSError>;
+			promise.then(() => {this[internalProperties].storedInDynamo = true; localCallback(null, this);}).catch((error) => callback(error));
+		} else {
+			return (async (): Promise<Document> => {
+				await promise;
+				this[internalProperties].storedInDynamo = true;
+				return this;
+			})();
+		}
+	}
+
 	model?: Model<Document>;
 
-	constructor(model: Model<Document>, object?: DynamoDB.AttributeMap | {[key: string]: any}, settings?: any) {
+	constructor(model: Model<Document>, object?: DynamoDB.AttributeMap | ObjectType, settings?: any) {
 		const documentObject = Document.isDynamoObject(object) ? (aws.converter() as any).unmarshall(object) : object;
 		Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
 		Object.defineProperty(this, internalProperties, {
@@ -92,7 +152,7 @@ Document.prepareForObjectFromSchema = function(object: any, model: Model<Documen
 };
 // This function will return a list of attributes combining both the schema attributes with the document attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in document), adding the indexes for each item in the document set.
 // https://stackoverflow.com/a/59928314/894067
-const attributesWithSchemaCache: {[key: string]: any} = {};
+const attributesWithSchemaCache: ObjectType = {};
 Document.attributesWithSchema = function(document: Document, model: Model<Document>): string[] {
 	const attributes = model.schema.attributes();
 	const documentID = utils.object.keys(document as any).join("");
@@ -155,7 +215,7 @@ interface DocumentObjectFromSchemaSettings {
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
-Document.objectFromSchema = async function(object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<any> {
+Document.objectFromSchema = async function(object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
 	if (settings.checkExpiredItem && model.options.expires && ((model.options.expires as ModelExpiresSettings).items || {}).returnExpired === false && object[(model.options.expires as ModelExpiresSettings).attribute] && (object[(model.options.expires as ModelExpiresSettings).attribute] * 1000) < Date.now()) {
 		return undefined;
 	}
@@ -336,52 +396,6 @@ Document.prototype.toDynamo = async function(this: Document, settings: Partial<D
 	const object = await Document.objectFromSchema(this, this.model, newSettings);
 	return Document.objectToDynamo(object);
 };
-interface DocumentSaveSettings {
-	overwrite?: boolean;
-	return?: "request" | "document";
-}
-Document.prototype.save = function(this: Document, settings: DocumentSaveSettings = {}, callback): Promise<any> {
-	if (typeof settings === "function" && !callback) {
-		callback = settings;
-		settings = {};
-	}
-
-	const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
-		const putItemObj: any = {
-			"Item": item,
-			"TableName": this.model.name
-		};
-
-		if (settings.overwrite === false) {
-			putItemObj.ConditionExpression = "attribute_not_exists(#__hash_key)";
-			putItemObj.ExpressionAttributeNames = {"#__hash_key": this.model.schema.getHashKey()};
-		}
-
-		return putItemObj;
-	});
-	if (settings.return === "request") {
-		if (callback) {
-			paramsPromise.then((result) => callback(null, result));
-			return;
-		} else {
-			return paramsPromise;
-		}
-	}
-	const promise = Promise.all([paramsPromise, this.model.pendingTaskPromise()]).then((promises) => {
-		const [putItemObj] = promises;
-		return ddb("putItem", putItemObj);
-	});
-
-	if (callback) {
-		promise.then(() => {this[internalProperties].storedInDynamo = true; return callback(null, this);}).catch((error) => callback(error));
-	} else {
-		return (async (): Promise<Document> => {
-			await promise;
-			this[internalProperties].storedInDynamo = true;
-			return this;
-		})();
-	}
-};
 Document.prototype.delete = function(this: Document, callback): any {
 	return this.model.delete({
 		[this.model.schema.getHashKey()]: this[this.model.schema.getHashKey()]
@@ -406,6 +420,6 @@ Document.prototype.conformToSchema = async function(this: Document, settings: Do
 	return this;
 };
 
-Document.prototype.original = function(): DynamoDB.AttributeMap | {[key: string]: any} | null {
+Document.prototype.original = function(): DynamoDB.AttributeMap | ObjectType | null {
 	return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
 };

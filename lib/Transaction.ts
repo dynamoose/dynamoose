@@ -72,7 +72,7 @@ export default (transactions: any[], settings: TransactionSettings = {"return": 
 		await Promise.all(models.map((model) => model.pendingTaskPromise()));
 
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-		const result = await ddb(transactionType, transactionParams);
+		const result: any = await ddb((transactionType as any), transactionParams);
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
 			const model: Model<Document> = models.find((model) => model.name === modelName);
