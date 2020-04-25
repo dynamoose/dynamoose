@@ -6,8 +6,12 @@ import {Model} from "./Model";
 import {Document} from "./Document";
 
 export type ConditionInitalizer = Condition | {[key: string]: any} | string;
+enum DocumentRetrieverTypes {
+	scan = "scan",
+	query = "query"
+}
 interface DocumentRetrieverTypeInformation {
-	type: string;
+	type: DocumentRetrieverTypes;
 	pastTense: string;
 }
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
@@ -185,7 +189,7 @@ DocumentRetriever.prototype.exec = function(this: DocumentRetriever, callback): 
 	};
 	const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
 		const allRequest = (extraParameters = {}): any => {
-			let promise = ddb(this.internalSettings.typeInformation.type, {...request, ...extraParameters});
+			let promise: Promise<any> = ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters});
 			timesRequested++;
 
 			if (this.settings.all) {
@@ -201,7 +205,7 @@ DocumentRetriever.prototype.exec = function(this: DocumentRetriever, callback): 
 							await utils.timeout(this.settings.all.delay);
 						}
 
-						const nextRequest = await ddb(this.internalSettings.typeInformation.type, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
+						const nextRequest: any = await ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
 						timesRequested++;
 						result = utils.merge_objects(result, nextRequest);
 						// The operation below is safe because right above we are overwriting the entire `result` variable, so there is no chance it'll be reassigned based on an outdated value since it's already been overwritten. There might be a better way to do this than ignoring the rule on the line below.
@@ -266,7 +270,7 @@ export class Scan extends DocumentRetriever {
 	parallel: (value: number) => Scan;
 
 	constructor(model: Model<Document>, object?: ConditionInitalizer) {
-		super(model, {"type": "scan", "pastTense": "scanned"}, object);
+		super(model, {"type": DocumentRetrieverTypes.scan, "pastTense": "scanned"}, object);
 	}
 }
 Scan.prototype.parallel = function(value: number): Scan {
@@ -276,6 +280,6 @@ Scan.prototype.parallel = function(value: number): Scan {
 
 export class Query extends DocumentRetriever {
 	constructor(model: Model<Document>, object?: ConditionInitalizer) {
-		super(model, {"type": "query", "pastTense": "queried"}, object);
+		super(model, {"type": DocumentRetrieverTypes.query, "pastTense": "queried"}, object);
 	}
 }

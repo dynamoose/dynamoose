@@ -96,7 +96,7 @@ async function createTable(model: Model<DocumentCarrier>): Promise<Request<Dynam
 		return (): Promise<void> => Promise.resolve.bind(Promise)();
 	}
 
-	return ddb("createTable", await createTableRequest(model));
+	await ddb("createTable", await createTableRequest(model));
 }
 async function updateTimeToLive(model: Model<DocumentCarrier>): Promise<void> {
 	let ttlDetails;
@@ -135,7 +135,7 @@ async function updateTimeToLive(model: Model<DocumentCarrier>): Promise<void> {
 function waitForActive(model: Model<DocumentCarrier>) {
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
-		async function check(count): Promise<void> {
+		async function check(count: number): Promise<void> {
 			try {
 				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
 				if ((await getTableDetails(model, {"forceRefresh": count > 0})).Table.TableStatus === "ACTIVE") {
@@ -214,8 +214,8 @@ export class Model<T extends DocumentCarrier> {
 	get: (this: Model<DocumentCarrier>, key: InputKey, settings?: ModelGetSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.GetItemInput, AWSError>) => void | DynamoDB.GetItemInput | Promise<DocumentCarrier>;
 	delete: (this: Model<DocumentCarrier>, key: InputKey, settings?: ModelDeleteSettings, callback?: CallbackType<void | DynamoDB.DeleteItemInput, AWSError>) => void | DynamoDB.DeleteItemInput | Promise<void>;
 	batchDelete: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchDeleteSettings, callback?: CallbackType<void | DynamoDB.BatchWriteItemInput, AWSError>) => void | DynamoDB.BatchWriteItemInput | Promise<void>;
-	create: (this: Model<DocumentCarrier>, document: any, settings?: {}, callback?: CallbackType<DocumentCarrier, AWSError>) => void | Promise<DocumentCarrier>;
-	batchPut: (this: Model<DocumentCarrier>, items: any, settings?: {}, callback?: CallbackType<DynamoDB.BatchWriteItemInput | {"unprocessedItems": any[]}, AWSError>) => void | Promise<DynamoDB.BatchWriteItemInput | {"unprocessedItems": any[]}>;
+	create: (this: Model<DocumentCarrier>, document: any, settings?: any, callback?: CallbackType<DocumentCarrier, AWSError>) => void | Promise<DocumentCarrier>;
+	batchPut: (this: Model<DocumentCarrier>, items: any, settings?: any, callback?: CallbackType<DynamoDB.BatchWriteItemInput | {"unprocessedItems": any[]}, AWSError>) => void | Promise<DynamoDB.BatchWriteItemInput | {"unprocessedItems": any[]}>;
 	update: (this: Model<DocumentCarrier>, keyObj: any, updateObj: any, settings?: ModelUpdateSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.UpdateItemInput, AWSError>) => void | Promise<DocumentCarrier | DynamoDB.UpdateItemInput>;
 	batchGet: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: CallbackType<DocumentCarrier[], AWSError>) => void | DynamoDB.BatchGetItemInput | Promise<DocumentCarrier[]>;
 	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
