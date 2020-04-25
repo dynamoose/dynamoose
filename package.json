@@ -27,7 +27,7 @@
     "test": "nyc npm run test:nocoverage",
     "test:debug": "npm run test:nocoverage -- --inspect=9229",
     "test:debug:breakpoint": "npm run test:nocoverage -- --inspect-brk=9229",
-    "lint": "eslint . --ext .ts,.js",
+    "lint": "eslint . --ext .ts,.js --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
     "site:install": "cd docs && npm install",
     "site:start": "cd docs && npm start",
