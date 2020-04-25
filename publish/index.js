@@ -200,7 +200,7 @@ async function isPRMerged(pr) {
 }
 async function isReleaseSubmitted(release) {
 	try {
-		await npmFetch(`/dynamoose/${release.substring(1)}`);
+		await npmFetch(`/dynamoose/${release}`);
 	} catch (e) {
 		await utils.timeout(5000);
 		return isReleaseSubmitted(release);
