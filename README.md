@@ -6,9 +6,6 @@
 	<a href="https://www.npmjs.com/package/dynamoose">
 		<img src="https://img.shields.io/npm/v/dynamoose" alt="npm">
 	</a>
-	<a href="https://www.npmjs.com/package/dynamoose/v/beta">
-		<img src="https://img.shields.io/npm/v/dynamoose/beta" alt="npm (beta)">
-	</a>
 	<a href="https://github.com/dynamoose/dynamoose/blob/master/LICENSE">
 		<img src="https://img.shields.io/github/license/dynamoose/dynamoose" alt="License">
 	</a>
@@ -62,5 +59,5 @@ Below you will find the current branch strategy for the project. Work taking pla
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
 | [`v1.11.1`](https://github.com/dynamoose/dynamoose/tree/v1.11.1) (tag) | 1.11.1 | latest | - [Documentation](https://v1.dynamoosejs.com) |
-| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.0.0 | beta | - [Documentation](https://github.com/dynamoose/dynamoose/tree/master/docs/docs)<br>- [Issue](https://github.com/dynamoose/dynamoose/issues/709) |
+| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.0.0 | beta | - [Documentation](https://github.com/dynamoose/dynamoose/tree/master/docs/docs) |
 | [`alpha`](https://github.com/dynamoose/dynamoose/tree/alpha) | 2.1.0 | alpha | - [Documentation](https://github.com/dynamoose/dynamoose/tree/alpha/docs/docs)<br>- [Issue](https://github.com/dynamoose/dynamoose/issues/788) |
