@@ -1,11 +1,3 @@
-You can access Dynamoose by requiring the library. For example:
-
-```js
-const dynamoose = require("dynamoose");
-```
-
-The Dynamoose object is the entry point to everything you will do with this package.
-
 ## dynamoose.aws
 
 The `dynamoose.aws` object is used to set AWS level settings for Dynamoose. This includes things like setting a custom DDB instance, setting the AWS region, access keys, and more.

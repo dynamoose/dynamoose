@@ -1,0 +1,67 @@
+Dynamoose interacts directly with the [AWS-SDK](https://www.npmjs.com/package/aws-sdk), therefore, it is required that you authenticate and provide valid credentials so Dynamoose can successfully make requests to DynamoDB.
+
+It is recommended that you do this as early in the application life cycle as possible to prevent issues where Dynamoose will try to make requests to DynamoDB that are unauthenticated.
+
+There are a few ways to do this.
+
+## Environment Variables
+
+You can use environment variables to setup your configuration.
+
+```bash
+export AWS_ACCESS_KEY_ID = "Your AWS Access Key ID"
+export AWS_SECRET_ACCESS_KEY = "Your AWS Secret Access Key"
+export AWS_REGION = "us-east-1"
+```
+
+## Programatically
+
+### Global
+
+The following code will change the AWS-SDK global settings to use the configuration options.
+
+```js
+dynamoose.aws.sdk.config.update({
+	"accessKeyId": "AKID",
+	"secretAccessKey": "SECRET",
+	"region": "us-east-1"
+});
+```
+
+### Dynamoose Specific
+
+The following code will create a new DynamoDB instance with the specific configuration options and use that in Dynamoose.
+
+```js
+// Create new DynamoDB instance
+const ddb = new dynamoose.aws.sdk.DynamoDB({
+	"accessKeyId": "AKID",
+	"secretAccessKey": "SECRET",
+	"region": "us-east-1"
+});
+
+// Set DynamoDB instance to the Dynamoose DDB instance
+dynamoose.aws.ddb.set(ddb);
+```
+
+## IAM Role
+
+If you are running Dynamoose in an environment that has an IAM role attached to it (ex. [Lambda](https://aws.amazon.com/lambda/) or [EC2](https://aws.amazon.com/ec2/)), you do not need to do any additional configuration so long as your IAM role has appropriate permissions to access DynamoDB.
+
+## Local
+
+You can also configure Dynamoose to use [DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html).
+
+If your DynamoDB Local server is running on `http://localhost:8000` you can use the following command.
+
+```js
+dynamoose.aws.ddb.local();
+```
+
+Otherwise if your local DynamoDB server is running at a different location you can pass that in as an argument. For example if your server is running at `http://localhost:1234` you can run the following command.
+
+```js
+dynamoose.aws.ddb.local("http://localhost:1234");
+```
+
+Read more about this method [here](/api/Dynamoose#dynamooseawsddblocalendpoint).

@@ -13,7 +13,7 @@ module.exports = {
 			},
 			"links": [
 				{
-					"href": "https://github.com/dynamoosejs/dynamoose",
+					"href": "https://github.com/dynamoose/dynamoose",
 					"label": "GitHub",
 					"position": "right",
 				},
@@ -28,11 +28,11 @@ module.exports = {
 			"style": "dark",
 			"links": [
 				{
-					"title": "Resources",
+					"title": "Social",
 					"items": [
 						{
 							"label": "GitHub",
-							"href": "https://github.com/dynamoosejs/dynamoose",
+							"href": "https://github.com/dynamoose/dynamoose",
 						},
 						{
 							"label": "Slack",
@@ -48,6 +48,27 @@ module.exports = {
 						}
 					],
 				},
+				{
+					"title": "Other Resources",
+					"items": [
+						{
+							"label": "Contributing Guidelines",
+							"href": "https://github.com/dynamoose/dynamoose/blob/master/CONTRIBUTING.md",
+						},
+						{
+							"label": "Code of Conduct",
+							"href": "https://github.com/dynamoose/dynamoose/blob/master/CODE_OF_CONDUCT.md",
+						},
+						{
+							"label": "Changelog",
+							"href": "https://github.com/dynamoose/dynamoose/blob/master/CHANGELOG.md",
+						},
+						{
+							"label": "License",
+							"href": "https://github.com/dynamoose/dynamoose/blob/master/LICENSE.md",
+						}
+					],
+				},
 			],
 		},
 	},
@@ -58,7 +79,10 @@ module.exports = {
 				"docs": {
 					"routeBasePath": "",
 					"sidebarPath": require.resolve("./sidebars.js"),
-					"editUrl": "https://github.com/dynamoosejs/dynamoose/edit/master/docs",
+					"editUrl": "https://github.com/dynamoose/dynamoose/edit/master/docs",
+					"remarkPlugins": [
+						require("./src/plugins/remark-npm2yarn")
+					],
 				},
 				"theme": {
 					"customCss": require.resolve("./src/css/custom.css"),

@@ -33,3 +33,7 @@ Definitely not. Anything that is undocumented in Dynamoose can change at anytime
 ## Why am I getting strange behavior when an attribute value is `null` in my documents?
 
 Currently Dynamoose purposefully has weird behavior and throws errors when trying to use `null` as values in documents. This is due to the fact that Dynamoose currently does not support the DynamoDB `null` attribute type. Dynamoose has strange behavior for this type so that in a future release we can potientally add support for the `null` attribute type in a non breaking way.
+
+## Where can I find documentation for v1?
+
+[Here](https://v1.dynamoosejs.com).

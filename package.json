@@ -3,7 +3,7 @@
   "version": "2.0.0-beta.11",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "main": "lib/index.js",
-  "homepage": "https://github.com/dynamoosejs/dynamoose#readme",
+  "homepage": "https://github.com/dynamoose/dynamoose#readme",
   "directories": {
     "doc": "docs"
   },
@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dynamoosejs/dynamoose.git"
+    "url": "git+https://github.com/dynamoose/dynamoose.git"
   },
   "author": {
     "name": "Charlie Fish",
@@ -40,7 +40,7 @@
     }
   ],
   "bugs": {
-    "url": "https://github.com/dynamoosejs/dynamoose/issues"
+    "url": "https://github.com/dynamoose/dynamoose/issues"
   },
   "dependencies": {
     "aws-sdk": "^2.662.0",

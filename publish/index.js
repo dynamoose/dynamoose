@@ -28,13 +28,14 @@ let package = require("../package.json");
 		console.error("Exiting.\n");
 		process.exit(1);
 	}
+	const originalBranch = (await git.status()).current;
 	let results = await inquirer.prompt([
 		{
 			"name": "branch",
 			"type": "list",
 			"message": "What branch would you like to publish?",
 			"choices": (await git.branchLocal()).all,
-			"default": (await git.status()).current
+			"default": originalBranch
 		}
 	]);
 	await git.checkout(results.branch);
@@ -54,6 +55,13 @@ let package = require("../package.json");
 				"type": "confirm",
 				"message": "Is this version a prerelease version?",
 				"default": (res) => retrieveInformation(res.version).isPrerelease
+			},
+			{
+				"name": "textEditor",
+				"type": "input",
+				"message": "What is the command line bin to launch your favorite text editor? (ex. `code`, `atom`, `nano`, etc.)",
+				"default": "code" // TODO: use default from Git preference, or take it from a user configuration file
+				// "validate": // TODO: ensure the command line thing exists and is valid (maybe by using `which` and checking to see if the output of that exists and is not `_____ not found`)
 			},
 			{
 				"name": "confirm",
@@ -98,16 +106,17 @@ let package = require("../package.json");
 	console.log("This tool will now open a web browser with a list of commits since the last verison.\nPlease use this information to fill out a change log.\n");
 	console.log("Press any key to proceed.");
 	await keypress();
-	openurl.open(`https://github.com/dynamoosejs/dynamoose/compare/v${package.version}...${results.branch}`);
+	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
 	const versionInfo = retrieveInformation(results.version);
 	const versionFriendlyTitle = `Version ${[versionInfo.main, utils.capitalize_first_letter(versionInfo.tag || ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
-	await fs.writeFile(changelogFilePath, `## ${versionFriendlyTitle}\n\nThis release ________\n\nPlease comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.\n\n### Major New Features\n\n### General\n\n### Bug Fixes\n\n### Documentation\n\n### Other`);
-	await exec(`code ${changelogFilePath}`);
+	const changelogTemplate = `## ${versionFriendlyTitle}\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
+	await fs.writeFile(changelogFilePath, changelogTemplate);
+	await exec(`${results.textEditor} ${changelogFilePath}`);
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
-	const versionChangelog = await fs.readFile(changelogFilePath, "utf8");
+	const versionChangelog = (await fs.readFile(changelogFilePath, "utf8")).trim();
 	if (!versionInfo.isPrerelease) {
 		const existingChangelog = await fs.readFile(path.join(__dirname, "..", "CHANGELOG.md"), "utf8");
 		const existingChangelogArray = existingChangelog.split("\n---\n");
@@ -123,7 +132,7 @@ let package = require("../package.json");
 	// Create PR
 	const gitPR = ora("Creating PR on GitHub").start();
 	const pr = (await octokit.pulls.create({
-		"owner": "dynamoosejs",
+		"owner": "dynamoose",
 		"repo": "dynamoose",
 		"title": versionFriendlyTitle,
 		"body": versionChangelog,
@@ -132,7 +141,7 @@ let package = require("../package.json");
 		"base": results.branch
 	})).data;
 	gitPR.succeed(`Created PR ${pr.number} on GitHub`);
-	openurl.open(`https://github.com/dynamoosejs/dynamoose/pull/${pr.number}`);
+	openurl.open(`https://github.com/dynamoose/dynamoose/pull/${pr.number}`);
 	// Poll for PR to be merged
 	const gitPRPoll = ora(`Polling GitHub for PR ${pr.number} to be merged`).start();
 	await isPRMerged(pr.number);
@@ -140,7 +149,7 @@ let package = require("../package.json");
 	// Create release
 	const gitRelease = ora("Creating release on GitHub").start();
 	await octokit.repos.createRelease({
-		"owner": "dynamoosejs",
+		"owner": "dynamoose",
 		"repo": "dynamoose",
 		"tag_name": `v${results.version}`,
 		"target_commitish": results.branch,
@@ -151,8 +160,15 @@ let package = require("../package.json");
 	gitRelease.succeed("GitHub release created");
 	// Poll NPM for release
 	const npmPoll = ora("Polling NPM for release").start();
-	await isReleaseSubmiitted(results.version);
+	await isReleaseSubmitted(results.version);
 	npmPoll.succeed("Version successfully published to NPM");
+	// Restore Git to original state
+	const gitCheckoutOriginal = ora(`Checking out ${originalBranch} branch`).start();
+	await git.checkout(originalBranch);
+	gitCheckoutOriginal.succeed(`Checked out ${originalBranch} branch`);
+	const gitDeleteNewBranch = ora(`Deleting ${branch} branch`).start();
+	await git.deleteLocalBranch(branch);
+	gitDeleteNewBranch.succeed(`Deleted ${branch} branch`);
 	// Complete
 	process.exit(0);
 })();
@@ -175,18 +191,18 @@ async function isPRMerged(pr) {
 	let data;
 	do {
 		data = (await octokit.pulls.get({
-			"owner": "dynamoosejs",
+			"owner": "dynamoose",
 			"repo": "dynamoose",
 			"pull_number": pr
 		})).data;
 		await utils.timeout(5000);
 	} while (!data.merged);
 }
-async function isReleaseSubmiitted(release) {
+async function isReleaseSubmitted(release) {
 	try {
-		await npmFetch(`/dynamoose/${release}`);
+		await npmFetch(`/dynamoose/${release.substring(1)}`);
 	} catch (e) {
 		await utils.timeout(5000);
-		isReleaseSubmiitted(release);
+		return isReleaseSubmitted(release);
 	}
 }
