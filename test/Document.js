@@ -152,9 +152,9 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should not use default if dynamoose.undefined used as value for that property", async () => {
+				it("Should not use default if dynamoose.UNDEFINED used as value for that property", async () => {
 					const Robot = dynamoose.model("Robot", {"id": Number, "age": {"type": Number, "default": 1}});
-					const robot = new Robot({"id": 2, "age": dynamoose.undefined});
+					const robot = new Robot({"id": 2, "age": dynamoose.UNDEFINED});
 
 					putItemFunction = () => Promise.resolve();
 					await callType.func(robot).bind(robot)();
@@ -1401,7 +1401,7 @@ describe("Document", () => {
 				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
 			},
 			{
-				"input": [{"id": 1, "name": dynamoose.undefined}, {"defaults": true}],
+				"input": [{"id": 1, "name": dynamoose.UNDEFINED}, {"defaults": true}],
 				"output": {"id": 1, "name": undefined},
 				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
 			},

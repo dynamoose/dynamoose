@@ -46,7 +46,27 @@ describe("utils.object.equals", () => {
 		{
 			"input": [[2, 1, 3], [2, 1]],
 			"output": false
-		}
+		},
+		{
+			"input": [1, 1],
+			"output": true
+		},
+		{
+			"input": [1, 2],
+			"output": false
+		},
+		{
+			"input": ["hello", "hello"],
+			"output": true
+		},
+		{
+			"input": ["hello", "world"],
+			"output": false
+		},
+		{
+			"input": ["hello", 1],
+			"output": false
+		},
 	];
 
 	tests.forEach((test) => {

@@ -577,7 +577,7 @@ Model.prototype.update = function (this: Model<DocumentCarrier>, keyObj, updateO
 
 				const dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 				const attributeExists = this.schema.attributes().includes(subKey);
-				const dynamooseUndefined = require("../index").undefined;
+				const dynamooseUndefined = require("../index").UNDEFINED;
 				if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
 					subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
 				}

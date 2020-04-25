@@ -92,6 +92,15 @@ describe("Condition", () => {
 				"output": {"ConditionExpression": "(#a0 = :v0 OR (#a1 = :v1 AND #a2 = :v2))", "ExpressionAttributeNames": {"#a0": "id", "#a1": "name", "#a2": "power"}, "ExpressionAttributeValues": {":v0": {"S": "5"}, ":v1": {"S": "Charlie"}, ":v2": {"N": "10"}}}
 			},
 			{
+				"input": () => new Condition({"id": 1}).parenthesis((a) => a.where("name").eq("Charlie").or().where("name").eq("Bob")),
+				"output": {"ConditionExpression": "#a0 = :v0 AND (#a1 = :v1 OR #a2 = :v2)", "ExpressionAttributeNames": {"#a0": "id", "#a1": "name", "#a2": "name"}, "ExpressionAttributeValues": {":v0": {"N": "1"}, ":v1": {"S": "Charlie"}, ":v2": {"S": "Bob"}}}
+			},
+			{
+				"input": () => new Condition({"id": 1}).parenthesis((a) => a.where("name").eq("Charlie").or().where("name").eq("Bob")),
+				"settings": {"conditionStringType": "array", "conditionString": "ConditionExpression"},
+				"output": {"ConditionExpression": ["#a0 = :v0", "AND", ["#a1 = :v1", "OR", "#a2 = :v2"]], "ExpressionAttributeNames": {"#a0": "id", "#a1": "name", "#a2": "name"}, "ExpressionAttributeValues": {":v0": {"N": "1"}, ":v1": {"S": "Charlie"}, ":v2": {"S": "Bob"}}}
+			},
+			{
 				"input": () => new Condition().where("id").eq("5").or().where("name").eq("Charlie"),
 				"output": {"ConditionExpression": "#a0 = :v0 OR #a1 = :v1", "ExpressionAttributeNames": {"#a0": "id", "#a1": "name"}, "ExpressionAttributeValues": {":v0": {"S": "5"}, ":v1": {"S": "Charlie"}}}
 			},
