@@ -167,7 +167,9 @@ let package = require("../package.json");
 	await git.checkout(originalBranch);
 	gitCheckoutOriginal.succeed(`Checked out ${originalBranch} branch`);
 	const gitDeleteNewBranch = ora(`Deleting ${branch} branch`).start();
-	await git.deleteLocalBranch(branch);
+	// TODO: using `raw` instead of `deleteLocalBranch` until https://github.com/steveukx/git-js/issues/441 gets fixed
+	// await git.deleteLocalBranch(branch);
+	await git.raw(["branch", "-D", branch]);
 	gitDeleteNewBranch.succeed(`Deleted ${branch} branch`);
 	// Complete
 	process.exit(0);
