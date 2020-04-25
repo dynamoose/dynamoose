@@ -156,7 +156,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 	}
 
 	if (object.FilterExpression) {
-		object.FilterExpression = object.FilterExpression.join(" ");
+		object.FilterExpression = utils.dynamoose.convertConditionArrayRequestObjectToString(object.FilterExpression);
 	}
 	if (object.FilterExpression === "") {
 		delete object.FilterExpression;

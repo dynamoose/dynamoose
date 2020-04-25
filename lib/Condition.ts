@@ -212,7 +212,7 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 				const newData = utils.merge_objects.main({"combineMethod": "object_combine"})({...result}, {...object});
 				const returnObject = utils.object.pick(newData, ["ExpressionAttributeNames", "ExpressionAttributeValues"]);
 
-				expression = `(${result[settings.conditionString]})`;
+				expression = settings.conditionStringType === "array" ? result[settings.conditionString] : `(${result[settings.conditionString]})`;
 				object = {...object, ...returnObject};
 			} else if (entry !== OR) {
 				const [key, condition] = Object.entries(entry)[0];
@@ -283,7 +283,7 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 				if (typeof object[settings.conditionString] === "string") {
 					object[settings.conditionString] = `${object[settings.conditionString]}${item}`;
 				} else {
-					object[settings.conditionString].push(item.trim());
+					object[settings.conditionString].push(Array.isArray(item) ? item : item.trim());
 				}
 			});
 

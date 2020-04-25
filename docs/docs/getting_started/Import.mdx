@@ -1,0 +1,27 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+In order to use Dynamoose you must import it or require it in your project. This will make the `dynamoose` namespace accessible so you can use things like models, schemas, and more.
+
+<Tabs
+	defaultValue="commonjs"
+	values={[
+		{"label": "CommonJS", value: "commonjs"},
+		{"label": "ES Modules", value: "esmodules"},
+	]
+}>
+<TabItem value="commonjs">
+
+```js
+const dynamoose = require("dynamoose");
+```
+
+</TabItem>
+<TabItem value="esmodules">
+
+```js
+import { dynamoose } from "dynamoose";
+```
+
+</TabItem>
+</Tabs>

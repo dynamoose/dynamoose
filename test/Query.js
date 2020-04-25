@@ -31,7 +31,7 @@ describe("Query", () => {
 
 	let Model;
 	beforeEach(() => {
-		Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}});
+		Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "favoriteNumber": Number});
 	});
 
 	describe("Model.query", () => {
@@ -473,6 +473,70 @@ describe("Query", () => {
 							":qhv": {"N": "1"}
 						},
 						"KeyConditionExpression": "#qha = :qhv"
+					});
+				});
+
+				it("Should send correct request on query.exec when using nested groups with OR", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).or().where("id").eq(2));
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a1": "favoriteNumber",
+							"#a2": "id",
+							"#a3": "id",
+							"#qha": "name"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "18"
+							},
+							":v2": {
+								"N": "1"
+							},
+							":v3": {
+								"N": "2"
+							}
+						},
+						"FilterExpression": "#a1 <= :v1 AND (#a2 = :v2 OR #a3 = :v3)",
+						"IndexName": "nameGlobalIndex",
+						"KeyConditionExpression": "#qha = :qhv",
+						"TableName": "Cat"
+					});
+				});
+
+				it("Should send correct request on query.exec when using nested groups with AND", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					const query = Model.query({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).and().where("id").eq(2));
+					await callType.func(query.exec).bind(query)();
+					expect(queryParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a1": "favoriteNumber",
+							"#a2": "id",
+							"#a3": "id",
+							"#qha": "name"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "18"
+							},
+							":v2": {
+								"N": "1"
+							},
+							":v3": {
+								"N": "2"
+							}
+						},
+						"FilterExpression": "#a1 <= :v1 AND (#a2 = :v2 AND #a3 = :v3)",
+						"IndexName": "nameGlobalIndex",
+						"KeyConditionExpression": "#qha = :qhv",
+						"TableName": "Cat"
 					});
 				});
 

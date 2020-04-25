@@ -52,5 +52,5 @@ export = {
 	transaction,
 	aws,
 	logger,
-	"undefined": Internal.Public.undefined
+	"UNDEFINED": Internal.Public.undefined
 };
