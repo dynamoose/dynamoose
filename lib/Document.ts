@@ -8,28 +8,95 @@ import {DynamoDBTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
-import {DynamoDB, AWSError} from "aws-sdk";
+import { DynamoDB, AWSError } from "aws-sdk";
 import { ValueType } from "./Schema";
 import { CallbackType, ObjectType } from "./General";
 
-interface DocumentSaveSettings {
+export interface DocumentSaveSettings {
 	overwrite?: boolean;
 	return?: "request" | "document";
+}
+interface DocumentSettings {
+	type: "fromDynamo" | "toDynamo";
 }
 
 // Document represents an item in a Model that is either pending (not saved) or saved
 export class Document {
-	static objectToDynamo: (object: any, settings?: {type: "object" | "value"}) => any;
-	static fromDynamo: (object: any) => any;
-	static isDynamoObject: (object: any, recurrsive?: boolean) => boolean | null;
+	constructor(model: Model<Document>, object?: DynamoDB.AttributeMap | ObjectType, settings?: DocumentSettings) {
+		const documentObject = Document.isDynamoObject(object) ? aws.converter().unmarshall(object) : object;
+		Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
+		Object.defineProperty(this, internalProperties, {
+			"configurable": false,
+			"value": {}
+		});
+		this[internalProperties].originalObject = {...object};
+		this[internalProperties].originalSettings = {...settings};
+
+		Object.defineProperty(this, "model", {
+			"configurable": false,
+			"value": model
+		});
+
+		if (settings.type === "fromDynamo") {
+			this[internalProperties].storedInDynamo = true;
+		}
+	}
+
+	// Internal
+	model?: Model<Document>;
+	static objectToDynamo(object: ObjectType): DynamoDB.AttributeMap;
+	static objectToDynamo(object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
+	static objectToDynamo(object: ObjectType, settings: {type: "object"}): DynamoDB.AttributeMap;
+	static objectToDynamo(object: any, settings: {type: "object" | "value"} = {"type": "object"}): DynamoDB.AttributeValue | DynamoDB.AttributeMap {
+		return (settings.type === "value" ? aws.converter().input : aws.converter().marshall)(object);
+	}
+	static fromDynamo(object: DynamoDB.AttributeMap): ObjectType {
+		return aws.converter().unmarshall(object);
+	}
+	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
+	static isDynamoObject(object: ObjectType, recurrsive?: boolean): boolean | null {
+		function isValid(value): boolean {
+			if (typeof value === "undefined" || value === null) {
+				return false;
+			}
+			const keys = Object.keys(value);
+			const key = keys[0];
+			const nestedResult = (typeof value[key] === "object" && !(value[key] instanceof Buffer) ? (Array.isArray(value[key]) ? value[key].every((value) => Document.isDynamoObject(value, true)) : Document.isDynamoObject(value[key])) : true);
+			const {Schema} = require("./Schema");
+			const attributeType = Schema.attributeTypes.findDynamoDBType(key);
+			return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
+		}
+
+		const keys = Object.keys(object);
+		const values = Object.values(object);
+		if (keys.length === 0) {
+			return null;
+		} else {
+			return recurrsive ? isValid(object) : values.every((value) => isValid(value));
+		}
+	}
+
 	static attributesWithSchema: (document: Document, model: Model<Document>) => string[];
-	original: () => ObjectType | null;
 	static objectFromSchema: (object: any, model: Model<Document>, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
 	static prepareForObjectFromSchema: (object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) => any;
 	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<Document>;
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
-	delete: (this: Document, callback: CallbackType<void, AWSError>) => void | Promise<void>;
 
+	// Original
+	original (): ObjectType | null {
+		return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
+	}
+
+	// Delete
+	delete(this: Document): Promise<void>;
+	delete(this: Document, callback: CallbackType<void, AWSError>): void;
+	delete(this: Document, callback?: CallbackType<void, AWSError>): Promise<void> | void {
+		return this.model.delete({
+			[this.model.schema.getHashKey()]: this[this.model.schema.getHashKey()]
+		}, callback);
+	}
+
+	// Save
 	save(this: Document): Promise<Document>;
 	save(this: Document, callback: CallbackType<Document, AWSError>): void;
 	save(this: Document, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
@@ -84,58 +151,10 @@ export class Document {
 			})();
 		}
 	}
-
-	model?: Model<Document>;
-
-	constructor(model: Model<Document>, object?: DynamoDB.AttributeMap | ObjectType, settings?: any) {
-		const documentObject = Document.isDynamoObject(object) ? (aws.converter() as any).unmarshall(object) : object;
-		Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
-		Object.defineProperty(this, internalProperties, {
-			"configurable": false,
-			"value": {}
-		});
-		this[internalProperties].originalObject = {...object};
-		this[internalProperties].originalSettings = {...settings};
-
-		Object.defineProperty(this, "model", {
-			"configurable": false,
-			"value": model
-		});
-
-		if (settings.fromDynamo) {
-			this[internalProperties].storedInDynamo = true;
-		}
-	}
 }
 
-Document.objectToDynamo = (object, settings = {"type": "object"}): any => (settings.type === "value" ? (aws.converter() as any).input : (aws.converter() as any).marshall)(object);
-Document.fromDynamo = (object): any => (aws.converter() as any).unmarshall(object);
-
-// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
-Document.isDynamoObject = (object, recurrsive = false): boolean | null => {
-	// This function will check to see if a nested object is valid by calling Document.isDynamoObject recursively
-	function isValid(value): boolean {
-		if (typeof value === "undefined" || value === null) {
-			return false;
-		}
-		const keys = Object.keys(value);
-		const key = keys[0];
-		const nestedResult = (typeof value[key] === "object" && !(value[key] instanceof Buffer) ? (Array.isArray(value[key]) ? value[key].every((value) => Document.isDynamoObject(value, true)) : Document.isDynamoObject(value[key])) : true);
-		const {Schema} = require("./Schema");
-		const attributeType = Schema.attributeTypes.findDynamoDBType(key);
-		return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
-	}
-
-	const keys = Object.keys(object);
-	const values = Object.values(object);
-	if (keys.length === 0) {
-		return null;
-	} else {
-		return recurrsive ? isValid(object) : values.every((value) => isValid(value));
-	}
-};
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
-Document.prepareForObjectFromSchema = function(object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings): any {
+Document.prepareForObjectFromSchema = function<T>(object: T, model: Model<Document>, settings: DocumentObjectFromSchemaSettings): T {
 	if (settings.updateTimestamps) {
 		if (model.schema.settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
@@ -396,11 +415,6 @@ Document.prototype.toDynamo = async function(this: Document, settings: Partial<D
 	const object = await Document.objectFromSchema(this, this.model, newSettings);
 	return Document.objectToDynamo(object);
 };
-Document.prototype.delete = function(this: Document, callback): any {
-	return this.model.delete({
-		[this.model.schema.getHashKey()]: this[this.model.schema.getHashKey()]
-	}, callback as any);
-};
 // This function will modify the document to conform to the Schema
 Document.prototype.conformToSchema = async function(this: Document, settings: DocumentObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Document> {
 	Document.prepareForObjectFromSchema(this, this.model, settings);
@@ -418,8 +432,4 @@ Document.prototype.conformToSchema = async function(this: Document, settings: Do
 	});
 
 	return this;
-};
-
-Document.prototype.original = function(): DynamoDB.AttributeMap | ObjectType | null {
-	return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
 };
