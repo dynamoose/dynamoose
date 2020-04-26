@@ -16,27 +16,35 @@ interface ModelDocumentConstructor<T extends Document> {
 const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
 	const model: Model<T> = new Model(name, schema, options);
 	const returnObject: any = model.Document;
-	Object.keys(model).forEach((key) => {
-		if (key !== "name") {
-			returnObject[key] = model[key];
-		}
-	});
-	Object.keys(Object.getPrototypeOf(model)).forEach((key) => {
+	const keys = utils.array_flatten([
+		Object.keys(model),
+		Object.keys(Object.getPrototypeOf(model)),
+		Object.getOwnPropertyNames(Object.getPrototypeOf(model))
+	]).filter((key) => !["constructor", "name"].includes(key));
+	keys.forEach((key) => {
 		if (typeof model[key] === "object") {
 			const main = (key: string): void => {
 				utils.object.set(returnObject, key, {});
-				Object.keys(utils.object.get(model as any, key)).forEach((subKey): void => {
-					const newKey = `${key}.${subKey}`;
-					if (typeof utils.object.get(model as any, newKey) === "object") {
-						main(newKey);
-					} else {
-						utils.object.set(returnObject, newKey, (utils.object.get(model, newKey) as any).bind(model));
-					}
-				});
+				const value = utils.object.get(model as any, key);
+				if (value === null) {
+					utils.object.set(returnObject, key, value);
+				} else {
+					Object.keys(value).forEach((subKey): void => {
+						const newKey = `${key}.${subKey}`;
+						const subValue: any = utils.object.get(model as any, newKey);
+						if (typeof subValue === "object") {
+							main(newKey);
+						} else {
+							utils.object.set(returnObject, newKey, typeof subValue === "function" ? subValue.bind(model) : subValue);
+						}
+					});
+				}
 			};
 			main(key);
-		} else {
+		} else if (typeof model[key] === "function") {
 			returnObject[key] = model[key].bind(model);
+		} else {
+			returnObject[key] = model[key];
 		}
 	});
 	return returnObject as any;
