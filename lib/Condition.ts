@@ -3,6 +3,7 @@ import CustomError from "./Error";
 import utils from "./utils";
 const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
+import { ObjectType } from "./General";
 
 const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
@@ -59,9 +60,9 @@ const types: ConditionComparisonType[] = [
 	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in},
 	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true}
 ];
-type ConditionInitalizer = Condition | {[key: string]: any} | string;
+export type ConditionInitalizer = Condition | ObjectType | string;
 
-class Condition {
+export class Condition {
 	settings: {
 		// TODO: fix this below, it should be a reference to `OR` not Symbol, you are only allowed to pass in OR here, not any other Symbol.
 		conditions: ConditionStorageSettingsConditions;
@@ -190,14 +191,14 @@ interface ConditionRequestObjectSettings {
 }
 Condition.prototype.requestObject = function(this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): ConditionRequestObjectResult {
 	if (this.settings.raw && utils.object.equals(Object.keys(this.settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
-		return Object.entries((this.settings.raw as any).ExpressionAttributeValues).reduce((obj, entry) => {
+		return Object.entries((this.settings.raw as ObjectType).ExpressionAttributeValues).reduce((obj, entry) => {
 			const [key, value] = entry;
 			// TODO: we should fix this so that we can do `isDynamoItem(value)`
 			if (!Document.isDynamoObject({"key": value})) {
 				obj.ExpressionAttributeValues[key] = Document.objectToDynamo(value, {"type": "value"});
 			}
 			return obj;
-		}, (this.settings.raw as any));
+		}, this.settings.raw as ObjectType);
 	} else if (this.settings.conditions.length === 0) {
 		return {};
 	}
@@ -231,8 +232,10 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 						return finalName;
 					}, []).join(".");
 				}
-				const toDynamo: (value: any, settings: {}) => {} = (Document as any).objectToDynamo;
-				object.ExpressionAttributeValues[keys.value] = toDynamo(value, {"type": "value"});
+				const toDynamo = (value: ObjectType): DynamoDB.AttributeValue => {
+					return Document.objectToDynamo(value, {"type": "value"});
+				};
+				object.ExpressionAttributeValues[keys.value] = toDynamo(value);
 
 				switch (condition.type) {
 				case "EQ":
@@ -243,7 +246,7 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 					delete object.ExpressionAttributeValues[keys.value];
 					expression = `${keys.name} IN (${value.map((_v: any, i: number) => `${keys.value}_${i + 1}`).join(", ")})`;
 					value.forEach((valueItem: any, i: number) => {
-						object.ExpressionAttributeValues[`${keys.value}_${i + 1}`] = toDynamo(valueItem, {"type": "value"});
+						object.ExpressionAttributeValues[`${keys.value}_${i + 1}`] = toDynamo(valueItem);
 					});
 					break;
 				case "GT":
@@ -254,8 +257,8 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 					break;
 				case "BETWEEN":
 					expression = `${keys.name} BETWEEN ${keys.value}_1 AND ${keys.value}_2`;
-					object.ExpressionAttributeValues[`${keys.value}_1`] = toDynamo(value[0], {"type": "value"});
-					object.ExpressionAttributeValues[`${keys.value}_2`] = toDynamo(value[1], {"type": "value"});
+					object.ExpressionAttributeValues[`${keys.value}_1`] = toDynamo(value[0]);
+					object.ExpressionAttributeValues[`${keys.value}_2`] = toDynamo(value[1]);
 					delete object.ExpressionAttributeValues[keys.value];
 					break;
 				case "CONTAINS":
@@ -292,5 +295,3 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 	}
 	return main(this.settings.conditions);
 };
-
-export = Condition;

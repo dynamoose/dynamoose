@@ -1,11 +1,12 @@
 import ddb from "./aws/ddb/internal";
 import CustomError from "./Error";
 import utils from "./utils";
-import Condition from "./Condition";
+import {Condition, ConditionInitalizer} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
+import { CallbackType } from "./General";
+import { AWSError } from "aws-sdk";
 
-export type ConditionInitalizer = Condition | {[key: string]: any} | string;
 enum DocumentRetrieverTypes {
 	scan = "scan",
 	query = "query"
