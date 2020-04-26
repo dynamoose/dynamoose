@@ -1,17 +1,23 @@
 module.exports = {
 	"sidebar": {
-		"API": [
-			"api/General",
-			"api/Schema",
-			"api/Model",
-			"api/Document",
-			"api/Condition",
-			"api/Query",
-			"api/Scan",
-			"api/Transaction"
+		"Getting Started": [
+			"getting_started/Introduction",
+			"getting_started/Install",
+			"getting_started/Import",
+			"getting_started/Configure"
+		],
+		"Guide": [
+			"guide/Schema",
+			"guide/Model",
+			"guide/Document",
+			"guide/Condition",
+			"guide/Query",
+			"guide/Scan",
+			"guide/Transaction",
+			"guide/Dynamoose"
 		],
 		"Other": [
-			"FAQ"
+			"other/FAQ"
 		]
 	},
 };
