@@ -7,7 +7,7 @@ import { ObjectType } from "./General";
 
 const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
-type ConditionFunction = (condition: Condition) => Condition;
+export type ConditionFunction = (condition: Condition) => Condition;
 // TODO: There is a problem where you can have multiple keys in one `ConditionStorageType`, which will cause problems. We need to fix that. Likely be refactoring it so that the key is part of `ConditionsConditionStorageObject`.
 type ConditionStorageType = {[key: string]: ConditionsConditionStorageObject} | typeof OR;
 type ConditionStorageTypeNested = ConditionStorageType | Array<ConditionStorageTypeNested>;
@@ -82,6 +82,17 @@ export class Condition {
 	where: (key: string) => Condition;
 	filter: (key: string) => Condition;
 	attribute: (key: string) => Condition;
+	eq: (value: any) => Condition;
+	lt: (value: number) => Condition;
+	le: (value: number) => Condition;
+	gt: (value: number) => Condition;
+	ge: (value: number) => Condition;
+	beginsWith: (value: any) => Condition;
+	contains: (value: any) => Condition;
+	exists: (value: any) => Condition;
+	in: (value: any) => Condition;
+	between: (...values: any[]) => Condition;
+
 	requestObject: (settings?: ConditionRequestObjectSettings) => ConditionRequestObjectResult;
 
 	constructor(object?: ConditionInitalizer) {
