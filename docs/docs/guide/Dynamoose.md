@@ -1,11 +1,3 @@
-You can access Dynamoose by requiring the library. For example:
-
-```js
-const dynamoose = require("dynamoose");
-```
-
-The Dynamoose object is the entry point to everything you will do with this package.
-
 ## dynamoose.aws
 
 The `dynamoose.aws` object is used to set AWS level settings for Dynamoose. This includes things like setting a custom DDB instance, setting the AWS region, access keys, and more.
@@ -168,7 +160,7 @@ This function returns `active` if log events are being emitted to log providers,
 dynamoose.logger.status(); // "active" || "paused"
 ```
 
-## dynamoose.undefined
+## dynamoose.UNDEFINED
 
 Setting an attribute value to this will cause it to bypass the `default` value, and set it to `undefined` in the database.
 
@@ -176,7 +168,7 @@ Setting an attribute value to this will cause it to bypass the `default` value, 
 const dynamoose = require("dynamoose");
 
 const User = dynamoose.model("User", {"id": String, "name": {"type": String, "default": "Bob"}});
-const user = new User({"id": 1, "name": dynamoose.undefined});
+const user = new User({"id": 1, "name": dynamoose.UNDEFINED});
 await user.save();
 // {"id": 1}
 // will be saved to the database (notice the `name` property is undefined and did not use the `default` property)

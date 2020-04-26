@@ -201,8 +201,8 @@ describe("Model", () => {
 						}
 					],
 					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 5,
-						"WriteCapacityUnits": 5
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
 					},
 					"TableName": tableName
 				});
@@ -459,80 +459,205 @@ describe("Model", () => {
 				dynamoose.aws.ddb.revert();
 			});
 
-			it("Should not call updateTable if throughput matches", async () => {
-				const tableName = "Cat";
-				describeTableFunction = () => Promise.resolve({
-					"Table": {
-						"ProvisionedThroughput": {
-							"ReadCapacityUnits": 1,
-							"WriteCapacityUnits": 2
-						},
-						"TableStatus": "ACTIVE"
-					}
+			describe("Throughput", () => {
+				const updateOptions = [
+					true,
+					["throughput"]
+				];
+				updateOptions.forEach((updateOption) => {
+					describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
+						it("Should not call updateTable if throughput matches", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 2
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}, "update": updateOption});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).to.eql([]);
+						});
+
+						it("Should call updateTable with correct parameters if throughput doesn't match", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 2,
+										"WriteCapacityUnits": 2
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}, "update": updateOption});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).to.eql([{
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 2
+								},
+								"TableName": tableName
+							}]);
+						});
+
+						it("Should call updateTable with correct parameters if switching from provisioned to on demand", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 2,
+										"WriteCapacityUnits": 2
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							dynamoose.model(tableName, {"id": String}, {"throughput": "ON_DEMAND", "update": updateOption});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).to.eql([{
+								"BillingMode": "PAY_PER_REQUEST",
+								"TableName": tableName
+							}]);
+						});
+
+						it("Should call updateTable with correct parameters if switching from on demand to provisioned", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"BillingMode": "PAY_PER_REQUEST",
+									"TableStatus": "ACTIVE"
+								}
+							});
+							dynamoose.model(tableName, {"id": String}, {"throughput": 5, "update": updateOption});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).to.eql([{
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 5,
+									"WriteCapacityUnits": 5
+								},
+								"TableName": tableName
+							}]);
+						});
+					});
 				});
-				dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
-				await utils.set_immediate_promise();
-				expect(updateTableParams).to.eql([]);
 			});
 
-			it("Should call updateTable with correct parameters if throughput doesn't match", async () => {
-				const tableName = "Cat";
-				describeTableFunction = () => Promise.resolve({
-					"Table": {
-						"ProvisionedThroughput": {
-							"ReadCapacityUnits": 2,
-							"WriteCapacityUnits": 2
-						},
-						"TableStatus": "ACTIVE"
-					}
-				});
-				dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}});
-				await utils.set_immediate_promise();
-				expect(updateTableParams).to.eql([{
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 2
-					},
-					"TableName": tableName
-				}]);
-			});
+			describe("Indexes", () => {
+				const updateOptions = [
+					true,
+					["indexes"]
+				];
+				updateOptions.forEach((updateOption) => {
+					describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
+						it("Should call updateTable to add index", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).to.eql([
+								{
+									"AttributeDefinitions": [
+										{
+											"AttributeName": "id",
+											"AttributeType": "S"
+										},
+										{
+											"AttributeName": "name",
+											"AttributeType": "S"
+										}
+									],
+									"GlobalSecondaryIndexUpdates": [
+										{
+											"Create": {
+												"IndexName": "nameGlobalIndex",
+												"KeySchema": [
+													{
+														"AttributeName": "name",
+														"KeyType": "HASH"
+													}
+												],
+												"Projection": {
+													"ProjectionType": "ALL"
+												},
+												"ProvisionedThroughput": {
+													"ReadCapacityUnits": 1,
+													"WriteCapacityUnits": 1
+												}
+											}
+										}
+									],
+									"TableName": "Cat"
+								}
+							]);
+						});
 
-			it("Should call updateTable with correct parameters if switching from provisioned to on demand", async () => {
-				const tableName = "Cat";
-				describeTableFunction = () => Promise.resolve({
-					"Table": {
-						"ProvisionedThroughput": {
-							"ReadCapacityUnits": 2,
-							"WriteCapacityUnits": 2
-						},
-						"TableStatus": "ACTIVE"
-					}
+						it("Should call updateTable to delete index", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"AttributeDefinitions": [
+									{
+										"AttributeName": "id",
+										"AttributeType": "S"
+									},
+									{
+										"AttributeName": "name",
+										"AttributeType": "S"
+									}
+								],
+								"GlobalSecondaryIndexes": [
+									{
+										"IndexName": "nameGlobalIndex",
+										"KeySchema": [
+											{
+												"AttributeName": "name",
+												"KeyType": "HASH"
+											}
+										],
+										"Projection": {
+											"ProjectionType": "ALL"
+										},
+										"ProvisionedThroughput": {
+											"ReadCapacityUnits": 1,
+											"WriteCapacityUnits": 1
+										}
+									}
+								],
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							dynamoose.model(tableName, {"id": String, "name": {"type": String}}, {"update": updateOption});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).to.eql([
+								{
+									"GlobalSecondaryIndexUpdates": [
+										{
+											"Delete": {
+												"IndexName": "nameGlobalIndex"
+											}
+										}
+									],
+									"TableName": "Cat"
+								}
+							]);
+						});
+					});
 				});
-				dynamoose.model(tableName, {"id": String}, {"throughput": "ON_DEMAND"});
-				await utils.set_immediate_promise();
-				expect(updateTableParams).to.eql([{
-					"BillingMode": "PAY_PER_REQUEST",
-					"TableName": tableName
-				}]);
-			});
-
-			it("Should call updateTable with correct parameters if switching from on demand to provisioned", async () => {
-				const tableName = "Cat";
-				describeTableFunction = () => Promise.resolve({
-					"Table": {
-						"BillingMode": "PAY_PER_REQUEST",
-						"TableStatus": "ACTIVE"
-					}
-				});
-				dynamoose.model(tableName, {"id": String}, {"throughput": 5});
-				await utils.set_immediate_promise();
-				expect(updateTableParams).to.eql([{
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 5,
-						"WriteCapacityUnits": 5
-					},
-					"TableName": tableName
-				}]);
 			});
 		});
 
@@ -552,8 +677,8 @@ describe("Model", () => {
 							"promise": () => Promise.resolve({
 								"Table": {
 									"ProvisionedThroughput": {
-										"ReadCapacityUnits": 5,
-										"WriteCapacityUnits": 5
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
 									},
 									"TableStatus": "ACTIVE"
 								}
@@ -1893,10 +2018,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.undefined to delete default property", async () => {
+				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
-					await callType.func(User).bind(User)({"id": 1, "name": dynamoose.undefined});
+					await callType.func(User).bind(User)({"id": 1, "name": dynamoose.UNDEFINED});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -1914,10 +2039,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.undefined to delete default property using $REMOVE", async () => {
+				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property using $REMOVE", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
-					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"name": dynamoose.undefined}});
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"name": dynamoose.UNDEFINED}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -1935,10 +2060,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.undefined to delete default property using $SET", async () => {
+				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property using $SET", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
-					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": dynamoose.undefined}});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": dynamoose.UNDEFINED}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -2985,8 +3110,8 @@ describe("Model", () => {
 			expect(await dynamoose.model("User", {"id": String}).table.create.request()).to.eql({
 				"TableName": "User",
 				"ProvisionedThroughput": {
-					"ReadCapacityUnits": 5,
-					"WriteCapacityUnits": 5
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
 				},
 				"AttributeDefinitions": [
 					{

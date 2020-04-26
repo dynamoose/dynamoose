@@ -9,6 +9,7 @@
 	- `$DELETE` has been renamed to `$REMOVE`
 	- `$REMOVE` (previously `$DELETE`) now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
 	- `$PUT` has been replaced with `$SET`
+- Model `update` setting now includes more update actions. To use the v1 update behavior change the value of `update` setting to be `["ttl", "indexes"]`.
 - `dynamoose.setDefaults` has been renamed to `dynamoose.model.defaults.set`
 - `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
 - `dynamoose.setDDB` has been renamed to `dynamoose.aws.ddb.set`
@@ -23,7 +24,7 @@
 	 - `expires`
 	 - `throughput`
 - `expires.ttl` is now milliseconds as opposed to seconds
-- `expires.defaultExpires` is no longer an option (most behavior from this option can be replicated by using the new `dynamoose.undefined` feature)
+- `expires.defaultExpires` is no longer an option (most behavior from this option can be replicated by using the new `dynamoose.UNDEFINED` feature)
 - `expires.returnExpiredItems` has been renamed to `expires.items.returnExpired`
 - `Model.transaction.conditionCheck` has been renamed to `Model.transaction.condition`
 - `Model.transaction.condition` options parameter now gets appended to the object returned. This means you can no longer use the helpers that Dynamoose provided to make conditions. Instead, pass in the DynamoDB API level conditions you wish to use
@@ -35,7 +36,7 @@
 - `Scan.null` & `Query.null` have been removed. In most cases this can be replaced with `.not().exists()`.
 - DynamoDB set types are now returned as JavaScript Set's instead of Array's
 - DynamoDB set types are now defined as `{"type": Set, "schema": [String]}` as opposed to the former `[String]` or `{"type": [String]}`. This is more explict and makes it more clear that the type is a set.
-- Trying to save a Document with a property set to `null` will now throw an error. If you would like to remove the property set it to `dynamoose.undefined` to set it to undefined without taking into account the `default` setting, or `undefined` to set it to undefined while taking into account the `default` setting.
+- Trying to save a Document with a property set to `null` will now throw an error. If you would like to remove the property set it to `dynamoose.UNDEFINED` to set it to undefined without taking into account the `default` setting, or `undefined` to set it to undefined while taking into account the `default` setting.
 - Expires TTL value is set to be a default value. In Dynamoose v1 there were cases where expires TTL wouldn't be set, in Dynamoose v2, the behavior of if the Expires TTL is set behaves the same as any default value
 - Custom methods have changed behavior:
 	- `schema.method` is now `model.methods.document`
