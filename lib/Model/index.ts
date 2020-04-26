@@ -374,7 +374,7 @@ export class Model<T extends DocumentCarrier> {
 	schema: Schema;
 	private ready: boolean;
 	alreadyCreated: boolean;
-	private pendingTasks: any[];
+	private pendingTasks: ((value?: void | PromiseLike<void>) => void)[];
 	latestTableDetails: DynamoDB.DescribeTableOutput;
 	pendingTaskPromise: () => Promise<void>;
 	static defaults: ModelOptions;
@@ -406,10 +406,7 @@ export class Model<T extends DocumentCarrier> {
 			const tmpResult = await Promise.all(response.Responses[this.name].map((item) => documentify(item)));
 			const unprocessedArray = response.UnprocessedKeys[this.name] ? response.UnprocessedKeys[this.name].Keys : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item)));
-			// TODO fix this to remove any
-			const startArray: any = [];
-			// const startArray: ModelBatchGetDocumentsResponse<DocumentCarrier> = [];
-			startArray.unprocessedKeys = [];
+			const startArray: ModelBatchGetDocumentsResponse<DocumentCarrier> = Object.assign([], {"unprocessedKeys": []});
 			return keyObjects.reduce((result, key) => {
 				const keyProperties = Object.keys(key);
 				let item: ObjectType = tmpResult.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
