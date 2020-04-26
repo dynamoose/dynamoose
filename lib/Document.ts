@@ -4,7 +4,7 @@ import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
 import {Model, ModelExpiresSettings} from "./Model";
-import {DynamoDBTypeResult} from "./Schema";
+import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
@@ -16,8 +16,8 @@ export interface DocumentSaveSettings {
 	overwrite?: boolean;
 	return?: "request" | "document";
 }
-interface DocumentSettings {
-	type: "fromDynamo" | "toDynamo";
+export interface DocumentSettings {
+	type?: "fromDynamo" | "toDynamo";
 }
 
 // Document represents an item in a Model that is either pending (not saved) or saved
@@ -220,8 +220,7 @@ Document.attributesWithSchema = function(document: Document, model: Model<Docume
 	attributesWithSchemaCache[documentID] = {[attributes.join()]: result};
 	return result;
 };
-// This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
-interface DocumentObjectFromSchemaSettings {
+export interface DocumentObjectFromSchemaSettings {
 	type: "toDynamo" | "fromDynamo";
 	checkExpiredItem?: boolean;
 	saveUnknown?: boolean;
@@ -234,6 +233,7 @@ interface DocumentObjectFromSchemaSettings {
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
+// This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
 Document.objectFromSchema = async function(object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
 	if (settings.checkExpiredItem && model.options.expires && ((model.options.expires as ModelExpiresSettings).items || {}).returnExpired === false && object[(model.options.expires as ModelExpiresSettings).attribute] && (object[(model.options.expires as ModelExpiresSettings).attribute] * 1000) < Date.now()) {
 		return undefined;
@@ -245,7 +245,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 	// Type check
 	const validParents = []; // This array is used to allow for set contents to not be type checked
 	const keysToDelete = [];
-	const getValueTypeCheckResult = (value: any, key: string, options = {}): {typeDetails: DynamoDBTypeResult; isValidType: boolean} => {
+	const getValueTypeCheckResult = (value: any, key: string, options = {}): {typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult; isValidType: boolean} => {
 		const typeDetails = model.schema.getAttributeTypeDetails(key, options);
 		const isValidType = [((typeDetails.customType || {}).functions || {}).isOfType, typeDetails.isOfType].filter((a) => Boolean(a)).some((func) => func(value, settings.type));
 		return {typeDetails, isValidType};
@@ -307,7 +307,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const typeDetails = model.schema.getAttributeTypeDetails(key);
+				const typeDetails = model.schema.getAttributeTypeDetails(key) as DynamoDBTypeResult;
 				const {customType} = typeDetails;
 				const {type: typeInfo} = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");

@@ -1,16 +1,16 @@
 import CustomError from "../Error";
-import {Schema, SchemaDefinition} from "../Schema";
-import {Document as DocumentCarrier, DocumentSaveSettings} from "../Document";
+import {Schema, SchemaDefinition, DynamoDBSetTypeResult} from "../Schema";
+import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings} from "../Document";
 import utils from "../utils";
 import ddb from "../aws/ddb/internal";
 import Internal from "../Internal";
 import Condition from "../Condition";
 import {Scan, Query, ConditionInitalizer} from "../DocumentRetriever";
-import {CallbackType, ObjectType} from "../General";
+import {CallbackType, ObjectType, FunctionType} from "../General";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 
-import {DynamoDB, Request, AWSError} from "aws-sdk";
+import {DynamoDB, AWSError} from "aws-sdk";
 
 // Defaults
 interface ModelWaitForActiveSettings {
@@ -205,6 +205,10 @@ interface ModelDeleteSettings {
 interface ModelBatchPutSettings {
 	return: "response" | "request";
 }
+interface ModelUpdateSettings {
+	return: "document" | "request";
+	condition?: Condition;
+}
 
 // Model represents one DynamoDB table
 export class Model<T extends DocumentCarrier> {
@@ -278,7 +282,7 @@ export class Model<T extends DocumentCarrier> {
 		const self: Model<DocumentCarrier> = this;
 		class Document extends DocumentCarrier {
 			static Model: Model<DocumentCarrier>;
-			constructor(object: DynamoDB.AttributeMap | ObjectType = {}, settings: any = {}) {
+			constructor(object: DynamoDB.AttributeMap | ObjectType = {}, settings: DocumentSettings = {}) {
 				super(self, object, settings);
 			}
 		}
@@ -369,9 +373,8 @@ export class Model<T extends DocumentCarrier> {
 	scan: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Scan;
 	query: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Query;
 	batchDelete: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchDeleteSettings, callback?: CallbackType<void | DynamoDB.BatchWriteItemInput, AWSError>) => void | DynamoDB.BatchWriteItemInput | Promise<void>;
-	update: (this: Model<DocumentCarrier>, keyObj: any, updateObj: any, settings?: ModelUpdateSettings, callback?: CallbackType<DocumentCarrier | DynamoDB.UpdateItemInput, AWSError>) => void | Promise<DocumentCarrier | DynamoDB.UpdateItemInput>;
 	batchGet: (this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings, callback?: CallbackType<DocumentCarrier[], AWSError>) => void | DynamoDB.BatchGetItemInput | Promise<DocumentCarrier[]>;
-	methods: { document: { set: (name: string, fn: any) => void; delete: (name: string) => void }; set: (name: string, fn: any) => void; delete: (name: string) => void };
+	methods: { document: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 
 	// Batch Put
 	batchPut(this: Model<DocumentCarrier>, documents: ObjectType[]): Promise<{"unprocessedItems": ObjectType[]}>;
@@ -428,6 +431,205 @@ export class Model<T extends DocumentCarrier> {
 			return (async (): Promise<{unprocessedItems: ObjectType[]}> => {
 				const response = await promise;
 				return prepareResponse(response);
+			})();
+		}
+	}
+
+	// Update
+	update(this: Model<DocumentCarrier>, obj: ObjectType): Promise<DocumentCarrier>;
+	update(this: Model<DocumentCarrier>, obj: ObjectType, callback: CallbackType<DocumentCarrier, AWSError>): void;
+	update(this: Model<DocumentCarrier>, keyObj: ObjectType, updateObj: ObjectType): Promise<DocumentCarrier>;
+	update(this: Model<DocumentCarrier>, keyObj: ObjectType, updateObj: ObjectType, callback: CallbackType<DocumentCarrier, AWSError>): void;
+	update(this: Model<DocumentCarrier>, keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "document"}): Promise<DocumentCarrier>;
+	update(this: Model<DocumentCarrier>, keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<DocumentCarrier, AWSError>): void;
+	update(this: Model<DocumentCarrier>, keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
+	update(this: Model<DocumentCarrier>, keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, AWSError>): void;
+	update(this: Model<DocumentCarrier>, keyObj: ObjectType, updateObj?: ObjectType | CallbackType<DocumentCarrier, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, settings?: ModelUpdateSettings | CallbackType<DocumentCarrier, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, callback?: CallbackType<DocumentCarrier, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>): void | Promise<DocumentCarrier> | Promise<DynamoDB.UpdateItemInput> {
+		if (typeof updateObj === "function") {
+			callback = updateObj as CallbackType<DocumentCarrier | DynamoDB.UpdateItemInput, AWSError>; // TODO: fix this, for some reason `updateObj` has a type of Function which is forcing us to type cast it
+			updateObj = null;
+			settings = {"return": "document"};
+		}
+		if (typeof settings === "function") {
+			callback = settings;
+			settings = {"return": "document"};
+		}
+		if (!updateObj) {
+			const hashKeyName = this.schema.getHashKey();
+			updateObj = keyObj;
+			keyObj = {
+				[hashKeyName]: keyObj[hashKeyName]
+			};
+			delete updateObj[hashKeyName];
+		}
+		if (typeof settings === "undefined") {
+			settings = {"return": "document"};
+		}
+
+		let index = 0;
+		// TODO: change the line below to not be partial
+		const getUpdateExpressionObject: () => Promise<any> = async () => {
+			const updateTypes = [
+				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
+				{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
+				{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}}
+			].reverse();
+			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
+				const accumulator = await accumulatorPromise;
+				let value = updateObj[key];
+
+				if (!(typeof value === "object" && updateTypes.map((a) => a.name).includes(key))) {
+					value = {[key]: value};
+					key = "$SET";
+				}
+
+				const valueKeys = Object.keys(value);
+				for (let i = 0; i < valueKeys.length; i++) {
+					let subKey = valueKeys[i];
+					let subValue = value[subKey];
+
+					let updateType = updateTypes.find((a) => a.name === key);
+
+					const expressionKey = `#a${index}`;
+					subKey = Array.isArray(value) ? subValue : subKey;
+
+					const dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
+					const attributeExists = this.schema.attributes().includes(subKey);
+					const dynamooseUndefined = require("../index").UNDEFINED;
+					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
+						subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
+					}
+
+					if (subValue === dynamooseUndefined || subValue === undefined) {
+						if (attributeExists) {
+							updateType = updateTypes.find((a) => a.name === "$REMOVE");
+						} else {
+							continue;
+						}
+					}
+
+					if (subValue !== dynamooseUndefined) {
+						const defaultValue = await this.schema.defaultCheck(subKey, undefined, updateType.objectFromSchemaSettings);
+						if (defaultValue) {
+							subValue = defaultValue;
+							updateType = updateTypes.find((a) => a.name === "$SET");
+						}
+					}
+
+					if (updateType.objectFromSchemaSettings.required === true) {
+						await this.schema.requiredCheck(subKey, undefined);
+					}
+
+					let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
+					accumulator.ExpressionAttributeNames[expressionKey] = subKey;
+					if (!updateType.attributeOnly) {
+						accumulator.ExpressionAttributeValues[expressionValue] = subValue;
+					}
+
+					if (dynamoType === "L" && updateType.name === "$ADD") {
+						expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
+						updateType = updateTypes.find((a) => a.name === "$SET");
+					}
+
+					const operator = updateType.operator || (updateType.attributeOnly ? "" : " ");
+
+					accumulator.UpdateExpression[updateType.name.slice(1)].push(`${expressionKey}${operator}${expressionValue}`);
+
+					index++;
+				}
+
+				return accumulator;
+			}, Promise.resolve((async (): Promise<{ExpressionAttributeNames: ObjectType; ExpressionAttributeValues: ObjectType; UpdateExpression: ObjectType}> => {
+				const obj = {
+					"ExpressionAttributeNames": {},
+					"ExpressionAttributeValues": {},
+					"UpdateExpression": updateTypes.map((a) => a.name).reduce((accumulator, key) => {
+						accumulator[key.slice(1)] = [];
+						return accumulator;
+					}, {})
+				};
+
+				const documentFunctionSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo"};
+				const defaultObjectFromSchema = await this.Document.objectFromSchema(this.Document.prepareForObjectFromSchema({}, this, (documentFunctionSettings as any)), this, (documentFunctionSettings as any));
+				Object.keys(defaultObjectFromSchema).forEach((key) => {
+					const value = defaultObjectFromSchema[key];
+					const updateType = updateTypes.find((a) => a.name === "$SET");
+
+					obj.ExpressionAttributeNames[`#a${index}`] = key;
+					obj.ExpressionAttributeValues[`:v${index}`] = value;
+					obj.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
+
+					index++;
+				});
+
+				return obj;
+			})()));
+
+			await Promise.all(this.schema.attributes().map(async (attribute) => {
+				const defaultValue = await this.schema.defaultCheck(attribute, undefined, {"forceDefault": true});
+				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
+					const updateType = updateTypes.find((a) => a.name === "$SET");
+
+					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
+					returnObject.ExpressionAttributeValues[`:v${index}`] = defaultValue;
+					returnObject.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
+
+					index++;
+				}
+			}));
+
+			Object.values(returnObject.ExpressionAttributeNames).map((attribute: string, index) => {
+				const value = Object.values(returnObject.ExpressionAttributeValues)[index];
+				const valueKey = Object.keys(returnObject.ExpressionAttributeValues)[index];
+				const dynamoType = this.schema.getAttributeType(attribute, (value as any), {"unknownAttributeAllowed": true});
+				const attributeType = Schema.attributeTypes.findDynamoDBType(dynamoType) as DynamoDBSetTypeResult;
+
+				if (attributeType.toDynamo && !attributeType.isOfType(value, "fromDynamo")) {
+					returnObject.ExpressionAttributeValues[valueKey] = attributeType.toDynamo(value);
+				}
+			});
+
+			returnObject.ExpressionAttributeValues = this.Document.objectToDynamo(returnObject.ExpressionAttributeValues);
+
+			return {
+				...returnObject,
+				"UpdateExpression": Object.keys(returnObject.UpdateExpression).reduce((accumulator, key) => {
+					const value = returnObject.UpdateExpression[key];
+
+					if (value.length > 0) {
+						return `${accumulator}${accumulator.length > 0 ? " " : ""}${key} ${value.join(", ")}`;
+					} else {
+						return accumulator;
+					}
+				}, "")
+			};
+		};
+
+		const documentify = (document): Promise<any> => (new this.Document(document, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"});
+		const localSettings: ModelUpdateSettings = settings;
+		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async () => ({
+			"Key": this.Document.objectToDynamo(keyObj),
+			"ReturnValues": "ALL_NEW",
+			...utils.merge_objects.main({"combineMethod": "object_combine"})((localSettings.condition ? localSettings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}), await getUpdateExpressionObject()),
+			"TableName": this.name
+		}));
+		if (settings.return === "request") {
+			if (callback) {
+				const localCallback: CallbackType<DynamoDB.UpdateItemInput, AWSError> = callback as CallbackType<DynamoDB.UpdateItemInput, AWSError>;
+				updateItemParamsPromise.then((params) => localCallback(null, params));
+				return;
+			} else {
+				return updateItemParamsPromise;
+			}
+		}
+		const promise = updateItemParamsPromise.then((params) => ddb("updateItem", params));
+
+		if (callback) {
+			promise.then((response) => response.Attributes ? documentify(response.Attributes) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
+		} else {
+			return (async (): Promise<any> => {
+				const response = await promise;
+				return response.Attributes ? await documentify(response.Attributes) : undefined;
 			})();
 		}
 	}
@@ -596,192 +798,6 @@ Model.prototype.batchGet = function (this: Model<DocumentCarrier>, keys: InputKe
 	}
 };
 
-interface ModelUpdateSettings {
-	return: "document" | "request";
-	condition?: Condition;
-}
-Model.prototype.update = function (this: Model<DocumentCarrier>, keyObj, updateObj, settings: ModelUpdateSettings = {"return": "document"}, callback): void | Promise<any> {
-	if (typeof updateObj === "function") {
-		callback = updateObj;
-		updateObj = null;
-		settings = {"return": "document"};
-	}
-	if (typeof settings === "function") {
-		callback = settings;
-		settings = {"return": "document"};
-	}
-	if (!updateObj) {
-		const hashKeyName = this.schema.getHashKey();
-		updateObj = keyObj;
-		keyObj = {
-			[hashKeyName]: keyObj[hashKeyName]
-		};
-		delete updateObj[hashKeyName];
-	}
-
-	let index = 0;
-	// TODO: change the line below to not be partial
-	const getUpdateExpressionObject: () => Promise<any> = async () => {
-		const updateTypes = [
-			{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
-			{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
-			{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}}
-		].reverse();
-		const returnObject: any = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
-			const accumulator = await accumulatorPromise;
-			let value = updateObj[key];
-
-			if (!(typeof value === "object" && updateTypes.map((a) => a.name).includes(key))) {
-				value = {[key]: value};
-				key = "$SET";
-			}
-
-			const valueKeys = Object.keys(value);
-			for (let i = 0; i < valueKeys.length; i++) {
-				let subKey = valueKeys[i];
-				let subValue = value[subKey];
-
-				let updateType = updateTypes.find((a) => a.name === key);
-
-				const expressionKey = `#a${index}`;
-				subKey = Array.isArray(value) ? subValue : subKey;
-
-				const dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
-				const attributeExists = this.schema.attributes().includes(subKey);
-				const dynamooseUndefined = require("../index").UNDEFINED;
-				if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
-					subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
-				}
-
-				if (subValue === dynamooseUndefined || subValue === undefined) {
-					if (attributeExists) {
-						updateType = updateTypes.find((a) => a.name === "$REMOVE");
-					} else {
-						continue;
-					}
-				}
-
-				if (subValue !== dynamooseUndefined) {
-					const defaultValue = await this.schema.defaultCheck(subKey, undefined, updateType.objectFromSchemaSettings);
-					if (defaultValue) {
-						subValue = defaultValue;
-						updateType = updateTypes.find((a) => a.name === "$SET");
-					}
-				}
-
-				if (updateType.objectFromSchemaSettings.required === true) {
-					await this.schema.requiredCheck(subKey, undefined);
-				}
-
-				let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
-				accumulator.ExpressionAttributeNames[expressionKey] = subKey;
-				if (!updateType.attributeOnly) {
-					accumulator.ExpressionAttributeValues[expressionValue] = subValue;
-				}
-
-				if (dynamoType === "L" && updateType.name === "$ADD") {
-					expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
-					updateType = updateTypes.find((a) => a.name === "$SET");
-				}
-
-				const operator = updateType.operator || (updateType.attributeOnly ? "" : " ");
-
-				accumulator.UpdateExpression[updateType.name.slice(1)].push(`${expressionKey}${operator}${expressionValue}`);
-
-				index++;
-			}
-
-			return accumulator;
-		}, Promise.resolve((async (): Promise<{ExpressionAttributeNames: any; ExpressionAttributeValues: any; UpdateExpression: any}> => {
-			const obj = {
-				"ExpressionAttributeNames": {},
-				"ExpressionAttributeValues": {},
-				"UpdateExpression": updateTypes.map((a) => a.name).reduce((accumulator, key) => {
-					accumulator[key.slice(1)] = [];
-					return accumulator;
-				}, {})
-			};
-
-			const documentFunctionSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo"};
-			const defaultObjectFromSchema = await this.Document.objectFromSchema(this.Document.prepareForObjectFromSchema({}, this, (documentFunctionSettings as any)), this, (documentFunctionSettings as any));
-			Object.keys(defaultObjectFromSchema).forEach((key) => {
-				const value = defaultObjectFromSchema[key];
-				const updateType = updateTypes.find((a) => a.name === "$SET");
-
-				obj.ExpressionAttributeNames[`#a${index}`] = key;
-				obj.ExpressionAttributeValues[`:v${index}`] = value;
-				obj.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
-
-				index++;
-			});
-
-			return obj;
-		})()));
-
-		await Promise.all(this.schema.attributes().map(async (attribute) => {
-			const defaultValue = await this.schema.defaultCheck(attribute, undefined, {"forceDefault": true});
-			if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
-				const updateType = updateTypes.find((a) => a.name === "$SET");
-
-				returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
-				returnObject.ExpressionAttributeValues[`:v${index}`] = defaultValue;
-				returnObject.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
-
-				index++;
-			}
-		}));
-
-		Object.values(returnObject.ExpressionAttributeNames).map((attribute: string, index) => {
-			const value = Object.values(returnObject.ExpressionAttributeValues)[index];
-			const valueKey = Object.keys(returnObject.ExpressionAttributeValues)[index];
-			const dynamoType = this.schema.getAttributeType(attribute, (value as any), {"unknownAttributeAllowed": true});
-			const attributeType = Schema.attributeTypes.findDynamoDBType(dynamoType);
-
-			if (attributeType.toDynamo && !attributeType.isOfType(value, "fromDynamo")) {
-				returnObject.ExpressionAttributeValues[valueKey] = attributeType.toDynamo(value);
-			}
-		});
-
-		returnObject.ExpressionAttributeValues = this.Document.objectToDynamo(returnObject.ExpressionAttributeValues);
-		returnObject.UpdateExpression = Object.keys(returnObject.UpdateExpression).reduce((accumulator, key) => {
-			const value = returnObject.UpdateExpression[key];
-
-			if (value.length > 0) {
-				return `${accumulator}${accumulator.length > 0 ? " " : ""}${key} ${value.join(", ")}`;
-			} else {
-				return accumulator;
-			}
-		}, "");
-		return returnObject;
-	};
-
-	const documentify = (document): Promise<any> => (new this.Document(document, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"});
-	const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async () => ({
-		"Key": this.Document.objectToDynamo(keyObj),
-		"ReturnValues": "ALL_NEW",
-		...utils.merge_objects.main({"combineMethod": "object_combine"})((settings.condition ? settings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}), await getUpdateExpressionObject()),
-		"TableName": this.name
-	}));
-	if (settings.return === "request") {
-		if (callback) {
-			updateItemParamsPromise.then((params) => callback(null, params));
-			return;
-		} else {
-			return updateItemParamsPromise;
-		}
-	}
-	const promise = updateItemParamsPromise.then((params) => ddb("updateItem", params));
-
-	if (callback) {
-		promise.then((response) => response.Attributes ? documentify(response.Attributes) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
-	} else {
-		return (async (): Promise<any> => {
-			const response = await promise;
-			return response.Attributes ? await documentify(response.Attributes) : undefined;
-		})();
-	}
-};
-
 interface ModelBatchDeleteSettings {
 	return: "response" | "request";
 }
@@ -794,7 +810,7 @@ Model.prototype.batchDelete = function (this: Model<DocumentCarrier>, keys: Inpu
 	const keyObjects = keys.map((key) => convertObjectToKey.bind(this)(key));
 
 
-	const prepareResponse = async (response): Promise<{unprocessedItems: any[]}> => {
+	const prepareResponse = async (response): Promise<{unprocessedItems: ObjectType[]}> => {
 		const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this.name] ? response.UnprocessedItems[this.name] : [];
 		const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item.DeleteRequest.Key)));
 		return keyObjects.reduce((result, key) => {
@@ -828,7 +844,7 @@ Model.prototype.batchDelete = function (this: Model<DocumentCarrier>, keys: Inpu
 	if (callback) {
 		promise.then((response) => prepareResponse(response)).then((response) => callback(null, response as any)).catch((error) => callback(error));
 	} else {
-		return (async (): Promise<{unprocessedItems: any[]}> => {
+		return (async (): Promise<{unprocessedItems: ObjectType[]}> => {
 			const response = await promise;
 			return prepareResponse(response);
 		})();
@@ -843,7 +859,7 @@ Model.prototype.query = function (this: Model<DocumentCarrier>, object?: Conditi
 };
 
 // Methods
-const customMethodFunctions = (type: "model" | "document"): {set: (name: string, fn: any) => void; delete: (name: string) => void} => {
+const customMethodFunctions = (type: "model" | "document"): {set: (name: string, fn: FunctionType) => void; delete: (name: string) => void} => {
 	const entryPoint = (self): any => type === "document" ? self.Document.prototype : self.Document;
 	return {
 		"set": function (name: string, fn): void {
