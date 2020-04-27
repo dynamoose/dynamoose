@@ -1,11 +1,12 @@
 import ddb from "./aws/ddb/internal";
 import CustomError from "./Error";
 import utils from "./utils";
-import {Condition, ConditionInitalizer} from "./Condition";
+import {Condition, ConditionInitalizer, ConditionFunction} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
-import { CallbackType } from "./General";
+import { CallbackType, ObjectType } from "./General";
 import { AWSError } from "aws-sdk";
+import { GeneralObject } from "./utils/object/types";
 
 enum DocumentRetrieverTypes {
 	scan = "scan",
@@ -35,6 +36,40 @@ abstract class DocumentRetriever {
 	getRequest: (this: DocumentRetriever) => Promise<any>;
 	exec: (this: DocumentRetriever, callback?: any) => any;
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
+	limit: (this: DocumentRetriever, value: number) => DocumentRetriever;
+	startAt: (this: DocumentRetriever, value: ObjectType) => DocumentRetriever;
+	attributes: (this: DocumentRetriever, value: string[]) => DocumentRetriever;
+	count: (this: DocumentRetriever) => DocumentRetriever;
+	consistent: (this: DocumentRetriever) => DocumentRetriever;
+	using: (this: DocumentRetriever, value: string) => DocumentRetriever;
+
+
+
+
+	// TODO: this was all copied from Condition.ts, we need to figure out a better way to handle this --------------------------------------------------
+	and: () => Condition;
+	or: () => Condition;
+	not: () => Condition;
+	parenthesis: (value: Condition | ConditionFunction) => Condition;
+	group: (value: Condition | ConditionFunction) => Condition;
+	where: (key: string) => Condition;
+	filter: (key: string) => Condition;
+	attribute: (key: string) => Condition;
+	eq: (value: any) => Condition;
+	lt: (value: number) => Condition;
+	le: (value: number) => Condition;
+	gt: (value: number) => Condition;
+	ge: (value: number) => Condition;
+	beginsWith: (value: any) => Condition;
+	contains: (value: any) => Condition;
+	exists: (value: any) => Condition;
+	in: (value: any) => Condition;
+	between: (...values: any[]) => Condition;
+	// -------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
 
 	constructor(model: Model<Document>, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
 		this.internalSettings = {model, typeInformation};
@@ -169,6 +204,18 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 
 	return object;
 };
+interface DocumentRetrieverResponse<T> extends Array<T> {
+	lastKey?: ObjectType;
+	count: number;
+}
+interface ScanResponse<T> extends DocumentRetrieverResponse<T> {
+	scannedCount: number;
+	timesScanned: number;
+}
+interface QueryResponse<T> extends DocumentRetrieverResponse<T> {
+	queriedCount: number;
+	timesQueried: number;
+}
 DocumentRetriever.prototype.exec = function(this: DocumentRetriever, callback): Promise<any> | void {
 	let timesRequested = 0;
 	const prepareForReturn = async (result): Promise<any> => {
@@ -268,18 +315,25 @@ DocumentRetriever.prototype.all = function(this: DocumentRetriever, delay = 0, m
 
 
 export class Scan extends DocumentRetriever {
-	parallel: (value: number) => Scan;
+	exec: (this: DocumentRetriever) => Promise<ScanResponse<Document[]>>;
+	// TODO: uncomment the line below
+	// exec: (this: DocumentRetriever, callback: CallbackType<ScanResponse<Document[]>, AWSError>) => void;
+
+	parallel(value: number): Scan {
+		this.settings.parallel = value;
+		return this;
+	}
 
 	constructor(model: Model<Document>, object?: ConditionInitalizer) {
 		super(model, {"type": DocumentRetrieverTypes.scan, "pastTense": "scanned"}, object);
 	}
 }
-Scan.prototype.parallel = function(value: number): Scan {
-	this.settings.parallel = value;
-	return this;
-};
 
 export class Query extends DocumentRetriever {
+	exec: (this: DocumentRetriever) => Promise<QueryResponse<Document[]>>;
+	// TODO: uncomment the line below
+	// exec: (this: DocumentRetriever, callback: CallbackType<QueryResponse<Document[]>, AWSError>) => void;
+
 	constructor(model: Model<Document>, object?: ConditionInitalizer) {
 		super(model, {"type": DocumentRetrieverTypes.query, "pastTense": "queried"}, object);
 	}
