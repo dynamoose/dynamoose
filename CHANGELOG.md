@@ -2,6 +2,96 @@
 
 ---
 
+## Version 2.0.0
+
+Version 2.0 is here!! This is a **full** rewrite of Dynamoose from the ground up. This means that the changelog listed below is not necessarily complete, but attempts to cover a lot of the high level items of this release. There are a lot of minor bug fixes and improvements that went into this rewrite that will not be covered, as well as potientally some breaking changes that are not included in the changelog below.
+
+Although version 2.0 is a full rewrite, the underlying API hasn't changed very much. Things like `Model.scan` or `Model.get` have not changed seamingly at all. The foundational syntax is indentical to version 1.0. This means the majority of breaking changes won't effect most users or will require only minor tweaks.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions or problems with this release.
+
+### General
+
+- Complete rewrite of the codebase!!!
+	- Better conditional support with new `dynamoose.Condition` class
+	- Same familiar API
+- Entirely new [website](https://dynamoosejs.com)
+	- Dark mode 🌑
+	- Edit links on each page to contribute changes and improve documentation
+	- Improved sidebar with easier orgainzation
+	- Links to navigate to next/previous pages on website
+- License has been changed to The Unlicense from MIT
+
+### 🚨 Breaking Changes 🚨
+
+- `dynamoose.setDefaults` has been renamed to `dynamoose.model.defaults.set`
+- `dynamoose.local` has been renamed to `dynamoose.aws.ddb.local`
+- `dynamoose.setDDB` has been renamed to `dynamoose.aws.ddb.set`
+- `dynamoose.revertDDB` has been renamed to `dynamoose.aws.ddb.revert`
+- `dynamoose.AWS.config.update` has been renamed to `dynamoose.aws.sdk.config.update`
+- `dynamoose.ddb` has been renamed to `dynamoose.aws.ddb`
+- `Map` attribute type has been replaced with `Object`
+- `List` attribute type has been replaced with `Array`
+- DynamoDB set types are now returned as JavaScript Set's instead of Array's
+- DynamoDB set types are now defined as `{"type": Set, "schema": [String]}` as opposed to the former `[String]` or `{"type": [String]}`. This is more explict and makes it more clear that the type is a set.
+- Trying to save a Document with a property set to `null` will now throw an error. If you would like to remove the property set it to `dynamoose.UNDEFINED` to set it to undefined without taking into account the `default` setting, or `undefined` to set it to undefined while taking into account the `default` setting.
+- Model `update` setting now includes more update actions. To use the v1 update behavior change the value of `update` setting to be `["ttl", "indexes"]`.
+- Schema `default` value does not pass the model instance into `default` functions any more.
+- `Model.update`
+	- `$LISTAPPEND` has been removed, and `$ADD` now includes the behavior of `$LISTAPPEND`
+	- `$DELETE` has been renamed to `$REMOVE`
+	- `$REMOVE` (previously `$DELETE`) now maps to the correct underlying DynamoDB method instead of the previous behavior of mapping to `$REMOVE`
+	- `$PUT` has been replaced with `$SET`
+- `Model.getTableReq` has been renamed to `Model.table.create.request`
+- `Model.table.create.request` (formerly `Model.getTableReq`) is now an async function
+- `model.originalItem` has been renamed to `model.original` (or `Document.original`)
+- `Document.original` formerly (`model.originalItem`) no longer returns the last item saved, but the item first retrieved from DynamoDB
+- The following Schema settings have been moved to Model settings:
+	 - `expires`
+	 - `throughput`
+- `expires.ttl` now accepts a number representing milliseconds as opposed to seconds
+- `expires.defaultExpires` is no longer an option (most behavior from this option can be replicated by using the new `dynamoose.UNDEFINED` feature)
+- `expires.returnExpiredItems` has been renamed to `expires.items.returnExpired`
+- `Model.transaction.conditionCheck` has been renamed to `Model.transaction.condition`
+- `Model.transaction.condition` now accepts a conditional instance instead of an object to specify the conditional you wish to run
+- In the past the `saveUnknown` option for attribute names would handle all nested properties. Now you must use `*` to indicate one level of wildcard or `**` to indicate infinate levels of wildcard. So if you have an object property (`address`) and want to parse one level of values (no sub objects) you can use `address.*`, or `address.**` to all for infinate levels of values (including sub objects)
+- `useNativeBooleans` & `useDocumentTypes` have been removed from the Model settings
+- `scan.count()` has been removed, and `scan.counts()` has been renamed to `scan.count()`.
+- The attribute types `Array` & `Object` in Dynamoose v1 don't work without a `schema` option in v2
+- `Scan.null` & `Query.null` have been removed. In most cases this can be replaced with `.not().exists()`.
+- Expires TTL value is set to be a default value. In Dynamoose v1 there were cases where expires TTL wouldn't be set, in Dynamoose v2, the behavior of if the Expires TTL is set behaves the same as any default value
+- Custom methods have changed behavior:
+	- `schema.method` is now `model.methods.document`
+	- `schema.statics` is now `model.methods`
+	- Both `model.methods` & `model.methods` have two functions that you call to add & remove methods. `set` & `delete` methods exist on both objects that you can use to add your methods. This is compared to the old system of calling the function for `schema.method` or setting the object for `schema.statics`.
+
+#### Features Removed to be Readded Later
+
+- TypeScript Support (v2.1.0) (coming soon, see more information [here](https://github.com/dynamoose/dynamoose/issues/836))
+- `Model.populate`
+- Plugin Support
+
+### Bug Fixes
+
+- Fixed issue where objects would get stored as a string `[object Object]` instead of the actual object
+
+### Documentation
+
+- Documentation has been rewritten from the ground up to be more clear and provide more examples
+
+### Other
+
+- Dynamoose logo now included in `internal` folder
+- More automated tests which leads to more stablity for Dynamoose (100% code coverage)
+- More resources/documentation have been added regarding project structure
+	- Code of Conduct (CODE_OF_CONDUCT.md)
+	- Contributing Guidelines (CONTRIBUTING.md)
+- Improvements to README
+	- More badges about project state
+	- More information relevant to repository (branch strategy, etc)
+
+---
+
 ## [1.11.1](https://github.com/dynamoose/dynamoose/compare/v1.11.0...v1.11.1) (2019-09-05)
 
 
