@@ -108,7 +108,7 @@ let package = require("../package.json");
 	await keypress();
 	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
 	const versionInfo = retrieveInformation(results.version);
-	const versionFriendlyTitle = `Version ${[versionInfo.main, utils.capitalize_first_letter(versionInfo.tag || ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
+	const versionFriendlyTitle = `Version ${[versionInfo.main, (versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
 	const changelogTemplate = `## ${versionFriendlyTitle}\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
 	await fs.writeFile(changelogFilePath, changelogTemplate);
