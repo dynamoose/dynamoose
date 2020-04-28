@@ -2,10 +2,10 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
-const Error = require("../lib/Error");
-const Internal = require("../lib/Internal");
-const utils = require("../lib/utils");
+const dynamoose = require("../dist");
+const Error = require("../dist/Error");
+const Internal = require("../dist/Internal");
+const utils = require("../dist/utils");
 const util = require("util");
 
 describe("Model", () => {
@@ -563,7 +563,8 @@ describe("Model", () => {
 									"TableStatus": "ACTIVE"
 								}
 							});
-							dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							await model.Model.pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{
@@ -605,43 +606,44 @@ describe("Model", () => {
 						it("Should call updateTable to delete index", async () => {
 							const tableName = "Cat";
 							describeTableFunction = () => Promise.resolve({
-								"AttributeDefinitions": [
-									{
-										"AttributeName": "id",
-										"AttributeType": "S"
-									},
-									{
-										"AttributeName": "name",
-										"AttributeType": "S"
-									}
-								],
-								"GlobalSecondaryIndexes": [
-									{
-										"IndexName": "nameGlobalIndex",
-										"KeySchema": [
-											{
-												"AttributeName": "name",
-												"KeyType": "HASH"
-											}
-										],
-										"Projection": {
-											"ProjectionType": "ALL"
-										},
-										"ProvisionedThroughput": {
-											"ReadCapacityUnits": 1,
-											"WriteCapacityUnits": 1
-										}
-									}
-								],
 								"Table": {
 									"ProvisionedThroughput": {
 										"ReadCapacityUnits": 1,
 										"WriteCapacityUnits": 1
 									},
-									"TableStatus": "ACTIVE"
+									"TableStatus": "ACTIVE",
+									"AttributeDefinitions": [
+										{
+											"AttributeName": "id",
+											"AttributeType": "S"
+										},
+										{
+											"AttributeName": "name",
+											"AttributeType": "S"
+										}
+									],
+									"GlobalSecondaryIndexes": [
+										{
+											"IndexName": "nameGlobalIndex",
+											"KeySchema": [
+												{
+													"AttributeName": "name",
+													"KeyType": "HASH"
+												}
+											],
+											"Projection": {
+												"ProjectionType": "ALL"
+											},
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											}
+										}
+									]
 								}
 							});
-							dynamoose.model(tableName, {"id": String, "name": {"type": String}}, {"update": updateOption});
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String}}, {"update": updateOption});
+							await model.Model.pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{

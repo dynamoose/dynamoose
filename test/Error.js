@@ -1,5 +1,5 @@
 const {expect} = require("chai");
-const Error = require("../lib/Error");
+const Error = require("../dist/Error");
 
 describe("Error", () => {
 	it("Should be an object", () => {

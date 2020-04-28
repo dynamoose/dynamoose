@@ -2,24 +2,33 @@
   "name": "dynamoose",
   "version": "2.0.0",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "homepage": "https://github.com/dynamoose/dynamoose#readme",
   "directories": {
     "doc": "docs"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.29.0",
+    "@typescript-eslint/parser": "^2.29.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^6.8.0",
     "mocha": "^7.1.1",
-    "nyc": "^15.0.1"
+    "nyc": "^15.0.1",
+    "typescript": "^3.8.3"
   },
   "scripts": {
-    "test": "nyc --all mocha && nyc report --reporter=html",
-    "test:debug": "mocha --inspect=9229",
-    "test:debug:breakpoint": "mocha --inspect-brk=9229",
-    "lint": "eslint .",
-    "test-nocoverage": "mocha",
+    "prepare": "npm run build:clean; npm run build",
+    "build": "tsc",
+    "build:clean": "rm -rf dist",
+    "build:watch": "npm run build -- -w",
+    "test:nocoverage": "mocha",
+    "test": "nyc npm run test:nocoverage",
+    "test:debug": "npm run test:nocoverage -- --inspect=9229",
+    "test:debug:breakpoint": "npm run test:nocoverage -- --inspect-brk=9229",
+    "lint": "eslint . --ext .ts,.js --max-warnings 0",
+    "lint:fix": "npm run lint -- --fix",
     "site:install": "cd docs && npm install",
     "site:start": "cd docs && npm start",
     "site:build": "cd docs && npm run build",
@@ -43,7 +52,10 @@
     "url": "https://github.com/dynamoose/dynamoose/issues"
   },
   "dependencies": {
-    "aws-sdk": "^2.662.0",
+    "@types/node": "^13.13.2",
+    "@types/source-map-support": "^0.5.1",
+    "aws-sdk": "^2.663.0",
+    "source-map-support": "^0.5.19",
     "uuid": "^7.0.3"
   },
   "license": "Unlicense",
@@ -75,6 +87,6 @@
     "node": ">=8.0.0"
   },
   "files": [
-    "lib"
+    "dist"
   ]
 }

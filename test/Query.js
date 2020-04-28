@@ -2,8 +2,9 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
+const dynamoose = require("../dist");
 const util = require("util");
+const {Query} = require("../dist/DocumentRetriever");
 
 describe("Query", () => {
 	beforeEach(() => {
@@ -39,7 +40,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query()).to.be.a.instanceof(Query);
 		});
 
 		it("Should have correct class name", () => {
@@ -54,7 +55,7 @@ describe("Query", () => {
 
 		it("Should set filters correctly for object passed into query function", () => {
 			const query = Model.query({"name": {"eq": "Charlie"}, "id": {"le": 5}});
-			expect(query.settings.condition.settings.conditions).to.eql([["name", {"type": "EQ", "value": "Charlie"}], ["id", {"type": "LE", "value": 5}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
 		});
 
 		it("Should throw error if unknown comparison operator is passed in", () => {
@@ -581,7 +582,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().and()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().and()).to.be.a.instanceof(Query);
 		});
 
 		it("Should return same object as Model.query()", () => {
@@ -595,7 +596,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().not()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().not()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct property", () => {
@@ -611,7 +612,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().where()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().where()).to.be.a.instanceof(Query);
 		});
 
 		it("Should not be an alias of query.filter", () => {
@@ -631,7 +632,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().filter()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().filter()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct property", () => {
@@ -647,18 +648,18 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().eq()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().eq()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").eq("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "EQ", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().eq("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "NE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -707,18 +708,18 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().exists()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().exists()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").exists("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "EXISTS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().exists("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "NOT_EXISTS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -765,18 +766,18 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().lt()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().lt()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").lt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().lt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -806,18 +807,18 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().le()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().le()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").le("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().le("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -847,18 +848,18 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().gt()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().gt()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").gt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().gt("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -888,18 +889,18 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().ge()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().ge()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").ge("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "GE", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().ge("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "LT", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -929,12 +930,12 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().beginsWith()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().beginsWith()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").beginsWith("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "BEGINS_WITH", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -969,18 +970,18 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().contains()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().contains()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").contains("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "CONTAINS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().contains("test");
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "NOT_CONTAINS", "value": "test"}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -1029,12 +1030,12 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().in()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().in()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").in(["test", "other"]);
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "IN", "value": ["test", "other"]}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "IN", "value": ["test", "other"]}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -1092,12 +1093,12 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().between()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().between()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").between(1, 2);
-			expect(query.settings.condition.settings.conditions).to.eql([["id", {"type": "BETWEEN", "value": [1, 2]}]]);
+			expect(query.settings.condition.settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
@@ -1242,7 +1243,7 @@ describe("Query", () => {
 		});
 
 		it("Should return an instance of query", () => {
-			expect(Model.query().all()).to.be.a.instanceof(Model.query.carrier);
+			expect(Model.query().all()).to.be.a.instanceof(Query);
 		});
 
 		it("Should set correct default options", () => {

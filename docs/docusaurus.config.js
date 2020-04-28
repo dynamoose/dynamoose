@@ -65,7 +65,7 @@ module.exports = {
 						},
 						{
 							"label": "License",
-							"href": "https://github.com/dynamoose/dynamoose/blob/master/LICENSE.md",
+							"href": "https://github.com/dynamoose/dynamoose/blob/master/LICENSE",
 						}
 					],
 				},

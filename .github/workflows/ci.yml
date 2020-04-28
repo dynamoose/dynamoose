@@ -14,7 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [8.x, 10.x, 12.x, 13.x, 14.x]
+        node-version: [
+          8.x,
+          10.x,
+          12.x,
+          13.x,
+          14.x
+        ]
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
@@ -26,13 +32,16 @@ jobs:
         uses: rrainn/dynamodb-action@v1.0
       - name: Create coverage folder
         run: mkdir -p ./coverage
-      - name: Run tests
-        run: npx nyc --all mocha && npx nyc report --reporter=text-lcov > ./coverage/lcov.info
+      - run: npm test
       - name: Coveralls
         uses: coverallsapp/github-action@v1.0.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
+      - name: Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
   finalize:
     runs-on: ubuntu-latest
     needs: [lint, test]

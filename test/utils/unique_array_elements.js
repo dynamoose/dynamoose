@@ -1,6 +1,6 @@
 const chai = require("chai");
 const {expect} = chai;
-const utils = require("../../lib/utils");
+const utils = require("../../dist/utils");
 
 describe("unique_array_elements", () => {
 	it("Should be a function", () => {
