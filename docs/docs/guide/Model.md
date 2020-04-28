@@ -1,4 +1,4 @@
-The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
+The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save documents in the database.
 
 ## dynamoose.model(name, schema[, config])
 
@@ -31,12 +31,12 @@ The `config` parameter is an object used to customize settings for the model.
 | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
-| update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following items to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
+| update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
 | expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
 | expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | null |
 | expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
-| expires.items | The options for items with ttl. | Object | {} |
-| expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
+| expires.items | The options for documents with ttl. | Object | {} |
+| expires.items.returnExpired | If Dynamoose should include expired documents when returning retrieved documents. | Boolean | true |
 
 The default object is listed below.
 
@@ -217,13 +217,13 @@ User.get({"id": 1}, (error, myUser) => {
 
 You can use Model.batchGet to retrieve multiple documents from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no documents can be found in DynamoDB this method will return an empty array.
 
 The array you receive back is a standard JavaScript array of objects. However, the array has some special properties with extra information about your scan operation that you can access. This does not prevent the ability do running loops or accessing the objects within the array.
 
 The extra properties attached to the array are:
 
-- `unprocessedKeys` - In the event there are more items to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
+- `unprocessedKeys` - In the event there are more documents to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those documents. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
@@ -576,7 +576,7 @@ User.delete({"id": 1}, (error) => {
 
 ## Model.batchDelete(keys[, settings][, callback])
 
-You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+You can use Model.batchDelete to delete documents from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
 
 `keys` can be an array of strings representing the hashKey and/or an array of objects containing the hashKey & rangeKey.
 
@@ -613,7 +613,7 @@ User.batchDelete([1, 2], (error, response) => {
 	if (error) {
 		console.error(error);
 	} else {
-		console.log(`Successfully deleted items. ${response.unprocessedItems.count} of unprocessed items.`);
+		console.log(`Successfully deleted documents. ${response.unprocessedItems.count} of unprocessed documents.`);
 	}
 });
 ```
@@ -653,7 +653,7 @@ const User = dynamoose.model("User", {"id": Number, "name": {"type": String, "ra
 
 try {
 	const response = await User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}]);
-	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+	console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
 } catch (error) {
 	console.error(error);
 }
@@ -664,7 +664,7 @@ User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}], (erro
 	if (error) {
 		console.error(error);
 	} else {
-		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+		console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
 	}
 });
 ```
@@ -674,7 +674,7 @@ const User = dynamoose.model("User", {"id": Number, "name": String});
 
 try {
 	const response = await User.batchDelete([{"id": 1}, {"id": 2}]);
-	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+	console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
 } catch (error) {
 	console.error(error);
 }
@@ -685,7 +685,7 @@ User.batchDelete([{"id": 1}, {"id": 2}], (error, response) => {
 	if (error) {
 		console.error(error);
 	} else {
-		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
+		console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
 	}
 });
 ```

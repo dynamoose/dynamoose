@@ -1,6 +1,6 @@
 const {expect} = require("chai");
-const dynamoose = require("../lib");
-const Error = require("../lib/Error");
+const dynamoose = require("../dist");
+const Error = require("../dist/Error");
 
 describe("Schema", () => {
 	it("Should be a function", () => {

@@ -1,5 +1,5 @@
 const {expect} = require("chai");
-const dynamoose = require("../../lib");
+const dynamoose = require("../../dist");
 
 describe("AWS", () => {
 	it("Should return an object", () => {

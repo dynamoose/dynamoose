@@ -5,13 +5,13 @@ Dynamoose provides the ability to query a model by using the `Model.query` funct
 This is the basic entry point to construct a query request. When running a query you must specify at least the hashKey of the document(s). This can either be the hashKey of the table, or the hashKey of an index. The filter property is optional and can either be an object or a string representing the key you which to first filter on. In the event you don't pass in any parameters and don't call any other methods on the query object it will query with no filters or options.
 
 ```js
-Cat.query("breed").contains("Terrier").exec() // will query all items where the hashKey `breed` contains `Terrier`
-Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all items where the hashKey `breed` contains `Terrier`
+Cat.query("breed").contains("Terrier").exec() // will query all documents where the hashKey `breed` contains `Terrier`
+Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all documents where the hashKey `breed` contains `Terrier`
 ```
 
 If you pass an object into `Model.query` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
-`Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.
+`Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more documents at first and then filter the result which could have a bad impact on performance and costs.
 
 ## Conditionals
 
@@ -53,28 +53,28 @@ The extra properties attached to the array are:
 
 | Name | Description |
 |---|---|
-| `lastKey` | In the event there are more items to query in DynamoDB this property will be equal to an object that you can pass into [`query.startAt(key)`](#querystartatkey) to retrieve more items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types. |
-| `count` | The count property from DynamoDB, which represents how many items were returned from DynamoDB. This should always equal the number of items in the array. |
-| `queriedCount` | How many items DynamoDB queried. This doesn't necessarily represent how many items were returned from DynamoDB due to filters that might have been applied to the query request. |
+| `lastKey` | In the event there are more documents to query in DynamoDB this property will be equal to an object that you can pass into [`query.startAt(key)`](#querystartatkey) to retrieve more documents. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types. |
+| `count` | The count property from DynamoDB, which represents how many documents were returned from DynamoDB. This should always equal the number of documents in the array. |
+| `queriedCount` | How many documents DynamoDB queried. This doesn't necessarily represent how many documents were returned from DynamoDB due to filters that might have been applied to the query request. |
 | `timesQueried` | How many times Dynamoose made a query request to DynamoDB. This will always equal 1, unless you used the `query.all` or `query.parallel` method. |
 
 ## query.limit(count)
 
-This function will limit the number of items that DynamoDB will query in this request. Unlike most SQL databases this does not guarantee the response will contain 5 items. Instead DynamoDB will only query a maximum of 5 items to see if they match and should be returned. The `count` parameter passed in should be a number representing how many items you wish DynamoDB to query.
+This function will limit the number of documents that DynamoDB will query in this request. Unlike most SQL databases this does not guarantee the response will contain 5 documents. Instead DynamoDB will only query a maximum of 5 documents to see if they match and should be returned. The `count` parameter passed in should be a number representing how many documents you wish DynamoDB to query.
 
 ```js
-Cat.query("name").eq("Will").limit(5); // Limit query request to 5 items
+Cat.query("name").eq("Will").limit(5); // Limit query request to 5 documents
 ```
 
 ## query.startAt(key)
 
-In the event there are more items to query in a previous response, Dynamoose will return a key in the `.lastKey` property. You can pass that object into this property to further query items in your table.
+In the event there are more documents to query in a previous response, Dynamoose will return a key in the `.lastKey` property. You can pass that object into this property to further query documents in your table.
 
 Although the `.lastKey` property returns a standard (non DynamoDB) object, you can pass a standard object OR DynamoDB object into this function, and it will handle either case.
 
 ```js
 const response = await Cat.query("name").eq("Will").exec();
-const moreItems = Cat.query("name").eq("Will").startAt(response.lastKey);
+const moreDocuments = Cat.query("name").eq("Will").startAt(response.lastKey);
 ```
 
 ## query.attributes(attributes)
@@ -114,17 +114,17 @@ Cat.query("name").eq("Will").using("name-index"); // Run the query on the `name-
 
 ## query.all([delay[, max]])
 
-Unlike most other query functions that directly change the DynamoDB query request, this function is purely internal and unique to Dynamoose. If a query result is more than the AWS query response limit, DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests upon receiving the response until all documents have been received (by checking and making new requests with the `lastKey` property from the previous response). This can be useful if you wish to get all the items from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
+Unlike most other query functions that directly change the DynamoDB query request, this function is purely internal and unique to Dynamoose. If a query result is more than the AWS query response limit, DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests upon receiving the response until all documents have been received (by checking and making new requests with the `lastKey` property from the previous response). This can be useful if you wish to get all the documents from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
 
 Two parameters can be specified on this setting:
 
 - `delay` - Number (default: 0) - The number of milliseconds to delay between receiving of the response of one query request and sending of the request for the next query request.
 - `max` - Number (default: 0) - The maximum number of requests that should be made to DynamoDB, regardless of if the `lastKey` property still exists in the response. In the event this is set to 0, an unlimited number of requests will be made to DynamoDB, so long as the `lastKey` property still exists.
 
-The items for all of the requests will be merged into a single array with the `count` & `queriedCount` properties being summed in the response. If you set a maximum number of query requests and there is still a `lastKey` on the response that will be returned to you.
+The documents for all of the requests will be merged into a single array with the `count` & `queriedCount` properties being summed in the response. If you set a maximum number of query requests and there is still a `lastKey` on the response that will be returned to you.
 
 ```js
-Cat.query("name").eq("Will").all(); // Query table and so long as the `lastKey` property exists continuously query the table to retrieve all items
-Cat.query("name").eq("Will").all(100); // Query table and so long as the `lastKey` property exists continuously query the table to retrieve all items with a 100 ms delay before the next query request
-Cat.query("name").eq("Will").all(0, 5); // Query table and so long as the `lastKey` property exists continuously query the table to retrieve all items with a maximum of 5 requests total
+Cat.query("name").eq("Will").all(); // Query table and so long as the `lastKey` property exists continuously query the table to retrieve all documents
+Cat.query("name").eq("Will").all(100); // Query table and so long as the `lastKey` property exists continuously query the table to retrieve all documents with a 100 ms delay before the next query request
+Cat.query("name").eq("Will").all(0, 5); // Query table and so long as the `lastKey` property exists continuously query the table to retrieve all documents with a maximum of 5 requests total
 ```
