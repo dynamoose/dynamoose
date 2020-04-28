@@ -36,6 +36,12 @@ In the event the documentation and TypeScript typings don't line up or give diff
 
 No. There is no differences between using Dynamoose with TypeScript and JavaScript, except stricter typings with TypeScript. The underlying behavior, API, and functionality of Dynamoose remains the exact same.
 
+### What does TypeScript support mean? What typings are included?
+
+TypeScript support includes support for all functions/methods, and properties of Dynamoose. It does **not** have typings or contracts between your Schema and Documents you create. All type checks between your Schema and Documents is handled at runtime as part of Dynamoose, and not part of the TypeScript typings.
+
+At some point we hope to explore the potiental of adding typings to ensure your Documents conform to your Schemas. However this raises a lot of questions regarding if it's even possible to have such dynamic typings in TypeScript, as well as edge cases that have not been considered yet.
+
 ### What should I do if I have additional questions?
 
 - [Contact me](https://charlie.fish/contact)
