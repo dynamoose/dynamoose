@@ -6,7 +6,6 @@ import {Model} from "./Model";
 import {Document} from "./Document";
 import { CallbackType, ObjectType } from "./General";
 import { AWSError } from "aws-sdk";
-import { GeneralObject } from "./utils/object/types";
 
 enum DocumentRetrieverTypes {
 	scan = "scan",
@@ -34,7 +33,6 @@ abstract class DocumentRetriever {
 		parallel?: number;
 	};
 	getRequest: (this: DocumentRetriever) => Promise<any>;
-	exec: (this: DocumentRetriever, callback?: any) => any;
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
 	limit: (this: DocumentRetriever, value: number) => DocumentRetriever;
 	startAt: (this: DocumentRetriever, value: ObjectType) => DocumentRetriever;
@@ -42,7 +40,77 @@ abstract class DocumentRetriever {
 	count: (this: DocumentRetriever) => DocumentRetriever;
 	consistent: (this: DocumentRetriever) => DocumentRetriever;
 	using: (this: DocumentRetriever, value: string) => DocumentRetriever;
+	exec(this: DocumentRetriever, callback?: any): any {
+		let timesRequested = 0;
+		const prepareForReturn = async (result): Promise<any> => {
+			if (Array.isArray(result)) {
+				result = utils.merge_objects(...result);
+			}
+			if (this.settings.count) {
+				return {
+					"count": result.Count,
+					[`${this.internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`]
+				};
+			}
+			const array: any = (await Promise.all(result.Items.map(async (item) => await ((new this.internalSettings.model.Document(item, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"}))))).filter((a) => Boolean(a));
+			array.lastKey = result.LastEvaluatedKey ? (Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this.internalSettings.model.Document.fromDynamo(key)) : this.internalSettings.model.Document.fromDynamo(result.LastEvaluatedKey)) : undefined;
+			array.count = result.Count;
+			array[`${this.internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`];
+			array[`times${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}`] = timesRequested;
+			return array;
+		};
+		const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
+			const allRequest = (extraParameters = {}): any => {
+				let promise: Promise<any> = ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters});
+				timesRequested++;
 
+				if (this.settings.all) {
+					promise = promise.then(async (result) => {
+						if (this.settings.all.delay && this.settings.all.delay > 0) {
+							await utils.timeout(this.settings.all.delay);
+						}
+
+						let lastKey = result.LastEvaluatedKey;
+						let requestedTimes = 1;
+						while (lastKey && (this.settings.all.max === 0 || requestedTimes < this.settings.all.max)) {
+							if (this.settings.all.delay && this.settings.all.delay > 0) {
+								await utils.timeout(this.settings.all.delay);
+							}
+
+							const nextRequest: any = await ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
+							timesRequested++;
+							result = utils.merge_objects(result, nextRequest);
+							// The operation below is safe because right above we are overwriting the entire `result` variable, so there is no chance it'll be reassigned based on an outdated value since it's already been overwritten. There might be a better way to do this than ignoring the rule on the line below.
+							result.LastEvaluatedKey = nextRequest.LastEvaluatedKey; // eslint-disable-line require-atomic-updates
+							lastKey = nextRequest.LastEvaluatedKey;
+							requestedTimes++;
+						}
+
+						return result;
+					});
+				}
+
+				return promise;
+			};
+
+			if (this.settings.parallel) {
+				return Promise.all(new Array(this.settings.parallel).fill(0).map((a, index) => allRequest({"Segment": index})));
+			} else {
+				return allRequest();
+			}
+		});
+
+		// TODO: we do something similar to do this below in other functions as well (ex. get, save), where we allow a callback or a promise, we should figure out a way to make this code more DRY and have a standard way of doing this throughout Dynamoose
+		if (callback) {
+			promise.then((result) => prepareForReturn(result)).then((result) => callback(null, result)).catch((error) => callback(error));
+		} else {
+			return (async (): Promise<any> => {
+				const result = await promise;
+				const finalResult = await prepareForReturn(result);
+				return finalResult;
+			})();
+		}
+	}
 
 
 
@@ -216,77 +284,6 @@ interface QueryResponse<T> extends DocumentRetrieverResponse<T> {
 	queriedCount: number;
 	timesQueried: number;
 }
-DocumentRetriever.prototype.exec = function(this: DocumentRetriever, callback): Promise<any> | void {
-	let timesRequested = 0;
-	const prepareForReturn = async (result): Promise<any> => {
-		if (Array.isArray(result)) {
-			result = utils.merge_objects(...result);
-		}
-		if (this.settings.count) {
-			return {
-				"count": result.Count,
-				[`${this.internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`]
-			};
-		}
-		const array: any = (await Promise.all(result.Items.map(async (item) => await ((new this.internalSettings.model.Document(item, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"}))))).filter((a) => Boolean(a));
-		array.lastKey = result.LastEvaluatedKey ? (Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this.internalSettings.model.Document.fromDynamo(key)) : this.internalSettings.model.Document.fromDynamo(result.LastEvaluatedKey)) : undefined;
-		array.count = result.Count;
-		array[`${this.internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`];
-		array[`times${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}`] = timesRequested;
-		return array;
-	};
-	const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
-		const allRequest = (extraParameters = {}): any => {
-			let promise: Promise<any> = ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters});
-			timesRequested++;
-
-			if (this.settings.all) {
-				promise = promise.then(async (result) => {
-					if (this.settings.all.delay && this.settings.all.delay > 0) {
-						await utils.timeout(this.settings.all.delay);
-					}
-
-					let lastKey = result.LastEvaluatedKey;
-					let requestedTimes = 1;
-					while (lastKey && (this.settings.all.max === 0 || requestedTimes < this.settings.all.max)) {
-						if (this.settings.all.delay && this.settings.all.delay > 0) {
-							await utils.timeout(this.settings.all.delay);
-						}
-
-						const nextRequest: any = await ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
-						timesRequested++;
-						result = utils.merge_objects(result, nextRequest);
-						// The operation below is safe because right above we are overwriting the entire `result` variable, so there is no chance it'll be reassigned based on an outdated value since it's already been overwritten. There might be a better way to do this than ignoring the rule on the line below.
-						result.LastEvaluatedKey = nextRequest.LastEvaluatedKey; // eslint-disable-line require-atomic-updates
-						lastKey = nextRequest.LastEvaluatedKey;
-						requestedTimes++;
-					}
-
-					return result;
-				});
-			}
-
-			return promise;
-		};
-
-		if (this.settings.parallel) {
-			return Promise.all(new Array(this.settings.parallel).fill(0).map((a, index) => allRequest({"Segment": index})));
-		} else {
-			return allRequest();
-		}
-	});
-
-	// TODO: we do something similar to do this below in other functions as well (ex. get, save), where we allow a callback or a promise, we should figure out a way to make this code more DRY and have a standard way of doing this throughout Dynamoose
-	if (callback) {
-		promise.then((result) => prepareForReturn(result)).then((result) => callback(null, result)).catch((error) => callback(error));
-	} else {
-		return (async (): Promise<any> => {
-			const result = await promise;
-			const finalResult = await prepareForReturn(result);
-			return finalResult;
-		})();
-	}
-};
 interface SettingDefinition {
 	name: string;
 	only?: string[];
@@ -315,9 +312,11 @@ DocumentRetriever.prototype.all = function(this: DocumentRetriever, delay = 0, m
 
 
 export class Scan extends DocumentRetriever {
-	exec: (this: DocumentRetriever) => Promise<ScanResponse<Document[]>>;
-	// TODO: uncomment the line below
-	// exec: (this: DocumentRetriever, callback: CallbackType<ScanResponse<Document[]>, AWSError>) => void;
+	exec(): Promise<ScanResponse<Document[]>>;
+	exec(callback: CallbackType<ScanResponse<Document[]>, AWSError>): void;
+	exec(callback?: CallbackType<ScanResponse<Document[]>, AWSError>): Promise<ScanResponse<Document[]>> | void {
+		return super.exec(callback);
+	}
 
 	parallel(value: number): Scan {
 		this.settings.parallel = value;
@@ -330,9 +329,11 @@ export class Scan extends DocumentRetriever {
 }
 
 export class Query extends DocumentRetriever {
-	exec: (this: DocumentRetriever) => Promise<QueryResponse<Document[]>>;
-	// TODO: uncomment the line below
-	// exec: (this: DocumentRetriever, callback: CallbackType<QueryResponse<Document[]>, AWSError>) => void;
+	exec(): Promise<QueryResponse<Document[]>>;
+	exec(callback: CallbackType<QueryResponse<Document[]>, AWSError>): void;
+	exec(callback?: CallbackType<QueryResponse<Document[]>, AWSError>): Promise<QueryResponse<Document[]>> | void {
+		return super.exec(callback);
+	}
 
 	constructor(model: Model<Document>, object?: ConditionInitalizer) {
 		super(model, {"type": DocumentRetrieverTypes.query, "pastTense": "queried"}, object);
