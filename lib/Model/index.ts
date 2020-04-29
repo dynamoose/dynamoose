@@ -296,27 +296,6 @@ export class Model<T extends DocumentCarrier> {
 			}
 		}
 		Document.Model = self;
-		// TODO: figure out if there is a better way to do this below.
-		// This is needed since when creating a Model we return a Document. But we want to be able to call Model.get and other functions on the model itself. This feels like a really messy solution, but it the only way I can think of how to do it for now.
-		// Without this things like Model.get wouldn't work. You would have to do Model.Model.get instead which would be referencing the `Document.Model = model` line above.
-		Object.keys(Object.getPrototypeOf(this)).forEach((key) => {
-			if (typeof this[key] === "object") {
-				const main = (key: string): void => {
-					utils.object.set(DocumentCarrier as any, key, {});
-					Object.keys(utils.object.get((this as any), key)).forEach((subKey) => {
-						const newKey = `${key}.${subKey}`;
-						if (typeof utils.object.get((this as any), newKey) === "object") {
-							main(newKey);
-						} else {
-							utils.object.set(DocumentCarrier as any, newKey, (utils.object.get(this, newKey) as any).bind(this));
-						}
-					});
-				};
-				main(key);
-			} else {
-				Document[key] = this[key].bind(this);
-			}
-		});
 		this.Document = Document;
 		(this.Document as any).table = {
 			"create": {
