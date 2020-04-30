@@ -1,10 +1,10 @@
-import get from "./get";
-import set from "./set";
-import deleteFunc from "./delete";
-import pick from "./pick";
-import keys from "./keys";
-import entries from "./entries";
-import equals from "./equals";
+import get = require("./get");
+import set = require("./set");
+import deleteFunc = require("./delete");
+import pick = require("./pick");
+import keys = require("./keys");
+import entries = require("./entries");
+import equals = require("./equals");
 
 export = {
 	get,
