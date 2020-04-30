@@ -4,15 +4,15 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../dist");
 const {Schema, aws} = dynamoose;
-const Document = require("../dist/Document");
+const {Document} = require("../dist/Document");
 const util = require("util");
 const Error = require("../dist/Error");
 const utils = require("../dist/utils");
 const Internal = require("../dist/Internal");
 
 describe("Document", () => {
-	it("Should be an object", () => {
-		expect(Document).to.be.an("object");
+	it("Should be a function", () => {
+		expect(Document).to.be.a("function");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
