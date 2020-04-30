@@ -2,6 +2,18 @@
 
 ---
 
+## Version 2.1.0
+
+This release adds beta support for TypeScript typings.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Major New Features
+
+- Beta support for TypeScript Typings
+
+---
+
 ## Version 2.0.0
 
 Version 2.0 is here!! This is a **full** rewrite of Dynamoose from the ground up. This means that the changelog listed below is not necessarily complete, but attempts to cover a lot of the high level items of this release. There are a lot of minor bug fixes and improvements that went into this rewrite that will not be covered, as well as potientally some breaking changes that are not included in the changelog below.
