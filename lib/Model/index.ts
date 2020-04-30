@@ -363,13 +363,13 @@ export class Model<T extends DocumentCarrier> {
 	methods: { document: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 
 	// Batch Get
-	batchGet(this: Model<DocumentCarrier>, keys: InputKey[]): Promise<DocumentCarrier[]>;
-	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], callback: CallbackType<DocumentCarrier[], AWSError>): void;
-	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}): Promise<DocumentCarrier[]>;
-	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}, callback: CallbackType<DocumentCarrier[], AWSError>): void;
+	batchGet(this: Model<DocumentCarrier>, keys: InputKey[]): Promise<ModelBatchGetDocumentsResponse<DocumentCarrier>>;
+	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], callback: CallbackType<ModelBatchGetDocumentsResponse<DocumentCarrier>, AWSError>): void;
+	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}): Promise<ModelBatchGetDocumentsResponse<DocumentCarrier>>;
+	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}, callback: CallbackType<ModelBatchGetDocumentsResponse<DocumentCarrier>, AWSError>): void;
 	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchGetSettings & {"return": "request"}): DynamoDB.BatchGetItemInput;
 	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings: ModelBatchGetSettings & {"return": "request"}, callback: CallbackType<DynamoDB.BatchGetItemInput, AWSError>): void;
-	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings | CallbackType<DocumentCarrier[], AWSError> | CallbackType<DynamoDB.BatchGetItemInput, AWSError>, callback?: CallbackType<DocumentCarrier[], AWSError> | CallbackType<DynamoDB.BatchGetItemInput, AWSError>): void | DynamoDB.BatchGetItemInput | Promise<DocumentCarrier[]> {
+	batchGet(this: Model<DocumentCarrier>, keys: InputKey[], settings?: ModelBatchGetSettings | CallbackType<ModelBatchGetDocumentsResponse<DocumentCarrier>, AWSError> | CallbackType<DynamoDB.BatchGetItemInput, AWSError>, callback?: CallbackType<ModelBatchGetDocumentsResponse<DocumentCarrier>, AWSError> | CallbackType<DynamoDB.BatchGetItemInput, AWSError>): void | DynamoDB.BatchGetItemInput | Promise<ModelBatchGetDocumentsResponse<DocumentCarrier>> {
 		if (typeof settings === "function") {
 			callback = settings;
 			settings = {"return": "documents"};
@@ -423,7 +423,7 @@ export class Model<T extends DocumentCarrier> {
 			const localCallback: CallbackType<DocumentCarrier[], AWSError> = callback as CallbackType<DocumentCarrier[], AWSError>;
 			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => localCallback(error));
 		} else {
-			return (async (): Promise<any> => {
+			return (async () => {
 				const response = await promise;
 				return prepareResponse(response);
 			})();
