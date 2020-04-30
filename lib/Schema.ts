@@ -160,7 +160,7 @@ interface IndexDefinition {
 	global?: boolean;
 	rangeKey?: string;
 	project?: boolean | string[];
-	throughput: number | {read: number; write: number};
+	throughput?: number | {read: number; write: number};
 }
 interface AttributeDefinitionTypeSettings {
 	storage?: "miliseconds" | "seconds";
