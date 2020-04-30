@@ -1,6 +1,6 @@
-import CustomError from "./Error";
-import utils from "./utils";
-import Internal from "./Internal";
+import CustomError = require("./Error");
+import utils = require("./utils");
+import Internal = require("./Internal");
 import {Document, DocumentObjectFromSchemaSettings} from "./Document";
 import {Model} from "./Model";
 import { DynamoDB } from "aws-sdk";

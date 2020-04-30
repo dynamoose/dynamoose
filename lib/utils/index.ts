@@ -1,13 +1,13 @@
-import combine_objects from "./combine_objects";
-import merge_objects from "./merge_objects";
-import timeout from "./timeout";
-import capitalize_first_letter from "./capitalize_first_letter";
-import set_immediate_promise from "./set_immediate_promise";
-import unique_array_elements from "./unique_array_elements";
-import array_flatten from "./array_flatten";
-import empty_function from "./empty_function";
-import object from "./object";
-import dynamoose from "./dynamoose";
+import * as combine_objects from "./combine_objects";
+import * as merge_objects from "./merge_objects";
+import timeout = require("./timeout");
+import capitalize_first_letter = require("./capitalize_first_letter");
+import set_immediate_promise = require("./set_immediate_promise");
+import unique_array_elements = require("./unique_array_elements");
+import array_flatten = require("./array_flatten");
+import empty_function = require("./empty_function");
+import object = require("./object");
+import dynamoose = require("./dynamoose");
 
 export = {
 	combine_objects,

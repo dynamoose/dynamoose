@@ -1,8 +1,8 @@
-import aws from "./aws";
-import ddb from "./aws/ddb/internal";
-import utils from "./utils";
-import Error from "./Error";
-import Internal from "./Internal";
+import aws = require("./aws");
+import ddb = require("./aws/ddb/internal");
+import utils = require("./utils");
+import Error = require("./Error");
+import Internal  = require("./Internal");
 import {Model, ModelExpiresSettings} from "./Model";
 import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;

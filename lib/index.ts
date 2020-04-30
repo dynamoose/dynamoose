@@ -4,10 +4,10 @@ import {Model, ModelOptionsOptional} from "./Model";
 import {Schema, SchemaDefinition} from "./Schema";
 import {Condition} from "./Condition";
 import transaction from "./Transaction";
-import aws from "./aws";
-import Internal from "./Internal";
-import utils from "./utils";
-import logger from "./logger";
+import aws = require("./aws");
+import Internal = require("./Internal");
+import utils = require("./utils");
+import logger = require("./logger");
 import {Document} from "./Document";
 
 interface ModelDocumentConstructor<T extends Document> {
