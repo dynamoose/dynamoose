@@ -7,6 +7,6 @@ changed:website:
 changed:documentation: docs/docs/**/*
 changed:publish: publish/**/*
 changed:project:
-  - *
+  - "*"
   - internal/**/*
   - .github/**/*
