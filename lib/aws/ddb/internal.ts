@@ -1,5 +1,5 @@
-import ddb from "./index";
-import log from "../../logger/emitter";
+import * as ddb from "./index";
+import log = require("../../logger/emitter");
 import { DynamoDB } from "aws-sdk";
 
 // Table
