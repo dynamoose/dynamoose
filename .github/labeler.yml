@@ -1,0 +1,12 @@
+changed:source: src/**/*
+changed:tests: test/**/*
+changed:website:
+  - docs/*
+  - docs/src/**/*
+  - docs/static/**/*
+changed:documentation: docs/docs/**/*
+changed:publish: publish/**/*
+changed:project:
+  - *
+  - internal/**/*
+  - .github/**/*
