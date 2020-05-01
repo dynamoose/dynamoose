@@ -1,4 +1,4 @@
-import obj from "../object";
+import obj = require("../object");
 import { Model } from "../../Model";
 import { Document } from "../../Document";
 import { IndexItem } from "../../Schema";

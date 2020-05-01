@@ -1,6 +1,6 @@
-import sdk from "./sdk";
-import ddb from "./ddb";
-import converter from "./converter";
+import * as sdk from "./sdk";
+import * as ddb from "./ddb";
+import * as converter from "./converter";
 
 export = {
 	sdk,

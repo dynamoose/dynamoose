@@ -1,8 +1,8 @@
-import ddb from "./aws/ddb/internal";
-import utils from "./utils";
-import Error from "./Error";
+import ddb = require("./aws/ddb/internal");
+import utils = require("./utils");
+import Error = require("./Error");
 import {Model} from "./Model";
-import ModelStore from "./ModelStore";
+import * as ModelStore from "./ModelStore";
 import {CallbackType} from "./General";
 import {Document} from "./Document";
 

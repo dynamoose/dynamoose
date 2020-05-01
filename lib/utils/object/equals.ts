@@ -1,4 +1,4 @@
-import entries from "./entries";
+import entries = require("./entries");
 
 export = (a, b): boolean => {
 	if (typeof a !== "object" || typeof b !== "object") {
