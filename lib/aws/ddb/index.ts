@@ -1,4 +1,4 @@
-import AWS from "../sdk";
+import * as AWS from "../sdk";
 
 let customDDB: AWS.DynamoDB | undefined;
 function main(): AWS.DynamoDB {

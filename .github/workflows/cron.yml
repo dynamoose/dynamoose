@@ -1,0 +1,21 @@
+name: Cron
+
+on:
+  schedule:
+    - cron: "5 0 * * *"
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: 'This issue is stale because it has been open 7 days with no activity. Remove stale label or comment or this will be closed in 3 days.'
+          stale-issue-label: 'status:stale'
+          exempt-issue-labels: 'status:not-stale'
+          stale-pr-message: 'This pull request is stale because it has been open 7 days with no activity. Remove stale label or comment or this will be closed in 3 days.'
+          stale-pr-label: 'status:stale'
+          exempt-pr-labels: 'status:not-stale'
+          days-before-stale: 7
+          days-before-close: 3
