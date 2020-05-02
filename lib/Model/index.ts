@@ -31,7 +31,7 @@ enum ModelUpdateOptions {
 }
 export interface ModelOptions {
 	create: boolean;
-	throughput: number | {read: number; write: number};
+	throughput: "ON_DEMAND" | number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
 	waitForActive: ModelWaitForActiveSettings;

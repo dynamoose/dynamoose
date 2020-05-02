@@ -160,7 +160,7 @@ interface IndexDefinition {
 	global?: boolean;
 	rangeKey?: string;
 	project?: boolean | string[];
-	throughput: number | {read: number; write: number};
+	throughput?: "ON_DEMAND" | number | {read: number; write: number};
 }
 interface AttributeDefinitionTypeSettings {
 	storage?: "miliseconds" | "seconds";
@@ -388,7 +388,7 @@ Schema.prototype.getIndexes = async function(this: Schema, model: Model<Document
 			dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
 		}
 		if (indexValue.global) {
-			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model.options);
+			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model.options.throughput === "ON_DEMAND" ? {} : model.options);
 			// TODO: fix up the two lines below. Using too many `as` statements.
 			if ((throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput) {
 				dynamoIndexObject.ProvisionedThroughput = (throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput;
