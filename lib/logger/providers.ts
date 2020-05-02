@@ -1,5 +1,5 @@
-import utils from "../utils";
-import internalProviders from "./internal_providers";
+import utils = require("../utils");
+import internalProviders = require("./internal_providers");
 let providers = [];
 
 // This method takes the provider and converts it to an internal provider if exists (ex. `console`)

@@ -1,6 +1,6 @@
 import {Document} from "./Document";
-import CustomError from "./Error";
-import utils from "./utils";
+import CustomError = require("./Error");
+import utils = require("./utils");
 const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
 import { ObjectType } from "./General";

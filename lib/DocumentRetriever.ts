@@ -1,6 +1,6 @@
-import ddb from "./aws/ddb/internal";
-import CustomError from "./Error";
-import utils from "./utils";
+import ddb = require("./aws/ddb/internal");
+import CustomError = require("./Error");
+import utils = require("./utils");
 import {Condition, ConditionInitalizer, ConditionFunction} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
