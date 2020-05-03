@@ -13,9 +13,9 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           stale-issue-message: 'This issue is stale because it has been open 7 days with no activity. Remove stale label or comment or this will be closed in 3 days.'
           stale-issue-label: 'status:stale'
-          exempt-issue-labels: 'status:not-stale'
+          exempt-issue-labels: 'status:not-stale,status:todo,status:triage,type:discussion'
           stale-pr-message: 'This pull request is stale because it has been open 7 days with no activity. Remove stale label or comment or this will be closed in 3 days.'
           stale-pr-label: 'status:stale'
-          exempt-pr-labels: 'status:not-stale'
+          exempt-pr-labels: 'status:not-stale,status:todo,status:triage,type:discussion'
           days-before-stale: 7
           days-before-close: 3
