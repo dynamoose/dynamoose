@@ -1,4 +1,4 @@
-changed:source: src/**/*
+changed:source: lib/**/*
 changed:tests: test/**/*
 changed:website:
   - docs/*
