@@ -57,6 +57,7 @@ The extra properties attached to the array are:
 | `count` | The count property from DynamoDB, which represents how many documents were returned from DynamoDB. This should always equal the number of documents in the array. |
 | `queriedCount` | How many documents DynamoDB queried. This doesn't necessarily represent how many documents were returned from DynamoDB due to filters that might have been applied to the query request. |
 | `timesQueried` | How many times Dynamoose made a query request to DynamoDB. This will always equal 1, unless you used the `query.all` or `query.parallel` method. |
+| `populate` | A function that is an alias to [`document.populate`]() and will populate all documents in the array. |
 
 ## query.limit(count)
 

@@ -224,6 +224,7 @@ The array you receive back is a standard JavaScript array of objects. However, t
 The extra properties attached to the array are:
 
 - `unprocessedKeys` - In the event there are more documents to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those documents. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
+- `populate` - A function that is an alias to [`document.populate`]() and will populate all documents in the array.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 

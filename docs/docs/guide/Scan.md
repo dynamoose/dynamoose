@@ -58,6 +58,7 @@ The extra properties attached to the array are:
 | `count` | The count property from DynamoDB, which represents how many documents were returned from DynamoDB. This should always equal the number of documents in the array. |
 | `scannedCount` | How many documents DynamoDB scanned. This doesn't necessarily represent how many documents were returned from DynamoDB due to filters that might have been applied to the scan request. |
 | `timesScanned` | How many times Dynamoose made a scan request to DynamoDB. This will always equal 1, unless you used the `scan.all` or `scan.parallel` method. |
+| `populate` | A function that is an alias to [`document.populate`]() and will populate all documents in the array. |
 
 ## scan.limit(count)
 
