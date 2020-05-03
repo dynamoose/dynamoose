@@ -87,6 +87,11 @@ export class Document {
 		return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
 	}
 
+	// toJSON
+	toJSON(): ObjectType {
+		return utils.dynamoose.documentToJSON.bind(this)();
+	}
+
 	// Delete
 	delete(this: Document): Promise<void>;
 	delete(this: Document, callback: CallbackType<void, AWSError>): void;
