@@ -57,6 +57,7 @@ abstract class DocumentRetriever {
 			array.count = result.Count;
 			array[`${this.internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`];
 			array[`times${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}`] = timesRequested;
+			array["toJSON"] = utils.dynamoose.documentToJSON;
 			return array;
 		};
 		const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
