@@ -1028,6 +1028,114 @@ describe("Document", () => {
 					}]);
 				});
 
+				describe("Populate", () => {
+					let Game, game;
+					beforeEach(() => {
+						Game = dynamoose.model("Game", {"id": Number, "name": String, "user": User});
+						game = new Game({"id": 2, "name": "Game 2", user});
+					});
+					afterEach(() => {
+						Game = null;
+						game = null;
+					});
+
+					it("Should save with correct object with document instance passed in", async () => {
+						putItemFunction = () => Promise.resolve();
+						await callType.func(game).bind(game)();
+						expect(putParams).to.eql([{
+							"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"N": "1"}},
+							"TableName": "Game"
+						}]);
+					});
+
+					it("Should save with correct object with id reference passed in", async () => {
+						putItemFunction = () => Promise.resolve();
+						game = new Game({"id": 2, "name": "Game 2", "user": user.id});
+						await callType.func(game).bind(game)();
+						expect(putParams).to.eql([{
+							"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"N": "1"}},
+							"TableName": "Game"
+						}]);
+					});
+
+					describe("Set", () => {
+						beforeEach(() => {
+							Game = dynamoose.model("Game", {"id": Number, "name": String, "user": {"type": Set, "schema": [User]}});
+							game = new Game({"id": 2, "name": "Game 2", "user": [user]});
+						});
+
+						it("Should save with correct object with document instance as set passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"NS": ["1"]}},
+								"TableName": "Game"
+							}]);
+						});
+
+						it("Should save with correct object with id reference as set passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": [user.id]});
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"NS": ["1"]}},
+								"TableName": "Game"
+							}]);
+						});
+					});
+
+					describe("rangeKey", () => {
+						beforeEach(() => {
+							User = dynamoose.model("User", {"pk": {"type": String, "hashKey": true}, "sk": {"type": String, "rangeKey": true}, "name": String});
+							user = new User({"pk": "hello", "sk": "world", "name": "Charlie"});
+							Game = dynamoose.model("Game", {"id": Number, "name": String, "user": User});
+							game = new Game({"id": 2, "name": "Game 2", user});
+						});
+
+						it("Should save with correct object with document instance passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"M": {"pk": {"S": "hello"}, "sk": {"S": "world"}}}},
+								"TableName": "Game"
+							}]);
+						});
+
+						it("Should save with correct object with id reference passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": {"pk": user.pk, "sk": user.sk}});
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"M": {"pk": {"S": "hello"}, "sk": {"S": "world"}}}},
+								"TableName": "Game"
+							}]);
+						});
+
+						it("Should throw error if passing object with one property in", () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": {"pk": user.pk}});
+							return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type object.");
+						});
+
+						it("Should throw error if passing object with one value passed in in", () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": user.pk});
+							return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type string.");
+						});
+
+						it("Should throw error if trying to create document with property type as set model", () => {
+							const Game = dynamoose.model("Game", {"id": Number, "name": String, "user": {"type": Set, "schema": [User]}});
+							return expect(Game.create({"id": 2, "name": "Game 2", "user": [1]})).to.be.rejectedWith("user with type: model is not allowed to be a set");
+						});
+					});
+
+					it("Should throw error if passing random type in", () => {
+						putItemFunction = () => Promise.resolve();
+						game = new Game({"id": 2, "name": "Game 2", "user": "hello"});
+						return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type string.");
+					});
+				});
+
 				it("Should throw error if object contains properties that have type mismatch with schema", () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number}, {"create": false, "waitForActive": false});
@@ -1177,6 +1285,134 @@ describe("Document", () => {
 		});
 	});
 
+	describe("document.populate", () => {
+		let User, user, Game, game, getItemParams = [], getItemFunction;
+		beforeEach(() => {
+			dynamoose.model.defaults.set({
+				"create": false,
+				"waitForActive": false
+			});
+			aws.ddb.set({
+				"getItem": (params) => {
+					getItemParams.push(params);
+					return {"promise": getItemFunction};
+				}
+			});
+			User = dynamoose.model("User", {"id": Number, "name": String});
+			user = new User({"id": 1, "name": "Charlie"});
+			Game = dynamoose.model("Game", {"id": Number, "name": String, "user": User});
+			game = new Game({"id": 2, "name": "Game 2", "user": 1});
+		});
+		afterEach(() => {
+			dynamoose.model.defaults.set({});
+			aws.ddb.revert();
+			User = null;
+			user = null;
+			Game = null;
+			game = null;
+			getItemParams = [];
+			getItemFunction = null;
+		});
+
+		it("Should be a function", () => {
+			expect(game.populate).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (document) => document.populate},
+			{"name": "Callback", "func": (document) => util.promisify(document.populate)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should expand to correct object", async () => {
+					getItemFunction = () => Promise.resolve({
+						"Item": {...user}
+					});
+					const res = await callType.func(game).bind(game)();
+					expect(getItemParams).to.eql([{
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}]);
+					expect(res.toJSON()).to.eql({
+						"id": 2,
+						"name": "Game 2",
+						"user": {
+							"id": 1,
+							"name": "Charlie"
+						}
+					});
+					expect(res).to.be.a.instanceOf(Document);
+				});
+
+				it("Should not call getItem if sub document already exists", async () => {
+					getItemFunction = () => Promise.resolve({
+						"Item": {...user}
+					});
+					game = new Game({"id": 2, "name": "Game 2", "user": user});
+					const res = await callType.func(game).bind(game)();
+					expect(getItemParams).to.eql([]);
+					expect(res.toJSON()).to.eql({
+						"id": 2,
+						"name": "Game 2",
+						"user": {
+							"id": 1,
+							"name": "Charlie"
+						}
+					});
+				});
+
+				describe("Own Model (this)", () => {
+					let child, parent;
+					beforeEach(() => {
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
+						parent = new User({"id": 1, "name": "Tom"});
+						child = new User({"id": 2, "name": "Tim", "parent": 1});
+					});
+
+					it("Should expand to correct object", async () => {
+						getItemFunction = () => Promise.resolve({
+							"Item": {...parent}
+						});
+						const res = await callType.func(child).bind(child)();
+						expect(getItemParams).to.eql([{
+							"Key": {
+								"id": {
+									"N": "1"
+								}
+							},
+							"TableName": "User"
+						}]);
+						expect(res.toJSON()).to.eql({
+							"id": 2,
+							"name": "Tim",
+							"parent": {
+								"id": 1,
+								"name": "Tom"
+							}
+						});
+					});
+
+					it("Should not call getItem if sub document already exists", async () => {
+						getItemFunction = () => Promise.resolve({
+							"Item": {...parent}
+						});
+						child = new User({"id": 2, "name": "Tim", "parent": parent});
+						const res = await callType.func(child).bind(child)();
+						expect(getItemParams).to.eql([]);
+						expect(res.toJSON()).to.eql({
+							"id": 2,
+							"name": "Tim",
+							"parent": {
+								"id": 1,
+								"name": "Tom"
+							}
+						});
+					});
+				});
+			});
+		});
+	});
+
 	describe("conformToSchema", () => {
 		beforeEach(() => {
 			dynamoose.model.defaults.set({
@@ -1191,6 +1427,7 @@ describe("Document", () => {
 		const tests = [
 			{"schema": {"id": Number, "name": String}, "input": {"id": 1, "name": "Charlie", "hello": "world"}, "output": {"id": 1, "name": "Charlie"}},
 			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "output": {"id": 1}},
+			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "settings": {"type": "toDynamo"}, "output": {"id": 1}},
 			{"schema": {"id": Number, "name": String, "age": Number}, "input": {"id": 1, "name": "Charlie", "age": "test"}, "error": "test"}
 		];
 
@@ -1200,14 +1437,14 @@ describe("Document", () => {
 					const User = dynamoose.model("User", test.schema);
 					const user = new User(test.input);
 
-					return expect(user.conformToSchema()).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
+					return expect(user.conformToSchema(test.settings || undefined)).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
 				});
 			} else {
 				it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
 					const User = dynamoose.model("User", test.schema);
 					const user = new User(test.input);
 
-					const obj = await user.conformToSchema();
+					const obj = await user.conformToSchema(test.settings || undefined);
 
 					expect({...user}).to.eql(test.output);
 					expect(obj).to.eql(user);
