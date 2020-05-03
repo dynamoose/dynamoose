@@ -4,13 +4,14 @@ import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
 import {Model, ModelExpiresSettings} from "./Model";
-import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
+import {DynamoDBTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
 import { DynamoDB, AWSError } from "aws-sdk";
 import { ValueType } from "./Schema";
 import { CallbackType, ObjectType } from "./General";
+import { PopulateDocument, PopulateSettings } from "./Populate";
 
 export interface DocumentSaveSettings {
 	overwrite?: boolean;
@@ -81,6 +82,14 @@ export class Document {
 	static prepareForObjectFromSchema: (object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) => any;
 	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<Document>;
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
+
+	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
+	async prepareForResponse(): Promise<Document> {
+		if (this.model.options.populate) {
+			return this.populate({"properties": this.model.options.populate});
+		}
+		return this;
+	}
 
 	// Original
 	original (): ObjectType | null {
@@ -155,6 +164,15 @@ export class Document {
 				return this;
 			})();
 		}
+	}
+
+	// Populate
+	populate(): Promise<Document>;
+	populate(callback: CallbackType<Document, AWSError>): void;
+	populate(settings: PopulateSettings): Promise<Document>;
+	populate(settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
+	populate(...args): Promise<Document> | void {
+		return PopulateDocument.bind(this)(...args);
 	}
 }
 
@@ -235,6 +253,7 @@ export interface DocumentObjectFromSchemaSettings {
 	validate?: boolean;
 	required?: boolean | "nested";
 	enum?: boolean;
+	populate?: boolean;
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
@@ -250,11 +269,6 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 	// Type check
 	const validParents = []; // This array is used to allow for set contents to not be type checked
 	const keysToDelete = [];
-	const getValueTypeCheckResult = (value: any, key: string, options = {}): {typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult; isValidType: boolean} => {
-		const typeDetails = model.schema.getAttributeTypeDetails(key, options);
-		const isValidType = [((typeDetails.customType || {}).functions || {}).isOfType, typeDetails.isOfType].filter((a) => Boolean(a)).some((func) => func(value, settings.type));
-		return {typeDetails, isValidType};
-	};
 	const checkTypeFunction = (item): void => {
 		const [key, value] = item;
 		if (validParents.find((parent) => key.startsWith(parent.key) && (parent.infinite || key.split(".").length === parent.key.split(".").length + 1))) {
@@ -263,10 +277,11 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 		const genericKey = key.replace(/\.\d+/gu, ".0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
 		const existsInSchema = schemaAttributes.includes(genericKey);
 		if (existsInSchema) {
-			const {isValidType, typeDetails} = getValueTypeCheckResult(value, genericKey, {"standardKey": true});
+			const {isValidType, typeDetails} = utils.dynamoose.getValueTypeCheckResult(model.schema, value, genericKey, settings, {"standardKey": true});
+			const typeDetailsName: string = typeDetails.dynamicName ? typeDetails.dynamicName() : typeDetails.name.toLowerCase();
 			if (!isValidType) {
-				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetails.name.toLowerCase()}, instead found type ${typeof value}.`);
-			} else if (typeDetails.isSet) {
+				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsName}, instead found type ${typeof value}.`);
+			} else if (typeDetails.isSet || typeDetails.name.toLowerCase() === "model") {
 				validParents.push({key, "infinite": true});
 			} else if (/*typeDetails.dynamodbType === "M" || */typeDetails.dynamodbType === "L") {
 				// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
@@ -296,7 +311,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 				const defaultValue = await model.schema.defaultCheck(key, value as ValueType, settings);
 				const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
 				if (!isDefaultValueUndefined) {
-					const {isValidType, typeDetails} = getValueTypeCheckResult(defaultValue, key);
+					const {isValidType, typeDetails} = utils.dynamoose.getValueTypeCheckResult(model.schema, defaultValue, key, settings);
 					if (!isValidType) {
 						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetails.name.toLowerCase()}, instead found type ${typeof defaultValue}.`);
 					} else {
@@ -422,13 +437,17 @@ Document.prototype.toDynamo = async function(this: Document, settings: Partial<D
 };
 // This function will modify the document to conform to the Schema
 Document.prototype.conformToSchema = async function(this: Document, settings: DocumentObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Document> {
-	Document.prepareForObjectFromSchema(this, this.model, settings);
-	const expectedObject = await Document.objectFromSchema(this, this.model, settings);
+	let document = this;
+	if (settings.type === "fromDynamo") {
+		document = await this.prepareForResponse();
+	}
+	Document.prepareForObjectFromSchema(document, document.model, settings);
+	const expectedObject = await Document.objectFromSchema(document, document.model, settings);
 	if (!expectedObject) {
 		return expectedObject;
 	}
 	const expectedKeys = Object.keys(expectedObject);
-	Object.keys(this).forEach((key) => {
+	Object.keys(document).forEach((key) => {
 		if (!expectedKeys.includes(key)) {
 			delete this[key];
 		} else if (this[key] !== expectedObject[key]) {

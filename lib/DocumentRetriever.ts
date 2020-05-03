@@ -4,8 +4,9 @@ import utils from "./utils";
 import {Condition, ConditionInitalizer, ConditionFunction} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
-import { CallbackType, ObjectType } from "./General";
+import { CallbackType, ObjectType, DocumentArray } from "./General";
 import { AWSError } from "aws-sdk";
+import { PopulateDocuments } from "./Populate";
 
 enum DocumentRetrieverTypes {
 	scan = "scan",
@@ -57,6 +58,7 @@ abstract class DocumentRetriever {
 			array.count = result.Count;
 			array[`${this.internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`];
 			array[`times${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}`] = timesRequested;
+			array["populate"] = PopulateDocuments;
 			array["toJSON"] = utils.dynamoose.documentToJSON;
 			return array;
 		};
@@ -273,7 +275,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 
 	return object;
 };
-interface DocumentRetrieverResponse<T> extends Array<T> {
+interface DocumentRetrieverResponse<T> extends DocumentArray<T> {
 	lastKey?: ObjectType;
 	count: number;
 }

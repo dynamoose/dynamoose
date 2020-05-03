@@ -9,11 +9,9 @@ import Internal from "./Internal";
 import utils from "./utils";
 import logger from "./logger";
 import {Document} from "./Document";
+import {ModelType} from "./General";
 
-interface ModelDocumentConstructor<T extends Document> {
-	new (object: {[key: string]: any}): T;
-}
-const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
+const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): ModelType<T> => {
 	const model: Model<T> = new Model(name, schema, options);
 	const returnObject: any = model.Document;
 	const keys = utils.array_flatten([
@@ -60,5 +58,6 @@ export = {
 	transaction,
 	aws,
 	logger,
-	"UNDEFINED": Internal.Public.undefined
+	"UNDEFINED": Internal.Public.undefined,
+	"THIS": Internal.Public.this
 };
