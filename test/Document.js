@@ -1729,22 +1729,29 @@ describe("Document", () => {
 		];
 
 		tests.forEach((test) => {
-			let model;
-			if (test.model) {
-				model = dynamoose.model(...test.model);
-			} else {
-				model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
-			}
+			let input, model;
+			const func = () => {
+				if (!(input && model)) {
+					if (test.model) {
+						model = dynamoose.model(...test.model);
+					} else {
+						model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
+					}
 
-			const input = (!Array.isArray(test.input) ? [test.input] : test.input);
-			input.splice(1, 0, model.Model);
+					input = (!Array.isArray(test.input) ? [test.input] : test.input);
+					input.splice(1, 0, model.Model);
+				}
+
+				return {input, model};
+			};
+
 			if (test.error) {
 				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
-					return expect(model.objectFromSchema(...input)).to.be.rejectedWith(test.error.message);
+					return expect(func().model.objectFromSchema(...func().input)).to.be.rejectedWith(test.error.message);
 				});
 			} else {
 				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
-					expect(await model.objectFromSchema(...input)).to.eql(test.output);
+					expect(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
 				});
 			}
 		});
