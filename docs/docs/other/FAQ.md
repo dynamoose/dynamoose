@@ -41,3 +41,7 @@ Currently Dynamoose purposefully has weird behavior and throws errors when tryin
 ## Where can I find documentation for v1?
 
 [Here](https://v1.dynamoosejs.com).
+
+## How do I migrate from v1 to v2?
+
+See the [release notes for v2.0.0](https://github.com/dynamoose/dynamoose/releases/tag/v2.0.0) for a list of breaking changes.

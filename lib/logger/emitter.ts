@@ -1,7 +1,7 @@
-import status from "./status";
-import providers from "./providers";
-import CustomError from "../Error";
-import utils from "../utils";
+import status = require("./status");
+import providers = require("./providers");
+import CustomError = require("../Error");
+import utils = require("../utils");
 import {v4 as uuid} from "uuid";
 
 const validLevels = ["fatal", "error", "warn", "info", "debug", "trace"];

@@ -1,5 +1,5 @@
-import providers from "./providers";
-import status from "./status";
+import providers = require("./providers");
+import status = require("./status");
 
 export = {
 	providers,

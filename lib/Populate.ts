@@ -1,6 +1,6 @@
 import { Document } from "./Document";
 import { DocumentArray, CallbackType } from "./General";
-import utils from "./utils";
+import utils = require("./utils");
 import { AWSError } from "aws-sdk";
 
 export interface PopulateSettings {
