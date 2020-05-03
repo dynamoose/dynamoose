@@ -85,6 +85,37 @@ myUser.delete((error) => {
 });
 ```
 
+## document.populate([settings], [callback])
+
+This allows you to populate a document with document instances for the subdocuments you are referencing in your schema. This function will return a promise, or call the `callback` paramter function upon completion.
+
+The `settings` parameter is an object you can pass in with the following properties:
+
+| Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| properties | string \| [string] \| boolean | Which properties should it populate. Passing `true` is equivalent to `**` & `false` is equivalent to not populating at all. | `true` \| `**` |
+
+```js
+const user = await User.get(2);
+
+try {
+	const populatedUser = await user.populate();
+	console.log(populatedUser);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+user.populate((populatedUser, error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(populatedUser);
+	}
+});
+```
+
 ## document.original()
 
 This function returns the original item that was received from DynamoDB. This function will return a JSON object that represents the original item. In the event no item has been retrieved from DynamoDB `null` will be returned.
