@@ -12,6 +12,7 @@ const myUser = new User({
 	"id": 1,
 	"name": "Tim"
 });
+console.log(myUser.id); // 1
 
 // myUser is now a document instance of the User model
 ```
@@ -95,4 +96,24 @@ user.name = "Tim";
 
 console.log(user); // {"id": 1, "name": "Tim"}
 console.log(user.original()); // {"id": 1, "name": "Bob"}
+```
+
+## document.toJSON()
+
+This function returns an object representation of the document. This is most commonly used when comparing a document to an object you receive elsewhere without worrying about prototypes.
+
+```js
+const user = new User({"id": 1, "name": "Tim"});
+
+console.log(user); // Document {"id": 1, "name": "Tim"}
+console.log(user.toJSON()); // {"id": 1, "name": "Tim"}
+```
+
+Due to the fact that a document instance is based on an object it is rare that you will have to use this function since you can access all the properties of the document directly. For example.
+
+```js
+const user = new User({"id": 1, "name": "Tim"});
+
+console.log(user.id); // 1
+console.log(user.toJSON().id); // 1
 ```
