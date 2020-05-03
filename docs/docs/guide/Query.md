@@ -112,6 +112,22 @@ This causes the query to be run on a specific index as opposed to the default ta
 Cat.query("name").eq("Will").using("name-index"); // Run the query on the `name-index` index
 ```
 
+## query.sort(order)
+
+This function sorts the documents you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
+
+The order parameter must be a string either equal to `ascending` or `descending`.
+
+```js
+Cat.query("name").eq("Will").sort("ascending");
+```
+
+```js
+Cat.query("name").eq("Will").sort("descending");
+```
+
+Under the hood this sets the `ScanIndexForward` property when making the request to DynamoDB. This ensures sorting is done on the database side to optimize results.
+
 ## query.all([delay[, max]])
 
 Unlike most other query functions that directly change the DynamoDB query request, this function is purely internal and unique to Dynamoose. If a query result is more than the AWS query response limit, DynamoDB paginates the results so you would have to send multiple requests. This function sends continuous query requests upon receiving the response until all documents have been received (by checking and making new requests with the `lastKey` property from the previous response). This can be useful if you wish to get all the documents from the table and don't want to worry about checking the `lastKey` property and sending a new query request yourself.
