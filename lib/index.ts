@@ -9,12 +9,27 @@ import Internal = require("./Internal");
 import utils = require("./utils");
 import logger = require("./logger");
 import {Document} from "./Document";
+import ModelStore = require("./ModelStore");
 
 interface ModelDocumentConstructor<T extends Document> {
 	new (object: {[key: string]: any}): T;
 }
-const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
-	const model: Model<T> = new Model(name, schema, options);
+
+const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
+	let model: Model<T>;
+	let storedSchema: Model<T>;
+	if (name) {
+		storedSchema = ModelStore(name);
+	}
+	// TODO: this is something I'd like to do. But is a breaking change. Need to enable this and uncomment it in a breaking release. Also will need to fix the tests as well.
+	/* if (schema && storedSchema) {
+		throw new CustomError.InvalidParameter(`Model with name ${name} has already been registered.`);
+	} else */
+	if (!schema && storedSchema) {
+		model = storedSchema;
+	} else {
+		model = new Model(name, schema, options);
+	}
 	const returnObject: any = model.Document;
 	const keys = utils.array_flatten([
 		Object.keys(model),
