@@ -58,7 +58,7 @@ const schema = new dynamoose.Schema({
 | Date | True | N | True | False | **storage** - miliseconds \| seconds (default: miliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
-| Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#ModelTypes) for more information. |
+| Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
 
 Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
 
@@ -142,7 +142,7 @@ const user = new User({
 });
 ```
 
-You can then call [`document.populate`]() to populate the instances with the documents.
+You can then call [`document.populate`](Document#documentpopulatesettings-callback) to populate the instances with the documents.
 
 ```js
 const user = await User.get(2); // {"id": 2, "name": "Bob", "parent": 1}
