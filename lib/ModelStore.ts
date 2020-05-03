@@ -1,4 +1,4 @@
-import CustomError from "./Error";
+import CustomError = require("./Error");
 import {Model} from "./Model";
 import {Document} from "./Document";
 

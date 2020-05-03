@@ -1,9 +1,9 @@
-import CustomError from "../Error";
+import CustomError = require("../Error");
 import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType} from "../Schema";
 import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings, DocumentObjectFromSchemaSettings} from "../Document";
-import utils from "../utils";
-import ddb from "../aws/ddb/internal";
-import Internal from "../Internal";
+import utils = require("../utils");
+import ddb = require("../aws/ddb/internal");
+import Internal = require("../Internal");
 import {Condition, ConditionInitalizer} from "../Condition";
 import {Scan, Query} from "../DocumentRetriever";
 import {CallbackType, ObjectType, FunctionType, DocumentArray} from "../General";
@@ -32,7 +32,7 @@ enum ModelUpdateOptions {
 }
 export interface ModelOptions {
 	create: boolean;
-	throughput: number | {read: number; write: number};
+	throughput: "ON_DEMAND" | number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
 	waitForActive: ModelWaitForActiveSettings;
