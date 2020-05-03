@@ -1141,6 +1141,26 @@ describe("Model", () => {
 					expect(user.name).to.eql("Charlie-get");
 				});
 
+				describe("Populate", () => {
+					it("Should autopopulate if model settings have populate set", async () => {
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								return {"promise": () => params.Key.id.N === "1" ? ({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}}) : ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							}
+						});
+						const user = await callType.func(User).bind(User)(1);
+						expect(user.toJSON()).to.eql({
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						});
+					});
+				});
+
 				it("Should throw error if DynamoDB responds with error", () => {
 					getItemFunction = () => Promise.reject({"error": "Error"});
 
@@ -1356,6 +1376,35 @@ describe("Model", () => {
 					expect(result.map((item) => ({...item}))).to.eql([
 						{"id": 1, "name": "Charlie"}
 					]);
+				});
+
+				describe("Populate", () => {
+					it("Should have populate function on response", async () => {
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						const result = await callType.func(User).bind(User)([1]);
+						expect(result.populate).to.be.a("function");
+					});
+
+					it("Should autopopulate if model settings have populate set", async () => {
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"batchGetItem": () => {
+								return {"promise": () => ({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]}, "UnprocessedKeys": {}})};
+							}
+						});
+						const result = await callType.func(User).bind(User)([1]);
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
 				});
 
 				it("Should handle correctly if item not in Responses or UnprocessedKeys", async () => {
