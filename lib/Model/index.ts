@@ -6,9 +6,10 @@ import ddb from "../aws/ddb/internal";
 import Internal from "../Internal";
 import {Condition, ConditionInitalizer} from "../Condition";
 import {Scan, Query} from "../DocumentRetriever";
-import {CallbackType, ObjectType, FunctionType} from "../General";
+import {CallbackType, ObjectType, FunctionType, DocumentArray} from "../General";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
+import {PopulateDocuments} from "../Populate";
 
 import {DynamoDB, AWSError} from "aws-sdk";
 
@@ -36,6 +37,7 @@ export interface ModelOptions {
 	suffix: string;
 	waitForActive: ModelWaitForActiveSettings;
 	update: boolean | ModelUpdateOptions[];
+	populate: string | string[] | boolean;
 	expires?: number | ModelExpiresSettings;
 }
 export type ModelOptionsOptional = Partial<ModelOptions>;
@@ -209,7 +211,7 @@ interface ModelUpdateSettings {
 	return: "document" | "request";
 	condition?: Condition;
 }
-interface ModelBatchGetDocumentsResponse<T> extends Array<T> {
+interface ModelBatchGetDocumentsResponse<T> extends DocumentArray<T> {
 	unprocessedKeys: ObjectType[];
 }
 interface ModelBatchGetSettings {
@@ -385,7 +387,11 @@ export class Model<T extends DocumentCarrier> {
 			const tmpResult = await Promise.all(response.Responses[this.name].map((item) => documentify(item)));
 			const unprocessedArray = response.UnprocessedKeys[this.name] ? response.UnprocessedKeys[this.name].Keys : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item)));
-			const startArray: ModelBatchGetDocumentsResponse<DocumentCarrier> = Object.assign([], {"unprocessedKeys": []});
+			const startArray: ModelBatchGetDocumentsResponse<DocumentCarrier> = Object.assign([], {
+				"unprocessedKeys": [],
+				"populate": PopulateDocuments,
+				"toJSON": utils.dynamoose.documentToJSON
+			});
 			return keyObjects.reduce((result, key) => {
 				const keyProperties = Object.keys(key);
 				let item: ObjectType = tmpResult.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
@@ -423,7 +429,7 @@ export class Model<T extends DocumentCarrier> {
 			const localCallback: CallbackType<DocumentCarrier[], AWSError> = callback as CallbackType<DocumentCarrier[], AWSError>;
 			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => localCallback(error));
 		} else {
-			return (async () => {
+			return (async (): Promise<ModelBatchGetDocumentsResponse<DocumentCarrier>> => {
 				const response = await promise;
 				return prepareResponse(response);
 			})();
