@@ -1,6 +1,6 @@
 The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save documents in the database.
 
-## dynamoose.model(name, schema[, config])
+## dynamoose.model(name, [schema][, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
@@ -14,6 +14,12 @@ const Cat = dynamoose.model("Cat", {"name": String}, {"create": false});
 
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
+```
+
+If you don't pass the `schema` parameter it is required that you have an existing model already registed with that name. This will use the existing model already registered.
+
+```js
+const Cat = dynamoose.model("Cat"); // Will reference existing model, or if no model exists already with name `Cat` it will throw an error.
 ```
 
 The `config` parameter is an object used to customize settings for the model.
