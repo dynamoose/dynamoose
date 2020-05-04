@@ -726,7 +726,7 @@ describe("Scan", () => {
 			const start = Date.now();
 			await Model.scan().all(10, 2).exec();
 			const end = Date.now();
-			expect(end - start).to.be.above(19);
+			expect(end - start).to.be.at.least(19);
 		});
 
 		it("Should send correct result on scan.exec", async () => {
