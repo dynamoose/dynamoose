@@ -54,9 +54,9 @@
   "dependencies": {
     "@types/node": "^13.13.4",
     "@types/source-map-support": "^0.5.1",
-    "aws-sdk": "^2.665.0",
+    "aws-sdk": "^2.668.0",
     "source-map-support": "^0.5.19",
-    "uuid": "^7.0.3"
+    "uuid": "^8.0.0"
   },
   "license": "Unlicense",
   "keywords": [
