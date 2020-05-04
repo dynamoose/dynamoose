@@ -15,7 +15,7 @@ import {DynamoDB, AWSError} from "aws-sdk";
 // Defaults
 interface ModelWaitForActiveSettings {
 	enabled: boolean;
-	check: {timeout: number; frequency: number};
+	check?: {timeout: number; frequency: number};
 }
 export interface ModelExpiresSettings {
 	ttl: number;
