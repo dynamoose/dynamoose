@@ -71,6 +71,10 @@ module.exports = {
 				},
 			],
 		},
+		"algolia": {
+			"apiKey": "ad8f45e217e480b02545037bf3c58887",
+			"indexName": "dynamoosejs",
+		},
 	},
 	"presets": [
 		[
