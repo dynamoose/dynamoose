@@ -608,7 +608,10 @@ export class Model<T extends DocumentCarrier> {
 					const expressionKey = `#a${index}`;
 					subKey = Array.isArray(value) ? subValue : subKey;
 
-					const dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
+					let dynamoType;
+					try {
+						dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
+					} catch (e) {} // eslint-disable-line no-empty
 					const attributeExists = this.schema.attributes().includes(subKey);
 					const dynamooseUndefined = require("../index").UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
@@ -696,10 +699,13 @@ export class Model<T extends DocumentCarrier> {
 			Object.values(returnObject.ExpressionAttributeNames).map((attribute: string, index) => {
 				const value: ValueType = Object.values(returnObject.ExpressionAttributeValues)[index];
 				const valueKey = Object.keys(returnObject.ExpressionAttributeValues)[index];
-				const dynamoType = this.schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
+				let dynamoType;
+				try {
+					dynamoType = this.schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
+				} catch (e) {} // eslint-disable-line no-empty
 				const attributeType = Schema.attributeTypes.findDynamoDBType(dynamoType) as DynamoDBSetTypeResult;
 
-				if (attributeType.toDynamo && !attributeType.isOfType(value, "fromDynamo")) {
+				if (attributeType?.toDynamo && !attributeType.isOfType(value, "fromDynamo")) {
 					returnObject.ExpressionAttributeValues[valueKey] = attributeType.toDynamo(value as any);
 				}
 			});
