@@ -132,13 +132,14 @@ async function updateTimeToLive(model: Model<DocumentCarrier>): Promise<void> {
 		break;
 	}
 }
-function waitForActive(model: Model<DocumentCarrier>) {
+function waitForActive(model: Model<DocumentCarrier>, forceRefreshOnFirstAttempt = true) {
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check(count: number): Promise<void> {
 			try {
 				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
-				if ((await getTableDetails(model, {"forceRefresh": count > 0})).Table.TableStatus === "ACTIVE") {
+				const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
+				if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
 					return resolve();
 				}
 			} catch (e) {
@@ -191,7 +192,7 @@ async function updateTable(model: Model<DocumentCarrier>): Promise<void> {
 				params.GlobalSecondaryIndexUpdates = [{"Delete": {"IndexName": index.name}}];
 			}
 			await ddb("updateTable", params);
-			await waitForActive(model);
+			await waitForActive(model)();
 		}, Promise.resolve());
 	}
 }
@@ -269,7 +270,7 @@ export class Model<T extends DocumentCarrier> {
 		}
 		// Wait for Active
 		if ((this.options.waitForActive || {}).enabled) {
-			setupFlow.push(() => waitForActive(this));
+			setupFlow.push(() => waitForActive(this, false));
 		}
 		// Update Time To Live
 		if ((this.options.create || (Array.isArray(this.options.update) ? this.options.update.includes(ModelUpdateOptions.ttl) : this.options.update)) && options.expires) {

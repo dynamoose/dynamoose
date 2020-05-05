@@ -346,7 +346,7 @@ describe("Model", () => {
 					"describeTable": (params) => {
 						describeTableParams.push(params);
 						return {
-							"promise": describeTableFunction
+							"promise": () => describeTableFunction(params)
 						};
 					}
 				});
@@ -625,6 +625,7 @@ describe("Model", () => {
 									"GlobalSecondaryIndexes": [
 										{
 											"IndexName": "nameGlobalIndex",
+											"IndexStatus": "ACTIVE",
 											"KeySchema": [
 												{
 													"AttributeName": "name",
@@ -655,6 +656,223 @@ describe("Model", () => {
 										}
 									],
 									"TableName": "Cat"
+								}
+							]);
+						});
+
+						it("Should call updateTable to add multiple indexes correctly", async () => {
+							const tableName = "Cat";
+							let describeTableFunctionCalledTimes = 0;
+							let testUpdateTableParams = {};
+							describeTableFunction = () => {
+								++describeTableFunctionCalledTimes;
+								let obj;
+								if (describeTableFunctionCalledTimes === 1) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE"
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 2) {
+									testUpdateTableParams["0"] = [...updateTableParams];
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "CREATING",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 3) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 4) {
+									testUpdateTableParams["1"] = [...updateTableParams];
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												},
+												{
+													"IndexName": "statusGlobalIndex",
+													"IndexStatus": "CREATING",
+													"KeySchema": [
+														{
+															"AttributeName": "status",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes >= 4) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												},
+												{
+													"IndexName": "statusGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "status",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								}
+								return Promise.resolve(obj);
+							};
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}, "status": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							await model.Model.pendingTaskPromise();
+							await utils.set_immediate_promise();
+							expect(describeTableFunctionCalledTimes).to.eql(5);
+							expect(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
+								"Create": {
+									"IndexName": "nameGlobalIndex",
+									"KeySchema": [
+										{
+											"AttributeName": "name",
+											"KeyType": "HASH"
+										}
+									],
+									"Projection": {
+										"ProjectionType": "ALL"
+									},
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									}
+								}
+							}]);
+							expect(utils.array_flatten(testUpdateTableParams["1"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([
+								...testUpdateTableParams["0"][0].GlobalSecondaryIndexUpdates,
+								{
+									"Create": {
+										"IndexName": "statusGlobalIndex",
+										"KeySchema": [
+											{
+												"AttributeName": "status",
+												"KeyType": "HASH"
+											}
+										],
+										"Projection": {
+											"ProjectionType": "ALL"
+										},
+										"ProvisionedThroughput": {
+											"ReadCapacityUnits": 1,
+											"WriteCapacityUnits": 1
+										}
+									}
 								}
 							]);
 						});
