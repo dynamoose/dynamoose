@@ -2,6 +2,19 @@
 
 ---
 
+## Version 2.1.2
+
+This release fixes a few minor bugs with `Model.update`.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixed an issue where `Model.update` using `$REMOVE` wouldn't work on non defined attributes using `saveUnknown`
+- Fixed an issue where `Model.update` would throw an AWS error `ExpressionAttributeValues must not be empty` when using `$REMOVE`
+
+---
+
 ## Version 2.1.1
 
 This release fixes some bugs related to TypeScript and improves the website with more accurate information.
