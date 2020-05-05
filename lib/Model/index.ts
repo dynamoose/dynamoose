@@ -132,7 +132,7 @@ async function updateTimeToLive(model: Model<DocumentCarrier>): Promise<void> {
 		break;
 	}
 }
-function waitForActive(model: Model<DocumentCarrier>, forceRefreshOnFirstAttempt: boolean = true) {
+function waitForActive(model: Model<DocumentCarrier>, forceRefreshOnFirstAttempt = true) {
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check(count: number): Promise<void> {
