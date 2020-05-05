@@ -2,6 +2,29 @@
 
 ---
 
+## Version 2.1.1
+
+This release fixes some bugs related to TypeScript and improves the website with more accurate information.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- 🔍 Added search functionality to website
+
+### Bug Fixes
+
+- TypeScript Fixes
+	- Removed esModuleInterop from tsconfig.json
+	- Allowing Schema Index Throughput to be Optional
+
+### Documentation
+
+- Add migration section from v1 to v2 to website FAQ page
+- Fixed ES Modules Import Documentation
+
+---
+
 ## Version 2.1.0
 
 This release adds beta support for TypeScript typings.
