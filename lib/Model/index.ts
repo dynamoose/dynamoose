@@ -705,6 +705,9 @@ export class Model<T extends DocumentCarrier> {
 			});
 
 			returnObject.ExpressionAttributeValues = this.Document.objectToDynamo(returnObject.ExpressionAttributeValues);
+			if (Object.keys(returnObject.ExpressionAttributeValues).length === 0) {
+				delete returnObject.ExpressionAttributeValues;
+			}
 
 			return {
 				...returnObject,
