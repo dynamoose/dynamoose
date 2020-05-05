@@ -2008,7 +2008,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2029,7 +2028,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2050,7 +2048,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2071,7 +2068,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2300,7 +2296,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "age",
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2321,7 +2316,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "age",
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2341,7 +2335,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "age",
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
