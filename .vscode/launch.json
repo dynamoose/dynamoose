@@ -1,0 +1,19 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "npm run test:debug:breakpoint",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": [
+				"run",
+				"test:debug:breakpoint"
+			],
+			"port": 9229,
+			"skipFiles": [
+				"<node_internals>/**"
+			]
+		}
+	]
+}
