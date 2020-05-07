@@ -103,6 +103,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 - `Model.transaction.conditionCheck` has been renamed to `Model.transaction.condition`
 - `Model.transaction.condition` now accepts a conditional instance instead of an object to specify the conditional you wish to run
 - In the past the `saveUnknown` option for attribute names would handle all nested properties. Now you must use `*` to indicate one level of wildcard or `**` to indicate infinate levels of wildcard. So if you have an object property (`address`) and want to parse one level of values (no sub objects) you can use `address.*`, or `address.**` to all for infinate levels of values (including sub objects)
+- In the past non-string type properties would be implicitly coerced into strings with a call to their `toString()` methods when saved as `String` type attributes. This will now throw a `TypeMismatch` error. Strings should be converted before saving.
 - `useNativeBooleans` & `useDocumentTypes` have been removed from the Model settings
 - `scan.count()` has been removed, and `scan.counts()` has been renamed to `scan.count()`.
 - The attribute types `Array` & `Object` in Dynamoose v1 don't work without a `schema` option in v2
