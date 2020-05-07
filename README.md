@@ -18,7 +18,7 @@
 	<a href="https://coveralls.io/github/dynamoose/dynamoose?branch=master">
 		<img src="https://coveralls.io/repos/github/dynamoose/dynamoose/badge.svg?branch=master" alt="Coverage Status">
 	</a>
-	<a href="https://vercel.com">
+	<a href="https://vercel.com?utc_source=dynamoose">
 		<img src="https://img.shields.io/badge/Website%20Previews-by%20Vercel-black" alt="Website Previews by Vercel">
 	</a>
 	<a href="https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY">
