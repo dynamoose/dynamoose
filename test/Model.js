@@ -2112,6 +2112,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem for single object update with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1, "name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem for single object update with multiple updates", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "age": 5});
@@ -2132,6 +2160,38 @@ describe("Model", () => {
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
 						"Key": {
 							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for single object update with multiple updates with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1, "name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
 								"N": "1"
 							}
 						},
@@ -2164,6 +2224,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem with seperate key and update objects with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem with seperate key and update objects and multiple updates", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "age": 5});
@@ -2184,6 +2272,38 @@ describe("Model", () => {
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
 						"Key": {
 							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with seperate key and update objects and multiple updates with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1}, {"name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
 								"N": "1"
 							}
 						},
