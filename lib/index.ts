@@ -10,10 +10,7 @@ import utils = require("./utils");
 import logger = require("./logger");
 import {Document} from "./Document";
 
-interface ModelDocumentConstructor<T extends Document> {
-	new (object: {[key: string]: any}): T;
-}
-const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
+const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T => {
 	const model: Model<T> = new Model(name, schema, options);
 	const returnObject: any = model.Document;
 	const keys = utils.array_flatten([
@@ -24,7 +21,7 @@ const model = <T extends Document>(name: string, schema: Schema | SchemaDefiniti
 	keys.forEach((key) => {
 		if (typeof model[key] === "object") {
 			const main = (key: string): void => {
-				utils.object.set(returnObject, key, {});
+				utils.object.set<T>(returnObject, key, {});
 				const value = utils.object.get(model as any, key);
 				if (value === null) {
 					utils.object.set(returnObject, key, value);
@@ -47,7 +44,7 @@ const model = <T extends Document>(name: string, schema: Schema | SchemaDefiniti
 			returnObject[key] = model[key];
 		}
 	});
-	return returnObject as any;
+	return returnObject;
 };
 model.defaults = {
 	...require("./Model/defaults").custom
