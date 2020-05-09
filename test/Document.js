@@ -1123,6 +1123,17 @@ describe("Document", () => {
 			expect(document.original()).to.eql({"id": 1});
 			expect({...document}).to.eql({"id": 2});
 		});
+
+		it("Shouldn't return DynamoDB object if retrieving from database", () => {
+			expect(new model({"id": {"N": "1"}}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
+		});
+
+		it("Shouldn't return DynamoDB object if retrieving from database even after modifying document", () => {
+			const document = new model({"id": {"N": "1"}}, {"type": "fromDynamo"});
+			document.id = 2;
+			expect(document.original()).to.eql({"id": 1});
+			expect({...document}).to.eql({"id": 2});
+		});
 	});
 
 	describe("document.delete", () => {
