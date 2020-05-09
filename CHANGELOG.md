@@ -2,6 +2,19 @@
 
 ---
 
+## Version 2.1.3
+
+This release fixes some minor bugs.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixing issue where creating multiple indexes would fail when creating or updating table
+- Fixing issue where `Model.update` with single object and `rangeKey` would fail
+
+---
+
 ## Version 2.1.2
 
 This release fixes a few minor bugs with `Model.update`.
