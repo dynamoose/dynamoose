@@ -199,6 +199,7 @@ async function updateTable(model: Model<DocumentCarrier>): Promise<void> {
 
 interface ModelGetSettings {
 	return: "document" | "request";
+	attributes?: string[];
 }
 interface ModelDeleteSettings {
 	return: null | "request";
@@ -839,10 +840,13 @@ export class Model<T extends DocumentCarrier> {
 
 		const documentify = (document: DynamoDB.AttributeMap): Promise<DocumentCarrier> => (new this.Document((document as any), {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 
-		const getItemParams = {
+		const getItemParams: DynamoDB.GetItemInput = {
 			"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
 			"TableName": this.name
 		};
+		if (settings.attributes) {
+			getItemParams.ProjectionExpression = settings.attributes.join(", ");
+		}
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.GetItemInput, AWSError> = callback as CallbackType<DynamoDB.GetItemInput, AWSError>;
