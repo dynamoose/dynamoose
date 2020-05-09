@@ -57,6 +57,7 @@ export = {
 	model,
 	Schema,
 	Condition,
+	Document,
 	transaction,
 	aws,
 	logger,
