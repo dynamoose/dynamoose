@@ -178,7 +178,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	if (this.settings.attributes) {
-		object.AttributesToGet = this.settings.attributes;
+		object.ProjectionExpression = this.settings.attributes.join(", ");
 	}
 	const indexes = await this.internalSettings.model.schema.getIndexes(this.internalSettings.model);
 	if (this.settings.index) {
