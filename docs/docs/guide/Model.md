@@ -131,6 +131,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
+| attributes | What document attributes should be retrieved & returned. This will use the underlying `ProjectionExpression` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
