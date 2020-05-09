@@ -1062,6 +1062,36 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to getItem if we only request a certain attribute", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id"
+					});
+				});
+
+				it("Should send correct params to getItem if we request certain attributes", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id", "name"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id, name"
+					});
+				});
+
 				it("Should send correct params to getItem if we pass in an object with range key", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
