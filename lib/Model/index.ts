@@ -577,6 +577,12 @@ export class Model<T extends DocumentCarrier> {
 				[hashKeyName]: keyObj[hashKeyName]
 			};
 			delete updateObj[hashKeyName];
+
+			const rangeKeyName = this.schema.getRangeKey();
+			if (rangeKeyName) {
+				keyObj[rangeKeyName] = updateObj[rangeKeyName];
+				delete updateObj[rangeKeyName];
+			}
 		}
 		if (typeof settings === "undefined") {
 			settings = {"return": "document"};
