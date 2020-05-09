@@ -54,9 +54,10 @@ export = {
 	model,
 	Schema,
 	Condition,
-	Document,
 	transaction,
 	aws,
 	logger,
 	"UNDEFINED": Internal.Public.undefined
 };
+
+exports.Document = Document;
