@@ -340,7 +340,8 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
 				const isValueUndefined = typeof value === "undefined" || value === null;
 				if (modifierFunction && !isValueUndefined) {
-					utils.object.set(returnObject, key, await modifierFunction(value));
+					const oldValue = object.original ? utils.object.get(object.original(), key) : undefined;
+					utils.object.set(returnObject, key, await modifierFunction(value, oldValue));
 				}
 			}));
 		}));
