@@ -339,6 +339,41 @@ export class Schema {
 			}
 		};
 		this.attributes().forEach((key) => checkMultipleArraySchemaElements(key));
+
+		const hashrangeKeys = this.attributes().reduce((val, key) => {
+			const isHashKey = this.getAttributeSettingValue("hashKey", key);
+			const isRangeKey = this.getAttributeSettingValue("rangeKey", key);
+
+			if (isHashKey) {
+				val.hashKeys.push(key);
+			}
+			if (isRangeKey) {
+				val.rangeKeys.push(key);
+			}
+			if (isHashKey && isRangeKey) {
+				val.hashAndRangeKeyAttributes.push(key);
+			}
+
+			return val;
+		}, {"hashKeys": [], "rangeKeys": [], "hashAndRangeKeyAttributes": []});
+		const keyTypes = ["hashKey", "rangeKey"];
+		keyTypes.forEach((keyType) => {
+			if (hashrangeKeys[`${keyType}s`].length > 1) {
+				throw new CustomError.InvalidParameter(`Only one ${keyType} allowed per schema.`);
+			}
+			if (hashrangeKeys[`${keyType}s`].find((key) => key.includes("."))) {
+				throw new CustomError.InvalidParameter(`${keyType} must be at root object and not nested in object or array.`);
+			}
+		});
+		if (hashrangeKeys.hashAndRangeKeyAttributes.length > 0) {
+			throw new CustomError.InvalidParameter(`Attribute ${hashrangeKeys.hashAndRangeKeyAttributes[0]} must not be both hashKey and rangeKey`);
+		}
+
+		this.attributes().forEach((key) => {
+			if (key.includes(".") && this.getAttributeSettingValue("index", key)) {
+				throw new CustomError.InvalidParameter("Index must be at root object and not nested in object or array.");
+			}
+		});
 	}
 }
 
