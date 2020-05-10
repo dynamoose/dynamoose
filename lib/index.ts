@@ -60,4 +60,4 @@ export  {
 	logger,
 };
 
-export const UNDEFINED= Internal.Public.undefined;
+export const UNDEFINED = Internal.Public.undefined;
