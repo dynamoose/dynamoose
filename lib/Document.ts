@@ -20,8 +20,6 @@ export interface DocumentSettings {
 	type?: "fromDynamo" | "toDynamo";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface Document {}
 // Document represents an item in a Model that is either pending (not saved) or saved
 export class Document {
 	constructor(model: Model<Document>, object?: DynamoDB.AttributeMap | ObjectType, settings?: DocumentSettings) {

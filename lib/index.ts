@@ -10,7 +10,7 @@ import utils = require("./utils");
 import logger = require("./logger");
 import {Document} from "./Document";
 
-const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T => {
+const model = <T extends Document>(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): Model<T> => {
 	const model: Model<T> = new Model(name, schema, options);
 	const returnObject: any = model.Document;
 	const keys = utils.array_flatten([
@@ -50,14 +50,14 @@ model.defaults = {
 	...require("./Model/defaults").custom
 };
 
-export = {
+export  {
 	model,
 	Schema,
 	Condition,
+	Document,
 	transaction,
 	aws,
 	logger,
-	"UNDEFINED": Internal.Public.undefined
 };
 
-exports.Document = Document;
+export const UNDEFINED= Internal.Public.undefined;

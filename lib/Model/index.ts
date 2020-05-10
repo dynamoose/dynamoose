@@ -822,13 +822,13 @@ export class Model<T extends DocumentCarrier> {
 	}
 
 	// Get
-	get(this: Model<DocumentCarrier>, key: InputKey): Promise<DocumentCarrier>;
+	get(this: Model<DocumentCarrier>, key: InputKey): Promise<T>;
 	get(this: Model<DocumentCarrier>, key: InputKey, callback: CallbackType<DocumentCarrier, AWSError>): void;
-	get(this: Model<DocumentCarrier>, key: InputKey, settings: ModelGetSettings & {return: "document"}): Promise<DocumentCarrier>;
-	get(this: Model<DocumentCarrier>, key: InputKey, settings: ModelGetSettings & {return: "document"}, callback: CallbackType<DocumentCarrier, AWSError>): void;
+	get(this: Model<DocumentCarrier>, key: InputKey, settings: ModelGetSettings & {return: "document"}): Promise<T>;
+	get(this: Model<DocumentCarrier>, key: InputKey, settings: ModelGetSettings & {return: "document"}, callback: CallbackType<T, AWSError>): void;
 	get(this: Model<DocumentCarrier>, key: InputKey, settings: ModelGetSettings & {return: "request"}): DynamoDB.GetItemInput;
 	get(this: Model<DocumentCarrier>, key: InputKey, settings: ModelGetSettings & {return: "request"}, callback: CallbackType<DynamoDB.GetItemInput, AWSError>): void;
-	get(this: Model<DocumentCarrier>, key: InputKey, settings?: ModelGetSettings | CallbackType<DocumentCarrier, AWSError> | CallbackType<DynamoDB.GetItemInput, AWSError>, callback?: CallbackType<DocumentCarrier, AWSError> | CallbackType<DynamoDB.GetItemInput, AWSError>): void | DynamoDB.GetItemInput | Promise<DocumentCarrier> {
+	get(this: Model<DocumentCarrier>, key: InputKey, settings?: ModelGetSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.GetItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.GetItemInput, AWSError>): void | DynamoDB.GetItemInput | Promise<T> {
 		if (typeof settings === "function") {
 			callback = settings;
 			settings = {"return": "document"};
@@ -864,6 +864,10 @@ export class Model<T extends DocumentCarrier> {
 			})();
 		}
 	}
+}
+
+export interface Model<T> {
+	new(doc?: Partial<T>): T;
 }
 
 Model.defaults = originalDefaults;
