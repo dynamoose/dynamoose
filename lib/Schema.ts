@@ -378,26 +378,31 @@ Schema.prototype.getIndexes = async function(this: Schema, model: Model<Document
 
 		const dynamoIndexObject: IndexItem = {
 			"IndexName": indexValue.name || `${attributeValue}${indexValue.global ? "GlobalIndex" : "LocalIndex"}`,
-			"KeySchema": [{"AttributeName": attributeValue, "KeyType": "HASH"}],
+			"KeySchema": [],
 			"Projection": {"ProjectionType": "KEYS_ONLY"}
 		};
 		if (indexValue.project || typeof indexValue.project === "undefined" || indexValue.project === null) {
 			dynamoIndexObject.Projection = Array.isArray(indexValue.project) ? ({"ProjectionType": "INCLUDE", "NonKeyAttributes": indexValue.project}) : ({"ProjectionType": "ALL"});
 		}
-		if (indexValue.rangeKey) {
-			dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
-		}
 		if (indexValue.global) {
+			dynamoIndexObject.KeySchema.push({"AttributeName": attributeValue, "KeyType": "HASH"});
+			if (indexValue.rangeKey) {
+				dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
+			}
 			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model.options.throughput === "ON_DEMAND" ? {} : model.options);
 			// TODO: fix up the two lines below. Using too many `as` statements.
 			if ((throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput) {
 				dynamoIndexObject.ProvisionedThroughput = (throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput;
 			}
+		} else {
+			dynamoIndexObject.KeySchema.push({"AttributeName": this.getHashKey(), "KeyType": "HASH"});
+			dynamoIndexObject.KeySchema.push({"AttributeName": attributeValue, "KeyType": "RANGE"});
 		}
-		if (!accumulator[(indexValue.global ? "GlobalSecondaryIndexes" : "LocalSecondaryIndexes")]) {
-			accumulator[(indexValue.global ? "GlobalSecondaryIndexes" : "LocalSecondaryIndexes")] = [];
+		const accumulatorKey = indexValue.global ? "GlobalSecondaryIndexes" : "LocalSecondaryIndexes";
+		if (!accumulator[accumulatorKey]) {
+			accumulator[accumulatorKey] = [];
 		}
-		accumulator[(indexValue.global ? "GlobalSecondaryIndexes" : "LocalSecondaryIndexes")].push(dynamoIndexObject);
+		accumulator[accumulatorKey].push(dynamoIndexObject);
 
 		return accumulator;
 	}, {});

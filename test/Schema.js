@@ -303,8 +303,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							]
 						}
@@ -343,8 +347,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							]
 						},
@@ -355,8 +363,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "name",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "name",
+									"KeyType": "RANGE"
 								}
 							]
 						}
@@ -391,8 +403,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							]
 						}
@@ -661,8 +677,12 @@ describe("Schema", () => {
 							"IndexName": "ageLocalIndex",
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							],
 							"Projection": {
