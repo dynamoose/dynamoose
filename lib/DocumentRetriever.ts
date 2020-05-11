@@ -286,18 +286,18 @@ DocumentRetriever.prototype.all = function(this: DocumentRetriever, delay = 0, m
 	return this;
 };
 
-export interface Scan extends DocumentRetriever,  BasicOperators<Scan>{
-	exec(): Promise<ScanResponse<Document[]>>;
+export interface Scan<T extends Document> extends DocumentRetriever,  BasicOperators<Scan<T>>{
+	exec(): Promise<ScanResponse<T[]>>;
 	exec(callback: CallbackType<ScanResponse<Document[]>, AWSError>): void;
 }
 
-export class Scan extends DocumentRetriever {
+export class Scan<T> extends DocumentRetriever {
 
 	exec(callback?: CallbackType<ScanResponse<Document[]>, AWSError>): Promise<ScanResponse<Document[]>> | void {
 		return super.exec(callback);
 	}
 
-	parallel(value: number): Scan {
+	parallel(value: number): Scan<T> {
 		this.settings.parallel = value;
 		return this;
 	}
@@ -307,12 +307,12 @@ export class Scan extends DocumentRetriever {
 	}
 }
 
-export interface Query extends DocumentRetriever,  BasicOperators<Query>{
-	exec(): Promise<QueryResponse<Document[]>>;
+export interface Query<T extends Document> extends DocumentRetriever,  BasicOperators<Query<T>>{
+	exec(): Promise<QueryResponse<T[]>>;
 	exec(callback: CallbackType<QueryResponse<Document[]>, AWSError>): void;
 }
 
-export class Query extends DocumentRetriever {
+export class Query<T extends Document> extends DocumentRetriever {
 	exec(callback?: CallbackType<QueryResponse<Document[]>, AWSError>): Promise<QueryResponse<Document[]>> | void {
 		return super.exec(callback);
 	}

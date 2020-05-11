@@ -77,8 +77,8 @@ export class Document {
 	}
 
 	static attributesWithSchema: (document: Document, model: Model<Document>) => string[];
-	static objectFromSchema: (object: any, model: Model<Document>, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
-	static prepareForObjectFromSchema: (object: any, model: Model<Document>, settings: DocumentObjectFromSchemaSettings) => any;
+	static objectFromSchema: (object: any, model: Model<Document,any>, settings?: DocumentObjectFromSchemaSettings) => Promise<any>;
+	static prepareForObjectFromSchema: (object: any, model: Model<Document,any>, settings: DocumentObjectFromSchemaSettings) => any;
 	conformToSchema: (this: Document, settings?: DocumentObjectFromSchemaSettings) => Promise<Document>;
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
 
