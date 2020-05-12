@@ -663,7 +663,7 @@ describe("Model", () => {
 						it("Should call updateTable to add multiple indexes correctly", async () => {
 							const tableName = "Cat";
 							let describeTableFunctionCalledTimes = 0;
-							let testUpdateTableParams = {};
+							const testUpdateTableParams = {};
 							describeTableFunction = () => {
 								++describeTableFunctionCalledTimes;
 								let obj;

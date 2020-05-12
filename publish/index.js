@@ -16,6 +16,42 @@ const os = require("os");
 const npmFetch = require("npm-registry-fetch");
 let package = require("../package.json");
 
+
+
+async function checkCleanWorkingDir() {
+	return (await git.status()).isClean();
+}
+function keypress() {
+	process.stdin.resume();
+	process.stdin.setRawMode(true);
+	return new Promise((resolve) => {
+		process.stdin.once("data", () => {
+			process.stdin.setRawMode(false);
+			resolve();
+			process.stdin.pause();
+		});
+	});
+}
+async function isPRMerged(pr) {
+	let data;
+	do {
+		data = (await octokit.pulls.get({
+			"owner": "dynamoose",
+			"repo": "dynamoose",
+			"pull_number": pr
+		})).data;
+		await utils.timeout(5000);
+	} while (!data.merged);
+}
+async function isReleaseSubmitted(release) {
+	try {
+		await npmFetch(`/dynamoose/${release}`);
+	} catch (e) {
+		await utils.timeout(5000);
+		return isReleaseSubmitted(release);
+	}
+}
+
 (async function main() {
 	console.log("Welcome to the Dynamoose Publisher!\n\n\n");
 	if (!await checkCleanWorkingDir()) {
@@ -175,36 +211,3 @@ let package = require("../package.json");
 	process.exit(0);
 })();
 
-async function checkCleanWorkingDir() {
-	return (await git.status()).isClean();
-}
-function keypress() {
-	process.stdin.resume();
-	process.stdin.setRawMode(true);
-	return new Promise((resolve) => {
-		process.stdin.once("data", () => {
-			process.stdin.setRawMode(false);
-			resolve();
-			process.stdin.pause();
-		});
-	});
-}
-async function isPRMerged(pr) {
-	let data;
-	do {
-		data = (await octokit.pulls.get({
-			"owner": "dynamoose",
-			"repo": "dynamoose",
-			"pull_number": pr
-		})).data;
-		await utils.timeout(5000);
-	} while (!data.merged);
-}
-async function isReleaseSubmitted(release) {
-	try {
-		await npmFetch(`/dynamoose/${release}`);
-	} catch (e) {
-		await utils.timeout(5000);
-		return isReleaseSubmitted(release);
-	}
-}
