@@ -79,41 +79,41 @@ describe("Query", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
-				it("Should return correct result", async () => {
+				it("Should return correct result", async() => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
-				it("Should return undefined for expired object", async () => {
+				it("Should return undefined for expired object", async() => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "ttl": {"N": "1"}}]});
 					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([]);
 				});
 
-				it("Should return expired object if returnExpired is not set", async () => {
+				it("Should return expired object if returnExpired is not set", async() => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "ttl": {"N": "1"}}]});
 					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}}, {"expires": {"ttl": 1000}});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "ttl": new Date(1000)}]);
 				});
 
-				it("Should return correct result if unknown properties are in DynamoDB", async () => {
+				it("Should return correct result if unknown properties are in DynamoDB", async() => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
-				it("Should return correct result if using custom types", async () => {
+				it("Should return correct result if using custom types", async() => {
 					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "birthday": Date});
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}]});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
 				});
 
-				it("Should return correct result for saveUnknown", async () => {
+				it("Should return correct result for saveUnknown", async() => {
 					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "index": {"global": true}}}, {"saveUnknown": true}));
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": 10}}]});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "age": 10}]);
 				});
 
-				it("Should return correct metadata in result", async () => {
+				it("Should return correct metadata in result", async() => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1});
 					const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
 					expect(result.lastKey).to.eql(undefined);
@@ -122,13 +122,13 @@ describe("Query", () => {
 					expect(result.timesQueried).to.eql(1);
 				});
 
-				it("Should return correct lastKey", async () => {
+				it("Should return correct lastKey", async() => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
 					const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
 					expect(result.lastKey).to.eql({"id": 5});
 				});
 
-				it("Should send correct request on query.exec", async () => {
+				it("Should send correct request on query.exec", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
 					expect(queryParams).to.eql({
@@ -144,7 +144,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec if querying main key", async () => {
+				it("Should send correct request on query.exec if querying main key", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": String, "age": Number});
 					await callType.func(Model.query("id").eq("HelloWorld").exec).bind(Model.query("id").eq("HelloWorld"))();
@@ -160,7 +160,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec if querying main key with range key", async () => {
+				it("Should send correct request on query.exec if querying main key with range key", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "rangeKey": true}, "age": Number});
 					await callType.func(Model.query("id").eq("HelloWorld").where("name").eq("Charlie").exec).bind(Model.query("id").eq("HelloWorld").where("name").eq("Charlie"))();
@@ -178,7 +178,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec if querying main key with range key as less than comparison", async () => {
+				it("Should send correct request on query.exec if querying main key with range key as less than comparison", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": String, "age": {"type": Number, "rangeKey": true}});
 					await callType.func(Model.query("id").eq("HelloWorld").where("age").lt(10).exec).bind(Model.query("id").eq("HelloWorld").where("age").lt(10))();
@@ -196,7 +196,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec using range key as less than comparison", async () => {
+				it("Should send correct request on query.exec using range key as less than comparison", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").lt(10).exec).bind(Model.query("name").eq("Charlie").where("age").lt(10))();
@@ -215,7 +215,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec using range key as between comparison", async () => {
+				it("Should send correct request on query.exec using range key as between comparison", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").between(10, 20).exec).bind(Model.query("name").eq("Charlie").where("age").between(10, 20))();
@@ -235,7 +235,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec using range key as exists comparison", async () => {
+				it("Should send correct request on query.exec using range key as exists comparison", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").exists().exec).bind(Model.query("name").eq("Charlie").where("age").exists())();
@@ -254,7 +254,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec using range key as contains comparison", async () => {
+				it("Should send correct request on query.exec using range key as contains comparison", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").contains(10).exec).bind(Model.query("name").eq("Charlie").where("age").contains(10))();
@@ -274,7 +274,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec using range key as beginsWith comparison", async () => {
+				it("Should send correct request on query.exec using range key as beginsWith comparison", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					await callType.func(Model.query("name").eq("Charlie").where("age").beginsWith(10).exec).bind(Model.query("name").eq("Charlie").where("age").beginsWith(10))();
@@ -293,7 +293,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec for one object passed in", async () => {
+				it("Should send correct request on query.exec for one object passed in", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query({"name": "Charlie"}).exec).bind(Model.query({"name": "Charlie"}))();
 					expect(queryParams).to.eql({
@@ -309,7 +309,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec for one object passed in with multiple filters", async () => {
+				it("Should send correct request on query.exec for one object passed in with multiple filters", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query({"id": {"le": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.query({"id": {"le": 5}, "name": {"eq": "Charlie"}}))();
 					expect(queryParams).to.eql({
@@ -328,7 +328,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec for one object passed in and multiple indexes but only one equals", async () => {
+				it("Should send correct request on query.exec for one object passed in and multiple indexes but only one equals", async() => {
 					Model = dynamoose.model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true}}, "name": {"type": String, "index": {"global": true}}});
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query({"age": {"le": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.query({"age": {"le": 5}, "name": {"eq": "Charlie"}}))();
@@ -348,7 +348,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec for one object passed in and multiple indexes and multiple equals", async () => {
+				it("Should send correct request on query.exec for one object passed in and multiple indexes and multiple equals", async() => {
 					Model = dynamoose.model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true}}, "name": {"type": String, "index": {"global": true}}});
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query({"age": {"eq": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.query({"age": {"eq": 5}, "name": {"eq": "Charlie"}}))();
@@ -368,7 +368,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec with filters", async () => {
+				it("Should send correct request on query.exec with filters", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					const query = Model.query("name").eq("Charlie").filter("id").eq("test");
 					await callType.func(query.exec).bind(query)();
@@ -388,7 +388,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec with multiple filters", async () => {
+				it("Should send correct request on query.exec with multiple filters", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "age": Number, "breed": String});
 					const query = Model.query("name").eq("Charlie").filter("breed").eq("Cat").and().filter("age").gt(2);
@@ -411,7 +411,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec with filters and multiple values", async () => {
+				it("Should send correct request on query.exec with filters and multiple values", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					const query = Model.query("name").eq("Charlie").filter("id").between(1, 3);
 					await callType.func(query.exec).bind(query)();
@@ -432,14 +432,14 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should not include - in filter expression", async () => {
+				it("Should not include - in filter expression", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					const query = Model.query("name").eq("Charlie").filter("id").between(1, 3);
 					await callType.func(query.exec).bind(query)();
 					expect(queryParams.FilterExpression).to.not.include("-");
 				});
 
-				it("Should send correct request on query.exec with query condition", async () => {
+				it("Should send correct request on query.exec with query condition", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true, "rangeKey": "age"}}, "age": Number});
 					const query = Model.query("name").eq("Charlie").where("age").eq(10);
@@ -459,7 +459,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec for index with hash and range key but only querying hash key", async () => {
+				it("Should send correct request on query.exec for index with hash and range key but only querying hash key", async() => {
 					Model = dynamoose.model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true, "rangeKey": "name"}}, "name": String});
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query("age").eq(1).exec).bind(Model.query("age").eq(1))();
@@ -476,7 +476,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec when using nested groups with OR", async () => {
+				it("Should send correct request on query.exec when using nested groups with OR", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					const query = Model.query({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).or().where("id").eq(2));
 					await callType.func(query.exec).bind(query)();
@@ -508,7 +508,7 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should send correct request on query.exec when using nested groups with AND", async () => {
+				it("Should send correct request on query.exec when using nested groups with AND", async() => {
 					queryPromiseResolver = () => ({"Items": []});
 					const query = Model.query({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).and().where("id").eq(2));
 					await callType.func(query.exec).bind(query)();
@@ -540,14 +540,14 @@ describe("Query", () => {
 					});
 				});
 
-				it("Should return correct result with get function for attribute", async () => {
+				it("Should return correct result with get function for attribute", async() => {
 					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "index": {"global": true}, "get": (val) => `${val}-get`}}));
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
 
-				it("Should return correct result with async get function for attribute", async () => {
-					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "index": {"global": true}, "get": async (val) => `${val}-get`}}));
+				it("Should return correct result with async get function for attribute", async() => {
+					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "index": {"global": true}, "get": async(val) => `${val}-get`}}));
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
@@ -559,7 +559,7 @@ describe("Query", () => {
 					return expect(callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).to.be.rejectedWith("Index can't be found for query.");
 				});
 
-				it("Should throw error if not querying index hash key", async () => {
+				it("Should throw error if not querying index hash key", async() => {
 					Model = dynamoose.model("Cat", {"id": Number, "age": {"type": Number, "index": {"global": true, "rangeKey": "name"}}, "name": String});
 					queryPromiseResolver = () => ({"Items": []});
 					return expect(callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).to.be.rejectedWith("Index can't be found for query.");
@@ -663,7 +663,7 @@ describe("Query", () => {
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").eq(5).exec();
 			expect(queryParams).to.eql({
@@ -682,7 +682,7 @@ describe("Query", () => {
 			});
 		});
 
-		it("Should send correct request with not()", async () => {
+		it("Should send correct request with not()", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").not().eq(5).exec();
 			expect(queryParams).to.eql({
@@ -723,7 +723,7 @@ describe("Query", () => {
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").exists().exec();
 			expect(queryParams).to.eql({
@@ -741,7 +741,7 @@ describe("Query", () => {
 			});
 		});
 
-		it("Should send correct request with not()", async () => {
+		it("Should send correct request with not()", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").not().exists().exec();
 			expect(queryParams).to.eql({
@@ -781,7 +781,7 @@ describe("Query", () => {
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").lt(5).exec();
 			expect(queryParams).to.eql({
@@ -822,7 +822,7 @@ describe("Query", () => {
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").le(5).exec();
 			expect(queryParams).to.eql({
@@ -863,7 +863,7 @@ describe("Query", () => {
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").gt(5).exec();
 			expect(queryParams).to.eql({
@@ -904,7 +904,7 @@ describe("Query", () => {
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").ge(5).exec();
 			expect(queryParams).to.eql({
@@ -944,7 +944,7 @@ describe("Query", () => {
 			expect(query).to.throw("BEGINS_WITH can not follow not()");
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").beginsWith("test").exec();
 			expect(queryParams).to.eql({
@@ -985,7 +985,7 @@ describe("Query", () => {
 			expect(query.settings.condition.settings.pending).to.eql({});
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").contains(5).exec();
 			expect(queryParams).to.eql({
@@ -1004,7 +1004,7 @@ describe("Query", () => {
 			});
 		});
 
-		it("Should send correct request with not()", async () => {
+		it("Should send correct request with not()", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").not().contains(5).exec();
 			expect(queryParams).to.eql({
@@ -1044,7 +1044,7 @@ describe("Query", () => {
 			expect(query).to.throw("IN can not follow not()");
 		});
 
-		it("Should send correct request", async () => {
+		it("Should send correct request", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").in([10, 20]).exec();
 			expect(queryParams).to.eql({
@@ -1064,7 +1064,7 @@ describe("Query", () => {
 			});
 		});
 
-		it("Should send correct request for many values", async () => {
+		it("Should send correct request for many values", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").filter("age").in([10, 20, 30, 40]).exec();
 			expect(queryParams).to.eql({
@@ -1118,7 +1118,7 @@ describe("Query", () => {
 			expect(query.settings.limit).to.eql(5);
 		});
 
-		it("Should send correct request on query.exec", async () => {
+		it("Should send correct request on query.exec", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").limit(5).exec();
 			expect(queryParams.Limit).to.eql(5);
@@ -1135,7 +1135,7 @@ describe("Query", () => {
 			expect(query.settings.startAt).to.eql({"id": 5});
 		});
 
-		it("Should send correct request on query.exec", async () => {
+		it("Should send correct request on query.exec", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").startAt({"id": 5}).exec();
 			expect(queryParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
@@ -1146,7 +1146,7 @@ describe("Query", () => {
 			expect(query.settings.startAt).to.eql({"id": {"N": "5"}});
 		});
 
-		it("Should send correct request on query.exec if passing in DynamoDB object", async () => {
+		it("Should send correct request on query.exec if passing in DynamoDB object", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").startAt({"id": {"N": "5"}}).exec();
 			expect(queryParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
@@ -1163,7 +1163,7 @@ describe("Query", () => {
 			expect(query.settings.attributes).to.eql(["id"]);
 		});
 
-		it("Should send correct request on query.exec", async () => {
+		it("Should send correct request on query.exec", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id"]).exec();
 			expect(queryParams.AttributesToGet).to.eql(["id"]);
@@ -1190,13 +1190,13 @@ describe("Query", () => {
 			expect(query.settings.count).to.be.true;
 		});
 
-		it("Should send correct request on query.exec", async () => {
+		it("Should send correct request on query.exec", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").count().exec();
 			expect(queryParams.Select).to.eql("COUNT");
 		});
 
-		it("Should return correct result on query.exec", async () => {
+		it("Should return correct result on query.exec", async() => {
 			queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
 			const result = await Model.query("name").eq("Charlie").count().exec();
 			expect(result).to.eql({"count": 1, "queriedCount": 1});
@@ -1213,7 +1213,7 @@ describe("Query", () => {
 			expect(query.settings.consistent).to.be.true;
 		});
 
-		it("Should send correct request on query.exec", async () => {
+		it("Should send correct request on query.exec", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").consistent().exec();
 			expect(queryParams.ConsistentRead).to.be.true;
@@ -1230,7 +1230,7 @@ describe("Query", () => {
 			expect(query.settings.index).to.eql("customIndex");
 		});
 
-		it("Should send correct request on query.exec", async () => {
+		it("Should send correct request on query.exec", async() => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").using("customIndex").exec();
 			expect(queryParams.IndexName).to.eql("customIndex");
@@ -1258,8 +1258,8 @@ describe("Query", () => {
 			expect(Model.query().all(0, 5).settings.all).to.eql({"delay": 0, "max": 5});
 		});
 
-		it("Should handle delay correctly on query.exec", async () => {
-			queryPromiseResolver = async () => ({"Items": [], "LastEvaluatedKey": {"id": {"S": "test"}}});
+		it("Should handle delay correctly on query.exec", async() => {
+			queryPromiseResolver = async() => ({"Items": [], "LastEvaluatedKey": {"id": {"S": "test"}}});
 
 			const start = Date.now();
 			await Model.query("name").eq("Charlie").all(10, 2).exec();
@@ -1267,9 +1267,9 @@ describe("Query", () => {
 			expect(end - start).to.be.at.least(19);
 		});
 
-		it("Should send correct result on query.exec", async () => {
+		it("Should send correct result on query.exec", async() => {
 			let count = 0;
-			queryPromiseResolver = async () => {
+			queryPromiseResolver = async() => {
 				const obj = ({"Items": [{"id": ++count}], "Count": 1, "QueriedCount": 2});
 				if (count < 2) {
 					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};

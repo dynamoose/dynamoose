@@ -61,7 +61,7 @@ describe("Transaction", () => {
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.be.rejectedWith("Model \"Credit\" not found. Please register the model with dynamoose before using it in transactions.");
 			});
 
-			it("Should send correct parameters to AWS", async () => {
+			it("Should send correct parameters to AWS", async() => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
 					"transactGetItems": (params) => {
@@ -97,7 +97,7 @@ describe("Transaction", () => {
 				});
 			});
 
-			it("Should send correct parameters to AWS for put items", async () => {
+			it("Should send correct parameters to AWS for put items", async() => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
 					"transactWriteItems": (params) => {
@@ -160,7 +160,7 @@ describe("Transaction", () => {
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.eventually.eql(null);
 			});
 
-			it("Should send correct parameters to AWS for custom type of write", async () => {
+			it("Should send correct parameters to AWS for custom type of write", async() => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
 					"transactWriteItems": (params) => {
@@ -177,7 +177,7 @@ describe("Transaction", () => {
 				expect(transactParams).to.be.an("object");
 			});
 
-			it("Should send correct parameters to AWS for custom type of get", async () => {
+			it("Should send correct parameters to AWS for custom type of get", async() => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
 					"transactGetItems": (params) => {

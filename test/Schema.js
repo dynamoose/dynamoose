@@ -711,7 +711,7 @@ describe("Schema", () => {
 		];
 
 		tests.forEach((test) => {
-			it(test.name, async () => {
+			it(test.name, async() => {
 				expect(await (new dynamoose.Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}}))).to.eql(test.output);
 			});
 		});
@@ -854,7 +854,7 @@ describe("Schema", () => {
 			{
 				"name": "Should return default as string for attribute if default is an async function",
 				"input": ["default", "id"],
-				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
+				"schema": {"id": {"type": String, "default": async() => "Hello World"}},
 				"output": "Hello World"
 			},
 			{
@@ -899,8 +899,8 @@ describe("Schema", () => {
 			{
 				"name": "Should return validator as function for attribute if validator is an async function",
 				"input": ["validate", "id", {"returnFunction": true}],
-				"schema": {"id": {"type": String, "validate": async () => "Hello World"}},
-				"output": async () => "Hello World"
+				"schema": {"id": {"type": String, "validate": async() => "Hello World"}},
+				"output": async() => "Hello World"
 			},
 			{
 				"name": "Should return validator as function for attribute if validator is a function that returns a promise",
@@ -998,7 +998,7 @@ describe("Schema", () => {
 		];
 
 		tests.forEach((test) => {
-			it(test.name, async () => {
+			it(test.name, async() => {
 				const schema = new dynamoose.Schema(test.schema);
 				const output = await (schema.getAttributeSettingValue(...test.input));
 				if (typeof output !== "function") {

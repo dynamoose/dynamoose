@@ -6,7 +6,7 @@ const utils = require("../dist/utils");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const retrieveInformation = require("./information/retrieve");
-const { Octokit } = require("@octokit/rest");
+const {Octokit} = require("@octokit/rest");
 const octokit = new Octokit({
 	"auth": process.env.GITHUBAUTH
 });
@@ -120,7 +120,7 @@ async function isReleaseSubmitted(release) {
 	await git.checkoutBranch(branch, results.branch);
 	branchSpinner.succeed(`Created branch ${branch}`);
 	// Update version in package.json
-	const updateVersion = async (file) => {
+	const updateVersion = async(file) => {
 		const currentPath = path.join(__dirname, "..", file);
 		let fileContents = await fs.readFile(currentPath);
 		const fileContentsJSON = JSON.parse(fileContents);

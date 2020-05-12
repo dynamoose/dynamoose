@@ -1,4 +1,4 @@
-import { ModelOptions, ModelOptionsOptional } from ".";
+import {ModelOptions, ModelOptionsOptional} from ".";
 
 export const original: ModelOptions = {
 	"create": true,

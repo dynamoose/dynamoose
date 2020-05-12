@@ -14,7 +14,7 @@ describe("Timeout", () => {
 		expect(myTimeout).to.be.a("promise");
 	});
 
-	it("Should resolve in x milliseconds", async () => {
+	it("Should resolve in x milliseconds", async() => {
 		const ms = 10;
 		const timeA = Date.now();
 		await utils.timeout(ms);

@@ -2,15 +2,15 @@ import aws = require("./aws");
 import ddb = require("./aws/ddb/internal");
 import utils = require("./utils");
 import Error = require("./Error");
-import Internal  = require("./Internal");
+import Internal = require("./Internal");
 import {Model, ModelExpiresSettings} from "./Model";
 import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
-import { DynamoDB, AWSError } from "aws-sdk";
-import { ValueType } from "./Schema";
-import { CallbackType, ObjectType } from "./General";
+import {DynamoDB, AWSError} from "aws-sdk";
+import {ValueType} from "./Schema";
+import {CallbackType, ObjectType} from "./General";
 
 export interface DocumentSaveSettings {
 	overwrite?: boolean;
@@ -83,7 +83,7 @@ export class Document {
 	toDynamo: (this: Document, settings?: Partial<DocumentObjectFromSchemaSettings>) => Promise<any>;
 
 	// Original
-	original (): ObjectType | null {
+	original(): ObjectType | null {
 		return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
 	}
 
@@ -144,7 +144,7 @@ export class Document {
 			const localCallback: CallbackType<Document, AWSError> = callback as CallbackType<Document, AWSError>;
 			promise.then(() => {this[internalProperties].storedInDynamo = true; localCallback(null, this);}).catch((error) => callback(error));
 		} else {
-			return (async (): Promise<Document> => {
+			return (async(): Promise<Document> => {
 				await promise;
 				this[internalProperties].storedInDynamo = true;
 				return this;
@@ -188,7 +188,7 @@ Document.attributesWithSchema = function(document: Document, model: Model<Docume
 		});
 	});
 	// explore the tree
-	function traverse (node, treeNode, outPath, callback): void {
+	function traverse(node, treeNode, outPath, callback): void {
 		callback(outPath);
 		if (Object.keys(treeNode).length === 0) { // a leaf
 			return;
@@ -283,7 +283,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 	keysToDelete.reverse().forEach((key) => utils.object.delete(returnObject, key));
 
 	if (settings.defaults || settings.forceDefault) {
-		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
+		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async(key) => {
 			const value = utils.object.get(returnObject, key);
 			if (value === dynamooseUndefined) {
 				utils.object.set(returnObject, key, undefined);
@@ -335,7 +335,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 	});
 	if (settings.modifiers) {
 		await Promise.all(settings.modifiers.map((modifier) => {
-			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
+			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async(key) => {
 				const value = utils.object.get(returnObject, key);
 				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
 				const isValueUndefined = typeof value === "undefined" || value === null;
@@ -346,7 +346,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 		}));
 	}
 	if (settings.validate) {
-		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
+		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async(key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
@@ -372,8 +372,8 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 		if (settings.required === "nested") {
 			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute.startsWith(key)));
 		}
-		await Promise.all(attributesToCheck.map(async (key) => {
-			const check = async (): Promise<void> => {
+		await Promise.all(attributesToCheck.map(async(key) => {
+			const check = async(): Promise<void> => {
 				const value = utils.object.get(returnObject, key);
 				await model.schema.requiredCheck(key, (value as ValueType));
 			};
@@ -392,7 +392,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 		}));
 	}
 	if (settings.enum) {
-		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
+		await Promise.all(Document.attributesWithSchema(returnObject, model).map(async(key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {

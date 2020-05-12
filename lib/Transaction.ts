@@ -30,7 +30,7 @@ export default (transactions: any[], settings: TransactionSettings = {"return": 
 		transactions = null;
 	}
 
-	const promise = (async (): Promise<any> => {
+	const promise = (async(): Promise<any> => {
 		if (!Array.isArray(transactions) || transactions.length <= 0) {
 			throw new Error.InvalidParameter("You must pass in an array with items for the transactions parameter.");
 		}

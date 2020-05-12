@@ -67,7 +67,7 @@ function convertObjectToKey(this: Model<DocumentCarrier>, key: InputKey): KeyObj
 
 // Utility functions
 async function getTableDetails(model: Model<DocumentCarrier>, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
-	const func = async (): Promise<void> => {
+	const func = async(): Promise<void> => {
 		const tableDetails: DynamoDB.DescribeTableOutput = await ddb("describeTable", {"TableName": model.name});
 		model.latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
 	};
@@ -180,7 +180,7 @@ async function updateTable(model: Model<DocumentCarrier>): Promise<void> {
 		const tableDetails = await getTableDetails(model);
 		const existingIndexes = tableDetails.Table.GlobalSecondaryIndexes;
 		const updateIndexes = await utils.dynamoose.index_changes(model, existingIndexes);
-		await updateIndexes.reduce(async (existingFlow, index) => {
+		await updateIndexes.reduce(async(existingFlow, index) => {
 			await existingFlow;
 			const params: DynamoDB.UpdateTableInput = {
 				"TableName": model.name
@@ -326,7 +326,7 @@ export class Model<T extends DocumentCarrier> {
 			const settingsIndex = currentValue.settingsIndex || 1;
 			const func = currentValue.function || this[key].bind(this);
 
-			accumulator[key] = async (...args): Promise<DynamoDB.TransactWriteItem> => {
+			accumulator[key] = async(...args): Promise<DynamoDB.TransactWriteItem> => {
 				if (typeof args[args.length - 1] === "function") {
 					console.warn("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 					args.pop();
@@ -382,7 +382,7 @@ export class Model<T extends DocumentCarrier> {
 		const keyObjects = keys.map((key) => convertObjectToKey.bind(this)(key));
 
 		const documentify = (document: DynamoDB.AttributeMap): Promise<DocumentCarrier> => (new this.Document(document as any, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
-		const prepareResponse = async (response: DynamoDB.BatchGetItemOutput): Promise<ModelBatchGetDocumentsResponse<DocumentCarrier>> => {
+		const prepareResponse = async(response: DynamoDB.BatchGetItemOutput): Promise<ModelBatchGetDocumentsResponse<DocumentCarrier>> => {
 			const tmpResult = await Promise.all(response.Responses[this.name].map((item) => documentify(item)));
 			const unprocessedArray = response.UnprocessedKeys[this.name] ? response.UnprocessedKeys[this.name].Keys : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item)));
@@ -424,7 +424,7 @@ export class Model<T extends DocumentCarrier> {
 			const localCallback: CallbackType<DocumentCarrier[], AWSError> = callback as CallbackType<DocumentCarrier[], AWSError>;
 			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => localCallback(error));
 		} else {
-			return (async (): Promise<any> => {
+			return (async(): Promise<any> => {
 				const response = await promise;
 				return prepareResponse(response);
 			})();
@@ -447,7 +447,7 @@ export class Model<T extends DocumentCarrier> {
 			settings = {"return": "response"};
 		}
 
-		const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
+		const prepareResponse = async(response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
 			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this.name] ? response.UnprocessedItems[this.name] : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item.PutRequest.Item)));
 			return documents.reduce((result: {unprocessedItems: ObjectType[]}, document) => {
@@ -459,9 +459,9 @@ export class Model<T extends DocumentCarrier> {
 			}, {"unprocessedItems": []}) as {unprocessedItems: ObjectType[]};
 		};
 
-		const paramsPromise: Promise<DynamoDB.BatchWriteItemInput> = (async (): Promise<DynamoDB.BatchWriteItemInput> => ({
+		const paramsPromise: Promise<DynamoDB.BatchWriteItemInput> = (async(): Promise<DynamoDB.BatchWriteItemInput> => ({
 			"RequestItems": {
-				[this.name]: await Promise.all(documents.map(async (document) => ({
+				[this.name]: await Promise.all(documents.map(async(document) => ({
 					"PutRequest": {
 						"Item": await (new this.Document(document as any)).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]})
 					}
@@ -483,7 +483,7 @@ export class Model<T extends DocumentCarrier> {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, AWSError> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, AWSError>;
 			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => callback(error));
 		} else {
-			return (async (): Promise<{unprocessedItems: ObjectType[]}> => {
+			return (async(): Promise<{unprocessedItems: ObjectType[]}> => {
 				const response = await promise;
 				return prepareResponse(response);
 			})();
@@ -508,7 +508,7 @@ export class Model<T extends DocumentCarrier> {
 
 		const keyObjects: KeyObject[] = keys.map((key) => convertObjectToKey.bind(this)(key));
 
-		const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
+		const prepareResponse = async(response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
 			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this.name] ? response.UnprocessedItems[this.name] : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Document.fromDynamo(item.DeleteRequest.Key)));
 			return keyObjects.reduce((result, key) => {
@@ -544,7 +544,7 @@ export class Model<T extends DocumentCarrier> {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, AWSError> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, AWSError>;
 			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => localCallback(error));
 		} else {
-			return (async (): Promise<{unprocessedItems: ObjectType[]}> => {
+			return (async(): Promise<{unprocessedItems: ObjectType[]}> => {
 				const response = await promise;
 				return prepareResponse(response);
 			})();
@@ -590,13 +590,13 @@ export class Model<T extends DocumentCarrier> {
 
 		let index = 0;
 		// TODO: change the line below to not be partial
-		const getUpdateExpressionObject: () => Promise<any> = async () => {
+		const getUpdateExpressionObject: () => Promise<any> = async() => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 				{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
 				{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}}
 			].reverse();
-			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
+			const returnObject = await Object.keys(updateObj).reduce(async(accumulatorPromise, key) => {
 				const accumulator = await accumulatorPromise;
 				let value = updateObj[key];
 
@@ -664,7 +664,7 @@ export class Model<T extends DocumentCarrier> {
 				}
 
 				return accumulator;
-			}, Promise.resolve((async (): Promise<{ExpressionAttributeNames: ObjectType; ExpressionAttributeValues: ObjectType; UpdateExpression: ObjectType}> => {
+			}, Promise.resolve((async(): Promise<{ExpressionAttributeNames: ObjectType; ExpressionAttributeValues: ObjectType; UpdateExpression: ObjectType}> => {
 				const obj = {
 					"ExpressionAttributeNames": {},
 					"ExpressionAttributeValues": {},
@@ -690,7 +690,7 @@ export class Model<T extends DocumentCarrier> {
 				return obj;
 			})()));
 
-			await Promise.all(this.schema.attributes().map(async (attribute) => {
+			await Promise.all(this.schema.attributes().map(async(attribute) => {
 				const defaultValue = await this.schema.defaultCheck(attribute, undefined, {"forceDefault": true});
 				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
@@ -738,7 +738,7 @@ export class Model<T extends DocumentCarrier> {
 
 		const documentify = (document): Promise<any> => (new this.Document(document, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"});
 		const localSettings: ModelUpdateSettings = settings;
-		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async () => ({
+		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async() => ({
 			"Key": this.Document.objectToDynamo(keyObj),
 			"ReturnValues": "ALL_NEW",
 			...utils.merge_objects.main({"combineMethod": "object_combine"})((localSettings.condition ? localSettings.condition.requestObject({"index": {"start": index, "set": (i): void => {index = i;}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}), await getUpdateExpressionObject()),
@@ -758,7 +758,7 @@ export class Model<T extends DocumentCarrier> {
 		if (callback) {
 			promise.then((response) => response.Attributes ? documentify(response.Attributes) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
 		} else {
-			return (async (): Promise<any> => {
+			return (async(): Promise<any> => {
 				const response = await promise;
 				return response.Attributes ? await documentify(response.Attributes) : undefined;
 			})();
@@ -815,7 +815,7 @@ export class Model<T extends DocumentCarrier> {
 		if (callback) {
 			promise.then(() => callback()).catch((error) => callback(error));
 		} else {
-			return (async (): Promise<void> => {
+			return (async(): Promise<void> => {
 				await promise;
 			})();
 		}
@@ -858,7 +858,7 @@ export class Model<T extends DocumentCarrier> {
 			const localCallback: CallbackType<DocumentCarrier, AWSError> = callback as CallbackType<DocumentCarrier, AWSError>;
 			promise.then((response) => response.Item ? documentify(response.Item) : undefined).then((response) => localCallback(null, response)).catch((error) => callback(error));
 		} else {
-			return (async (): Promise<any> => {
+			return (async(): Promise<any> => {
 				const response = await promise;
 				return response.Item ? await documentify(response.Item) : undefined;
 			})();
@@ -869,10 +869,10 @@ export class Model<T extends DocumentCarrier> {
 Model.defaults = originalDefaults;
 
 
-Model.prototype.scan = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Scan {
+Model.prototype.scan = function(this: Model<DocumentCarrier>, object?: ConditionInitalizer): Scan {
 	return new Scan(this, object);
 };
-Model.prototype.query = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Query {
+Model.prototype.query = function(this: Model<DocumentCarrier>, object?: ConditionInitalizer): Query {
 	return new Query(this, object);
 };
 
@@ -880,10 +880,10 @@ Model.prototype.query = function (this: Model<DocumentCarrier>, object?: Conditi
 const customMethodFunctions = (type: "model" | "document"): {set: (name: string, fn: FunctionType) => void; delete: (name: string) => void} => {
 	const entryPoint = (self: Model<DocumentCarrier>): DocumentCarrier | typeof DocumentCarrier => type === "document" ? self.Document.prototype : self.Document;
 	return {
-		"set": function (this: Model<DocumentCarrier>, name: string, fn): void {
+		"set": function(this: Model<DocumentCarrier>, name: string, fn): void {
 			const self: Model<DocumentCarrier> = this;
 			if (!entryPoint(this)[name] || (entryPoint(this)[name][Internal.General.internalProperties] && entryPoint(this)[name][Internal.General.internalProperties].type === "customMethod")) {
-				entryPoint(this)[name] = function (...args): Promise<any> {
+				entryPoint(this)[name] = function(...args): Promise<any> {
 					const bindObject = type === "document" ? this : self.Document;
 					const cb = typeof args[args.length - 1] === "function" ? args[args.length - 1] : undefined;
 					if (cb) {
@@ -909,7 +909,7 @@ const customMethodFunctions = (type: "model" | "document"): {set: (name: string,
 				entryPoint(this)[name][Internal.General.internalProperties] = {"type": "customMethod"};
 			}
 		},
-		"delete": function (this: Model<DocumentCarrier>, name: string): void {
+		"delete": function(this: Model<DocumentCarrier>, name: string): void {
 			if (entryPoint(this)[name] && entryPoint(this)[name][Internal.General.internalProperties] && entryPoint(this)[name][Internal.General.internalProperties].type === "customMethod") {
 				entryPoint(this)[name] = undefined;
 			}

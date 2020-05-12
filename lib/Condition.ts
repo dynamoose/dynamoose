@@ -3,7 +3,7 @@ import CustomError = require("./Error");
 import utils = require("./utils");
 const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
-import { ObjectType } from "./General";
+import {ObjectType} from "./General";
 
 const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
@@ -164,7 +164,7 @@ function finalizePending(instance: Condition): void {
 	instance.settings.pending = {};
 }
 
-Condition.prototype.parenthesis = Condition.prototype.group = function (this: Condition, value: Condition | ConditionFunction): Condition {
+Condition.prototype.parenthesis = Condition.prototype.group = function(this: Condition, value: Condition | ConditionFunction): Condition {
 	value = typeof value === "function" ? value(new Condition()) : value;
 	this.settings.conditions.push(value.settings.conditions);
 	return this;

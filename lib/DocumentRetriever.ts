@@ -4,8 +4,8 @@ import utils = require("./utils");
 import {Condition, ConditionInitalizer, ConditionFunction} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
-import { CallbackType, ObjectType } from "./General";
-import { AWSError } from "aws-sdk";
+import {CallbackType, ObjectType} from "./General";
+import {AWSError} from "aws-sdk";
 
 enum DocumentRetrieverTypes {
 	scan = "scan",
@@ -42,7 +42,7 @@ abstract class DocumentRetriever {
 	using: (this: DocumentRetriever, value: string) => DocumentRetriever;
 	exec(this: DocumentRetriever, callback?: any): any {
 		let timesRequested = 0;
-		const prepareForReturn = async (result): Promise<any> => {
+		const prepareForReturn = async(result): Promise<any> => {
 			if (Array.isArray(result)) {
 				result = utils.merge_objects(...result);
 			}
@@ -52,7 +52,7 @@ abstract class DocumentRetriever {
 					[`${this.internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => await ((new this.internalSettings.model.Document(item, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"}))))).filter((a) => Boolean(a));
+			const array: any = (await Promise.all(result.Items.map(async(item) => await ((new this.internalSettings.model.Document(item, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"}))))).filter((a) => Boolean(a));
 			array.lastKey = result.LastEvaluatedKey ? (Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this.internalSettings.model.Document.fromDynamo(key)) : this.internalSettings.model.Document.fromDynamo(result.LastEvaluatedKey)) : undefined;
 			array.count = result.Count;
 			array[`${this.internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`];
@@ -65,7 +65,7 @@ abstract class DocumentRetriever {
 				timesRequested++;
 
 				if (this.settings.all) {
-					promise = promise.then(async (result) => {
+					promise = promise.then(async(result) => {
 						if (this.settings.all.delay && this.settings.all.delay > 0) {
 							await utils.timeout(this.settings.all.delay);
 						}
@@ -104,7 +104,7 @@ abstract class DocumentRetriever {
 		if (callback) {
 			promise.then((result) => prepareForReturn(result)).then((result) => callback(null, result)).catch((error) => callback(error));
 		} else {
-			return (async (): Promise<any> => {
+			return (async(): Promise<any> => {
 				const result = await promise;
 				const finalResult = await prepareForReturn(result);
 				return finalResult;
