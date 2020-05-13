@@ -85,6 +85,8 @@ This function will limit which attributes DynamoDB returns for each item in the 
 Cat.query("name").eq("Will").attributes(["id", "name"]); // Return all documents but only return the `id` & `name` properties for each item
 ```
 
+This function uses the `ProjectionExpression` DynamoDB property to save bandwidth and not send the entire item over the wire.
+
 ## query.count()
 
 Instead of returning an array of documents this function will cause the query operation to return a special object with the count information for the query. The response you will receive from the query operation with this setting will be an object with the properties `count` & `queriedCount`, which have the same values as described in [`query.exec([callback])`](#queryexeccallback).
