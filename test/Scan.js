@@ -608,9 +608,16 @@ describe("Scan", () => {
 
 		it("Should send correct request on scan.exec", async () => {
 			scanPromiseResolver = () => ({"Items": []});
-			await Model.scan().attributes(["id"]).exec();
-			expect(scanParams.AttributesToGet).to.eql(["id"]);
+			await Model.scan("name").eq("Charlie").attributes(["id"]).exec();
+			expect(scanParams.ProjectionExpression).to.eql("id");
 		});
+
+		it("Should send correct request on scan.exec with multiple attributes", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan("name").eq("Charlie").attributes(["id", "name"]).exec();
+			expect(scanParams.ProjectionExpression).to.eql("id, name");
+		});
+
 	});
 
 	describe("scan.parallel", () => {
