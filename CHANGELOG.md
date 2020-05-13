@@ -2,6 +2,25 @@
 
 ---
 
+## Version 2.2.0
+
+This release adds a few key features to improve your Dynamoose workflow.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added support for `query.sort`
+- Added support for only passing model name into `dynamoose.model` and having it retrieve the registered model that was already registered previously
+- Added support for passing original value into `set` attribute setting function
+- Added attributes setting to `Model.get` to only retrieve certain attributes
+
+### Bug Fixes
+
+- Fixed an issue where `document.original` would return a DynamoDB object and not a parsed object in certain cases
+
+---
+
 ## Version 2.1.3
 
 This release fixes some minor bugs.
