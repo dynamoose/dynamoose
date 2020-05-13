@@ -4,7 +4,7 @@ import utils = require("./utils");
 import {Condition, ConditionInitalizer, ConditionFunction} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
-import { CallbackType, ObjectType } from "./General";
+import { CallbackType, ObjectType, SortOrder } from "./General";
 import { AWSError } from "aws-sdk";
 
 enum DocumentRetrieverTypes {
@@ -31,6 +31,7 @@ abstract class DocumentRetriever {
 		consistent?: boolean;
 		count?: boolean;
 		parallel?: number;
+		sort?: SortOrder;
 	};
 	getRequest: (this: DocumentRetriever) => Promise<any>;
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
@@ -262,6 +263,9 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 	if (this.settings.parallel) {
 		object.TotalSegments = this.settings.parallel;
 	}
+	if (this.settings.sort === SortOrder.descending) {
+		object.ScanIndexForward = false;
+	}
 
 	if (object.FilterExpression) {
 		object.FilterExpression = utils.dynamoose.convertConditionArrayRequestObjectToString(object.FilterExpression);
@@ -333,6 +337,11 @@ export class Query extends DocumentRetriever {
 	exec(callback: CallbackType<QueryResponse<Document[]>, AWSError>): void;
 	exec(callback?: CallbackType<QueryResponse<Document[]>, AWSError>): Promise<QueryResponse<Document[]>> | void {
 		return super.exec(callback);
+	}
+
+	sort(order: SortOrder): Query {
+		this.settings.sort = order;
+		return this;
 	}
 
 	constructor(model: Model<Document>, object?: ConditionInitalizer) {
