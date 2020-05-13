@@ -1,6 +1,6 @@
 The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save documents in the database.
 
-## dynamoose.model(name, schema[, config])
+## dynamoose.model(name, [schema][, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
@@ -14,6 +14,12 @@ const Cat = dynamoose.model("Cat", {"name": String}, {"create": false});
 
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
+```
+
+If you don't pass the `schema` parameter it is required that you have an existing model already registed with that name. This will use the existing model already registered.
+
+```js
+const Cat = dynamoose.model("Cat"); // Will reference existing model, or if no model exists already with name `Cat` it will throw an error.
 ```
 
 The `config` parameter is an object used to customize settings for the model.
@@ -131,6 +137,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
+| attributes | What document attributes should be retrieved & returned. This will use the underlying `ProjectionExpression` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});

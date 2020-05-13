@@ -7,6 +7,7 @@ const Error = require("../dist/Error");
 const Internal = require("../dist/Internal");
 const utils = require("../dist/utils");
 const util = require("util");
+const ModelStore = require("../dist/ModelStore");
 
 describe("Model", () => {
 	beforeEach(() => {
@@ -25,12 +26,28 @@ describe("Model", () => {
 	});
 
 	describe("Initialization", () => {
-		it("Should throw an error if no schema is passed in", () => {
+		it("Should throw an error if no schema is passed in and no existing model in store", () => {
 			expect(() => dynamoose.model("Cat")).to.throw(Error.MissingSchemaError);
+			expect(() => dynamoose.model("Cat")).to.throw("Schema hasn't been registered for model \"Cat\".\nUse \"dynamoose.model(name, schema)\"");
 		});
 
 		it("Should throw same error as no schema if nothing passed in", () => {
 			expect(() => dynamoose.model()).to.throw(Error.MissingSchemaError);
+			expect(() => dynamoose.model()).to.throw("Schema hasn't been registered for model \"undefined\".\nUse \"dynamoose.model(name, schema)\"");
+		});
+
+		it("Should return existing model if already exists and not passing in schema", () => {
+			const User = dynamoose.model("User", {"id": String});
+			const UserB = dynamoose.model("User");
+
+			expect(UserB).to.eql(User);
+		});
+
+		it("Should throw error if passing in model with same name as existing model", () => {
+			dynamoose.model("User", {"id": String});
+			dynamoose.model("User", {"id": String, "name": String});
+
+			expect(ModelStore("User").schema.schemaObject).to.eql({"id": String, "name": String});
 		});
 
 		it("Should create a schema if not passing in schema instance", () => {
@@ -1059,6 +1076,36 @@ describe("Model", () => {
 							}
 						},
 						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we only request a certain attribute", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id"
+					});
+				});
+
+				it("Should send correct params to getItem if we request certain attributes", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id", "name"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id, name"
 					});
 				});
 

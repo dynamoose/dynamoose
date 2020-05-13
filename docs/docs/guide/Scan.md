@@ -86,6 +86,8 @@ This function will limit which attributes DynamoDB returns for each item in the 
 Cat.scan().attributes(["id", "name"]); // Return all documents but only return the `id` & `name` properties for each item
 ```
 
+This function uses the `ProjectionExpression` DynamoDB property to save bandwidth and not send the entire item over the wire.
+
 ## scan.parallel(parallelScans)
 
 This function will run parallel scans on your table. The `parallelScans` parameter should be a number representing how many concurrent scans you wish to preform on the table. The results will be merged into a single array, with the `count`, `scannedCount`, & `timesScanned` properties being summed in the response. In the event there are multiple `lastKey` properties these will be merged into an array of objects.

@@ -69,6 +69,15 @@ module.exports = {
 						}
 					],
 				},
+				{
+					"title": "Infrastructure Providers",
+					"items": [
+						{
+							"label": "Vercel",
+							"href": "https://vercel.com/?utc_source=dynamoose"
+						}
+					]
+				},
 			],
 		},
 		"algolia": {
