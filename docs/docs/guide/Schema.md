@@ -326,6 +326,17 @@ You can use a set function on an attribute to be run whenever saving a document 
 }
 ```
 
+Unlike `get` this method will additionally pass in the original value as the second parameter (if avaiable). Internally Dynamoose uses the [`document.original()`](Document#documentoriginal) method to access the original value. This means that using [`Model.batchPut`](Model#modelbatchputdocuments-settings-callback), [`Model.update`](Model#modelupdatekey-updateobj-settings-callback) or any other document save method that does not have access to [`document.original()`](Document#documentoriginal) this second parameter will be `undefined`.
+
+```js
+{
+	"name": {
+		"type": String,
+		"set": (newValue, oldValue) => `${newValue.charAt(0).toUpperCase()}${newValue.slice(1)}-${oldValue.charAt(0).toUpperCase()}${oldValue.slice(1)}` // Prepend the newValue to the oldValue (split by a `-`) and capitalize first letter of each when saving to database
+	}
+}
+```
+
 ### index: boolean | object | array
 
 You can define indexes on properties to be created or updated upon model initialization. If you pass in an array for the value of this setting it must be an array of index objects. By default no indexes are specified on the attribute.

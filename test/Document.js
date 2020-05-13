@@ -1004,6 +1004,35 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should pass in correct original variable into set function", async () => {
+					let newVal, oldVal;
+					aws.ddb.set({
+						"putItem": (params) => {
+							putParams.push(params);
+							return {"promise": putItemFunction};
+						},
+						"getItem": () => ({
+							"promise": () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}}})
+						})
+					});
+
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": (newValA, oldValA) => {
+						newVal = newValA;
+						oldVal = oldValA;
+						return oldValA;
+					}}});
+					user = await User.get("1");
+					user.name = "Charlie";
+					await callType.func(user).bind(user)();
+					expect(newVal).to.eql("Charlie");
+					expect(oldVal).to.eql("Charlie-set");
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with async set function for attribute", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": async (val) => `${val}-set`}});
@@ -1119,6 +1148,17 @@ describe("Document", () => {
 
 		it("Should return original object if retrieving from database even after modifying document", () => {
 			const document = new model({"id": 1}, {"type": "fromDynamo"});
+			document.id = 2;
+			expect(document.original()).to.eql({"id": 1});
+			expect({...document}).to.eql({"id": 2});
+		});
+
+		it("Shouldn't return DynamoDB object if retrieving from database", () => {
+			expect(new model({"id": {"N": "1"}}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
+		});
+
+		it("Shouldn't return DynamoDB object if retrieving from database even after modifying document", () => {
+			const document = new model({"id": {"N": "1"}}, {"type": "fromDynamo"});
 			document.id = 2;
 			expect(document.original()).to.eql({"id": 1});
 			expect({...document}).to.eql({"id": 2});
