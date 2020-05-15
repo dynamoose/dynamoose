@@ -26,7 +26,7 @@ abstract class DocumentRetriever {
 		limit?: number;
 		all?: {delay: number; max: number};
 		startAt?: any;
-		attributes?: string[];
+		attributes?: string[] | {expressionAttributeNames?: [{key: string; value: string}]; projectionExpression?: string[]};
 		index?: string;
 		consistent?: boolean;
 		count?: boolean;
@@ -37,7 +37,7 @@ abstract class DocumentRetriever {
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
 	limit: (this: DocumentRetriever, value: number) => DocumentRetriever;
 	startAt: (this: DocumentRetriever, value: ObjectType) => DocumentRetriever;
-	attributes: (this: DocumentRetriever, value: string[]) => DocumentRetriever;
+	attributes: (this: DocumentRetriever, value: string[] | {expressionAttributeNames?: [{key: string; value: string}]; projectionExpression?: string[]}) => DocumentRetriever;
 	count: (this: DocumentRetriever) => DocumentRetriever;
 	consistent: (this: DocumentRetriever) => DocumentRetriever;
 	using: (this: DocumentRetriever, value: string) => DocumentRetriever;
@@ -179,7 +179,19 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	if (this.settings.attributes) {
-		object.ProjectionExpression = this.settings.attributes.join(", ");
+		// Check expression attribute names
+		if (this.settings.attributes["expressionAttributeNames"]) {
+			object.ExpressionAttributeNames = this.settings.attributes["expressionAttributeNames"].reduce((o, val) => {
+				o[val.key] = val.value;
+				return o;
+			}, {});
+		}
+		// Check projection expression
+		if (this.settings.attributes["projectionExpression"]) {
+			object.ProjectionExpression = this.settings.attributes["projectionExpression"].join(", ");
+		} else {
+			object.ProjectionExpression = [this.settings.attributes].join(", ");
+		}
 	}
 	const indexes = await this.internalSettings.model.schema.getIndexes(this.internalSettings.model);
 	if (this.settings.index) {

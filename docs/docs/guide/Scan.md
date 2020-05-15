@@ -14,6 +14,41 @@ Cat.scan({"breed": {"contains": "Terrier"}}).exec() // will scan all documents a
 
 If you pass an object into `Model.scan` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
+### Model.scan([filter]) with scan.attributes(attributes) and "ProjectionExpression" 
+
+To use new attributes with `ProjectionExpression` (make sure to start `expressionAttributeNames` keys with "#") create an object like the example below:
+
+```js
+// Query attributes
+const attributes = {
+  expressionAttributeNames: [{ key: '#N', value: 'name' }, { key: '#S', value: 'status' }],
+  projectionExpression: ['#N', '#S', 'createdAt', 'updatedAt']
+}
+```
+
+Then set filters key name with the same key name of relative attribute on `expressionAttributeNames`:
+
+```js
+const filters = { "#N": { contains: 'name' }, "#S": { eq: 'status' } }
+```
+
+Complete example: 
+
+```js
+// Query attributes
+const attributes = {
+  expressionAttributeNames: [{ key: '#N', value: 'name' }, { key: '#S', value: 'status' }],
+  projectionExpression: ['#N', '#S', 'createdAt', 'updatedAt']
+}
+// Query filter
+const filters = { "#N": { contains: 'name' }, "#S": { eq: 'status' } }
+// Query scan
+Cat.scan(filters)
+  .attributes(attributes)
+  .all(100)
+  .exec()
+```
+
 ## Conditionals
 
 On top of all of the methods listed below, every `Scan` instance has all of the methods that a `Condition` instance has. This means you can use methods like `where`, `filter`, `eq`, `lt` and more.
@@ -87,6 +122,22 @@ Cat.scan().attributes(["id", "name"]); // Return all documents but only return t
 ```
 
 This function uses the `ProjectionExpression` DynamoDB property to save bandwidth and not send the entire item over the wire.
+
+### scan.attributes(attributes) with "ProjectionExpression" 
+
+If you want use attributes with `ProjectionExpression`, to avoid for example:
+
+`"Invalid ProjectionExpression: Attribute name is a reserved keyword; reserved keyword: status"`
+
+Set attributes like this object (make sure to start `expressionAttributeNames` keys with "#"):
+
+```js
+// Query attributes
+const attributes = {
+  expressionAttributeNames: [{ key: '#N', value: 'name' }, { key: '#S', value: 'status' }],
+  projectionExpression: ['#N', '#S', 'createdAt', 'updatedAt']
+}
+```
 
 ## scan.parallel(parallelScans)
 
