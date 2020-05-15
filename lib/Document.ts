@@ -309,7 +309,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			if (!isValueUndefined) {
 				const typeDetails = model.schema.getAttributeTypeDetails(key) as DynamoDBTypeResult;
 				const { customType } = typeDetails;
-				const { type: typeInfo } = typeDetails.isOfType(value as ValueType);
+				const { "type": typeInfo } = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
 				if (customType && !isCorrectTypeAlready) {
 					const customValue = customType.functions[settings.type](value);

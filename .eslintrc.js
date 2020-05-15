@@ -32,7 +32,8 @@ module.exports = {
     indent: ["error", "tab"],
     "linebreak-style": ["error", "unix"],
     quotes: ["error", "double"],
-    semi: ["error", "always"],
+	semi: ["error", "always"],
+	"quote-props": ["error", "always"],
   },
   globals: {
     Atomics: "readonly",
