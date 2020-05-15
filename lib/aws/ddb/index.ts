@@ -1,7 +1,7 @@
 import * as AWS from "../sdk";
 
 let customDDB: AWS.DynamoDB | undefined;
-function main(): AWS.DynamoDB {
+function main (): AWS.DynamoDB {
 	return customDDB || new AWS.DynamoDB();
 }
 main.set = (ddb: AWS.DynamoDB): void => {customDDB = ddb;};

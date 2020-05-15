@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../dist/utils");
 
 describe("utils.merge_objects", () => {
@@ -8,42 +8,42 @@ describe("utils.merge_objects", () => {
 
 	const tests = [
 		{
-			"input": [{"a": [{"a": "b"}, {"a": "c"}], "b": 2, "c": {"a": "c"}}, {"a": [{"a": "d"}, {"a": "e"}, {"a": "f"}], "b": 3, "c": {"a": "f"}}],
-			"output": {"a": [{"a": "b"}, {"a": "c"}, {"a": "d"}, {"a": "e"}, {"a": "f"}], "b": 5, "c": [{"a": "c"}, {"a": "f"}]}
+			"input": [{ "a": [{ "a": "b" }, { "a": "c" }], "b": 2, "c": { "a": "c" } }, { "a": [{ "a": "d" }, { "a": "e" }, { "a": "f" }], "b": 3, "c": { "a": "f" } }],
+			"output": { "a": [{ "a": "b" }, { "a": "c" }, { "a": "d" }, { "a": "e" }, { "a": "f" }], "b": 5, "c": [{ "a": "c" }, { "a": "f" }] }
 		},
 		{
-			"input": [{"a": [{"a": "b"}, {"a": "c"}], "b": 2, "c": {"a": "c"}}, {"a": [{"a": "d"}, {"a": "e"}, {"a": "f"}], "b": 3}],
-			"output": {"a": [{"a": "b"}, {"a": "c"}, {"a": "d"}, {"a": "e"}, {"a": "f"}], "b": 5, "c": {"a": "c"}}
+			"input": [{ "a": [{ "a": "b" }, { "a": "c" }], "b": 2, "c": { "a": "c" } }, { "a": [{ "a": "d" }, { "a": "e" }, { "a": "f" }], "b": 3 }],
+			"output": { "a": [{ "a": "b" }, { "a": "c" }, { "a": "d" }, { "a": "e" }, { "a": "f" }], "b": 5, "c": { "a": "c" } }
 		},
 		{
-			"input": [{"a": [{"a": "b"}, {"a": "c"}], "b": 2, "c": {"a": "c"}}, {"a": [{"a": "d"}, {"a": "e"}, {"a": "f"}], "b": 3, "c": {"a": "f"}}, {"a": [{"a": "g"}, {"a": "h"}, {"a": "i"}, {"a": "z"}], "b": 4}],
-			"output": {"a": [{"a": "b"}, {"a": "c"}, {"a": "d"}, {"a": "e"}, {"a": "f"}, {"a": "g"}, {"a": "h"}, {"a": "i"}, {"a": "z"}], "b": 9, "c": [{"a": "c"}, {"a": "f"}]}
+			"input": [{ "a": [{ "a": "b" }, { "a": "c" }], "b": 2, "c": { "a": "c" } }, { "a": [{ "a": "d" }, { "a": "e" }, { "a": "f" }], "b": 3, "c": { "a": "f" } }, { "a": [{ "a": "g" }, { "a": "h" }, { "a": "i" }, { "a": "z" }], "b": 4 }],
+			"output": { "a": [{ "a": "b" }, { "a": "c" }, { "a": "d" }, { "a": "e" }, { "a": "f" }, { "a": "g" }, { "a": "h" }, { "a": "i" }, { "a": "z" }], "b": 9, "c": [{ "a": "c" }, { "a": "f" }] }
 		},
 		{
-			"input": [{"a": [{"b": "c"}, {"d": "e"}]}, {"a": [{"f": "g"}, {"h": "i"}]}, {"a": {"j": "k"}}],
-			"output": {"a": [{"b": "c"}, {"d": "e"}, {"f": "g"}, {"h": "i"}, {"j": "k"}]}
+			"input": [{ "a": [{ "b": "c" }, { "d": "e" }] }, { "a": [{ "f": "g" }, { "h": "i" }] }, { "a": { "j": "k" } }],
+			"output": { "a": [{ "b": "c" }, { "d": "e" }, { "f": "g" }, { "h": "i" }, { "j": "k" }] }
 		},
 		{
-			"input": [{"a": {"b": "c"}}, {"a": {"d": "e"}}],
-			"output": {"a": {"b": "c", "d": "e"}},
-			"main": {"combineMethod": "object_combine"}
+			"input": [{ "a": { "b": "c" } }, { "a": { "d": "e" } }],
+			"output": { "a": { "b": "c", "d": "e" } },
+			"main": { "combineMethod": "object_combine" }
 		},
 		{
-			"input": [{"a": {"d": "c"}}, {"a": {"d": "e"}}],
-			"output": {"a": {"d": "e"}},
-			"main": {"combineMethod": "object_combine"}
+			"input": [{ "a": { "d": "c" } }, { "a": { "d": "e" } }],
+			"output": { "a": { "d": "e" } },
+			"main": { "combineMethod": "object_combine" }
 		},
 		{
-			"input": [{"a": {"d": "c"}}, {"a": {"z": "e", "d": "b"}}, {"a": {"z": "y"}}],
-			"output": {"a": {"d": "b", "z": "y"}},
-			"main": {"combineMethod": "object_combine"}
+			"input": [{ "a": { "d": "c" } }, { "a": { "z": "e", "d": "b" } }, { "a": { "z": "y" } }],
+			"output": { "a": { "d": "b", "z": "y" } },
+			"main": { "combineMethod": "object_combine" }
 		},
 		{
-			"input": [[1, 2], {"a": "b"}],
+			"input": [[1, 2], { "a": "b" }],
 			"error": "You can't mix value types for the merge_objects method."
 		},
 		{
-			"input": [{"a": "b"}, [1, 2]],
+			"input": [{ "a": "b" }, [1, 2]],
 			"error": "You can't mix value types for the merge_objects method."
 		},
 		{

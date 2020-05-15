@@ -1,4 +1,4 @@
-import {ConsoleProvider} from "./console";
+import { ConsoleProvider } from "./console";
 
 export = {
 	"console": ConsoleProvider

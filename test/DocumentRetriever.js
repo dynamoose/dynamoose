@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const DocumentRetriever = require("../dist/DocumentRetriever");
 
 describe("DocumentRetriever", () => {

@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../../dist/utils");
 
 describe("utils.dynamoose.wildcard_allowed_check", () => {

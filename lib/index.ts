@@ -1,14 +1,14 @@
 import "source-map-support/register";
 
-import {Model, ModelOptionsOptional} from "./Model";
-import {Schema, SchemaDefinition} from "./Schema";
-import {Condition} from "./Condition";
+import { Model, ModelOptionsOptional } from "./Model";
+import { Schema, SchemaDefinition } from "./Schema";
+import { Condition } from "./Condition";
 import transaction from "./Transaction";
 import aws = require("./aws");
 import Internal = require("./Internal");
 import utils = require("./utils");
 import logger = require("./logger");
-import {Document} from "./Document";
+import { Document } from "./Document";
 
 interface ModelDocumentConstructor<T extends Document> {
 	new (object: {[key: string]: any}): T;

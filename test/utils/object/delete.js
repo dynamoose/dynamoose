@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../../dist/utils");
 
 describe("utils.object.delete", () => {
@@ -16,12 +16,12 @@ describe("utils.object.delete", () => {
 			"output": {}
 		},
 		{
-			"input": [{"hello": "world"}, "hello"],
+			"input": [{ "hello": "world" }, "hello"],
 			"output": {}
 		},
 		{
-			"input": [{"hello": "world", "test": "data"}, "test"],
-			"output": {"hello": "world"}
+			"input": [{ "hello": "world", "test": "data" }, "test"],
+			"output": { "hello": "world" }
 		},
 		{
 			"input": [["world", "universe"], "0"],
@@ -32,20 +32,20 @@ describe("utils.object.delete", () => {
 			"output": ["universe"]
 		},
 		{
-			"input": [{"hello": ["world", "universe"]}, "hello.0"],
-			"output": {"hello": ["universe"]}
+			"input": [{ "hello": ["world", "universe"] }, "hello.0"],
+			"output": { "hello": ["universe"] }
 		},
 		{
-			"input": [{"name": "Bob", "address": {"country": "world", "zip": 12345}}, "address.country"],
-			"output": {"name": "Bob", "address": {"zip": 12345}}
+			"input": [{ "name": "Bob", "address": { "country": "world", "zip": 12345 } }, "address.country"],
+			"output": { "name": "Bob", "address": { "zip": 12345 } }
 		},
 		{
-			"input": [{"name": "Bob", "friends": ["Bob", "Tim"]}, "friends.0"],
-			"output": {"name": "Bob", "friends": ["Tim"]}
+			"input": [{ "name": "Bob", "friends": ["Bob", "Tim"] }, "friends.0"],
+			"output": { "name": "Bob", "friends": ["Tim"] }
 		},
 		{
-			"input": [{"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]}, "friends.1.name"],
-			"output": {"id": 1, "friends": [{"name": "Bob", "id": 1}, {}]}
+			"input": [{ "id": 1, "friends": [{ "name": "Bob", "id": 1 }, { "name": "Tim" }] }, "friends.1.name"],
+			"output": { "id": 1, "friends": [{ "name": "Bob", "id": 1 }, {}] }
 		}
 	];
 

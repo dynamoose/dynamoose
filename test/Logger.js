@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const dynamoose = require("../dist");
 const emitter = require("../dist/logger/emitter");
 
@@ -62,7 +62,7 @@ describe("Logger", () => {
 
 		describe("dynamoose.logger.providers.list", () => {
 			beforeEach(() => {
-				const obj = [{"id": "test"}];
+				const obj = [{ "id": "test" }];
 				dynamoose.logger.providers.set(obj);
 				expect(dynamoose.logger.providers.list()).to.eql(obj);
 			});
@@ -72,7 +72,7 @@ describe("Logger", () => {
 			});
 
 			it("Should return list of providers", () => {
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}]);
+				expect(dynamoose.logger.providers.list()).to.eql([{ "id": "test" }]);
 			});
 		});
 
@@ -82,13 +82,13 @@ describe("Logger", () => {
 			});
 
 			it("Should set correctly for object", () => {
-				const obj = {"id": "test"};
+				const obj = { "id": "test" };
 				dynamoose.logger.providers.set(obj);
 				expect(dynamoose.logger.providers.list()).to.eql([obj]);
 			});
 
 			it("Should set correctly for array", () => {
-				const obj = [{"id": "test"}];
+				const obj = [{ "id": "test" }];
 				dynamoose.logger.providers.set(obj);
 				expect(dynamoose.logger.providers.list()).to.eql(obj);
 			});
@@ -125,7 +125,7 @@ describe("Logger", () => {
 
 		describe("dynamoose.logger.providers.clear", () => {
 			beforeEach(() => {
-				const obj = [{"id": "test"}];
+				const obj = [{ "id": "test" }];
 				dynamoose.logger.providers.set(obj);
 				expect(dynamoose.logger.providers.list()).to.eql(obj);
 			});
@@ -142,7 +142,7 @@ describe("Logger", () => {
 
 		describe("dynamoose.logger.providers.add", () => {
 			beforeEach(() => {
-				const obj = [{"id": "test"}];
+				const obj = [{ "id": "test" }];
 				dynamoose.logger.providers.set(obj);
 				expect(dynamoose.logger.providers.list()).to.eql(obj);
 			});
@@ -152,19 +152,19 @@ describe("Logger", () => {
 			});
 
 			it("Should add object provider to providers", () => {
-				dynamoose.logger.providers.add({"id": "test2"});
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}, {"id": "test2"}]);
+				dynamoose.logger.providers.add({ "id": "test2" });
+				expect(dynamoose.logger.providers.list()).to.eql([{ "id": "test" }, { "id": "test2" }]);
 			});
 
 			it("Should add array of providers to providers", () => {
-				dynamoose.logger.providers.add([{"id": "test2"}, {"id": "test3"}]);
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}, {"id": "test2"}, {"id": "test3"}]);
+				dynamoose.logger.providers.add([{ "id": "test2" }, { "id": "test3" }]);
+				expect(dynamoose.logger.providers.list()).to.eql([{ "id": "test" }, { "id": "test2" }, { "id": "test3" }]);
 			});
 		});
 
 		describe("dynamoose.logger.providers.delete", () => {
 			beforeEach(() => {
-				const obj = [{"id": "test"}, {"id": "test2"}, {"id": "test3"}];
+				const obj = [{ "id": "test" }, { "id": "test2" }, { "id": "test3" }];
 				dynamoose.logger.providers.set(obj);
 				expect(dynamoose.logger.providers.list()).to.eql(obj);
 			});
@@ -175,12 +175,12 @@ describe("Logger", () => {
 
 			it("Should delete provider", () => {
 				dynamoose.logger.providers.delete("test2");
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}, {"id": "test3"}]);
+				expect(dynamoose.logger.providers.list()).to.eql([{ "id": "test" }, { "id": "test3" }]);
 			});
 
 			it("Should delete multiple providers if array passed into delete", () => {
 				dynamoose.logger.providers.delete(["test2", "test3"]);
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}]);
+				expect(dynamoose.logger.providers.list()).to.eql([{ "id": "test" }]);
 			});
 		});
 	});
@@ -188,15 +188,15 @@ describe("Logger", () => {
 	describe("Emitter", () => {
 		let events = [];
 		class CustomProvider {
-			log(event) {
+			log (event) {
 				events.push(event);
 			}
 		}
 		class CustomProviderMessage {
-			constructor() {
+			constructor () {
 				this.type = "string";
 			}
-			log(event) {
+			log (event) {
 				events.push(event);
 			}
 		}
@@ -208,7 +208,7 @@ describe("Logger", () => {
 		});
 
 		it("Should log event", () => {
-			emitter({"level": "info", "message": "Hello World", "category": "test"});
+			emitter({ "level": "info", "message": "Hello World", "category": "test" });
 			expect(events).to.be.an("array");
 			expect(events.length).to.eql(1);
 			expect(events[0]).to.be.an("object");
@@ -224,47 +224,47 @@ describe("Logger", () => {
 
 		it("Should log event with string type", () => {
 			dynamoose.logger.providers.set(new CustomProviderMessage());
-			emitter({"level": "info", "message": "Hello World", "category": "test"});
+			emitter({ "level": "info", "message": "Hello World", "category": "test" });
 			expect(events).to.eql(["Hello World"]);
 		});
 
 		it("Should allow for no category", () => {
-			emitter({"level": "info", "message": "Hello World"});
+			emitter({ "level": "info", "message": "Hello World" });
 			expect(events[0].category).to.eql("");
 		});
 
 		it("Should not log event if paused", () => {
 			dynamoose.logger.pause();
-			emitter({"level": "info", "message": "Hello World", "category": "test"});
+			emitter({ "level": "info", "message": "Hello World", "category": "test" });
 			expect(events.length).to.eql(0);
 		});
 
 		it("Should throw error if no message passed in", () => {
-			expect(() => emitter({"level": "info"})).to.throw("You must pass in a valid message, level, and category into your event object.");
+			expect(() => emitter({ "level": "info" })).to.throw("You must pass in a valid message, level, and category into your event object.");
 		});
 
 		it("Should throw error if no level passed in", () => {
-			expect(() => emitter({"message": "Hello World"})).to.throw("You must pass in a valid message, level, and category into your event object.");
+			expect(() => emitter({ "message": "Hello World" })).to.throw("You must pass in a valid message, level, and category into your event object.");
 		});
 
 		it("Should throw error if invalid level passed in", () => {
-			expect(() => emitter({"message": "Hello World", "level": "random"})).to.throw("You must pass in a valid message, level, and category into your event object.");
+			expect(() => emitter({ "message": "Hello World", "level": "random" })).to.throw("You must pass in a valid message, level, and category into your event object.");
 		});
 
 		describe("Filter", () => {
 			describe("Level", () => {
 				const tests = [
-					{"filter": "error", "level": "error", "outcome": false},
-					{"filter": "error", "level": "fatal", "outcome": true},
-					{"filter": "error+", "level": "fatal", "outcome": false},
-					{"filter": "error+", "level": "error", "outcome": false},
-					{"filter": "error+", "level": "debug", "outcome": true},
-					{"filter": "error-", "level": "fatal", "outcome": true},
-					{"filter": "error-", "level": "error", "outcome": false},
-					{"filter": "error-", "level": "debug", "outcome": false},
-					{"filter": ["error", "info"], "level": "error", "outcome": false},
-					{"filter": ["error", "info"], "level": "info", "outcome": false},
-					{"filter": ["error", "info"], "level": "fatal", "outcome": true},
+					{ "filter": "error", "level": "error", "outcome": false },
+					{ "filter": "error", "level": "fatal", "outcome": true },
+					{ "filter": "error+", "level": "fatal", "outcome": false },
+					{ "filter": "error+", "level": "error", "outcome": false },
+					{ "filter": "error+", "level": "debug", "outcome": true },
+					{ "filter": "error-", "level": "fatal", "outcome": true },
+					{ "filter": "error-", "level": "error", "outcome": false },
+					{ "filter": "error-", "level": "debug", "outcome": false },
+					{ "filter": ["error", "info"], "level": "error", "outcome": false },
+					{ "filter": ["error", "info"], "level": "info", "outcome": false },
+					{ "filter": ["error", "info"], "level": "fatal", "outcome": true },
 				];
 				tests.forEach((test) => {
 					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.level}`, () => {
@@ -274,7 +274,7 @@ describe("Logger", () => {
 								"level": test.filter
 							}
 						});
-						emitter({"level": test.level, "message": "Hello World"});
+						emitter({ "level": test.level, "message": "Hello World" });
 						expect(events.length).to.eql(test.outcome ? 0 : 1);
 					});
 				});
@@ -282,22 +282,22 @@ describe("Logger", () => {
 
 			describe("Category", () => {
 				const tests = [
-					{"filter": "aws:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:request", "outcome": false},
-					{"filter": "aws:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:response", "outcome": true},
-					{"filter": ["aws:dynamodb:putItem:request", "aws:dynamodb:putItem:response"], "category": "aws:dynamodb:putItem:response", "outcome": false},
-					{"filter": "*:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:request", "outcome": false},
-					{"filter": "*:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:request", "outcome": false},
-					{"filter": "**", "category": "aws:dynamodb:putItem:request", "outcome": false},
-					{"filter": "*:dynamodb:putItem:request", "category": "aws:dynamodb:getItem:request", "outcome": true},
-					{"filter": "*:dynamodb:**", "category": "aws:dynamodb:getItem:request", "outcome": false},
-					{"filter": "*:dynamodb:**", "category": "aws:dynamodb:getItem:response", "outcome": false},
-					{"filter": "*:dynamodb:**", "category": "aws:dynamodb:putItem:request", "outcome": false},
-					{"filter": "*:dynamodb:**", "category": "aws:dynamodb:putItem:response", "outcome": false},
-					{"filter": "random", "category": "other", "outcome": true},
-					{"filter": "random:*", "category": "other", "outcome": true},
-					{"filter": "random:*", "category": "random", "outcome": true},
-					{"filter": "random:**", "category": "random", "outcome": true},
-					{"filter": "random:*:test", "category": "random:test", "outcome": true},
+					{ "filter": "aws:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:request", "outcome": false },
+					{ "filter": "aws:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:response", "outcome": true },
+					{ "filter": ["aws:dynamodb:putItem:request", "aws:dynamodb:putItem:response"], "category": "aws:dynamodb:putItem:response", "outcome": false },
+					{ "filter": "*:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:request", "outcome": false },
+					{ "filter": "*:dynamodb:putItem:request", "category": "aws:dynamodb:putItem:request", "outcome": false },
+					{ "filter": "**", "category": "aws:dynamodb:putItem:request", "outcome": false },
+					{ "filter": "*:dynamodb:putItem:request", "category": "aws:dynamodb:getItem:request", "outcome": true },
+					{ "filter": "*:dynamodb:**", "category": "aws:dynamodb:getItem:request", "outcome": false },
+					{ "filter": "*:dynamodb:**", "category": "aws:dynamodb:getItem:response", "outcome": false },
+					{ "filter": "*:dynamodb:**", "category": "aws:dynamodb:putItem:request", "outcome": false },
+					{ "filter": "*:dynamodb:**", "category": "aws:dynamodb:putItem:response", "outcome": false },
+					{ "filter": "random", "category": "other", "outcome": true },
+					{ "filter": "random:*", "category": "other", "outcome": true },
+					{ "filter": "random:*", "category": "random", "outcome": true },
+					{ "filter": "random:**", "category": "random", "outcome": true },
+					{ "filter": "random:*:test", "category": "random:test", "outcome": true },
 				];
 				tests.forEach((test) => {
 					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.category}`, () => {
@@ -307,7 +307,7 @@ describe("Logger", () => {
 								"category": test.filter
 							}
 						});
-						emitter({"level": "error", "category": test.category, "message": "Hello World"});
+						emitter({ "level": "error", "category": test.category, "message": "Hello World" });
 						expect(events.length).to.eql(test.outcome ? 0 : 1);
 					});
 				});
@@ -323,7 +323,7 @@ describe("Logger", () => {
 			dynamoose.logger.providers.set(console);
 			consoleTypes.forEach((type) => {
 				originalConsole[type] = console[type];
-				console[type] = (str) => logs.push({"message": str, type});
+				console[type] = (str) => logs.push({ "message": str, type });
 			});
 		});
 		afterEach(() => {
@@ -335,38 +335,38 @@ describe("Logger", () => {
 		});
 
 		it("Should print message & category", () => {
-			emitter({"level": "fatal", "message": "Hello World", "category": "test"});
-			expect(logs).to.eql([{"message": "test - Hello World", "type": "error"}]);
+			emitter({ "level": "fatal", "message": "Hello World", "category": "test" });
+			expect(logs).to.eql([{ "message": "test - Hello World", "type": "error" }]);
 		});
 
 		it("Should print message to console.error for fatal", () => {
-			emitter({"level": "fatal", "message": "Hello World"});
-			expect(logs).to.eql([{"message": "Hello World", "type": "error"}]);
+			emitter({ "level": "fatal", "message": "Hello World" });
+			expect(logs).to.eql([{ "message": "Hello World", "type": "error" }]);
 		});
 
 		it("Should print message to console.error for error", () => {
-			emitter({"level": "error", "message": "Hello World"});
-			expect(logs).to.eql([{"message": "Hello World", "type": "error"}]);
+			emitter({ "level": "error", "message": "Hello World" });
+			expect(logs).to.eql([{ "message": "Hello World", "type": "error" }]);
 		});
 
 		it("Should print message to console.warn for warn", () => {
-			emitter({"level": "warn", "message": "Hello World"});
-			expect(logs).to.eql([{"message": "Hello World", "type": "warn"}]);
+			emitter({ "level": "warn", "message": "Hello World" });
+			expect(logs).to.eql([{ "message": "Hello World", "type": "warn" }]);
 		});
 
 		it("Should print message to console.info for info", () => {
-			emitter({"level": "info", "message": "Hello World"});
-			expect(logs).to.eql([{"message": "Hello World", "type": "info"}]);
+			emitter({ "level": "info", "message": "Hello World" });
+			expect(logs).to.eql([{ "message": "Hello World", "type": "info" }]);
 		});
 
 		it("Should print message to console.log for debug", () => {
-			emitter({"level": "debug", "message": "Hello World"});
-			expect(logs).to.eql([{"message": "Hello World", "type": "log"}]);
+			emitter({ "level": "debug", "message": "Hello World" });
+			expect(logs).to.eql([{ "message": "Hello World", "type": "log" }]);
 		});
 
 		it("Should print message to console.log for trace", () => {
-			emitter({"level": "trace", "message": "Hello World"});
-			expect(logs).to.eql([{"message": "Hello World", "type": "log"}]);
+			emitter({ "level": "trace", "message": "Hello World" });
+			expect(logs).to.eql([{ "message": "Hello World", "type": "log" }]);
 		});
 	});
 });

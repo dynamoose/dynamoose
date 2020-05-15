@@ -1,4 +1,4 @@
-import {GeneralObject, GeneralObjectOrValue} from "./types";
+import { GeneralObject, GeneralObjectOrValue } from "./types";
 
 export = <T>(object: GeneralObject<T>, key: string): GeneralObjectOrValue<T> => {
 	const keyParts = key.split(".");

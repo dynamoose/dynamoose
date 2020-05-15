@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const Error = require("../dist/Error");
 
 describe("Error", () => {

@@ -1,6 +1,6 @@
 import CustomError = require("./Error");
-import {Model} from "./Model";
-import {Document} from "./Document";
+import { Model } from "./Model";
+import { Document } from "./Document";
 
 let models: {[name: string]: Model<Document>} = {};
 

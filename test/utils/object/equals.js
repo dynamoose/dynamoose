@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../../dist/utils");
 
 describe("utils.object.equals", () => {
@@ -8,27 +8,27 @@ describe("utils.object.equals", () => {
 
 	const tests = [
 		{
-			"input": [{"hello": "world"}, {"hello": "world"}],
+			"input": [{ "hello": "world" }, { "hello": "world" }],
 			"output": true
 		},
 		{
-			"input": [{"hello": "world"}, {"hello": "universe"}],
+			"input": [{ "hello": "world" }, { "hello": "universe" }],
 			"output": false
 		},
 		{
-			"input": [{"hello": "universe"}, {"hello": "world"}],
+			"input": [{ "hello": "universe" }, { "hello": "world" }],
 			"output": false
 		},
 		{
-			"input": [{"hello": {"item": "world"}}, {"hello": "world"}],
+			"input": [{ "hello": { "item": "world" } }, { "hello": "world" }],
 			"output": false
 		},
 		{
-			"input": [{"hello": {"item": "world"}}, {"hello": {"item": "universe"}}],
+			"input": [{ "hello": { "item": "world" } }, { "hello": { "item": "universe" } }],
 			"output": false
 		},
 		{
-			"input": [{"hello": {"item": "world"}}, {"hello": {"item": "world"}}],
+			"input": [{ "hello": { "item": "world" } }, { "hello": { "item": "world" } }],
 			"output": true
 		},
 		{

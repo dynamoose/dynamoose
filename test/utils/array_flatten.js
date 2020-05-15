@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../dist/utils");
 
 describe("utils.array_flatten", () => {

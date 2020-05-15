@@ -1,5 +1,5 @@
 const chai = require("chai");
-const {expect} = chai;
+const { expect } = chai;
 const ModelStore = require("../dist/ModelStore");
 
 describe("ModelStore", () => {

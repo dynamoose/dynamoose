@@ -9,9 +9,9 @@ interface MergeObjectsSettings {
 	combineMethod: MergeObjectsCombineMethod;
 }
 
-import {GeneralObject} from "./object/types";
+import { GeneralObject } from "./object/types";
 
-const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombineMethod.ArrayMerge}) => <T>(...args: GeneralObject<T>[]): GeneralObject<T> => {
+const main = (settings: MergeObjectsSettings = { combineMethod: MergeObjectsCombineMethod.ArrayMerge }) => <T>(...args: GeneralObject<T>[]): GeneralObject<T> => {
 	let returnObject: { [x: string]: any };
 
 	args.forEach((arg, index) => {
@@ -29,7 +29,7 @@ const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombi
 			Object.keys(arg).forEach((key) => {
 				if (typeof returnObject[key] === "object" && typeof arg[key] === "object" && !Array.isArray(returnObject[key]) && !Array.isArray(arg[key]) && returnObject[key] !== null) {
 					if (settings.combineMethod === MergeObjectsCombineMethod.ObjectCombine) {
-						returnObject[key] = {...returnObject[key], ...arg[key]};
+						returnObject[key] = { ...returnObject[key], ...arg[key] };
 					} else {
 						returnObject[key] = [returnObject[key], arg[key]];
 					}

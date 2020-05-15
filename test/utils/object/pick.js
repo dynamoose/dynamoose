@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../../dist/utils");
 
 describe("utils.object.pick", () => {
@@ -8,16 +8,16 @@ describe("utils.object.pick", () => {
 
 	const tests = [
 		{
-			"input": [{"hello": "world"}, ["hello"]],
-			"output": {"hello": "world"}
+			"input": [{ "hello": "world" }, ["hello"]],
+			"output": { "hello": "world" }
 		},
 		{
-			"input": [{"hello": "world"}, ["hello", "world"]],
-			"output": {"hello": "world"}
+			"input": [{ "hello": "world" }, ["hello", "world"]],
+			"output": { "hello": "world" }
 		},
 		{
-			"input": [{"hello": "world", "obj": 1}, ["hello"]],
-			"output": {"hello": "world"}
+			"input": [{ "hello": "world", "obj": 1 }, ["hello"]],
+			"output": { "hello": "world" }
 		},
 	];
 

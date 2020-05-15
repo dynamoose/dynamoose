@@ -1,5 +1,5 @@
 export class ConsoleProvider {
-	log(message): void {
+	log (message): void {
 		let method: (message: string) => void;
 		switch(message.level) {
 		case "fatal":

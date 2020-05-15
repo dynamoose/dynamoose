@@ -1,14 +1,14 @@
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
-const {expect} = chai;
+const { expect } = chai;
 const dynamoose = require("../dist");
 const util = require("util");
-const {Scan} = require("../dist/DocumentRetriever");
+const { Scan } = require("../dist/DocumentRetriever");
 
 describe("Scan", () => {
 	beforeEach(() => {
-		dynamoose.model.defaults.set({"create": false, "waitForActive": false});
+		dynamoose.model.defaults.set({ "create": false, "waitForActive": false });
 	});
 	afterEach(() => {
 		dynamoose.model.defaults.set({});
@@ -19,7 +19,7 @@ describe("Scan", () => {
 		dynamoose.aws.ddb.set({
 			"scan": (request) => {
 				scanParams = request;
-				return {"promise": scanPromiseResolver};
+				return { "promise": scanPromiseResolver };
 			}
 		});
 	});
@@ -31,7 +31,7 @@ describe("Scan", () => {
 
 	let Model;
 	beforeEach(() => {
-		Model = dynamoose.model("Cat", {"id": Number, "name": String, "favoriteNumber": Number});
+		Model = dynamoose.model("Cat", { "id": Number, "name": String, "favoriteNumber": Number });
 	});
 
 	describe("Model.scan", () => {
@@ -50,16 +50,16 @@ describe("Scan", () => {
 		it("Should set pending key if string passed into scan function", () => {
 			const id = "id";
 			const scan = Model.scan(id);
-			expect(scan.settings.condition.settings.pending).to.eql({"key": id});
+			expect(scan.settings.condition.settings.pending).to.eql({ "key": id });
 		});
 
 		it("Should set filters correctly for object passed into scan function", () => {
-			const scan = Model.scan({"name": {"eq": "Charlie"}, "id": {"le": 5}});
-			expect(scan.settings.condition.settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
+			const scan = Model.scan({ "name": { "eq": "Charlie" }, "id": { "le": 5 } });
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "name": { "type": "EQ", "value": "Charlie" } }, { "id": { "type": "LE", "value": 5 } }]);
 		});
 
 		it("Should throw error if unknown comparison operator is passed in", () => {
-			expect(() => Model.scan({"name": {"unknown": "Charlie"}})).to.throw("The type: unknown is invalid for the scan operation.");
+			expect(() => Model.scan({ "name": { "unknown": "Charlie" } })).to.throw("The type: unknown is invalid for the scan operation.");
 		});
 	});
 
@@ -69,52 +69,52 @@ describe("Scan", () => {
 		});
 
 		it("Should return a promise", () => {
-			scanPromiseResolver = () => ({"Items": []});
+			scanPromiseResolver = () => ({ "Items": [] });
 			expect(Model.scan().exec()).to.be.a("promise");
 		});
 
 		const functionCallTypes = [
-			{"name": "Promise", "func": (func) => func},
-			{"name": "Callback", "func": (func) => util.promisify(func)}
+			{ "name": "Promise", "func": (func) => func },
+			{ "name": "Callback", "func": (func) => util.promisify(func) }
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
-				it("Should return correct result", async() => {
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				it("Should return correct result", async () => {
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" } }] });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([{ "id": 1, "name": "Charlie" }]);
 				});
 
-				it("Should return undefined for expired object", async() => {
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "ttl": {"N": "1"}}]});
-					Model = dynamoose.model("Cat", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([]);
+				it("Should return undefined for expired object", async () => {
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "ttl": { "N": "1" } }] });
+					Model = dynamoose.model("Cat", { "id": Number }, { "expires": { "ttl": 1000, "items": { "returnExpired": false } } });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([]);
 				});
 
-				it("Should return expired object if returnExpired is not set", async() => {
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "ttl": {"N": "1"}}]});
-					Model = dynamoose.model("Cat", {"id": Number}, {"expires": {"ttl": 1000}});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "ttl": new Date(1000)}]);
+				it("Should return expired object if returnExpired is not set", async () => {
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "ttl": { "N": "1" } }] });
+					Model = dynamoose.model("Cat", { "id": Number }, { "expires": { "ttl": 1000 } });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([{ "id": 1, "ttl": new Date(1000) }]);
 				});
 
-				it("Should return correct result if unknown properties are in DynamoDB", async() => {
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				it("Should return correct result if unknown properties are in DynamoDB", async () => {
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" }, "age": { "N": "1" } }] });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([{ "id": 1, "name": "Charlie" }]);
 				});
 
-				it("Should return correct result if using custom types", async() => {
-					Model = dynamoose.model("Cat", {"id": Number, "name": String, "birthday": Date});
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": "1"}}]});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie", "birthday": new Date(1)}]);
+				it("Should return correct result if using custom types", async () => {
+					Model = dynamoose.model("Cat", { "id": Number, "name": String, "birthday": Date });
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" }, "birthday": { "N": "1" } }] });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([{ "id": 1, "name": "Charlie", "birthday": new Date(1) }]);
 				});
 
-				it("Should return correct result for saveUnknown", async() => {
-					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number}, {"saveUnknown": true}));
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				it("Should return correct result for saveUnknown", async () => {
+					Model = dynamoose.model("Cat", new dynamoose.Schema({ "id": Number }, { "saveUnknown": true }));
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" } }] });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([{ "id": 1, "name": "Charlie" }]);
 				});
 
-				it("Should return correct metadata in result", async() => {
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1});
+				it("Should return correct metadata in result", async () => {
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" } }], "Count": 1, "ScannedCount": 1 });
 					const result = await callType.func(Model.scan().exec).bind(Model.scan())();
 					expect(result.lastKey).to.eql(undefined);
 					expect(result.count).to.eql(1);
@@ -122,36 +122,36 @@ describe("Scan", () => {
 					expect(result.timesScanned).to.eql(1);
 				});
 
-				it("Should return correct lastKey", async() => {
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+				it("Should return correct lastKey", async () => {
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" } }], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": { "id": { "N": "5" } } });
 					const result = await callType.func(Model.scan().exec).bind(Model.scan())();
-					expect(result.lastKey).to.eql({"id": 5});
+					expect(result.lastKey).to.eql({ "id": 5 });
 				});
 
-				it("Should send correct request on scan.exec", async() => {
-					scanPromiseResolver = () => ({"Items": []});
+				it("Should send correct request on scan.exec", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
 					await callType.func(Model.scan().exec).bind(Model.scan())();
-					expect(scanParams).to.eql({"TableName": "Cat"});
+					expect(scanParams).to.eql({ "TableName": "Cat" });
 				});
 
-				it("Should send correct request on scan.exec for one object passed in", async() => {
-					scanPromiseResolver = () => ({"Items": []});
-					await callType.func(Model.scan({"name": "Charlie"}).exec).bind(Model.scan({"name": "Charlie"}))();
+				it("Should send correct request on scan.exec for one object passed in", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
+					await callType.func(Model.scan({ "name": "Charlie" }).exec).bind(Model.scan({ "name": "Charlie" }))();
 					expect(scanParams).to.eql({
 						"TableName": "Cat",
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
 						"ExpressionAttributeValues": {
-							":v0": {"S": "Charlie"}
+							":v0": { "S": "Charlie" }
 						},
 						"FilterExpression": "#a0 = :v0"
 					});
 				});
 
-				it("Should send correct request on scan.exec for one object passed in", async() => {
-					scanPromiseResolver = () => ({"Items": []});
-					await callType.func(Model.scan({"id": {"le": 5}, "name": {"eq": "Charlie"}}).exec).bind(Model.scan({"id": {"le": 5}, "name": {"eq": "Charlie"}}))();
+				it("Should send correct request on scan.exec for one object passed in", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
+					await callType.func(Model.scan({ "id": { "le": 5 }, "name": { "eq": "Charlie" } }).exec).bind(Model.scan({ "id": { "le": 5 }, "name": { "eq": "Charlie" } }))();
 					expect(scanParams).to.eql({
 						"TableName": "Cat",
 						"ExpressionAttributeNames": {
@@ -159,15 +159,15 @@ describe("Scan", () => {
 							"#a1": "name"
 						},
 						"ExpressionAttributeValues": {
-							":v0": {"N": "5"},
-							":v1": {"S": "Charlie"}
+							":v0": { "N": "5" },
+							":v1": { "S": "Charlie" }
 						},
 						"FilterExpression": "#a0 <= :v0 AND #a1 = :v1"
 					});
 				});
 
-				it("Should send correct request on scan.exec with filters", async() => {
-					scanPromiseResolver = () => ({"Items": []});
+				it("Should send correct request on scan.exec with filters", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
 					const scan = Model.scan().filter("id").eq("test");
 					await callType.func(scan.exec).bind(scan)();
 					expect(scanParams).to.eql({
@@ -175,15 +175,15 @@ describe("Scan", () => {
 							"#a0": "id"
 						},
 						"ExpressionAttributeValues": {
-							":v0": {"S": "test"}
+							":v0": { "S": "test" }
 						},
 						"FilterExpression": "#a0 = :v0",
 						"TableName": "Cat"
 					});
 				});
 
-				it("Should send correct request on scan.exec with filters and multiple values", async() => {
-					scanPromiseResolver = () => ({"Items": []});
+				it("Should send correct request on scan.exec with filters and multiple values", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
 					const scan = Model.scan().filter("id").between(1, 3);
 					await callType.func(scan.exec).bind(scan)();
 					expect(scanParams).to.eql({
@@ -191,17 +191,17 @@ describe("Scan", () => {
 							"#a0": "id"
 						},
 						"ExpressionAttributeValues": {
-							":v0_1": {"N": "1"},
-							":v0_2": {"N": "3"}
+							":v0_1": { "N": "1" },
+							":v0_2": { "N": "3" }
 						},
 						"FilterExpression": "#a0 BETWEEN :v0_1 AND :v0_2",
 						"TableName": "Cat"
 					});
 				});
 
-				it("Should send correct request on scan.exec when using nested groups with OR", async() => {
-					scanPromiseResolver = () => ({"Items": []});
-					const scan = Model.scan({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).or().where("id").eq(2));
+				it("Should send correct request on scan.exec when using nested groups with OR", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
+					const scan = Model.scan({ "name": "Charlie" }).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).or().where("id").eq(2));
 					await callType.func(scan.exec).bind(scan)();
 					expect(scanParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -229,9 +229,9 @@ describe("Scan", () => {
 					});
 				});
 
-				it("Should send correct request on scan.exec when using nested groups with AND", async() => {
-					scanPromiseResolver = () => ({"Items": []});
-					const scan = Model.scan({"name": "Charlie"}).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).and().where("id").eq(2));
+				it("Should send correct request on scan.exec when using nested groups with AND", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
+					const scan = Model.scan({ "name": "Charlie" }).and().where("favoriteNumber").le(18).parenthesis((a) => a.where("id").eq(1).and().where("id").eq(2));
 					await callType.func(scan.exec).bind(scan)();
 					expect(scanParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -259,31 +259,31 @@ describe("Scan", () => {
 					});
 				});
 
-				it("Should not include - in filter expression", async() => {
-					scanPromiseResolver = () => ({"Items": []});
+				it("Should not include - in filter expression", async () => {
+					scanPromiseResolver = () => ({ "Items": [] });
 					const scan = Model.scan().filter("id").between(1, 3);
 					await callType.func(scan.exec).bind(scan)();
 					expect(scanParams.FilterExpression).to.not.include("-");
 				});
 
-				it("Should return correct result for get function on attribute", async() => {
-					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": (val) => `${val}-get`}}));
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
+				it("Should return correct result for get function on attribute", async () => {
+					Model = dynamoose.model("Cat", new dynamoose.Schema({ "id": Number, "name": { "type": String, "get": (val) => `${val}-get` } }));
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" } }] });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([{ "id": 1, "name": "Charlie-get" }]);
 				});
 
-				it("Should return correct result for async get function on attribute", async() => {
-					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "get": async(val) => `${val}-get`}}));
-					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
-					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
+				it("Should return correct result for async get function on attribute", async () => {
+					Model = dynamoose.model("Cat", new dynamoose.Schema({ "id": Number, "name": { "type": String, "get": async (val) => `${val}-get` } }));
+					scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" } }] });
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({ ...item }))).to.eql([{ "id": 1, "name": "Charlie-get" }]);
 				});
 
 				it("Should throw error from AWS", () => {
 					scanPromiseResolver = () => {
-						throw {"error": "Error"};
+						throw { "error": "Error" };
 					};
 
-					return expect(callType.func(Model.scan().exec).bind(Model.scan())()).to.be.rejectedWith({"error": "Error"});
+					return expect(callType.func(Model.scan().exec).bind(Model.scan())()).to.be.rejectedWith({ "error": "Error" });
 				});
 			});
 		});
@@ -330,8 +330,8 @@ describe("Scan", () => {
 
 		it("Should set correct property", () => {
 			expect(Model.scan().settings.condition.settings.pending).to.eql({});
-			expect(Model.scan().where("id").settings.condition.settings.pending).to.eql({"key": "id"});
-			expect(Model.scan().where("id").where("name").settings.condition.settings.pending).to.eql({"key": "name"});
+			expect(Model.scan().where("id").settings.condition.settings.pending).to.eql({ "key": "id" });
+			expect(Model.scan().where("id").where("name").settings.condition.settings.pending).to.eql({ "key": "name" });
 		});
 	});
 
@@ -346,8 +346,8 @@ describe("Scan", () => {
 
 		it("Should set correct property", () => {
 			expect(Model.scan().settings.condition.settings.pending).to.eql({});
-			expect(Model.scan().filter("id").settings.condition.settings.pending).to.eql({"key": "id"});
-			expect(Model.scan().filter("id").filter("name").settings.condition.settings.pending).to.eql({"key": "name"});
+			expect(Model.scan().filter("id").settings.condition.settings.pending).to.eql({ "key": "id" });
+			expect(Model.scan().filter("id").filter("name").settings.condition.settings.pending).to.eql({ "key": "name" });
 		});
 	});
 
@@ -362,12 +362,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").eq("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "EQ", "value": "test" } }]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().eq("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "NE", "value": "test" } }]);
 		});
 	});
 
@@ -382,12 +382,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").exists();
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": undefined}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "EXISTS", "value": undefined } }]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().exists();
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": undefined}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "NOT_EXISTS", "value": undefined } }]);
 		});
 	});
 
@@ -402,12 +402,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").lt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "LT", "value": "test" } }]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().lt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "GE", "value": "test" } }]);
 		});
 	});
 
@@ -422,12 +422,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").le("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "LE", "value": "test" } }]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().le("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "GT", "value": "test" } }]);
 		});
 	});
 
@@ -442,12 +442,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").gt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "GT", "value": "test" } }]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().gt("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "LE", "value": "test" } }]);
 		});
 	});
 
@@ -462,12 +462,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").ge("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "GE", "value": "test" } }]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().ge("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "LT", "value": "test" } }]);
 		});
 	});
 
@@ -482,7 +482,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").beginsWith("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "BEGINS_WITH", "value": "test" } }]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -502,12 +502,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").contains("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "CONTAINS", "value": "test" } }]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().contains("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "NOT_CONTAINS", "value": "test" } }]);
 		});
 	});
 
@@ -522,7 +522,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").in("test");
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "IN", "value": "test"}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "IN", "value": "test" } }]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -542,7 +542,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").between(1, 2);
-			expect(scan.settings.condition.settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
+			expect(scan.settings.condition.settings.conditions).to.eql([{ "id": { "type": "BETWEEN", "value": [1, 2] } }]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -561,8 +561,8 @@ describe("Scan", () => {
 			expect(scan.settings.limit).to.eql(5);
 		});
 
-		it("Should send correct request on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": []});
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
 			await Model.scan().limit(5).exec();
 			expect(scanParams.Limit).to.eql(5);
 		});
@@ -574,25 +574,25 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct setting on scan instance", () => {
-			const scan = Model.scan().startAt({"id": 5});
-			expect(scan.settings.startAt).to.eql({"id": 5});
+			const scan = Model.scan().startAt({ "id": 5 });
+			expect(scan.settings.startAt).to.eql({ "id": 5 });
 		});
 
-		it("Should send correct request on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": []});
-			await Model.scan().startAt({"id": 5}).exec();
-			expect(scanParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
+			await Model.scan().startAt({ "id": 5 }).exec();
+			expect(scanParams.ExclusiveStartKey).to.eql({ "id": { "N": "5" } });
 		});
 
 		it("Should set correct setting on scan instance if passing in DynamoDB object", () => {
-			const scan = Model.scan().startAt({"id": {"N": "5"}});
-			expect(scan.settings.startAt).to.eql({"id": {"N": "5"}});
+			const scan = Model.scan().startAt({ "id": { "N": "5" } });
+			expect(scan.settings.startAt).to.eql({ "id": { "N": "5" } });
 		});
 
-		it("Should send correct request on scan.exec if passing in DynamoDB object", async() => {
-			scanPromiseResolver = () => ({"Items": []});
-			await Model.scan().startAt({"id": {"N": "5"}}).exec();
-			expect(scanParams.ExclusiveStartKey).to.eql({"id": {"N": "5"}});
+		it("Should send correct request on scan.exec if passing in DynamoDB object", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
+			await Model.scan().startAt({ "id": { "N": "5" } }).exec();
+			expect(scanParams.ExclusiveStartKey).to.eql({ "id": { "N": "5" } });
 		});
 	});
 
@@ -606,8 +606,8 @@ describe("Scan", () => {
 			expect(scan.settings.attributes).to.eql(["id"]);
 		});
 
-		it("Should send correct request on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": []});
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
 			await Model.scan().attributes(["id"]).exec();
 			expect(scanParams.AttributesToGet).to.eql(["id"]);
 		});
@@ -623,18 +623,18 @@ describe("Scan", () => {
 			expect(scan.settings.parallel).to.eql(5);
 		});
 
-		it("Should send correct request on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": []});
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
 			await Model.scan().parallel(5).exec();
 			expect(scanParams.TotalSegments).to.eql(5);
 		});
 
-		it("Should return correct result on scan.exec", async() => {
+		it("Should return correct result on scan.exec", async () => {
 			let count = 0;
-			scanPromiseResolver = () => ({"Items": [{"id": count * 50, "name": "Test"}, {"id": count * 100, "name": "Test 2"}], "Count": 2, "ScannedCount": 3, "LastEvaluatedKey": {"id": {"N": `${count++}`}}});
+			scanPromiseResolver = () => ({ "Items": [{ "id": count * 50, "name": "Test" }, { "id": count * 100, "name": "Test 2" }], "Count": 2, "ScannedCount": 3, "LastEvaluatedKey": { "id": { "N": `${count++}` } } });
 			const result = await Model.scan().parallel(5).exec();
 			expect(count).to.eql(5);
-			expect(result.lastKey).to.eql([{"id": 0}, {"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}]);
+			expect(result.lastKey).to.eql([{ "id": 0 }, { "id": 1 }, { "id": 2 }, { "id": 3 }, { "id": 4 }]);
 			expect(result.scannedCount).to.eql(15);
 			expect(result.count).to.eql(10);
 			expect(result.timesScanned).to.eql(5);
@@ -652,16 +652,16 @@ describe("Scan", () => {
 			expect(scan.settings.count).to.be.true;
 		});
 
-		it("Should send correct request on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": []});
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
 			await Model.scan().count().exec();
 			expect(scanParams.Select).to.eql("COUNT");
 		});
 
-		it("Should return correct result on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+		it("Should return correct result on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [{ "id": { "N": "1" }, "name": { "S": "Charlie" } }], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": { "id": { "N": "5" } } });
 			const result = await Model.scan().count().exec();
-			expect(result).to.eql({"count": 1, "scannedCount": 1});
+			expect(result).to.eql({ "count": 1, "scannedCount": 1 });
 		});
 	});
 
@@ -675,8 +675,8 @@ describe("Scan", () => {
 			expect(scan.settings.consistent).to.be.true;
 		});
 
-		it("Should send correct request on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": []});
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
 			await Model.scan().consistent().exec();
 			expect(scanParams.ConsistentRead).to.be.true;
 		});
@@ -692,8 +692,8 @@ describe("Scan", () => {
 			expect(scan.settings.index).to.eql("customIndex");
 		});
 
-		it("Should send correct request on scan.exec", async() => {
-			scanPromiseResolver = () => ({"Items": []});
+		it("Should send correct request on scan.exec", async () => {
+			scanPromiseResolver = () => ({ "Items": [] });
 			await Model.scan().using("customIndex").exec();
 			expect(scanParams.IndexName).to.eql("customIndex");
 		});
@@ -709,19 +709,19 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct default options", () => {
-			expect(Model.scan().all().settings.all).to.eql({"delay": 0, "max": 0});
+			expect(Model.scan().all().settings.all).to.eql({ "delay": 0, "max": 0 });
 		});
 
 		it("Should set correct option for delay", () => {
-			expect(Model.scan().all(5).settings.all).to.eql({"delay": 5, "max": 0});
+			expect(Model.scan().all(5).settings.all).to.eql({ "delay": 5, "max": 0 });
 		});
 
 		it("Should set correct option for max", () => {
-			expect(Model.scan().all(0, 5).settings.all).to.eql({"delay": 0, "max": 5});
+			expect(Model.scan().all(0, 5).settings.all).to.eql({ "delay": 0, "max": 5 });
 		});
 
-		it("Should handle delay correctly on scan.exec", async() => {
-			scanPromiseResolver = async() => ({"Items": [], "LastEvaluatedKey": {"id": {"S": "test"}}});
+		it("Should handle delay correctly on scan.exec", async () => {
+			scanPromiseResolver = async () => ({ "Items": [], "LastEvaluatedKey": { "id": { "S": "test" } } });
 
 			const start = Date.now();
 			await Model.scan().all(10, 2).exec();
@@ -729,18 +729,18 @@ describe("Scan", () => {
 			expect(end - start).to.be.at.least(19);
 		});
 
-		it("Should send correct result on scan.exec", async() => {
+		it("Should send correct result on scan.exec", async () => {
 			let count = 0;
-			scanPromiseResolver = async() => {
-				const obj = ({"Items": [{"id": ++count}], "Count": 1, "ScannedCount": 2});
+			scanPromiseResolver = async () => {
+				const obj = ({ "Items": [{ "id": ++count }], "Count": 1, "ScannedCount": 2 });
 				if (count < 2) {
-					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
+					obj["LastEvaluatedKey"] = { "id": { "N": `${count}` } };
 				}
 				return obj;
 			};
 
 			const result = await Model.scan().all().exec();
-			expect(result.map((item) => ({...item}))).to.eql([{"id": 1}, {"id": 2}]);
+			expect(result.map((item) => ({ ...item }))).to.eql([{ "id": 1 }, { "id": 2 }]);
 			expect(result.count).to.eql(2);
 			expect(result.scannedCount).to.eql(4);
 			expect(result.lastKey).to.not.exist;

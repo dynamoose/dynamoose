@@ -1,4 +1,4 @@
-import {GeneralObjectOrValue} from "./types";
+import { GeneralObjectOrValue } from "./types";
 
 const main = <T>(object: GeneralObjectOrValue<T>, existingKey = ""): [string, GeneralObjectOrValue<T>][] => {
 	return Object.entries(object).reduce((accumulator, entry) => {

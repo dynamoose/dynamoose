@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../../dist/utils");
 
 describe("utils.object.set", () => {
@@ -8,36 +8,36 @@ describe("utils.object.set", () => {
 
 	const tests = [
 		{
-			"input": [{"hello": "world"}, "hello", "random"],
-			"output": {"hello": "random"}
+			"input": [{ "hello": "world" }, "hello", "random"],
+			"output": { "hello": "random" }
 		},
 		{
-			"input": [{"test": {"hello": "world"}}, "test.hello", "random"],
-			"output": {"test": {"hello": "random"}}
+			"input": [{ "test": { "hello": "world" } }, "test.hello", "random"],
+			"output": { "test": { "hello": "random" } }
 		},
 		{
-			"input": [{"test": {"hello": {"other": "here"}}}, "test.hello.test", "random"],
-			"output": {"test": {"hello":{"other": "here", "test": "random"}}}
+			"input": [{ "test": { "hello": { "other": "here" } } }, "test.hello.test", "random"],
+			"output": { "test": { "hello":{ "other": "here", "test": "random" } } }
 		},
 		{
 			"input": [{}, "test.hello", "random"],
-			"output": {"test": {"hello": "random"}}
+			"output": { "test": { "hello": "random" } }
 		},
 		{
 			"input": [{}, "test.hello.test", "random"],
-			"output": {"test": {"hello": {"test": "random"}}}
+			"output": { "test": { "hello": { "test": "random" } } }
 		},
 		{
-			"input": [{"data": [{"id": "hello world"}]}, "data.0.id", "random"],
-			"output": {"data": [{"id": "random"}]}
+			"input": [{ "data": [{ "id": "hello world" }] }, "data.0.id", "random"],
+			"output": { "data": [{ "id": "random" }] }
 		},
 		{
-			"input": [{"data": [{"id": "hello world"}]}, "data.1.id", "random"],
-			"output": {"data": [{"id": "hello world"}, {"id": "random"}]}
+			"input": [{ "data": [{ "id": "hello world" }] }, "data.1.id", "random"],
+			"output": { "data": [{ "id": "hello world" }, { "id": "random" }] }
 		},
 		{
-			"input": [{"data": []}, "data.0", {"hello": "world"}],
-			"output": {"data": [{"hello": "world"}]}
+			"input": [{ "data": [] }, "data.0", { "hello": "world" }],
+			"output": { "data": [{ "hello": "world" }] }
 		}
 	];
 

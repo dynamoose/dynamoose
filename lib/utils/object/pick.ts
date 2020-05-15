@@ -1,6 +1,6 @@
 import get = require("./get");
 import set = require("./set");
-import {GeneralObject} from "./types";
+import { GeneralObject } from "./types";
 
 export = <T>(object: GeneralObject<T>, keys: any[]): GeneralObject<T> => {
 	return keys.reduce((obj, key) => {

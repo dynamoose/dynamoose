@@ -2,7 +2,7 @@ import status = require("./status");
 import providers = require("./providers");
 import CustomError = require("../Error");
 import utils = require("../utils");
-import {v4 as uuid} from "uuid";
+import { v4 as uuid } from "uuid";
 
 const validLevels = ["fatal", "error", "warn", "info", "debug", "trace"];
 
@@ -39,7 +39,7 @@ export = (event): void => {
 					}
 				}
 				if (provider.filter.category) {
-					if (!utils.dynamoose.wildcard_allowed_check(Array.isArray(provider.filter.category) ? provider.filter.category : [provider.filter.category], event.category, {"splitString": ":", "prefixesDisallowed": false})) {
+					if (!utils.dynamoose.wildcard_allowed_check(Array.isArray(provider.filter.category) ? provider.filter.category : [provider.filter.category], event.category, { "splitString": ":", "prefixesDisallowed": false })) {
 						return;
 					}
 				}

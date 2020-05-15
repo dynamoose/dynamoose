@@ -1,4 +1,4 @@
-const {expect} = require("chai");
+const { expect } = require("chai");
 const utils = require("../../../dist/utils");
 
 describe("utils.object.get", () => {
@@ -8,11 +8,11 @@ describe("utils.object.get", () => {
 
 	const tests = [
 		{
-			"input": [{"hello": "world"}, "hello"],
+			"input": [{ "hello": "world" }, "hello"],
 			"output": "world"
 		},
 		{
-			"input": [{"test": {"hello": "world"}}, "test.hello"],
+			"input": [{ "test": { "hello": "world" } }, "test.hello"],
 			"output": "world"
 		},
 		{
@@ -24,7 +24,7 @@ describe("utils.object.get", () => {
 			"output": undefined
 		},
 		{
-			"input": [{"data": [{"id": "hello world"}]}, "data.0.id"],
+			"input": [{ "data": [{ "id": "hello world" }] }, "data.0.id"],
 			"output": "hello world"
 		}
 	];

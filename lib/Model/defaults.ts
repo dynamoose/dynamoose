@@ -1,4 +1,4 @@
-import {ModelOptions, ModelOptionsOptional} from ".";
+import { ModelOptions, ModelOptionsOptional } from ".";
 
 export const original: ModelOptions = {
 	"create": true,
@@ -29,4 +29,4 @@ const customObject = {
 	"get": (): ModelOptionsOptional => customValue
 };
 
-export {customObject as custom};
+export { customObject as custom };

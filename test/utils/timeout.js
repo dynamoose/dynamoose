@@ -1,7 +1,7 @@
 const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
-const {expect} = chai;
+const { expect } = chai;
 const utils = require("../../dist/utils");
 
 describe("Timeout", () => {
@@ -14,7 +14,7 @@ describe("Timeout", () => {
 		expect(myTimeout).to.be.a("promise");
 	});
 
-	it("Should resolve in x milliseconds", async() => {
+	it("Should resolve in x milliseconds", async () => {
 		const ms = 10;
 		const timeA = Date.now();
 		await utils.timeout(ms);

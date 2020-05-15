@@ -1,9 +1,9 @@
-import {Document} from "./Document";
+import { Document } from "./Document";
 import CustomError = require("./Error");
 import utils = require("./utils");
 const OR = Symbol("OR");
-import {DynamoDB} from "aws-sdk";
-import {ObjectType} from "./General";
+import { DynamoDB } from "aws-sdk";
+import { ObjectType } from "./General";
 
 const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
@@ -49,16 +49,16 @@ enum ConditionComparisonComparatorDynamoName {
 	between = "BETWEEN"
 }
 const types: ConditionComparisonType[] = [
-	{"name": ConditionComparisonComparatorName.equals, "typeName": ConditionComparisonComparatorDynamoName.equals, "not": ConditionComparisonComparatorDynamoName.notEquals},
-	{"name": ConditionComparisonComparatorName.lessThan, "typeName": ConditionComparisonComparatorDynamoName.lessThan, "not": ConditionComparisonComparatorDynamoName.greaterThanEquals},
-	{"name": ConditionComparisonComparatorName.lessThanEquals, "typeName": ConditionComparisonComparatorDynamoName.lessThanEquals, "not": ConditionComparisonComparatorDynamoName.greaterThan},
-	{"name": ConditionComparisonComparatorName.greaterThan, "typeName": ConditionComparisonComparatorDynamoName.greaterThan, "not": ConditionComparisonComparatorDynamoName.lessThanEquals},
-	{"name": ConditionComparisonComparatorName.greaterThanEquals, "typeName": ConditionComparisonComparatorDynamoName.greaterThanEquals, "not": ConditionComparisonComparatorDynamoName.lessThan},
-	{"name": ConditionComparisonComparatorName.beginsWith, "typeName": ConditionComparisonComparatorDynamoName.beginsWith},
-	{"name": ConditionComparisonComparatorName.contains, "typeName": ConditionComparisonComparatorDynamoName.contains, "not": ConditionComparisonComparatorDynamoName.notContains},
-	{"name": ConditionComparisonComparatorName.exists, "typeName": ConditionComparisonComparatorDynamoName.exists, "not": ConditionComparisonComparatorDynamoName.notExists},
-	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in},
-	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true}
+	{ "name": ConditionComparisonComparatorName.equals, "typeName": ConditionComparisonComparatorDynamoName.equals, "not": ConditionComparisonComparatorDynamoName.notEquals },
+	{ "name": ConditionComparisonComparatorName.lessThan, "typeName": ConditionComparisonComparatorDynamoName.lessThan, "not": ConditionComparisonComparatorDynamoName.greaterThanEquals },
+	{ "name": ConditionComparisonComparatorName.lessThanEquals, "typeName": ConditionComparisonComparatorDynamoName.lessThanEquals, "not": ConditionComparisonComparatorDynamoName.greaterThan },
+	{ "name": ConditionComparisonComparatorName.greaterThan, "typeName": ConditionComparisonComparatorDynamoName.greaterThan, "not": ConditionComparisonComparatorDynamoName.lessThanEquals },
+	{ "name": ConditionComparisonComparatorName.greaterThanEquals, "typeName": ConditionComparisonComparatorDynamoName.greaterThanEquals, "not": ConditionComparisonComparatorDynamoName.lessThan },
+	{ "name": ConditionComparisonComparatorName.beginsWith, "typeName": ConditionComparisonComparatorDynamoName.beginsWith },
+	{ "name": ConditionComparisonComparatorName.contains, "typeName": ConditionComparisonComparatorDynamoName.contains, "not": ConditionComparisonComparatorDynamoName.notContains },
+	{ "name": ConditionComparisonComparatorName.exists, "typeName": ConditionComparisonComparatorDynamoName.exists, "not": ConditionComparisonComparatorDynamoName.notExists },
+	{ "name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in },
+	{ "name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true }
 ];
 export type ConditionInitalizer = Condition | ObjectType | string;
 
@@ -95,7 +95,7 @@ export class Condition {
 
 	requestObject: (settings?: ConditionRequestObjectSettings) => ConditionRequestObjectResult;
 
-	constructor(object?: ConditionInitalizer) {
+	constructor (object?: ConditionInitalizer) {
 		if (object instanceof Condition) {
 			Object.entries(object).forEach((entry) => {
 				const [key, value] = entry;
@@ -141,7 +141,7 @@ interface ConditionsConditionStorageObject {
 	value: any;
 }
 
-function finalizePending(instance: Condition): void {
+function finalizePending (instance: Condition): void {
 	const pending = instance.settings.pending;
 
 	let dynamoNameType: ConditionComparisonComparatorDynamoName;
@@ -164,27 +164,27 @@ function finalizePending(instance: Condition): void {
 	instance.settings.pending = {};
 }
 
-Condition.prototype.parenthesis = Condition.prototype.group = function(this: Condition, value: Condition | ConditionFunction): Condition {
+Condition.prototype.parenthesis = Condition.prototype.group = function (this: Condition, value: Condition | ConditionFunction): Condition {
 	value = typeof value === "function" ? value(new Condition()) : value;
 	this.settings.conditions.push(value.settings.conditions);
 	return this;
 };
-Condition.prototype.or = function(this: Condition): Condition {
+Condition.prototype.or = function (this: Condition): Condition {
 	this.settings.conditions.push(OR);
 	return this;
 };
-Condition.prototype.and = function(this: Condition): Condition { return this; };
-Condition.prototype.not = function(this: Condition): Condition {
+Condition.prototype.and = function (this: Condition): Condition { return this; };
+Condition.prototype.not = function (this: Condition): Condition {
 	this.settings.pending.not = !this.settings.pending.not;
 	return this;
 };
-Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function(this: Condition, key: string): Condition {
-	this.settings.pending = {key};
+Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function (this: Condition, key: string): Condition {
+	this.settings.pending = { key };
 	return this;
 };
 // TODO: I don't think this prototypes are being exposed which is gonna cause a lot of problems with our type definition file. Need to figure out a better way to do this since they aren't defined and are dynamic.
 types.forEach((type) => {
-	Condition.prototype[type.name] = function(this: Condition, ...args: any[]): Condition {
+	Condition.prototype[type.name] = function (this: Condition, ...args: any[]): Condition {
 		this.settings.pending.value = type.multipleArguments ? args : args[0];
 		this.settings.pending.type = type;
 		finalizePending(this);
@@ -200,13 +200,13 @@ interface ConditionRequestObjectSettings {
 	};
 	conditionStringType: "array" | "string";
 }
-Condition.prototype.requestObject = function(this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): ConditionRequestObjectResult {
+Condition.prototype.requestObject = function (this: Condition, settings: ConditionRequestObjectSettings = { "conditionString": "ConditionExpression", "conditionStringType": "string" }): ConditionRequestObjectResult {
 	if (this.settings.raw && utils.object.equals(Object.keys(this.settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
 		return Object.entries((this.settings.raw as ObjectType).ExpressionAttributeValues).reduce((obj, entry) => {
 			const [key, value] = entry;
 			// TODO: we should fix this so that we can do `isDynamoItem(value)`
-			if (!Document.isDynamoObject({"key": value})) {
-				obj.ExpressionAttributeValues[key] = Document.objectToDynamo(value, {"type": "value"});
+			if (!Document.isDynamoObject({ "key": value })) {
+				obj.ExpressionAttributeValues[key] = Document.objectToDynamo(value, { "type": "value" });
 			}
 			return obj;
 		}, this.settings.raw as ObjectType);
@@ -215,21 +215,21 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 	}
 
 	let index = (settings.index || {}).start || 0;
-	const setIndex = (i: number): void => {index = i; (settings.index || {"set": utils.empty_function}).set(i);};
-	function main(input: ConditionStorageSettingsConditions): ConditionRequestObjectResult {
+	const setIndex = (i: number): void => {index = i; (settings.index || { "set": utils.empty_function }).set(i);};
+	function main (input: ConditionStorageSettingsConditions): ConditionRequestObjectResult {
 		return input.reduce((object: ConditionRequestObjectResult, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {
 			let expression = "";
 			if (Array.isArray(entry)) {
 				const result = main(entry);
-				const newData = utils.merge_objects.main({"combineMethod": "object_combine"})({...result}, {...object});
+				const newData = utils.merge_objects.main({ "combineMethod": "object_combine" })({ ...result }, { ...object });
 				const returnObject = utils.object.pick(newData, ["ExpressionAttributeNames", "ExpressionAttributeValues"]);
 
 				expression = settings.conditionStringType === "array" ? result[settings.conditionString] : `(${result[settings.conditionString]})`;
-				object = {...object, ...returnObject};
+				object = { ...object, ...returnObject };
 			} else if (entry !== OR) {
 				const [key, condition] = Object.entries(entry)[0];
-				const {value} = condition;
-				const keys = {"name": `#a${index}`, "value": `:v${index}`};
+				const { value } = condition;
+				const keys = { "name": `#a${index}`, "value": `:v${index}` };
 				setIndex(++index);
 
 				const keyParts = key.split(".");
@@ -244,7 +244,7 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 					}, []).join(".");
 				}
 				const toDynamo = (value: ObjectType): DynamoDB.AttributeValue => {
-					return Document.objectToDynamo(value, {"type": "value"});
+					return Document.objectToDynamo(value, { "type": "value" });
 				};
 				object.ExpressionAttributeValues[keys.value] = toDynamo(value);
 
@@ -302,7 +302,7 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 			});
 
 			return object;
-		}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
+		}, { [settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {} });
 	}
 	return main(this.settings.conditions);
 };

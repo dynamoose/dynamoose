@@ -1,10 +1,10 @@
 import ddb = require("./aws/ddb/internal");
 import utils = require("./utils");
 import Error = require("./Error");
-import {Model} from "./Model";
+import { Model } from "./Model";
 import * as ModelStore from "./ModelStore";
-import {CallbackType} from "./General";
-import {Document} from "./Document";
+import { CallbackType } from "./General";
+import { Document } from "./Document";
 
 enum TransactionReturnOptions {
 	request = "request",
@@ -20,17 +20,17 @@ export interface TransactionSettings {
 }
 
 // TODO: seems like when using this method as a consumer of Dynamoose that it will get confusing with the different parameter names. For example, if you pass in an array of transactions and a callback, the callback parameter name when using this method will be `settings` (I THINK). Which is super confusing to the user. Not sure how to fix this tho.
-export default (transactions: any[], settings: TransactionSettings = {"return": TransactionReturnOptions.documents}, callback: CallbackType<any, any>): any => {
+export default (transactions: any[], settings: TransactionSettings = { "return": TransactionReturnOptions.documents }, callback: CallbackType<any, any>): any => {
 	if (typeof settings === "function") {
 		callback = settings;
-		settings = {"return": TransactionReturnOptions.documents};
+		settings = { "return": TransactionReturnOptions.documents };
 	}
 	if (typeof transactions === "function") {
 		callback = transactions;
 		transactions = null;
 	}
 
-	const promise = (async(): Promise<any> => {
+	const promise = (async (): Promise<any> => {
 		if (!Array.isArray(transactions) || transactions.length <= 0) {
 			throw new Error.InvalidParameter("You must pass in an array with items for the transactions parameter.");
 		}
@@ -76,7 +76,7 @@ export default (transactions: any[], settings: TransactionSettings = {"return": 
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
 			const model: Model<Document> = models.find((model) => model.name === modelName);
-			return (new model.Document(item.Item, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
+			return (new model.Document(item.Item, { "type": "fromDynamo" })).conformToSchema({ "customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo" });
 		})) : null;
 	})();
 
