@@ -615,7 +615,7 @@ describe("Scan", () => {
 		it("Should send correct request on scan.exec with multiple attributes", async () => {
 			scanPromiseResolver = () => ({"Items": []});
 			await Model.scan("name").eq("Charlie").attributes(["id", "name"]).exec();
-			expect(scanParams.ProjectionExpression).to.eql("id, name");
+			expect(scanParams.ProjectionExpression).to.eql("id,name");
 		});
 
 	});
