@@ -24,7 +24,7 @@ module.exports = {
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "object-curly-spacing": ["error", "never"],
-    "space-before-function-paren": ["error", "never"],
+    "space-before-function-paren": ["error", "always"],
     "space-before-blocks": ["error", "always"],
     "no-multi-spaces": "error",
     "space-in-parens": "error",
