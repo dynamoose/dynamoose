@@ -1,5 +1,6 @@
 import { ObjectType, ModelType } from "./General";
 import { Document } from "./Document";
+import CustomError = require("./Error");
 import utils = require("./utils");
 
 interface SerializerOptions {
@@ -14,19 +15,19 @@ const defaultSerializer: SerializerOptions = {
 
 const validateName = (name: string): void => {
 	if (!name || typeof name !== "string") {
-		throw new Error("Field name is required and should be of type string");
+		throw new CustomError.InvalidParameter("Field name is required and should be of type string");
 	}
 };
 
 const validateOptions = (options: SerializerOptions): void => {
 	if (!options || !(Array.isArray(options) || typeof options === "object")) {
-		throw new Error("Field options is required and should be an object or array");
+		throw new CustomError.InvalidParameter("Field options is required and should be an object or array");
 	}
 };
 
 const cleanAndValidateDocumentsArray = (documentsArray: ModelType<Document>[]): ModelType<Document>[] => {
 	if (!documentsArray || !Array.isArray(documentsArray)) {
-		throw new Error("documentsArray must be an array of document objects");
+		throw new CustomError.InvalidParameter("documentsArray must be an array of document objects");
 	}
 
 	return documentsArray.filter((doc) => typeof doc.serialize === "function");
