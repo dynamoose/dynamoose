@@ -4,10 +4,10 @@ import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings, Doc
 import utils = require("../utils");
 import ddb = require("../aws/ddb/internal");
 import Internal = require("../Internal");
-import {Serializer} from "../Serializer";
+import {Serializer, SerializerOptions} from "../Serializer";
 import {Condition, ConditionInitalizer} from "../Condition";
 import {Scan, Query} from "../DocumentRetriever";
-import {CallbackType, ObjectType, FunctionType} from "../General";
+import {CallbackType, ObjectType, FunctionType, ModelType} from "../General";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 
@@ -872,8 +872,9 @@ export class Model<T extends DocumentCarrier> {
 		}
 	}
 
-	serializeMany(...args): any {
-		return this.serializer._serializeMany.apply(this, args);
+	// Serialize Many
+	serializeMany(documentsArray: ModelType<DocumentCarrier>[] = [], nameOrOptions: SerializerOptions | string): any {
+		return this.serializer._serializeMany(documentsArray, nameOrOptions);
 	}
 }
 

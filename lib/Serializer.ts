@@ -3,7 +3,7 @@ import { Document } from "./Document";
 import CustomError = require("./Error");
 import utils = require("./utils");
 
-interface SerializerOptions {
+export interface SerializerOptions {
 	include?: string[];
 	exclude?: string[];
 	modify?: (serialized: ObjectType, original: ObjectType) => ObjectType;
@@ -73,7 +73,7 @@ export class Serializer {
 
 	_serializeMany(documentsArray: ModelType<Document>[] = [], nameOrOptions: SerializerOptions | string): ObjectType[] {
 		documentsArray = cleanAndValidateDocumentsArray(documentsArray);
-		return documentsArray.map((doc) => doc.serialize(nameOrOptions));
+		return documentsArray.map((document) => document.serialize(nameOrOptions));
 	}
 
 	_serialize(document: ObjectType, nameOrOptions: SerializerOptions | string = this.#defaultSerializer): ObjectType {
