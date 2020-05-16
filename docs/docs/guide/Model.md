@@ -970,16 +970,16 @@ This function will delete the serializer from the list of serializer on the mode
 User.serializer.delete("myCustomSerializer");
 ```
 
-## Model.serializer.setDefault([name])
+## Model.serializer.default.set([name])
 
 This function sets the default serializer for the given model. By default the default serializer has the same behavior as [document.toJSON](). The default serializer will be used for [`Model.serializeMany`]() and [`document.serialize`]() if you don't pass anything into the `serializer` parameter.
 
 ```js
-User.serializer.setDefault("myCustomSerializer");
+User.serializer.default.set("myCustomSerializer");
 ```
 
 You can revert back to the default serializer by calling this method with no arguments.
 
 ```js
-User.serializer.setDefault();
+User.serializer.default.set();
 ```
