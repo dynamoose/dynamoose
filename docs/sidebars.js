@@ -4,7 +4,8 @@ module.exports = {
 			"getting_started/Introduction",
 			"getting_started/Install",
 			"getting_started/Import",
-			"getting_started/Configure"
+			"getting_started/Configure",
+			"getting_started/TypeScript"
 		],
 		"Guide": [
 			"guide/Schema",

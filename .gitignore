@@ -1,19 +1,7 @@
 .DS_Store
 thumbs.db
-*.log
 node_modules/
-.settings
-.session.vim
-.vscode
-dist
-
-# Ignore webstorm directories
-.idea/
-
-.bundle/
-docs/_site
-Gemfile.lock
-
 .nyc_output
 coverage
 coverage.html
+dist

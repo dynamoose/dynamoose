@@ -2,11 +2,12 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
-const Error = require("../lib/Error");
-const Internal = require("../lib/Internal");
-const utils = require("../lib/utils");
+const dynamoose = require("../dist");
+const Error = require("../dist/Error");
+const Internal = require("../dist/Internal");
+const utils = require("../dist/utils");
 const util = require("util");
+const ModelStore = require("../dist/ModelStore");
 
 describe("Model", () => {
 	beforeEach(() => {
@@ -25,12 +26,28 @@ describe("Model", () => {
 	});
 
 	describe("Initialization", () => {
-		it("Should throw an error if no schema is passed in", () => {
+		it("Should throw an error if no schema is passed in and no existing model in store", () => {
 			expect(() => dynamoose.model("Cat")).to.throw(Error.MissingSchemaError);
+			expect(() => dynamoose.model("Cat")).to.throw("Schema hasn't been registered for model \"Cat\".\nUse \"dynamoose.model(name, schema)\"");
 		});
 
 		it("Should throw same error as no schema if nothing passed in", () => {
 			expect(() => dynamoose.model()).to.throw(Error.MissingSchemaError);
+			expect(() => dynamoose.model()).to.throw("Schema hasn't been registered for model \"undefined\".\nUse \"dynamoose.model(name, schema)\"");
+		});
+
+		it("Should return existing model if already exists and not passing in schema", () => {
+			const User = dynamoose.model("User", {"id": String});
+			const UserB = dynamoose.model("User");
+
+			expect(UserB).to.eql(User);
+		});
+
+		it("Should throw error if passing in model with same name as existing model", () => {
+			dynamoose.model("User", {"id": String});
+			dynamoose.model("User", {"id": String, "name": String});
+
+			expect(ModelStore("User").schema.schemaObject).to.eql({"id": String, "name": String});
 		});
 
 		it("Should create a schema if not passing in schema instance", () => {
@@ -346,7 +363,7 @@ describe("Model", () => {
 					"describeTable": (params) => {
 						describeTableParams.push(params);
 						return {
-							"promise": describeTableFunction
+							"promise": () => describeTableFunction(params)
 						};
 					}
 				});
@@ -563,7 +580,8 @@ describe("Model", () => {
 									"TableStatus": "ACTIVE"
 								}
 							});
-							dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							await model.Model.pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{
@@ -605,43 +623,45 @@ describe("Model", () => {
 						it("Should call updateTable to delete index", async () => {
 							const tableName = "Cat";
 							describeTableFunction = () => Promise.resolve({
-								"AttributeDefinitions": [
-									{
-										"AttributeName": "id",
-										"AttributeType": "S"
-									},
-									{
-										"AttributeName": "name",
-										"AttributeType": "S"
-									}
-								],
-								"GlobalSecondaryIndexes": [
-									{
-										"IndexName": "nameGlobalIndex",
-										"KeySchema": [
-											{
-												"AttributeName": "name",
-												"KeyType": "HASH"
-											}
-										],
-										"Projection": {
-											"ProjectionType": "ALL"
-										},
-										"ProvisionedThroughput": {
-											"ReadCapacityUnits": 1,
-											"WriteCapacityUnits": 1
-										}
-									}
-								],
 								"Table": {
 									"ProvisionedThroughput": {
 										"ReadCapacityUnits": 1,
 										"WriteCapacityUnits": 1
 									},
-									"TableStatus": "ACTIVE"
+									"TableStatus": "ACTIVE",
+									"AttributeDefinitions": [
+										{
+											"AttributeName": "id",
+											"AttributeType": "S"
+										},
+										{
+											"AttributeName": "name",
+											"AttributeType": "S"
+										}
+									],
+									"GlobalSecondaryIndexes": [
+										{
+											"IndexName": "nameGlobalIndex",
+											"IndexStatus": "ACTIVE",
+											"KeySchema": [
+												{
+													"AttributeName": "name",
+													"KeyType": "HASH"
+												}
+											],
+											"Projection": {
+												"ProjectionType": "ALL"
+											},
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											}
+										}
+									]
 								}
 							});
-							dynamoose.model(tableName, {"id": String, "name": {"type": String}}, {"update": updateOption});
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String}}, {"update": updateOption});
+							await model.Model.pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{
@@ -653,6 +673,223 @@ describe("Model", () => {
 										}
 									],
 									"TableName": "Cat"
+								}
+							]);
+						});
+
+						it("Should call updateTable to add multiple indexes correctly", async () => {
+							const tableName = "Cat";
+							let describeTableFunctionCalledTimes = 0;
+							let testUpdateTableParams = {};
+							describeTableFunction = () => {
+								++describeTableFunctionCalledTimes;
+								let obj;
+								if (describeTableFunctionCalledTimes === 1) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE"
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 2) {
+									testUpdateTableParams["0"] = [...updateTableParams];
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "CREATING",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 3) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 4) {
+									testUpdateTableParams["1"] = [...updateTableParams];
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												},
+												{
+													"IndexName": "statusGlobalIndex",
+													"IndexStatus": "CREATING",
+													"KeySchema": [
+														{
+															"AttributeName": "status",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes >= 4) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												},
+												{
+													"IndexName": "statusGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "status",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								}
+								return Promise.resolve(obj);
+							};
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}, "status": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							await model.Model.pendingTaskPromise();
+							await utils.set_immediate_promise();
+							expect(describeTableFunctionCalledTimes).to.eql(5);
+							expect(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
+								"Create": {
+									"IndexName": "nameGlobalIndex",
+									"KeySchema": [
+										{
+											"AttributeName": "name",
+											"KeyType": "HASH"
+										}
+									],
+									"Projection": {
+										"ProjectionType": "ALL"
+									},
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									}
+								}
+							}]);
+							expect(utils.array_flatten(testUpdateTableParams["1"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([
+								...testUpdateTableParams["0"][0].GlobalSecondaryIndexUpdates,
+								{
+									"Create": {
+										"IndexName": "statusGlobalIndex",
+										"KeySchema": [
+											{
+												"AttributeName": "status",
+												"KeyType": "HASH"
+											}
+										],
+										"Projection": {
+											"ProjectionType": "ALL"
+										},
+										"ProvisionedThroughput": {
+											"ReadCapacityUnits": 1,
+											"WriteCapacityUnits": 1
+										}
+									}
 								}
 							]);
 						});
@@ -839,6 +1076,36 @@ describe("Model", () => {
 							}
 						},
 						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we only request a certain attribute", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id"
+					});
+				});
+
+				it("Should send correct params to getItem if we request certain attributes", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id", "name"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id, name"
 					});
 				});
 
@@ -1892,6 +2159,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem for single object update with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1, "name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem for single object update with multiple updates", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "age": 5});
@@ -1912,6 +2207,38 @@ describe("Model", () => {
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
 						"Key": {
 							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for single object update with multiple updates with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1, "name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
 								"N": "1"
 							}
 						},
@@ -1944,6 +2271,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem with seperate key and update objects with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem with seperate key and update objects and multiple updates", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "age": 5});
@@ -1964,6 +2319,38 @@ describe("Model", () => {
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
 						"Key": {
 							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with seperate key and update objects and multiple updates with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1}, {"name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
 								"N": "1"
 							}
 						},
@@ -2006,7 +2393,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2027,7 +2413,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2048,7 +2433,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2069,7 +2453,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2298,7 +2681,26 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "age",
 						},
-						"ExpressionAttributeValues": {},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $REMOVE saveUnknown property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"saveUnknown": ["age"]}));
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"age": null}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age",
+						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2318,7 +2720,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "age",
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {

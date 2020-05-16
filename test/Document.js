@@ -2,17 +2,17 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
+const dynamoose = require("../dist");
 const {Schema, aws} = dynamoose;
-const Document = require("../lib/Document");
+const Document = require("../dist/Document");
 const util = require("util");
-const Error = require("../lib/Error");
-const utils = require("../lib/utils");
-const Internal = require("../lib/Internal");
+const Error = require("../dist/Error");
+const utils = require("../dist/utils");
+const Internal = require("../dist/Internal");
 
 describe("Document", () => {
-	it("Should be a function", () => {
-		expect(Document).to.be.a("function");
+	it("Should be an object", () => {
+		expect(Document).to.be.an("object");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
@@ -45,7 +45,7 @@ describe("Document", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-					expect(User.toDynamo(test.input)).to.eql(test.output);
+					expect(User.objectToDynamo(test.input)).to.eql(test.output);
 				});
 			});
 		});
@@ -1004,6 +1004,35 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should pass in correct original variable into set function", async () => {
+					let newVal, oldVal;
+					aws.ddb.set({
+						"putItem": (params) => {
+							putParams.push(params);
+							return {"promise": putItemFunction};
+						},
+						"getItem": () => ({
+							"promise": () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}}})
+						})
+					});
+
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": (newValA, oldValA) => {
+						newVal = newValA;
+						oldVal = oldValA;
+						return oldValA;
+					}}});
+					user = await User.get("1");
+					user.name = "Charlie";
+					await callType.func(user).bind(user)();
+					expect(newVal).to.eql("Charlie");
+					expect(oldVal).to.eql("Charlie-set");
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with async set function for attribute", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": async (val) => `${val}-set`}});
@@ -1119,6 +1148,17 @@ describe("Document", () => {
 
 		it("Should return original object if retrieving from database even after modifying document", () => {
 			const document = new model({"id": 1}, {"type": "fromDynamo"});
+			document.id = 2;
+			expect(document.original()).to.eql({"id": 1});
+			expect({...document}).to.eql({"id": 2});
+		});
+
+		it("Shouldn't return DynamoDB object if retrieving from database", () => {
+			expect(new model({"id": {"N": "1"}}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
+		});
+
+		it("Shouldn't return DynamoDB object if retrieving from database even after modifying document", () => {
+			const document = new model({"id": {"N": "1"}}, {"type": "fromDynamo"});
 			document.id = 2;
 			expect(document.original()).to.eql({"id": 1});
 			expect({...document}).to.eql({"id": 2});
@@ -1363,7 +1403,8 @@ describe("Document", () => {
 
 		tests.forEach((test) => {
 			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
-				expect((dynamoose.model("User", test.schema, {"create": false, "waitForActive": false})).attributesWithSchema(test.input).sort()).to.eql(test.output.sort());
+				const model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
+				expect(model.attributesWithSchema(test.input, model.Model).sort()).to.eql(test.output.sort());
 			});
 		});
 	});
@@ -1728,20 +1769,29 @@ describe("Document", () => {
 		];
 
 		tests.forEach((test) => {
-			let model;
-			if (test.model) {
-				model = dynamoose.model(...test.model);
-			} else {
-				model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
-			}
+			let input, model;
+			const func = () => {
+				if (!(input && model)) {
+					if (test.model) {
+						model = dynamoose.model(...test.model);
+					} else {
+						model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
+					}
+
+					input = (!Array.isArray(test.input) ? [test.input] : test.input);
+					input.splice(1, 0, model.Model);
+				}
+
+				return {input, model};
+			};
 
 			if (test.error) {
 				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
-					return expect(model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input))).to.be.rejectedWith(test.error.message);
+					return expect(func().model.objectFromSchema(...func().input)).to.be.rejectedWith(test.error.message);
 				});
 			} else {
 				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
-					expect(await model.objectFromSchema(...(!Array.isArray(test.input) ? [test.input] : test.input))).to.eql(test.output);
+					expect(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
 				});
 			}
 		});

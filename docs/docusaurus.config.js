@@ -65,11 +65,24 @@ module.exports = {
 						},
 						{
 							"label": "License",
-							"href": "https://github.com/dynamoose/dynamoose/blob/master/LICENSE.md",
+							"href": "https://github.com/dynamoose/dynamoose/blob/master/LICENSE",
 						}
 					],
 				},
+				{
+					"title": "Infrastructure Providers",
+					"items": [
+						{
+							"label": "Vercel",
+							"href": "https://vercel.com/?utc_source=dynamoose"
+						}
+					]
+				},
 			],
+		},
+		"algolia": {
+			"apiKey": "ad8f45e217e480b02545037bf3c58887",
+			"indexName": "dynamoosejs",
 		},
 	},
 	"presets": [

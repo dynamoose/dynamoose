@@ -7,5 +7,11 @@ module.exports = {
 		"publish",
 		"docs",
 		"nyc.config.js"
+	],
+	"all": true,
+	"reporter": [
+		"html",
+		"text",
+		"lcovonly"
 	]
 };

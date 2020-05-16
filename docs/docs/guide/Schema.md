@@ -6,7 +6,7 @@ The `options` parameter is an optional object with the following options:
 
 | Name | Type | Default | Information
 |---|---|---|---|
-| `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep. If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
+| `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep. If you retrieve documents from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
 | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
@@ -322,6 +322,17 @@ You can use a set function on an attribute to be run whenever saving a document 
 	"name": {
 		"type": String,
 		"set": (value) => `${value.charAt(0).toUpperCase()}${value.slice(1)}` // Capitalize first letter of name when saving to database
+	}
+}
+```
+
+Unlike `get` this method will additionally pass in the original value as the second parameter (if avaiable). Internally Dynamoose uses the [`document.original()`](Document#documentoriginal) method to access the original value. This means that using [`Model.batchPut`](Model#modelbatchputdocuments-settings-callback), [`Model.update`](Model#modelupdatekey-updateobj-settings-callback) or any other document save method that does not have access to [`document.original()`](Document#documentoriginal) this second parameter will be `undefined`.
+
+```js
+{
+	"name": {
+		"type": String,
+		"set": (newValue, oldValue) => `${newValue.charAt(0).toUpperCase()}${newValue.slice(1)}-${oldValue.charAt(0).toUpperCase()}${oldValue.slice(1)}` // Prepend the newValue to the oldValue (split by a `-`) and capitalize first letter of each when saving to database
 	}
 }
 ```

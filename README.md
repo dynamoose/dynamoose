@@ -18,6 +18,9 @@
 	<a href="https://coveralls.io/github/dynamoose/dynamoose?branch=master">
 		<img src="https://coveralls.io/repos/github/dynamoose/dynamoose/badge.svg?branch=master" alt="Coverage Status">
 	</a>
+	<a href="https://vercel.com?utc_source=dynamoose">
+		<img src="https://img.shields.io/badge/Website%20Previews-by%20Vercel-black" alt="Website Previews by Vercel">
+	</a>
 	<a href="https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY">
 		<img src="https://img.shields.io/badge/chat-on%20slack-informational.svg" alt="Slack Chat">
 	</a>
@@ -58,6 +61,4 @@ Below you will find the current branch strategy for the project. Work taking pla
 
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
-| [`v1.11.1`](https://github.com/dynamoose/dynamoose/tree/v1.11.1) (tag) | 1.11.1 | latest | - [Documentation](https://v1.dynamoosejs.com) |
-| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.0.0 | beta | - [Documentation](https://github.com/dynamoose/dynamoose/tree/master/docs/docs) |
-| [`alpha`](https://github.com/dynamoose/dynamoose/tree/alpha) | 2.1.0 | alpha | - [Documentation](https://github.com/dynamoose/dynamoose/tree/alpha/docs/docs)<br>- [Issue](https://github.com/dynamoose/dynamoose/issues/788) |
+| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.2.x | latest | - [Documentation](https://dynamoosejs.com) |
