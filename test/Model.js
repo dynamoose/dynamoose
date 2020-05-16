@@ -3811,10 +3811,6 @@ describe("Model", () => {
 					expect(User.serializer.default.set).to.be.a("function");
 				});
 
-				it("Should throw an error if calling with no parameters", () => {
-					expect(() => User.serializer.default.set()).to.throw("Field name is required and should be of type string");
-				});
-
 				it("Should throw an error if calling with number as first parameter", () => {
 					expect(() => User.serializer.default.set(1)).to.throw("Field name is required and should be of type string");
 				});
@@ -3852,6 +3848,12 @@ describe("Model", () => {
 				User.serializer.default.set("mySerializer");
 				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
 			}, "output": [{"id": 1}, {"id": 2}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("mySerializer");
+				User.serializer.default.set();
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
 			{"input": () => {
 				User.serializer.add("mySerializer", ["id"]);
 				User.serializer.default.set("random");
