@@ -19,7 +19,7 @@ export class Serializer {
 				"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
 			}
 		};
-		this.#defaultSerializer = "_default";
+		this.default.set();
 	}
 
 	add(name: string, options: SerializerOptions): void {
@@ -34,7 +34,11 @@ export class Serializer {
 	}
 
 	default = {
-		"set": (name: string): void => {
+		"set": (name?: string): void => {
+			if (typeof name === "undefined" || name === null) {
+				name = "_default";
+			}
+
 			if (!name || typeof name !== "string") {
 				throw new CustomError.InvalidParameter("Field name is required and should be of type string");
 			}
