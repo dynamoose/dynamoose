@@ -1,7 +1,13 @@
 import { ObjectType, ModelType } from "./General";
 import { Document } from "./Document";
 
-const defaultSerializer = {
+interface SerializerOptions {
+	include?: string[];
+	exclude?: string[];
+	modify?: (serialized: ObjectType, original: ObjectType) => ObjectType;
+}
+
+const defaultSerializer: SerializerOptions = {
 	"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
 };
 
@@ -31,7 +37,7 @@ const validateName = (name: string): void => {
 	}
 };
 
-const validateOptions = (options): void => {
+const validateOptions = (options: SerializerOptions): void => {
 	if (!options || !(Array.isArray(options) || typeof options === "object")) {
 		throw new Error("Field options is required and should be an object or array");
 	}
@@ -46,15 +52,17 @@ const cleanAndValidateDocumentsArray = (documentsArray: ModelType<Document>[]): 
 };
 
 export class Serializer {
-	#serializers: any;
+	#serializers: {[key: string]: SerializerOptions};
 	#defaultSerializer: string;
 
 	constructor() {
-		this.#serializers = {_default: defaultSerializer};
+		this.#serializers = {
+			"_default": defaultSerializer
+		};
 		this.#defaultSerializer = "_default";
 	}
 
-	add(name: string, options): void {
+	add(name: string, options: SerializerOptions): void {
 		validateName(name);
 		validateOptions(options);
 		this.#serializers[name] = options;
@@ -77,22 +85,22 @@ export class Serializer {
 		}
 	}
 
-	_serializeMany(documentsArray: ModelType<Document>[] = [], nameOrOptions): ObjectType[] {
+	_serializeMany(documentsArray: ModelType<Document>[] = [], nameOrOptions: SerializerOptions | string): ObjectType[] {
 		documentsArray = cleanAndValidateDocumentsArray(documentsArray);
 		return documentsArray.map((doc) => doc.serialize(nameOrOptions));
 	}
 
-	_serialize(document: ObjectType, nameOrOptions = this.#defaultSerializer): ObjectType {
-		const inputType = typeof nameOrOptions;
-		let options;
+	_serialize(document: ObjectType, nameOrOptions: SerializerOptions | string = this.#defaultSerializer): ObjectType {
+		let options: SerializerOptions;
 
-		if (inputType === "string") {
+		if (typeof nameOrOptions === "string") {
 			options = this.#serializers[nameOrOptions];
-		} else if (Array.isArray(nameOrOptions) || inputType === "object") {
+		} else if (Array.isArray(nameOrOptions) || typeof nameOrOptions === "object") {
 			options = nameOrOptions;
 		}
 
 		validateOptions(options);
+
 		if (Array.isArray(options)) {
 			return includeHandler(document, options, {});
 		}
