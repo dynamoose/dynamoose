@@ -186,17 +186,9 @@ describe("Serializer", () => {
 	});
 
 	it("Should throw errors on invalid usage", () => {
-		expect(() => {
-			User.serializer.add({invalidUsage: "Should fail"}, ["name", "email"]);
-		}).to.throw("Field name is required and should be of type string");
-
-		expect(() => {
-			User.serializer.add("broken", "invalidOptionsUsage");
-		}).to.throw("Field options is required and should be an object or array");
-
-		expect(() => {
-			User.serializeMany({notAnArray: "ofDocuments"});
-		}).to.throw("documentsArray must be an array of document objects");
+		expect(() => User.serializer.add({invalidUsage: "Should fail"}, ["name", "email"])).to.throw("Field name is required and should be of type string");
+		expect(() => User.serializer.add("broken", "invalidOptionsUsage")).to.throw("Field options is required and should be an object or array");
+		expect(() => User.serializeMany({notAnArray: "ofDocuments"})).to.throw("documentsArray must be an array of document objects");
 	});
 
 	const addSerializers = () => {
