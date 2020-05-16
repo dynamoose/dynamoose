@@ -142,7 +142,6 @@ describe("Serializer", () => {
 		const docs = createDocuments();
 		const resultOne = docs[0].serialize(["phone", "status"]);
 		const resultTwo = docs[1].serialize({include: ["id", "name"]});
-		const resultThree = docs[1].serialize(7);
 		expect(resultOne).to.have.property("phone");
 		expect(resultOne).to.have.property("status");
 		expect(resultOne).to.not.have.property("id");
@@ -156,8 +155,6 @@ describe("Serializer", () => {
 		expect(resultTwo).to.not.have.property("phone");
 		expect(resultTwo).to.not.have.property("passwordHash");
 		expect(resultTwo).to.not.have.property("status");
-
-		expect(Object.keys(resultThree)).to.be.an("array").length(0);
 	});
 
 	it("Should add all document fields to the output prior to running modify without include or exclude statements", () => {
@@ -185,11 +182,10 @@ describe("Serializer", () => {
 		expect(result).to.not.have.property("passwordHash");
 	});
 
-	it("Should fail while serializing a document and return a blank object", () => {
+	it("Should throw error when trying to serialize using non existant serializer", () => {
 		addSerializers();
 		const docs = createDocuments();
-		const result = docs[0].serialize("nonExistingSerializer");
-		expect(Object.keys(result)).to.be.an("array").length(0);
+		expect(() => docs[0].serialize("nonExistingSerializer")).throw("Field options is required and should be an object or array");
 	});
 
 	it("Should throw errors on invalid usage", () => {
