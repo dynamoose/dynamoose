@@ -9,7 +9,7 @@ const defaultSerializer = {
 
 const includeHandler = (document: ModelType<Document>, includeRules: string[], serialized: ObjectType): ObjectType => {
 	return includeRules.reduce((serialized: ObjectType, key: string) => {
-		if (Object.prototype.hasOwnProperty.call(document, key)) {
+		if (Object.keys(document).includes(key)) {
 			serialized[key] = document[key];
 		}
 
@@ -19,7 +19,7 @@ const includeHandler = (document: ModelType<Document>, includeRules: string[], s
 
 const excludeHandler = (document: ModelType<Document>, excludeRules: string[], serialized: ObjectType): ObjectType => {
 	return excludeRules.reduce((serialized: ObjectType, key: string) => {
-		if (Object.prototype.hasOwnProperty.call(serialized, key)) {
+		if (Object.keys(serialized).includes(key)) {
 			delete serialized[key];
 		}
 
@@ -64,14 +64,14 @@ export class Serializer {
 
 	setDefault(name: string): void {
 		validateName(name);
-		if (Object.prototype.hasOwnProperty.call(this.#serializers, name)) {
+		if (Object.keys(this.#serializers).includes(name)) {
 			this.#defaultSerializer = name;
 		}
 	}
 
 	remove(name: string): void {
 		validateName(name);
-		if (Object.prototype.hasOwnProperty.call(this.#serializers, name)) {
+		if (Object.keys(this.#serializers).includes(name)) {
 			delete this.#serializers[name];
 		}
 		if (this.#defaultSerializer === name) {
@@ -79,12 +79,12 @@ export class Serializer {
 		}
 	}
 
-	_serializeMany(documentsArray = [], nameOrOptions): ObjectType[] {
+	_serializeMany(documentsArray: ModelType<Document>[] = [], nameOrOptions): ObjectType[] {
 		documentsArray = cleanAndValidateDocumentsArray(documentsArray);
 		return documentsArray.map((doc) => doc.serialize(nameOrOptions));
 	}
 
-	_serialize(document, nameOrOptions = this.#defaultSerializer): ObjectType {
+	_serialize(document: ModelType<Document>, nameOrOptions = this.#defaultSerializer): ObjectType {
 		const inputType = typeof nameOrOptions;
 		let options;
 
