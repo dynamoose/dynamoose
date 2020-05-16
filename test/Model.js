@@ -3792,17 +3792,17 @@ describe("Model", () => {
 				});
 			});
 
-			describe("Model.serializer.remove", () => {
+			describe("Model.serializer.delete", () => {
 				it("Should be a function", () => {
-					expect(User.serializer.remove).to.be.a("function");
+					expect(User.serializer.delete).to.be.a("function");
 				});
 
 				it("Should throw an error if calling with no parameters", () => {
-					expect(() => User.serializer.remove()).to.throw("Field name is required and should be of type string");
+					expect(() => User.serializer.delete()).to.throw("Field name is required and should be of type string");
 				});
 
 				it("Should throw an error if calling with number as first parameter", () => {
-					expect(() => User.serializer.remove(1)).to.throw("Field name is required and should be of type string");
+					expect(() => User.serializer.delete(1)).to.throw("Field name is required and should be of type string");
 				});
 			});
 
@@ -3859,18 +3859,18 @@ describe("Model", () => {
 			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
 			{"input": () => {
 				User.serializer.add("mySerializer", ["id"]);
-				User.serializer.remove("mySerializer");
+				User.serializer.delete("mySerializer");
 				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "mySerializer"];
 			}, "error": "Field options is required and should be an object or array"},
 			{"input": () => {
 				User.serializer.add("mySerializer", ["id"]);
-				User.serializer.remove("random");
+				User.serializer.delete("random");
 				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
 			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
 			{"input": () => {
 				User.serializer.add("mySerializer", ["id"]);
 				User.serializer.setDefault("mySerializer");
-				User.serializer.remove("mySerializer");
+				User.serializer.delete("mySerializer");
 				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
 			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
 			{"input": () => {
