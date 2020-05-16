@@ -34,6 +34,7 @@ describe("Schema", () => {
 	it("Should throw error if timestamps already exists in schema", () => {
 		expect(() => new dynamoose.Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true}).settings).to.throw("Timestamp attributes must not be defined in schema.");
 		expect(() => new dynamoose.Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": ["created", "a1"], "updatedAt": ["updated", "b1"]}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
 	});
 
 	it("Should throw error if passing multiple schema elements into array", () => {
@@ -89,6 +90,76 @@ describe("Schema", () => {
 
 	it("Should not throw error if valid schema passed in", () => {
 		expect(() => new dynamoose.Schema({"id": Number, "friends": {"type": Set, "schema": [String]}})).to.not.throw();
+	});
+
+	describe("Nested Schemas", () => {
+		it("Should have correct schemaObject for nested schemas", () => {
+			expect(new dynamoose.Schema({"id": Number, "parent": new dynamoose.Schema({"name": String})}).schemaObject).to.eql({
+				"id": Number,
+				"parent": {
+					"type": Object,
+					"schema": {
+						"name": String
+					}
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas when defined as schema", () => {
+			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String})}}).schemaObject).to.eql({
+				"id": Number,
+				"parent": {
+					"type": Object,
+					"schema": {
+						"name": String
+					}
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas when defined as schema and other settings", () => {
+			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String}), "required": true}}).schemaObject).to.eql({
+				"id": Number,
+				"parent": {
+					"type": Object,
+					"schema": {
+						"name": String
+					},
+					"required": true
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas as array", () => {
+			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})]}}).schemaObject).to.eql({
+				"id": Number,
+				"parents": {
+					"type": Array,
+					"schema": [{
+						"type": Object,
+						"schema": {
+							"name": String
+						}
+					}]
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas as array and other settings", () => {
+			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})], "required": true}}).schemaObject).to.eql({
+				"id": Number,
+				"parents": {
+					"type": Array,
+					"schema": [{
+						"type": Object,
+						"schema": {
+							"name": String
+						}
+					}],
+					"required": true
+				}
+			});
+		});
 	});
 
 	describe("getAttributeType", () => {
