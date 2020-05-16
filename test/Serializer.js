@@ -65,33 +65,6 @@ describe("Serializer", () => {
 		expect(new User({"id": 1, name: "User"}).serialize).to.be.a("function");
 	});
 
-	it("Should add some serializers to the Models serializer instance", () => {
-		expect(User.serializer.serializers).to.have.property("contactInfoOnly").to.be.an("array");
-		expect(User.serializer.serializers).to.have.property("hideSecure").to.be.an("object");
-		expect(User.serializer.serializers).to.have.property("isActiveNoStatus").to.be.an("object");
-		expect(User.serializer.serializers).to.have.property("isActive").to.be.an("object");
-		expect(User.serializer.defaultSerializer).eql("_default");
-	});
-
-	it("Should remove an existing serializer from the instance and change _defaultSerializer accordingly", () => {
-		User.serializer.remove("hideSecure");
-		expect(User.serializer.serializers).to.have.property("contactInfoOnly").to.be.an("array");
-		expect(User.serializer.serializers).to.have.property("isActiveNoStatus").to.be.an("object");
-		expect(User.serializer.serializers).to.have.property("isActive").to.be.an("object");
-		expect(User.serializer.serializers).to.not.have.property("hideSecure");
-		expect(User.serializer.defaultSerializer).eql("_default");
-
-		User.serializer.setDefault("contactInfoOnly");
-		User.serializer.setDefault("doesntExist");
-		expect(User.serializer.defaultSerializer).eql("contactInfoOnly");
-
-		User.serializer.remove("contactInfoOnly");
-		expect(User.serializer.serializers).to.not.have.property("contactInfoOnly");
-		expect(User.serializer.defaultSerializer).eql("_default");
-
-		User.serializer.remove("nonExistent");
-	});
-
 	it("Should run the document through a serializer configured with an array (include)", () => {
 		const result = docs[0].serialize("contactInfoOnly");
 		expect(result).to.eql(utils.object.pick(docs[0], ["name", "email", "phone"]));

@@ -48,34 +48,34 @@ const cleanAndValidateDocumentsArray = (documentsArray: ModelType<Document>[]): 
 };
 
 export class Serializer {
-	serializers: any;
-	defaultSerializer: string;
+	#serializers: any;
+	#defaultSerializer: string;
 
 	constructor() {
-		this.serializers = {_default: defaultSerializer};
-		this.defaultSerializer = "_default";
+		this.#serializers = {_default: defaultSerializer};
+		this.#defaultSerializer = "_default";
 	}
 
 	add(name: string, options): void {
 		validateName(name);
 		validateOptions(options);
-		this.serializers[name] = options;
+		this.#serializers[name] = options;
 	}
 
 	setDefault(name: string): void {
 		validateName(name);
-		if (Object.prototype.hasOwnProperty.call(this.serializers, name)) {
-			this.defaultSerializer = name;
+		if (Object.prototype.hasOwnProperty.call(this.#serializers, name)) {
+			this.#defaultSerializer = name;
 		}
 	}
 
 	remove(name: string): void {
 		validateName(name);
-		if (Object.prototype.hasOwnProperty.call(this.serializers, name)) {
-			delete this.serializers[name];
+		if (Object.prototype.hasOwnProperty.call(this.#serializers, name)) {
+			delete this.#serializers[name];
 		}
-		if (this.defaultSerializer === name) {
-			this.defaultSerializer = "_default";
+		if (this.#defaultSerializer === name) {
+			this.#defaultSerializer = "_default";
 		}
 	}
 
@@ -84,12 +84,12 @@ export class Serializer {
 		return documentsArray.map((doc) => doc.serialize(nameOrOptions));
 	}
 
-	_serialize(document, nameOrOptions = this.defaultSerializer): ObjectType {
+	_serialize(document, nameOrOptions = this.#defaultSerializer): ObjectType {
 		const inputType = typeof nameOrOptions;
 		let options;
 
 		if (inputType === "string") {
-			options = this.serializers[nameOrOptions];
+			options = this.#serializers[nameOrOptions];
 		} else if (Array.isArray(nameOrOptions) || inputType === "object") {
 			options = nameOrOptions;
 		}
