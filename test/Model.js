@@ -3749,7 +3749,7 @@ describe("Model", () => {
 	});
 
 	describe("Serializer", () => {
-		let User, user;
+		let User;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String, "friend": {"type": Object, "schema": {"id": Number, "name": String}}});
 		});
@@ -3763,6 +3763,10 @@ describe("Model", () => {
 			});
 
 			describe("Model.serializer.add", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.add).to.be.a("function");
+				});
+
 				it("Should throw an error if calling with no parameters", () => {
 					expect(() => User.serializer.add()).to.throw("Field name is required and should be of type string");
 				});
@@ -3785,6 +3789,34 @@ describe("Model", () => {
 
 				it("Should throw an error if calling with number as second parameter", () => {
 					expect(() => User.serializer.add("mySerializer", 1)).to.throw("Field options is required and should be an object or array");
+				});
+			});
+
+			describe("Model.serializer.remove", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.remove).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with no parameters", () => {
+					expect(() => User.serializer.remove()).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.remove(1)).to.throw("Field name is required and should be of type string");
+				});
+			});
+
+			describe("Model.serializer.setDefault", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.setDefault).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with no parameters", () => {
+					expect(() => User.serializer.setDefault()).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.setDefault(1)).to.throw("Field name is required and should be of type string");
 				});
 			});
 		});
@@ -3837,7 +3869,7 @@ describe("Model", () => {
 			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
 			{"input": () => {
 				User.serializer.add("mySerializer", ["id"]);
-				User.serializer.setDefault("mySerializer")
+				User.serializer.setDefault("mySerializer");
 				User.serializer.remove("mySerializer");
 				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
 			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
