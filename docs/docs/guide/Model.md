@@ -920,3 +920,66 @@ await user.setName();
 // OR
 user.setName((err) => {});
 ```
+
+## Model.serializeMany(items[, serializer])
+
+This function takes in an array of `items` and serializes all of them. This function is very similar to [`document.serialize`]() except it takes in an array of documents to serialize and returns an array of those documents.
+
+```js
+User.serializeMany(await User.scan().exec(), "myCustomSerializer");
+```
+
+## Model.serializer.add(name, serializer)
+
+This function adds a serializer to the model.
+
+The `serializer` parameter can be an object containing the following properties.
+
+| Name | Type | Description |
+| --- | --- | --- |
+| include | [string] | The properties you wish to include when serializing. |
+| exclude | [string] | The properties you wish to exclude when serializing. |
+| modify | (serialized: Object, original: Object) => Object | A function you want to use to modify the object in the serializer. The `serialized` parameter is the new object (after `include` & `exclude` have been applied). The `original` parameter is the original document (before `include` & `exclude` have been applied). |
+
+```js
+User.serializer.add("myCustomSerializer", {
+	"include": ["email"]
+});
+
+User.serializer.add("myCustomSerializer", {
+	"exclude": ["password"]
+});
+
+User.serializer.add("myCustomSerializer", {
+	"exclude": ["status"],
+	"modify": (serialized, original) => ({...serialized, "isActive": original.status === "active"})
+});
+```
+
+You can also pass an array into the `serializer` parameter, which acts as a shorthand for the `include` property.
+
+```js
+User.serializer.add("myCustomSerializer", ["id"]); // ["id"] is the same as {"include": ["id"]}
+```
+
+## Model.serializer.remove(name)
+
+This function will remove the serializer from the list of serializer on the model. If no existing serializer is assigned for that name, the function will do nothing and no error will be thrown.
+
+```js
+User.serializer.remove("myCustomSerializer");
+```
+
+## Model.serializer.setDefault([name])
+
+This function sets the default serializer for the given model. By default the default serializer has the same behavior as [document.toJSON](). The default serializer will be used for [`Model.serializeMany`]() and [`document.serialize`]() if you don't pass anything into the `serializer` parameter.
+
+```js
+User.serializer.setDefault("myCustomSerializer");
+```
+
+You can revert back to the default serializer by calling this method with no arguments.
+
+```js
+User.serializer.setDefault();
+```
