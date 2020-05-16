@@ -9,18 +9,6 @@ export interface SerializerOptions {
 	modify?: (serialized: ObjectType, original: ObjectType) => ObjectType;
 }
 
-const validateName = (name: string): void => {
-	if (!name || typeof name !== "string") {
-		throw new CustomError.InvalidParameter("Field name is required and should be of type string");
-	}
-};
-
-const validateOptions = (options: SerializerOptions): void => {
-	if (!options || !(Array.isArray(options) || typeof options === "object")) {
-		throw new CustomError.InvalidParameter("Field options is required and should be an object or array");
-	}
-};
-
 export class Serializer {
 	#serializers: {[key: string]: SerializerOptions};
 	#defaultSerializer: string;
@@ -35,14 +23,20 @@ export class Serializer {
 	}
 
 	add(name: string, options: SerializerOptions): void {
-		validateName(name);
-		validateOptions(options);
+		if (!name || typeof name !== "string") {
+			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
+		}
+		if (!options || !(Array.isArray(options) || typeof options === "object")) {
+			throw new CustomError.InvalidParameter("Field options is required and should be an object or array");
+		}
 
 		this.#serializers[name] = options;
 	}
 
 	setDefault(name: string): void {
-		validateName(name);
+		if (!name || typeof name !== "string") {
+			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
+		}
 
 		if (Object.keys(this.#serializers).includes(name)) {
 			this.#defaultSerializer = name;
@@ -50,7 +44,9 @@ export class Serializer {
 	}
 
 	remove(name: string): void {
-		validateName(name);
+		if (!name || typeof name !== "string") {
+			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
+		}
 
 		// Removing serializer
 		if (Object.keys(this.#serializers).includes(name)) {
@@ -86,28 +82,27 @@ export class Serializer {
 			options = nameOrOptions;
 		}
 
-		validateOptions(options);
+		if (!options || !(Array.isArray(options) || typeof options === "object")) {
+			throw new CustomError.InvalidParameter("Field options is required and should be an object or array");
+		}
 
 		if (Array.isArray(options)) {
 			return utils.object.pick(document, options);
 		}
 
-		let serialized: ObjectType = {};
-		if (options.include) {
-			serialized = utils.object.pick(document, options.include);
-		}
-		if (options.exclude) {
-			if (!options.include) {
-				serialized = {...document};
+		return [
+			{
+				"if": Boolean(options.include),
+				"function": (): ObjectType => utils.object.pick(document, options.include)
+			},
+			{
+				"if": Boolean(options.exclude),
+				"function": (serialized: ObjectType): ObjectType => utils.object.delete(serialized, options.exclude)
+			},
+			{
+				"if": Boolean(options.modify),
+				"function": (serialized: ObjectType): ObjectType => options.modify(serialized, document)
 			}
-			serialized = utils.object.delete(serialized, options.exclude);
-		}
-		if (options.modify && typeof options.modify === "function") {
-			if (!options.include && !options.exclude) {
-				serialized = {...document};
-			}
-			serialized = options.modify(serialized, document);
-		}
-		return serialized;
+		].filter((item) => item.if).reduce((serialized: ObjectType, item) => item.function(serialized), {...document});
 	}
 }
