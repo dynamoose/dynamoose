@@ -3915,7 +3915,6 @@ describe("Model", () => {
 					if (Array.isArray(input[0])) {
 						input[0].forEach((object, index) => {
 							const document = new User(object);
-							console.log(document);
 
 							if (test.error) {
 								expect(() => document.serialize(input[1])).to.throw(test.error);
