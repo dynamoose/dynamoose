@@ -86,42 +86,35 @@ export class Serializer {
 
 	_serialize(document, nameOrOptions = this.defaultSerializer): ObjectType {
 		const inputType = typeof nameOrOptions;
-		let isArray = Array.isArray(nameOrOptions);
 		let options;
 
 		if (inputType === "string") {
 			options = this.serializers[nameOrOptions];
-		} else if (isArray || inputType === "object") {
+		} else if (Array.isArray(nameOrOptions) || inputType === "object") {
 			options = nameOrOptions;
 		}
 
-		try {
-			validateOptions(options);
-			isArray = Array.isArray(options);
-			if (isArray) {
-				return includeHandler(document, options, {});
-			}
-
-			let serialized: ObjectType = {};
-			if (options.include) {
-				serialized = includeHandler(document, options.include, serialized);
-			}
-			if (options.exclude) {
-				if (!options.include) {
-					serialized = {...document};
-				}
-				serialized = excludeHandler(document, options.exclude, serialized);
-			}
-			if (options.modify && typeof options.modify === "function") {
-				if (!options.include && !options.exclude) {
-					serialized = {...document};
-				}
-				serialized = options.modify(serialized, document);
-			}
-			return serialized;
-		} catch (error) {
-			// Failing quietly and defaulting to dumping the whole object may not be safest idea, lest we expose sensitive data.
-			return {};
+		validateOptions(options);
+		if (Array.isArray(options)) {
+			return includeHandler(document, options, {});
 		}
+
+		let serialized: ObjectType = {};
+		if (options.include) {
+			serialized = includeHandler(document, options.include, serialized);
+		}
+		if (options.exclude) {
+			if (!options.include) {
+				serialized = {...document};
+			}
+			serialized = excludeHandler(document, options.exclude, serialized);
+		}
+		if (options.modify && typeof options.modify === "function") {
+			if (!options.include && !options.exclude) {
+				serialized = {...document};
+			}
+			serialized = options.modify(serialized, document);
+		}
+		return serialized;
 	}
 }
