@@ -7,7 +7,7 @@ const defaultSerializer = {
 	}
 };
 
-const includeHandler = (document: ModelType<Document>, includeRules: string[], serialized: ObjectType): ObjectType => {
+const includeHandler = (document: ObjectType, includeRules: string[], serialized: ObjectType): ObjectType => {
 	return includeRules.reduce((serialized: ObjectType, key: string) => {
 		if (Object.keys(document).includes(key)) {
 			serialized[key] = document[key];
@@ -17,7 +17,7 @@ const includeHandler = (document: ModelType<Document>, includeRules: string[], s
 	}, serialized);
 };
 
-const excludeHandler = (document: ModelType<Document>, excludeRules: string[], serialized: ObjectType): ObjectType => {
+const excludeHandler = (document: ObjectType, excludeRules: string[], serialized: ObjectType): ObjectType => {
 	return excludeRules.reduce((serialized: ObjectType, key: string) => {
 		if (Object.keys(serialized).includes(key)) {
 			delete serialized[key];
@@ -84,7 +84,7 @@ export class Serializer {
 		return documentsArray.map((doc) => doc.serialize(nameOrOptions));
 	}
 
-	_serialize(document: ModelType<Document>, nameOrOptions = this.#defaultSerializer): ObjectType {
+	_serialize(document: ObjectType, nameOrOptions = this.#defaultSerializer): ObjectType {
 		const inputType = typeof nameOrOptions;
 		let options;
 
