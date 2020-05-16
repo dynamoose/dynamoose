@@ -229,7 +229,7 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 			} else if (entry !== OR) {
 				const [key, condition] = Object.entries(entry)[0];
 				const {value} = condition;
-				const keys = {"name": (key.startsWith("#") ? key : `#a${index}`), "value": `:v${index}`};
+				const keys = {"name": `#a${index}`, "value": `:v${index}`};
 				setIndex(++index);
 
 				const keyParts = key.split(".");
