@@ -9,10 +9,7 @@ const {Serializer} = require("../dist/Serializer");
 describe("Serializer", () => {
 	let User;
 	beforeEach(() => {
-		User = model("User",
-			{id: Number, name: String, email: String, phone: String, passwordHash: String, status: String},
-			{"create": false, "waitForActive": false}
-		);
+		User = model("User", {"id": Number, "name": String, "email": String, "phone": String, "passwordHash": String, "status": String}, {"create": false, "waitForActive": false});
 	});
 	afterEach(() => {
 		User = null;
