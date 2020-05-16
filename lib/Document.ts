@@ -4,7 +4,7 @@ import utils = require("./utils");
 import Error = require("./Error");
 import Internal  = require("./Internal");
 import {Model, ModelExpiresSettings} from "./Model";
-import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
+import {DynamoDBTypeResult, DynamoDBSetTypeResult, TimestampObject} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
@@ -158,12 +158,17 @@ Document.prepareForObjectFromSchema = function<T>(object: T, model: Model<Docume
 	if (settings.updateTimestamps) {
 		if (model.schema.settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
-			// TODO: The last condition of the following is commented out until we can add automated tests for it
-			if ((model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt && (object[internalProperties] && !object[internalProperties].storedInDynamo)/* && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)*/) {
-				object[(model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt] = date;
+			const createdAtProperties: string[] = ((Array.isArray((model.schema.settings.timestamps as TimestampObject).createdAt) ? (model.schema.settings.timestamps as TimestampObject).createdAt : [(model.schema.settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
+			const updatedAtProperties: string[] = ((Array.isArray((model.schema.settings.timestamps as TimestampObject).updatedAt) ? (model.schema.settings.timestamps as TimestampObject).updatedAt : [(model.schema.settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
+			if ((object[internalProperties] && !object[internalProperties].storedInDynamo) && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
+				createdAtProperties.forEach((prop) => {
+					utils.object.set(object as any, prop, date);
+				});
 			}
-			if ((model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt)) {
-				object[(model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt] = date;
+			if (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt) {
+				updatedAtProperties.forEach((prop) => {
+					utils.object.set(object as any, prop, date);
+				});
 			}
 		}
 	}
