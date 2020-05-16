@@ -18,17 +18,17 @@ describe("Serializer", () => {
 
 	beforeEach(() => {
 		User.serializer.add("contactInfoOnly", ["name", "email", "phone"]);
-		User.serializer.add("hideSecure", {exclude: ["passwordHash"]});
-		User.serializer.add("redundant", {include: ["email", "phone", "doesntExist"], exclude: ["phone", "doesntExist"]});
+		User.serializer.add("hideSecure", {"exclude": ["passwordHash"]});
+		User.serializer.add("redundant", {"include": ["email", "phone", "doesntExist"], "exclude": ["phone", "doesntExist"]});
 		User.serializer.add("isActiveNoStatus", {
-			exclude: ["status"],
-			modify: (serialized, original) => {
+			"exclude": ["status"],
+			"modify": (serialized, original) => {
 				serialized.isActive = original.status === "active";
 				return serialized;
 			}
 		});
 		User.serializer.add("isActive", {
-			modify: (serialized, original) => {
+			"modify": (serialized, original) => {
 				serialized.isActive = original.status === "active";
 				return serialized;
 			}
@@ -38,20 +38,20 @@ describe("Serializer", () => {
 	beforeEach(() => {
 		docs = [
 			{
-				id: 1,
-				name: "User One",
-				email: "userone@example.com",
-				phone: "0123456789",
-				passwordHash: "5dxFDpyKeEKiVUSp9I6dQ1DGd3CFH5Jk",
-				status: "not_active"
+				"id": 1,
+				"name": "User One",
+				"email": "userone@example.com",
+				"phone": "0123456789",
+				"passwordHash": "5dxFDpyKeEKiVUSp9I6dQ1DGd3CFH5Jk",
+				"status": "not_active"
 			},
 			{
-				id: 2,
-				name: "User Two",
-				email: "usertwo@example.com",
-				phone: "0123456789",
-				passwordHash: "KnbuZWU0RNPPXhgPNMxovLtUiuMN4I6i",
-				status: "active"
+				"id": 2,
+				"name": "User Two",
+				"email": "usertwo@example.com",
+				"phone": "0123456789",
+				"passwordHash": "KnbuZWU0RNPPXhgPNMxovLtUiuMN4I6i",
+				"status": "active"
 			}
 		].map((a) => new User(a));
 	});
@@ -62,7 +62,7 @@ describe("Serializer", () => {
 	it("Should verify Model and Document have a serializer instance and expected methods bound", () => {
 		expect(User.serializer).to.be.an.instanceof(Serializer);
 		expect(User.serializeMany).to.be.a("function");
-		expect(new User({"id": 1, name: "User"}).serialize).to.be.a("function");
+		expect(new User({"id": 1, "name": "User"}).serialize).to.be.a("function");
 	});
 
 	it("Should run the document through a serializer configured with an array (include)", () => {
@@ -111,8 +111,8 @@ describe("Serializer", () => {
 	});
 
 	it("Should throw errors on invalid usage", () => {
-		expect(() => User.serializer.add({invalidUsage: "Should fail"}, ["name", "email"])).to.throw("Field name is required and should be of type string");
+		expect(() => User.serializer.add({"invalidUsage": "Should fail"}, ["name", "email"])).to.throw("Field name is required and should be of type string");
 		expect(() => User.serializer.add("broken", "invalidOptionsUsage")).to.throw("Field options is required and should be an object or array");
-		expect(() => User.serializeMany({notAnArray: "ofDocuments"})).to.throw("documentsArray must be an array of document objects");
+		expect(() => User.serializeMany({"notAnArray": "ofDocuments"})).to.throw("documentsArray must be an array of document objects");
 	});
 });
