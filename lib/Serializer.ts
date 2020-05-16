@@ -43,7 +43,7 @@ export class Serializer {
 		}
 	}
 
-	remove(name: string): void {
+	delete(name: string): void {
 		if (!name || typeof name !== "string") {
 			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
 		}

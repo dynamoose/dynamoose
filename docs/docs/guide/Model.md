@@ -962,12 +962,12 @@ You can also pass an array into the `serializer` parameter, which acts as a shor
 User.serializer.add("myCustomSerializer", ["id"]); // ["id"] is the same as {"include": ["id"]}
 ```
 
-## Model.serializer.remove(name)
+## Model.serializer.delete(name)
 
-This function will remove the serializer from the list of serializer on the model. If no existing serializer is assigned for that name, the function will do nothing and no error will be thrown.
+This function will delete the serializer from the list of serializer on the model. If no existing serializer is assigned for that name, the function will do nothing and no error will be thrown.
 
 ```js
-User.serializer.remove("myCustomSerializer");
+User.serializer.delete("myCustomSerializer");
 ```
 
 ## Model.serializer.setDefault([name])
