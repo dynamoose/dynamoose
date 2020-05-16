@@ -2,8 +2,8 @@ import { ObjectType, ModelType } from "./General";
 import { Document } from "./Document";
 
 const defaultSerializer = {
-	"modify": (s, o): ObjectType => {
-		return {...o};
+	"modify": (serialized: ObjectType, original: ObjectType): ObjectType => {
+		return {...original};
 	}
 };
 
