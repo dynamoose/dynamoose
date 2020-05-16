@@ -9,10 +9,6 @@ export interface SerializerOptions {
 	modify?: (serialized: ObjectType, original: ObjectType) => ObjectType;
 }
 
-const defaultSerializer: SerializerOptions = {
-	"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
-};
-
 const validateName = (name: string): void => {
 	if (!name || typeof name !== "string") {
 		throw new CustomError.InvalidParameter("Field name is required and should be of type string");
@@ -25,21 +21,15 @@ const validateOptions = (options: SerializerOptions): void => {
 	}
 };
 
-const cleanAndValidateDocumentsArray = (documentsArray: ModelType<Document>[]): ModelType<Document>[] => {
-	if (!documentsArray || !Array.isArray(documentsArray)) {
-		throw new CustomError.InvalidParameter("documentsArray must be an array of document objects");
-	}
-
-	return documentsArray.filter((doc) => typeof doc.serialize === "function");
-};
-
 export class Serializer {
 	#serializers: {[key: string]: SerializerOptions};
 	#defaultSerializer: string;
 
 	constructor() {
 		this.#serializers = {
-			"_default": defaultSerializer
+			"_default": {
+				"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
+			}
 		};
 		this.#defaultSerializer = "_default";
 	}
@@ -47,11 +37,13 @@ export class Serializer {
 	add(name: string, options: SerializerOptions): void {
 		validateName(name);
 		validateOptions(options);
+
 		this.#serializers[name] = options;
 	}
 
 	setDefault(name: string): void {
 		validateName(name);
+
 		if (Object.keys(this.#serializers).includes(name)) {
 			this.#defaultSerializer = name;
 		}
@@ -71,9 +63,18 @@ export class Serializer {
 		}
 	}
 
-	_serializeMany(documentsArray: ModelType<Document>[] = [], nameOrOptions: SerializerOptions | string): ObjectType[] {
-		documentsArray = cleanAndValidateDocumentsArray(documentsArray);
-		return documentsArray.map((document) => document.serialize(nameOrOptions));
+	_serializeMany(documentsArray: ModelType<Document>[], nameOrOptions: SerializerOptions | string): ObjectType[] {
+		if (!documentsArray || !Array.isArray(documentsArray)) {
+			throw new CustomError.InvalidParameter("documentsArray must be an array of document objects");
+		}
+
+		return documentsArray.map((document) => {
+			try {
+				return document.serialize(nameOrOptions);
+			} catch (e) {
+				return this._serialize(document, nameOrOptions);
+			}
+		});
 	}
 
 	_serialize(document: ObjectType, nameOrOptions: SerializerOptions | string = this.#defaultSerializer): ObjectType {
@@ -81,7 +82,7 @@ export class Serializer {
 
 		if (typeof nameOrOptions === "string") {
 			options = this.#serializers[nameOrOptions];
-		} else if (Array.isArray(nameOrOptions) || typeof nameOrOptions === "object") {
+		} else {
 			options = nameOrOptions;
 		}
 
