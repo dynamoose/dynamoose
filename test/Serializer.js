@@ -2,9 +2,9 @@ const chaiAsPromised = require("chai-as-promised");
 const chai = require("chai");
 chai.use(chaiAsPromised);
 const {expect} = chai;
-const dynamoose = require("../lib");
+const dynamoose = require("../dist");
 const {model} = dynamoose;
-const Serializer = require("../lib/Serializer");
+const {Serializer} = require("../dist/Serializer");
 
 describe("Serializer", () => {
 	let User;
@@ -27,29 +27,29 @@ describe("Serializer", () => {
 
 	it("Should add some serializers to the Models serializer instance", () => {
 		addSerializers();
-		expect(User.serializer._serializers).to.have.property("contactInfoOnly").to.be.an("array");
-		expect(User.serializer._serializers).to.have.property("hideSecure").to.be.an("object");
-		expect(User.serializer._serializers).to.have.property("isActiveNoStatus").to.be.an("object");
-		expect(User.serializer._serializers).to.have.property("isActive").to.be.an("object");
-		expect(User.serializer._defaultSerializer).eql("_default");
+		expect(User.serializer.serializers).to.have.property("contactInfoOnly").to.be.an("array");
+		expect(User.serializer.serializers).to.have.property("hideSecure").to.be.an("object");
+		expect(User.serializer.serializers).to.have.property("isActiveNoStatus").to.be.an("object");
+		expect(User.serializer.serializers).to.have.property("isActive").to.be.an("object");
+		expect(User.serializer.defaultSerializer).eql("_default");
 	});
 
 	it("Should remove an existing serializer from the instance and change _defaultSerializer accordingly", () => {
 		addSerializers();
 		User.serializer.remove("hideSecure");
-		expect(User.serializer._serializers).to.have.property("contactInfoOnly").to.be.an("array");
-		expect(User.serializer._serializers).to.have.property("isActiveNoStatus").to.be.an("object");
-		expect(User.serializer._serializers).to.have.property("isActive").to.be.an("object");
-		expect(User.serializer._serializers).to.not.have.property("hideSecure");
-		expect(User.serializer._defaultSerializer).eql("_default");
+		expect(User.serializer.serializers).to.have.property("contactInfoOnly").to.be.an("array");
+		expect(User.serializer.serializers).to.have.property("isActiveNoStatus").to.be.an("object");
+		expect(User.serializer.serializers).to.have.property("isActive").to.be.an("object");
+		expect(User.serializer.serializers).to.not.have.property("hideSecure");
+		expect(User.serializer.defaultSerializer).eql("_default");
 
 		User.serializer.setDefault("contactInfoOnly");
 		User.serializer.setDefault("doesntExist");
-		expect(User.serializer._defaultSerializer).eql("contactInfoOnly");
+		expect(User.serializer.defaultSerializer).eql("contactInfoOnly");
 
 		User.serializer.remove("contactInfoOnly");
-		expect(User.serializer._serializers).to.not.have.property("contactInfoOnly");
-		expect(User.serializer._defaultSerializer).eql("_default");
+		expect(User.serializer.serializers).to.not.have.property("contactInfoOnly");
+		expect(User.serializer.defaultSerializer).eql("_default");
 
 		User.serializer.remove("nonExistent");
 	});

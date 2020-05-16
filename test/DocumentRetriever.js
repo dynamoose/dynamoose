@@ -1,12 +1,16 @@
 const {expect} = require("chai");
-const DocumentRetriever = require("../lib/DocumentRetriever");
+const DocumentRetriever = require("../dist/DocumentRetriever");
 
 describe("DocumentRetriever", () => {
-	it("Should be a function", () => {
-		expect(DocumentRetriever).to.be.a("function");
+	it("Should return an object", () => {
+		expect(DocumentRetriever).to.be.an("object");
 	});
 
-	it("Should throw if invalid type passed in", () => {
-		expect(() => DocumentRetriever("random")).to.throw("The type: random for setting up a document retriever is invalid.");
+	it("Should return an object with Scan property", () => {
+		expect(DocumentRetriever.Scan).to.exist;
+	});
+
+	it("Should return an object with Query property", () => {
+		expect(DocumentRetriever.Query).to.exist;
 	});
 });

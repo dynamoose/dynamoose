@@ -1,6 +1,6 @@
 const {expect} = require("chai");
-const utils = require("../../../lib/utils");
-const dynamoose = require("../../../lib");
+const utils = require("../../../dist/utils");
+const dynamoose = require("../../../dist");
 
 describe("utils.dynamoose.index_changes", () => {
 	it("Should be a function", () => {

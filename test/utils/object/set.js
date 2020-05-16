@@ -1,5 +1,5 @@
 const {expect} = require("chai");
-const utils = require("../../../lib/utils");
+const utils = require("../../../dist/utils");
 
 describe("utils.object.set", () => {
 	it("Should be a function", () => {

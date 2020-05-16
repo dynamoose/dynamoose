@@ -101,7 +101,7 @@ You will use this function with a comparison function which will complete the fi
 
 ```js
 new dynamoose.Condition().filter("id"); // Currently this condition has no filter behavior and will represent an empty conditional
-new dynamoose.Condition().filter("id").eq(1); // Since this condition has a comparison function (eq) after the filter it will complete the filter conditional and only represent items where `id` = 1
+new dynamoose.Condition().filter("id").eq(1); // Since this condition has a comparison function (eq) after the filter it will complete the filter conditional and only represent documents where `id` = 1
 ```
 
 ## condition.where(key)
@@ -117,7 +117,7 @@ This function is identical to [`condition.filter(key)`](#conditionfilterkey) and
 This comparison function will check to see if the given filter key is equal to the value you pass in as a parameter.
 
 ```js
-new dynamoose.Condition().filter("name").eq("Tom"); // Condition all items where `name` equals `Tom`
+new dynamoose.Condition().filter("name").eq("Tom"); // Condition all documents where `name` equals `Tom`
 ```
 
 ## condition.exists()
@@ -125,9 +125,9 @@ new dynamoose.Condition().filter("name").eq("Tom"); // Condition all items where
 This comparison function will check to see if the given filter key exists in the document.
 
 ```js
-new dynamoose.Condition().filter("phoneNumber").exists(); // Represents all items where `phoneNumber` exists in the document
+new dynamoose.Condition().filter("phoneNumber").exists(); // Represents all documents where `phoneNumber` exists in the document
 
-new dynamoose.Condition().filter("phoneNumber").not().exists(); // Represents all items where `phoneNumber` does not exist in the document
+new dynamoose.Condition().filter("phoneNumber").not().exists(); // Represents all documents where `phoneNumber` does not exist in the document
 ```
 
 ## condition.lt(value)
@@ -135,7 +135,7 @@ new dynamoose.Condition().filter("phoneNumber").not().exists(); // Represents al
 This comparison function will check to see if the given filter key is less than the value you pass in as a parameter.
 
 ```js
-new dynamoose.Condition().filter("age").lt(5); // Represents all items where `age` is less than 5
+new dynamoose.Condition().filter("age").lt(5); // Represents all documents where `age` is less than 5
 ```
 
 ## condition.le(value)
@@ -143,7 +143,7 @@ new dynamoose.Condition().filter("age").lt(5); // Represents all items where `ag
 This comparison function will check to see if the given filter key is less than or equal to the value you pass in as a parameter.
 
 ```js
-new dynamoose.Condition().filter("age").le(5); // Represents all items where `age` is less than or equal to 5
+new dynamoose.Condition().filter("age").le(5); // Represents all documents where `age` is less than or equal to 5
 ```
 
 ## condition.gt(value)
@@ -151,7 +151,7 @@ new dynamoose.Condition().filter("age").le(5); // Represents all items where `ag
 This comparison function will check to see if the given filter key is greater than the value you pass in as a parameter.
 
 ```js
-new dynamoose.Condition().filter("age").gt(5); // Represents all items where `age` is greater than 5
+new dynamoose.Condition().filter("age").gt(5); // Represents all documents where `age` is greater than 5
 ```
 
 ## condition.ge(value)
@@ -159,7 +159,7 @@ new dynamoose.Condition().filter("age").gt(5); // Represents all items where `ag
 This comparison function will check to see if the given filter key is greater than or equal to the value you pass in as a parameter.
 
 ```js
-new dynamoose.Condition().filter("age").ge(5); // Represents all items where `age` is greater than or equal to 5
+new dynamoose.Condition().filter("age").ge(5); // Represents all documents where `age` is greater than or equal to 5
 ```
 
 ## condition.beginsWith(value)
@@ -167,7 +167,7 @@ new dynamoose.Condition().filter("age").ge(5); // Represents all items where `ag
 This comparison function will check to see if the given filter key begins with the value you pass in as a parameter.
 
 ```js
-new dynamoose.Condition().filter("name").beginsWith("T"); // Represents all items where `name` begins with `T`
+new dynamoose.Condition().filter("name").beginsWith("T"); // Represents all documents where `name` begins with `T`
 ```
 
 ## condition.contains(value)
@@ -175,15 +175,15 @@ new dynamoose.Condition().filter("name").beginsWith("T"); // Represents all item
 This comparison function will check to see if the given filter key contains the value you pass in as a parameter.
 
 ```js
-new dynamoose.Condition().filter("name").contains("om"); // Represents all items where `name` contains `om`
+new dynamoose.Condition().filter("name").contains("om"); // Represents all documents where `name` contains `om`
 ```
 
 ## condition.in(values)
 
-This comparison function will check to see if the given filter key equals any of the items you pass in in the values array you pass in. The `values` parameter must be an array and will only represent items where the value for the given key exists in the array you pass in.
+This comparison function will check to see if the given filter key equals any of the documents you pass in in the values array you pass in. The `values` parameter must be an array and will only represent documents where the value for the given key exists in the array you pass in.
 
 ```js
-new dynamoose.Condition("name").in(["Charlie", "Bob"]) // Represents all items where `name` = `Charlie` OR `Bob`
+new dynamoose.Condition("name").in(["Charlie", "Bob"]) // Represents all documents where `name` = `Charlie` OR `Bob`
 ```
 
 ## condition.between(a, b)
@@ -191,5 +191,5 @@ new dynamoose.Condition("name").in(["Charlie", "Bob"]) // Represents all items w
 This comparison function will check to see if the given filter key is between the two values you pass in as parameters.
 
 ```js
-new dynamoose.Condition().filter("age").between(5, 9); // Represents all items where `age` is between 5 and 9
+new dynamoose.Condition().filter("age").between(5, 9); // Represents all documents where `age` is between 5 and 9
 ```
