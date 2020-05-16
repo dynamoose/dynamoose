@@ -5,6 +5,7 @@ const {expect} = chai;
 const dynamoose = require("../dist");
 const {model} = dynamoose;
 const {Serializer} = require("../dist/Serializer");
+const utils = require("../dist/utils");
 
 describe("Serializer", () => {
 	let User;
@@ -93,112 +94,48 @@ describe("Serializer", () => {
 
 	it("Should run the document through a serializer configured with an array (include)", () => {
 		const result = docs[0].serialize("contactInfoOnly");
-		expect(result).to.have.property("name");
-		expect(result).to.have.property("email");
-		expect(result).to.have.property("phone");
-		expect(result).to.not.have.property("id");
-		expect(result).to.not.have.property("passwordHash");
-		expect(result).to.not.have.property("status");
+		expect(result).to.eql(utils.object.pick(docs[0], ["name", "email", "phone"]));
 	});
 
 	it("Should run the document through a serializer configured with exclude properties", () => {
 		const result = docs[0].serialize("hideSecure");
-		expect(result).to.have.property("id");
-		expect(result).to.have.property("name");
-		expect(result).to.have.property("email");
-		expect(result).to.have.property("phone");
-		expect(result).to.have.property("status");
-		expect(result).to.not.have.property("passwordHash");
+		expect(result).to.eql(utils.object.pick(docs[0], ["id", "name", "email", "phone", "status"]));
 	});
 
 	it("Should run the document through a serializer configured with a modify function", () => {
 		const result = docs[0].serialize("isActiveNoStatus");
-		expect(result).to.have.property("id");
-		expect(result).to.have.property("name");
-		expect(result).to.have.property("email");
-		expect(result).to.have.property("phone");
-		expect(result).to.not.have.property("status");
-		expect(result).to.have.property("isActive").eql(false);
+		expect(result).to.eql({...utils.object.pick(docs[0], ["id", "name", "email", "phone", "passwordHash"]), "isActive": false});
 	});
 
 	it("Should run the document through the default serializer", () => {
 		const result = docs[0].serialize();
-		expect(result).to.have.property("id");
-		expect(result).to.have.property("name");
-		expect(result).to.have.property("email");
-		expect(result).to.have.property("phone");
-		expect(result).to.have.property("passwordHash");
-		expect(result).to.have.property("status");
+		expect(result).to.eql(utils.object.pick(docs[0], ["id", "name", "email", "phone", "passwordHash", "status"]));
 	});
 
 	it("Should run a serializer with both include and exclude statements", () => {
 		const result = docs[0].serialize("redundant");
-		expect(result).to.have.property("email");
-		expect(result).to.not.have.property("id");
-		expect(result).to.not.have.property("name");
-		expect(result).to.not.have.property("passwordHash");
-		expect(result).to.not.have.property("status");
-		expect(result).to.not.have.property("phone");
+		expect(result).to.eql(utils.object.pick(docs[0], ["email"]));
 	});
 
 	it("Should serialize many documents at once", () => {
-		const results = User.serializeMany(docs, "hideSecure");
-		const noDocsResults = User.serializeMany();
-		expect(results).to.be.an("array").length(2);
-		expect(results[0]).to.have.property("id");
-		expect(results[0]).to.have.property("name");
-		expect(results[0]).to.have.property("email");
-		expect(results[0]).to.have.property("phone");
-		expect(results[0]).to.have.property("status");
-		expect(results[0]).to.not.have.property("passwordHash");
+		expect(User.serializeMany(docs, "hideSecure")).to.eql(docs.map((obj) => utils.object.pick(obj, ["id", "name", "email", "phone", "status"])));
+	});
 
-		expect(results[1]).to.have.property("id");
-		expect(results[1]).to.have.property("name");
-		expect(results[1]).to.have.property("email");
-		expect(results[1]).to.have.property("phone");
-		expect(results[1]).to.have.property("status");
-		expect(results[1]).to.not.have.property("passwordHash");
-
-		expect(noDocsResults).to.be.an("array").length(0);
+	it("Should return empty array if nothing passed into Model.serializeMany", () => {
+		expect(User.serializeMany()).to.eql([]);
 	});
 
 	it("Should accept an options object instead of a name", () => {
-		const resultOne = docs[0].serialize(["phone", "status"]);
-		const resultTwo = docs[1].serialize({include: ["id", "name"]});
-		expect(resultOne).to.have.property("phone");
-		expect(resultOne).to.have.property("status");
-		expect(resultOne).to.not.have.property("id");
-		expect(resultOne).to.not.have.property("name");
-		expect(resultOne).to.not.have.property("email");
-		expect(resultOne).to.not.have.property("passwordHash");
-
-		expect(resultTwo).to.have.property("id");
-		expect(resultTwo).to.have.property("name");
-		expect(resultTwo).to.not.have.property("email");
-		expect(resultTwo).to.not.have.property("phone");
-		expect(resultTwo).to.not.have.property("passwordHash");
-		expect(resultTwo).to.not.have.property("status");
+		expect(docs[0].serialize(["phone", "status"])).to.eql(utils.object.pick(docs[0], ["phone", "status"]));
+		expect(docs[1].serialize({"include": ["id", "name"]})).to.eql(utils.object.pick(docs[1], ["id", "name"]));
 	});
 
 	it("Should add all document fields to the output prior to running modify without include or exclude statements", () => {
-		const result = docs[0].serialize("isActive");
-		expect(result).to.have.property("id");
-		expect(result).to.have.property("name");
-		expect(result).to.have.property("email");
-		expect(result).to.have.property("phone");
-		expect(result).to.have.property("passwordHash");
-		expect(result).to.have.property("status");
-		expect(result).to.have.property("isActive");
+		expect(docs[0].serialize("isActive")).to.eql({...utils.object.pick(docs[0], ["id", "name", "email", "phone", "passwordHash", "status"]), "isActive": false});
 	});
 
 	it("Should add all document fields to the output prior to running both include and exclude statements", () => {
-		const result = docs[0].serialize("hideSecure");
-		expect(result).to.have.property("id");
-		expect(result).to.have.property("name");
-		expect(result).to.have.property("email");
-		expect(result).to.have.property("phone");
-		expect(result).to.have.property("status");
-		expect(result).to.not.have.property("passwordHash");
+		expect(docs[0].serialize("hideSecure")).to.eql(utils.object.pick(docs[0], ["id", "name", "email", "phone", "status"]));
 	});
 
 	it("Should throw error when trying to serialize using non existant serializer", () => {
