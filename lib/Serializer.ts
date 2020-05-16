@@ -58,11 +58,15 @@ export class Serializer {
 
 	remove(name: string): void {
 		validateName(name);
+
+		// Removing serializer
 		if (Object.keys(this.#serializers).includes(name)) {
 			delete this.#serializers[name];
 		}
+
+		// Reset defaultSerializer to default if removing default serializer
 		if (this.#defaultSerializer === name) {
-			this.#defaultSerializer = "_default";
+			this.setDefault("_default");
 		}
 	}
 
