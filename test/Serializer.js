@@ -66,28 +66,23 @@ describe("Serializer", () => {
 	});
 
 	it("Should run the document through a serializer configured with an array (include)", () => {
-		const result = docs[0].serialize("contactInfoOnly");
-		expect(result).to.eql(utils.object.pick(docs[0], ["name", "email", "phone"]));
+		expect(docs[0].serialize("contactInfoOnly")).to.eql(utils.object.pick(docs[0], ["name", "email", "phone"]));
 	});
 
 	it("Should run the document through a serializer configured with exclude properties", () => {
-		const result = docs[0].serialize("hideSecure");
-		expect(result).to.eql(utils.object.pick(docs[0], ["id", "name", "email", "phone", "status"]));
+		expect(docs[0].serialize("hideSecure")).to.eql(utils.object.pick(docs[0], ["id", "name", "email", "phone", "status"]));
 	});
 
 	it("Should run the document through a serializer configured with a modify function", () => {
-		const result = docs[0].serialize("isActiveNoStatus");
-		expect(result).to.eql({...utils.object.pick(docs[0], ["id", "name", "email", "phone", "passwordHash"]), "isActive": false});
+		expect(docs[0].serialize("isActiveNoStatus")).to.eql({...utils.object.pick(docs[0], ["id", "name", "email", "phone", "passwordHash"]), "isActive": false});
 	});
 
 	it("Should run the document through the default serializer", () => {
-		const result = docs[0].serialize();
-		expect(result).to.eql(utils.object.pick(docs[0], ["id", "name", "email", "phone", "passwordHash", "status"]));
+		expect(docs[0].serialize()).to.eql(utils.object.pick(docs[0], ["id", "name", "email", "phone", "passwordHash", "status"]));
 	});
 
 	it("Should run a serializer with both include and exclude statements", () => {
-		const result = docs[0].serialize("redundant");
-		expect(result).to.eql(utils.object.pick(docs[0], ["email"]));
+		expect(docs[0].serialize("redundant")).to.eql(utils.object.pick(docs[0], ["email"]));
 	});
 
 	it("Should serialize many documents at once", () => {
