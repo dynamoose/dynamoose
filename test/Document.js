@@ -681,6 +681,183 @@ describe("Document", () => {
 					expect(parseInt(putParams[1].Item.updated.N)).to.be.above(parseInt(putParams[0].Item.updated.N));
 				});
 
+				it("Should save with correct object with custom timestamps with multiple attribute names", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": ["a1", "a2"], "updatedAt": ["b1", "b2"]}}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.a("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.a1).to.be.a("object");
+					expect(putParams[0].Item.a2).to.be.a("object");
+					expect(putParams[0].Item.b1).to.be.a("object");
+					expect(putParams[0].Item.b2).to.be.a("object");
+					expect(putParams[0].Item.a1.N).to.eql(putParams[0].Item.a2.N);
+					expect(putParams[0].Item.b1.N).to.eql(putParams[0].Item.b2.N);
+					expect(putParams[0].Item.a1.N).to.eql(putParams[0].Item.b1.N);
+
+					await utils.timeout(5);
+
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.a("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.a1).to.be.a("object");
+					expect(putParams[1].Item.a2).to.be.a("object");
+					expect(putParams[1].Item.b1).to.be.a("object");
+					expect(putParams[1].Item.b2).to.be.a("object");
+
+					expect(putParams[1].Item.a1.N).to.eql(putParams[1].Item.a2.N);
+					expect(putParams[1].Item.b1.N).to.eql(putParams[1].Item.b2.N);
+					expect(parseInt(putParams[1].Item.a1.N)).to.be.below(parseInt(putParams[1].Item.b1.N));
+					expect(parseInt(putParams[1].Item.b1.N)).to.be.above(parseInt(putParams[0].Item.b1.N));
+					expect(parseInt(putParams[1].Item.b2.N)).to.be.above(parseInt(putParams[0].Item.b2.N));
+					expect(parseInt(putParams[1].Item.a1.N)).to.eql(parseInt(putParams[0].Item.a1.N));
+					expect(parseInt(putParams[1].Item.a2.N)).to.eql(parseInt(putParams[0].Item.a2.N));
+				});
+
+				it("Should save with correct object with timestamps with nested schemas", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String, "friend": new Schema({"name": String}, {"timestamps": true})}, {"timestamps": true}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie", "friend": {"name": "Tim"}});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.an("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.friend).to.be.an("object");
+					expect(putParams[0].Item.friend.M).to.be.an("object");
+					expect(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
+					expect(putParams[0].Item.createdAt).to.be.an("object");
+					expect(putParams[0].Item.updatedAt).to.be.an("object");
+					expect(putParams[0].Item.friend.M.createdAt).to.be.an("object");
+					expect(putParams[0].Item.friend.M.updatedAt).to.be.an("object");
+					expect(putParams[0].Item.friend.M.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
+					expect(putParams[0].Item.friend.M.updatedAt.N).to.eql(putParams[0].Item.updatedAt.N);
+					expect(putParams[0].Item.friend.M.createdAt.N).to.eql(putParams[0].Item.friend.M.updatedAt.N);
+
+					await utils.timeout(5);
+
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.an("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.friend).to.be.an("object");
+					expect(putParams[1].Item.friend.M).to.be.an("object");
+					expect(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
+					expect(putParams[1].Item.createdAt).to.be.an("object");
+					expect(putParams[1].Item.updatedAt).to.be.an("object");
+					expect(putParams[1].Item.friend.M.createdAt).to.be.an("object");
+					expect(putParams[1].Item.friend.M.updatedAt).to.be.an("object");
+					expect(putParams[1].Item.friend.M.createdAt.N).to.eql(putParams[1].Item.createdAt.N);
+					expect(putParams[1].Item.friend.M.updatedAt.N).to.eql(putParams[1].Item.updatedAt.N);
+					expect(parseInt(putParams[1].Item.friend.M.createdAt.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedAt.N));
+				});
+
+				it("Should save with correct object with custom timestamp attributes with nested schemas", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String, "friend": new Schema({"name": String}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}})}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie", "friend": {"name": "Tim"}});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.an("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.friend).to.be.an("object");
+					expect(putParams[0].Item.friend.M).to.be.an("object");
+					expect(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
+					expect(putParams[0].Item.created).to.be.an("object");
+					expect(putParams[0].Item.updated).to.be.an("object");
+					expect(putParams[0].Item.friend.M.created).to.be.an("object");
+					expect(putParams[0].Item.friend.M.updated).to.be.an("object");
+					expect(putParams[0].Item.friend.M.created.N).to.eql(putParams[0].Item.created.N);
+					expect(putParams[0].Item.friend.M.updated.N).to.eql(putParams[0].Item.updated.N);
+					expect(putParams[0].Item.friend.M.created.N).to.eql(putParams[0].Item.friend.M.updated.N);
+
+					await utils.timeout(5);
+
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.an("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.friend).to.be.an("object");
+					expect(putParams[1].Item.friend.M).to.be.an("object");
+					expect(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
+					expect(putParams[1].Item.created).to.be.an("object");
+					expect(putParams[1].Item.updated).to.be.an("object");
+					expect(putParams[1].Item.friend.M.created).to.be.an("object");
+					expect(putParams[1].Item.friend.M.updated).to.be.an("object");
+					expect(putParams[1].Item.friend.M.created.N).to.eql(putParams[1].Item.created.N);
+					expect(putParams[1].Item.friend.M.updated.N).to.eql(putParams[1].Item.updated.N);
+					expect(parseInt(putParams[1].Item.friend.M.created.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updated.N));
+				});
+
+				it("Should save with correct object with multiple custom timestamps attributes with nested schemas", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String, "friend": new Schema({"name": String}, {"timestamps": {"createdAt": ["createdC", "createdD"], "updatedAt": ["updatedC", "updatedD"]}})}, {"timestamps": {"createdAt": ["createdA", "createdB"], "updatedAt": ["updatedA", "updatedB"]}}), {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "name": "Charlie", "friend": {"name": "Tim"}});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).to.eql("User");
+					expect(putParams[0].Item).to.be.an("object");
+					expect(putParams[0].Item.id).to.eql({"N": "1"});
+					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expect(putParams[0].Item.friend).to.be.an("object");
+					expect(putParams[0].Item.friend.M).to.be.an("object");
+					expect(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
+					expect(putParams[0].Item.createdA).to.be.an("object");
+					expect(putParams[0].Item.createdB).to.be.an("object");
+					expect(putParams[0].Item.updatedA).to.be.an("object");
+					expect(putParams[0].Item.updatedB).to.be.an("object");
+					expect(putParams[0].Item.friend.M.createdC).to.be.an("object");
+					expect(putParams[0].Item.friend.M.createdD).to.be.an("object");
+					expect(putParams[0].Item.friend.M.updatedC).to.be.an("object");
+					expect(putParams[0].Item.friend.M.updatedD).to.be.an("object");
+					expect(putParams[0].Item.friend.M.createdC.N).to.eql(putParams[0].Item.createdA.N);
+					expect(putParams[0].Item.friend.M.createdD.N).to.eql(putParams[0].Item.createdB.N);
+					expect(putParams[0].Item.friend.M.updatedC.N).to.eql(putParams[0].Item.updatedA.N);
+					expect(putParams[0].Item.friend.M.updatedD.N).to.eql(putParams[0].Item.updatedB.N);
+					expect(putParams[0].Item.friend.M.createdC.N).to.eql(putParams[0].Item.friend.M.updatedC.N);
+					expect(putParams[0].Item.friend.M.createdD.N).to.eql(putParams[0].Item.friend.M.updatedD.N);
+
+					await utils.timeout(5);
+
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).to.eql("User");
+					expect(putParams[1].Item).to.be.an("object");
+					expect(putParams[1].Item.id).to.eql({"N": "1"});
+					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expect(putParams[1].Item.friend).to.be.an("object");
+					expect(putParams[1].Item.friend.M).to.be.an("object");
+					expect(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
+					expect(putParams[1].Item.createdA).to.be.an("object");
+					expect(putParams[1].Item.createdB).to.be.an("object");
+					expect(putParams[1].Item.updatedA).to.be.an("object");
+					expect(putParams[1].Item.updatedB).to.be.an("object");
+					expect(putParams[1].Item.friend.M.createdC).to.be.an("object");
+					expect(putParams[1].Item.friend.M.createdD).to.be.an("object");
+					expect(putParams[1].Item.friend.M.updatedC).to.be.an("object");
+					expect(putParams[1].Item.friend.M.updatedD).to.be.an("object");
+					expect(putParams[1].Item.friend.M.createdC.N).to.eql(putParams[1].Item.createdA.N);
+					expect(putParams[1].Item.friend.M.createdD.N).to.eql(putParams[1].Item.createdB.N);
+					expect(putParams[1].Item.friend.M.updatedC.N).to.eql(putParams[1].Item.updatedA.N);
+					expect(putParams[1].Item.friend.M.updatedD.N).to.eql(putParams[1].Item.updatedB.N);
+					expect(parseInt(putParams[1].Item.friend.M.createdC.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedC.N));
+					expect(parseInt(putParams[1].Item.friend.M.createdD.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedD.N));
+				});
+
 				it("Should save with correct object with timestamps but no createdAt timestamp", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": null, "updatedAt": "updatedAt"}}), {"create": false, "waitForActive": false});
@@ -1231,7 +1408,14 @@ describe("Document", () => {
 		const tests = [
 			{"schema": {"id": Number, "name": String}, "input": {"id": 1, "name": "Charlie", "hello": "world"}, "output": {"id": 1, "name": "Charlie"}},
 			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "output": {"id": 1}},
-			{"schema": {"id": Number, "name": String, "age": Number}, "input": {"id": 1, "name": "Charlie", "age": "test"}, "error": "test"}
+			{"schema": {"id": Number, "name": String, "age": Number}, "input": {"id": 1, "name": "Charlie", "age": "test"}, "error": "test"},
+			{"schema": {"id": Number, "name": String, "age": Number, "parents": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "age": Number}}]}}, "input": {"id": 1, "name": "Bob", "age": 2, "parents": [{"name": "Tim", "age": 3}, {"name": "Sara", "age": 4}]}, "output": {"id": 1, "name": "Bob", "age": 2, "parents": [{"name": "Tim", "age": 3}, {"name": "Sara", "age": 4}]}},
+			{"schema": new dynamoose.Schema({"id": Number, "name": String, "age": Number, "parent": new dynamoose.Schema({"name": String, "age": Number})}), "input": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}},
+			{"schema": new dynamoose.Schema({"id": Number, "name": String, "age": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String, "age": Number})}}), "input": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}},
+			{"schema": new dynamoose.Schema({"id": Number, "name": String, "age": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String, "age": Number})]}}), "input": {"id": 1, "name": "Bob", "age": 2, "parents": [{"name": "Tim", "age": 3}, {"name": "Sara", "age": 4}]}, "output": {"id": 1, "name": "Bob", "age": 2, "parents": [{"name": "Tim", "age": 3}, {"name": "Sara", "age": 4}]}},
+			{"schema": new dynamoose.Schema({"id": Number, "name": String, "parent": new dynamoose.Schema({"name": String}, {"saveUnknown": ["age"]})}, {"saveUnknown": ["age"]}), "input": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}, "settings": {"saveUnknown": true}},
+			{"schema": new dynamoose.Schema({"id": Number, "name": String, "parent": new dynamoose.Schema({"name": String}, {"saveUnknown": true})}, {"saveUnknown": ["age"]}), "input": {"id": 1, "name": "Bob", "age": 2, "favoriteColor": "gray", "parent": {"name": "Tim", "age": 3, "favoriteColor": "blue"}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3, "favoriteColor": "blue"}}, "settings": {"saveUnknown": true}},
+			{"schema": new dynamoose.Schema({"id": Number, "name": String, "parent": new dynamoose.Schema({"name": String}, {})}, {"saveUnknown": ["age"]}), "input": {"id": 1, "name": "Bob", "age": 2, "favoriteColor": "gray", "parent": {"name": "Tim", "age": 3, "favoriteColor": "blue"}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim"}}, "settings": {"saveUnknown": true}},
 		];
 
 		tests.forEach((test) => {
@@ -1240,14 +1424,14 @@ describe("Document", () => {
 					const User = dynamoose.model("User", test.schema);
 					const user = new User(test.input);
 
-					return expect(user.conformToSchema()).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
+					return expect(user.conformToSchema(test.settings)).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
 				});
 			} else {
 				it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
 					const User = dynamoose.model("User", test.schema);
 					const user = new User(test.input);
 
-					const obj = await user.conformToSchema();
+					const obj = await user.conformToSchema(test.settings);
 
 					expect({...user}).to.eql(test.output);
 					expect(obj).to.eql(user);
@@ -1794,6 +1978,117 @@ describe("Document", () => {
 					expect(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
 				});
 			}
+		});
+	});
+
+	describe("Document.prepareForObjectFromSchema", () => {
+		it("Should be a function", () => {
+			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).prepareForObjectFromSchema).to.be.a("function");
+		});
+
+		const internalProperties = require("../dist/Internal").General.internalProperties;
+		const tests = [
+			{
+				"input": [{}, {}],
+				"output": {},
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [{}, {"updateTimestamps": true}],
+				"output": {},
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [{}, {"updateTimestamps": false, "type": "toDynamo"}],
+				"output": {},
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [{}, {"updateTimestamps": true, "type": "toDynamo"}],
+				"output": (result) => ({
+					"updatedAt": result.updatedAt || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": true}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"output": (result) => ({
+					"updatedAt": result.updatedAt || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"output": (result) => ({
+					"updatedAt": result.updatedAt || new Date(),
+					"createdAt": result.createdAt || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": {"createdAt": true, "updatedAt": true}, "type": "toDynamo"}],
+				"output": (result) => ({
+					"updatedAt": result.updatedAt || new Date(),
+					"createdAt": result.createdAt || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": {"createdAt": true, "updatedAt": false}, "type": "toDynamo"}],
+				"output": (result) => ({
+					"createdAt": result.createdAt || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": {"createdAt": false, "updatedAt": true}, "type": "toDynamo"}],
+				"output": (result) => ({
+					"updatedAt": result.updatedAt || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": true}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"output": (result) => ({
+					"updated": result.updated || new Date(),
+					"created": result.created || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}), {"create": false, "waitForActive": false}]
+			},
+			{
+				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"output": (result) => ({
+					"a": result.a || new Date(),
+					"b": result.b || new Date(),
+					"c": result.c || new Date(),
+					"d": result.d || new Date()
+				}),
+				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": {"createdAt": ["a", "b"], "updatedAt": ["c", "d"]}}), {"create": false, "waitForActive": false}]
+			},
+		];
+
+		tests.forEach((test) => {
+			let input, model;
+			const func = () => {
+				if (!(input && model)) {
+					if (test.model) {
+						model = dynamoose.model(...test.model);
+					} else {
+						model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
+					}
+
+					input = (!Array.isArray(test.input) ? [test.input] : test.input);
+					input.splice(1, 0, model.Model);
+				}
+
+				return {input, model};
+			};
+
+			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
+				const res = func();
+				const result = await res.model.prepareForObjectFromSchema(...res.input);
+				expect(result).to.eql(typeof test.output === "function" ? test.output(result) : test.output);
+			});
 		});
 	});
 });
