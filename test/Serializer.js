@@ -33,12 +33,35 @@ describe("Serializer", () => {
 			}
 		});
 	});
+	let docs = [];
+	beforeEach(() => {
+		docs = [
+			{
+				id: 1,
+				name: "User One",
+				email: "userone@example.com",
+				phone: "0123456789",
+				passwordHash: "5dxFDpyKeEKiVUSp9I6dQ1DGd3CFH5Jk",
+				status: "not_active"
+			},
+			{
+				id: 2,
+				name: "User Two",
+				email: "usertwo@example.com",
+				phone: "0123456789",
+				passwordHash: "KnbuZWU0RNPPXhgPNMxovLtUiuMN4I6i",
+				status: "active"
+			}
+		].map((a) => new User(a));
+	});
+	afterEach(() => {
+		docs = [];
+	});
 
 	it("Should verify Model and Document have a serializer instance and expected methods bound", () => {
-		const doc = new User({"id": 1, name: "User"});
 		expect(User.serializer).to.be.an.instanceof(Serializer);
-		expect(doc.serialize).to.be.a("function");
 		expect(User.serializeMany).to.be.a("function");
+		expect(new User({"id": 1, name: "User"}).serialize).to.be.a("function");
 	});
 
 	it("Should add some serializers to the Models serializer instance", () => {
@@ -69,7 +92,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should run the document through a serializer configured with an array (include)", () => {
-		const docs = createDocuments();
 		const result = docs[0].serialize("contactInfoOnly");
 		expect(result).to.have.property("name");
 		expect(result).to.have.property("email");
@@ -80,7 +102,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should run the document through a serializer configured with exclude properties", () => {
-		const docs = createDocuments();
 		const result = docs[0].serialize("hideSecure");
 		expect(result).to.have.property("id");
 		expect(result).to.have.property("name");
@@ -91,7 +112,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should run the document through a serializer configured with a modify function", () => {
-		const docs = createDocuments();
 		const result = docs[0].serialize("isActiveNoStatus");
 		expect(result).to.have.property("id");
 		expect(result).to.have.property("name");
@@ -102,7 +122,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should run the document through the default serializer", () => {
-		const docs = createDocuments();
 		const result = docs[0].serialize();
 		expect(result).to.have.property("id");
 		expect(result).to.have.property("name");
@@ -113,7 +132,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should run a serializer with both include and exclude statements", () => {
-		const docs = createDocuments();
 		const result = docs[0].serialize("redundant");
 		expect(result).to.have.property("email");
 		expect(result).to.not.have.property("id");
@@ -124,7 +142,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should serialize many documents at once", () => {
-		const docs = createDocuments();
 		const results = User.serializeMany(docs, "hideSecure");
 		const noDocsResults = User.serializeMany();
 		expect(results).to.be.an("array").length(2);
@@ -146,7 +163,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should accept an options object instead of a name", () => {
-		const docs = createDocuments();
 		const resultOne = docs[0].serialize(["phone", "status"]);
 		const resultTwo = docs[1].serialize({include: ["id", "name"]});
 		expect(resultOne).to.have.property("phone");
@@ -165,7 +181,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should add all document fields to the output prior to running modify without include or exclude statements", () => {
-		const docs = createDocuments();
 		const result = docs[0].serialize("isActive");
 		expect(result).to.have.property("id");
 		expect(result).to.have.property("name");
@@ -177,7 +192,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should add all document fields to the output prior to running both include and exclude statements", () => {
-		const docs = createDocuments();
 		const result = docs[0].serialize("hideSecure");
 		expect(result).to.have.property("id");
 		expect(result).to.have.property("name");
@@ -188,7 +202,6 @@ describe("Serializer", () => {
 	});
 
 	it("Should throw error when trying to serialize using non existant serializer", () => {
-		const docs = createDocuments();
 		expect(() => docs[0].serialize("nonExistingSerializer")).throw("Field options is required and should be an object or array");
 	});
 
@@ -197,28 +210,4 @@ describe("Serializer", () => {
 		expect(() => User.serializer.add("broken", "invalidOptionsUsage")).to.throw("Field options is required and should be an object or array");
 		expect(() => User.serializeMany({notAnArray: "ofDocuments"})).to.throw("documentsArray must be an array of document objects");
 	});
-
-	const createDocuments = () => {
-		const docs = [];
-
-		docs[0] = new User({
-			id: 1,
-			name: "User One",
-			email: "userone@example.com",
-			phone: "0123456789",
-			passwordHash: "5dxFDpyKeEKiVUSp9I6dQ1DGd3CFH5Jk",
-			status: "not_active"
-		});
-
-		docs[1] = new User({
-			id: 2,
-			name: "User Two",
-			email: "usertwo@example.com",
-			phone: "0123456789",
-			passwordHash: "KnbuZWU0RNPPXhgPNMxovLtUiuMN4I6i",
-			status: "active"
-		});
-
-		return docs;
-	};
 });
