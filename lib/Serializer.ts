@@ -33,15 +33,17 @@ export class Serializer {
 		this.#serializers[name] = options;
 	}
 
-	setDefault(name: string): void {
-		if (!name || typeof name !== "string") {
-			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
-		}
+	default = {
+		"set": (name: string): void => {
+			if (!name || typeof name !== "string") {
+				throw new CustomError.InvalidParameter("Field name is required and should be of type string");
+			}
 
-		if (Object.keys(this.#serializers).includes(name)) {
-			this.#defaultSerializer = name;
+			if (Object.keys(this.#serializers).includes(name)) {
+				this.#defaultSerializer = name;
+			}
 		}
-	}
+	};
 
 	delete(name: string): void {
 		if (!name || typeof name !== "string") {
@@ -55,7 +57,7 @@ export class Serializer {
 
 		// Reset defaultSerializer to default if removing default serializer
 		if (this.#defaultSerializer === name) {
-			this.setDefault("_default");
+			this.default.set("_default");
 		}
 	}
 
