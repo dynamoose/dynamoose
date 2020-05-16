@@ -2,7 +2,8 @@
 
 enum MergeObjectsCombineMethod {
 	ObjectCombine = "object_combine",
-	ArrayMerge = "array_merge"
+	ArrayMerge = "array_merge",
+	ArrayMergeNewArray = "array_merge_new_arrray"
 }
 
 interface MergeObjectsSettings {
@@ -30,6 +31,8 @@ const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombi
 				if (typeof returnObject[key] === "object" && typeof arg[key] === "object" && !Array.isArray(returnObject[key]) && !Array.isArray(arg[key]) && returnObject[key] !== null) {
 					if (settings.combineMethod === MergeObjectsCombineMethod.ObjectCombine) {
 						returnObject[key] = {...returnObject[key], ...arg[key]};
+					} else if (settings.combineMethod === MergeObjectsCombineMethod.ArrayMergeNewArray) {
+						returnObject[key] = main(settings)(returnObject[key], arg[key] as any);
 					} else {
 						returnObject[key] = [returnObject[key], arg[key]];
 					}
@@ -38,7 +41,11 @@ const main = (settings: MergeObjectsSettings = {combineMethod: MergeObjectsCombi
 				} else if (Array.isArray(returnObject[key])) {
 					returnObject[key] = [...returnObject[key], arg[key]];
 				} else if (returnObject[key]) {
-					returnObject[key] += arg[key];
+					if (settings.combineMethod === MergeObjectsCombineMethod.ArrayMergeNewArray) {
+						returnObject[key] = [returnObject[key], arg[key]];
+					} else {
+						returnObject[key] += arg[key];
+					}
 				} else {
 					returnObject[key] = arg[key];
 				}
