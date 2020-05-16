@@ -1,5 +1,6 @@
 import { ObjectType, ModelType } from "./General";
 import { Document } from "./Document";
+import utils = require("./utils");
 
 interface SerializerOptions {
 	include?: string[];
@@ -9,16 +10,6 @@ interface SerializerOptions {
 
 const defaultSerializer: SerializerOptions = {
 	"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
-};
-
-const includeHandler = (document: ObjectType, includeRules: string[], serialized: ObjectType): ObjectType => {
-	return includeRules.reduce((serialized: ObjectType, key: string) => {
-		if (Object.keys(document).includes(key)) {
-			serialized[key] = document[key];
-		}
-
-		return serialized;
-	}, serialized);
 };
 
 const excludeHandler = (document: ObjectType, excludeRules: string[], serialized: ObjectType): ObjectType => {
@@ -102,12 +93,12 @@ export class Serializer {
 		validateOptions(options);
 
 		if (Array.isArray(options)) {
-			return includeHandler(document, options, {});
+			return utils.object.pick(document, options);
 		}
 
 		let serialized: ObjectType = {};
 		if (options.include) {
-			serialized = includeHandler(document, options.include, serialized);
+			serialized = utils.object.pick(document, options.include);
 		}
 		if (options.exclude) {
 			if (!options.include) {
