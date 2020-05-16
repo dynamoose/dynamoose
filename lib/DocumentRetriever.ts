@@ -26,7 +26,7 @@ abstract class DocumentRetriever {
 		limit?: number;
 		all?: {delay: number; max: number};
 		startAt?: any;
-		attributes?: string[] | {expressionAttributeNames?: [{key: string; value: string}]; projectionExpression?: string[]};
+		attributes?: string[];
 		index?: string;
 		consistent?: boolean;
 		count?: boolean;
@@ -37,7 +37,7 @@ abstract class DocumentRetriever {
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
 	limit: (this: DocumentRetriever, value: number) => DocumentRetriever;
 	startAt: (this: DocumentRetriever, value: ObjectType) => DocumentRetriever;
-	attributes: (this: DocumentRetriever, value: string[] | {expressionAttributeNames?: [{key: string; value: string}]; projectionExpression?: string[]}) => DocumentRetriever;
+	attributes: (this: DocumentRetriever, value: string[]) => DocumentRetriever;
 	count: (this: DocumentRetriever) => DocumentRetriever;
 	consistent: (this: DocumentRetriever) => DocumentRetriever;
 	using: (this: DocumentRetriever, value: string) => DocumentRetriever;
@@ -179,18 +179,40 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	if (this.settings.attributes) {
-		// Check expression attribute names
-		if (this.settings.attributes["expressionAttributeNames"]) {
-			object.ExpressionAttributeNames = this.settings.attributes["expressionAttributeNames"].reduce((o, val) => {
-				o[val.key] = val.value;
-				return o;
-			}, {});
-		}
-		// Check projection expression
-		if (this.settings.attributes["projectionExpression"]) {
-			object.ProjectionExpression = this.settings.attributes["projectionExpression"].join(", ");
+		const expressionAttributeNames = {};
+		const projectionExpression = [];
+		// Check object ExpressionAttributeNames
+		if (object.ExpressionAttributeNames) {
+			let existingIndex = Object.keys(object.ExpressionAttributeNames).reduce((existing, item) => {
+				return Math.max(parseInt(item.replace("#a", "")), existing);
+			}, 0);
+			this.settings.attributes.forEach((element, index) => {
+				if (Object.keys(object.ExpressionAttributeNames).length) {
+					const item = Object.keys(object.ExpressionAttributeNames).find(key => object.ExpressionAttributeNames[key] === element);
+					if (item) {
+						projectionExpression.push(item);
+					} else {
+						const attrID = `#a${existingIndex + 1}`;
+						existingIndex++;
+						projectionExpression.push(attrID);
+						expressionAttributeNames[attrID] = element;
+					}
+				} else {
+					const attrID = `#a${index + 1}`;
+					projectionExpression.push(attrID);
+					expressionAttributeNames[attrID] = element;
+				}
+			});
+			object.ExpressionAttributeNames = { ...object.ExpressionAttributeNames, ...expressionAttributeNames };
+			object.ProjectionExpression = projectionExpression.sort().join(", ");
 		} else {
-			object.ProjectionExpression = [this.settings.attributes].join(", ");
+			object.ExpressionAttributeNames = {};
+			this.settings.attributes.forEach((element, index) => {
+				const attrID = `#a${index}`;
+				projectionExpression.push(attrID);
+				object.ExpressionAttributeNames[attrID] = element;
+			});
+			object.ProjectionExpression = projectionExpression.sort().join(", ");
 		}
 	}
 	const indexes = await this.internalSettings.model.schema.getIndexes(this.internalSettings.model);

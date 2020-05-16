@@ -1166,13 +1166,13 @@ describe("Query", () => {
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id"]).exec();
-			expect(queryParams.ProjectionExpression).to.eql("id");
+			expect(queryParams.ProjectionExpression).to.eql("#a1");
 		});
 
 		it("Should send correct request on query.exec with multiple attributes", async () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id", "name"]).exec();
-			expect(queryParams.ProjectionExpression).to.eql("id,name");
+			expect(queryParams.ProjectionExpression).to.eql("#a0, #a1");
 		});
 	});
 
