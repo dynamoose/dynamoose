@@ -2,9 +2,7 @@ import { ObjectType, ModelType } from "./General";
 import { Document } from "./Document";
 
 const defaultSerializer = {
-	"modify": (serialized: ObjectType, original: ObjectType): ObjectType => {
-		return {...original};
-	}
+	"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
 };
 
 const includeHandler = (document: ObjectType, includeRules: string[], serialized: ObjectType): ObjectType => {
