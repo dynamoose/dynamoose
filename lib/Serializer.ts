@@ -12,16 +12,6 @@ const defaultSerializer: SerializerOptions = {
 	"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
 };
 
-const excludeHandler = (document: ObjectType, excludeRules: string[], serialized: ObjectType): ObjectType => {
-	return excludeRules.reduce((serialized: ObjectType, key: string) => {
-		if (Object.keys(serialized).includes(key)) {
-			delete serialized[key];
-		}
-
-		return serialized;
-	}, serialized);
-};
-
 const validateName = (name: string): void => {
 	if (!name || typeof name !== "string") {
 		throw new Error("Field name is required and should be of type string");
@@ -104,7 +94,7 @@ export class Serializer {
 			if (!options.include) {
 				serialized = {...document};
 			}
-			serialized = excludeHandler(document, options.exclude, serialized);
+			serialized = utils.object.delete(serialized, options.exclude);
 		}
 		if (options.modify && typeof options.modify === "function") {
 			if (!options.include && !options.exclude) {
