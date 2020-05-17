@@ -2,3 +2,4 @@ docs
 dist
 publish/node_modules
 !.eslintrc.js
+!.huskyrc.js
