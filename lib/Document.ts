@@ -88,6 +88,11 @@ export class Document {
 		return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
 	}
 
+	// toJSON
+	toJSON (): ObjectType {
+		return {...this};
+	}
+
 	// Serializer
 	serialize (nameOrOptions?: SerializerOptions | string): ObjectType {
 		return this.model.serializer._serialize(this, nameOrOptions);
