@@ -13,9 +13,11 @@ export class Serializer {
 	#serializers: {[key: string]: SerializerOptions};
 	#defaultSerializer: string;
 
+	static defaultName = "_default";
+
 	constructor() {
 		this.#serializers = {
-			"_default": {
+			[Serializer.defaultName]: {
 				"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
 			}
 		};
@@ -36,7 +38,7 @@ export class Serializer {
 	default = {
 		"set": (name?: string): void => {
 			if (typeof name === "undefined" || name === null) {
-				name = "_default";
+				name = Serializer.defaultName;
 			}
 
 			if (!name || typeof name !== "string") {
@@ -52,6 +54,9 @@ export class Serializer {
 	delete(name: string): void {
 		if (!name || typeof name !== "string") {
 			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
+		}
+		if (name === Serializer.defaultName) {
+			throw new CustomError.InvalidParameter("Can not delete primary default serializer");
 		}
 
 		// Removing serializer
