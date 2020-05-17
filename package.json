@@ -88,5 +88,15 @@
   },
   "files": [
     "dist"
+  ],
+  "funding": [
+    {
+      "type": "individual",
+      "url": "https://github.com/sponsors/fishcharlie"
+    },
+    {
+      "type": "opencollective",
+      "url": "https://opencollective.com/dynamoose"
+    }
   ]
 }

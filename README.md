@@ -45,6 +45,7 @@ Take a look at our [website](https://dynamoosejs.com) for information about how 
 #### General
 
 - [Website](https://dynamoosejs.com)
+- [Sponsor](SPONSOR.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](CHANGELOG.md)
