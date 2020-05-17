@@ -1166,7 +1166,13 @@ describe("Query", () => {
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({ "Items": [] });
 			await Model.query("name").eq("Charlie").attributes(["id"]).exec();
-			expect(queryParams.AttributesToGet).to.eql(["id"]);
+			expect(queryParams.ProjectionExpression).to.eql("id");
+		});
+
+		it("Should send correct request on query.exec with multiple attributes", async () => {
+			queryPromiseResolver = () => ({ "Items": [] });
+			await Model.query("name").eq("Charlie").attributes(["id", "name"]).exec();
+			expect(queryParams.ProjectionExpression).to.eql("id, name");
 		});
 	});
 
@@ -1234,6 +1240,45 @@ describe("Query", () => {
 			queryPromiseResolver = () => ({ "Items": [] });
 			await Model.query("name").eq("Charlie").using("customIndex").exec();
 			expect(queryParams.IndexName).to.eql("customIndex");
+		});
+	});
+
+	describe("query.sort", () => {
+		it("Should be a function", () => {
+			expect(Model.query().sort).to.be.a("function");
+		});
+
+		it("Should set correct setting on query instance for nothing", () => {
+			const query = Model.query();
+			expect(query.settings.sort).to.not.exist;
+		});
+
+		it("Should set correct setting on query instance for ascending", () => {
+			const query = Model.query().sort("ascending");
+			expect(query.settings.sort).to.eql("ascending");
+		});
+
+		it("Should set correct setting on query instance for descending", () => {
+			const query = Model.query().sort("descending");
+			expect(query.settings.sort).to.eql("descending");
+		});
+
+		it("Should send correct request on query.exec for nothing", async () => {
+			queryPromiseResolver = () => ({ "Items": [] });
+			await Model.query("name").eq("Charlie").exec();
+			expect(queryParams.ScanIndexForward).to.not.exist;
+		});
+
+		it("Should send correct request on query.exec for ascending", async () => {
+			queryPromiseResolver = () => ({ "Items": [] });
+			await Model.query("name").eq("Charlie").sort("ascending").exec();
+			expect(queryParams.ScanIndexForward).to.not.exist;
+		});
+
+		it("Should send correct request on query.exec for descending", async () => {
+			queryPromiseResolver = () => ({ "Items": [] });
+			await Model.query("name").eq("Charlie").sort("descending").exec();
+			expect(queryParams.ScanIndexForward).to.eql(false);
 		});
 	});
 
