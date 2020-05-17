@@ -3968,7 +3968,7 @@ describe("Model", () => {
 						const input = typeof test.input === "function" ? test.input() : test.input;
 
 						if (Array.isArray(input[0])) {
-							input[0].forEach((object, index) => {
+							input[0].forEach((object) => {
 								const document = new User(object);
 								User.serializer.default.set();
 								expect(document.serialize()).to.eql(document.toJSON());
