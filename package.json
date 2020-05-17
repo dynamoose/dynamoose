@@ -90,16 +90,5 @@
   },
   "files": [
     "dist"
-  ],
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "pre-push": "npm test"
-    }
-  },
-  "lint-staged": {
-    "(lib|test|publish)/*.{js,ts}": [
-      "npm run lint:fix"
-    ]
-  }
+  ]
 }
