@@ -6,12 +6,10 @@ module.exports = {
 		".mocharc.js",
 		"publish",
 		"docs",
-		"nyc.config.js"
+		"nyc.config.js",
+		".huskyrc.js",
+		"lint-staged.config.js",
 	],
 	"all": true,
-	"reporter": [
-		"html",
-		"text",
-		"lcovonly"
-	]
+	"reporter": ["html", "text", "lcovonly"],
 };
