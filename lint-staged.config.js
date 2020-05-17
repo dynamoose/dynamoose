@@ -1,3 +1,3 @@
 module.exports = {
-	"(lib|test|publish)/*.{js,ts}": ["eslint --cache --fix"],
+	"(lib|test|publish)/*.{js,ts}": ["eslint --fix"],
 };
