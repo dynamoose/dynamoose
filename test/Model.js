@@ -3962,6 +3962,20 @@ describe("Model", () => {
 						});
 					}
 				});
+
+				if (!test.error) {
+					it(`Should return same output as document.toJSON() for ${JSON.stringify(test.input)}`, () => {
+						const input = typeof test.input === "function" ? test.input() : test.input;
+
+						if (Array.isArray(input[0])) {
+							input[0].forEach((object, index) => {
+								const document = new User(object);
+								User.serializer.default.set();
+								expect(document.serialize()).to.eql(document.toJSON());
+							});
+						}
+					});
+				}
 			});
 		});
 	});
