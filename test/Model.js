@@ -3804,6 +3804,10 @@ describe("Model", () => {
 				it("Should throw an error if calling with number as first parameter", () => {
 					expect(() => User.serializer.delete(1)).to.throw("Field name is required and should be of type string");
 				});
+
+				it("Should throw an error if trying to delete primary default serializer", () => {
+					expect(() => User.serializer.delete("_default")).to.throw("Can not delete primary default serializer");
+				});
 			});
 
 			describe("Model.serializer.default.set", () => {
