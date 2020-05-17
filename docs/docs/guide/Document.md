@@ -86,7 +86,7 @@ myUser.delete((error) => {
 
 ## document.serialize([serializer])
 
-This function serializes the document with the given serializer. The serializer parameter can either be a string or object. If it is an object you can pass in the same serializer as you do into [`Model.serializer.add`](). If you pass in a string it will use the registered serializer with that name that is attached to the Model.
+This function serializes the document with the given serializer. The serializer parameter can either be a string or object. If it is an object you can pass in the same serializer as you do into [`Model.serializer.add`](Model#modelserializeraddname-serializer). If you pass in a string it will use the registered serializer with that name that is attached to the Model.
 
 This function will return an object.
 
