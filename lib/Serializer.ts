@@ -61,7 +61,7 @@ export class Serializer {
 
 		// Reset defaultSerializer to default if removing default serializer
 		if (this.#defaultSerializer === name) {
-			this.default.set("_default");
+			this.default.set();
 		}
 	}
 
