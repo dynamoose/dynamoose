@@ -61,4 +61,4 @@ Below you will find the current branch strategy for the project. Work taking pla
 
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
-| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.1.0 | latest | - [Documentation](https://dynamoosejs.com) |
+| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.2.x | latest | - [Documentation](https://dynamoosejs.com) |
