@@ -183,9 +183,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		const projectionExpression = [];
 		// Check object ExpressionAttributeNames
 		if (object.ExpressionAttributeNames) {
-			let existingIndex = Object.keys(object.ExpressionAttributeNames).reduce((existing, item) => {
-				return Math.max(parseInt(item.replace("#a", "")), existing);
-			}, 0);
+			let existingIndex = Object.keys(object.ExpressionAttributeNames).reduce((existing, item) => Math.max(parseInt(item.replace("#a", "")), existing), 0);
 			this.settings.attributes.forEach((element, index) => {
 				if (Object.keys(object.ExpressionAttributeNames).length) {
 					const item = Object.keys(object.ExpressionAttributeNames).find(key => object.ExpressionAttributeNames[key] === element);
