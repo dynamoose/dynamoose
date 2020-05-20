@@ -245,9 +245,6 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		}
 		object.ExpressionAttributeNames[`#${prefix}a`] = value;
 		delete object.ExpressionAttributeNames[key];
-		if (object.ProjectionExpression && prefix === "qh") {
-			object.ProjectionExpression = object.ProjectionExpression.replace(key, "#qha");
-		}
 
 		const valueKey = key.replace("#a", ":v");
 
