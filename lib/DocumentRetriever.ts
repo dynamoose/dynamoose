@@ -184,19 +184,13 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 
 		if (object.ExpressionAttributeNames) {
 			let existingIndex = Object.keys(object.ExpressionAttributeNames).reduce((existing, item) => Math.max(parseInt(item.replace("#a", "")), existing), 0);
-			this.settings.attributes.forEach((element, index) => {
-				if (Object.keys(object.ExpressionAttributeNames).length) {
-					const item = Object.keys(object.ExpressionAttributeNames).find(key => object.ExpressionAttributeNames[key] === element);
-					if (item) {
-						projectionExpression.push(item);
-					} else {
-						const attrID = `#a${existingIndex + 1}`;
-						existingIndex++;
-						projectionExpression.push(attrID);
-						expressionAttributeNames[attrID] = element;
-					}
+			this.settings.attributes.forEach((element)=> {
+				const item = Object.keys(object.ExpressionAttributeNames).find(key => object.ExpressionAttributeNames[key] === element);
+				if (item) {
+					projectionExpression.push(item);
 				} else {
-					const attrID = `#a${index + 1}`;
+					const attrID = `#a${existingIndex + 1}`;
+					existingIndex++;
 					projectionExpression.push(attrID);
 					expressionAttributeNames[attrID] = element;
 				}
@@ -251,6 +245,9 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		}
 		object.ExpressionAttributeNames[`#${prefix}a`] = value;
 		delete object.ExpressionAttributeNames[key];
+		if (object.ProjectionExpression && prefix === "qh") {
+			object.ProjectionExpression = object.ProjectionExpression.replace(key, "#qha");
+		}
 
 		const valueKey = key.replace("#a", ":v");
 
