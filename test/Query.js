@@ -1167,12 +1167,21 @@ describe("Query", () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id"]).exec();
 			expect(queryParams.ProjectionExpression).to.eql("#a1");
+			expect(queryParams.ExpressionAttributeNames).to.eql({ "#a1": "id", "#qha": "name" });
 		});
 
 		it("Should send correct request on query.exec with multiple attributes", async () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id", "name"]).exec();
-			expect(queryParams.ProjectionExpression).to.eql("#a0, #a1");
+			expect(queryParams.ProjectionExpression).to.eql("#qha, #a1");
+			expect(queryParams.ExpressionAttributeNames).to.eql({ "#a1": "id", "#qha": "name" });
+		});
+
+		it("Should send correct request on query.exec with multiple attributes and one filter", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").attributes(["id", "name", "favoriteNumber"]).exec();
+			expect(queryParams.ProjectionExpression).to.eql("#qha, #a1, #a2");
+			expect(queryParams.ExpressionAttributeNames).to.eql({ "#a1": "id", "#a2": "favoriteNumber", "#qha": "name" });
 		});
 	});
 
