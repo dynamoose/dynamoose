@@ -627,7 +627,7 @@ describe("Scan", () => {
 
 		it("Should send correct request on scan.exec with multiple attributes and one filter", async () => {
 			scanPromiseResolver = () => ({"Items": []});
-			const filter = { "name": { eq: "Charlie" } };
+			const filter = { "name": { "eq": "Charlie" } };
 			await Model.scan(filter).attributes(["id", "name", "favoriteNumber"]).exec();
 			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1, #a2");
 		});
