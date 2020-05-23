@@ -74,7 +74,7 @@ When using `saveUnknown` with a set, the type recognized by Dynamoose will be th
 
 Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
-For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute.
+For types that are `Nested Types`, you must define a [`schema` setting](#schema-object--array) that includes the nested schema for that given attribute.
 
 ## Attribute Settings
 
