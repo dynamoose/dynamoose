@@ -76,6 +76,25 @@ Custom Dynamoose Types are not supported with the `saveUnknown` property. For ex
 
 For types that are `Nested Types`, you must define a [`schema` setting](#schema-object--array) that includes the nested schema for that given attribute.
 
+You can also define an array of types to allow your attribute to match any one of multiple types you set. For example in the following code example, the `data` attribute can either be of type String or Number.
+
+```js
+{
+	"data": [String, Number]
+}
+```
+
+In the event you have multiple types that match (Date & Number, Set & Array, multple Objects with different Schemas), Dynamoose will attempt to pick the closest matching type. However, if all types are valid, Dynamoose will default to the first type in the array.
+
+```js
+{
+	"date": [Number, Date] // If you pass in a Date instance, it will use Date, otherwise it will use Number. All retrieved documents from DynamoDB will use Number since there is no difference in the underlying storage of Number vs Date
+}
+```
+
+You are also not allowed to have multiple types on any `hashKey` or `rangeKey` attributes. DynamoDB requires that these key attributes only have one type.
+
+
 ## Attribute Settings
 
 ### type: type | object
