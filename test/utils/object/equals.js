@@ -66,7 +66,7 @@ describe("utils.object.equals", () => {
 		{
 			"input": ["hello", 1],
 			"output": false
-		},
+		}
 	];
 
 	tests.forEach((test) => {
