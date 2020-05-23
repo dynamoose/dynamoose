@@ -3,7 +3,7 @@ import CustomError = require("./Error");
 import utils = require("./utils");
 const OR = Symbol("OR");
 import {DynamoDB} from "aws-sdk";
-import { ObjectType } from "./General";
+import {ObjectType} from "./General";
 
 const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
@@ -95,7 +95,7 @@ export class Condition {
 
 	requestObject: (settings?: ConditionRequestObjectSettings) => ConditionRequestObjectResult;
 
-	constructor(object?: ConditionInitalizer) {
+	constructor (object?: ConditionInitalizer) {
 		if (object instanceof Condition) {
 			Object.entries(object).forEach((entry) => {
 				const [key, value] = entry;
@@ -141,7 +141,7 @@ interface ConditionsConditionStorageObject {
 	value: any;
 }
 
-function finalizePending(instance: Condition): void {
+function finalizePending (instance: Condition): void {
 	const pending = instance.settings.pending;
 
 	let dynamoNameType: ConditionComparisonComparatorDynamoName;
@@ -169,22 +169,24 @@ Condition.prototype.parenthesis = Condition.prototype.group = function (this: Co
 	this.settings.conditions.push(value.settings.conditions);
 	return this;
 };
-Condition.prototype.or = function(this: Condition): Condition {
+Condition.prototype.or = function (this: Condition): Condition {
 	this.settings.conditions.push(OR);
 	return this;
 };
-Condition.prototype.and = function(this: Condition): Condition { return this; };
-Condition.prototype.not = function(this: Condition): Condition {
+Condition.prototype.and = function (this: Condition): Condition {
+	return this;
+};
+Condition.prototype.not = function (this: Condition): Condition {
 	this.settings.pending.not = !this.settings.pending.not;
 	return this;
 };
-Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function(this: Condition, key: string): Condition {
+Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function (this: Condition, key: string): Condition {
 	this.settings.pending = {key};
 	return this;
 };
 // TODO: I don't think this prototypes are being exposed which is gonna cause a lot of problems with our type definition file. Need to figure out a better way to do this since they aren't defined and are dynamic.
 types.forEach((type) => {
-	Condition.prototype[type.name] = function(this: Condition, ...args: any[]): Condition {
+	Condition.prototype[type.name] = function (this: Condition, ...args: any[]): Condition {
 		this.settings.pending.value = type.multipleArguments ? args : args[0];
 		this.settings.pending.type = type;
 		finalizePending(this);
@@ -200,7 +202,7 @@ interface ConditionRequestObjectSettings {
 	};
 	conditionStringType: "array" | "string";
 }
-Condition.prototype.requestObject = function(this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): ConditionRequestObjectResult {
+Condition.prototype.requestObject = function (this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): ConditionRequestObjectResult {
 	if (this.settings.raw && utils.object.equals(Object.keys(this.settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
 		return Object.entries((this.settings.raw as ObjectType).ExpressionAttributeValues).reduce((obj, entry) => {
 			const [key, value] = entry;
@@ -215,8 +217,10 @@ Condition.prototype.requestObject = function(this: Condition, settings: Conditio
 	}
 
 	let index = (settings.index || {}).start || 0;
-	const setIndex = (i: number): void => {index = i; (settings.index || {"set": utils.empty_function}).set(i);};
-	function main(input: ConditionStorageSettingsConditions): ConditionRequestObjectResult {
+	const setIndex = (i: number): void => {
+		index = i; (settings.index || {"set": utils.empty_function}).set(i);
+	};
+	function main (input: ConditionStorageSettingsConditions): ConditionRequestObjectResult {
 		return input.reduce((object: ConditionRequestObjectResult, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {
 			let expression = "";
 			if (Array.isArray(entry)) {
