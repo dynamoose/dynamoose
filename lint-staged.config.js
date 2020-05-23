@@ -1,5 +1,4 @@
 const { CLIEngine } = require("eslint");
-
 const cli = new CLIEngine({});
 
 module.exports = {
