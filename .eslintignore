@@ -1,4 +1,4 @@
 docs
 dist
 publish/node_modules
-!.eslintrc.js
+!.*.js
