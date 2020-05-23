@@ -3528,6 +3528,14 @@ describe("Model", () => {
 				]
 			});
 		});
+
+		it("Should reject if has multiple types for hashKey", () => {
+			return expect(dynamoose.model("User", {"id": [String, Number]}).table.create.request()).to.eventually.rejectedWith("You can not have multiple types for attribute definition: id.");
+		});
+
+		it("Should reject if has multiple types for rangeKey", () => {
+			return expect(dynamoose.model("User", {"id": String, "rangeKey": {"type": [String, Number], "rangeKey": true}}).table.create.request()).to.eventually.rejectedWith("You can not have multiple types for attribute definition: rangeKey.");
+		});
 	});
 
 	describe("Model.transaction", () => {

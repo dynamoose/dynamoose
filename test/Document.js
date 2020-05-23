@@ -1765,7 +1765,199 @@ describe("Document", () => {
 				"schema": {"id": Number, "name": {"type": String, "required": true, "set": (val) => val === "" ? undefined : val}},
 				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"], "required": true}],
 				"error": new Error.ValidationError("name is a required property but has no value when trying to save document")
-			}
+			},
+
+			// Multiple Types
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [String, Number]},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": "hello"}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [String, Number]},
+				"output": {"id": 1, "data": "hello"}
+			},
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": ["String", "Number"]},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": "hello"}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": ["String", "Number"]},
+				"output": {"id": 1, "data": "hello"}
+			},
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": {"type": [String, Number]}},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": "hello"}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": {"type": [String, Number]}},
+				"output": {"id": 1, "data": "hello"}
+			},
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": 1}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [String]}]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [String]}]},
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
+			},
+			{
+				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world"}}
+			},
+			{
+				"input": [{"id": 1, "data": [{"name": "hello world"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": [{"name": "hello world"}]}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id2": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id2": "1", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": 1, "id1": "1", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": 1, "id2": "1"}},
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id2": "1", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": 1, "id2": "1", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": 1, "id2": "1"}},
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"error": new Error.ValidationError("Expected data.id1 to be of type number, instead found type string.")
+			},
+			{
+				"input": [{"id": 1, "data": {"name": 1, "id2": 2}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"error": new Error.ValidationError("Expected data.id2 to be of type string, instead found type number.")
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "seconds"}}]},
+				"output": {"id": 1, "data": new Date(1000)},
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date}]},
+				"output": {"id": 1, "data": new Date(1)},
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "miliseconds"}}]},
+				"output": {"id": 1, "data": new Date(1)},
+			},
+			{
+				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "seconds"}}]},
+				"output": {"id": 1, "data": "hello world"},
+			},
+			{
+				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "miliseconds"}}]},
+				"output": {"id": 1, "data": "hello world"},
+			},
+			{
+				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date}]},
+				"output": {"id": 1, "data": "hello world"},
+			},
 		];
 
 		tests.forEach((test) => {
@@ -1785,12 +1977,13 @@ describe("Document", () => {
 				return {input, model};
 			};
 
+			const testFunc = test.test || it;
 			if (test.error) {
-				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
+				testFunc(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
 					return expect(func().model.objectFromSchema(...func().input)).to.be.rejectedWith(test.error.message);
 				});
 			} else {
-				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
+				testFunc(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
 					expect(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
 				});
 			}
