@@ -14,6 +14,8 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^6.8.0",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.6",
     "mocha": "^7.1.2",
     "nyc": "^15.0.1",
     "typescript": "^3.8.3"
@@ -29,6 +31,7 @@
     "test:debug:breakpoint": "npm run test:nocoverage -- --no-timeout --inspect-brk=9229",
     "lint": "eslint . --ext .ts,.js --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
+    "lint:staged:fix": "lint-staged",
     "site:install": "cd docs && npm install",
     "site:start": "cd docs && npm start",
     "site:build": "cd docs && npm run build",
