@@ -610,37 +610,35 @@ describe("Scan", () => {
 			scanPromiseResolver = () => ({"Items": []});
 			await Model.scan("name").eq("Charlie").attributes(["id"]).exec();
 			expect(scanParams.ProjectionExpression).to.eql("#a1");
-			expect(scanParams.ExpressionAttributeNames).to.eql({ "#a0": "name", "#a1": "id" });
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "id"});
 		});
 
 		it("Should send correct request on scan.exec with multiple attributes", async () => {
 			scanPromiseResolver = () => ({"Items": []});
 			await Model.scan("name").eq("Charlie").attributes(["id", "name"]).exec();
 			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1");
-			expect(scanParams.ExpressionAttributeNames).to.eql({ "#a0": "name", "#a1": "id" });
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "id"});
 		});
 
 		it("Should send correct request on scan.exec with multiple attributes no filters", async () => {
 			scanPromiseResolver = () => ({"Items": []});
 			await Model.scan().attributes(["id", "name", "favoriteNumber"]).exec();
-			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1, #a2");
-			expect(scanParams.ExpressionAttributeNames).to.eql({ "#a0": "id", "#a1": "name", "#a2": "favoriteNumber" });
+			expect(scanParams.ProjectionExpression).to.eql("#a1, #a2, #a3");
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#a2": "name", "#a3": "favoriteNumber"});
 		});
 
 		it("Should send correct request on scan.exec with multiple attributes and one filter", async () => {
 			scanPromiseResolver = () => ({"Items": []});
-			const filter = { "name": { "eq": "Charlie" } };
-			await Model.scan(filter).attributes(["id", "name", "favoriteNumber"]).exec();
+			await Model.scan("name").eq("Charlie").attributes(["id", "name", "favoriteNumber"]).exec();
 			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1, #a2");
-			expect(scanParams.ExpressionAttributeNames).to.eql({ "#a0": "name", "#a1": "id", "#a2": "favoriteNumber" });
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "id", "#a2": "favoriteNumber"});
 		});
 
 		it("Should send correct request on scan.exec with multiple attributes and two filters", async () => {
 			scanPromiseResolver = () => ({"Items": []});
-			const filter = { "name": { "eq": "Charlie" }, "favoriteNumber": { "eq": 1 } };
-			await Model.scan(filter).attributes(["id", "name", "favoriteNumber"]).exec();
+			await Model.scan("name").eq("Charlie").where("favoriteNumber").eq(1).attributes(["id", "name", "favoriteNumber"]).exec();
 			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1, #a2");
-			expect(scanParams.ExpressionAttributeNames).to.eql({ "#a0": "name", "#a1": "favoriteNumber", "#a2": "id" });
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "favoriteNumber", "#a2": "id"});
 		});
 	});
 
