@@ -250,7 +250,6 @@ export class Model<T extends DocumentCarrier> {
 				},
 				"default": (): Date => new Date(Date.now() + (options.expires as ModelExpiresSettings).ttl)
 			};
-			schema[Internal.Schema.internalCache].attributes = undefined;
 		}
 		this.schema = schema;
 
