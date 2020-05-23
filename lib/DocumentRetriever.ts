@@ -178,37 +178,6 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 	if (this.settings.startAt) {
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
-	if (this.settings.attributes) {
-		const expressionAttributeNames = {};
-		const projectionExpression = [];
-
-		if (object.ExpressionAttributeNames) {
-			let existingIndex = Object.keys(object.ExpressionAttributeNames)
-				.reduce((existing, item) => Math.max(parseInt(item.replace("#a", "")), existing), 0);
-			this.settings.attributes.forEach((element)=> {
-				const item = Object.keys(object.ExpressionAttributeNames)
-					.find(key => object.ExpressionAttributeNames[key] === element);
-				if (item) {
-					projectionExpression.push(item);
-				} else {
-					const attrID = `#a${existingIndex + 1}`;
-					existingIndex++;
-					projectionExpression.push(attrID);
-					expressionAttributeNames[attrID] = element;
-				}
-			});
-			object.ExpressionAttributeNames = { ...object.ExpressionAttributeNames, ...expressionAttributeNames };
-			object.ProjectionExpression = projectionExpression.sort().join(", ");
-		} else {
-			object.ExpressionAttributeNames = {};
-			this.settings.attributes.forEach((element, index) => {
-				const attrID = `#a${index}`;
-				projectionExpression.push(attrID);
-				object.ExpressionAttributeNames[attrID] = element;
-			});
-			object.ProjectionExpression = projectionExpression.sort().join(", ");
-		}
-	}
 	const indexes = await this.internalSettings.model.schema.getIndexes(this.internalSettings.model);
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
@@ -247,9 +216,6 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 		}
 		object.ExpressionAttributeNames[`#${prefix}a`] = value;
 		delete object.ExpressionAttributeNames[key];
-		if (object.ProjectionExpression && prefix === "qh") {
-			object.ProjectionExpression = object.ProjectionExpression.replace(key, "#qha");
-		}
 
 		const valueKey = key.replace("#a", ":v");
 
@@ -296,6 +262,24 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 	}
 	if (this.settings.sort === SortOrder.descending) {
 		object.ScanIndexForward = false;
+	}
+	if (this.settings.attributes) {
+		if (!object.ExpressionAttributeNames) {
+			object.ExpressionAttributeNames = {};
+		}
+
+		object.ProjectionExpression = this.settings.attributes.map((attribute) => {
+			let expressionAttributeName = "";
+
+			expressionAttributeName = (Object.entries(object.ExpressionAttributeNames).find((entry) => entry[1] === attribute) || [])[0];
+			if (!expressionAttributeName) {
+				const nextIndex = (Object.keys(object.ExpressionAttributeNames).map((item) => parseInt(item.replace("#a", ""))).filter((item) => !isNaN(item)).reduce((existing, item) => Math.max(item, existing), 0) || 0) + 1;
+				expressionAttributeName = `#a${nextIndex}`;
+				object.ExpressionAttributeNames[expressionAttributeName] = attribute;
+			}
+
+			return expressionAttributeName;
+		}).sort().join(", ");
 	}
 
 	if (object.FilterExpression) {
