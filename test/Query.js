@@ -1167,21 +1167,28 @@ describe("Query", () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id"]).exec();
 			expect(queryParams.ProjectionExpression).to.eql("#a1");
-			expect(queryParams.ExpressionAttributeNames).to.eql({ "#a1": "id", "#qha": "name" });
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#qha": "name"});
 		});
 
 		it("Should send correct request on query.exec with multiple attributes", async () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id", "name"]).exec();
-			expect(queryParams.ProjectionExpression).to.eql("#qha, #a1");
-			expect(queryParams.ExpressionAttributeNames).to.eql({ "#a1": "id", "#qha": "name" });
+			expect(queryParams.ProjectionExpression).to.eql("#a1, #qha");
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#qha": "name"});
 		});
 
 		it("Should send correct request on query.exec with multiple attributes and one filter", async () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id", "name", "favoriteNumber"]).exec();
-			expect(queryParams.ProjectionExpression).to.eql("#qha, #a1, #a2");
-			expect(queryParams.ExpressionAttributeNames).to.eql({ "#a1": "id", "#a2": "favoriteNumber", "#qha": "name" });
+			expect(queryParams.ProjectionExpression).to.eql("#a1, #a2, #qha");
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#a2": "favoriteNumber", "#qha": "name"});
+		});
+
+		it("Should send correct request on scan.exec with multiple attributes and two filters", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").where("favoriteNumber").eq(1).attributes(["id", "name", "favoriteNumber"]).exec();
+			expect(queryParams.ProjectionExpression).to.eql("#a1, #a2, #qha");
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "favoriteNumber", "#a2": "id", "#qha": "name"});
 		});
 	});
 
