@@ -761,7 +761,7 @@ describe("Scan", () => {
 		it("Should send correct result on scan.exec", async () => {
 			let count = 0;
 			scanPromiseResolver = async () => {
-				const obj = ({"Items": [{"id": ++count}], "Count": 1, "ScannedCount": 2});
+				const obj = {"Items": [{"id": ++count}], "Count": 1, "ScannedCount": 2};
 				if (count < 2) {
 					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
 				}

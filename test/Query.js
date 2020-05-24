@@ -734,7 +734,7 @@ describe("Query", () => {
 					"#a1": "age"
 				},
 				"ExpressionAttributeValues": {
-					":qhv": {"S": "Charlie"},
+					":qhv": {"S": "Charlie"}
 				},
 				"FilterExpression": "attribute_exists (#a1)",
 				"KeyConditionExpression": "#qha = :qhv"
@@ -752,7 +752,7 @@ describe("Query", () => {
 					"#a1": "age"
 				},
 				"ExpressionAttributeValues": {
-					":qhv": {"S": "Charlie"},
+					":qhv": {"S": "Charlie"}
 				},
 				"FilterExpression": "attribute_not_exists (#a1)",
 				"KeyConditionExpression": "#qha = :qhv"
@@ -1331,7 +1331,7 @@ describe("Query", () => {
 		it("Should send correct result on query.exec", async () => {
 			let count = 0;
 			queryPromiseResolver = async () => {
-				const obj = ({"Items": [{"id": ++count}], "Count": 1, "QueriedCount": 2});
+				const obj = {"Items": [{"id": ++count}], "Count": 1, "QueriedCount": 2};
 				if (count < 2) {
 					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
 				}
