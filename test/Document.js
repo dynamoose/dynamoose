@@ -1242,6 +1242,17 @@ describe("Document", () => {
 					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
 				});
 
+				it("Should save with correct object with combine attribute", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data1": "hello", "data2": "world"});
+					await callType.func(user).bind(user)();
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}, "data2": {"S": "world"}, "combine": {"S": "hello,world"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
@@ -1949,7 +1960,74 @@ describe("Document", () => {
 				"schema": {"id": Number, "name": {"type": String, "required": true, "set": (val) => val === "" ? undefined : val}},
 				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"], "required": true}],
 				"error": new Error.ValidationError("name is a required property but has no value when trying to save document")
-			}
+			},
+
+			// Combine Type
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo", "combine": true}],
+				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello-world"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"input": [{"id": 1, "data1": "hello", "data2": "world", "combine": "random"}, {"type": "toDynamo", "combine": true}],
+				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello-world"}
+			},
+			{
+				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"input": [{"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}, {"type": "toDynamo", "combine": true}],
+				"output": {"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"], "combine": "hello,hola-world,universe"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo", "combine": true}],
+				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello!world"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"input": [{"id": 1, "data1": "hello"}, {"type": "toDynamo", "combine": true}],
+				"output": {"id": 1, "data1": "hello", "combine": "hello"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "fromDynamo", "combine": true}],
+				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello-world"}
+			},
+			{
+				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"input": [{"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}, {"type": "fromDynamo", "combine": true}],
+				"output": {"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"], "combine": "hello,hola-world,universe"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "fromDynamo", "combine": true}],
+				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello!world"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"input": [{"id": 1, "data1": "hello"}, {"type": "fromDynamo", "combine": true}],
+				"output": {"id": 1, "data1": "hello", "combine": "hello"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "data1": "hello", "data2": "world"}
+			},
+			{
+				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"input": [{"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}, {"type": "toDynamo"}],
+				"output": {"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "data1": "hello", "data2": "world"}
+			},
+			{
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"input": [{"id": 1, "data1": "hello"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "data1": "hello"}
+			},
 		];
 
 		tests.forEach((test) => {

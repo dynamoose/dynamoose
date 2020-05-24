@@ -1427,6 +1427,18 @@ describe("Model", () => {
 					expect(user.name).to.eql("Charlie");
 				});
 
+				it("Should return object with correct combine attribute without modifying", async () => {
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}, "data2": {"S": "world"}, "combine": {"S": "random"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "data1", "data2", "combine"]);
+					expect(user.id).to.eql(1);
+					expect(user.data1).to.eql("hello");
+					expect(user.data2).to.eql("world");
+					expect(user.combine).to.eql("random");
+				});
+
 				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", () => {
 					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}});
@@ -1842,6 +1854,34 @@ describe("Model", () => {
 						"TableName": "User"
 					});
 				});
+
+				it("Should send correct params to putItem with combine attribute", async () => {
+					createItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)({"id": 1, "data1": "hello", "data2": "world"});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"data1": {
+								"S": "hello"
+							},
+							"data2": {
+								"S": "world"
+							},
+							"combine": {
+								"S": "hello,world"
+							}
+						},
+						"TableName": "User"
+					});
+				});
 			});
 		});
 	});
@@ -1934,6 +1974,29 @@ describe("Model", () => {
 								{
 									"PutRequest": {
 										"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it("Should should send correct parameters to batchWriteItem with combine atttribute", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)([{"id": 1, "data1": "hello", "data2": "world"}, {"id": 2, "data1": "hello", "data2": "universe"}]);
+					expect(params).to.be.an("object");
+					expect(params).to.eql({
+						"RequestItems": {
+							"User": [
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}, "data2": {"S": "world"}, "combine": {"S": "hello,world"}}
+									}
+								},
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "2"}, "data1": {"S": "hello"}, "data2": {"S": "universe"}, "combine": {"S": "hello,universe"}}
 									}
 								}
 							]
@@ -3340,6 +3403,76 @@ describe("Model", () => {
 							}
 						},
 						"UpdateExpression": "ADD #a0 :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should throw error if updating one combine property", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+
+					return expect(callType.func(User).bind(User)({"id": 1}, {"data1": "Charlie"})).to.be.rejectedWith("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: data2.");
+				});
+
+				it("Should send correct parameters when updating all combine properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)({"id": 1}, {"data1": "hello", "data2": "world"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1",
+							"#a1": "data2",
+							"#a2": "combine"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "hello"
+							},
+							":v1": {
+								"S": "world"
+							},
+							":v2": {
+								"S": "hello,world"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = :v2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct parameters when updating or removing all combine properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"data1": "hello"}, "$REMOVE": {"data2": "world"}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1",
+							"#a1": "data2",
+							"#a2": "combine"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "hello"
+							},
+							":v2": {
+								"S": "hello"
+							}
+						},
+						"UpdateExpression": "REMOVE #a1 SET #a0 = :v0, #a2 = :v2",
 						"Key": {
 							"id": {
 								"N": "1"
