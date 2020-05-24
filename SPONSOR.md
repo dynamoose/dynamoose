@@ -1,6 +1,6 @@
 # Sponsor Dynamoose
 
-:+1::tada: **THANK YOU** for considering sponsoring Dynamoose! :tada::+1:
+:+1::tada: **THANK YOU** for considering sponsoring Dynamoose! Your contributions and support help make this project as amazing as it can be. :tada::+1:
 
 This document gives a little bit more information about that process. If you have any further questions don't hesitate to [reach out](https://charlie.fish/contact).
 
@@ -12,13 +12,13 @@ The short version of this document is that there are two ways to sponsor Dynamoo
 
 There are two different ways you can help to fund Dynamoose. Both are listed below along with additional information about each. Please choose the option that works best for you.
 
-### [GitHub Sponsors](https://github.com/sponsors/fishcharlie)
+### [GitHub Sponsors (Recommended)](https://github.com/sponsors/fishcharlie)
 
-You can sponsor me (Charlie Fish) directly. At the time of writing this I'm the primary maintainer of Dynamoose, and the majority of the time I spend on open source projects goes towards working on Dynamoose.
+You can sponsor me (Charlie Fish) directly. I'm the primary maintainer/contributor of Dynamoose, and the majority of the time I spend on open source projects goes towards working on Dynamoose. Therefore any contributions I receive directly helps support my work on my open source projects (Dynamoose being the largest and the one I spend most time on).
 
 This is benefical since GitHub Sponsors charges very little in terms of fees (at the time of writing I've been charged no fees). Which means more of your funds are going directly to support me and the project. Plus you get some extra perks such as a sponsor badge.
 
-This is the recommended option.
+**This is the recommended option.**
 
 [Sponsor](https://github.com/sponsors/fishcharlie).
 
