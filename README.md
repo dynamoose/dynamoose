@@ -12,6 +12,9 @@
 	<a href="https://www.npmjs.com/package/dynamoose">
 		<img src="https://img.shields.io/npm/dw/dynamoose" alt="npm Downloads">
 	</a>
+	<a href="https://github.com/dynamoose/dynamoose/blob/master/SPONSOR.md">
+		<img src="https://img.shields.io/badge/sponsor-Dynamoose-brightgreen" alt="Sponsor Dynamoose">
+	</a>
 	<a href="https://github.com/dynamoose/dynamoose/actions">
 		<img src="https://github.com/dynamoose/dynamoose/workflows/CI/badge.svg" alt="CI">
 	</a>
