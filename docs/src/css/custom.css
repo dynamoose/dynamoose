@@ -24,6 +24,14 @@
 	padding: 0 var(--ifm-pre-padding);
 }
 
+.header-link {
+	padding: 4px 16px;
+	margin: 0px 2px;
+}
+.header-link:last-of-type {
+	margin-right: 18px;
+}
+
 /* GitHub Icon */
 .header-github-link:hover {
 	opacity: 0.6;
