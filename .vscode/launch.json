@@ -11,6 +11,7 @@
 				"test:debug:breakpoint"
 			],
 			"port": 9229,
+			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": [
 				"<node_internals>/**"
 			]
