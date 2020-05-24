@@ -326,7 +326,7 @@ describe("Model", () => {
 					"createTable": (params) => {
 						createTableParams = params;
 						return {
-							"promise": function() {
+							"promise": function () {
 								self = this;
 								return Promise.resolve();
 							}
@@ -1436,7 +1436,9 @@ describe("Model", () => {
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledGetItem = false;
-					getItemFunction = () => {calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});};
+					getItemFunction = () => {
+						calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					};
 					let describeTableResponse = {
 						"Table": {"TableStatus": "CREATING"}
 					};
@@ -1651,7 +1653,9 @@ describe("Model", () => {
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledBatchGetItem = false;
-					promiseFunction = () => {calledBatchGetItem = true; return Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});};
+					promiseFunction = () => {
+						calledBatchGetItem = true; return Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					};
 					let describeTableResponse = {
 						"Table": {"TableStatus": "CREATING"}
 					};
@@ -2679,7 +2683,7 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
@@ -2699,7 +2703,7 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
@@ -2718,7 +2722,7 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
@@ -3763,7 +3767,7 @@ describe("Model", () => {
 			expect(User.methods).to.be.an("object");
 		});
 
-		function customMethodTests(settings) {
+		function customMethodTests (settings) {
 			describe(`${settings.prefixName}.set`, () => {
 				it("Should be a function", () => {
 					expect(settings.methodEntryPoint().set).to.be.a("function");
