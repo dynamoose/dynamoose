@@ -1,4 +1,8 @@
-docs
+docs/.docusaurus
+docs/build
+docs/node_modules
+docs/src/pages
+
 dist
 publish/node_modules
 !.*.js
