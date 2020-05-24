@@ -113,7 +113,7 @@ export class Document {
 		}
 
 		const localSettings: DocumentSaveSettings = settings;
-		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
+		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
 			const putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
 				"TableName": this.model.name
@@ -235,6 +235,7 @@ export interface DocumentObjectFromSchemaSettings {
 	validate?: boolean;
 	required?: boolean | "nested";
 	enum?: boolean;
+	combine?: boolean;
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
@@ -338,6 +339,23 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 			utils.object.set(returnObject, key, typeDetails[settings.type](value));
 		}
 	});
+	if (settings.combine) {
+		schemaAttributes.map((key) => {
+			try {
+				const typeDetails = model.schema.getAttributeTypeDetails(key);
+
+				return {
+					key,
+					"type": typeDetails
+				};
+			} catch (e) {} // eslint-disable-line no-empty
+		}).filter((item) => item.type.name === "Combine").forEach((item) => {
+			const {key, type} = item;
+
+			const value = type.typeSettings.attributes.map((attribute) => utils.object.get(returnObject, attribute)).filter((value) => typeof value !== "undefined" && value !== null).join(type.typeSettings.seperator);
+			utils.object.set(returnObject, key, value);
+		});
+	}
 	if (settings.modifiers) {
 		await Promise.all(settings.modifiers.map((modifier) => {
 			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
