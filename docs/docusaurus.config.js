@@ -13,13 +13,15 @@ module.exports = {
 			},
 			"links": [
 				{
-					"href": "https://github.com/dynamoose/dynamoose",
-					"label": "GitHub",
+					"href": "https://www.npmjs.com/package/dynamoose",
+					"className": "header-link header-npm-link",
+					"aria-label": "NPM",
 					"position": "right"
 				},
 				{
-					"href": "https://www.npmjs.com/package/dynamoose",
-					"label": "NPM",
+					"href": "https://github.com/dynamoose/dynamoose",
+					"className": "header-link header-github-link",
+					"aria-label": "GitHub",
 					"position": "right"
 				}
 			]
