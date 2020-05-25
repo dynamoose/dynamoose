@@ -239,6 +239,12 @@ export class Model<T extends DocumentCarrier> {
 		} else {
 			realSchemas = [schema];
 		}
+		if (!utils.all_elements_match(realSchemas.map((schema) => schema.getHashKey()))) {
+			throw new CustomError.InvalidParameter("hashKey's for all schema's must match.");
+		}
+		if (!utils.all_elements_match(realSchemas.map((schema) => schema.getRangeKey()).filter((key) => Boolean(key)))) {
+			throw new CustomError.InvalidParameter("rangeKey's for all schema's must match.");
+		}
 		if (options.expires) {
 			if (typeof options.expires === "number") {
 				options.expires = {
