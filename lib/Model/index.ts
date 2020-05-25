@@ -386,8 +386,14 @@ export class Model<T extends DocumentCarrier> {
 	}
 
 	async getIndexes(): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
-		// TODO: implement this
-		return this.schemas[0].getIndexes(this);
+		return (await Promise.all(this.schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
+			Object.entries(indexes).forEach((entry) => {
+				const [key, value] = entry;
+				result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value]) : value;
+			});
+
+			return result;
+		}, {});
 	}
 	async getCreateTableAttributeParams(): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
 		// TODO: implement this
