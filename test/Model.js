@@ -43,25 +43,25 @@ describe("Model", () => {
 			expect(UserB).to.eql(User);
 		});
 
-		it("Should throw error if passing in model with same name as existing model", () => {
+		it("Should store latest model in model store", () => {
 			dynamoose.model("User", {"id": String});
 			dynamoose.model("User", {"id": String, "name": String});
 
-			expect(ModelStore("User").schema.schemaObject).to.eql({"id": String, "name": String});
+			expect(ModelStore("User").schemas[0].schemaObject).to.eql({"id": String, "name": String});
 		});
 
 		it("Should create a schema if not passing in schema instance", () => {
 			const schema = {"name": String};
 			const Cat = dynamoose.model("Cat", schema);
-			expect(Cat.Model.schema).to.not.eql(schema);
-			expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
+			expect(Cat.Model.schemas).to.not.eql([schema]);
+			expect(Cat.Model.schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should use schema instance if passed in", () => {
 			const schema = new dynamoose.Schema({"name": String});
 			const Cat = dynamoose.model("Cat", schema);
-			expect(Cat.Model.schema).to.eql(schema);
-			expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
+			expect(Cat.Model.schemas).to.eql([schema]);
+			expect(Cat.Model.schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should not fail with initialization if table doesn't exist", async () => {

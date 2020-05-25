@@ -4,7 +4,7 @@ import utils = require("./utils");
 import Error = require("./Error");
 import Internal  = require("./Internal");
 import {Model, ModelExpiresSettings} from "./Model";
-import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
+import {DynamoDBTypeResult, DynamoDBSetTypeResult, Schema} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
@@ -92,7 +92,7 @@ export class Document {
 	delete(this: Document, callback: CallbackType<void, AWSError>): void;
 	delete(this: Document, callback?: CallbackType<void, AWSError>): Promise<void> | void {
 		return this.model.delete({
-			[this.model.schema.getHashKey()]: this[this.model.schema.getHashKey()]
+			[this.model.getHashKey()]: this[this.model.getHashKey()]
 		}, callback);
 	}
 
@@ -121,7 +121,7 @@ export class Document {
 
 			if (localSettings.overwrite === false) {
 				putItemObj.ConditionExpression = "attribute_not_exists(#__hash_key)";
-				putItemObj.ExpressionAttributeNames = {"#__hash_key": this.model.schema.getHashKey()};
+				putItemObj.ExpressionAttributeNames = {"#__hash_key": this.model.getHashKey()};
 			}
 
 			return putItemObj;
@@ -156,14 +156,15 @@ export class Document {
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
 Document.prepareForObjectFromSchema = function<T>(object: T, model: Model<Document>, settings: DocumentObjectFromSchemaSettings): T {
 	if (settings.updateTimestamps) {
-		if (model.schema.settings.timestamps && settings.type === "toDynamo") {
+		const schema: Schema = model.schemaForObject(object);
+		if (schema.settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
 			// TODO: The last condition of the following is commented out until we can add automated tests for it
-			if ((model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt && (object[internalProperties] && !object[internalProperties].storedInDynamo)/* && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)*/) {
-				object[(model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt] = date;
+			if ((schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt && (object[internalProperties] && !object[internalProperties].storedInDynamo)/* && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)*/) {
+				object[(schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).createdAt] = date;
 			}
-			if ((model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt)) {
-				object[(model.schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt] = date;
+			if ((schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt)) {
+				object[(schema.settings.timestamps as {createdAt?: string; updatedAt?: string}).updatedAt] = date;
 			}
 		}
 	}
@@ -173,7 +174,8 @@ Document.prepareForObjectFromSchema = function<T>(object: T, model: Model<Docume
 // https://stackoverflow.com/a/59928314/894067
 const attributesWithSchemaCache: ObjectType = {};
 Document.attributesWithSchema = function(document: Document, model: Model<Document>): string[] {
-	const attributes = model.schema.attributes();
+	const schema: Schema = model.schemaForObject(document);
+	const attributes = schema.attributes();
 	const documentID = utils.object.keys(document as any).join("");
 	if (attributesWithSchemaCache[documentID] && attributesWithSchemaCache[documentID][attributes.join()]) {
 		return attributesWithSchemaCache[documentID][attributes.join()];
@@ -240,13 +242,14 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 	}
 
 	const returnObject = {...object};
-	const schemaAttributes = model.schema.attributes();
+	const schema: Schema = model.schemaForObject(returnObject);
+	const schemaAttributes = schema.attributes();
 
 	// Type check
 	const validParents = []; // This array is used to allow for set contents to not be type checked
 	const keysToDelete = [];
 	const getValueTypeCheckResult = (value: any, key: string, options = {}): {typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult; isValidType: boolean} => {
-		const typeDetails = model.schema.getAttributeTypeDetails(key, options);
+		const typeDetails = schema.getAttributeTypeDetails(key, options);
 		const isValidType = [((typeDetails.customType || {}).functions || {}).isOfType, typeDetails.isOfType].filter((a) => Boolean(a)).some((func) => func(value, settings.type));
 		return {typeDetails, isValidType};
 	};
@@ -274,7 +277,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 			}
 		} else {
 			// Check saveUnknown
-			if (!settings.saveUnknown || !utils.dynamoose.wildcard_allowed_check(model.schema.getSettingValue("saveUnknown"), key)) {
+			if (!settings.saveUnknown || !utils.dynamoose.wildcard_allowed_check(schema.getSettingValue("saveUnknown"), key)) {
 				keysToDelete.push(key);
 			}
 		}
@@ -288,7 +291,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 			if (value === dynamooseUndefined) {
 				utils.object.set(returnObject, key, undefined);
 			} else {
-				const defaultValue = await model.schema.defaultCheck(key, value as ValueType, settings);
+				const defaultValue = await schema.defaultCheck(key, value as ValueType, settings);
 				const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
 				if (!isDefaultValueUndefined) {
 					const {isValidType, typeDetails} = getValueTypeCheckResult(defaultValue, key);
@@ -307,7 +310,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const typeDetails = model.schema.getAttributeTypeDetails(key) as DynamoDBTypeResult;
+				const typeDetails = schema.getAttributeTypeDetails(key) as DynamoDBTypeResult;
 				const {customType} = typeDetails;
 				const {type: typeInfo} = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
@@ -323,7 +326,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 		const [key, value] = item;
 		let typeDetails;
 		try {
-			typeDetails = model.schema.getAttributeTypeDetails(key);
+			typeDetails = schema.getAttributeTypeDetails(key);
 		} catch (e) {
 			const {Schema} = require("./Schema");
 			typeDetails = Schema.attributeTypes.findTypeForValue(value, settings.type, settings);
@@ -337,7 +340,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 		await Promise.all(settings.modifiers.map((modifier) => {
 			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
-				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
+				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
 				const isValueUndefined = typeof value === "undefined" || value === null;
 				if (modifierFunction && !isValueUndefined) {
 					const oldValue = object.original ? utils.object.get(object.original(), key) : undefined;
@@ -351,7 +354,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const validator = await model.schema.getAttributeSettingValue("validate", key, {"returnFunction": true});
+				const validator = await schema.getAttributeSettingValue("validate", key, {"returnFunction": true});
 				if (validator) {
 					let result;
 					if (validator instanceof RegExp) {
@@ -376,7 +379,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 		await Promise.all(attributesToCheck.map(async (key) => {
 			const check = async (): Promise<void> => {
 				const value = utils.object.get(returnObject, key);
-				await model.schema.requiredCheck(key, (value as ValueType));
+				await schema.requiredCheck(key, (value as ValueType));
 			};
 
 			const keyParts = key.split(".");
@@ -397,7 +400,7 @@ Document.objectFromSchema = async function(object: any, model: Model<Document>, 
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const enumArray = await model.schema.getAttributeSettingValue("enum", key);
+				const enumArray = await schema.getAttributeSettingValue("enum", key);
 				if (enumArray && !enumArray.includes(value)) {
 					throw new Error.ValidationError(`${key} must equal ${JSON.stringify(enumArray)}, but is set to ${value}`);
 				}

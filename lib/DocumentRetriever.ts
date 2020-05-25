@@ -178,7 +178,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 	if (this.settings.startAt) {
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
-	const indexes = await this.internalSettings.model.schema.getIndexes(this.internalSettings.model);
+	const indexes = await this.internalSettings.model.getIndexes();
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
 	} else if (this.internalSettings.typeInformation.type === "query") {
@@ -196,7 +196,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 			return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
 		});
 		if (!index) {
-			if ((comparisonChart[this.internalSettings.model.schema.getHashKey()] || {}).type !== "EQ") {
+			if ((comparisonChart[this.internalSettings.model.getHashKey()] || {}).type !== "EQ") {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
 			}
 		} else {
@@ -245,9 +245,9 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 				moveParameterNames(range, "qr");
 			}
 		} else {
-			moveParameterNames(this.internalSettings.model.schema.getHashKey(), "qh");
-			if (this.internalSettings.model.schema.getRangeKey()) {
-				moveParameterNames(this.internalSettings.model.schema.getRangeKey(), "qr");
+			moveParameterNames(this.internalSettings.model.getHashKey(), "qh");
+			if (this.internalSettings.model.getRangeKey()) {
+				moveParameterNames(this.internalSettings.model.getRangeKey(), "qr");
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 import CustomError = require("../Error");
-import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType} from "../Schema";
+import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem} from "../Schema";
 import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings, DocumentObjectFromSchemaSettings} from "../Document";
 import utils = require("../utils");
 import ddb = require("../aws/ddb/internal");
@@ -45,9 +45,9 @@ type KeyObject = {[attribute: string]: string};
 type InputKey = string | KeyObject;
 function convertObjectToKey(this: Model<DocumentCarrier>, key: InputKey): KeyObject {
 	let keyObject: KeyObject;
-	const hashKey = this.schema.getHashKey();
+	const hashKey = this.getHashKey();
 	if (typeof key === "object") {
-		const rangeKey = this.schema.getRangeKey();
+		const rangeKey = this.getRangeKey();
 		keyObject = {
 			[hashKey]: key[hashKey]
 		};
@@ -87,7 +87,7 @@ async function createTableRequest(model: Model<DocumentCarrier>): Promise<Dynamo
 	return {
 		"TableName": model.name,
 		...utils.dynamoose.get_provisioned_throughput(model.options),
-		...await model.schema.getCreateTableAttributeParams(model)
+		...await model.getCreateTableAttributeParams()
 	};
 }
 async function createTable(model: Model<DocumentCarrier>): Promise<void | (() => Promise<void>)> {
@@ -186,7 +186,7 @@ async function updateTable(model: Model<DocumentCarrier>): Promise<void> {
 				"TableName": model.name
 			};
 			if (index.type === ModelIndexChangeType.add) {
-				params.AttributeDefinitions = (await model.schema.getCreateTableAttributeParams(model)).AttributeDefinitions;
+				params.AttributeDefinitions = (await model.getCreateTableAttributeParams()).AttributeDefinitions;
 				params.GlobalSecondaryIndexUpdates = [{"Create": index.spec}];
 			} else {
 				params.GlobalSecondaryIndexUpdates = [{"Delete": {"IndexName": index.name}}];
@@ -223,14 +223,21 @@ interface ModelBatchDeleteSettings {
 
 // Model represents one DynamoDB table
 export class Model<T extends DocumentCarrier> {
-	constructor(name: string, schema: Schema | SchemaDefinition, options: ModelOptionsOptional) {
+	constructor(name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional) {
 		this.options = (utils.combine_objects(options, customDefaults.get(), originalDefaults) as ModelOptions);
 		this.name = `${this.options.prefix}${name}${this.options.suffix}`;
 
-		if (!schema) {
+		let realSchemas: Schema[];
+		if (!schema || (Array.isArray(schema) && schema.length === 0)) {
 			throw new CustomError.MissingSchemaError(`Schema hasn't been registered for model "${name}".\nUse "dynamoose.model(name, schema)"`);
 		} else if (!(schema instanceof Schema)) {
-			schema = new Schema(schema);
+			if (Array.isArray(schema)) {
+				realSchemas = schema.map((schema: Schema | SchemaDefinition): Schema => schema instanceof Schema ? schema : new Schema(schema));
+			} else {
+				realSchemas = [new Schema(schema)];
+			}
+		} else {
+			realSchemas = [schema];
 		}
 		if (options.expires) {
 			if (typeof options.expires === "number") {
@@ -241,18 +248,20 @@ export class Model<T extends DocumentCarrier> {
 			}
 			options.expires = utils.combine_objects((options.expires as any), {"attribute": "ttl"});
 
-			schema.schemaObject[(options.expires as ModelExpiresSettings).attribute] = {
-				"type": {
-					"value": Date,
-					"settings": {
-						"storage": "seconds"
-					}
-				},
-				"default": (): Date => new Date(Date.now() + (options.expires as ModelExpiresSettings).ttl)
-			};
-			schema[Internal.Schema.internalCache].attributes = undefined;
+			realSchemas.forEach((schema) => {
+				schema.schemaObject[(options.expires as ModelExpiresSettings).attribute] = {
+					"type": {
+						"value": Date,
+						"settings": {
+							"storage": "seconds"
+						}
+					},
+					"default": (): Date => new Date(Date.now() + (options.expires as ModelExpiresSettings).ttl)
+				};
+				schema[Internal.Schema.internalCache].attributes = undefined;
+			});
 		}
-		this.schema = schema;
+		this.schemas = realSchemas;
 
 		// Setup flow
 		this.ready = false; // Represents if model is ready to be used for actions such as "get", "put", etc. This property being true does not guarantee anything on the DynamoDB server. It only guarantees that Dynamoose has finished the initalization steps required to allow the model to function as expected on the client side.
@@ -352,7 +361,7 @@ export class Model<T extends DocumentCarrier> {
 
 	name: string;
 	options: ModelOptions;
-	schema: Schema;
+	schemas: Schema[];
 	private ready: boolean;
 	alreadyCreated: boolean;
 	private pendingTasks: ((value?: void | PromiseLike<void>) => void)[];
@@ -363,6 +372,27 @@ export class Model<T extends DocumentCarrier> {
 	scan: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Scan;
 	query: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Query;
 	methods: { document: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
+
+	// This function returns the best matched schema for the given object input
+	schemaForObject(object: ObjectType): Schema {
+		// TODO: implement this
+		return this.schemas[0];
+	}
+
+	async getIndexes(): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+		// TODO: implement this
+		return this.schemas[0].getIndexes(this);
+	}
+	async getCreateTableAttributeParams(): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
+		// TODO: implement this
+		return this.schemas[0].getCreateTableAttributeParams(this);
+	}
+	getHashKey(): string {
+		return this.schemas[0].getHashKey();
+	}
+	getRangeKey(): string | void {
+		return this.schemas[0].getRangeKey();
+	}
 
 	// Batch Get
 	batchGet(this: Model<DocumentCarrier>, keys: InputKey[]): Promise<DocumentCarrier[]>;
@@ -572,14 +602,14 @@ export class Model<T extends DocumentCarrier> {
 			settings = {"return": "document"};
 		}
 		if (!updateObj) {
-			const hashKeyName = this.schema.getHashKey();
+			const hashKeyName = this.getHashKey();
 			updateObj = keyObj;
 			keyObj = {
 				[hashKeyName]: keyObj[hashKeyName]
 			};
 			delete updateObj[hashKeyName];
 
-			const rangeKeyName = this.schema.getRangeKey();
+			const rangeKeyName = this.getRangeKey();
 			if (rangeKeyName) {
 				keyObj[rangeKeyName] = updateObj[rangeKeyName];
 				delete updateObj[rangeKeyName];
@@ -589,6 +619,7 @@ export class Model<T extends DocumentCarrier> {
 			settings = {"return": "document"};
 		}
 
+		const schema: Schema = this.schemas[0]; // TODO: fix this to get correct schema
 		let index = 0;
 		// TODO: change the line below to not be partial
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
@@ -618,9 +649,9 @@ export class Model<T extends DocumentCarrier> {
 
 					let dynamoType;
 					try {
-						dynamoType = this.schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
+						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 					} catch (e) {} // eslint-disable-line no-empty
-					const attributeExists = this.schema.attributes().includes(subKey);
+					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = require("../index").UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
 						subValue = (await this.Document.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, ({"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any)))[subKey];
@@ -635,7 +666,7 @@ export class Model<T extends DocumentCarrier> {
 					}
 
 					if (subValue !== dynamooseUndefined) {
-						const defaultValue = await this.schema.defaultCheck(subKey, undefined, updateType.objectFromSchemaSettings);
+						const defaultValue = await schema.defaultCheck(subKey, undefined, updateType.objectFromSchemaSettings);
 						if (defaultValue) {
 							subValue = defaultValue;
 							updateType = updateTypes.find((a) => a.name === "$SET");
@@ -643,7 +674,7 @@ export class Model<T extends DocumentCarrier> {
 					}
 
 					if (updateType.objectFromSchemaSettings.required === true) {
-						await this.schema.requiredCheck(subKey, undefined);
+						await schema.requiredCheck(subKey, undefined);
 					}
 
 					let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
@@ -691,8 +722,8 @@ export class Model<T extends DocumentCarrier> {
 				return obj;
 			})()));
 
-			await Promise.all(this.schema.attributes().map(async (attribute) => {
-				const defaultValue = await this.schema.defaultCheck(attribute, undefined, {"forceDefault": true});
+			await Promise.all(schema.attributes().map(async (attribute) => {
+				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
 				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 
@@ -709,7 +740,7 @@ export class Model<T extends DocumentCarrier> {
 				const valueKey = Object.keys(returnObject.ExpressionAttributeValues)[index];
 				let dynamoType;
 				try {
-					dynamoType = this.schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
+					dynamoType = schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
 				} catch (e) {} // eslint-disable-line no-empty
 				const attributeType = Schema.attributeTypes.findDynamoDBType(dynamoType) as DynamoDBSetTypeResult;
 

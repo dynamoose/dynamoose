@@ -15,7 +15,7 @@ interface ModelDocumentConstructor<T extends Document> {
 	new (object: {[key: string]: any}): T;
 }
 
-const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
+const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
 	let model: Model<T>;
 	let storedSchema: Model<T>;
 	if (name) {
