@@ -50,6 +50,18 @@ describe("Model", () => {
 			expect(ModelStore("User").schemas[0].schemaObject).to.eql({"id": String, "name": String});
 		});
 
+		it("Should throw error if passing in empty array for schema parameter", () => {
+			expect(() => dynamoose.model("User", [])).to.throw("Schema hasn't been registered for model \"User\".\nUse \"dynamoose.model(name, schema)\"");
+		});
+
+		it("Should throw error if hashKey's don't match for all schema's", () => {
+			expect(() => dynamoose.model("User", [{"id": String}, {"id2": String}])).to.throw("hashKey's for all schema's must match.");
+		});
+
+		it("Should throw error if rangeKey's don't match for all schema's", () => {
+			expect(() => dynamoose.model("User", [{"id": String, "rangeKey": {"type": String, "rangeKey": true}}, {"id": String, "rangeKey2": {"type": String, "rangeKey": true}}])).to.throw("rangeKey's for all schema's must match.");
+		});
+
 		it("Should create a schema if not passing in schema instance", () => {
 			const schema = {"name": String};
 			const Cat = dynamoose.model("Cat", schema);
