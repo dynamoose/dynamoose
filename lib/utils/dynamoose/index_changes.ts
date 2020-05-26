@@ -18,21 +18,23 @@ export interface ModelIndexDeleteChange {
 }
 
 const index_changes = async (model: Model<Document>, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
-	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
 	const expectedIndexes = await model.schema.getIndexes(model);
 
-	// Indexes to delete
-	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(index, searchIndex))).map((index) => ({"name": index.IndexName as string, "type": ModelIndexChangeType.delete}));
-	output.push(...deleteIndexes);
+	const aggregator = (indexes: IndexItem[], map: (index) => ModelIndexAddChange | ModelIndexDeleteChange): (ModelIndexAddChange | ModelIndexDeleteChange)[] => {
+		const selectedIndexes = indexes || [];
+		const discriminatedIndexes = existingIndexes.filter((index) => !selectedIndexes.find((searchIndex) => obj.equals(index, searchIndex)));
+		return discriminatedIndexes.map(map);
+	};
 
-	// Indexes to create
-	const createIndexes: ModelIndexAddChange[] = (expectedIndexes.GlobalSecondaryIndexes || []).filter((index) => ![...output.map((i) => (i as {name: string; type: string}).name), ...existingIndexes.map((i) => i.IndexName)].includes(index.IndexName)).map((index) => ({
-		"type": ModelIndexChangeType.add,
-		"spec": index
-	}));
-	output.push(...createIndexes);
+	const mapAddChange = (index): ModelIndexAddChange | ModelIndexDeleteChange => ({"spec": index, "type": ModelIndexChangeType.add}) as ModelIndexAddChange;
+	const mapDeleteChange = (index): ModelIndexAddChange | ModelIndexDeleteChange => ({"name": index.IndexName as string, "type": ModelIndexChangeType.delete}) as ModelIndexDeleteChange;
 
-	return output;
+	return Promise.resolve([
+		...aggregator(expectedIndexes.GlobalSecondaryIndexes, mapAddChange),
+		...aggregator(expectedIndexes.GlobalSecondaryIndexes, mapDeleteChange),
+		...aggregator(expectedIndexes.LocalSecondaryIndexes, mapAddChange),
+		...aggregator(expectedIndexes.LocalSecondaryIndexes, mapDeleteChange)
+	]);
 };
 
 export default index_changes;
