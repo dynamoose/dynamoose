@@ -29,7 +29,7 @@ export class Document {
 			"configurable": false,
 			"value": {}
 		});
-		this[internalProperties].originalObject = {...documentObject};
+		this[internalProperties].originalObject = JSON.parse(JSON.stringify(documentObject));
 		this[internalProperties].originalSettings = {...settings};
 
 		Object.defineProperty(this, "model", {
