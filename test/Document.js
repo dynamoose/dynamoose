@@ -1167,6 +1167,13 @@ describe("Document", () => {
 			expect(document.original()).to.eql({"id": 1});
 			expect({...document}).to.eql({"id": 2});
 		});
+
+		it("Shouldn't modify inner object after modifying document", () => {
+			const document = new model({"id": {"N": "1"}, "el": {"L": [{"S": "1"}]}}, {"type": "fromDynamo"});
+			document.el.push("2");
+			expect(document.original()).to.eql({"id": 1, "el": ["1"]});
+			expect({...document}).to.eql({"id": 1, "el": ["1", "2"]});
+		});
 	});
 
 	describe("document.delete", () => {
