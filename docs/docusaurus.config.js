@@ -54,6 +54,10 @@ module.exports = {
 					"title": "Other Resources",
 					"items": [
 						{
+							"label": "Sponsor Dynamoose",
+							"href": "https://github.com/dynamoose/dynamoose/blob/master/SPONSOR.md"
+						},
+						{
 							"label": "Contributing Guidelines",
 							"href": "https://github.com/dynamoose/dynamoose/blob/master/CONTRIBUTING.md"
 						},
