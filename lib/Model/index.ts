@@ -380,8 +380,16 @@ export class Model<T extends DocumentCarrier> {
 	methods: { document: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 
 	// This function returns the best matched schema for the given object input
-	schemaForObject(object: ObjectType): Schema {
-		// TODO: implement this
+	async schemaForObject(object: ObjectType): Promise<Schema> {
+		for (let i = 0; i < this.schemas.length; i++) {
+			const schema = this.schemas[i];
+
+			try {
+				await this.Document.objectFromSchema(JSON.parse(JSON.stringify(object)), this, {"type": "toDynamo", schema});
+				return schema;
+			} catch (e) {} // eslint-disable-line no-empty
+		}
+
 		return this.schemas[0];
 	}
 
@@ -719,7 +727,7 @@ export class Model<T extends DocumentCarrier> {
 				};
 
 				const documentFunctionSettings: DocumentObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo"};
-				const defaultObjectFromSchema = await this.Document.objectFromSchema(this.Document.prepareForObjectFromSchema({}, this, documentFunctionSettings), this, documentFunctionSettings);
+				const defaultObjectFromSchema = await this.Document.objectFromSchema((await this.Document.prepareForObjectFromSchema({}, this, documentFunctionSettings)), this, documentFunctionSettings);
 				Object.keys(defaultObjectFromSchema).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
 					const updateType = updateTypes.find((a) => a.name === "$SET");
