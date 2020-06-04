@@ -58,7 +58,7 @@ describe("utils.object.delete", () => {
 		{
 			"input": [{"hello": "world", "test": {"data1": "first", "data2": "item"}}, ["hello", "test.data1"]],
 			"output": {"test": {"data2": "item"}}
-		},
+		}
 	];
 
 	tests.forEach((test) => {

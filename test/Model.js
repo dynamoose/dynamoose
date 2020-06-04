@@ -3913,7 +3913,7 @@ describe("Model", () => {
 				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
 			}, "output": [{"id": 1, "isActive": true}, {"id": 2, "isActive": false}]},
 			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "random"], "error": "Field options is required and should be an object or array"},
-			{"input": [{"id": 1, "name": "Bob"}], "error": "documentsArray must be an array of document objects"},
+			{"input": [{"id": 1, "name": "Bob"}], "error": "documentsArray must be an array of document objects"}
 		];
 		describe("Model.serializeMany", () => {
 			it("Should be a function", () => {
