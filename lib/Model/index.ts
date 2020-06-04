@@ -877,7 +877,7 @@ export class Model<T extends DocumentCarrier> {
 	}
 
 	// Serialize Many
-	serializeMany(documentsArray: ModelType<DocumentCarrier>[] = [], nameOrOptions: SerializerOptions | string): any {
+	serializeMany (documentsArray: ModelType<DocumentCarrier>[] = [], nameOrOptions: SerializerOptions | string): any {
 		return this.serializer._serializeMany(documentsArray, nameOrOptions);
 	}
 }

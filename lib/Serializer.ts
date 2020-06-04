@@ -1,5 +1,5 @@
-import { ObjectType, ModelType } from "./General";
-import { Document } from "./Document";
+import {ObjectType, ModelType} from "./General";
+import {Document} from "./Document";
 import CustomError = require("./Error");
 import utils = require("./utils");
 
@@ -15,7 +15,7 @@ export class Serializer {
 
 	static defaultName = "_default";
 
-	constructor() {
+	constructor () {
 		this.#serializers = {
 			[Serializer.defaultName]: {
 				"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
@@ -24,7 +24,7 @@ export class Serializer {
 		this.default.set();
 	}
 
-	add(name: string, options: SerializerOptions): void {
+	add (name: string, options: SerializerOptions): void {
 		if (!name || typeof name !== "string") {
 			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
 		}
@@ -51,7 +51,7 @@ export class Serializer {
 		}
 	};
 
-	delete(name: string): void {
+	delete (name: string): void {
 		if (!name || typeof name !== "string") {
 			throw new CustomError.InvalidParameter("Field name is required and should be of type string");
 		}
@@ -70,7 +70,7 @@ export class Serializer {
 		}
 	}
 
-	_serializeMany(documentsArray: ModelType<Document>[], nameOrOptions: SerializerOptions | string): ObjectType[] {
+	_serializeMany (documentsArray: ModelType<Document>[], nameOrOptions: SerializerOptions | string): ObjectType[] {
 		if (!documentsArray || !Array.isArray(documentsArray)) {
 			throw new CustomError.InvalidParameter("documentsArray must be an array of document objects");
 		}
@@ -84,7 +84,7 @@ export class Serializer {
 		});
 	}
 
-	_serialize(document: ObjectType, nameOrOptions: SerializerOptions | string = this.#defaultSerializer): ObjectType {
+	_serialize (document: ObjectType, nameOrOptions: SerializerOptions | string = this.#defaultSerializer): ObjectType {
 		let options: SerializerOptions;
 
 		if (typeof nameOrOptions === "string") {

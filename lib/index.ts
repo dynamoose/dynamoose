@@ -10,7 +10,7 @@ import utils = require("./utils");
 import logger = require("./logger");
 import {Document} from "./Document";
 import ModelStore = require("./ModelStore");
-import { ModelType } from "./General";
+import {ModelType} from "./General";
 
 const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): ModelType<T> => {
 	let model: Model<T>;
@@ -38,7 +38,7 @@ const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinit
 			const main = (key: string): void => {
 				utils.object.set(returnObject, key, {});
 				const value = utils.object.get(model as any, key);
-				if (value === null || (value.constructor !== Object && value.constructor !== Array)) {
+				if (value === null || value.constructor !== Object && value.constructor !== Array) {
 					utils.object.set(returnObject, key, value);
 				} else {
 					Object.keys(value).forEach((subKey): void => {

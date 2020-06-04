@@ -11,7 +11,7 @@ const dynamooseUndefined = Internal.Public.undefined;
 import {DynamoDB, AWSError} from "aws-sdk";
 import {ValueType} from "./Schema";
 import {CallbackType, ObjectType} from "./General";
-import { SerializerOptions } from "./Serializer";
+import {SerializerOptions} from "./Serializer";
 
 export interface DocumentSaveSettings {
 	overwrite?: boolean;
