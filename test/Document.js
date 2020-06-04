@@ -1169,6 +1169,44 @@ describe("Document", () => {
 		});
 	});
 
+	describe("document.toJSON", () => {
+		let model;
+		beforeEach(() => {
+			model = dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false});
+		});
+		afterEach(() => {
+			model = null;
+		});
+
+		it("Should be a function", () => {
+			expect(new model({}).toJSON).to.be.a("function");
+		});
+
+		it("Should set result constructor to Object", () => {
+			expect(new model({}).toJSON().constructor).to.eql(Object);
+			expect(new model({}).constructor).to.not.eql(Object);
+		});
+
+		it("Should return empty object if no properties in document", () => {
+			expect(new model({}).toJSON()).to.eql({});
+		});
+
+		it("Should return JSON object", () => {
+			expect(new model({"id": 1}).toJSON()).to.eql({"id": 1});
+		});
+
+		it("Should not return object that equals document", () => {
+			const document = new model({"id": 1});
+			expect(document.toJSON()).to.not.eql(document);
+		});
+
+		it("Should return JSON object even after modifying", () => {
+			const document = new model({"id": 1});
+			document.id = 2;
+			expect(document.toJSON()).to.eql({"id": 2});
+		});
+	});
+
 	describe("document.delete", () => {
 		let User, user, deleteParams, deleteItemFunction;
 		beforeEach(() => {

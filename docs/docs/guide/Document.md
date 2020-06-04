@@ -84,6 +84,40 @@ myUser.delete((error) => {
 });
 ```
 
+## document.serialize([serializer])
+
+This function serializes the document with the given serializer. The serializer parameter can either be a string or object. If it is an object you can pass in the same serializer as you do into [`Model.serializer.add`](Model#modelserializeraddname-serializer). If you pass in a string it will use the registered serializer with that name that is attached to the Model.
+
+This function will return an object.
+
+```js
+const myUser = new User({"id": 1, "name": "Bob"});
+
+myUser.serialize({"include": ["id"]}); // {"id": 1}
+myUser.serialize({"exclude": ["name"]}); // {"id": 1}
+
+myUser.serialize("myRegisteredSerializer");
+```
+
+In the event no `serializer` parameter is passed in, the default serialization for the Model will be used.
+
+```js
+const myUser = new User({"id": 1, "name": "Bob"});
+
+myUser.serialize(); // {"id": 1, "name": "Bob"}
+```
+
+## document.toJSON()
+
+This function returns a JSON object representation of the document. This can be useful for comparing objects or if you want a clean object without worrying about prototypes or functions attached to the object or anything.
+
+```js
+const myUser = new User({"id": 1, "name": "Bob"});
+
+myUser.toJSON(); // {"id": 1, "name": "Bob"}
+myUser.toJSON().constructor === Object; // true
+```
+
 ## document.original()
 
 This function returns the original item that was received from DynamoDB. This function will return a JSON object that represents the original item. In the event no item has been retrieved from DynamoDB `null` will be returned.
