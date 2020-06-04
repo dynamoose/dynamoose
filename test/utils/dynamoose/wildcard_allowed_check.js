@@ -78,7 +78,7 @@ describe("utils.dynamoose.wildcard_allowed_check", () => {
 		{
 			"input": [["**"], "random.test.random"],
 			"output": true
-		},
+		}
 		// TODO: add support for this later
 		// {
 		// 	"input": [["random.**.hello"], "random.test.random"],
