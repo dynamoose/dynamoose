@@ -1168,11 +1168,18 @@ describe("Document", () => {
 			expect({...document}).to.eql({"id": 2});
 		});
 
+		it("Shouldn't modify inner array after modifying document", () => {
+			const document = new model({"id": {"N": "1"}, "array": {"L": [{"S": "1"}]}}, {"type": "fromDynamo"});
+			document.array.push("2");
+			expect(document.original()).to.eql({"id": 1, "array": ["1"]});
+			expect({...document}).to.eql({"id": 1, "array": ["1", "2"]});
+		});
+
 		it("Shouldn't modify inner object after modifying document", () => {
-			const document = new model({"id": {"N": "1"}, "el": {"L": [{"S": "1"}]}}, {"type": "fromDynamo"});
-			document.el.push("2");
-			expect(document.original()).to.eql({"id": 1, "el": ["1"]});
-			expect({...document}).to.eql({"id": 1, "el": ["1", "2"]});
+			const document = new model({"id": {"N": "1"}, "object": {"M": {"hello": {"S": "world"}}}}, {"type": "fromDynamo"});
+			document.object.test = "item";
+			expect(document.original()).to.eql({"id": 1, "object": {"hello": "world"}});
+			expect({...document}).to.eql({"id": 1, "object": {"hello": "world", "test": "item"}});
 		});
 	});
 
