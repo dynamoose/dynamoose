@@ -11,6 +11,7 @@ const dynamooseUndefined = Internal.Public.undefined;
 import {DynamoDB, AWSError} from "aws-sdk";
 import {ValueType} from "./Schema";
 import {CallbackType, ObjectType} from "./General";
+import {SerializerOptions} from "./Serializer";
 
 export interface DocumentSaveSettings {
 	overwrite?: boolean;
@@ -85,6 +86,16 @@ export class Document {
 	// Original
 	original (): ObjectType | null {
 		return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
+	}
+
+	// toJSON
+	toJSON (): ObjectType {
+		return {...this};
+	}
+
+	// Serializer
+	serialize (nameOrOptions?: SerializerOptions | string): ObjectType {
+		return this.model.serializer._serialize(this, nameOrOptions);
 	}
 
 	// Delete

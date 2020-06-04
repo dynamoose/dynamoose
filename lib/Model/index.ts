@@ -4,9 +4,10 @@ import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings, Doc
 import utils = require("../utils");
 import ddb = require("../aws/ddb/internal");
 import Internal = require("../Internal");
+import {Serializer, SerializerOptions} from "../Serializer";
 import {Condition, ConditionInitalizer} from "../Condition";
 import {Scan, Query} from "../DocumentRetriever";
-import {CallbackType, ObjectType, FunctionType} from "../General";
+import {CallbackType, ObjectType, FunctionType, ModelType} from "../General";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 
@@ -300,6 +301,7 @@ export class Model<T extends DocumentCarrier> {
 			}
 		}
 		Document.Model = self;
+		this.serializer = new Serializer();
 		this.Document = Document;
 		(this.Document as any).table = {
 			"create": {
@@ -355,6 +357,7 @@ export class Model<T extends DocumentCarrier> {
 	name: string;
 	options: ModelOptions;
 	schema: Schema;
+	serializer: Serializer;
 	private ready: boolean;
 	alreadyCreated: boolean;
 	private pendingTasks: ((value?: void | PromiseLike<void>) => void)[];
@@ -871,6 +874,11 @@ export class Model<T extends DocumentCarrier> {
 				return response.Item ? await documentify(response.Item) : undefined;
 			})();
 		}
+	}
+
+	// Serialize Many
+	serializeMany (documentsArray: ModelType<DocumentCarrier>[] = [], nameOrOptions: SerializerOptions | string): any {
+		return this.serializer._serializeMany(documentsArray, nameOrOptions);
 	}
 }
 
