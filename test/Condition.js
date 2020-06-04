@@ -230,7 +230,7 @@ describe("Condition", () => {
 				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
 				"settings": {"conditionString": "FilterExpression"},
 				"output": {}
-			},
+			}
 		];
 
 		tests.forEach((test) => {

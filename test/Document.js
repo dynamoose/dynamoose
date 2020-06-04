@@ -83,7 +83,7 @@ describe("Document", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with settings ${JSON.stringify(test.settings)}`, async () => {
-					expect(await (new User(test.input).toDynamo(test.settings))).to.eql(test.output);
+					expect(await new User(test.input).toDynamo(test.settings)).to.eql(test.output);
 				});
 			});
 		});
@@ -839,7 +839,9 @@ describe("Document", () => {
 				it("Should not run validation function if property doesn't exist", async () => {
 					putItemFunction = () => Promise.resolve();
 					let didRun = false;
-					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "validate": () => {
+						didRun = true; return true;
+					}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
 					expect(didRun).to.be.false;
@@ -848,7 +850,9 @@ describe("Document", () => {
 				it("Should run validation function if property is falsy", async () => {
 					putItemFunction = () => Promise.resolve();
 					let didRun = false;
-					User = dynamoose.model("User", {"id": Number, "data": {"type": Boolean, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Boolean, "validate": () => {
+						didRun = true; return true;
+					}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "data": false});
 					await callType.func(user).bind(user)();
 					expect(didRun).to.be.true;
@@ -1341,7 +1345,7 @@ describe("Document", () => {
 				"output": false
 			},
 			{
-				"input": {"id": {"N": "1"}, "map": {"L": [{"S": "hello"},{"S": "world"}]}},
+				"input": {"id": {"N": "1"}, "map": {"L": [{"S": "hello"}, {"S": "world"}]}},
 				"output": true
 			},
 			{
@@ -1816,7 +1820,7 @@ describe("Document", () => {
 						model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
 					}
 
-					input = (!Array.isArray(test.input) ? [test.input] : test.input);
+					input = !Array.isArray(test.input) ? [test.input] : test.input;
 					input.splice(1, 0, model.Model);
 				}
 
