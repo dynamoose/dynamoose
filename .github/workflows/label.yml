@@ -10,6 +10,6 @@ jobs:
         # Limiting this to dynamoose/dynamoose repo until GitHub adds support for this to work in forked repos
         # https://github.com/actions/labeler/issues/36
         # https://github.com/actions/labeler/issues/12
-        if: github.repository == 'dynamoose/dynamoose'
+        if: !github.event.pull_request.head.repo.fork
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
