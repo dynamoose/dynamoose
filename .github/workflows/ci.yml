@@ -1,8 +1,8 @@
 name: CI
 on:
-  - push:
-  - pull_request:
-      types: [opened, synchronize]
+  push:
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   lint:
