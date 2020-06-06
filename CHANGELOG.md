@@ -2,6 +2,23 @@
 
 ---
 
+## Version 2.2.1
+
+This release fixes some minor bugs found in Dynamoose.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixed an issue with creation of local secondary indexes
+- Fixed an issue where specifying attributes to retrieve wouldn't work with reserved DynamoDB keywords
+
+### Other
+
+- Adding icons to website for GitHub & npm links
+
+---
+
 ## Version 2.2.0
 
 This release adds a few key features to improve your Dynamoose workflow.
