@@ -223,8 +223,12 @@ type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
 type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor;
 
+export interface TimestampObject {
+	createdAt?: string | string[];
+	updatedAt?: string | string[];
+}
 interface SchemaSettings {
-	timestamps?: boolean | {createdAt?: string; updatedAt?: string};
+	timestamps?: boolean | TimestampObject;
 	saveUnknown?: boolean | string[];
 }
 interface IndexDefinition {
@@ -369,17 +373,56 @@ export class Schema {
 			};
 		}
 		if (settings.timestamps) {
-			if (object[settings.timestamps.createdAt] || object[settings.timestamps.updatedAt]) {
-				throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
-			}
+			const createdAtArray = Array.isArray(settings.timestamps.createdAt) ? settings.timestamps.createdAt : [settings.timestamps.createdAt];
+			const updatedAtArray = Array.isArray(settings.timestamps.updatedAt) ? settings.timestamps.updatedAt : [settings.timestamps.updatedAt];
 
-			object[settings.timestamps.createdAt] = Date;
-			object[settings.timestamps.updatedAt] = Date;
+			[...createdAtArray, ...updatedAtArray].forEach((prop) => {
+				if (object[prop]) {
+					throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
+				}
+
+				object[prop] = Date;
+			});
 		}
 
+		let parsedSettings = {...settings};
+		const parsedObject = {...object};
+		utils.object.entries(parsedObject).filter((entry) => entry[1] instanceof Schema).forEach((entry) => {
+			const [key, value] = entry;
+			let newValue = {
+				"type": Object,
+				"schema": (value as any).schemaObject
+			};
+			if (key.endsWith(".schema")) {
+				newValue = (value as any).schemaObject;
+			}
+
+			const subSettings = {...(value as any).settings};
+			Object.entries(subSettings).forEach((entry) => {
+				const [settingsKey, settingsValue] = entry;
+				switch (settingsKey) {
+				case "saveUnknown":
+					subSettings[settingsKey] = typeof subSettings[settingsKey] === "boolean" ? [`${key}.**`] : (settingsValue as any).map((val) => `${key}.${val}`);
+					break;
+				case "timestamps":
+					subSettings[settingsKey] = Object.entries(subSettings[settingsKey]).reduce((obj, entity) => {
+						const [subKey, subValue] = entity;
+
+						obj[subKey] = Array.isArray(subValue) ? subValue.map((subValue) => `${key}.${subValue}`) : `${key}.${subValue}`;
+
+						return obj;
+					}, {});
+					break;
+				}
+			});
+			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_arrray"})(parsedSettings, subSettings);
+
+			utils.object.set(parsedObject, key, newValue);
+		});
+
 		// Anytime `this.schemaObject` is modified, `this[internalCache].attributes` must be set to undefined or null
-		this.schemaObject = object;
-		this.settings = settings;
+		this.schemaObject = parsedObject;
+		this.settings = parsedSettings;
 		Object.defineProperty(this, internalCache, {
 			"configurable": false,
 			"value": {
@@ -412,6 +455,41 @@ export class Schema {
 			}
 		};
 		this.attributes().forEach((key) => checkMultipleArraySchemaElements(key));
+
+		const hashrangeKeys = this.attributes().reduce((val, key) => {
+			const isHashKey = this.getAttributeSettingValue("hashKey", key);
+			const isRangeKey = this.getAttributeSettingValue("rangeKey", key);
+
+			if (isHashKey) {
+				val.hashKeys.push(key);
+			}
+			if (isRangeKey) {
+				val.rangeKeys.push(key);
+			}
+			if (isHashKey && isRangeKey) {
+				val.hashAndRangeKeyAttributes.push(key);
+			}
+
+			return val;
+		}, {"hashKeys": [], "rangeKeys": [], "hashAndRangeKeyAttributes": []});
+		const keyTypes = ["hashKey", "rangeKey"];
+		keyTypes.forEach((keyType) => {
+			if (hashrangeKeys[`${keyType}s`].length > 1) {
+				throw new CustomError.InvalidParameter(`Only one ${keyType} allowed per schema.`);
+			}
+			if (hashrangeKeys[`${keyType}s`].find((key) => key.includes("."))) {
+				throw new CustomError.InvalidParameter(`${keyType} must be at root object and not nested in object or array.`);
+			}
+		});
+		if (hashrangeKeys.hashAndRangeKeyAttributes.length > 0) {
+			throw new CustomError.InvalidParameter(`Attribute ${hashrangeKeys.hashAndRangeKeyAttributes[0]} must not be both hashKey and rangeKey`);
+		}
+
+		this.attributes().forEach((key) => {
+			if (key.includes(".") && this.getAttributeSettingValue("index", key)) {
+				throw new CustomError.InvalidParameter("Index must be at root object and not nested in object or array.");
+			}
+		});
 	}
 }
 

@@ -2891,6 +2891,74 @@ describe("Model", () => {
 					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
 				});
 
+				it("Should send correct params to updateItem for timestamps with updateAt with custom parameter names", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}));
+					const date = Date.now();
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "updated",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": updateItemParams.ExpressionAttributeValues[":v0"].N
+							},
+							":v1": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
+				});
+
+				it("Should send correct params to updateItem for timestamps with updateAt with multiple custom parameter names", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": ["a1", "a2"], "updatedAt": ["b1", "b2"]}}));
+					const date = Date.now();
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "b1",
+							"#a1": "b2",
+							"#a2": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": updateItemParams.ExpressionAttributeValues[":v0"].N
+							},
+							":v1": {
+								"N": updateItemParams.ExpressionAttributeValues[":v1"].N
+							},
+							":v2": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = :v2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v1"].N)).to.be.within(date - 10, date + 10);
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.eql(parseInt(updateItemParams.ExpressionAttributeValues[":v1"].N));
+				});
+
 				it("Should send correct params to updateItem with conditional", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
