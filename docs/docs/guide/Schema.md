@@ -7,7 +7,7 @@ The `options` parameter is an optional object with the following options:
 | Name | Type | Default | Information
 |---|---|---|---|
 | `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep. If you retrieve documents from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
-| `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string being the name of the attribute for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
+| `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
 const dynamoose = require("dynamoose");
@@ -47,6 +47,20 @@ const schema = new dynamoose.Schema({
 });
 ```
 
+```js
+const dynamoose = require("dynamoose");
+
+const schema = new dynamoose.Schema({
+	"id": String,
+	"name": String
+}, {
+	"timestamps": {
+		"createdAt": ["createDate", "creation"],
+		"updatedAt": ["updateDate", "updated"]
+	}
+});
+```
+
 ## Attribute Types
 
 | Type | Set Allowed | DynamoDB Type | Custom Dynamoose Type | Nested Type | Settings | Notes |
@@ -58,6 +72,7 @@ const schema = new dynamoose.Schema({
 | Date | True | N | True | False | **storage** - miliseconds \| seconds (default: miliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
+| Schema | False | M | True | True |   | This will be converted to an Object type. |
 | Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
 
 Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
