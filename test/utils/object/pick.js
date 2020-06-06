@@ -18,7 +18,7 @@ describe("utils.object.pick", () => {
 		{
 			"input": [{"hello": "world", "obj": 1}, ["hello"]],
 			"output": {"hello": "world"}
-		},
+		}
 	];
 
 	tests.forEach((test) => {

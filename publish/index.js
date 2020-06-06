@@ -6,7 +6,7 @@ const utils = require("../dist/utils");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const retrieveInformation = require("./information/retrieve");
-const { Octokit } = require("@octokit/rest");
+const {Octokit} = require("@octokit/rest");
 const octokit = new Octokit({
 	"auth": process.env.GITHUBAUTH
 });
@@ -16,7 +16,7 @@ const os = require("os");
 const npmFetch = require("npm-registry-fetch");
 let package = require("../package.json");
 
-(async function main() {
+(async function main () {
 	console.log("Welcome to the Dynamoose Publisher!\n\n\n");
 	if (!await checkCleanWorkingDir()) {
 		console.error("You must have a clean working directory in order to use this tool.");
@@ -108,7 +108,7 @@ let package = require("../package.json");
 	await keypress();
 	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
 	const versionInfo = retrieveInformation(results.version);
-	const versionFriendlyTitle = `Version ${[versionInfo.main, (versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : ""), versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
+	const versionFriendlyTitle = `Version ${[versionInfo.main, versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : "", versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
 	const changelogTemplate = `## ${versionFriendlyTitle}\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
 	await fs.writeFile(changelogFilePath, changelogTemplate);
@@ -175,10 +175,10 @@ let package = require("../package.json");
 	process.exit(0);
 })();
 
-async function checkCleanWorkingDir() {
+async function checkCleanWorkingDir () {
 	return (await git.status()).isClean();
 }
-function keypress() {
+function keypress () {
 	process.stdin.resume();
 	process.stdin.setRawMode(true);
 	return new Promise((resolve) => {
@@ -189,7 +189,7 @@ function keypress() {
 		});
 	});
 }
-async function isPRMerged(pr) {
+async function isPRMerged (pr) {
 	let data;
 	do {
 		data = (await octokit.pulls.get({
@@ -200,7 +200,7 @@ async function isPRMerged(pr) {
 		await utils.timeout(5000);
 	} while (!data.merged);
 }
-async function isReleaseSubmitted(release) {
+async function isReleaseSubmitted (release) {
 	try {
 		await npmFetch(`/dynamoose/${release}`);
 	} catch (e) {

@@ -72,11 +72,11 @@ export default (transactions: any[], settings: TransactionSettings = {"return": 
 		await Promise.all(models.map((model) => model.pendingTaskPromise()));
 
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-		const result: any = await ddb((transactionType as any), transactionParams);
+		const result: any = await ddb(transactionType as any, transactionParams);
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
 			const model: Model<Document> = models.find((model) => model.name === modelName);
-			return (new model.Document(item.Item, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
+			return new model.Document(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
 		})) : null;
 	})();
 

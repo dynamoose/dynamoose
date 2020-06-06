@@ -1,7 +1,7 @@
 export class ConsoleProvider {
-	log(message): void {
+	log (message): void {
 		let method: (message: string) => void;
-		switch(message.level) {
+		switch (message.level) {
 		case "fatal":
 		case "error":
 			method = console.error;
