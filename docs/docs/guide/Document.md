@@ -12,6 +12,7 @@ const myUser = new User({
 	"id": 1,
 	"name": "Tim"
 });
+console.log(myUser.id); // 1
 
 // myUser is now a document instance of the User model
 ```
@@ -84,6 +85,37 @@ myUser.delete((error) => {
 });
 ```
 
+## document.populate([settings], [callback])
+
+This allows you to populate a document with document instances for the subdocuments you are referencing in your schema. This function will return a promise, or call the `callback` paramter function upon completion.
+
+The `settings` parameter is an object you can pass in with the following properties:
+
+| Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| properties | string \| [string] \| boolean | Which properties should it populate. Passing `true` is equivalent to `**` & `false` is equivalent to not populating at all. | `true` \| `**` |
+
+```js
+const user = await User.get(2);
+
+try {
+	const populatedUser = await user.populate();
+	console.log(populatedUser);
+} catch (error) {
+	console.error(error);
+}
+
+// OR
+
+user.populate((populatedUser, error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log(populatedUser);
+	}
+});
+```
+
 ## document.serialize([serializer])
 
 This function serializes the document with the given serializer. The serializer parameter can either be a string or object. If it is an object you can pass in the same serializer as you do into [`Model.serializer.add`](Model#modelserializeraddname-serializer). If you pass in a string it will use the registered serializer with that name that is attached to the Model.
@@ -107,17 +139,6 @@ const myUser = new User({"id": 1, "name": "Bob"});
 myUser.serialize(); // {"id": 1, "name": "Bob"}
 ```
 
-## document.toJSON()
-
-This function returns a JSON object representation of the document. This can be useful for comparing objects or if you want a clean object without worrying about prototypes or functions attached to the object or anything.
-
-```js
-const myUser = new User({"id": 1, "name": "Bob"});
-
-myUser.toJSON(); // {"id": 1, "name": "Bob"}
-myUser.toJSON().constructor === Object; // true
-```
-
 ## document.original()
 
 This function returns the original item that was received from DynamoDB. This function will return a JSON object that represents the original item. In the event no item has been retrieved from DynamoDB `null` will be returned.
@@ -129,4 +150,24 @@ user.name = "Tim";
 
 console.log(user); // {"id": 1, "name": "Tim"}
 console.log(user.original()); // {"id": 1, "name": "Bob"}
+```
+
+## document.toJSON()
+
+This function returns a JSON object representation of the document. This is most commonly used when comparing a document to an object you receive elsewhere without worrying about prototypes.
+
+```js
+const user = new User({"id": 1, "name": "Tim"});
+
+console.log(user); // Document {"id": 1, "name": "Tim"}
+console.log(user.toJSON()); // {"id": 1, "name": "Tim"}
+```
+
+Due to the fact that a document instance is based on an object it is rare that you will have to use this function since you can access all the properties of the document directly. For example, both of the results will yield the same output.
+
+```js
+const user = new User({"id": 1, "name": "Tim"});
+
+console.log(user.id); // 1
+console.log(user.toJSON().id); // 1
 ```

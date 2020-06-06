@@ -173,3 +173,17 @@ await user.save();
 // {"id": 1}
 // will be saved to the database (notice the `name` property is undefined and did not use the `default` property)
 ```
+
+## dynamoose.THIS
+
+Setting a schema attribute to this will cause it to reference itself for populating objects.
+
+```js
+const dynamoose = require("dynamoose");
+
+const User = dynamoose.model("User", {"id": String, "parent": dynamoose.THIS});
+```
+
+:::note
+This property might be used for other things in the future.
+:::
