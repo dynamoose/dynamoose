@@ -15,7 +15,8 @@ export const original: ModelOptions = {
 			"frequency": 1000
 		}
 	},
-	"update": false
+	"update": false,
+	"populate": false
 	// "streamOptions": {
 	// 	"enabled": false,
 	// 	"type": undefined

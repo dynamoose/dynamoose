@@ -552,6 +552,35 @@ describe("Query", () => {
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
 
+				describe("Populate", () => {
+					it("Should have populate function on response", async () => {
+						queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+						const response = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
+						expect(response.populate).to.be.a("function");
+					});
+
+					it("Should autopopulate if model settings have populate set", async () => {
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"query": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+							}
+						});
+						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
+				});
+
 				it("Should throw error if no indexes exist on model", () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": String}));

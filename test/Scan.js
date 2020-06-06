@@ -278,6 +278,35 @@ describe("Scan", () => {
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
 
+				describe("Populate", () => {
+					it("Should have populate function on response", async () => {
+						scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+						const response = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(response.populate).to.be.a("function");
+					});
+
+					it("Should autopopulate if model settings have populate set", async () => {
+						Model = dynamoose.model("Cat", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan().exec).bind(Model.scan())();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
+				});
+
 				it("Should throw error from AWS", () => {
 					scanPromiseResolver = () => {
 						throw {"error": "Error"};
