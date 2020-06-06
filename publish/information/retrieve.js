@@ -1,6 +1,6 @@
 module.exports = (version) => {
 	const regex = /^v?((?:\d\.?){1,3})(?:-(.*)\.(\d*))?$/gmu;
-	const [,main,tag,tagNumber] = regex.exec(version);
+	const [, main, tag, tagNumber] = regex.exec(version);
 	const obj = {
 		main,
 		tag,
@@ -9,7 +9,7 @@ module.exports = (version) => {
 		"isPrerelease": Boolean(tag)
 	};
 
-	switch(obj.npmtag) {
+	switch (obj.npmtag) {
 	case "latest":
 		obj.websites3bucket = "dynamoosejs.com";
 		break;

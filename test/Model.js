@@ -7,6 +7,7 @@ const Error = require("../dist/Error");
 const Internal = require("../dist/Internal");
 const utils = require("../dist/utils");
 const util = require("util");
+const ModelStore = require("../dist/ModelStore");
 
 describe("Model", () => {
 	beforeEach(() => {
@@ -25,12 +26,28 @@ describe("Model", () => {
 	});
 
 	describe("Initialization", () => {
-		it("Should throw an error if no schema is passed in", () => {
+		it("Should throw an error if no schema is passed in and no existing model in store", () => {
 			expect(() => dynamoose.model("Cat")).to.throw(Error.MissingSchemaError);
+			expect(() => dynamoose.model("Cat")).to.throw("Schema hasn't been registered for model \"Cat\".\nUse \"dynamoose.model(name, schema)\"");
 		});
 
 		it("Should throw same error as no schema if nothing passed in", () => {
 			expect(() => dynamoose.model()).to.throw(Error.MissingSchemaError);
+			expect(() => dynamoose.model()).to.throw("Schema hasn't been registered for model \"undefined\".\nUse \"dynamoose.model(name, schema)\"");
+		});
+
+		it("Should return existing model if already exists and not passing in schema", () => {
+			const User = dynamoose.model("User", {"id": String});
+			const UserB = dynamoose.model("User");
+
+			expect(UserB).to.eql(User);
+		});
+
+		it("Should throw error if passing in model with same name as existing model", () => {
+			dynamoose.model("User", {"id": String});
+			dynamoose.model("User", {"id": String, "name": String});
+
+			expect(ModelStore("User").schema.schemaObject).to.eql({"id": String, "name": String});
 		});
 
 		it("Should create a schema if not passing in schema instance", () => {
@@ -309,7 +326,7 @@ describe("Model", () => {
 					"createTable": (params) => {
 						createTableParams = params;
 						return {
-							"promise": function() {
+							"promise": function () {
 								self = this;
 								return Promise.resolve();
 							}
@@ -346,7 +363,7 @@ describe("Model", () => {
 					"describeTable": (params) => {
 						describeTableParams.push(params);
 						return {
-							"promise": describeTableFunction
+							"promise": () => describeTableFunction(params)
 						};
 					}
 				});
@@ -625,6 +642,7 @@ describe("Model", () => {
 									"GlobalSecondaryIndexes": [
 										{
 											"IndexName": "nameGlobalIndex",
+											"IndexStatus": "ACTIVE",
 											"KeySchema": [
 												{
 													"AttributeName": "name",
@@ -655,6 +673,223 @@ describe("Model", () => {
 										}
 									],
 									"TableName": "Cat"
+								}
+							]);
+						});
+
+						it("Should call updateTable to add multiple indexes correctly", async () => {
+							const tableName = "Cat";
+							let describeTableFunctionCalledTimes = 0;
+							let testUpdateTableParams = {};
+							describeTableFunction = () => {
+								++describeTableFunctionCalledTimes;
+								let obj;
+								if (describeTableFunctionCalledTimes === 1) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE"
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 2) {
+									testUpdateTableParams["0"] = [...updateTableParams];
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "CREATING",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 3) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes === 4) {
+									testUpdateTableParams["1"] = [...updateTableParams];
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												},
+												{
+													"IndexName": "statusGlobalIndex",
+													"IndexStatus": "CREATING",
+													"KeySchema": [
+														{
+															"AttributeName": "status",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								} else if (describeTableFunctionCalledTimes >= 4) {
+									obj = {
+										"Table": {
+											"ProvisionedThroughput": {
+												"ReadCapacityUnits": 1,
+												"WriteCapacityUnits": 1
+											},
+											"TableStatus": "ACTIVE",
+											"GlobalSecondaryIndexes": [
+												{
+													"IndexName": "nameGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "name",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												},
+												{
+													"IndexName": "statusGlobalIndex",
+													"IndexStatus": "ACTIVE",
+													"KeySchema": [
+														{
+															"AttributeName": "status",
+															"KeyType": "HASH"
+														}
+													],
+													"Projection": {
+														"ProjectionType": "ALL"
+													},
+													"ProvisionedThroughput": {
+														"ReadCapacityUnits": 1,
+														"WriteCapacityUnits": 1
+													}
+												}
+											]
+										}
+									};
+								}
+								return Promise.resolve(obj);
+							};
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}, "status": {"type": String, "index": {"global": true}}}, {"update": updateOption});
+							await model.Model.pendingTaskPromise();
+							await utils.set_immediate_promise();
+							expect(describeTableFunctionCalledTimes).to.eql(5);
+							expect(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
+								"Create": {
+									"IndexName": "nameGlobalIndex",
+									"KeySchema": [
+										{
+											"AttributeName": "name",
+											"KeyType": "HASH"
+										}
+									],
+									"Projection": {
+										"ProjectionType": "ALL"
+									},
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									}
+								}
+							}]);
+							expect(utils.array_flatten(testUpdateTableParams["1"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([
+								...testUpdateTableParams["0"][0].GlobalSecondaryIndexUpdates,
+								{
+									"Create": {
+										"IndexName": "statusGlobalIndex",
+										"KeySchema": [
+											{
+												"AttributeName": "status",
+												"KeyType": "HASH"
+											}
+										],
+										"Projection": {
+											"ProjectionType": "ALL"
+										},
+										"ProvisionedThroughput": {
+											"ReadCapacityUnits": 1,
+											"WriteCapacityUnits": 1
+										}
+									}
 								}
 							]);
 						});
@@ -841,6 +1076,36 @@ describe("Model", () => {
 							}
 						},
 						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we only request a certain attribute", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id"
+					});
+				});
+
+				it("Should send correct params to getItem if we request certain attributes", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1}, {"attributes": ["id", "name"]});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ProjectionExpression": "id, name"
 					});
 				});
 
@@ -1146,7 +1411,7 @@ describe("Model", () => {
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
-								return {"promise": () => params.Key.id.N === "1" ? ({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}}) : ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1191,7 +1456,9 @@ describe("Model", () => {
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledGetItem = false;
-					getItemFunction = () => {calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});};
+					getItemFunction = () => {
+						calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					};
 					let describeTableResponse = {
 						"Table": {"TableStatus": "CREATING"}
 					};
@@ -1435,7 +1702,9 @@ describe("Model", () => {
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledBatchGetItem = false;
-					promiseFunction = () => {calledBatchGetItem = true; return Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});};
+					promiseFunction = () => {
+						calledBatchGetItem = true; return Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					};
 					let describeTableResponse = {
 						"Table": {"TableStatus": "CREATING"}
 					};
@@ -1943,6 +2212,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem for single object update with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1, "name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem for single object update with multiple updates", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "age": 5});
@@ -1963,6 +2260,38 @@ describe("Model", () => {
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
 						"Key": {
 							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for single object update with multiple updates with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1, "name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
 								"N": "1"
 							}
 						},
@@ -1995,6 +2324,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem with seperate key and update objects with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem with seperate key and update objects and multiple updates", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "age": 5});
@@ -2015,6 +2372,38 @@ describe("Model", () => {
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
 						"Key": {
 							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with seperate key and update objects and multiple updates with rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
+					await callType.func(User).bind(User)({"pk": 1, "sk": 1}, {"name": "Charlie", "age": 5});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							},
+							":v1": {
+								"N": "5"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"pk": {
+								"N": "1"
+							},
+							"sk": {
 								"N": "1"
 							}
 						},
@@ -2057,7 +2446,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2078,7 +2466,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2099,7 +2486,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2120,7 +2506,6 @@ describe("Model", () => {
 						"ExpressionAttributeNames": {
 							"#a0": "name"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2347,9 +2732,28 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
-						"ExpressionAttributeValues": {},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $REMOVE saveUnknown property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"saveUnknown": ["age"]}));
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"age": null}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "age"
+						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -2367,9 +2771,8 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
-						"ExpressionAttributeValues": {},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
 							"id": {
@@ -3398,6 +3801,238 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Serializer", () => {
+		let User;
+		beforeEach(() => {
+			User = dynamoose.model("User", {"id": Number, "name": String, "friend": {"type": Object, "schema": {"id": Number, "name": String}}});
+		});
+		afterEach(() => {
+			User = null;
+		});
+
+		describe("Model.serializer", () => {
+			it("Should be an instance of Serializer", () => {
+				expect(User.serializer).to.be.an.instanceOf(require("../dist/Serializer").Serializer);
+			});
+
+			describe("Model.serializer.add", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.add).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with no parameters", () => {
+					expect(() => User.serializer.add()).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with object as first parameter", () => {
+					expect(() => User.serializer.add({})).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.add(1)).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with only first parameter", () => {
+					expect(() => User.serializer.add("mySerializer")).to.throw("Field options is required and should be an object or array");
+				});
+
+				it("Should throw an error if calling with string as second parameter", () => {
+					expect(() => User.serializer.add("mySerializer", "hello world")).to.throw("Field options is required and should be an object or array");
+				});
+
+				it("Should throw an error if calling with number as second parameter", () => {
+					expect(() => User.serializer.add("mySerializer", 1)).to.throw("Field options is required and should be an object or array");
+				});
+			});
+
+			describe("Model.serializer.delete", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.delete).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with no parameters", () => {
+					expect(() => User.serializer.delete()).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.delete(1)).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if trying to delete primary default serializer", () => {
+					expect(() => User.serializer.delete("_default")).to.throw("Can not delete primary default serializer");
+				});
+			});
+
+			describe("Model.serializer.default.set", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.default.set).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.default.set(1)).to.throw("Field name is required and should be of type string");
+				});
+			});
+		});
+
+		const serializeTests = [
+			{"input": [[]], "output": []},
+			{"input": [], "output": []},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]], "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], ["name"]], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], ["id"]], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"include": ["name"]}], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"include": ["id"]}], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["name"]}], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id"]}], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id", "name"]}], "output": [{}, {}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"include": []}], "output": [{}, {}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id"], "include": ["id"]}], "output": [{}, {}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id"], "include": ["id", "name"]}], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["name"], "include": ["id", "name"]}], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob", "friend": {"id": 3, "name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"id": 3, "name": "Tom"}}], {"exclude": ["friend"]}], "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob", "friend": {"id": 3, "name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"id": 3, "name": "Tom"}}], {"exclude": ["friend.id"]}], "output": [{"id": 1, "name": "Bob", "friend": {"name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"name": "Tom"}}]},
+			{"input": [[{"id": 1, "name": "Bob", "friend": {"id": 3, "name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"id": 3, "name": "Tom"}}], {"include": ["friend.name"]}], "output": [{"friend": {"name": "Tom"}}, {"friend": {"name": "Tom"}}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["name"]);
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "mySerializer"];
+			}, "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "mySerializer"];
+			}, "output": [{"id": 1}, {"id": 2}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("mySerializer");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1}, {"id": 2}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("mySerializer");
+				User.serializer.default.set();
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("random");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.delete("mySerializer");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "mySerializer"];
+			}, "error": "Field options is required and should be an object or array"},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.delete("random");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("mySerializer");
+				User.serializer.delete("mySerializer");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("isActive", {
+					"modify": (serialized, original) => {
+						serialized.isActive = original.status === "active";
+						return serialized;
+					}
+				});
+				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
+			}, "output": [{"id": 1, "status": "active", "isActive": true, "name": "Bob"}, {"id": 2, "status": "not_active", "isActive": false, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("isActive", {
+					"exclude": ["status"],
+					"modify": (serialized, original) => {
+						serialized.isActive = original.status === "active";
+						return serialized;
+					}
+				});
+				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
+			}, "output": [{"id": 1, "isActive": true, "name": "Bob"}, {"id": 2, "isActive": false, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("isActive", {
+					"include": ["id"],
+					"modify": (serialized, original) => {
+						serialized.isActive = original.status === "active";
+						return serialized;
+					}
+				});
+				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
+			}, "output": [{"id": 1, "isActive": true}, {"id": 2, "isActive": false}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "random"], "error": "Field options is required and should be an object or array"},
+			{"input": [{"id": 1, "name": "Bob"}], "error": "documentsArray must be an array of document objects"}
+		];
+		describe("Model.serializeMany", () => {
+			it("Should be a function", () => {
+				expect(User.serializeMany).to.be.a("function");
+			});
+
+			serializeTests.forEach((test) => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+					const input = typeof test.input === "function" ? test.input() : test.input;
+					if (test.error) {
+						expect(() => User.serializeMany(...input)).to.throw(test.error);
+					} else {
+						expect(User.serializeMany(...input)).to.eql(test.output);
+					}
+				});
+
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} when using document instance`, () => {
+					const input = typeof test.input === "function" ? test.input() : test.input;
+					if (Array.isArray(input[0])) {
+						input[0] = input[0].map((obj) => new User(obj));
+					}
+
+					if (test.error) {
+						expect(() => User.serializeMany(...input)).to.throw(test.error);
+					} else {
+						expect(User.serializeMany(...input)).to.eql(test.output);
+					}
+				});
+			});
+		});
+
+		describe("model.serialize", () => {
+			it("Should be a function", () => {
+				expect(new User().serialize).to.be.a("function");
+			});
+
+			serializeTests.forEach((test) => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+					const input = typeof test.input === "function" ? test.input() : test.input;
+
+					if (Array.isArray(input[0])) {
+						input[0].forEach((object, index) => {
+							const document = new User(object);
+
+							if (test.error) {
+								expect(() => document.serialize(input[1])).to.throw(test.error);
+							} else {
+								expect(document.serialize(input[1])).to.eql(test.output[index]);
+							}
+						});
+					}
+				});
+
+				if (!test.error) {
+					it(`Should return same output as document.toJSON() for ${JSON.stringify(test.input)}`, () => {
+						const input = typeof test.input === "function" ? test.input() : test.input;
+
+						if (Array.isArray(input[0])) {
+							input[0].forEach((object) => {
+								const document = new User(object);
+								User.serializer.default.set();
+								expect(document.serialize()).to.eql(document.toJSON());
+							});
+						}
+					});
+				}
+			});
+		});
+	});
+
 	describe("Model.methods", () => {
 		let User, user;
 		beforeEach(() => {
@@ -3413,7 +4048,7 @@ describe("Model", () => {
 			expect(User.methods).to.be.an("object");
 		});
 
-		function customMethodTests(settings) {
+		function customMethodTests (settings) {
 			describe(`${settings.prefixName}.set`, () => {
 				it("Should be a function", () => {
 					expect(settings.methodEntryPoint().set).to.be.a("function");

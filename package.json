@@ -1,10 +1,10 @@
 {
   "name": "dynamoose",
-  "version": "2.1.0",
+  "version": "2.2.1",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "homepage": "https://github.com/dynamoose/dynamoose#readme",
+  "homepage": "https://dynamoosejs.com",
   "directories": {
     "doc": "docs"
   },
@@ -25,8 +25,8 @@
     "build:watch": "npm run build -- -w",
     "test:nocoverage": "mocha",
     "test": "nyc npm run test:nocoverage",
-    "test:debug": "npm run test:nocoverage -- --inspect=9229",
-    "test:debug:breakpoint": "npm run test:nocoverage -- --inspect-brk=9229",
+    "test:debug": "npm run test:nocoverage -- --no-timeout --inspect=9229",
+    "test:debug:breakpoint": "npm run test:nocoverage -- --no-timeout --inspect-brk=9229",
     "lint": "eslint . --ext .ts,.js --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
     "site:install": "cd docs && npm install",
@@ -54,9 +54,9 @@
   "dependencies": {
     "@types/node": "^13.13.4",
     "@types/source-map-support": "^0.5.1",
-    "aws-sdk": "^2.665.0",
+    "aws-sdk": "^2.668.0",
     "source-map-support": "^0.5.19",
-    "uuid": "^7.0.3"
+    "uuid": "^8.0.0"
   },
   "license": "Unlicense",
   "keywords": [
@@ -88,5 +88,15 @@
   },
   "files": [
     "dist"
+  ],
+  "funding": [
+    {
+      "type": "github-sponsors",
+      "url": "https://github.com/sponsors/fishcharlie"
+    },
+    {
+      "type": "opencollective",
+      "url": "https://opencollective.com/dynamoose"
+    }
   ]
 }

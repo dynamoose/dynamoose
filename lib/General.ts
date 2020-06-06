@@ -1,5 +1,5 @@
-import { Document } from "./Document";
-import { Model } from "./Model";
+import {Document} from "./Document";
+import {Model} from "./Model";
 
 // - General
 export type CallbackType<R, E> = (error?: E | null, response?: R) => void;
@@ -17,4 +17,9 @@ export type ModelType<T extends Document> = T & Model<T> & ModelDocumentConstruc
 export interface DocumentArray<T> extends Array<T> {
 	populate: () => Promise<DocumentArray<T>>;
 	toJSON: () => ObjectType;
+}
+
+export enum SortOrder {
+	ascending = "ascending",
+	descending = "descending"
 }

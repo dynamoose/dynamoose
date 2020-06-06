@@ -20,5 +20,5 @@ module.exports = {
 		"Other": [
 			"other/FAQ"
 		]
-	},
+	}
 };

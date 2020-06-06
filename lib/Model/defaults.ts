@@ -1,4 +1,4 @@
-import { ModelOptions, ModelOptionsOptional } from ".";
+import {ModelOptions, ModelOptionsOptional} from ".";
 
 export const original: ModelOptions = {
 	"create": true,
@@ -16,7 +16,7 @@ export const original: ModelOptions = {
 		}
 	},
 	"update": false,
-	"populate": false,
+	"populate": false
 	// "streamOptions": {
 	// 	"enabled": false,
 	// 	"type": undefined
@@ -26,7 +26,9 @@ export const original: ModelOptions = {
 };
 let customValue: ModelOptionsOptional = {};
 const customObject = {
-	"set": (val: ModelOptionsOptional): void => {customValue = val;},
+	"set": (val: ModelOptionsOptional): void => {
+		customValue = val;
+	},
 	"get": (): ModelOptionsOptional => customValue
 };
 

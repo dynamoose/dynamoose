@@ -1,7 +1,7 @@
-import { Document } from "./Document";
-import { DocumentArray, CallbackType } from "./General";
+import {Document} from "./Document";
+import {DocumentArray, CallbackType} from "./General";
 import utils = require("./utils");
-import { AWSError } from "aws-sdk";
+import {AWSError} from "aws-sdk";
 
 export interface PopulateSettings {
 	properties?: string[] | string | boolean;
@@ -16,7 +16,7 @@ export function PopulateDocument(this: Document, callback: CallbackType<Document
 export function PopulateDocument(this: Document, settings: PopulateSettings): Promise<Document>;
 export function PopulateDocument(this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
 export function PopulateDocument(this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): void;
-export function PopulateDocument(this: Document, settings?: PopulateSettings | CallbackType<Document, AWSError>, callback?: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): Promise<Document> | void {
+export function PopulateDocument (this: Document, settings?: PopulateSettings | CallbackType<Document, AWSError>, callback?: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): Promise<Document> | void {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {};
@@ -65,7 +65,7 @@ export function PopulateDocuments(this: DocumentArray<Document>): Promise<Docume
 export function PopulateDocuments(this: DocumentArray<Document>, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
 export function PopulateDocuments(this: DocumentArray<Document>, settings: PopulateSettings): Promise<DocumentArray<Document>>;
 export function PopulateDocuments(this: DocumentArray<Document>, settings: PopulateSettings, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
-export function PopulateDocuments(this: DocumentArray<Document>, settings?: PopulateSettings | CallbackType<DocumentArray<Document>, AWSError>, callback?: CallbackType<DocumentArray<Document>, AWSError>): Promise<DocumentArray<Document>> | void {
+export function PopulateDocuments (this: DocumentArray<Document>, settings?: PopulateSettings | CallbackType<DocumentArray<Document>, AWSError>, callback?: CallbackType<DocumentArray<Document>, AWSError>): Promise<DocumentArray<Document>> | void {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {};

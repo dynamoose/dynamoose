@@ -86,6 +86,8 @@ This function will limit which attributes DynamoDB returns for each item in the 
 Cat.query("name").eq("Will").attributes(["id", "name"]); // Return all documents but only return the `id` & `name` properties for each item
 ```
 
+This function uses the `ProjectionExpression` DynamoDB property to save bandwidth and not send the entire item over the wire.
+
 ## query.count()
 
 Instead of returning an array of documents this function will cause the query operation to return a special object with the count information for the query. The response you will receive from the query operation with this setting will be an object with the properties `count` & `queriedCount`, which have the same values as described in [`query.exec([callback])`](#queryexeccallback).
@@ -112,6 +114,22 @@ This causes the query to be run on a specific index as opposed to the default ta
 ```js
 Cat.query("name").eq("Will").using("name-index"); // Run the query on the `name-index` index
 ```
+
+## query.sort(order)
+
+This function sorts the documents you receive back by the rangeKey. By default, if not provided, it will sort in ascending order.
+
+The order parameter must be a string either equal to `ascending` or `descending`.
+
+```js
+Cat.query("name").eq("Will").sort("ascending");
+```
+
+```js
+Cat.query("name").eq("Will").sort("descending");
+```
+
+Under the hood this sets the `ScanIndexForward` property when making the request to DynamoDB. This ensures sorting is done on the database side to optimize results.
 
 ## query.all([delay[, max]])
 

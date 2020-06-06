@@ -78,7 +78,9 @@ describe("Populate", () => {
 					});
 
 					it("Should throw error if error from AWS", () => {
-						promiseFunction = () => {throw "ERROR";};
+						promiseFunction = () => {
+							throw "ERROR";
+						};
 
 						const obj = new User({"id": 2, "name": "Tim", "parent": 1});
 						const input = populateType.name === "PopulateDocuments" ? Object.assign([obj], {"populate": Populate.PopulateDocuments}) : obj;

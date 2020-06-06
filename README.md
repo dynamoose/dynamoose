@@ -12,11 +12,17 @@
 	<a href="https://www.npmjs.com/package/dynamoose">
 		<img src="https://img.shields.io/npm/dw/dynamoose" alt="npm Downloads">
 	</a>
+	<a href="https://github.com/dynamoose/dynamoose/blob/master/SPONSOR.md">
+		<img src="https://img.shields.io/badge/sponsor-Dynamoose-brightgreen" alt="Sponsor Dynamoose">
+	</a>
 	<a href="https://github.com/dynamoose/dynamoose/actions">
 		<img src="https://github.com/dynamoose/dynamoose/workflows/CI/badge.svg" alt="CI">
 	</a>
 	<a href="https://coveralls.io/github/dynamoose/dynamoose?branch=master">
 		<img src="https://coveralls.io/repos/github/dynamoose/dynamoose/badge.svg?branch=master" alt="Coverage Status">
+	</a>
+	<a href="https://vercel.com?utc_source=dynamoose">
+		<img src="https://img.shields.io/badge/Website%20Previews-by%20Vercel-black" alt="Website Previews by Vercel">
 	</a>
 	<a href="https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY">
 		<img src="https://img.shields.io/badge/chat-on%20slack-informational.svg" alt="Slack Chat">
@@ -42,6 +48,7 @@ Take a look at our [website](https://dynamoosejs.com) for information about how 
 #### General
 
 - [Website](https://dynamoosejs.com)
+- [Sponsor](SPONSOR.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](CHANGELOG.md)
@@ -58,4 +65,4 @@ Below you will find the current branch strategy for the project. Work taking pla
 
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
-| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.1.0 | latest | - [Documentation](https://dynamoosejs.com) |
+| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.2.x | latest | - [Documentation](https://dynamoosejs.com) |

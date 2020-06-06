@@ -1,6 +1,6 @@
 The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save documents in the database.
 
-## dynamoose.model(name, schema[, config])
+## dynamoose.model(name, [schema][, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
@@ -14,6 +14,12 @@ const Cat = dynamoose.model("Cat", {"name": String}, {"create": false});
 
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
+```
+
+If you don't pass the `schema` parameter it is required that you have an existing model already registed with that name. This will use the existing model already registered.
+
+```js
+const Cat = dynamoose.model("Cat"); // Will reference existing model, or if no model exists already with name `Cat` it will throw an error.
 ```
 
 The `config` parameter is an object used to customize settings for the model.
@@ -131,6 +137,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
+| attributes | What document attributes should be retrieved & returned. This will use the underlying `ProjectionExpression` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
@@ -913,4 +920,67 @@ const user = new User();
 await user.setName();
 // OR
 user.setName((err) => {});
+```
+
+## Model.serializeMany(items[, serializer])
+
+This function takes in an array of `items` and serializes all of them. This function is very similar to [`document.serialize`](Document#documentserializeserializer) except it takes in an array of documents to serialize and returns an array of those documents.
+
+```js
+User.serializeMany(await User.scan().exec(), "myCustomSerializer");
+```
+
+## Model.serializer.add(name, serializer)
+
+This function adds a serializer to the model.
+
+The `serializer` parameter can be an object containing the following properties.
+
+| Name | Type | Description |
+| --- | --- | --- |
+| include | [string] | The properties you wish to include when serializing. |
+| exclude | [string] | The properties you wish to exclude when serializing. |
+| modify | (serialized: Object, original: Object) => Object | A function you want to use to modify the object in the serializer. The `serialized` parameter is the new object (after `include` & `exclude` have been applied). The `original` parameter is the original document (before `include` & `exclude` have been applied). |
+
+```js
+User.serializer.add("myCustomSerializer", {
+	"include": ["email"]
+});
+
+User.serializer.add("myCustomSerializer", {
+	"exclude": ["password"]
+});
+
+User.serializer.add("myCustomSerializer", {
+	"exclude": ["status"],
+	"modify": (serialized, original) => ({...serialized, "isActive": original.status === "active"})
+});
+```
+
+You can also pass an array into the `serializer` parameter, which acts as a shorthand for the `include` property.
+
+```js
+User.serializer.add("myCustomSerializer", ["id"]); // ["id"] is the same as {"include": ["id"]}
+```
+
+## Model.serializer.delete(name)
+
+This function will delete the serializer from the list of serializer on the model. If no existing serializer is assigned for that name, the function will do nothing and no error will be thrown.
+
+```js
+User.serializer.delete("myCustomSerializer");
+```
+
+## Model.serializer.default.set([name])
+
+This function sets the default serializer for the given model. By default the default serializer has the same behavior as [`document.toJSON`](Document#documenttojson). The default serializer will be used for [`Model.serializeMany`](#modelserializemanyitems-serializer) and [`document.serialize`](Document#documentserializeserializer) if you don't pass anything into the `serializer` parameter.
+
+```js
+User.serializer.default.set("myCustomSerializer");
+```
+
+You can revert back to the default serializer by calling this method with no arguments.
+
+```js
+User.serializer.default.set();
 ```
