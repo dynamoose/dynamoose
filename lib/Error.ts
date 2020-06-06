@@ -2,7 +2,7 @@ const makeError = (defaultMessage: string, errorName: string) => class CustomErr
 	name: string;
 	message: string;
 
-	constructor(message: string) {
+	constructor (message: string) {
 		super();
 		this.name = errorName;
 		this.message = message || defaultMessage;

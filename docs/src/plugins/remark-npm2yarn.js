@@ -8,33 +8,33 @@ const transformNode = (node) => {
 	return [
 		{
 			"type": "jsx",
-			"value": `<Tabs groupId="packageManager" defaultValue="npm" values={[{label: "npm", value: "npm"}, {label: "Yarn", value: "yarn"}]}><TabItem value="npm">`,
+			"value": "<Tabs groupId=\"packageManager\" defaultValue=\"npm\" values={[{label: \"npm\", value: \"npm\"}, {label: \"Yarn\", value: \"yarn\"}]}><TabItem value=\"npm\">"
 		},
 		{
 			"type": node.type,
 			"lang": node.lang,
-			"value": npmCode,
+			"value": npmCode
 		},
 		{
 			"type": "jsx",
-			"value": `</TabItem>\n<TabItem value="yarn">`,
+			"value": "</TabItem>\n<TabItem value=\"yarn\">"
 		},
 		{
 			"type": node.type,
 			"lang": node.lang,
-			"value": yarnCode,
+			"value": yarnCode
 		},
 		{
 			"type": "jsx",
-			"value": "</TabItem>\n</Tabs>",
-		},
+			"value": "</TabItem>\n</Tabs>"
+		}
 	];
 };
 
 const matchNode = (node) => node.type === "code" && node.meta === "npm2yarn";
 const nodeForImport = {
 	"type": "import",
-	"value": `import Tabs from "@theme/Tabs";\nimport TabItem from "@theme/TabItem";`,
+	"value": "import Tabs from \"@theme/Tabs\";\nimport TabItem from \"@theme/TabItem\";"
 };
 
 module.exports = () => {

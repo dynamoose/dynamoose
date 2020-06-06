@@ -12,6 +12,9 @@
 	<a href="https://www.npmjs.com/package/dynamoose">
 		<img src="https://img.shields.io/npm/dw/dynamoose" alt="npm Downloads">
 	</a>
+	<a href="https://github.com/dynamoose/dynamoose/blob/master/SPONSOR.md">
+		<img src="https://img.shields.io/badge/sponsor-Dynamoose-brightgreen" alt="Sponsor Dynamoose">
+	</a>
 	<a href="https://github.com/dynamoose/dynamoose/actions">
 		<img src="https://github.com/dynamoose/dynamoose/workflows/CI/badge.svg" alt="CI">
 	</a>
@@ -45,6 +48,7 @@ Take a look at our [website](https://dynamoosejs.com) for information about how 
 #### General
 
 - [Website](https://dynamoosejs.com)
+- [Sponsor](SPONSOR.md)
 - [Contributing Guide](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](CHANGELOG.md)
@@ -61,4 +65,4 @@ Below you will find the current branch strategy for the project. Work taking pla
 
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
-| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.1.0 | latest | - [Documentation](https://dynamoosejs.com) |
+| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.2.x | latest | - [Documentation](https://dynamoosejs.com) |

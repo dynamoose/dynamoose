@@ -398,8 +398,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							]
 						}
@@ -438,8 +442,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							]
 						},
@@ -450,8 +458,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "name",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "name",
+									"KeyType": "RANGE"
 								}
 							]
 						}
@@ -486,8 +498,12 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							]
 						}
@@ -756,8 +772,12 @@ describe("Schema", () => {
 							"IndexName": "ageLocalIndex",
 							"KeySchema": [
 								{
-									"AttributeName": "age",
+									"AttributeName": "id",
 									"KeyType": "HASH"
+								},
+								{
+									"AttributeName": "age",
+									"KeyType": "RANGE"
 								}
 							],
 							"Projection": {
@@ -807,7 +827,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				expect(await (new dynamoose.Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}}))).to.eql(test.output);
+				expect(await new dynamoose.Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}})).to.eql(test.output);
 			});
 		});
 	});
@@ -1095,7 +1115,7 @@ describe("Schema", () => {
 		tests.forEach((test) => {
 			it(test.name, async () => {
 				const schema = new dynamoose.Schema(test.schema);
-				const output = await (schema.getAttributeSettingValue(...test.input));
+				const output = await schema.getAttributeSettingValue(...test.input);
 				if (typeof output !== "function") {
 					expect(output).to.eql(test.output);
 				} else {

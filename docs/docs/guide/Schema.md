@@ -73,6 +73,7 @@ const schema = new dynamoose.Schema({
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
 | Schema | False | M | True | True |   | This will be converted to an Object type. |
+| Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
 
 Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
 
@@ -90,6 +91,78 @@ When using `saveUnknown` with a set, the type recognized by Dynamoose will be th
 Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
 For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute.
+
+## Model Types
+
+For Model types, you must pass in another model or `dynamoose.THIS` (to reference your own model).
+
+```js
+const userSchema = new dynamoose.Schema({
+	"id": String,
+	"name": String,
+	"parent": dynamoose.THIS
+});
+```
+
+```js
+const gameSchema = new dynamoose.Schema({
+	"id": String,
+	"state": String,
+	"user": User
+});
+```
+
+```js
+const gameSchema = new dynamoose.Schema({
+	"id": String,
+	"state": String,
+	"user": {
+		"type": Set,
+		"schema": [User] // Set is only valid if `User` does not have a `rangeKey`
+	}
+});
+```
+
+You can then set documents to be a Document instance of that Model, a value of the `hashKey` (if you don't have a `rangeKey`), or an object representing the `hashKey` & `rangeKey` (if you have a `rangeKey`).
+
+```js
+const dad = new User({
+	"id": 1,
+	"name": "Steve"
+});
+
+const user = new User({
+	"id": 2,
+	"name": "Bob",
+	"parent": dad
+});
+```
+
+```js
+const user = new User({
+	"id": 2,
+	"name": "Bob",
+	"parent": 1 // Only valid if you do not have a `rangeKey` on the model you are referencing
+});
+```
+
+```js
+const user = new User({
+	"id": 2,
+	"name": "Bob",
+	"parent": {
+		"pk": 1,
+		"sk": "random"
+	} // Only valid if you have a `rangeKey` on the model you are referencing
+});
+```
+
+You can then call [`document.populate`](Document#documentpopulatesettings-callback) to populate the instances with the documents.
+
+```js
+const user = await User.get(2); // {"id": 2, "name": "Bob", "parent": 1}
+const populatedUser = await user.populate(); // {"id": 2, "name": "Bob", "parent": {"id": 1, "name": "Steve"}}
+```
 
 ## Attribute Settings
 

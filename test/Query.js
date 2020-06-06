@@ -552,6 +552,35 @@ describe("Query", () => {
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
 
+				describe("Populate", () => {
+					it("Should have populate function on response", async () => {
+						queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+						const response = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
+						expect(response.populate).to.be.a("function");
+					});
+
+					it("Should autopopulate if model settings have populate set", async () => {
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"query": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+							}
+						});
+						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
+				});
+
 				it("Should throw error if no indexes exist on model", () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": String}));
@@ -734,7 +763,7 @@ describe("Query", () => {
 					"#a1": "age"
 				},
 				"ExpressionAttributeValues": {
-					":qhv": {"S": "Charlie"},
+					":qhv": {"S": "Charlie"}
 				},
 				"FilterExpression": "attribute_exists (#a1)",
 				"KeyConditionExpression": "#qha = :qhv"
@@ -752,7 +781,7 @@ describe("Query", () => {
 					"#a1": "age"
 				},
 				"ExpressionAttributeValues": {
-					":qhv": {"S": "Charlie"},
+					":qhv": {"S": "Charlie"}
 				},
 				"FilterExpression": "attribute_not_exists (#a1)",
 				"KeyConditionExpression": "#qha = :qhv"
@@ -1166,13 +1195,29 @@ describe("Query", () => {
 		it("Should send correct request on query.exec", async () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id"]).exec();
-			expect(queryParams.ProjectionExpression).to.eql("id");
+			expect(queryParams.ProjectionExpression).to.eql("#a1");
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#qha": "name"});
 		});
 
 		it("Should send correct request on query.exec with multiple attributes", async () => {
 			queryPromiseResolver = () => ({"Items": []});
 			await Model.query("name").eq("Charlie").attributes(["id", "name"]).exec();
-			expect(queryParams.ProjectionExpression).to.eql("id, name");
+			expect(queryParams.ProjectionExpression).to.eql("#a1, #qha");
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#qha": "name"});
+		});
+
+		it("Should send correct request on query.exec with multiple attributes and one filter", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").attributes(["id", "name", "favoriteNumber"]).exec();
+			expect(queryParams.ProjectionExpression).to.eql("#a1, #a2, #qha");
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#a2": "favoriteNumber", "#qha": "name"});
+		});
+
+		it("Should send correct request on scan.exec with multiple attributes and two filters", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").where("favoriteNumber").eq(1).attributes(["id", "name", "favoriteNumber"]).exec();
+			expect(queryParams.ProjectionExpression).to.eql("#a1, #a2, #qha");
+			expect(queryParams.ExpressionAttributeNames).to.eql({"#a1": "favoriteNumber", "#a2": "id", "#qha": "name"});
 		});
 	});
 
@@ -1315,7 +1360,7 @@ describe("Query", () => {
 		it("Should send correct result on query.exec", async () => {
 			let count = 0;
 			queryPromiseResolver = async () => {
-				const obj = ({"Items": [{"id": ++count}], "Count": 1, "QueriedCount": 2});
+				const obj = {"Items": [{"id": ++count}], "Count": 1, "QueriedCount": 2};
 				if (count < 2) {
 					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
 				}
