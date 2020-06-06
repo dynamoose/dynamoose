@@ -46,6 +46,18 @@ describe("utils.object.delete", () => {
 		{
 			"input": [{"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]}, "friends.1.name"],
 			"output": {"id": 1, "friends": [{"name": "Bob", "id": 1}, {}]}
+		},
+		{
+			"input": [{"hello": "world", "test": "data"}, ["test", "hello"]],
+			"output": {}
+		},
+		{
+			"input": [{"hello": "world", "test": "data", "random": "thing"}, ["test", "hello"]],
+			"output": {"random": "thing"}
+		},
+		{
+			"input": [{"hello": "world", "test": {"data1": "first", "data2": "item"}}, ["hello", "test.data1"]],
+			"output": {"test": {"data2": "item"}}
 		}
 	];
 

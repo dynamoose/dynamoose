@@ -2,6 +2,91 @@
 
 ---
 
+## Version 2.2.1
+
+This release fixes some minor bugs found in Dynamoose.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixed an issue with creation of local secondary indexes
+- Fixed an issue where specifying attributes to retrieve wouldn't work with reserved DynamoDB keywords
+
+### Other
+
+- Adding icons to website for GitHub & npm links
+
+---
+
+## Version 2.2.0
+
+This release adds a few key features to improve your Dynamoose workflow.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added support for `query.sort`
+- Added support for only passing model name into `dynamoose.model` and having it retrieve the registered model that was already registered previously
+- Added support for passing original value into `set` attribute setting function
+- Added attributes setting to `Model.get` to only retrieve certain attributes
+
+### Bug Fixes
+
+- Fixed an issue where `document.original` would return a DynamoDB object and not a parsed object in certain cases
+
+---
+
+## Version 2.1.3
+
+This release fixes some minor bugs.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixing issue where creating multiple indexes would fail when creating or updating table
+- Fixing issue where `Model.update` with single object and `rangeKey` would fail
+
+---
+
+## Version 2.1.2
+
+This release fixes a few minor bugs with `Model.update`.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixed an issue where `Model.update` using `$REMOVE` wouldn't work on non defined attributes using `saveUnknown`
+- Fixed an issue where `Model.update` would throw an AWS error `ExpressionAttributeValues must not be empty` when using `$REMOVE`
+
+---
+
+## Version 2.1.1
+
+This release fixes some bugs related to TypeScript and improves the website with more accurate information.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- 🔍 Added search functionality to website
+
+### Bug Fixes
+
+- TypeScript Fixes
+	- Removed esModuleInterop from tsconfig.json
+	- Allowing Schema Index Throughput to be Optional
+
+### Documentation
+
+- Add migration section from v1 to v2 to website FAQ page
+- Fixed ES Modules Import Documentation
+
+---
+
 ## Version 2.1.0
 
 This release adds beta support for TypeScript typings.
@@ -67,6 +152,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 - `Model.transaction.conditionCheck` has been renamed to `Model.transaction.condition`
 - `Model.transaction.condition` now accepts a conditional instance instead of an object to specify the conditional you wish to run
 - In the past the `saveUnknown` option for attribute names would handle all nested properties. Now you must use `*` to indicate one level of wildcard or `**` to indicate infinate levels of wildcard. So if you have an object property (`address`) and want to parse one level of values (no sub objects) you can use `address.*`, or `address.**` to all for infinate levels of values (including sub objects)
+- In the past non-string type properties would be implicitly coerced into strings with a call to their `toString()` methods when saved as `String` type attributes. This will now throw a `TypeMismatch` error. Strings should be converted before saving.
 - `useNativeBooleans` & `useDocumentTypes` have been removed from the Model settings
 - `scan.count()` has been removed, and `scan.counts()` has been renamed to `scan.count()`.
 - The attribute types `Array` & `Object` in Dynamoose v1 don't work without a `schema` option in v2

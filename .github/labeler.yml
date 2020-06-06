@@ -10,3 +10,4 @@ changed:project:
   - "*"
   - internal/**/*
   - .github/**/*
+  - .vscode/**/*

@@ -111,7 +111,7 @@ describe("utils.dynamoose.index_changes", () => {
 				"name": "nameGlobalIndex2",
 				"type": "delete"
 			}
-		]},
+		]}
 	];
 
 	tests.forEach((test) => {
