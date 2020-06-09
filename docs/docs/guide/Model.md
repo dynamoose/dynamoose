@@ -67,14 +67,14 @@ The default object is listed below.
 }
 ```
 
-## dynamoose.Model.defaults
+## dynamoose.model.defaults.set(customDefaults)
 
-The `dynamoose.Model.defaults` object is a property you can edit to set default values for the config object for new models that are created. Ensure that you set this property before initializing your models to ensure the defaults are applied to your models.
+This function is used to set default values for the config object for new models that are created. Ensure that you set this before initializing your models to ensure the defaults are applied to your models.
 
 The priority of how the configuration gets set for new models is:
 
 - Configuration object passed into model creation
-- Custom defaults provided by `dynamoose.Model.defaults`
+- Custom defaults provided by `dynamoose.model.defaults.set(customDefaults)`
 - Dynamoose internal defaults
 
 In the event that properties are not passed into the configuration object or custom defaults, the Dynamoose internal defaults will be used.
@@ -82,15 +82,15 @@ In the event that properties are not passed into the configuration object or cus
 You can set the defaults by setting the property to a custom object:
 
 ```js
-dynamoose.Model.defaults = {
+dynamoose.model.defaults.set({
 	"prefix": "MyApplication_"
-};
+});
 ```
 
 In order to revert to the default and remove custom defaults you can set it to an empty object:
 
 ```js
-dynamoose.Model.defaults = {};
+dynamoose.model.defaults.set({});
 ```
 
 ## Model.table.create.request()
