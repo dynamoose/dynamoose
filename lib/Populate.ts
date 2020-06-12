@@ -2,6 +2,7 @@ import {Document} from "./Document";
 import {DocumentArray, CallbackType} from "./General";
 import utils = require("./utils");
 import {AWSError} from "aws-sdk";
+import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
 
 export interface PopulateSettings {
 	properties?: string[] | string | boolean;
@@ -27,10 +28,12 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 
 	const {model} = this;
 	const {schema} = model;
-	const modelAttributes = schema.attributes().filter((prop) => schema.getAttributeTypeDetails(prop).name === "Model");
+	const modelAttributes = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model") : obj.details.name === "Model").map((obj) => obj.prop);
 	const localSettings = settings;
 	const promise = Promise.all(modelAttributes.map(async (prop) => {
-		const {typeSettings} = schema.getAttributeTypeDetails(prop);
+		const typeDetails = schema.getAttributeTypeDetails(prop);
+		const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
+		const {typeSettings} = typeDetail;
 		// TODO: `subModel` is currently any, we should fix that
 		const subModel = typeof typeSettings.model === "object" ? model.Document as any : typeSettings.model;
 

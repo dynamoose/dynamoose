@@ -277,11 +277,12 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 	}
 
 	const returnObject = {...object};
-	const schemaAttributes = model.schema.attributes();
+	const schemaAttributes = model.schema.attributes(returnObject);
 
 	// Type check
 	const validParents = []; // This array is used to allow for set contents to not be type checked
 	const keysToDelete = [];
+	const typeIndexOptionMap = model.schema.getTypePaths(returnObject, settings);
 	const checkTypeFunction = (item): void => {
 		const [key, value] = item;
 		if (validParents.find((parent) => key.startsWith(parent.key) && (parent.infinite || key.split(".").length === parent.key.split(".").length + 1))) {
@@ -290,13 +291,12 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 		const genericKey = key.replace(/\.\d+/gu, ".0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
 		const existsInSchema = schemaAttributes.includes(genericKey);
 		if (existsInSchema) {
-			const {isValidType, typeDetails} = utils.dynamoose.getValueTypeCheckResult(model.schema, value, genericKey, settings, {"standardKey": true});
-			const typeDetailsName: string = typeDetails.dynamicName ? typeDetails.dynamicName() : typeDetails.name.toLowerCase();
+			const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(model.schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
 			if (!isValidType) {
-				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsName}, instead found type ${typeof value}.`);
-			} else if (typeDetails.isSet || typeDetails.name.toLowerCase() === "model") {
+				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof value}.`);
+			} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model") {
 				validParents.push({key, "infinite": true});
-			} else if (/*typeDetails.dynamodbType === "M" || */typeDetails.dynamodbType === "L") {
+			} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
 				// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
 				value.forEach((subValue, index: number, array: any[]) => {
 					if (index === 0 || typeof subValue !== typeof array[0]) {
@@ -324,9 +324,9 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 				const defaultValue = await model.schema.defaultCheck(key, value as ValueType, settings);
 				const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
 				if (!isDefaultValueUndefined) {
-					const {isValidType, typeDetails} = utils.dynamoose.getValueTypeCheckResult(model.schema, defaultValue, key, settings);
+					const {isValidType, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(model.schema, defaultValue, key, settings, {typeIndexOptionMap});
 					if (!isValidType) {
-						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetails.name.toLowerCase()}, instead found type ${typeof defaultValue}.`);
+						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof defaultValue}.`);
 					} else {
 						utils.object.set(returnObject, key, defaultValue);
 					}
@@ -340,7 +340,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const typeDetails = model.schema.getAttributeTypeDetails(key) as DynamoDBTypeResult;
+				const typeDetails = utils.dynamoose.getValueTypeCheckResult(model.schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails as DynamoDBTypeResult;
 				const {customType} = typeDetails;
 				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
@@ -356,7 +356,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 		const [key, value] = item;
 		let typeDetails;
 		try {
-			typeDetails = model.schema.getAttributeTypeDetails(key);
+			typeDetails = utils.dynamoose.getValueTypeCheckResult(model.schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails;
 		} catch (e) {
 			const {Schema} = require("./Schema");
 			typeDetails = Schema.attributeTypes.findTypeForValue(value, settings.type, settings);
@@ -371,8 +371,9 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
 				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
+				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
 				const isValueUndefined = typeof value === "undefined" || value === null;
-				if (modifierFunction && !isValueUndefined) {
+				if (modifierFunctionExists && !isValueUndefined) {
 					const oldValue = object.original ? utils.object.get(object.original(), key) : undefined;
 					utils.object.set(returnObject, key, await modifierFunction(value, oldValue));
 				}
