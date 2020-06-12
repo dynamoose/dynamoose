@@ -33,7 +33,8 @@ describe("Populate", () => {
 						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob"}}, "documents": [{"id": 1, "name": "Bob"}]},
 						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": {"id": 3, "name": "Evan"}}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}]},
 						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": "*"}},
-						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
+						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}},
+						{"schema": {"id": Number, "name": String, "parent": [dynamoose.THIS, String]}, "input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
 					]
 				},
 				{
@@ -69,6 +70,10 @@ describe("Populate", () => {
 
 					populateType.tests.forEach((test) => {
 						it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, async () => {
+							if (test.schema) {
+								User = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
+							}
+
 							promiseFunction = (param) => ({"Item": aws.converter().marshall(test.documents.find((doc) => doc.id === parseInt(param.Key.id.N)))});
 
 							const input = Array.isArray(test.input) ? Object.assign(test.input.map((item) => new User(item)), {"populate": Populate.PopulateDocuments, "toJSON": utils.dynamoose.documentToJSON}) : new User(test.input);
