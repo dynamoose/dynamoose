@@ -326,7 +326,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 				if (!isDefaultValueUndefined) {
 					const {isValidType, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(model.schema, defaultValue, key, settings, {typeIndexOptionMap});
 					if (!isValidType) {
-						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.name.toLowerCase())}, instead found type ${typeof defaultValue}.`);
+						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof defaultValue}.`);
 					} else {
 						utils.object.set(returnObject, key, defaultValue);
 					}
@@ -371,8 +371,9 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
 				const modifierFunction = await model.schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
+				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
 				const isValueUndefined = typeof value === "undefined" || value === null;
-				if (modifierFunction && !isValueUndefined) {
+				if (modifierFunctionExists && !isValueUndefined) {
 					const oldValue = object.original ? utils.object.get(object.original(), key) : undefined;
 					utils.object.set(returnObject, key, await modifierFunction(value, oldValue));
 				}

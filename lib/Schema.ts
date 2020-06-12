@@ -120,7 +120,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 				"fromDynamo": (val: SetValueType): Set<ValueType> => new Set(val.values)
 			};
 			if (this.dynamicName) {
-				result.set.dynamicName = (): string => this.dynamicName(typeSettings);
+				result.set.dynamicName = (): string => `${this.dynamicName(typeSettings)} Set`;
 			}
 			if (this.customType) {
 				result.set.customType = {
@@ -177,8 +177,8 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 		new DynamoDBType({"name": "Model", "customDynamoName": (typeSettings?: AttributeDefinitionTypeSettings): string => {
 			const schema = typeSettings.model.Model.schema;
 			const hashKey = schema.getHashKey();
-			const typeDetails = schema.getAttributeTypeDetails(hashKey);
-			return Array.isArray(typeDetails) ? (typeDetails as any).map((detail) => detail.name) : typeDetails.name;
+			const typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult = schema.getAttributeTypeDetails(hashKey) as DynamoDBTypeResult | DynamoDBSetTypeResult; // This has no potiental of being an array because a hashKey is not allowed to have multiple type options
+			return typeDetails.name;
 		}, "dynamicName": (typeSettings?: AttributeDefinitionTypeSettings): string => typeSettings.model.Model.name, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
 			const schema = typeSettings.model.Model.schema;
 			const hashKey = schema.getHashKey();

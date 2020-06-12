@@ -28,7 +28,7 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 
 	const {model} = this;
 	const {schema} = model;
-	const modelAttributes = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => obj.details.name === "Model").map((obj) => obj.prop);
+	const modelAttributes = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model") : obj.details.name === "Model").map((obj) => obj.prop);
 	const localSettings = settings;
 	const promise = Promise.all(modelAttributes.map(async (prop) => {
 		const typeDetails = schema.getAttributeTypeDetails(prop);
