@@ -2459,7 +2459,7 @@ describe("Document", () => {
 					return {"id": Number, "data": [{"type": Set, "schema": [Item]}, String]};
 				},
 				"error": new Error.ValidationError("Expected data to be of type Item Set, string, instead found type boolean.")
-			},
+			}
 		];
 
 		tests.forEach((test) => {
@@ -2469,7 +2469,7 @@ describe("Document", () => {
 					if (test.model) {
 						model = dynamoose.model(...test.model);
 					} else {
-						model = dynamoose.model("User", (typeof test.schema === "function" ? test.schema() : test.schema), {"create": false, "waitForActive": false});
+						model = dynamoose.model("User", typeof test.schema === "function" ? test.schema() : test.schema, {"create": false, "waitForActive": false});
 					}
 
 					input = !Array.isArray(test.input) ? [test.input] : test.input;
