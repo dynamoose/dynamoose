@@ -1986,6 +1986,14 @@ describe("Document", () => {
 				"schema": {"id": {"type": Number, "default": 0}}
 			},
 			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "defaults": true}],
+				"schema": () => {
+					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
+					return {"id": Number, "data": {"type": Item, "default": true}};
+				},
+				"error": new Error.ValidationError("Expected data to be of type Item, instead found type boolean.")
+			},
+			{
 				"input": [{"id": "test"}, {"validate": true}],
 				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
@@ -2435,7 +2443,23 @@ describe("Document", () => {
 				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": {"id": Number, "data": [String, {"value": Date}]},
 				"output": {"id": 1, "data": "hello world"}
-			}
+			},
+			{
+				"input": [{"id": 1, "data": true}, {"type": "fromDynamo"}],
+				"schema": () => {
+					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
+					return {"id": Number, "data": [Item, String]};
+				},
+				"error": new Error.ValidationError("Expected data to be of type Item, string, instead found type boolean.")
+			},
+			{
+				"input": [{"id": 1, "data": true}, {"type": "fromDynamo"}],
+				"schema": () => {
+					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
+					return {"id": Number, "data": [{"type": Set, "schema": [Item]}, String]};
+				},
+				"error": new Error.ValidationError("Expected data to be of type Item Set, string, instead found type boolean.")
+			},
 		];
 
 		tests.forEach((test) => {
@@ -2445,7 +2469,7 @@ describe("Document", () => {
 					if (test.model) {
 						model = dynamoose.model(...test.model);
 					} else {
-						model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
+						model = dynamoose.model("User", (typeof test.schema === "function" ? test.schema() : test.schema), {"create": false, "waitForActive": false});
 					}
 
 					input = !Array.isArray(test.input) ? [test.input] : test.input;
