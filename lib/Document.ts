@@ -374,10 +374,10 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 
 				return {
 					key,
-					"type": typeDetails
+					"type": Array.isArray(typeDetails) ? typeDetails[0] : typeDetails
 				};
 			} catch (e) {} // eslint-disable-line no-empty
-		}).filter((item) => item.type.name === "Combine").forEach((item) => {
+		}).filter((item) => item?.type.name === "Combine").forEach((item) => {
 			const {key, type} = item;
 
 			const value = type.typeSettings.attributes.map((attribute) => utils.object.get(returnObject, attribute)).filter((value) => typeof value !== "undefined" && value !== null).join(type.typeSettings.seperator);

@@ -18,8 +18,6 @@ export interface DynamoDBSetTypeResult {
 
 	toDynamo: (val: GeneralValueType[]) => SetValueType;
 	fromDynamo: (val: SetValueType) => Set<ValueType>;
-
-	typeSettings?: AttributeDefinitionTypeSettings;
 }
 export interface DynamoDBTypeResult {
 	name: string;
@@ -32,8 +30,6 @@ export interface DynamoDBTypeResult {
 
 	nestedType: boolean;
 	set?: DynamoDBSetTypeResult;
-
-	typeSettings?: AttributeDefinitionTypeSettings;
 }
 
 interface DynamoDBTypeCreationObject {
@@ -180,7 +176,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 				}
 			})
 		}, "jsType": Date}),
-		new DynamoDBType({"name": "Combine", "dynamodbType": stringType, "set": false, "jsType": String})
+		new DynamoDBType({"name": "Combine", "dynamodbType": stringType, "set": false, "jsType": String}),
 		new DynamoDBType({"name": "Model", "customDynamoName": (typeSettings?: AttributeDefinitionTypeSettings): string => {
 			const schema = typeSettings.model.Model.schema;
 			const hashKey = schema.getHashKey();
