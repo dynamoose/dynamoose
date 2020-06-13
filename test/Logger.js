@@ -188,15 +188,15 @@ describe("Logger", () => {
 	describe("Emitter", () => {
 		let events = [];
 		class CustomProvider {
-			log(event) {
+			log (event) {
 				events.push(event);
 			}
 		}
 		class CustomProviderMessage {
-			constructor() {
+			constructor () {
 				this.type = "string";
 			}
-			log(event) {
+			log (event) {
 				events.push(event);
 			}
 		}
@@ -264,7 +264,7 @@ describe("Logger", () => {
 					{"filter": "error-", "level": "debug", "outcome": false},
 					{"filter": ["error", "info"], "level": "error", "outcome": false},
 					{"filter": ["error", "info"], "level": "info", "outcome": false},
-					{"filter": ["error", "info"], "level": "fatal", "outcome": true},
+					{"filter": ["error", "info"], "level": "fatal", "outcome": true}
 				];
 				tests.forEach((test) => {
 					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.level}`, () => {
@@ -297,7 +297,7 @@ describe("Logger", () => {
 					{"filter": "random:*", "category": "other", "outcome": true},
 					{"filter": "random:*", "category": "random", "outcome": true},
 					{"filter": "random:**", "category": "random", "outcome": true},
-					{"filter": "random:*:test", "category": "random:test", "outcome": true},
+					{"filter": "random:*:test", "category": "random:test", "outcome": true}
 				];
 				tests.forEach((test) => {
 					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.category}`, () => {
