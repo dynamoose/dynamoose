@@ -700,7 +700,7 @@ export class Model<T extends DocumentCarrier> {
 				return obj;
 			})()));
 
-			this.schema.attributes().map((attribute) => ({attribute, "type": this.schema.getAttributeTypeDetails(attribute)})).filter((details) => details.type.name === "Combine").forEach((details) => {
+			this.schema.attributes().map((attribute) => ({attribute, "type": this.schema.getAttributeTypeDetails(attribute)})).map((details) => ({...details, "type": Array.isArray(details.type) ? details.type[0] : details.type})).filter((details) => details.type.name === "Combine").forEach((details) => {
 				const {invalidAttributes} = details.type.typeSettings.attributes.reduce((result, attribute) => {
 					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 					const doesExist = Boolean(expressionAttributeNameEntry);
