@@ -474,7 +474,7 @@ export class Model<T extends DocumentCarrier> {
 			"RequestItems": {
 				[this.name]: await Promise.all(documents.map(async (document) => ({
 					"PutRequest": {
-						"Item": await new this.Document(document as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]})
+						"Item": await new this.Document(document as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]})
 					}
 				})))
 			}
@@ -600,7 +600,6 @@ export class Model<T extends DocumentCarrier> {
 		}
 
 		let index = 0;
-		// TODO: change the line below to not be partial
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
@@ -700,6 +699,40 @@ export class Model<T extends DocumentCarrier> {
 
 				return obj;
 			})()));
+
+			this.schema.attributes().map((attribute) => {
+				const type = this.schema.getAttributeTypeDetails(attribute);
+
+				if (Array.isArray(type)) {
+					throw new CustomError.InvalidParameter("Combine type is not allowed to be used with multiple types.");
+				}
+
+				return {attribute, type};
+			}).filter((details) => details.type.name === "Combine").forEach((details) => {
+				const {invalidAttributes} = details.type.typeSettings.attributes.reduce((result, attribute) => {
+					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
+					const doesExist = Boolean(expressionAttributeNameEntry);
+					const isValid = doesExist && [...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", ").includes(expressionAttributeNameEntry[0]);
+
+					if (!isValid) {
+						result.invalidAttributes.push(attribute);
+					}
+
+					return result;
+				}, {"invalidAttributes": []});
+
+				if (invalidAttributes.length > 0) {
+					throw new CustomError.InvalidParameter(`You must update all or none of the combine attributes when running Model.update. Missing combine attributes: ${invalidAttributes.join(", ")}.`);
+				} else {
+					const nextIndex = Math.max(...Object.keys(returnObject.ExpressionAttributeNames).map((key) => parseInt(key.replace("#a", "")))) + 1;
+					returnObject.ExpressionAttributeNames[`#a${nextIndex}`] = details.attribute;
+					returnObject.ExpressionAttributeValues[`:v${nextIndex}`] = details.type.typeSettings.attributes.map((attribute) => {
+						const [expressionAttributeNameKey] = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
+						return returnObject.ExpressionAttributeValues[expressionAttributeNameKey.replace("#a", ":v")];
+					}).filter((value) => typeof value !== "undefined" && value !== null).join(details.type.typeSettings.seperator);
+					returnObject.UpdateExpression.SET.push(`#a${nextIndex} = :v${nextIndex}`);
+				}
+			});
 
 			await Promise.all(this.schema.attributes().map(async (attribute) => {
 				const defaultValue = await this.schema.defaultCheck(attribute, undefined, {"forceDefault": true});
@@ -850,7 +883,8 @@ export class Model<T extends DocumentCarrier> {
 			settings = {"return": "document"};
 		}
 
-		const documentify = (document: DynamoDB.AttributeMap): Promise<DocumentCarrier> => new this.Document(document as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+		const conformToSchemaSettings: DocumentObjectFromSchemaSettings = {"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"};
+		const documentify = (document: DynamoDB.AttributeMap): Promise<DocumentCarrier> => new this.Document(document as any, {"type": "fromDynamo"}).conformToSchema(conformToSchemaSettings);
 
 		const getItemParams: DynamoDB.GetItemInput = {
 			"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
