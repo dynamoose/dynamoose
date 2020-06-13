@@ -117,7 +117,8 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 					}
 				},
 				"toDynamo": (val: GeneralValueType[]): SetValueType => ({"wrapperName": "Set", "type": typeName, "values": [...val]}),
-				"fromDynamo": (val: SetValueType): Set<ValueType> => new Set(val.values)
+				"fromDynamo": (val: SetValueType): Set<ValueType> => new Set(val.values),
+				typeSettings
 			};
 			if (this.dynamicName) {
 				result.set.dynamicName = (): string => `${this.dynamicName(typeSettings)} Set`;
@@ -146,13 +147,14 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 
 const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 	const numberType = new DynamoDBType({"name": "Number", "dynamodbType": "N", "set": true, "jsType": "number"});
+	const stringType = new DynamoDBType({"name": "String", "dynamodbType": "S", "set": true, "jsType": "string"});
 	return [
 		new DynamoDBType({"name": "Buffer", "dynamodbType": "B", "set": true, "jsType": Buffer, "customDynamoName": "Binary"}),
 		new DynamoDBType({"name": "Boolean", "dynamodbType": "BOOL", "jsType": "boolean"}),
 		new DynamoDBType({"name": "Array", "dynamodbType": "L", "jsType": {"func": Array.isArray}, "nestedType": true}),
 		new DynamoDBType({"name": "Object", "dynamodbType": "M", "jsType": {"func": (val): boolean => Boolean(val) && val.constructor === Object && (val.wrapperName !== "Set" || Object.keys(val).length !== 3 || !val.type || !val.values)}, "nestedType": true}),
 		numberType,
-		new DynamoDBType({"name": "String", "dynamodbType": "S", "set": true, "jsType": "string"}),
+		stringType,
 		new DynamoDBType({"name": "Date", "dynamodbType": numberType, "customType": {
 			"functions": (typeSettings: AttributeDefinitionTypeSettings): {toDynamo: (val: Date) => number; fromDynamo: (val: number) => Date; isOfType: (val: Date, type: "toDynamo" | "fromDynamo") => boolean} => ({
 				"toDynamo": (val: Date): number => {
@@ -174,6 +176,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 				}
 			})
 		}, "jsType": Date}),
+		new DynamoDBType({"name": "Combine", "dynamodbType": stringType, "set": false, "jsType": String}),
 		new DynamoDBType({"name": "Model", "customDynamoName": (typeSettings?: AttributeDefinitionTypeSettings): string => {
 			const schema = typeSettings.model.Model.schema;
 			const hashKey = schema.getHashKey();
@@ -241,6 +244,8 @@ interface IndexDefinition {
 interface AttributeDefinitionTypeSettings {
 	storage?: "miliseconds" | "seconds";
 	model?: ModelType<Document>;
+	attributes?: string[];
+	seperator?: string;
 }
 interface AttributeDefinition {
 	type: AttributeType | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType}; // TODO add support for this being an object

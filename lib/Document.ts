@@ -4,7 +4,7 @@ import utils = require("./utils");
 import Error = require("./Error");
 import Internal = require("./Internal");
 import {Model, ModelExpiresSettings} from "./Model";
-import {DynamoDBTypeResult, TimestampObject} from "./Schema";
+import {DynamoDBTypeResult, TimestampObject, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
@@ -95,9 +95,9 @@ export class Document {
 	// Original
 	original (): ObjectType | null {
 		return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
+	// toJSON
 	}
 
-	// toJSON
 	toJSON (): ObjectType {
 		return utils.dynamoose.documentToJSON.bind(this)();
 	}
@@ -133,7 +133,7 @@ export class Document {
 		}
 
 		const localSettings: DocumentSaveSettings = settings;
-		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
+		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
 			const putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
 				"TableName": this.model.name
@@ -267,6 +267,7 @@ export interface DocumentObjectFromSchemaSettings {
 	required?: boolean | "nested";
 	enum?: boolean;
 	populate?: boolean;
+	combine?: boolean;
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 }
@@ -322,7 +323,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 				utils.object.set(returnObject, key, undefined);
 			} else {
 				const defaultValue = await model.schema.defaultCheck(key, value as ValueType, settings);
-				const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
+				const isDefaultValueUndefined = Array.isArray(defaultValue) ? defaultValue.some((defaultValue) => typeof defaultValue === "undefined" || defaultValue === null) : typeof defaultValue === "undefined" || defaultValue === null;
 				if (!isDefaultValueUndefined) {
 					const {isValidType, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(model.schema, defaultValue, key, settings, {typeIndexOptionMap});
 					if (!isValidType) {
@@ -366,6 +367,29 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			utils.object.set(returnObject, key, typeDetails[settings.type](value));
 		}
 	});
+	if (settings.combine) {
+		schemaAttributes.map((key) => {
+			try {
+				const typeDetails = model.schema.getAttributeTypeDetails(key);
+
+				return {
+					key,
+					"type": typeDetails
+				};
+			} catch (e) {} // eslint-disable-line no-empty
+		}).map((obj: {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]} | undefined): {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult} => {
+			if (obj && Array.isArray(obj.type)) {
+				throw new Error.InvalidParameter("Combine type is not allowed to be used with multiple types.");
+			}
+
+			return obj as any;
+		}).filter((item) => item?.type.name === "Combine").forEach((item) => {
+			const {key, type} = item;
+
+			const value = type.typeSettings.attributes.map((attribute) => utils.object.get(returnObject, attribute)).filter((value) => typeof value !== "undefined" && value !== null).join(type.typeSettings.seperator);
+			utils.object.set(returnObject, key, value);
+		});
+	}
 	if (settings.modifiers) {
 		await Promise.all(settings.modifiers.map((modifier) => {
 			return Promise.all(Document.attributesWithSchema(returnObject, model).map(async (key) => {
