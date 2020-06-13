@@ -2330,6 +2330,11 @@ describe("Document", () => {
 				"input": [{"id": 1, "data1": "hello"}, {"type": "toDynamo"}],
 				"output": {"id": 1, "data1": "hello"}
 			},
+			{
+				"schema": {"id": Number, "other": [{"type": "Combine"}, String]},
+				"input": [{"id": 1}, {"type": "toDynamo", "combine": true}],
+				"error": new Error.InvalidParameter("Combine type is not allowed to be used with multiple types")
+			},
 			// Multiple Types
 			{
 				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],

@@ -3473,6 +3473,13 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"data1": "Charlie"})).to.be.rejectedWith("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: data2.");
 				});
 
+				it("Should throw error if using multiple types with combine type", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": ["Combine", "String"]});
+
+					return expect(callType.func(User).bind(User)({"id": 1}, {"data1": "Charlie", "data2": "Fish"})).to.be.rejectedWith("Combine type is not allowed to be used with multiple types.");
+				});
+
 				it("Should send correct parameters when updating all combine properties", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});

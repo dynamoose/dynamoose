@@ -4,7 +4,7 @@ import utils = require("./utils");
 import Error = require("./Error");
 import Internal = require("./Internal");
 import {Model, ModelExpiresSettings} from "./Model";
-import {DynamoDBTypeResult, TimestampObject} from "./Schema";
+import {DynamoDBTypeResult, TimestampObject, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
@@ -323,7 +323,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 				utils.object.set(returnObject, key, undefined);
 			} else {
 				const defaultValue = await model.schema.defaultCheck(key, value as ValueType, settings);
-				const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
+				const isDefaultValueUndefined = Array.isArray(defaultValue) ? defaultValue.some((defaultValue) => typeof defaultValue === "undefined" || defaultValue === null) : typeof defaultValue === "undefined" || defaultValue === null;
 				if (!isDefaultValueUndefined) {
 					const {isValidType, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(model.schema, defaultValue, key, settings, {typeIndexOptionMap});
 					if (!isValidType) {
@@ -374,9 +374,15 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 
 				return {
 					key,
-					"type": Array.isArray(typeDetails) ? typeDetails[0] : typeDetails
+					"type": typeDetails
 				};
 			} catch (e) {} // eslint-disable-line no-empty
+		}).map((obj: {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]} | undefined): {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult} => {
+			if (obj && Array.isArray(obj.type)) {
+				throw new Error.InvalidParameter("Combine type is not allowed to be used with multiple types.");
+			}
+
+			return obj as any;
 		}).filter((item) => item?.type.name === "Combine").forEach((item) => {
 			const {key, type} = item;
 
