@@ -3,16 +3,18 @@ import utils = require("./utils");
 import Internal = require("./Internal");
 import {Document, DocumentObjectFromSchemaSettings} from "./Document";
 import {Model} from "./Model";
-import { DynamoDB } from "aws-sdk";
-const internalCache = Internal.Schema.internalCache;
+import {DynamoDB} from "aws-sdk";
+import {ModelType, ObjectType} from "./General";
 
 // TODO: the interfaces below are so similar, we should consider combining them into one. We also do a lot of `DynamoDBTypeResult | DynamoDBSetTypeResult` in the code base.
 export interface DynamoDBSetTypeResult {
 	name: string;
+	dynamicName?: (() => string);
 	dynamodbType: string; // TODO: This should probably be an enum
 	isOfType: (value: ValueType, type?: "toDynamo" | "fromDynamo", settings?: Partial<DocumentObjectFromSchemaSettings>) => boolean;
 	isSet: true;
 	customType?: any;
+	typeSettings?: AttributeDefinitionTypeSettings;
 
 	toDynamo: (val: GeneralValueType[]) => SetValueType;
 	fromDynamo: (val: SetValueType) => Set<ValueType>;
@@ -21,10 +23,12 @@ export interface DynamoDBSetTypeResult {
 }
 export interface DynamoDBTypeResult {
 	name: string;
-	dynamodbType: string; // TODO: This should probably be an enum
+	dynamicName?: (() => string);
+	dynamodbType: string | string[]; // TODO: This should probably be an enum
 	isOfType: (value: ValueType) => {value: ValueType; type: string};
 	isSet: false;
 	customType?: any;
+	typeSettings?: AttributeDefinitionTypeSettings;
 
 	nestedType: boolean;
 	set?: DynamoDBSetTypeResult;
@@ -34,54 +38,83 @@ export interface DynamoDBTypeResult {
 
 interface DynamoDBTypeCreationObject {
 	name: string;
-	dynamodbType: string | DynamoDBType;
-	set?: boolean;
+	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
+	dynamodbType: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
+	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
 	jsType: any;
 	nestedType?: boolean;
 	customType?: {functions: (typeSettings: AttributeDefinitionTypeSettings) => {toDynamo: (val: ValueType) => ValueType; fromDynamo: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
-	customDynamoName?: string;
+	customDynamoName?: string | ((typeSettings?: AttributeDefinitionTypeSettings) => string);
 }
 
 class DynamoDBType implements DynamoDBTypeCreationObject {
 	// TODO: since the code below will always be the exact same as DynamoDBTypeCreationObject we should see if there is a way to make it more DRY and not repeat it
 	name: string;
-	dynamodbType: string | DynamoDBType;
-	set?: boolean;
+	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
+	dynamodbType: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
+	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
 	jsType: any;
 	nestedType?: boolean;
-	customType?: {functions: (typeSettings: AttributeDefinitionTypeSettings) => {toDynamo: (val: ValueType) => ValueType; fromDynamo: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
-	customDynamoName?: string;
+	customType?: {functions: (typeSettings?: AttributeDefinitionTypeSettings) => {toDynamo: (val: ValueType) => ValueType; fromDynamo: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
+	customDynamoName?: string | ((typeSettings?: AttributeDefinitionTypeSettings) => string);
 
-	constructor(obj: DynamoDBTypeCreationObject) {
+	constructor (obj: DynamoDBTypeCreationObject) {
 		Object.keys(obj).forEach((key) => {
 			this[key] = obj[key];
 		});
 	}
 
-	result(typeSettings?: AttributeDefinitionTypeSettings): DynamoDBTypeResult {
+	result (typeSettings?: AttributeDefinitionTypeSettings): DynamoDBTypeResult {
 		// Can't use variable below to check type, see TypeScript issue link below for more information
 		// https://github.com/microsoft/TypeScript/issues/37855
 		// const isSubType = this.dynamodbType instanceof DynamoDBType; // Represents underlying DynamoDB type for custom types
 		const type = this.dynamodbType instanceof DynamoDBType ? this.dynamodbType : this;
+		const dynamodbType: string | string[] = ((): string | string[] => {
+			if (this.dynamodbType instanceof DynamoDBType) {
+				return this.dynamodbType.dynamodbType as string;
+			} else if (typeof this.dynamodbType === "function") {
+				return this.dynamodbType(typeSettings);
+			} else {
+				return this.dynamodbType;
+			}
+		})();
 		const result: DynamoDBTypeResult = {
 			"name": this.name,
-			"dynamodbType": this.dynamodbType instanceof DynamoDBType ? (this.dynamodbType.dynamodbType as string) : this.dynamodbType,
+			dynamodbType,
 			"nestedType": this.nestedType,
-			"isOfType": this.jsType.func ? this.jsType.func : ((val): {value: ValueType; type: string} => {
-				return [{"value": this.jsType, "type": "main"}, {"value": (this.dynamodbType instanceof DynamoDBType ? type.jsType : null), "type": "underlying"}].filter((a) => Boolean(a.value)).find((jsType) => typeof jsType.value === "string" ? typeof val === jsType.value : val instanceof jsType.value);
-			}),
+			"isOfType": this.jsType.func ? this.jsType.func : (val): {value: ValueType; type: string} => {
+				return [{"value": this.jsType, "type": "main"}, {"value": this.dynamodbType instanceof DynamoDBType ? type.jsType : null, "type": "underlying"}].filter((a) => Boolean(a.value)).find((jsType) => typeof jsType.value === "string" ? typeof val === jsType.value : val instanceof jsType.value);
+			},
 			"isSet": false,
 			typeSettings
 		};
-		if (type.set) {
-			const typeName = type.customDynamoName || type.name;
+		if (this.dynamicName) {
+			result.dynamicName = (): string => this.dynamicName(typeSettings);
+		}
+
+		if (this.customType) {
+			const functions = this.customType.functions(typeSettings);
+			result.customType = {
+				...this.customType,
+				functions
+			};
+		}
+
+		const isSetAllowed = typeof type.set === "function" ? type.set(typeSettings) : type.set;
+		if (isSetAllowed) {
+			let typeName;
+			if (type.customDynamoName) {
+				typeName = typeof type.customDynamoName === "function" ? type.customDynamoName(typeSettings) : type.customDynamoName;
+			} else {
+				typeName = type.name;
+			}
 			result.set = {
 				"name": `${this.name} Set`,
 				"isSet": true,
-				"dynamodbType": `${type.dynamodbType}S`,
+				"dynamodbType": `${dynamodbType}S`,
 				"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo", settings: Partial<DocumentObjectFromSchemaSettings> = {}): boolean => {
 					if (type === "toDynamo") {
-						return (!settings.saveUnknown && Array.isArray(val) && val.every((subValue) => result.isOfType(subValue))) || (val instanceof Set && [...val].every((subValue) => result.isOfType(subValue)));
+						return !settings.saveUnknown && Array.isArray(val) && val.every((subValue) => result.isOfType(subValue)) || val instanceof Set && [...val].every((subValue) => result.isOfType(subValue));
 					} else {
 						const setVal = val as SetValueType; // TODO: Probably bad practice here, should figure out how to do this better.
 						return setVal.wrapperName === "Set" && setVal.type === typeName && Array.isArray(setVal.values);
@@ -91,19 +124,17 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 				"fromDynamo": (val: SetValueType): Set<ValueType> => new Set(val.values),
 				typeSettings
 			};
+			if (this.dynamicName) {
+				result.set.dynamicName = (): string => `${this.dynamicName(typeSettings)} Set`;
+			}
 			if (this.customType) {
-				const functions = this.customType.functions(typeSettings);
-				result.customType = {
-					...this.customType,
-					functions
-				};
 				result.set.customType = {
 					"functions": {
-						"toDynamo": (val: GeneralValueType[]): ValueType[] => val.map(functions.toDynamo),
-						"fromDynamo": (val: SetValueType): {values: ValueType} => ({"values": val.values.map(functions.fromDynamo)}),
+						"toDynamo": (val: GeneralValueType[]): ValueType[] => val.map(result.customType.functions.toDynamo),
+						"fromDynamo": (val: SetValueType): {values: ValueType} => ({...val, "values": val.values.map(result.customType.functions.fromDynamo)}),
 						"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo"): boolean => {
 							if (type === "toDynamo") {
-								return Array.isArray(val) && val.every((item) => functions.isOfType(item, type));
+								return Array.isArray(val) && val.every((item) => result.customType.functions.isOfType(item, type));
 							} else {
 								const setVal = val as SetValueType; // TODO: Probably bad practice here, should figure out how to do this better.
 								return setVal.wrapperName === "Set" && setVal.type === typeName && Array.isArray(setVal.values);
@@ -150,6 +181,46 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 			})
 		}, "jsType": Date}),
 		new DynamoDBType({"name": "Combine", "dynamodbType": stringType, "set": false, "jsType": String})
+		new DynamoDBType({"name": "Model", "customDynamoName": (typeSettings?: AttributeDefinitionTypeSettings): string => {
+			const schema = typeSettings.model.Model.schema;
+			const hashKey = schema.getHashKey();
+			const typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult = schema.getAttributeTypeDetails(hashKey) as DynamoDBTypeResult | DynamoDBSetTypeResult; // This has no potiental of being an array because a hashKey is not allowed to have multiple type options
+			return typeDetails.name;
+		}, "dynamicName": (typeSettings?: AttributeDefinitionTypeSettings): string => typeSettings.model.Model.name, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
+			const schema = typeSettings.model.Model.schema;
+			const hashKey = schema.getHashKey();
+			const rangeKey = schema.getRangeKey();
+			return rangeKey ? "M" : schema.getAttributeType(hashKey);
+		}, "set": (typeSettings?: AttributeDefinitionTypeSettings): boolean => {
+			return !typeSettings.model.Model.schema.getRangeKey();
+		}, "jsType": {"func": (val): boolean => val.prototype instanceof Document}, "customType": {
+			"functions": (typeSettings?: AttributeDefinitionTypeSettings): {toDynamo: (val: any) => any; fromDynamo: (val: any) => any; isOfType: (val: any, type: "toDynamo" | "fromDynamo") => boolean} => ({
+				"toDynamo": (val: any): any => {
+					const schema = typeSettings.model.Model.schema;
+					const hashKey = schema.getHashKey();
+					const rangeKey = schema.getRangeKey();
+					if (rangeKey) {
+						return {
+							[hashKey]: val[hashKey],
+							[rangeKey]: val[rangeKey]
+						};
+					} else {
+						return val[hashKey] ?? val;
+					}
+				},
+				"fromDynamo": (val: any): any => val,
+				"isOfType": (val: any, type: "toDynamo" | "fromDynamo"): boolean => {
+					const schema = typeSettings.model.Model.schema;
+					const hashKey = schema.getHashKey();
+					const rangeKey = schema.getRangeKey();
+					if (rangeKey) {
+						return typeof val === "object" && val[hashKey] && val[rangeKey];
+					} else {
+						return utils.dynamoose.getValueTypeCheckResult(schema, val[hashKey] ?? val, hashKey, {type}, {}).isValidType;
+					}
+				}
+			})
+		}})
 	];
 })();
 const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.array_flatten(attributeTypesMain.filter((checkType) => !checkType.customType).map((checkType) => checkType.result()).map((a) => [a, a.set])).filter((a) => Boolean(a));
@@ -176,6 +247,7 @@ interface IndexDefinition {
 }
 interface AttributeDefinitionTypeSettings {
 	storage?: "miliseconds" | "seconds";
+	model?: ModelType<Document>;
 	attributes?: string[];
 	seperator?: string;
 }
@@ -206,13 +278,13 @@ interface SchemaGetAttributeSettingValue {
 export class Schema {
 	settings: SchemaSettings;
 	schemaObject: SchemaDefinition;
-	attributes: () => string[];
-	async getCreateTableAttributeParams(model: Model<Document>): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
+	attributes: (object?: ObjectType) => string[];
+	async getCreateTableAttributeParams (model: Model<Document>): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
 		const hashKey = this.getHashKey();
 		const AttributeDefinitions = [
 			{
 				"AttributeName": hashKey,
-				"AttributeType": this.getAttributeType(hashKey)
+				"AttributeType": this.getSingleAttributeType(hashKey)
 			}
 		];
 		const AttributeDefinitionsNames = [hashKey];
@@ -227,7 +299,7 @@ export class Schema {
 		if (rangeKey) {
 			AttributeDefinitions.push({
 				"AttributeName": rangeKey,
-				"AttributeType": this.getAttributeType(rangeKey)
+				"AttributeType": this.getSingleAttributeType(rangeKey)
 			});
 			AttributeDefinitionsNames.push(rangeKey);
 			KeySchema.push({
@@ -244,7 +316,7 @@ export class Schema {
 			AttributeDefinitionsNames.push(index);
 			AttributeDefinitions.push({
 				"AttributeName": index,
-				"AttributeType": this.getAttributeType(index)
+				"AttributeType": this.getSingleAttributeType(index)
 			});
 		});
 
@@ -254,9 +326,18 @@ export class Schema {
 			...await this.getIndexes(model)
 		};
 	}
-	getAttributeType(key: string, value?: ValueType, settings?: SchemaGetAttributeTypeSettings): string {
+	// This function has the same behavior as `getAttributeType` except if the schema has multiple types, it will throw an error. This is useful for attribute definitions and keys for when you are only allowed to have one type for an attribute
+	private getSingleAttributeType (key: string, value?: ValueType, settings?: SchemaGetAttributeTypeSettings): string {
+		const attributeType = this.getAttributeType(key, value, settings);
+		if (Array.isArray(attributeType)) {
+			throw new CustomError.InvalidParameter(`You can not have multiple types for attribute definition: ${key}.`);
+		}
+		return attributeType;
+	}
+	getAttributeType (key: string, value?: ValueType, settings?: SchemaGetAttributeTypeSettings): string | string[] {
 		try {
-			return this.getAttributeTypeDetails(key).dynamodbType;
+			const typeDetails = this.getAttributeTypeDetails(key);
+			return Array.isArray(typeDetails) ? (typeDetails as any).map((detail) => detail.dynamodbType) : typeDetails.dynamodbType;
 		} catch (e) {
 			if (settings?.unknownAttributeAllowed && e.message === `Invalid Attribute: ${key}` && value) {
 				return Object.keys((Document as any).objectToDynamo(value, {"type": "value"}))[0];
@@ -273,9 +354,9 @@ export class Schema {
 	getHashKey: () => string;
 	getRangeKey: () => string | void;
 	// This function will take in an attribute and value, and returns the default value if it should be applied.
-	async defaultCheck(key: string, value: ValueType, settings: any): Promise<ValueType | void> {
+	async defaultCheck (key: string, value: ValueType, settings: any): Promise<ValueType | void> {
 		const isValueUndefined = typeof value === "undefined" || value === null;
-		if ((settings.defaults && isValueUndefined) || (settings.forceDefault && await this.getAttributeSettingValue("forceDefault", key))) {
+		if (settings.defaults && isValueUndefined || settings.forceDefault && await this.getAttributeSettingValue("forceDefault", key)) {
 			const defaultValue = await this.getAttributeSettingValue("default", key);
 			const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
 			if (!isDefaultValueUndefined) {
@@ -284,18 +365,82 @@ export class Schema {
 		}
 	}
 	requiredCheck: (key: string, value: ValueType) => Promise<void>;
-	getAttributeSettingValue(setting: string, key: string, settings: SchemaGetAttributeSettingValue = {"returnFunction": false}): any {
-		const defaultPropertyValue = (this.getAttributeValue(key) || {})[setting];
-		return typeof defaultPropertyValue === "function" && !settings.returnFunction ? defaultPropertyValue() : defaultPropertyValue;
+	getAttributeSettingValue (setting: string, key: string, settings: SchemaGetAttributeSettingValue = {"returnFunction": false}): any {
+		function func (attributeValue): any {
+			const defaultPropertyValue = (attributeValue || {})[setting];
+			return typeof defaultPropertyValue === "function" && !settings.returnFunction ? defaultPropertyValue() : defaultPropertyValue;
+		}
+		const attributeValue = this.getAttributeValue(key);
+		if (Array.isArray(attributeValue)) {
+			return attributeValue.map(func);
+		} else {
+			return func(attributeValue);
+		}
+	}
+	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string } = {"type": "toDynamo"}): ObjectType {
+		return Object.entries(object).reduce((result, entry) => {
+			const [key, value] = entry;
+			const fullKey = [settings.previousKey, key].filter((a) => Boolean(a)).join(".");
+			let typeCheckResult;
+			try {
+				typeCheckResult = utils.dynamoose.getValueTypeCheckResult(this, value, fullKey, settings, {});
+			} catch (e) {
+				return {};
+			}
+			const {typeDetails, matchedTypeDetailsIndex, matchedTypeDetailsIndexes} = typeCheckResult;
+			const hasMultipleTypes = Array.isArray(typeDetails);
+			const isObject = typeof value === "object";
+
+			if (hasMultipleTypes) {
+				if (matchedTypeDetailsIndexes.length > 1 && isObject) {
+					result[fullKey] = matchedTypeDetailsIndexes.map((index: number) => {
+						const entryCorrectness = utils.object.entries(value).map((entry) => {
+							const [subKey, subValue] = entry;
+
+							try {
+								const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, subValue, `${fullKey}.${subKey}`, settings, {"typeIndexOptionMap": {[key]: index}}); // TODO add {typeMap: {[key]: index}}
+								return isValidType ? 1 : 0;
+							} catch (e) {
+								return 0.5;
+							}
+						});
+						return {
+							index,
+							// 1 = full match
+							// 0.5 = attributes don't exist
+							// 0 = types don't match
+							"matchCorrectness": Math.min(...entryCorrectness),
+							entryCorrectness
+						};
+					}).sort((a, b) => {
+						if (a.matchCorrectness === b.matchCorrectness) {
+							return b.entryCorrectness.reduce((a: number, b: number) => a + b, 0) - a.entryCorrectness.reduce((a: number, b: number) => a + b, 0);
+						} else {
+							return b.matchCorrectness - a.matchCorrectness;
+						}
+					}).map((a) => a.index)[0];
+				}
+
+				if (result[fullKey] === undefined) {
+					result[fullKey] = matchedTypeDetailsIndex;
+				}
+			}
+
+			if (isObject) {
+				result = {...result, ...this.getTypePaths(value, {...settings, "previousKey": fullKey})};
+			}
+
+			return result;
+		}, {});
 	}
 	getIndexAttributes: () => Promise<{ index: IndexDefinition; attribute: string }[]>;
 	getSettingValue: (setting: string) => any;
-	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean }) => DynamoDBTypeResult | DynamoDBSetTypeResult;
-	getAttributeValue: (key: string, settings?: { standardKey?: boolean }) => AttributeDefinition;
+	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[];
+	getAttributeValue: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => AttributeDefinition;
 	getIndexes: (model: Model<Document>) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
 
-	constructor(object: SchemaDefinition, settings: SchemaSettings = {}) {
+	constructor (object: SchemaDefinition, settings: SchemaSettings = {}) {
 		if (!object || typeof object !== "object" || Array.isArray(object)) {
 			throw new CustomError.InvalidParameterType("Schema initalization parameter must be an object.");
 		}
@@ -360,12 +505,6 @@ export class Schema {
 		// Anytime `this.schemaObject` is modified, `this[internalCache].attributes` must be set to undefined or null
 		this.schemaObject = parsedObject;
 		this.settings = parsedSettings;
-		Object.defineProperty(this, internalCache, {
-			"configurable": false,
-			"value": {
-				"getAttributeTypeDetails": {}
-			}
-		});
 
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
 			Object.keys(object).forEach((key) => {
@@ -374,28 +513,32 @@ export class Schema {
 				}
 
 				// TODO: lots of `as` statements in the two lines below. We should clean that up.
-				if (typeof object[key] === "object" && (object[key] as AttributeDefinition).schema) {
-					checkAttributeNameDots(((object[key] as AttributeDefinition).schema as SchemaDefinition)/*, key*/);
+				if (typeof object[key] === "object" && object[key] !== null && (object[key] as AttributeDefinition).schema) {
+					checkAttributeNameDots((object[key] as AttributeDefinition).schema as SchemaDefinition/*, key*/);
 				}
 			});
 		};
 		checkAttributeNameDots(this.schemaObject);
 
 		const checkMultipleArraySchemaElements = (key: string): void => {
-			let attributeType: string;
+			let attributeType: string[] = [];
 			try {
-				attributeType = this.getAttributeType(key);
+				const tmpAttributeType = this.getAttributeType(key);
+				attributeType = Array.isArray(tmpAttributeType) ? tmpAttributeType : [tmpAttributeType];
 			} catch (e) {} // eslint-disable-line no-empty
 
-			if (attributeType === "L" && (this.getAttributeValue(key).schema || []).length > 1) {
+			if (attributeType.some((type) => type === "L") && (this.getAttributeValue(key).schema || []).length > 1) {
 				throw new CustomError.InvalidParameter("You must only pass one element into schema array.");
 			}
 		};
 		this.attributes().forEach((key) => checkMultipleArraySchemaElements(key));
 
 		const hashrangeKeys = this.attributes().reduce((val, key) => {
-			const isHashKey = this.getAttributeSettingValue("hashKey", key);
-			const isRangeKey = this.getAttributeSettingValue("rangeKey", key);
+			const hashKey = this.getAttributeSettingValue("hashKey", key);
+			const rangeKey = this.getAttributeSettingValue("rangeKey", key);
+
+			const isHashKey = Array.isArray(hashKey) ? hashKey.every((item) => Boolean(item)) : hashKey;
+			const isRangeKey = Array.isArray(rangeKey) ? rangeKey.every((item) => Boolean(item)) : rangeKey;
 
 			if (isHashKey) {
 				val.hashKeys.push(key);
@@ -431,25 +574,25 @@ export class Schema {
 }
 
 // TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
-Schema.prototype.getHashKey = function(this: Schema): string {
+Schema.prototype.getHashKey = function (this: Schema): string {
 	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.schemaObject)[0];
 };
-Schema.prototype.getRangeKey = function(this: Schema): string | void {
+Schema.prototype.getRangeKey = function (this: Schema): string | void {
 	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).rangeKey);
 };
 
 // This function will take in an attribute and value, and throw an error if the property is required and the value is undefined or null.
-Schema.prototype.requiredCheck = async function(this: Schema, key: string, value: ValueType): Promise<void> {
+Schema.prototype.requiredCheck = async function (this: Schema, key: string, value: ValueType): Promise<void> {
 	const isRequired = await this.getAttributeSettingValue("required", key);
 	if ((typeof value === "undefined" || value === null) && isRequired) {
 		throw new CustomError.ValidationError(`${key} is a required property but has no value when trying to save document`);
 	}
 };
 
-Schema.prototype.getIndexAttributes = async function(this: Schema): Promise<{index: IndexDefinition; attribute: string}[]> {
-	return (await Promise.all(this.attributes().map(async (attribute: string) => ({"index": (await this.getAttributeSettingValue("index", attribute) as IndexDefinition), attribute})))).filter((obj) => obj.index);
+Schema.prototype.getIndexAttributes = async function (this: Schema): Promise<{index: IndexDefinition; attribute: string}[]> {
+	return (await Promise.all(this.attributes().map(async (attribute: string) => ({"index": await this.getAttributeSettingValue("index", attribute) as IndexDefinition, attribute})))).filter((obj) => obj.index);
 };
-Schema.prototype.getIndexRangeKeyAttributes = async function(this: Schema): Promise<{attribute: string}[]> {
+Schema.prototype.getIndexRangeKeyAttributes = async function (this: Schema): Promise<{attribute: string}[]> {
 	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getIndexAttributes();
 	return indexes.map((index) => index.index.rangeKey).filter((a) => Boolean(a)).map((a) => ({"attribute": a}));
 };
@@ -459,7 +602,7 @@ export interface IndexItem {
 	Projection: {ProjectionType: "KEYS_ONLY" | "INCLUDE" | "ALL"; NonKeyAttributes?: string[]};
 	ProvisionedThroughput?: {"ReadCapacityUnits": number; "WriteCapacityUnits": number}; // TODO: this was copied from get_provisioned_throughput. We should change this to be an actual interface
 }
-Schema.prototype.getIndexes = async function(this: Schema, model: Model<Document>): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+Schema.prototype.getIndexes = async function (this: Schema, model: Model<Document>): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
 	return (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
@@ -470,7 +613,7 @@ Schema.prototype.getIndexes = async function(this: Schema, model: Model<Document
 			"Projection": {"ProjectionType": "KEYS_ONLY"}
 		};
 		if (indexValue.project || typeof indexValue.project === "undefined" || indexValue.project === null) {
-			dynamoIndexObject.Projection = Array.isArray(indexValue.project) ? ({"ProjectionType": "INCLUDE", "NonKeyAttributes": indexValue.project}) : ({"ProjectionType": "ALL"});
+			dynamoIndexObject.Projection = Array.isArray(indexValue.project) ? {"ProjectionType": "INCLUDE", "NonKeyAttributes": indexValue.project} : {"ProjectionType": "ALL"};
 		}
 		if (indexValue.global) {
 			dynamoIndexObject.KeySchema.push({"AttributeName": attributeValue, "KeyType": "HASH"});
@@ -496,25 +639,39 @@ Schema.prototype.getIndexes = async function(this: Schema, model: Model<Document
 	}, {});
 };
 
-Schema.prototype.getSettingValue = function(this: Schema, setting: string): any {
+Schema.prototype.getSettingValue = function (this: Schema, setting: string): any {
 	return this.settings[setting];
 };
 
-function attributesAction(this: Schema): string[] {
+function attributesAction (this: Schema, object?: ObjectType): string[] {
+	const typePaths = object && this.getTypePaths(object);
 	const main = (object: SchemaDefinition, existingKey = ""): string[] => {
 		return Object.keys(object).reduce((accumulator: string[], key) => {
 			const keyWithExisting = `${existingKey ? `${existingKey}.` : ""}${key}`;
 			accumulator.push(keyWithExisting);
 
-			let attributeType;
+			let attributeType: string[];
 			try {
-				attributeType = this.getAttributeType(keyWithExisting);
+				const tmpAttributeType = this.getAttributeType(keyWithExisting);
+				attributeType = Array.isArray(tmpAttributeType) ? tmpAttributeType : [tmpAttributeType];
 			} catch (e) {} // eslint-disable-line no-empty
 
-			// TODO: using too many `as` statements in the two lines below. Clean that up.
-			if ((attributeType === "M" || attributeType === "L") && (object[key] as AttributeDefinition).schema) {
-				accumulator.push(...main(((object[key] as AttributeDefinition).schema as SchemaDefinition), keyWithExisting));
+			// TODO: using too many `as` statements in the few lines below. Clean that up.
+			function recursive (type, arrayTypeIndex): void {
+				if ((type === "M" || type === "L") && ((object[key][arrayTypeIndex] || object[key]) as AttributeDefinition).schema) {
+					accumulator.push(...main(((object[key][arrayTypeIndex] || object[key]) as AttributeDefinition).schema as SchemaDefinition, keyWithExisting));
+				}
 			}
+			if (attributeType) {
+				if (typePaths && typePaths[keyWithExisting] !== undefined) {
+					const index = typePaths[keyWithExisting];
+					const type = attributeType[index];
+					recursive(type, index);
+				} else {
+					attributeType.forEach(recursive);
+				}
+			}
+			// ------------------------------
 
 			return accumulator;
 		}, []);
@@ -522,21 +679,27 @@ function attributesAction(this: Schema): string[] {
 
 	return main(this.schemaObject);
 }
-Schema.prototype.attributes = function(this: Schema): string[] {
-	if (!this[internalCache].attributes) {
-		this[internalCache].attributes = attributesAction.call(this);
-	}
-
-	return this[internalCache].attributes;
+Schema.prototype.attributes = function (this: Schema, object?: ObjectType): string[] {
+	return attributesAction.call(this, object);
 };
 
-Schema.prototype.getAttributeValue = function(this: Schema, key: string, settings?: {standardKey?: boolean}): AttributeDefinition {
+Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
+	const previousKeyParts = [];
 	return (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part) => {
-		return (utils.object.get(result.schema, part));
-	}, ({"schema": this.schemaObject} as any));
+		if (Array.isArray(result)) {
+			const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
+			if (predefinedIndex !== undefined) {
+				result = result[predefinedIndex];
+			} else {
+				result = result.find((item) => item.schema && item.schema[part]);
+			}
+		}
+		previousKeyParts.push(part);
+		return utils.object.get(result.schema, part);
+	}, {"schema": this.schemaObject} as any);
 };
 
-function retrieveTypeInfo(type: string, isSet: boolean, key: string, typeSettings: AttributeDefinitionTypeSettings): DynamoDBTypeResult | DynamoDBSetTypeResult {
+function retrieveTypeInfo (type: string, isSet: boolean, key: string, typeSettings: AttributeDefinitionTypeSettings): DynamoDBTypeResult | DynamoDBSetTypeResult {
 	const foundType = attributeTypesMain.find((checkType) => checkType.name.toLowerCase() === type.toLowerCase());
 	if (!foundType) {
 		throw new CustomError.InvalidType(`${key} contains an invalid type: ${type}`);
@@ -548,39 +711,62 @@ function retrieveTypeInfo(type: string, isSet: boolean, key: string, typeSetting
 	return isSet ? parentType.set : parentType;
 }
 // TODO: using too many `as` statements in the function below. We should clean this up.
-Schema.prototype.getAttributeTypeDetails = function(this: Schema, key: string, settings: {standardKey?: boolean} = {}): DynamoDBTypeResult | DynamoDBSetTypeResult {
-	const standardKey = (settings.standardKey ? key : key.replace(/\.\d+/gu, ".0"));
-	if (this[internalCache].getAttributeTypeDetails[standardKey]) {
-		return this[internalCache].getAttributeTypeDetails[standardKey];
-	}
-	const val = this.getAttributeValue(standardKey, {"standardKey": true});
+Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, settings: {standardKey?: boolean; typeIndexOptionMap?: {}} = {}): DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[] {
+	const standardKey = settings.standardKey ? key : key.replace(/\.\d+/gu, ".0");
+	const val = this.getAttributeValue(standardKey, {...settings, "standardKey": true});
 	if (!val) {
 		throw new CustomError.UnknownAttribute(`Invalid Attribute: ${key}`);
 	}
 	let typeVal = typeof val === "object" && !Array.isArray(val) ? val.type : val;
-	let typeSettings = {};
+	let typeSettings: AttributeDefinitionTypeSettings = {};
 	if (typeof typeVal === "object" && !Array.isArray(typeVal)) {
 		typeSettings = (typeVal as {value: DateConstructor; settings?: AttributeDefinitionTypeSettings}).settings || {};
 		typeVal = typeVal.value;
 	}
 
-	const getType = (typeVal): string => {
+	const getType = (typeVal: AttributeType | AttributeDefinition): string => {
 		let type: string;
-		if (typeof typeVal === "function") {
-			const regexFuncName = /^Function ([^(]+)\(/iu;
-			[, type] = typeVal.toString().match(regexFuncName);
+		const isThisType = typeVal as any === Internal.Public.this;
+		if (typeof typeVal === "function" || isThisType) {
+			if ((typeVal as any).prototype instanceof Document || isThisType) {
+				type = "model";
+
+				if (isThisType) {
+					typeSettings.model = {"Model": {"schema": this}} as any;
+				} else {
+					typeSettings.model = typeVal as any;
+				}
+			} else {
+				const regexFuncName = /^Function ([^(]+)\(/iu;
+				[, type] = typeVal.toString().match(regexFuncName);
+			}
 		} else {
-			type = (typeVal as string);
+			type = typeVal as string;
 		}
 		return type;
 	};
-	let type = getType(typeVal);
-	const isSet = type.toLowerCase() === "set";
-	if (isSet) {
-		type = getType(this.getAttributeSettingValue("schema", key)[0]);
-	}
 
-	const returnObject = retrieveTypeInfo(type, isSet, key, typeSettings);
-	this[internalCache].getAttributeTypeDetails[standardKey] = returnObject;
+	const result: DynamoDBTypeResult[] | DynamoDBSetTypeResult[] = ((Array.isArray(typeVal) ? typeVal : [typeVal]) as any).map((item, index: number) => {
+		item = typeof item === "object" && !Array.isArray(item) && item.type ? item.type : item;
+		if (typeof item === "object" && !Array.isArray(item)) {
+			typeSettings = (item as {value: DateConstructor; settings?: AttributeDefinitionTypeSettings}).settings || {};
+			item = item.value;
+		}
+
+		let type = getType(item);
+		const isSet = type.toLowerCase() === "set";
+		if (isSet) {
+			let schemaValue = this.getAttributeSettingValue("schema", key);
+			if (Array.isArray(schemaValue[index])) {
+				schemaValue = schemaValue[index];
+			}
+			type = getType(schemaValue[0]);
+		}
+
+		const returnObject = retrieveTypeInfo(type, isSet, key, typeSettings);
+		return returnObject;
+	});
+
+	const returnObject = result.length < 2 ? result[0] : result;
 	return returnObject;
 };

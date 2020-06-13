@@ -278,6 +278,35 @@ describe("Scan", () => {
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie-get"}]);
 				});
 
+				describe("Populate", () => {
+					it("Should have populate function on response", async () => {
+						scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+						const response = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(response.populate).to.be.a("function");
+					});
+
+					it("Should autopopulate if model settings have populate set", async () => {
+						Model = dynamoose.model("Cat", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan().exec).bind(Model.scan())();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
+				});
+
 				it("Should throw error from AWS", () => {
 					scanPromiseResolver = () => {
 						throw {"error": "Error"};
@@ -609,15 +638,37 @@ describe("Scan", () => {
 		it("Should send correct request on scan.exec", async () => {
 			scanPromiseResolver = () => ({"Items": []});
 			await Model.scan("name").eq("Charlie").attributes(["id"]).exec();
-			expect(scanParams.ProjectionExpression).to.eql("id");
+			expect(scanParams.ProjectionExpression).to.eql("#a1");
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "id"});
 		});
 
 		it("Should send correct request on scan.exec with multiple attributes", async () => {
 			scanPromiseResolver = () => ({"Items": []});
 			await Model.scan("name").eq("Charlie").attributes(["id", "name"]).exec();
-			expect(scanParams.ProjectionExpression).to.eql("id, name");
+			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1");
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "id"});
 		});
 
+		it("Should send correct request on scan.exec with multiple attributes no filters", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().attributes(["id", "name", "favoriteNumber"]).exec();
+			expect(scanParams.ProjectionExpression).to.eql("#a1, #a2, #a3");
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a1": "id", "#a2": "name", "#a3": "favoriteNumber"});
+		});
+
+		it("Should send correct request on scan.exec with multiple attributes and one filter", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan("name").eq("Charlie").attributes(["id", "name", "favoriteNumber"]).exec();
+			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1, #a2");
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "id", "#a2": "favoriteNumber"});
+		});
+
+		it("Should send correct request on scan.exec with multiple attributes and two filters", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan("name").eq("Charlie").where("favoriteNumber").eq(1).attributes(["id", "name", "favoriteNumber"]).exec();
+			expect(scanParams.ProjectionExpression).to.eql("#a0, #a1, #a2");
+			expect(scanParams.ExpressionAttributeNames).to.eql({"#a0": "name", "#a1": "favoriteNumber", "#a2": "id"});
+		});
 	});
 
 	describe("scan.parallel", () => {
@@ -739,7 +790,7 @@ describe("Scan", () => {
 		it("Should send correct result on scan.exec", async () => {
 			let count = 0;
 			scanPromiseResolver = async () => {
-				const obj = ({"Items": [{"id": ++count}], "Count": 1, "ScannedCount": 2});
+				const obj = {"Items": [{"id": ++count}], "Count": 1, "ScannedCount": 2};
 				if (count < 2) {
 					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
 				}

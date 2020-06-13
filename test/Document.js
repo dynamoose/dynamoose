@@ -4,15 +4,15 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../dist");
 const {Schema, aws} = dynamoose;
-const Document = require("../dist/Document");
+const {Document} = require("../dist/Document");
 const util = require("util");
 const Error = require("../dist/Error");
 const utils = require("../dist/utils");
 const Internal = require("../dist/Internal");
 
 describe("Document", () => {
-	it("Should be an object", () => {
-		expect(Document).to.be.an("object");
+	it("Should be a function", () => {
+		expect(Document).to.be.a("function");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
@@ -83,7 +83,7 @@ describe("Document", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with settings ${JSON.stringify(test.settings)}`, async () => {
-					expect(await (new User(test.input).toDynamo(test.settings))).to.eql(test.output);
+					expect(await new User(test.input).toDynamo(test.settings)).to.eql(test.output);
 				});
 			});
 		});
@@ -1016,7 +1016,9 @@ describe("Document", () => {
 				it("Should not run validation function if property doesn't exist", async () => {
 					putItemFunction = () => Promise.resolve();
 					let didRun = false;
-					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "validate": () => {
+						didRun = true; return true;
+					}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
 					expect(didRun).to.be.false;
@@ -1025,7 +1027,9 @@ describe("Document", () => {
 				it("Should run validation function if property is falsy", async () => {
 					putItemFunction = () => Promise.resolve();
 					let didRun = false;
-					User = dynamoose.model("User", {"id": Number, "data": {"type": Boolean, "validate": () => {didRun = true; return true;}}}, {"create": false, "waitForActive": false});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Boolean, "validate": () => {
+						didRun = true; return true;
+					}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "data": false});
 					await callType.func(user).bind(user)();
 					expect(didRun).to.be.true;
@@ -1234,6 +1238,114 @@ describe("Document", () => {
 					}]);
 				});
 
+				describe("Populate", () => {
+					let Game, game;
+					beforeEach(() => {
+						Game = dynamoose.model("Game", {"id": Number, "name": String, "user": User});
+						game = new Game({"id": 2, "name": "Game 2", user});
+					});
+					afterEach(() => {
+						Game = null;
+						game = null;
+					});
+
+					it("Should save with correct object with document instance passed in", async () => {
+						putItemFunction = () => Promise.resolve();
+						await callType.func(game).bind(game)();
+						expect(putParams).to.eql([{
+							"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"N": "1"}},
+							"TableName": "Game"
+						}]);
+					});
+
+					it("Should save with correct object with id reference passed in", async () => {
+						putItemFunction = () => Promise.resolve();
+						game = new Game({"id": 2, "name": "Game 2", "user": user.id});
+						await callType.func(game).bind(game)();
+						expect(putParams).to.eql([{
+							"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"N": "1"}},
+							"TableName": "Game"
+						}]);
+					});
+
+					describe("Set", () => {
+						beforeEach(() => {
+							Game = dynamoose.model("Game", {"id": Number, "name": String, "user": {"type": Set, "schema": [User]}});
+							game = new Game({"id": 2, "name": "Game 2", "user": [user]});
+						});
+
+						it("Should save with correct object with document instance as set passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"NS": ["1"]}},
+								"TableName": "Game"
+							}]);
+						});
+
+						it("Should save with correct object with id reference as set passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": [user.id]});
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"NS": ["1"]}},
+								"TableName": "Game"
+							}]);
+						});
+					});
+
+					describe("rangeKey", () => {
+						beforeEach(() => {
+							User = dynamoose.model("User", {"pk": {"type": String, "hashKey": true}, "sk": {"type": String, "rangeKey": true}, "name": String});
+							user = new User({"pk": "hello", "sk": "world", "name": "Charlie"});
+							Game = dynamoose.model("Game", {"id": Number, "name": String, "user": User});
+							game = new Game({"id": 2, "name": "Game 2", user});
+						});
+
+						it("Should save with correct object with document instance passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"M": {"pk": {"S": "hello"}, "sk": {"S": "world"}}}},
+								"TableName": "Game"
+							}]);
+						});
+
+						it("Should save with correct object with id reference passed in", async () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": {"pk": user.pk, "sk": user.sk}});
+							await callType.func(game).bind(game)();
+							expect(putParams).to.eql([{
+								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"M": {"pk": {"S": "hello"}, "sk": {"S": "world"}}}},
+								"TableName": "Game"
+							}]);
+						});
+
+						it("Should throw error if passing object with one property in", () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": {"pk": user.pk}});
+							return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type object.");
+						});
+
+						it("Should throw error if passing object with one value passed in in", () => {
+							putItemFunction = () => Promise.resolve();
+							game = new Game({"id": 2, "name": "Game 2", "user": user.pk});
+							return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type string.");
+						});
+
+						it("Should throw error if trying to create document with property type as set model", () => {
+							const Game = dynamoose.model("Game", {"id": Number, "name": String, "user": {"type": Set, "schema": [User]}});
+							return expect(Game.create({"id": 2, "name": "Game 2", "user": [1]})).to.be.rejectedWith("user with type: model is not allowed to be a set");
+						});
+					});
+
+					it("Should throw error if passing random type in", () => {
+						putItemFunction = () => Promise.resolve();
+						game = new Game({"id": 2, "name": "Game 2", "user": "hello"});
+						return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type string.");
+					});
+				});
+
 				it("Should throw error if object contains properties that have type mismatch with schema", () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number}, {"create": false, "waitForActive": false});
@@ -1351,6 +1463,58 @@ describe("Document", () => {
 			expect(document.original()).to.eql({"id": 1});
 			expect({...document}).to.eql({"id": 2});
 		});
+
+		it("Shouldn't modify inner array after modifying document", () => {
+			const document = new model({"id": {"N": "1"}, "array": {"L": [{"S": "1"}]}}, {"type": "fromDynamo"});
+			document.array.push("2");
+			expect(document.original()).to.eql({"id": 1, "array": ["1"]});
+			expect({...document}).to.eql({"id": 1, "array": ["1", "2"]});
+		});
+
+		it("Shouldn't modify inner object after modifying document", () => {
+			const document = new model({"id": {"N": "1"}, "object": {"M": {"hello": {"S": "world"}}}}, {"type": "fromDynamo"});
+			document.object.test = "item";
+			expect(document.original()).to.eql({"id": 1, "object": {"hello": "world"}});
+			expect({...document}).to.eql({"id": 1, "object": {"hello": "world", "test": "item"}});
+		});
+	});
+
+	describe("document.toJSON", () => {
+		let model;
+		beforeEach(() => {
+			model = dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false});
+		});
+		afterEach(() => {
+			model = null;
+		});
+
+		it("Should be a function", () => {
+			expect(new model({}).toJSON).to.be.a("function");
+		});
+
+		it("Should set result constructor to Object", () => {
+			expect(new model({}).toJSON().constructor).to.eql(Object);
+			expect(new model({}).constructor).to.not.eql(Object);
+		});
+
+		it("Should return empty object if no properties in document", () => {
+			expect(new model({}).toJSON()).to.eql({});
+		});
+
+		it("Should return JSON object", () => {
+			expect(new model({"id": 1}).toJSON()).to.eql({"id": 1});
+		});
+
+		it("Should not return object that equals document", () => {
+			const document = new model({"id": 1});
+			expect(document.toJSON()).to.not.eql(document);
+		});
+
+		it("Should return JSON object even after modifying", () => {
+			const document = new model({"id": 1});
+			document.id = 2;
+			expect(document.toJSON()).to.eql({"id": 2});
+		});
 	});
 
 	describe("document.delete", () => {
@@ -1405,6 +1569,134 @@ describe("Document", () => {
 		});
 	});
 
+	describe("document.populate", () => {
+		let User, user, Game, game, getItemParams = [], getItemFunction;
+		beforeEach(() => {
+			dynamoose.model.defaults.set({
+				"create": false,
+				"waitForActive": false
+			});
+			aws.ddb.set({
+				"getItem": (params) => {
+					getItemParams.push(params);
+					return {"promise": getItemFunction};
+				}
+			});
+			User = dynamoose.model("User", {"id": Number, "name": String});
+			user = new User({"id": 1, "name": "Charlie"});
+			Game = dynamoose.model("Game", {"id": Number, "name": String, "user": User});
+			game = new Game({"id": 2, "name": "Game 2", "user": 1});
+		});
+		afterEach(() => {
+			dynamoose.model.defaults.set({});
+			aws.ddb.revert();
+			User = null;
+			user = null;
+			Game = null;
+			game = null;
+			getItemParams = [];
+			getItemFunction = null;
+		});
+
+		it("Should be a function", () => {
+			expect(game.populate).to.be.a("function");
+		});
+
+		const functionCallTypes = [
+			{"name": "Promise", "func": (document) => document.populate},
+			{"name": "Callback", "func": (document) => util.promisify(document.populate)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should expand to correct object", async () => {
+					getItemFunction = () => Promise.resolve({
+						"Item": {...user}
+					});
+					const res = await callType.func(game).bind(game)();
+					expect(getItemParams).to.eql([{
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					}]);
+					expect(res.toJSON()).to.eql({
+						"id": 2,
+						"name": "Game 2",
+						"user": {
+							"id": 1,
+							"name": "Charlie"
+						}
+					});
+					expect(res).to.be.a.instanceOf(Document);
+				});
+
+				it("Should not call getItem if sub document already exists", async () => {
+					getItemFunction = () => Promise.resolve({
+						"Item": {...user}
+					});
+					game = new Game({"id": 2, "name": "Game 2", "user": user});
+					const res = await callType.func(game).bind(game)();
+					expect(getItemParams).to.eql([]);
+					expect(res.toJSON()).to.eql({
+						"id": 2,
+						"name": "Game 2",
+						"user": {
+							"id": 1,
+							"name": "Charlie"
+						}
+					});
+				});
+
+				describe("Own Model (this)", () => {
+					let child, parent;
+					beforeEach(() => {
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
+						parent = new User({"id": 1, "name": "Tom"});
+						child = new User({"id": 2, "name": "Tim", "parent": 1});
+					});
+
+					it("Should expand to correct object", async () => {
+						getItemFunction = () => Promise.resolve({
+							"Item": {...parent}
+						});
+						const res = await callType.func(child).bind(child)();
+						expect(getItemParams).to.eql([{
+							"Key": {
+								"id": {
+									"N": "1"
+								}
+							},
+							"TableName": "User"
+						}]);
+						expect(res.toJSON()).to.eql({
+							"id": 2,
+							"name": "Tim",
+							"parent": {
+								"id": 1,
+								"name": "Tom"
+							}
+						});
+					});
+
+					it("Should not call getItem if sub document already exists", async () => {
+						getItemFunction = () => Promise.resolve({
+							"Item": {...parent}
+						});
+						child = new User({"id": 2, "name": "Tim", "parent": parent});
+						const res = await callType.func(child).bind(child)();
+						expect(getItemParams).to.eql([]);
+						expect(res.toJSON()).to.eql({
+							"id": 2,
+							"name": "Tim",
+							"parent": {
+								"id": 1,
+								"name": "Tom"
+							}
+						});
+					});
+				});
+			});
+		});
+	});
+
 	describe("conformToSchema", () => {
 		beforeEach(() => {
 			dynamoose.model.defaults.set({
@@ -1427,6 +1719,8 @@ describe("Document", () => {
 			{"schema": new dynamoose.Schema({"id": Number, "name": String, "parent": new dynamoose.Schema({"name": String}, {"saveUnknown": ["age"]})}, {"saveUnknown": ["age"]}), "input": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3}}, "settings": {"saveUnknown": true}},
 			{"schema": new dynamoose.Schema({"id": Number, "name": String, "parent": new dynamoose.Schema({"name": String}, {"saveUnknown": true})}, {"saveUnknown": ["age"]}), "input": {"id": 1, "name": "Bob", "age": 2, "favoriteColor": "gray", "parent": {"name": "Tim", "age": 3, "favoriteColor": "blue"}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim", "age": 3, "favoriteColor": "blue"}}, "settings": {"saveUnknown": true}},
 			{"schema": new dynamoose.Schema({"id": Number, "name": String, "parent": new dynamoose.Schema({"name": String}, {})}, {"saveUnknown": ["age"]}), "input": {"id": 1, "name": "Bob", "age": 2, "favoriteColor": "gray", "parent": {"name": "Tim", "age": 3, "favoriteColor": "blue"}}, "output": {"id": 1, "name": "Bob", "age": 2, "parent": {"name": "Tim"}}, "settings": {"saveUnknown": true}},
+			{"schema": {"id": Number, "name": String}, "input": {"id": 1}, "settings": {"type": "toDynamo"}, "output": {"id": 1}},
+			{"schema": {"id": Number, "name": String, "age": Number}, "input": {"id": 1, "name": "Charlie", "age": "test"}, "error": "test"}
 		];
 
 		tests.forEach((test) => {
@@ -1435,14 +1729,14 @@ describe("Document", () => {
 					const User = dynamoose.model("User", test.schema);
 					const user = new User(test.input);
 
-					return expect(user.conformToSchema(test.settings)).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
+					return expect(user.conformToSchema(test.settings || undefined)).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
 				});
 			} else {
 				it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
 					const User = dynamoose.model("User", test.schema);
 					const user = new User(test.input);
 
-					const obj = await user.conformToSchema(test.settings);
+					const obj = await user.conformToSchema(test.settings || undefined);
 
 					expect({...user}).to.eql(test.output);
 					expect(obj).to.eql(user);
@@ -1498,7 +1792,7 @@ describe("Document", () => {
 				"output": false
 			},
 			{
-				"input": {"id": {"N": "1"}, "map": {"L": [{"S": "hello"},{"S": "world"}]}},
+				"input": {"id": {"N": "1"}, "map": {"L": [{"S": "hello"}, {"S": "world"}]}},
 				"output": true
 			},
 			{
@@ -1701,6 +1995,14 @@ describe("Document", () => {
 				"input": [{}, {"defaults": true}],
 				"output": {"id": 0},
 				"schema": {"id": {"type": Number, "default": 0}}
+			},
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "defaults": true}],
+				"schema": () => {
+					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
+					return {"id": Number, "data": {"type": Item, "default": true}};
+				},
+				"error": new Error.ValidationError("Expected data to be of type Item, instead found type boolean.")
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
@@ -2028,6 +2330,213 @@ describe("Document", () => {
 				"input": [{"id": 1, "data1": "hello"}, {"type": "toDynamo"}],
 				"output": {"id": 1, "data1": "hello"}
 			},
+			// Multiple Types
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [String, Number]},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": "hello"}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [String, Number]},
+				"output": {"id": 1, "data": "hello"}
+			},
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": ["String", "Number"]},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": "hello"}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": ["String", "Number"]},
+				"output": {"id": 1, "data": "hello"}
+			},
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": {"type": [String, Number]}},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": "hello"}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": {"type": [String, Number]}},
+				"output": {"id": 1, "data": "hello"}
+			},
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
+				"output": {"id": 1, "data": 1}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [String]}]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+			},
+			{
+				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [String]}]},
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
+			},
+			{
+				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world"}}
+			},
+			{
+				"input": [{"id": 1, "data": [{"name": "hello world"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": [{"name": "hello world"}]}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}, {"type": Object, "schema": {"name": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id2": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id2": "1", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": String, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": 1, "id1": "1", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": 1, "id2": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id2": "1", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": 1, "id2": "1", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": 1, "id2": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1", "id2": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"error": new Error.ValidationError("Expected data.id1 to be of type number, instead found type string.")
+			},
+			{
+				"input": [{"id": 1, "data": {"name": 1, "id2": 2}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
+				"error": new Error.ValidationError("Expected data.id2 to be of type string, instead found type number.")
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "seconds"}}]},
+				"output": {"id": 1, "data": new Date(1000)}
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date}]},
+				"output": {"id": 1, "data": new Date(1)}
+			},
+			{
+				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "miliseconds"}}]},
+				"output": {"id": 1, "data": new Date(1)}
+			},
+			{
+				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "seconds"}}]},
+				"output": {"id": 1, "data": "hello world"}
+			},
+			{
+				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "miliseconds"}}]},
+				"output": {"id": 1, "data": "hello world"}
+			},
+			{
+				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": [String, {"value": Date}]},
+				"output": {"id": 1, "data": "hello world"}
+			},
+			{
+				"input": [{"id": 1, "data": true}, {"type": "fromDynamo"}],
+				"schema": () => {
+					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
+					return {"id": Number, "data": [Item, String]};
+				},
+				"error": new Error.ValidationError("Expected data to be of type Item, string, instead found type boolean.")
+			},
+			{
+				"input": [{"id": 1, "data": true}, {"type": "fromDynamo"}],
+				"schema": () => {
+					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
+					return {"id": Number, "data": [{"type": Set, "schema": [Item]}, String]};
+				},
+				"error": new Error.ValidationError("Expected data to be of type Item Set, string, instead found type boolean.")
+			}
 		];
 
 		tests.forEach((test) => {
@@ -2037,22 +2546,23 @@ describe("Document", () => {
 					if (test.model) {
 						model = dynamoose.model(...test.model);
 					} else {
-						model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
+						model = dynamoose.model("User", typeof test.schema === "function" ? test.schema() : test.schema, {"create": false, "waitForActive": false});
 					}
 
-					input = (!Array.isArray(test.input) ? [test.input] : test.input);
+					input = !Array.isArray(test.input) ? [test.input] : test.input;
 					input.splice(1, 0, model.Model);
 				}
 
 				return {input, model};
 			};
 
+			const testFunc = test.test || it;
 			if (test.error) {
-				it(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
+				testFunc(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
 					return expect(func().model.objectFromSchema(...func().input)).to.be.rejectedWith(test.error.message);
 				});
 			} else {
-				it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
+				testFunc(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
 					expect(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
 				});
 			}
@@ -2142,7 +2652,7 @@ describe("Document", () => {
 					"d": result.d || new Date()
 				}),
 				"model": ["User", new dynamoose.Schema({"id": String}, {"timestamps": {"createdAt": ["a", "b"], "updatedAt": ["c", "d"]}}), {"create": false, "waitForActive": false}]
-			},
+			}
 		];
 
 		tests.forEach((test) => {
@@ -2155,7 +2665,7 @@ describe("Document", () => {
 						model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
 					}
 
-					input = (!Array.isArray(test.input) ? [test.input] : test.input);
+					input = !Array.isArray(test.input) ? [test.input] : test.input;
 					input.splice(1, 0, model.Model);
 				}
 
