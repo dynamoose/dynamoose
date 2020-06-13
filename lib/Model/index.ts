@@ -474,7 +474,7 @@ export class Model<T extends DocumentCarrier> {
 			"RequestItems": {
 				[this.name]: await Promise.all(documents.map(async (document) => ({
 					"PutRequest": {
-						"Item": await (new this.Document(document as any)).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]})
+						"Item": await new this.Document(document as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]})
 					}
 				})))
 			}
@@ -876,7 +876,7 @@ export class Model<T extends DocumentCarrier> {
 		}
 
 		const conformToSchemaSettings: DocumentObjectFromSchemaSettings = {"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"};
-		const documentify = (document: DynamoDB.AttributeMap): Promise<DocumentCarrier> => (new this.Document((document as any), {"type": "fromDynamo"})).conformToSchema(conformToSchemaSettings);
+		const documentify = (document: DynamoDB.AttributeMap): Promise<DocumentCarrier> => new this.Document(document as any, {"type": "fromDynamo"}).conformToSchema(conformToSchemaSettings);
 
 		const getItemParams: DynamoDB.GetItemInput = {
 			"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
