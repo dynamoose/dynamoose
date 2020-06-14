@@ -4,8 +4,9 @@ import utils = require("./utils");
 import {Condition, ConditionInitalizer, ConditionFunction} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
-import { CallbackType, ObjectType, SortOrder } from "./General";
-import { AWSError } from "aws-sdk";
+import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
+import {AWSError} from "aws-sdk";
+import {PopulateDocuments} from "./Populate";
 
 enum DocumentRetrieverTypes {
 	scan = "scan",
@@ -41,7 +42,7 @@ abstract class DocumentRetriever {
 	count: (this: DocumentRetriever) => DocumentRetriever;
 	consistent: (this: DocumentRetriever) => DocumentRetriever;
 	using: (this: DocumentRetriever, value: string) => DocumentRetriever;
-	exec(this: DocumentRetriever, callback?: any): any {
+	exec (this: DocumentRetriever, callback?: any): any {
 		let timesRequested = 0;
 		const prepareForReturn = async (result): Promise<any> => {
 			if (Array.isArray(result)) {
@@ -53,11 +54,13 @@ abstract class DocumentRetriever {
 					[`${this.internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => await ((new this.internalSettings.model.Document(item, {"type": "fromDynamo"})).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"}))))).filter((a) => Boolean(a));
-			array.lastKey = result.LastEvaluatedKey ? (Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this.internalSettings.model.Document.fromDynamo(key)) : this.internalSettings.model.Document.fromDynamo(result.LastEvaluatedKey)) : undefined;
+			const array: any = (await Promise.all(result.Items.map(async (item) => await new this.internalSettings.model.Document(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"})))).filter((a) => Boolean(a));
+			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this.internalSettings.model.Document.fromDynamo(key)) : this.internalSettings.model.Document.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
 			array[`${this.internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`];
 			array[`times${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}`] = timesRequested;
+			array["populate"] = PopulateDocuments;
+			array["toJSON"] = utils.dynamoose.documentToJSON;
 			return array;
 		};
 		const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
@@ -140,7 +143,7 @@ abstract class DocumentRetriever {
 
 
 
-	constructor(model: Model<Document>, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
+	constructor (model: Model<Document>, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
 		this.internalSettings = {model, typeInformation};
 
 		let condition: Condition;
@@ -159,14 +162,14 @@ abstract class DocumentRetriever {
 Object.entries(Condition.prototype).forEach((prototype) => {
 	const [key, func] = prototype;
 	if (key !== "requestObject") {
-		DocumentRetriever.prototype[key] = function(this: DocumentRetriever, ...args): DocumentRetriever {
+		DocumentRetriever.prototype[key] = function (this: DocumentRetriever, ...args): DocumentRetriever {
 			func.bind(this.settings.condition)(...args);
 			return this;
 		};
 	}
 });
 
-DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever): Promise<any> {
+DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever): Promise<any> {
 	const object: any = {
 		...this.settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
 		"TableName": this.internalSettings.model.name
@@ -203,7 +206,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 			object.IndexName = index.IndexName;
 		}
 	}
-	function moveParameterNames(val, prefix): void {
+	function moveParameterNames (val, prefix): void {
 		const entry = Object.entries(object.ExpressionAttributeNames).find((entry) => entry[1] === val);
 		if (!entry) {
 			return;
@@ -291,7 +294,7 @@ DocumentRetriever.prototype.getRequest = async function(this: DocumentRetriever)
 
 	return object;
 };
-interface DocumentRetrieverResponse<T> extends Array<T> {
+interface DocumentRetrieverResponse<T> extends DocumentArray<T> {
 	lastKey?: ObjectType;
 	count: number;
 }
@@ -318,13 +321,13 @@ const settings: (SettingDefinition | string)[] = [
 	{"name": "using", "settingsName": "index"}
 ];
 settings.forEach((item) => {
-	DocumentRetriever.prototype[(item as SettingDefinition).name || (item as string)] = function(value): DocumentRetriever {
+	DocumentRetriever.prototype[(item as SettingDefinition).name || (item as string)] = function (value): DocumentRetriever {
 		const key: string = (item as SettingDefinition).settingsName || (item as SettingDefinition).name || (item as string);
 		this.settings[key] = (item as SettingDefinition).boolean ? !this.settings[key] : value;
 		return this;
 	};
 });
-DocumentRetriever.prototype.all = function(this: DocumentRetriever, delay = 0, max = 0): DocumentRetriever {
+DocumentRetriever.prototype.all = function (this: DocumentRetriever, delay = 0, max = 0): DocumentRetriever {
 	this.settings.all = {delay, max};
 	return this;
 };
@@ -333,16 +336,16 @@ DocumentRetriever.prototype.all = function(this: DocumentRetriever, delay = 0, m
 export class Scan extends DocumentRetriever {
 	exec(): Promise<ScanResponse<Document[]>>;
 	exec(callback: CallbackType<ScanResponse<Document[]>, AWSError>): void;
-	exec(callback?: CallbackType<ScanResponse<Document[]>, AWSError>): Promise<ScanResponse<Document[]>> | void {
+	exec (callback?: CallbackType<ScanResponse<Document[]>, AWSError>): Promise<ScanResponse<Document[]>> | void {
 		return super.exec(callback);
 	}
 
-	parallel(value: number): Scan {
+	parallel (value: number): Scan {
 		this.settings.parallel = value;
 		return this;
 	}
 
-	constructor(model: Model<Document>, object?: ConditionInitalizer) {
+	constructor (model: Model<Document>, object?: ConditionInitalizer) {
 		super(model, {"type": DocumentRetrieverTypes.scan, "pastTense": "scanned"}, object);
 	}
 }
@@ -350,16 +353,16 @@ export class Scan extends DocumentRetriever {
 export class Query extends DocumentRetriever {
 	exec(): Promise<QueryResponse<Document[]>>;
 	exec(callback: CallbackType<QueryResponse<Document[]>, AWSError>): void;
-	exec(callback?: CallbackType<QueryResponse<Document[]>, AWSError>): Promise<QueryResponse<Document[]>> | void {
+	exec (callback?: CallbackType<QueryResponse<Document[]>, AWSError>): Promise<QueryResponse<Document[]>> | void {
 		return super.exec(callback);
 	}
 
-	sort(order: SortOrder): Query {
+	sort (order: SortOrder): Query {
 		this.settings.sort = order;
 		return this;
 	}
 
-	constructor(model: Model<Document>, object?: ConditionInitalizer) {
+	constructor (model: Model<Document>, object?: ConditionInitalizer) {
 		super(model, {"type": DocumentRetrieverTypes.query, "pastTense": "queried"}, object);
 	}
 }

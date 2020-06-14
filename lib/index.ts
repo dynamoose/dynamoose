@@ -10,12 +10,9 @@ import utils = require("./utils");
 import logger = require("./logger");
 import {Document} from "./Document";
 import ModelStore = require("./ModelStore");
+import {ModelType} from "./General";
 
-interface ModelDocumentConstructor<T extends Document> {
-	new (object: {[key: string]: any}): T;
-}
-
-const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): T & Model<T> & ModelDocumentConstructor<T> => {
+const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): ModelType<T> => {
 	let model: Model<T>;
 	let storedSchema: Model<T>;
 	if (name) {
@@ -41,7 +38,7 @@ const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinit
 			const main = (key: string): void => {
 				utils.object.set(returnObject, key, {});
 				const value = utils.object.get(model as any, key);
-				if (value === null) {
+				if (value === null || value.constructor !== Object && value.constructor !== Array) {
 					utils.object.set(returnObject, key, value);
 				} else {
 					Object.keys(value).forEach((subKey): void => {
@@ -75,5 +72,6 @@ export = {
 	transaction,
 	aws,
 	logger,
-	"UNDEFINED": Internal.Public.undefined
+	"UNDEFINED": Internal.Public.undefined,
+	"THIS": Internal.Public.this
 };

@@ -34,6 +34,7 @@ describe("Schema", () => {
 	it("Should throw error if timestamps already exists in schema", () => {
 		expect(() => new dynamoose.Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true}).settings).to.throw("Timestamp attributes must not be defined in schema.");
 		expect(() => new dynamoose.Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": ["created", "a1"], "updatedAt": ["updated", "b1"]}}).settings).to.throw("Timestamp attributes must not be defined in schema.");
 	});
 
 	it("Should throw error if passing multiple schema elements into array", () => {
@@ -49,6 +50,30 @@ describe("Schema", () => {
 	it("Should throw error if attribute names contain dots", () => {
 		expect(() => new dynamoose.Schema({"id.data": String})).to.throw("Attributes must not contain dots.");
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name.other": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes must not contain dots.");
+	});
+
+	it("Should throw error if attribute is both hashKey and rangeKey", () => {
+		expect(() => new dynamoose.Schema({"id": String, "friend": {"type": String, "hashKey": true, "rangeKey": true}})).to.throw("Attribute friend must not be both hashKey and rangeKey");
+	});
+
+	it("Should throw error if using hashKey as nested attribute", () => {
+		expect(() => new dynamoose.Schema({"id": String, "friend": {"type": Object, "schema": {"name": {"type": String, "hashKey": true}}}})).to.throw("hashKey must be at root object and not nested in object or array.");
+	});
+
+	it("Should throw error if using multiple hashKey's'", () => {
+		expect(() => new dynamoose.Schema({"id": String, "attr1": {"type": String, "hashKey": true}, "attr2": {"type": String, "hashKey": true}})).to.throw("Only one hashKey allowed per schema.");
+	});
+
+	it("Should throw error if using rangeKey as nested attribute", () => {
+		expect(() => new dynamoose.Schema({"id": String, "friend": {"type": Object, "schema": {"name": {"type": String, "rangeKey": true}}}})).to.throw("rangeKey must be at root object and not nested in object or array.");
+	});
+
+	it("Should throw error if using multiple rangeKeys's'", () => {
+		expect(() => new dynamoose.Schema({"id": String, "attr1": {"type": String, "rangeKey": true}, "attr2": {"type": String, "rangeKey": true}})).to.throw("Only one rangeKey allowed per schema.");
+	});
+
+	it("Should throw error if using index as nested attribute", () => {
+		expect(() => new dynamoose.Schema({"id": String, "friend": {"type": Object, "schema": {"name": {"type": String, "index": {"global": true}}}}})).to.throw("Index must be at root object and not nested in object or array.");
 	});
 
 	it.skip("Should throw error if attribute names only contains number", () => {
@@ -67,6 +92,76 @@ describe("Schema", () => {
 		expect(() => new dynamoose.Schema({"id": Number, "friends": {"type": Set, "schema": [String]}})).to.not.throw();
 	});
 
+	describe("Nested Schemas", () => {
+		it("Should have correct schemaObject for nested schemas", () => {
+			expect(new dynamoose.Schema({"id": Number, "parent": new dynamoose.Schema({"name": String})}).schemaObject).to.eql({
+				"id": Number,
+				"parent": {
+					"type": Object,
+					"schema": {
+						"name": String
+					}
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas when defined as schema", () => {
+			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String})}}).schemaObject).to.eql({
+				"id": Number,
+				"parent": {
+					"type": Object,
+					"schema": {
+						"name": String
+					}
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas when defined as schema and other settings", () => {
+			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String}), "required": true}}).schemaObject).to.eql({
+				"id": Number,
+				"parent": {
+					"type": Object,
+					"schema": {
+						"name": String
+					},
+					"required": true
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas as array", () => {
+			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})]}}).schemaObject).to.eql({
+				"id": Number,
+				"parents": {
+					"type": Array,
+					"schema": [{
+						"type": Object,
+						"schema": {
+							"name": String
+						}
+					}]
+				}
+			});
+		});
+
+		it("Should have correct schemaObject for nested schemas as array and other settings", () => {
+			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})], "required": true}}).schemaObject).to.eql({
+				"id": Number,
+				"parents": {
+					"type": Array,
+					"schema": [{
+						"type": Object,
+						"schema": {
+							"name": String
+						}
+					}],
+					"required": true
+				}
+			});
+		});
+	});
+
 	describe("getAttributeType", () => {
 		const schemas = [
 			{
@@ -81,6 +176,9 @@ describe("Schema", () => {
 					"metadata": Object,
 					"friends": Array,
 					"picture": Buffer,
+					"data": [String, Buffer],
+					"dataArray": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Buffer]}],
+					"randomArray": [{"type": Object, "schema": {"name": String}}, {"type": Array, "schema": [Buffer]}],
 					"favoriteFoods": {"type": Set, "schema": [String]},
 					"favoriteNumbers": {"type": Set, "schema": [Number]},
 					"favoriteDates": {"type": Set, "schema": [Date]},
@@ -103,7 +201,10 @@ describe("Schema", () => {
 					"birthday": "DaTe",
 					"metadata": "objECT",
 					"friends": "ARRay",
-					"picture": "buffer"
+					"picture": "buffer",
+					"data": ["String", "Buffer"],
+					"dataArray": [{"type": "Array", "schema": ["String"]}, {"type": "Array", "schema": ["Buffer"]}],
+					"randomArray": [{"type": "Object", "schema": {"name": "String"}}, {"type": "Array", "schema": ["Buffer"]}]
 				}
 			}
 		];
@@ -119,6 +220,9 @@ describe("Schema", () => {
 			{"input": "metadata", "output": "M"},
 			{"input": "friends", "output": "L"},
 			{"input": "picture", "output": "B"},
+			{"input": "data", "output": ["S", "B"]},
+			{"input": "dataArray", "output": ["L", "L"]},
+			{"input": "randomArray", "output": ["M", "L"]},
 			{"input": "favoriteFoods", "output": "SS", "collection": 1},
 			{"input": "favoriteNumbers", "output": "NS", "collection": 1},
 			{"input": "favoriteDates", "output": "NS", "collection": 1},
@@ -732,7 +836,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				expect(await (new dynamoose.Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}}))).to.eql(test.output);
+				expect(await new dynamoose.Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}})).to.eql(test.output);
 			});
 		});
 	});
@@ -768,6 +872,21 @@ describe("Schema", () => {
 				"name": "Should return correct result with object type and no schema",
 				"input": {"id": Number, "address": Object},
 				"output": ["id", "address"]
+			},
+			{
+				"name": "Should return correct result for multiple attribute types",
+				"input": {"id": Number, "data": [String, Number]},
+				"output": ["id", "data"]
+			},
+			{
+				"name": "Should return correct result for multiple attribute types and one as array",
+				"input": {"id": Number, "data": [{"type": Array, "schema": [Number]}, Number]},
+				"output": ["id", "data", "data.0"]
+			},
+			{
+				"name": "Should work for multiple nested types",
+				"input": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
+				"output": ["id", "data", "data.0", "data.name"]
 			}
 		];
 
@@ -835,6 +954,11 @@ describe("Schema", () => {
 			expect(functions.fromDynamo).to.exist;
 			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653);
 			expect(functions.fromDynamo(1582246653)).to.eql(new Date(1582246653000));
+		});
+
+		it("Should have correct result for multiple types", () => {
+			const result = new dynamoose.Schema({"id": {"type": [String, Buffer]}}).getAttributeTypeDetails("id");
+			expect(result.map((item) => ({"name": item.name, "dynamodbType": item.dynamodbType}))).to.eql([{"name": "String", "dynamodbType": "S"}, {"name": "Buffer", "dynamodbType": "B"}]);
 		});
 	});
 
@@ -1020,7 +1144,7 @@ describe("Schema", () => {
 		tests.forEach((test) => {
 			it(test.name, async () => {
 				const schema = new dynamoose.Schema(test.schema);
-				const output = await (schema.getAttributeSettingValue(...test.input));
+				const output = await schema.getAttributeSettingValue(...test.input);
 				if (typeof output !== "function") {
 					expect(output).to.eql(test.output);
 				} else {
@@ -1028,6 +1152,29 @@ describe("Schema", () => {
 					expect(output.toString()).to.eql(test.output.toString());
 					expect(await output()).to.eql(await test.output());
 				}
+			});
+		});
+	});
+
+	describe("getTypePaths", () => {
+		it("Should be a function", () => {
+			expect(new dynamoose.Schema({"id": String}).getTypePaths).to.be.a("function");
+		});
+
+		const tests = [
+			{"schema": {"id": String, "data": [String, Number]}, "input": {"id": "id1", "data": "hello world"}, "output": {"data": 0}},
+			{"schema": {"id": String, "data": [String, Number]}, "input": {"id": "id1", "data": 10}, "output": {"data": 1}},
+			{"schema": {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item2": String}}]}, "input": {"id": "id1", "data": {"item1": "hello"}}, "output": {"data": 0}},
+			{"schema": {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item2": String}}]}, "input": {"id": "id1", "data": {"item2": "hello"}}, "output": {"data": 1}},
+			{"schema": {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item1": Number}}]}, "input": {"id": "id1", "data": {"item1": "hello"}}, "output": {"data": 0}},
+			{"schema": {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item1": Number}}]}, "input": {"id": "id1", "data": {"item1": 10}}, "output": {"data": 1}},
+			{"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]}, "input": {"id": 1, "data": {"name": 1, "id1": "1", "id2": "1"}}, "output": {"data": 1}},
+			{"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]}, "input": {"id": 1, "data": {"name": 1, "id2": 2}}, "output": {"data": 1}}
+		];
+
+		tests.forEach((test) => {
+			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with schema as ${JSON.stringify(test.schema)}`, () => {
+				expect(new dynamoose.Schema(test.schema).getTypePaths(test.input)).to.eql(test.output);
 			});
 		});
 	});

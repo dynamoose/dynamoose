@@ -34,7 +34,7 @@ describe("utils.array_flatten", () => {
 		{
 			"input": [[1, [2, 3]], 4],
 			"output": [1, [2, 3], 4]
-		},
+		}
 	];
 
 	tests.forEach((test) => {
