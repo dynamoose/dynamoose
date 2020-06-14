@@ -111,7 +111,59 @@ describe("utils.dynamoose.index_changes", () => {
 				"name": "nameGlobalIndex2",
 				"type": "delete"
 			}
-		]}
+		]},
+		{
+			"input": [],
+			"schema": [{"id": String, "data1": String, "data": {"type": String, "index": {"global": true, "rangeKey": "data1"}}}, {"id": String, "data2": String, "data": {"type": String, "index": {"global": true, "rangeKey": "data2"}}}],
+			"output": [
+				{
+					"spec": {
+						"IndexName": "dataGlobalIndex",
+						"KeySchema": [
+							{
+								"AttributeName": "data",
+								"KeyType": "HASH"
+							},
+							{
+								"AttributeName": "data1",
+								"KeyType": "RANGE"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					},
+					"type": "add"
+				},
+				{
+					"spec": {
+						"IndexName": "dataGlobalIndex",
+						"KeySchema": [
+							{
+								"AttributeName": "data",
+								"KeyType": "HASH"
+							},
+							{
+								"AttributeName": "data2",
+								"KeyType": "RANGE"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					},
+					"type": "add"
+				}
+			]
+		}
 	];
 
 	tests.forEach((test) => {

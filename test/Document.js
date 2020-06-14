@@ -2266,6 +2266,11 @@ describe("Document", () => {
 
 			// Multiple Schemas
 			{
+				"schema": [new Schema({"id": Number, "name": String}), new Schema({"id": Number, "name": Number})],
+				"input": [{"id": 1, "name": "Test"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "name": "Test"}
+			},
+			{
 				"schema": [{"id": Number, "name": String}, {"id": Number, "name": Number}],
 				"input": [{"id": 1, "name": "Test"}, {"type": "toDynamo"}],
 				"output": {"id": 1, "name": "Test"}
