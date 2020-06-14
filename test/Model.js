@@ -338,7 +338,7 @@ describe("Model", () => {
 					"createTable": (params) => {
 						createTableParams = params;
 						return {
-							"promise": function() {
+							"promise": function () {
 								self = this;
 								return Promise.resolve();
 							}
@@ -1418,6 +1418,26 @@ describe("Model", () => {
 					expect(user.name).to.eql("Charlie-get");
 				});
 
+				describe("Populate", () => {
+					it("Should autopopulate if model settings have populate set", async () => {
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+							}
+						});
+						const user = await callType.func(User).bind(User)(1);
+						expect(user.toJSON()).to.eql({
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						});
+					});
+				});
+
 				it("Should throw error if DynamoDB responds with error", () => {
 					getItemFunction = () => Promise.reject({"error": "Error"});
 
@@ -1439,6 +1459,18 @@ describe("Model", () => {
 					expect(user.name).to.eql("Charlie");
 				});
 
+				it("Should return object with correct combine attribute without modifying", async () => {
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}, "data2": {"S": "world"}, "combine": {"S": "random"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).to.be.an("object");
+					expect(Object.keys(user)).to.eql(["id", "data1", "data2", "combine"]);
+					expect(user.id).to.eql(1);
+					expect(user.data1).to.eql("hello");
+					expect(user.data2).to.eql("world");
+					expect(user.combine).to.eql("random");
+				});
+
 				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", () => {
 					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}});
@@ -1448,7 +1480,9 @@ describe("Model", () => {
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledGetItem = false;
-					getItemFunction = () => {calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});};
+					getItemFunction = () => {
+						calledGetItem = true; return Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					};
 					let describeTableResponse = {
 						"Table": {"TableStatus": "CREATING"}
 					};
@@ -1635,6 +1669,35 @@ describe("Model", () => {
 					]);
 				});
 
+				describe("Populate", () => {
+					it("Should have populate function on response", async () => {
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						const result = await callType.func(User).bind(User)([1]);
+						expect(result.populate).to.be.a("function");
+					});
+
+					it("Should autopopulate if model settings have populate set", async () => {
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"batchGetItem": () => {
+								return {"promise": () => ({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]}, "UnprocessedKeys": {}})};
+							}
+						});
+						const result = await callType.func(User).bind(User)([1]);
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
+				});
+
 				it("Should handle correctly if item not in Responses or UnprocessedKeys", async () => {
 					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {"User": {"Keys": [{"id": {"N": 3}}, {"id": {"N": 2}}]}}});
 					const result = await callType.func(User).bind(User)([1, 2, 3, 4]);
@@ -1663,7 +1726,9 @@ describe("Model", () => {
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
 					let calledBatchGetItem = false;
-					promiseFunction = () => {calledBatchGetItem = true; return Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});};
+					promiseFunction = () => {
+						calledBatchGetItem = true; return Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					};
 					let describeTableResponse = {
 						"Table": {"TableStatus": "CREATING"}
 					};
@@ -1854,6 +1919,34 @@ describe("Model", () => {
 						"TableName": "User"
 					});
 				});
+
+				it("Should send correct params to putItem with combine attribute", async () => {
+					createItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)({"id": 1, "data1": "hello", "data2": "world"});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"data1": {
+								"S": "hello"
+							},
+							"data2": {
+								"S": "world"
+							},
+							"combine": {
+								"S": "hello,world"
+							}
+						},
+						"TableName": "User"
+					});
+				});
 			});
 		});
 	});
@@ -1946,6 +2039,29 @@ describe("Model", () => {
 								{
 									"PutRequest": {
 										"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it("Should should send correct parameters to batchWriteItem with combine atttribute", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)([{"id": 1, "data1": "hello", "data2": "world"}, {"id": 2, "data1": "hello", "data2": "universe"}]);
+					expect(params).to.be.an("object");
+					expect(params).to.eql({
+						"RequestItems": {
+							"User": [
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}, "data2": {"S": "world"}, "combine": {"S": "hello,world"}}
+									}
+								},
+								{
+									"PutRequest": {
+										"Item": {"id": {"N": "2"}, "data1": {"S": "hello"}, "data2": {"S": "universe"}, "combine": {"S": "hello,universe"}}
 									}
 								}
 							]
@@ -2691,7 +2807,7 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
@@ -2711,7 +2827,7 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
@@ -2730,7 +2846,7 @@ describe("Model", () => {
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
-							"#a0": "age",
+							"#a0": "age"
 						},
 						"UpdateExpression": "REMOVE #a0",
 						"Key": {
@@ -2848,6 +2964,74 @@ describe("Model", () => {
 						"ReturnValues": "ALL_NEW"
 					});
 					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
+				});
+
+				it("Should send correct params to updateItem for timestamps with updateAt with custom parameter names", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}));
+					const date = Date.now();
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "updated",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": updateItemParams.ExpressionAttributeValues[":v0"].N
+							},
+							":v1": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
+				});
+
+				it("Should send correct params to updateItem for timestamps with updateAt with multiple custom parameter names", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": ["a1", "a2"], "updatedAt": ["b1", "b2"]}}));
+					const date = Date.now();
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "b1",
+							"#a1": "b2",
+							"#a2": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": updateItemParams.ExpressionAttributeValues[":v0"].N
+							},
+							":v1": {
+								"N": updateItemParams.ExpressionAttributeValues[":v1"].N
+							},
+							":v2": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = :v2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.be.within(date - 10, date + 10);
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v1"].N)).to.be.within(date - 10, date + 10);
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).to.eql(parseInt(updateItemParams.ExpressionAttributeValues[":v1"].N));
 				});
 
 				it("Should send correct params to updateItem with conditional", async () => {
@@ -3294,6 +3478,83 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should throw error if updating one combine property", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+
+					return expect(callType.func(User).bind(User)({"id": 1}, {"data1": "Charlie"})).to.be.rejectedWith("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: data2.");
+				});
+
+				it("Should throw error if using multiple types with combine type", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": ["Combine", "String"]});
+
+					return expect(callType.func(User).bind(User)({"id": 1}, {"data1": "Charlie", "data2": "Fish"})).to.be.rejectedWith("Combine type is not allowed to be used with multiple types.");
+				});
+
+				it("Should send correct parameters when updating all combine properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)({"id": 1}, {"data1": "hello", "data2": "world"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1",
+							"#a1": "data2",
+							"#a2": "combine"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "hello"
+							},
+							":v1": {
+								"S": "world"
+							},
+							":v2": {
+								"S": "hello,world"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = :v2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct parameters when updating or removing all combine properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"data1": "hello"}, "$REMOVE": {"data2": "world"}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1",
+							"#a1": "data2",
+							"#a2": "combine"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "hello"
+							},
+							":v2": {
+								"S": "hello"
+							}
+						},
+						"UpdateExpression": "REMOVE #a1 SET #a0 = :v0, #a2 = :v2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should throw error if AWS throws error", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
@@ -3540,6 +3801,14 @@ describe("Model", () => {
 				]
 			});
 		});
+
+		it("Should reject if has multiple types for hashKey", () => {
+			return expect(dynamoose.model("User", {"id": [String, Number]}).table.create.request()).to.eventually.rejectedWith("You can not have multiple types for attribute definition: id.");
+		});
+
+		it("Should reject if has multiple types for rangeKey", () => {
+			return expect(dynamoose.model("User", {"id": String, "rangeKey": {"type": [String, Number], "rangeKey": true}}).table.create.request()).to.eventually.rejectedWith("You can not have multiple types for attribute definition: rangeKey.");
+		});
 	});
 
 	describe("Model.transaction", () => {
@@ -3760,6 +4029,238 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Serializer", () => {
+		let User;
+		beforeEach(() => {
+			User = dynamoose.model("User", {"id": Number, "name": String, "friend": {"type": Object, "schema": {"id": Number, "name": String}}});
+		});
+		afterEach(() => {
+			User = null;
+		});
+
+		describe("Model.serializer", () => {
+			it("Should be an instance of Serializer", () => {
+				expect(User.serializer).to.be.an.instanceOf(require("../dist/Serializer").Serializer);
+			});
+
+			describe("Model.serializer.add", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.add).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with no parameters", () => {
+					expect(() => User.serializer.add()).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with object as first parameter", () => {
+					expect(() => User.serializer.add({})).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.add(1)).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with only first parameter", () => {
+					expect(() => User.serializer.add("mySerializer")).to.throw("Field options is required and should be an object or array");
+				});
+
+				it("Should throw an error if calling with string as second parameter", () => {
+					expect(() => User.serializer.add("mySerializer", "hello world")).to.throw("Field options is required and should be an object or array");
+				});
+
+				it("Should throw an error if calling with number as second parameter", () => {
+					expect(() => User.serializer.add("mySerializer", 1)).to.throw("Field options is required and should be an object or array");
+				});
+			});
+
+			describe("Model.serializer.delete", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.delete).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with no parameters", () => {
+					expect(() => User.serializer.delete()).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.delete(1)).to.throw("Field name is required and should be of type string");
+				});
+
+				it("Should throw an error if trying to delete primary default serializer", () => {
+					expect(() => User.serializer.delete("_default")).to.throw("Can not delete primary default serializer");
+				});
+			});
+
+			describe("Model.serializer.default.set", () => {
+				it("Should be a function", () => {
+					expect(User.serializer.default.set).to.be.a("function");
+				});
+
+				it("Should throw an error if calling with number as first parameter", () => {
+					expect(() => User.serializer.default.set(1)).to.throw("Field name is required and should be of type string");
+				});
+			});
+		});
+
+		const serializeTests = [
+			{"input": [[]], "output": []},
+			{"input": [], "output": []},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]], "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], ["name"]], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], ["id"]], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"include": ["name"]}], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"include": ["id"]}], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["name"]}], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id"]}], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id", "name"]}], "output": [{}, {}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"include": []}], "output": [{}, {}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id"], "include": ["id"]}], "output": [{}, {}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["id"], "include": ["id", "name"]}], "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], {"exclude": ["name"], "include": ["id", "name"]}], "output": [{"id": 1}, {"id": 2}]},
+			{"input": [[{"id": 1, "name": "Bob", "friend": {"id": 3, "name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"id": 3, "name": "Tom"}}], {"exclude": ["friend"]}], "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": [[{"id": 1, "name": "Bob", "friend": {"id": 3, "name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"id": 3, "name": "Tom"}}], {"exclude": ["friend.id"]}], "output": [{"id": 1, "name": "Bob", "friend": {"name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"name": "Tom"}}]},
+			{"input": [[{"id": 1, "name": "Bob", "friend": {"id": 3, "name": "Tom"}}, {"id": 2, "name": "Tim", "friend": {"id": 3, "name": "Tom"}}], {"include": ["friend.name"]}], "output": [{"friend": {"name": "Tom"}}, {"friend": {"name": "Tom"}}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["name"]);
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "mySerializer"];
+			}, "output": [{"name": "Bob"}, {"name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "mySerializer"];
+			}, "output": [{"id": 1}, {"id": 2}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("mySerializer");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1}, {"id": 2}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("mySerializer");
+				User.serializer.default.set();
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("random");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.delete("mySerializer");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "mySerializer"];
+			}, "error": "Field options is required and should be an object or array"},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.delete("random");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("mySerializer", ["id"]);
+				User.serializer.default.set("mySerializer");
+				User.serializer.delete("mySerializer");
+				return [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]];
+			}, "output": [{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("isActive", {
+					"modify": (serialized, original) => {
+						serialized.isActive = original.status === "active";
+						return serialized;
+					}
+				});
+				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
+			}, "output": [{"id": 1, "status": "active", "isActive": true, "name": "Bob"}, {"id": 2, "status": "not_active", "isActive": false, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("isActive", {
+					"exclude": ["status"],
+					"modify": (serialized, original) => {
+						serialized.isActive = original.status === "active";
+						return serialized;
+					}
+				});
+				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
+			}, "output": [{"id": 1, "isActive": true, "name": "Bob"}, {"id": 2, "isActive": false, "name": "Tim"}]},
+			{"input": () => {
+				User.serializer.add("isActive", {
+					"include": ["id"],
+					"modify": (serialized, original) => {
+						serialized.isActive = original.status === "active";
+						return serialized;
+					}
+				});
+				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
+			}, "output": [{"id": 1, "isActive": true}, {"id": 2, "isActive": false}]},
+			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "random"], "error": "Field options is required and should be an object or array"},
+			{"input": [{"id": 1, "name": "Bob"}], "error": "documentsArray must be an array of document objects"}
+		];
+		describe("Model.serializeMany", () => {
+			it("Should be a function", () => {
+				expect(User.serializeMany).to.be.a("function");
+			});
+
+			serializeTests.forEach((test) => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+					const input = typeof test.input === "function" ? test.input() : test.input;
+					if (test.error) {
+						expect(() => User.serializeMany(...input)).to.throw(test.error);
+					} else {
+						expect(User.serializeMany(...input)).to.eql(test.output);
+					}
+				});
+
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} when using document instance`, () => {
+					const input = typeof test.input === "function" ? test.input() : test.input;
+					if (Array.isArray(input[0])) {
+						input[0] = input[0].map((obj) => new User(obj));
+					}
+
+					if (test.error) {
+						expect(() => User.serializeMany(...input)).to.throw(test.error);
+					} else {
+						expect(User.serializeMany(...input)).to.eql(test.output);
+					}
+				});
+			});
+		});
+
+		describe("model.serialize", () => {
+			it("Should be a function", () => {
+				expect(new User().serialize).to.be.a("function");
+			});
+
+			serializeTests.forEach((test) => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+					const input = typeof test.input === "function" ? test.input() : test.input;
+
+					if (Array.isArray(input[0])) {
+						input[0].forEach((object, index) => {
+							const document = new User(object);
+
+							if (test.error) {
+								expect(() => document.serialize(input[1])).to.throw(test.error);
+							} else {
+								expect(document.serialize(input[1])).to.eql(test.output[index]);
+							}
+						});
+					}
+				});
+
+				if (!test.error) {
+					it(`Should return same output as document.toJSON() for ${JSON.stringify(test.input)}`, () => {
+						const input = typeof test.input === "function" ? test.input() : test.input;
+
+						if (Array.isArray(input[0])) {
+							input[0].forEach((object) => {
+								const document = new User(object);
+								User.serializer.default.set();
+								expect(document.serialize()).to.eql(document.toJSON());
+							});
+						}
+					});
+				}
+			});
+		});
+	});
+
 	describe("Model.methods", () => {
 		let User, user;
 		beforeEach(() => {
@@ -3775,7 +4276,7 @@ describe("Model", () => {
 			expect(User.methods).to.be.an("object");
 		});
 
-		function customMethodTests(settings) {
+		function customMethodTests (settings) {
 			describe(`${settings.prefixName}.set`, () => {
 				it("Should be a function", () => {
 					expect(settings.methodEntryPoint().set).to.be.a("function");

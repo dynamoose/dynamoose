@@ -67,14 +67,14 @@ The default object is listed below.
 }
 ```
 
-## dynamoose.Model.defaults
+## dynamoose.model.defaults.set(defaults)
 
-The `dynamoose.Model.defaults` object is a property you can edit to set default values for the config object for new models that are created. Ensure that you set this property before initializing your models to ensure the defaults are applied to your models.
+This function is used to set default values for the config object for new models that are created. Ensure that you set this before initializing your models to ensure the defaults are applied to your models.
 
 The priority of how the configuration gets set for new models is:
 
 - Configuration object passed into model creation
-- Custom defaults provided by `dynamoose.Model.defaults`
+- Custom defaults provided by `dynamoose.model.defaults.set(defaults)`
 - Dynamoose internal defaults
 
 In the event that properties are not passed into the configuration object or custom defaults, the Dynamoose internal defaults will be used.
@@ -82,15 +82,15 @@ In the event that properties are not passed into the configuration object or cus
 You can set the defaults by setting the property to a custom object:
 
 ```js
-dynamoose.Model.defaults = {
+dynamoose.model.defaults.set({
 	"prefix": "MyApplication_"
-};
+});
 ```
 
 In order to revert to the default and remove custom defaults you can set it to an empty object:
 
 ```js
-dynamoose.Model.defaults = {};
+dynamoose.model.defaults.set({});
 ```
 
 ## Model.table.create.request()
@@ -231,6 +231,7 @@ The array you receive back is a standard JavaScript array of objects. However, t
 The extra properties attached to the array are:
 
 - `unprocessedKeys` - In the event there are more documents to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those documents. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
+- `populate` - A function that is an alias to [`document.populate`](Document#documentpopulatesettings-callback) and will populate all documents in the array.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
@@ -919,4 +920,67 @@ const user = new User();
 await user.setName();
 // OR
 user.setName((err) => {});
+```
+
+## Model.serializeMany(items[, serializer])
+
+This function takes in an array of `items` and serializes all of them. This function is very similar to [`document.serialize`](Document#documentserializeserializer) except it takes in an array of documents to serialize and returns an array of those documents.
+
+```js
+User.serializeMany(await User.scan().exec(), "myCustomSerializer");
+```
+
+## Model.serializer.add(name, serializer)
+
+This function adds a serializer to the model.
+
+The `serializer` parameter can be an object containing the following properties.
+
+| Name | Type | Description |
+| --- | --- | --- |
+| include | [string] | The properties you wish to include when serializing. |
+| exclude | [string] | The properties you wish to exclude when serializing. |
+| modify | (serialized: Object, original: Object) => Object | A function you want to use to modify the object in the serializer. The `serialized` parameter is the new object (after `include` & `exclude` have been applied). The `original` parameter is the original document (before `include` & `exclude` have been applied). |
+
+```js
+User.serializer.add("myCustomSerializer", {
+	"include": ["email"]
+});
+
+User.serializer.add("myCustomSerializer", {
+	"exclude": ["password"]
+});
+
+User.serializer.add("myCustomSerializer", {
+	"exclude": ["status"],
+	"modify": (serialized, original) => ({...serialized, "isActive": original.status === "active"})
+});
+```
+
+You can also pass an array into the `serializer` parameter, which acts as a shorthand for the `include` property.
+
+```js
+User.serializer.add("myCustomSerializer", ["id"]); // ["id"] is the same as {"include": ["id"]}
+```
+
+## Model.serializer.delete(name)
+
+This function will delete the serializer from the list of serializer on the model. If no existing serializer is assigned for that name, the function will do nothing and no error will be thrown.
+
+```js
+User.serializer.delete("myCustomSerializer");
+```
+
+## Model.serializer.default.set([name])
+
+This function sets the default serializer for the given model. By default the default serializer has the same behavior as [`document.toJSON`](Document#documenttojson). The default serializer will be used for [`Model.serializeMany`](#modelserializemanyitems-serializer) and [`document.serialize`](Document#documentserializeserializer) if you don't pass anything into the `serializer` parameter.
+
+```js
+User.serializer.default.set("myCustomSerializer");
+```
+
+You can revert back to the default serializer by calling this method with no arguments.
+
+```js
+User.serializer.default.set();
 ```

@@ -15,7 +15,7 @@ describe("unique_array_elements", () => {
 		{"input": [[1, 2], [1, 2]], "output": [[1, 2]]},
 		{"input": [[1, 2], [3, 4]], "output": [[1, 2], [3, 4]]},
 		{"input": [{"hello": "world"}, {"hello": "world"}], "output": [{"hello": "world"}]},
-		{"input": [{"hello": "world"}, {"hello": "universe"}], "output": [{"hello": "world"}, {"hello": "universe"}]},
+		{"input": [{"hello": "world"}, {"hello": "universe"}], "output": [{"hello": "world"}, {"hello": "universe"}]}
 	];
 	tests.forEach((test) => {
 		it(`Should return ${test.output} for ${test.input}`, () => {
