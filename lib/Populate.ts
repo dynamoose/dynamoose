@@ -28,11 +28,10 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 
 	const {model} = this;
 	const localSettings = settings;
-	const promise = new Promise(async (resolve) => {
-		const schema: Schema = await model.schemaForObject(this);
+	const promise = model.schemaForObject(this).then((schema) => {
 		const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model") : obj.details.name === "Model").map((obj) => obj.prop);
 
-		return resolve({schema, modelAttributes});
+		return {schema, modelAttributes};
 	}).then((obj: {schema: Schema; modelAttributes: any[]}) => {
 		const {schema, modelAttributes} = obj;
 
