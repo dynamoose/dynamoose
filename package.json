@@ -16,7 +16,7 @@
     "eslint": "^6.8.0",
     "mocha": "^7.1.2",
     "nyc": "^15.0.1",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.5"
   },
   "scripts": {
     "prepare": "npm run build:clean; npm run build",
