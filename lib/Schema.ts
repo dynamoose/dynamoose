@@ -373,7 +373,7 @@ export class Schema {
 			return func(attributeValue);
 		}
 	}
-	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string; includeAllProperties?: boolean; } = {"type": "toDynamo"}): ObjectType {
+	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string; includeAllProperties?: boolean } = {"type": "toDynamo"}): ObjectType {
 		return Object.entries(object).reduce((result, entry) => {
 			const [key, value] = entry;
 			const fullKey = [settings.previousKey, key].filter((a) => Boolean(a)).join(".");
@@ -386,7 +386,7 @@ export class Schema {
 						"index": 0,
 						"matchCorrectness": 0,
 						"entryCorrectness": [0]
-					}
+					};
 				}
 				return result;
 			}
@@ -439,7 +439,7 @@ export class Schema {
 					"index": 0,
 					matchCorrectness,
 					"entryCorrectness": [matchCorrectness]
-				}
+				};
 			}
 
 			if (isObject) {

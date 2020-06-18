@@ -2288,7 +2288,7 @@ describe("Document", () => {
 			{
 				"schema": [{"id": Number, "name": String}, {"id": Number, "data": String}],
 				"input": [{"id": 1, "data": "Test"}, {"type": "toDynamo"}],
-				"output": {"id": 1, "data": "Test"},
+				"output": {"id": 1, "data": "Test"}
 			},
 			// Combine Type
 			{
