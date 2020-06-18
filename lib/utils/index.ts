@@ -8,6 +8,7 @@ import array_flatten = require("./array_flatten");
 import empty_function = require("./empty_function");
 import object = require("./object");
 import dynamoose = require("./dynamoose");
+import all_elements_match from "./all_elements_match";
 
 export = {
 	combine_objects,
@@ -16,6 +17,7 @@ export = {
 	capitalize_first_letter,
 	set_immediate_promise,
 	unique_array_elements,
+	all_elements_match,
 	array_flatten,
 	empty_function,
 	object,

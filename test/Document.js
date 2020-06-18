@@ -1891,9 +1891,9 @@ describe("Document", () => {
 		];
 
 		tests.forEach((test) => {
-			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, () => {
+			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
 				const model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
-				expect(model.attributesWithSchema(test.input, model.Model).sort()).to.eql(test.output.sort());
+				expect((await model.attributesWithSchema(test.input, model.Model)).sort()).to.eql(test.output.sort());
 			});
 		});
 	});
@@ -2264,6 +2264,32 @@ describe("Document", () => {
 				"error": new Error.ValidationError("name is a required property but has no value when trying to save document")
 			},
 
+			// Multiple Schemas
+			{
+				"schema": [new Schema({"id": Number, "name": String}), new Schema({"id": Number, "name": Number})],
+				"input": [{"id": 1, "name": "Test"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "name": "Test"}
+			},
+			{
+				"schema": [{"id": Number, "name": String}, {"id": Number, "name": Number}],
+				"input": [{"id": 1, "name": "Test"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "name": "Test"}
+			},
+			{
+				"schema": [{"id": Number, "name": String}, {"id": Number, "name": Number}],
+				"input": [{"id": 1, "name": 2}, {"type": "toDynamo"}],
+				"output": {"id": 1, "name": 2}
+			},
+			{
+				"schema": [{"id": Number, "name": String}, {"id": Number, "data": String}],
+				"input": [{"id": 1, "name": "Test"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "name": "Test"}
+			},
+			{
+				"schema": [{"id": Number, "name": String}, {"id": Number, "data": String}],
+				"input": [{"id": 1, "data": "Test"}, {"type": "toDynamo"}],
+				"output": {"id": 1, "data": "Test"}
+			},
 			// Combine Type
 			{
 				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},

@@ -2,7 +2,7 @@ import {Document} from "./Document";
 import {DocumentArray, CallbackType} from "./General";
 import utils = require("./utils");
 import {AWSError} from "aws-sdk";
-import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
+import {DynamoDBTypeResult, DynamoDBSetTypeResult, Schema} from "./Schema";
 
 export interface PopulateSettings {
 	properties?: string[] | string | boolean;
@@ -27,32 +27,38 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 	}
 
 	const {model} = this;
-	const {schema} = model;
-	const modelAttributes = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model") : obj.details.name === "Model").map((obj) => obj.prop);
 	const localSettings = settings;
-	const promise = Promise.all(modelAttributes.map(async (prop) => {
-		const typeDetails = schema.getAttributeTypeDetails(prop);
-		const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
-		const {typeSettings} = typeDetail;
-		// TODO: `subModel` is currently any, we should fix that
-		const subModel = typeof typeSettings.model === "object" ? model.Document as any : typeSettings.model;
+	const promise = model.schemaForObject(this).then((schema) => {
+		const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model") : obj.details.name === "Model").map((obj) => obj.prop);
 
-		const doesPopulatePropertyExist = !(typeof this[prop] === "undefined" || this[prop] === null);
-		if (!doesPopulatePropertyExist || this[prop] instanceof subModel) {
-			return;
-		}
-		const key: string = [internalSettings.parentKey, prop].filter((a) => Boolean(a)).join(".");
-		const populatePropertiesExists: boolean = typeof localSettings?.properties !== "undefined" && localSettings.properties !== null;
-		const populateProperties: boolean | string[] = Array.isArray(localSettings?.properties) || typeof localSettings?.properties === "boolean" ? localSettings.properties : [localSettings?.properties];
-		const isPopulatePropertyInSettingProperties: boolean = populatePropertiesExists ? utils.dynamoose.wildcard_allowed_check(populateProperties, key) : true;
-		if (!isPopulatePropertyInSettingProperties) {
-			return;
-		}
+		return {schema, modelAttributes};
+	}).then((obj: {schema: Schema; modelAttributes: any[]}) => {
+		const {schema, modelAttributes} = obj;
 
-		const subDocument = await subModel.get(this[prop]);
-		const saveDocument: Document = await PopulateDocument.bind(subDocument)(localSettings, null, {"parentKey": key});
-		this[prop] = saveDocument;
-	}));
+		return Promise.all(modelAttributes.map(async (prop) => {
+			const typeDetails = schema.getAttributeTypeDetails(prop);
+			const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
+			const {typeSettings} = typeDetail;
+			// TODO: `subModel` is currently any, we should fix that
+			const subModel = typeof typeSettings.model === "object" ? model.Document as any : typeSettings.model;
+
+			const doesPopulatePropertyExist = !(typeof this[prop] === "undefined" || this[prop] === null);
+			if (!doesPopulatePropertyExist || this[prop] instanceof subModel) {
+				return;
+			}
+			const key: string = [internalSettings.parentKey, prop].filter((a) => Boolean(a)).join(".");
+			const populatePropertiesExists: boolean = typeof localSettings?.properties !== "undefined" && localSettings.properties !== null;
+			const populateProperties: boolean | string[] = Array.isArray(localSettings?.properties) || typeof localSettings?.properties === "boolean" ? localSettings.properties : [localSettings?.properties];
+			const isPopulatePropertyInSettingProperties: boolean = populatePropertiesExists ? utils.dynamoose.wildcard_allowed_check(populateProperties, key) : true;
+			if (!isPopulatePropertyInSettingProperties) {
+				return;
+			}
+
+			const subDocument = await subModel.get(this[prop]);
+			const saveDocument: Document = await PopulateDocument.bind(subDocument)(localSettings, null, {"parentKey": key});
+			this[prop] = saveDocument;
+		}));
+	});
 
 	if (callback) {
 		promise.then(() => callback(null, this)).catch((err) => callback(err));
