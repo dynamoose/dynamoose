@@ -19,7 +19,7 @@ export interface ModelIndexDeleteChange {
 
 const index_changes = async (model: Model<Document>, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
 	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
-	const expectedIndexes = await model.schema.getIndexes(model);
+	const expectedIndexes = await model.getIndexes();
 
 	// Indexes to delete
 	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(index, searchIndex))).map((index) => ({"name": index.IndexName as string, "type": ModelIndexChangeType.delete}));

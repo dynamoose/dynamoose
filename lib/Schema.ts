@@ -178,23 +178,23 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 		}, "jsType": Date}),
 		new DynamoDBType({"name": "Combine", "dynamodbType": stringType, "set": false, "jsType": String}),
 		new DynamoDBType({"name": "Model", "customDynamoName": (typeSettings?: AttributeDefinitionTypeSettings): string => {
-			const schema = typeSettings.model.Model.schema;
-			const hashKey = schema.getHashKey();
-			const typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult = schema.getAttributeTypeDetails(hashKey) as DynamoDBTypeResult | DynamoDBSetTypeResult; // This has no potiental of being an array because a hashKey is not allowed to have multiple type options
+			const model = typeSettings.model.Model;
+			const hashKey = model.getHashKey();
+			const typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult = model.schemas[0].getAttributeTypeDetails(hashKey) as DynamoDBTypeResult | DynamoDBSetTypeResult; // This has no potiental of being an array because a hashKey is not allowed to have multiple type options
 			return typeDetails.name;
 		}, "dynamicName": (typeSettings?: AttributeDefinitionTypeSettings): string => typeSettings.model.Model.name, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
-			const schema = typeSettings.model.Model.schema;
-			const hashKey = schema.getHashKey();
-			const rangeKey = schema.getRangeKey();
-			return rangeKey ? "M" : schema.getAttributeType(hashKey);
+			const model = typeSettings.model.Model;
+			const hashKey = model.getHashKey();
+			const rangeKey = model.getRangeKey();
+			return rangeKey ? "M" : model.schemas[0].getAttributeType(hashKey);
 		}, "set": (typeSettings?: AttributeDefinitionTypeSettings): boolean => {
-			return !typeSettings.model.Model.schema.getRangeKey();
+			return !typeSettings.model.Model.getRangeKey();
 		}, "jsType": {"func": (val): boolean => val.prototype instanceof Document}, "customType": {
 			"functions": (typeSettings?: AttributeDefinitionTypeSettings): {toDynamo: (val: any) => any; fromDynamo: (val: any) => any; isOfType: (val: any, type: "toDynamo" | "fromDynamo") => boolean} => ({
 				"toDynamo": (val: any): any => {
-					const schema = typeSettings.model.Model.schema;
-					const hashKey = schema.getHashKey();
-					const rangeKey = schema.getRangeKey();
+					const model = typeSettings.model.Model;
+					const hashKey = model.getHashKey();
+					const rangeKey = model.getRangeKey();
 					if (rangeKey) {
 						return {
 							[hashKey]: val[hashKey],
@@ -206,13 +206,13 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 				},
 				"fromDynamo": (val: any): any => val,
 				"isOfType": (val: any, type: "toDynamo" | "fromDynamo"): boolean => {
-					const schema = typeSettings.model.Model.schema;
-					const hashKey = schema.getHashKey();
-					const rangeKey = schema.getRangeKey();
+					const model = typeSettings.model.Model;
+					const hashKey = model.getHashKey();
+					const rangeKey = model.getRangeKey();
 					if (rangeKey) {
 						return typeof val === "object" && val[hashKey] && val[rangeKey];
 					} else {
-						return utils.dynamoose.getValueTypeCheckResult(schema, val[hashKey] ?? val, hashKey, {type}, {}).isValidType;
+						return utils.dynamoose.getValueTypeCheckResult(model.schemas[0], val[hashKey] ?? val, hashKey, {type}, {}).isValidType;
 					}
 				}
 			})
@@ -373,7 +373,7 @@ export class Schema {
 			return func(attributeValue);
 		}
 	}
-	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string } = {"type": "toDynamo"}): ObjectType {
+	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string; includeAllProperties?: boolean } = {"type": "toDynamo"}): ObjectType {
 		return Object.entries(object).reduce((result, entry) => {
 			const [key, value] = entry;
 			const fullKey = [settings.previousKey, key].filter((a) => Boolean(a)).join(".");
@@ -381,7 +381,14 @@ export class Schema {
 			try {
 				typeCheckResult = utils.dynamoose.getValueTypeCheckResult(this, value, fullKey, settings, {});
 			} catch (e) {
-				return {};
+				if (result && settings.includeAllProperties) {
+					result[fullKey] = {
+						"index": 0,
+						"matchCorrectness": 0,
+						"entryCorrectness": [0]
+					};
+				}
+				return result;
 			}
 			const {typeDetails, matchedTypeDetailsIndex, matchedTypeDetailsIndexes} = typeCheckResult;
 			const hasMultipleTypes = Array.isArray(typeDetails);
@@ -420,6 +427,19 @@ export class Schema {
 				if (result[fullKey] === undefined) {
 					result[fullKey] = matchedTypeDetailsIndex;
 				}
+			} else if (settings.includeAllProperties) {
+				let matchCorrectness: number;
+				try {
+					const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, value, key, settings, {}); // TODO add {typeMap: {[key]: index}}
+					matchCorrectness = isValidType ? 1 : 0;
+				} catch (e) {
+					matchCorrectness = 0.5;
+				}
+				result[fullKey] = {
+					"index": 0,
+					matchCorrectness,
+					"entryCorrectness": [matchCorrectness]
+				};
 			}
 
 			if (isObject) {
@@ -728,7 +748,13 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 				type = "model";
 
 				if (isThisType) {
-					typeSettings.model = {"Model": {"schema": this}} as any;
+					typeSettings.model = {
+						"Model": {
+							"getHashKey": this.getHashKey.bind(this),
+							"getRangeKey": this.getRangeKey.bind(this),
+							"schemas": [this]
+						}
+					} as any;
 				} else {
 					typeSettings.model = typeVal as any;
 				}

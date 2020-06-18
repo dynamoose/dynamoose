@@ -43,25 +43,37 @@ describe("Model", () => {
 			expect(UserB).to.eql(User);
 		});
 
-		it("Should throw error if passing in model with same name as existing model", () => {
+		it("Should store latest model in model store", () => {
 			dynamoose.model("User", {"id": String});
 			dynamoose.model("User", {"id": String, "name": String});
 
-			expect(ModelStore("User").schema.schemaObject).to.eql({"id": String, "name": String});
+			expect(ModelStore("User").schemas[0].schemaObject).to.eql({"id": String, "name": String});
+		});
+
+		it("Should throw error if passing in empty array for schema parameter", () => {
+			expect(() => dynamoose.model("User", [])).to.throw("Schema hasn't been registered for model \"User\".\nUse \"dynamoose.model(name, schema)\"");
+		});
+
+		it("Should throw error if hashKey's don't match for all schema's", () => {
+			expect(() => dynamoose.model("User", [{"id": String}, {"id2": String}])).to.throw("hashKey's for all schema's must match.");
+		});
+
+		it("Should throw error if rangeKey's don't match for all schema's", () => {
+			expect(() => dynamoose.model("User", [{"id": String, "rangeKey": {"type": String, "rangeKey": true}}, {"id": String, "rangeKey2": {"type": String, "rangeKey": true}}])).to.throw("rangeKey's for all schema's must match.");
 		});
 
 		it("Should create a schema if not passing in schema instance", () => {
 			const schema = {"name": String};
 			const Cat = dynamoose.model("Cat", schema);
-			expect(Cat.Model.schema).to.not.eql(schema);
-			expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
+			expect(Cat.Model.schemas).to.not.eql([schema]);
+			expect(Cat.Model.schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should use schema instance if passed in", () => {
 			const schema = new dynamoose.Schema({"name": String});
 			const Cat = dynamoose.model("Cat", schema);
-			expect(Cat.Model.schema).to.eql(schema);
-			expect(Cat.Model.schema).to.be.an.instanceof(dynamoose.Schema);
+			expect(Cat.Model.schemas).to.eql([schema]);
+			expect(Cat.Model.schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should not fail with initialization if table doesn't exist", async () => {
