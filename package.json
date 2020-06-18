@@ -27,7 +27,7 @@
     "test": "nyc npm run test:nocoverage",
     "test:debug": "npm run test:nocoverage -- --no-timeout --inspect=9229",
     "test:debug:breakpoint": "npm run test:nocoverage -- --no-timeout --inspect-brk=9229",
-    "test:types": "tsc --noEmit test/types/*.ts",
+    "test:types": "tsc --project test/types/tsconfig.json",
     "lint": "eslint . --ext .ts,.js --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
     "site:install": "cd docs && npm install",
