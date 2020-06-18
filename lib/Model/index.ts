@@ -387,16 +387,10 @@ export class Model<T extends DocumentCarrier> {
 
 	// This function returns the best matched schema for the given object input
 	async schemaForObject (object: ObjectType): Promise<Schema> {
-		for (let i = 0; i < this.schemas.length; i++) {
-			const schema = this.schemas[i];
+		const schemaCorrectnessScores: number[] = this.schemas.map((schema) => schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true})).map((obj) => Object.values(obj).map((obj) => obj?.matchCorrectness || 0)).map((array) => Math.min(...array));
+		const highestSchemaCorrectnessScoreIndex: number = schemaCorrectnessScores.indexOf(Math.max(...schemaCorrectnessScores));
 
-			try {
-				await this.Document.objectFromSchema(JSON.parse(JSON.stringify(object)), this, {"type": "toDynamo", schema});
-				return schema;
-			} catch (e) {} // eslint-disable-line no-empty
-		}
-
-		return this.schemas[0];
+		return this.schemas[highestSchemaCorrectnessScoreIndex];
 	}
 
 	async getIndexes (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {

@@ -373,7 +373,7 @@ export class Schema {
 			return func(attributeValue);
 		}
 	}
-	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string } = {"type": "toDynamo"}): ObjectType {
+	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string; includeAllProperties?: boolean; } = {"type": "toDynamo"}): ObjectType {
 		return Object.entries(object).reduce((result, entry) => {
 			const [key, value] = entry;
 			const fullKey = [settings.previousKey, key].filter((a) => Boolean(a)).join(".");
@@ -381,7 +381,14 @@ export class Schema {
 			try {
 				typeCheckResult = utils.dynamoose.getValueTypeCheckResult(this, value, fullKey, settings, {});
 			} catch (e) {
-				return {};
+				if (result && settings.includeAllProperties) {
+					result[fullKey] = {
+						"index": 0,
+						"matchCorrectness": 0,
+						"entryCorrectness": [0]
+					}
+				}
+				return result;
 			}
 			const {typeDetails, matchedTypeDetailsIndex, matchedTypeDetailsIndexes} = typeCheckResult;
 			const hasMultipleTypes = Array.isArray(typeDetails);
@@ -419,6 +426,19 @@ export class Schema {
 
 				if (result[fullKey] === undefined) {
 					result[fullKey] = matchedTypeDetailsIndex;
+				}
+			} else if (settings.includeAllProperties) {
+				let matchCorrectness: number;
+				try {
+					const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, value, key, settings, {}); // TODO add {typeMap: {[key]: index}}
+					matchCorrectness = isValidType ? 1 : 0;
+				} catch (e) {
+					matchCorrectness = 0.5;
+				}
+				result[fullKey] = {
+					"index": 0,
+					matchCorrectness,
+					"entryCorrectness": [matchCorrectness]
 				}
 			}
 
