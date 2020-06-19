@@ -1,3 +1,4 @@
 module.exports = {
-	"recursive": true
+	"recursive": true,
+	"spec": ["test/unit"]
 };
