@@ -19,6 +19,13 @@ module.exports = {
 		],
 		"Other": [
 			"other/FAQ"
+		],
+		"Sponsored By": [
+			{
+				"type": "link",
+				"label": "",
+				"href": "https://dynobase.dev/?ref=dynamoose"
+			}
 		]
 	}
 };
