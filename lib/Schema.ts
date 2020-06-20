@@ -543,7 +543,7 @@ export class Schema {
 				attributeType = Array.isArray(tmpAttributeType) ? tmpAttributeType : [tmpAttributeType];
 			} catch (e) {} // eslint-disable-line no-empty
 
-			if (attributeType.some((type) => type === "L") && (this.getAttributeValue(key).schema || []).length > 1) {
+			if (attributeType.some((type) => type === "L") && ((this.getAttributeValue(key).schema || []) as any).length > 1) {
 				throw new CustomError.InvalidParameter("You must only pass one element into schema array.");
 			}
 		};
