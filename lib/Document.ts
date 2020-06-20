@@ -307,6 +307,8 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 				value.forEach((subValue, index: number, array: any[]) => {
 					if (index === 0 || typeof subValue !== typeof array[0]) {
 						checkTypeFunction([`${key}.${index}`, subValue]);
+					} else if (keysToDelete.includes(`${key}.0`) && typeof subValue === typeof array[0]) {
+						keysToDelete.push(`${key}.${index}`);
 					}
 				});
 				validParents.push({key});
