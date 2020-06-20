@@ -1,7 +1,7 @@
 import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
-import {Condition, ConditionInitalizer, ConditionFunction, BasicOperators} from "./Condition";
+import {Condition, ConditionInitalizer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
@@ -18,7 +18,7 @@ interface DocumentRetrieverTypeInformation {
 }
 
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
-interface DocumentRetriever extends BasicOperators {}
+type DocumentRetriever = BasicOperators;
 abstract class DocumentRetriever implements BasicOperators {
 	internalSettings?: {
 		model: Model<Document>;
