@@ -64,6 +64,7 @@ module.exports = {
 		"no-trailing-spaces": "error",
 		"array-element-newline": ["error", "consistent"],
 		"array-bracket-spacing": "error",
-		"array-bracket-newline": ["error", "consistent"]
+		"array-bracket-newline": ["error", "consistent"],
+		"eol-last": "error"
 	}
 };
