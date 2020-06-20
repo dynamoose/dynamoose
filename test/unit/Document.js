@@ -2263,6 +2263,11 @@ describe("Document", () => {
 				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"], "required": true}],
 				"error": new Error.ValidationError("name is a required property but has no value when trying to save document")
 			},
+			{
+				"schema": {"id": Number, "friends": {"type": Array}},
+				"input": [{"id": 1, "friends": ["a", "b", "c"]}, {"type": "toDynamo"}],
+				"output": {"id": 1, "friends": []}
+			},
 
 			// Multiple Schemas
 			{
