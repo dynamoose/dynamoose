@@ -19,7 +19,7 @@
     "typescript": "^3.9.5"
   },
   "scripts": {
-    "prepare": "npm run build:clean; npm run build",
+    "prepare": "npm run build:clean && npm run build",
     "build": "tsc",
     "build:clean": "rm -rf dist",
     "build:watch": "npm run build -- -w",
