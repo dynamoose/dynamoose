@@ -1,7 +1,7 @@
 import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
-import {Condition, ConditionInitalizer, ConditionFunction} from "./Condition";
+import {Condition, ConditionInitalizer, ConditionFunction, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
@@ -16,8 +16,10 @@ interface DocumentRetrieverTypeInformation {
 	type: DocumentRetrieverTypes;
 	pastTense: string;
 }
+
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
-abstract class DocumentRetriever {
+interface DocumentRetriever extends BasicOperators {}
+abstract class DocumentRetriever implements BasicOperators {
 	internalSettings?: {
 		model: Model<Document>;
 		typeInformation: DocumentRetrieverTypeInformation;
@@ -115,33 +117,6 @@ abstract class DocumentRetriever {
 			})();
 		}
 	}
-
-
-
-	// TODO: this was all copied from Condition.ts, we need to figure out a better way to handle this --------------------------------------------------
-	and: () => Condition;
-	or: () => Condition;
-	not: () => Condition;
-	parenthesis: (value: Condition | ConditionFunction) => Condition;
-	group: (value: Condition | ConditionFunction) => Condition;
-	where: (key: string) => Condition;
-	filter: (key: string) => Condition;
-	attribute: (key: string) => Condition;
-	eq: (value: any) => Condition;
-	lt: (value: number) => Condition;
-	le: (value: number) => Condition;
-	gt: (value: number) => Condition;
-	ge: (value: number) => Condition;
-	beginsWith: (value: any) => Condition;
-	contains: (value: any) => Condition;
-	exists: (value: any) => Condition;
-	in: (value: any) => Condition;
-	between: (...values: any[]) => Condition;
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
 
 	constructor (model: Model<Document>, typeInformation: DocumentRetrieverTypeInformation, object?: ConditionInitalizer) {
 		this.internalSettings = {model, typeInformation};

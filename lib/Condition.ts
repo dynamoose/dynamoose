@@ -62,7 +62,28 @@ const types: ConditionComparisonType[] = [
 ];
 export type ConditionInitalizer = Condition | ObjectType | string;
 
-export class Condition {
+export interface BasicOperators<T = Condition> {
+	and: () => T;
+	or: () => T;
+	not: () => T;
+	parenthesis: (value: T | ConditionFunction) => T;
+	group: (value: T | ConditionFunction) => T;
+	where: (key: string) => T;
+	filter: (key: string) => T;
+	attribute: (key: string) => T;
+	eq: (value: any) => T;
+	lt: (value: Number) => T;
+	le: (value: Number) => T;
+	gt: (value: Number) => T;
+	ge: (value: Number) => T;
+	beginsWith: (value: any) => T;
+	contains: (value: any) => T;
+	exists: (value: any) => T;
+	in: (value: any) => T;
+	between: (...values: any[]) => T;
+}
+
+export class Condition implements BasicOperators {
 	settings: {
 		// TODO: fix this below, it should be a reference to `OR` not Symbol, you are only allowed to pass in OR here, not any other Symbol.
 		conditions: ConditionStorageSettingsConditions;
