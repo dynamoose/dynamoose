@@ -249,7 +249,7 @@ interface AttributeDefinitionTypeSettings {
 }
 interface AttributeDefinition {
 	type: AttributeType | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType}; // TODO add support for this being an object
-	schema?: SchemaDefinition | SchemaDefinition[];
+	schema?: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[] | SchemaDefinition | SchemaDefinition[];
 	default?: ValueType | (() => ValueType);
 	forceDefault?: boolean;
 	validate?: ValueType | RegExp | ((value: ValueType) => boolean);
