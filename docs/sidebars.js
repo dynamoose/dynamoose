@@ -9,7 +9,7 @@ module.exports = {
 				"getting_started/Import",
 				"getting_started/Configure",
 				"getting_started/TypeScript",
-		],
+			],
 		},
 		{
 			"type": "category",
