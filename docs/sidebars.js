@@ -8,8 +8,8 @@ module.exports = {
 				"getting_started/Install",
 				"getting_started/Import",
 				"getting_started/Configure",
-				"getting_started/TypeScript",
-			],
+				"getting_started/TypeScript"
+			]
 		},
 		{
 			"type": "category",
@@ -22,13 +22,13 @@ module.exports = {
 				"guide/Query",
 				"guide/Scan",
 				"guide/Transaction",
-				"guide/Dynamoose",
-			],
+				"guide/Dynamoose"
+			]
 		},
 		{
-		"type": "category",
-		"label": "Other",
-		"items": ["other/FAQ"],
+			"type": "category",
+			"label": "Other",
+			"items": ["other/FAQ"]
 		},
 		{
 			"type": "category",
@@ -36,11 +36,11 @@ module.exports = {
 			"collapsed": false,
 			"items": [
 				{
-			"type": "link",
-			"label": "",
-			"href": "https://dynobase.dev/?ref=dynamoose",
-				},
-			],
-		},
-	],
+					"type": "link",
+					"label": "",
+					"href": "https://dynobase.dev/?ref=dynamoose"
+				}
+			]
+		}
+	]
 };
