@@ -64,10 +64,7 @@
 	display: none;
 }
 #__docusaurus > div > div > div > div > div > ul > li:nth-child(4) > a {
-	font-size: 22px;
-	margin-top: 52px;
-	font-weight: 700;
-	color: #1C1E21;
+	display: none;
 }
 #__docusaurus > div > div > div > div > div > ul > li:nth-child(4) > ul > li > a {
 	background-image: url("/img/dynobase-banner.png");
