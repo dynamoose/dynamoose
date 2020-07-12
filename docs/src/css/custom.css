@@ -59,18 +59,16 @@
 	 background: url("data:image/svg+xml,%3Csvg id='n' xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 16 16'%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:%23c12127;%7D.cls-2%7Bfill:%23fff;%7D%3C/style%3E%3C/defs%3E%3Ctitle%3En%3C/title%3E%3Cpath class='cls-1' d='M0,16V0H16V16ZM3,3V13H8V5h3v8h2V3Z'/%3E%3Cpath class='cls-2' d='M3,3H13V13H11V5H8v8H3Z'/%3E%3C/svg%3E%0A") no-repeat;
  }
  ​
- /* Sponsor Banner CSS*/
+/* Sponsor Banner CSS */
 #__docusaurus > div > div > div > div > div > ul > li:nth-child(4) > a:after {
 	display: none;
 }
-​
 #__docusaurus > div > div > div > div > div > ul > li:nth-child(4) > a {
 	font-size: 22px;
 	margin-top: 52px;
 	font-weight: 700;
 	color: #1C1E21;
 }
-
 #__docusaurus > div > div > div > div > div > ul > li:nth-child(4) > ul > li > a {
 	background-image: url("/img/dynobase-banner.png");
 	height: 162px;
