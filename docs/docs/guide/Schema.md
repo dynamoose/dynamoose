@@ -74,6 +74,7 @@ const schema = new dynamoose.Schema({
 | Array | False | L | False | True |   |   |
 | Schema | False | M | True | True |   | This will be converted to an Object type. |
 | Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
+| Combine | False | S | True | False | **attributes** - [string] - The attributes to store in the combine attribute.\n**seperator** - string (default: `,`) - The string used to seperate the attributes in the combine attribute. | When running `Model.update` you must update all the attributes in the combine attributes array, or none of them. This is to ensure your combine method remains in sync with your overall document. |
 
 Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
 
@@ -90,7 +91,26 @@ When using `saveUnknown` with a set, the type recognized by Dynamoose will be th
 
 Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
-For types that are `Nested Types`, you must define a `schema` setting that includes the nested schema for that given attribute.
+For types that are `Nested Types`, you must define a [`schema` setting](#schema-object--array) that includes the nested schema for that given attribute.
+
+You can also define an array of types to allow your attribute to match any one of multiple types you set. For example in the following code example, the `data` attribute can either be of type String or Number.
+
+```js
+{
+	"data": [String, Number]
+}
+```
+
+In the event you have multiple types that match (Date & Number, Set & Array, multple Objects with different Schemas), Dynamoose will attempt to pick the closest matching type. However, if all types are valid, Dynamoose will default to the first type in the array.
+
+```js
+{
+	"date": [Number, Date] // If you pass in a Date instance, it will use Date, otherwise it will use Number. All retrieved documents from DynamoDB will use Number since there is no difference in the underlying storage of Number vs Date
+}
+```
+
+You are also not allowed to have multiple types on any `hashKey` or `rangeKey` attributes. DynamoDB requires that these key attributes only have one type.
+
 
 ## Model Types
 

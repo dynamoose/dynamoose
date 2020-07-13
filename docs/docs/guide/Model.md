@@ -16,6 +16,19 @@ const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
 ```
 
+You can also pass in an array of Schema instances or schema objects into the `schema` paremeter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your document, and use that schema for all operations pertaining to that document. If no matching schema can be found, it will default to the first schema in the array.
+
+:::note
+If you use multiple schemas in one model, the hash & range keys must match for all schemas.
+:::
+
+```js
+const Cat = dynamoose.model("Cat", [
+	new dynamoose.Schema({"id": String, "name": String}),
+	{"id": String, "age": Number}
+]);
+```
+
 If you don't pass the `schema` parameter it is required that you have an existing model already registed with that name. This will use the existing model already registered.
 
 ```js
