@@ -12,7 +12,7 @@ import {Document} from "./Document";
 import ModelStore = require("./ModelStore");
 import {ModelType} from "./General";
 
-const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition, options: ModelOptionsOptional = {}): ModelType<T> => {
+const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): ModelType<T> => {
 	let model: Model<T>;
 	let storedSchema: Model<T>;
 	if (name) {

@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"lib": ["es2015"],
+		"target": "es6",
+		"noEmit": true
+	},
+	"include": ["./**/*"]
+}

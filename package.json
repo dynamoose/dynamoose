@@ -1,6 +1,6 @@
 {
   "name": "dynamoose",
-  "version": "2.2.1",
+  "version": "2.3.0-beta.1",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,10 +16,10 @@
     "eslint": "^6.8.0",
     "mocha": "^7.1.2",
     "nyc": "^15.0.1",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.5"
   },
   "scripts": {
-    "prepare": "npm run build:clean; npm run build",
+    "prepare": "npm run build:clean && npm run build",
     "build": "tsc",
     "build:clean": "rm -rf dist",
     "build:watch": "npm run build -- -w",
@@ -27,6 +27,7 @@
     "test": "nyc npm run test:nocoverage",
     "test:debug": "npm run test:nocoverage -- --no-timeout --inspect=9229",
     "test:debug:breakpoint": "npm run test:nocoverage -- --no-timeout --inspect-brk=9229",
+    "test:types": "tsc --project test/types/tsconfig.json",
     "lint": "eslint . --ext .ts,.js --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
     "site:install": "cd docs && npm install",
