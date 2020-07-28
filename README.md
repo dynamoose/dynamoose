@@ -39,6 +39,10 @@
 
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](https://mongoosejs.com/)).
 
+### Dynamoose is Sponsored by Dynobase
+​
+Dynobase helps you accelerate your DynamoDB workflow with code generation, faster data exploration, bookmarks and more: [https://dynobase.dev/](https://dynobase.dev/?ref=dynamoose)
+
 ### Getting Started
 
 Take a look at our [website](https://dynamoosejs.com) for information about how to get started.
