@@ -2,6 +2,32 @@
 
 ---
 
+## Version 2.3.0
+
+This release adds major new support for single table design.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Major New Features
+
+- Single Table Design Enhancements
+	- Nested Schemas
+	- Multiple Attribute Types
+	- Combine Type
+	- Multiple Schemas per Model
+- Readds populate support (similar to v1 but breaking changes between v1 and v2 populate functionality)
+
+### General
+
+- Adds document.toJSON() method
+- Adds Serialization support
+
+### Bug Fixes
+
+- Minor bug fixes for TypeScript typings
+
+---
+
 ## Version 2.2.1
 
 This release fixes some minor bugs found in Dynamoose.
