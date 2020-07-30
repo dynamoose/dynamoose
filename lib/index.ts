@@ -16,7 +16,7 @@ const model = <T extends Document>(name: string, schema?: Schema | SchemaDefinit
 	let model: Model<T>;
 	let storedSchema: Model<T>;
 	if (name) {
-		storedSchema = ModelStore(name);
+		storedSchema = ModelStore<T>(name);
 	}
 	// TODO: this is something I'd like to do. But is a breaking change. Need to enable this and uncomment it in a breaking release. Also will need to fix the tests as well.
 	/* if (schema && storedSchema) {
