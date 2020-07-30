@@ -381,8 +381,8 @@ export class Model<T extends DocumentCarrier> {
 	pendingTaskPromise: () => Promise<void>;
 	static defaults: ModelOptions;
 	Document: typeof DocumentCarrier;
-	scan: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Scan;
-	query: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Query;
+	scan: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Scan<T>;
+	query: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Query<T>;
 	methods: { document: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 
 	// This function returns the best matched schema for the given object input
@@ -969,10 +969,10 @@ export class Model<T extends DocumentCarrier> {
 Model.defaults = originalDefaults;
 
 
-Model.prototype.scan = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Scan {
+Model.prototype.scan = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Scan<DocumentCarrier> {
 	return new Scan(this, object);
 };
-Model.prototype.query = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Query {
+Model.prototype.query = function (this: Model<DocumentCarrier>, object?: ConditionInitalizer): Query<DocumentCarrier> {
 	return new Query(this, object);
 };
 
