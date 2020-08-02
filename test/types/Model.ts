@@ -12,12 +12,13 @@ const shouldFailWithBooleanAsName = dynamoose.model(true);
 const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 
 // Typed Models
-interface User extends Document {
+export interface User extends Document {
 	id: string;
 	name: string;
+	age: number;
 }
 
-const TypedModel = dynamoose.model<User>(
+export const UserTypedModel = dynamoose.model<User>(
 	"User",
 	new dynamoose.Schema({
 		"id": String,
@@ -30,10 +31,3 @@ const TypedModel = dynamoose.model<User>(
 		"age": Number
 	})
 );
-
-const shouldCreateSuccessfully = TypedModel.create({"id": "1", "name": "john", "age": 25});
-
-const shouldNotFailWithNotAllAttributesPassedIn = TypedModel.create({"id": "1"});
-
-// //@ts-expect-error
-const shouldFailWithInvalidAttributes = TypedModel.create({"id": "1", "random": "string"});
