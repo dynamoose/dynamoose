@@ -582,7 +582,8 @@ export class Schema {
 		}
 
 		this.attributes().forEach((key) => {
-			if (key.includes(".") && this.getAttributeSettingValue("index", key)) {
+			const attributeSettingValue = this.getAttributeSettingValue("index", key);
+			if (key.includes(".") && attributeSettingValue && !Array.isArray(attributeSettingValue)) {
 				throw new CustomError.InvalidParameter("Index must be at root object and not nested in object or array.");
 			}
 		});
