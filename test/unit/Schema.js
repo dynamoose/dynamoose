@@ -77,7 +77,7 @@ describe("Schema", () => {
 	});
 
 	it("Should not throw error if passing multiple data types for a nested array attribute", () => {
-		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Object, "schema": {"names": [ {"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]} ]}}})).to.not.throw();
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}})).to.not.throw();
 	});
 
 	it.skip("Should throw error if attribute names only contains number", () => {
