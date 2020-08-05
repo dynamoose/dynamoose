@@ -2558,6 +2558,11 @@ describe("Document", () => {
 				"output": {"id": 1, "data": "hello world"}
 			},
 			{
+				"input": [{"id": 1, "data": "hello world"}, {"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"}],
+				"model": ["User", new Schema({"id": Number}, {"saveUnknown": true})],
+				"output": {"id": 1, "data": "hello world"}
+			},
+			{
 				"input": [{"id": 1, "data": true}, {"type": "fromDynamo"}],
 				"schema": () => {
 					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});

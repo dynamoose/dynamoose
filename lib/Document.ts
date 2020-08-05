@@ -315,7 +315,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			}
 		} else {
 			// Check saveUnknown
-			if (!settings.saveUnknown || !utils.dynamoose.wildcard_allowed_check(schema.getSettingValue("saveUnknown"), key)) {
+			if (settings.saveUnknown === false || !utils.dynamoose.wildcard_allowed_check(schema.getSettingValue("saveUnknown"), key)) {
 				keysToDelete.push(key);
 			}
 		}
