@@ -13,6 +13,7 @@ import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 import {PopulateDocuments} from "../Populate";
 
 import {DynamoDB, AWSError} from "aws-sdk";
+import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
 
 // Defaults
 interface ModelWaitForActiveSettings {
@@ -66,36 +67,40 @@ function convertObjectToKey (this: Model<DocumentCarrier>, key: InputKey): KeyOb
 	return keyObject;
 }
 
-
 // Transactions
-type TransactionResult = Promise<unknown>;
-interface GetTransaction {
-	(key: InputKey): TransactionResult;
-	(key: InputKey, settings?: ModelGetSettings): TransactionResult;
-	(key: InputKey, settings: ModelGetSettings & {return: "document"}): TransactionResult;
-	(key: InputKey, settings: ModelGetSettings & {return: "request"}): TransactionResult;
+type GetTransactionResult = Promise<GetTransactionInput>;
+type CreateTransactionResult = Promise<CreateTransactionInput>;
+type DeleteTransactionResult = Promise<DeleteTransactionInput>;
+type UpdateTransactionResult = Promise<UpdateTransactionInput>;
+type ConditionTransactionResult = Promise<ConditionTransactionInput>;
+
+export interface GetTransaction {
+	(key: InputKey): GetTransactionResult;
+	(key: InputKey, settings?: ModelGetSettings): GetTransactionResult;
+	(key: InputKey, settings: ModelGetSettings & {return: "document"}): GetTransactionResult;
+	(key: InputKey, settings: ModelGetSettings & {return: "request"}): GetTransactionResult;
 }
-interface CreateTransaction {
-	(document: ObjectType): TransactionResult;
-	(document: ObjectType, settings: DocumentSaveSettings & {return: "request"}): TransactionResult;
-	(document: ObjectType, settings: DocumentSaveSettings & {return: "document"}): TransactionResult;
-	(document: ObjectType, settings?: DocumentSaveSettings): TransactionResult;
+export interface CreateTransaction {
+	(document: ObjectType): CreateTransactionResult;
+	(document: ObjectType, settings: DocumentSaveSettings & {return: "request"}): CreateTransactionResult;
+	(document: ObjectType, settings: DocumentSaveSettings & {return: "document"}): CreateTransactionResult;
+	(document: ObjectType, settings?: DocumentSaveSettings): CreateTransactionResult;
 }
-interface DeleteTransaction {
-	(key: InputKey): TransactionResult;
-	(key: InputKey, settings: ModelDeleteSettings & {return: "request"}): TransactionResult;
-	(key: InputKey, settings: ModelDeleteSettings & {return: null}): TransactionResult;
-	(key: InputKey, settings?: ModelDeleteSettings): TransactionResult;
+export interface DeleteTransaction {
+	(key: InputKey): DeleteTransactionResult;
+	(key: InputKey, settings: ModelDeleteSettings & {return: "request"}): DeleteTransactionResult;
+	(key: InputKey, settings: ModelDeleteSettings & {return: null}): DeleteTransactionResult;
+	(key: InputKey, settings?: ModelDeleteSettings): DeleteTransactionResult;
 }
-interface UpdateTransaction {
-	(obj: ObjectType): TransactionResult;
-	(keyObj: ObjectType, updateObj: ObjectType): TransactionResult;
-	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "document"}): TransactionResult;
-	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "request"}): TransactionResult;
-	(keyObj: ObjectType, updateObj?: ObjectType, settings?: ModelUpdateSettings): TransactionResult;
+export interface UpdateTransaction {
+	(obj: ObjectType): CreateTransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType): UpdateTransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "document"}): UpdateTransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "request"}): UpdateTransactionResult;
+	(keyObj: ObjectType, updateObj?: ObjectType, settings?: ModelUpdateSettings): UpdateTransactionResult;
 }
-interface ConditionTransaction {
-	(key: InputKey, condition: Condition): TransactionResult;
+export interface ConditionTransaction {
+	(key: InputKey, condition: Condition): ConditionTransactionResult;
 }
 
 type TransactionType = {

@@ -1,4 +1,5 @@
 import ddb = require("./aws/ddb/internal");
+import {DynamoDB} from "aws-sdk";
 import utils = require("./utils");
 import Error = require("./Error");
 import {Model} from "./Model";
@@ -19,8 +20,23 @@ export interface TransactionSettings {
 	type?: TransactionType;
 }
 
+export type GetTransactionInput = {Get: DynamoDB.GetItemInput};
+export type CreateTransactionInput = {Put: DynamoDB.PutItemInput};
+export type DeleteTransactionInput = {Delete: DynamoDB.DeleteItemInput};
+export type UpdateTransactionInput = {Update: DynamoDB.UpdateItemInput};
+export type ConditionTransactionInput = {ConditionCheck: DynamoDB.ConditionCheck};
+
+type Transaction =
+	GetTransactionInput |
+	CreateTransactionInput |
+	DeleteTransactionInput |
+	UpdateTransactionInput |
+	ConditionTransactionInput;
+
+type Transactions = (Transaction | Promise<Transaction>)[];
+
 // TODO: seems like when using this method as a consumer of Dynamoose that it will get confusing with the different parameter names. For example, if you pass in an array of transactions and a callback, the callback parameter name when using this method will be `settings` (I THINK). Which is super confusing to the user. Not sure how to fix this tho.
-export default (transactions: any[], settings?: TransactionSettings, callback?: CallbackType<any, any>): any => {
+export default (transactions: Transactions, settings?: TransactionSettings, callback?: CallbackType<any, any>): any => {
 	settings = settings ?? {"return": TransactionReturnOptions.documents};
 
 	if (typeof settings === "function") {
@@ -74,7 +90,7 @@ export default (transactions: any[], settings?: TransactionSettings, callback?: 
 		await Promise.all(models.map((model) => model.pendingTaskPromise()));
 
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-		const result: any = await ddb(transactionType as any, transactionParams);
+		const result: any = await ddb(transactionType as any, transactionParams as any);
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
 			const model: Model<Document> = models.find((model) => model.name === modelName);
