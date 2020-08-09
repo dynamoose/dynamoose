@@ -67,6 +67,44 @@ function convertObjectToKey (this: Model<DocumentCarrier>, key: InputKey): KeyOb
 }
 
 
+// Transactions
+type TransactionResult = Promise<unknown>;
+interface GetTransaction {
+	(key: InputKey): TransactionResult;
+	(key: InputKey, settings?: ModelGetSettings): TransactionResult;
+	(key: InputKey, settings: ModelGetSettings & {return: "document"}): TransactionResult;
+	(key: InputKey, settings: ModelGetSettings & {return: "request"}): TransactionResult;
+}
+interface CreateTransaction {
+	(document: ObjectType): TransactionResult;
+	(document: ObjectType, settings: DocumentSaveSettings & {return: "request"}): TransactionResult;
+	(document: ObjectType, settings: DocumentSaveSettings & {return: "document"}): TransactionResult;
+	(document: ObjectType, settings?: DocumentSaveSettings): TransactionResult;
+}
+interface DeleteTransaction {
+	(key: InputKey): TransactionResult;
+	(key: InputKey, settings: ModelDeleteSettings & {return: "request"}): TransactionResult;
+	(key: InputKey, settings: ModelDeleteSettings & {return: null}): TransactionResult;
+	(key: InputKey, settings?: ModelDeleteSettings): TransactionResult;
+}
+interface UpdateTransaction {
+	(obj: ObjectType): TransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType): TransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "document"}): TransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "request"}): TransactionResult;
+	(keyObj: ObjectType, updateObj?: ObjectType, settings?: ModelUpdateSettings): TransactionResult;
+}
+interface ConditionTransaction {
+	(key: InputKey, condition: Condition): TransactionResult;
+}
+
+type TransactionType = {
+	get: GetTransaction;
+	create: CreateTransaction;
+	delete: DeleteTransaction;
+	update: UpdateTransaction;
+	condition: ConditionTransaction;
+};
 
 // Utility functions
 async function getTableDetails (model: Model<DocumentCarrier>, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
@@ -384,6 +422,7 @@ export class Model<T extends DocumentCarrier> {
 	scan: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Scan;
 	query: (this: Model<DocumentCarrier>, object?: ConditionInitalizer) => Query;
 	methods: { document: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
+	transaction: TransactionType;
 
 	// This function returns the best matched schema for the given object input
 	async schemaForObject (object: ObjectType): Promise<Schema> {

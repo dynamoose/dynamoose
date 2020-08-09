@@ -20,7 +20,9 @@ export interface TransactionSettings {
 }
 
 // TODO: seems like when using this method as a consumer of Dynamoose that it will get confusing with the different parameter names. For example, if you pass in an array of transactions and a callback, the callback parameter name when using this method will be `settings` (I THINK). Which is super confusing to the user. Not sure how to fix this tho.
-export default (transactions: any[], settings: TransactionSettings = {"return": TransactionReturnOptions.documents}, callback: CallbackType<any, any>): any => {
+export default (transactions: any[], settings?: TransactionSettings, callback?: CallbackType<any, any>): any => {
+	settings = settings ?? {"return": TransactionReturnOptions.documents};
+
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {"return": TransactionReturnOptions.documents};
