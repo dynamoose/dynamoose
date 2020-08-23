@@ -7,7 +7,7 @@ import * as ModelStore from "./ModelStore";
 import {CallbackType} from "./General";
 import {Document} from "./Document";
 
-enum TransactionReturnOptions {
+export enum TransactionReturnOptions {
 	request = "request",
 	documents = "documents"
 }
