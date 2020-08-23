@@ -34,9 +34,16 @@ type Transaction =
 	ConditionTransactionInput;
 
 type Transactions = (Transaction | Promise<Transaction>)[];
+type TransactionCallback = CallbackType<any, any>;
+type TransactionReturnType = any;
 
-// TODO: seems like when using this method as a consumer of Dynamoose that it will get confusing with the different parameter names. For example, if you pass in an array of transactions and a callback, the callback parameter name when using this method will be `settings` (I THINK). Which is super confusing to the user. Not sure how to fix this tho.
-export default (transactions: Transactions, settings?: TransactionSettings, callback?: CallbackType<any, any>): any => {
+/* Define overloads / signatures for Transaction method */
+function Transaction (transactions: Transactions): TransactionReturnType;
+function Transaction (transactions: Transactions, settings: TransactionSettings): TransactionReturnType;
+function Transaction (transactions: Transactions, callback: TransactionCallback): TransactionReturnType;
+function Transaction (transaction: Transactions, settings: TransactionSettings, callback: TransactionCallback): TransactionReturnType;
+
+function Transaction (transactions: Transactions, settings?: TransactionSettings | TransactionCallback, callback?: TransactionCallback): TransactionReturnType {
 	settings = settings ?? {"return": TransactionReturnOptions.documents};
 
 	if (typeof settings === "function") {
@@ -103,4 +110,6 @@ export default (transactions: Transactions, settings?: TransactionSettings, call
 	} else {
 		return promise;
 	}
-};
+}
+
+export default Transaction;

@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 
 import * as dynamoose from "../../dist";
-import {TransactionReturnOptions} from "../../lib/Transaction";
+import {TransactionReturnOptions} from "../../dist/Transaction";
 
 const model = dynamoose.model("User");
 
@@ -29,3 +29,7 @@ const shouldFailWithInvalidCallback = dynamoose.transaction(
 		return;
 	}
 );
+
+const shouldPassWithCallbackInSecondArg = dynamoose.transaction([model.transaction.get("key")], (a, b) => {
+	return;
+});
