@@ -66,8 +66,8 @@ export interface BasicOperators<T = Condition> {
 	and: () => T;
 	or: () => T;
 	not: () => T;
-	parenthesis: (value: T | ConditionFunction) => T;
-	group: (value: T | ConditionFunction) => T;
+	parenthesis: (value: Condition | ConditionFunction) => T;
+	group: (value: Condition | ConditionFunction) => T;
 	where: (key: string) => T;
 	filter: (key: string) => T;
 	attribute: (key: string) => T;
@@ -78,7 +78,7 @@ export interface BasicOperators<T = Condition> {
 	ge: (value: any) => T;
 	beginsWith: (value: any) => T;
 	contains: (value: any) => T;
-	exists: (value: any) => T;
+	exists: () => T;
 	in: (value: any) => T;
 	between: (...values: any[]) => T;
 }
@@ -110,7 +110,7 @@ export interface Condition extends BasicOperators {
 	ge: (value: any) => Condition;
 	beginsWith: (value: any) => Condition;
 	contains: (value: any) => Condition;
-	exists: (value: any) => Condition;
+	exists: () => Condition;
 	in: (value: any) => Condition;
 	between: (...values: any[]) => Condition;
 

@@ -19,7 +19,6 @@ interface DocumentRetrieverTypeInformation {
 
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
 // type DocumentRetriever = BasicOperators;
-// interface DocumentRetriever extends BasicOperators {} // eslint-disable-line @typescript-eslint/no-empty-interface
 abstract class DocumentRetriever {
 	internalSettings?: {
 		model: Model<Document>;
