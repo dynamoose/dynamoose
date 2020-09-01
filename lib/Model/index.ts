@@ -1,6 +1,6 @@
 import CustomError = require("../Error");
 import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem} from "../Schema";
-import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings, DocumentObjectFromSchemaSettings} from "../Document";
+import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings, DocumentObjectFromSchemaSettings, AnyDocument} from "../Document";
 import utils = require("../utils");
 import ddb = require("../aws/ddb/internal");
 import Internal = require("../Internal");
@@ -204,7 +204,7 @@ interface ModelBatchDeleteSettings {
 }
 
 // Model represents one DynamoDB table
-export class Model<T extends DocumentCarrier> {
+export class Model<T extends DocumentCarrier = AnyDocument> {
 	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional) {
 		this.options = utils.combine_objects(options, customDefaults.get(), originalDefaults) as ModelOptions;
 		this.name = `${this.options.prefix}${name}${this.options.suffix}`;
