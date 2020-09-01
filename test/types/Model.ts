@@ -18,16 +18,23 @@ export interface User extends Document {
 	age: number;
 }
 
+const userSchema = new dynamoose.Schema({
+	"id": String,
+	"name": {
+		"type": String,
+		"index": {
+			"global": true
+		}
+	},
+	"age": Number
+});
+
 export const UserTypedModel = dynamoose.model<User>(
 	"User",
-	new dynamoose.Schema({
-		"id": String,
-		"name": {
-			"type": String,
-			"index": {
-				"global": true
-			}
-		},
-		"age": Number
-	})
+	userSchema
+);
+
+export const UserModel = dynamoose.model(
+	"User",
+	userSchema
 );

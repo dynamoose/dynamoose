@@ -1,9 +1,17 @@
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 
-import {UserTypedModel} from "../Model";
+import {UserTypedModel, User, UserModel} from "../Model";
 import {Condition} from "../../../dist";
+import {AnyDocument} from "../../../dist/Document";
 
 // scan.exec([callback])
+async function scanExec (): Promise<User[]> {
+	return await UserTypedModel.scan().exec();
+}
+async function scanExecUnTyped (): Promise<AnyDocument[]> {
+	return await UserModel.scan().exec();
+}
+
 UserTypedModel.scan().exec();
 
 // scan.limit(count)

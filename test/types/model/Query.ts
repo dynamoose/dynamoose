@@ -1,11 +1,17 @@
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 
-import {UserTypedModel} from "../Model";
+import {UserTypedModel, UserModel, User} from "../Model";
 import {SortOrder} from "../../../dist/General";
 import {Condition} from "../../../dist";
+import {AnyDocument} from "../../../dist/Document";
 
 // query.exec([callback])
-UserTypedModel.query().exec();
+async function queryExec (): Promise<User[]> {
+	return await UserTypedModel.query().exec();
+}
+async function queryExecUnTyped (): Promise<AnyDocument[]> {
+	return await UserModel.query().exec();
+}
 
 // query.limit(count)
 UserTypedModel.query("name").eq("Will").limit(5);
