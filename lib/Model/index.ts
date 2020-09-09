@@ -203,6 +203,7 @@ async function updateTable (model: Model<DocumentCarrier>): Promise<void> {
 interface ModelGetSettings {
 	return: "document" | "request";
 	attributes?: string[];
+	consistent?: boolean;
 }
 interface ModelDeleteSettings {
 	return: null | "request";
@@ -935,6 +936,9 @@ export class Model<T extends DocumentCarrier> {
 			"Key": this.Document.objectToDynamo(convertObjectToKey.bind(this)(key)),
 			"TableName": this.name
 		};
+		if (settings.consistent !== undefined && settings.consistent !== null) {
+			getItemParams.ConsistentRead = settings.consistent;
+		}
 		if (settings.attributes) {
 			getItemParams.ProjectionExpression = settings.attributes.join(", ");
 		}
