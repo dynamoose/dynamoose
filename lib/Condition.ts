@@ -78,7 +78,7 @@ export interface BasicOperators<T = Condition> {
 	ge: (value: number) => T;
 	beginsWith: (value: any) => T;
 	contains: (value: any) => T;
-	exists: (value: any) => T;
+	exists: () => T;
 	in: (value: any) => T;
 	between: (...values: any[]) => T;
 }
@@ -110,7 +110,7 @@ export class Condition implements BasicOperators {
 	ge: (value: number) => Condition;
 	beginsWith: (value: any) => Condition;
 	contains: (value: any) => Condition;
-	exists: (value: any) => Condition;
+	exists: () => Condition;
 	in: (value: any) => Condition;
 	between: (...values: any[]) => Condition;
 
@@ -329,5 +329,6 @@ Condition.prototype.requestObject = function (this: Condition, settings: Conditi
 			return object;
 		}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
 	}
-	return main(this.settings.conditions);
+
+	return utils.object.clearEmpties(main(this.settings.conditions));
 };
