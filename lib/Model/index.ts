@@ -901,7 +901,7 @@ export class Model<T extends DocumentCarrier> {
 			deleteItemParams = {
 				...deleteItemParams,
 				...settings.condition.requestObject()
-			}
+			};
 		}
 
 		if (settings.return === "request") {
