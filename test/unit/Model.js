@@ -3652,6 +3652,24 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should successfully add a condition if a condition is passed in", async () => {
+					const condition = new dynamoose.Condition().filter("id").exists();
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1}, {"condition": condition});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ConditionExpression": "attribute_exists (#a0)",
+						"ExpressionAttributeNames": {
+							"#a0": "id"
+						}
+					});
+				});
 
 				it("Should return request if return request setting is set", async () => {
 					const result = await callType.func(User).bind(User)(1, {"return": "request"});
