@@ -12,7 +12,7 @@ const shouldFailWithBooleanAsName = dynamoose.model(true);
 const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 
 // Typed Models
-export interface User extends Document {
+export class User extends Document {
 	id: string;
 	name: string;
 	age: number;

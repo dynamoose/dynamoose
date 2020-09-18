@@ -1,12 +1,14 @@
 The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save documents in the database.
 
-## dynamoose.model(name, [schema][, config])
+## dynamoose.model[&lt;Document&gt;](name, [schema][, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
+An optional class which extends `Document` can be given right before the function bracket. This provide type checking when using operations like Model.create().
+
 The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
-```js
+```ts
 const dynamoose = require("dynamoose");
 
 const Cat = dynamoose.model("Cat", {"name": String});
@@ -14,6 +16,19 @@ const Cat = dynamoose.model("Cat", {"name": String}, {"create": false});
 
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
+
+// Strongly typed model
+class Cat extends Document {
+	id: number;
+	name: string;
+}
+const CatModel = dynamoose.model<Cat>("Cat", {"id": Number, "name": String});
+
+// Will raise type checking error as random is not a valid field.
+CatModel.create({"id": 1, "random": "string"});
+
+// Will return the correct type of Cat
+const cat = await CatModel.get(1);
 ```
 
 You can also pass in an array of Schema instances or schema objects into the `schema` paremeter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your document, and use that schema for all operations pertaining to that document. If no matching schema can be found, it will default to the first schema in the array.
