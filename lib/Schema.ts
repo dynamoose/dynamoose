@@ -233,6 +233,8 @@ export interface TimestampObject {
 interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
 	saveUnknown?: boolean | string[];
+	modelType?: string;
+	modelTypeField?: string;
 }
 interface IndexDefinition {
 	name?: string;
@@ -374,6 +376,13 @@ export class Schema {
 		}
 	}
 	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string; includeAllProperties?: boolean } = {"type": "toDynamo"}): ObjectType {
+		let typeCorrectness: number | undefined = undefined;
+		if (this.settings.modelType) {
+			const typeField = this.settings.modelTypeField || "type";
+			const modelType = object[typeField];
+			typeCorrectness = modelType === this.settings.modelType ? 1 : 0.75;
+		}
+
 		return Object.entries(object).reduce((result, entry) => {
 			const [key, value] = entry;
 			const fullKey = [settings.previousKey, key].filter((a) => Boolean(a)).join(".");
@@ -438,7 +447,8 @@ export class Schema {
 				result[fullKey] = {
 					"index": 0,
 					matchCorrectness,
-					"entryCorrectness": [matchCorrectness]
+					"entryCorrectness": [matchCorrectness],
+					typeCorrectness
 				};
 			}
 

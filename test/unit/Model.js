@@ -4426,6 +4426,126 @@ describe("Model", () => {
 			customMethodTests({"prefixName": "Model.methods.document", "methodEntryPoint": () => User.methods.document, "testObject": () => user, "existingMethod": "save"});
 		});
 	});
+
+	describe("schemaForObject", () => {
+		let DataModel, TypeFieldDataModel, EasyDataModel;
+		let FooSchema, BarSchema, TypeFieldFooSchema, TypeFieldBarSchema, EasyFooSchema, EasyBarSchema;
+
+		beforeEach(() => {
+			FooSchema = new dynamoose.Schema({
+				"id": Number,
+				"type": {
+					"type": String,
+					"validate": "foo"
+				},
+				"fooValue": Number,
+				"multiType": String
+			}, {
+				"modelType": "foo"
+			});
+			BarSchema = new dynamoose.Schema({
+				"id": Number,
+				"type": {
+					"type": String,
+					"validate": "bar"
+				},
+				"barValue": Number,
+				"multiType": Number
+			}, {
+				"modelType": "bar"
+			});
+			TypeFieldFooSchema = new dynamoose.Schema({
+				"id": Number,
+				"modeltype": {
+					"type": String
+				},
+				"fooValue": Number,
+				"multiType": String
+			}, {
+				"modelType": "foo",
+				"modelTypeField": "modeltype"
+			});
+			TypeFieldBarSchema = new dynamoose.Schema({
+				"id": Number,
+				"modeltype": {
+					"type": String
+				},
+				"barValue": Number,
+				"multiType": Number
+			}, {
+				"modelType": "bar",
+				"modelTypeField": "modeltype"
+			});
+
+			EasyFooSchema = new dynamoose.Schema({
+				"id": Number,
+				"fooValue": Number,
+				"multiType": String
+			});
+			EasyBarSchema = new dynamoose.Schema({
+				"id": Number,
+				"barValue": Number,
+				"multiType": Number
+			});
+
+			DataModel = dynamoose.model("Base", [FooSchema, BarSchema]);
+			TypeFieldDataModel = dynamoose.model("Base", [TypeFieldFooSchema, TypeFieldBarSchema]);
+			EasyDataModel = dynamoose.model("Base", [EasyFooSchema, EasyBarSchema]);
+
+		});
+		afterEach(() => {
+			DataModel = null;
+			TypeFieldDataModel = null;
+			EasyDataModel = null;
+		});
+		it("Should be a function", () => {
+			expect(DataModel.schemaForObject).to.be.a("function");
+		});
+		it("Should guess properly when optimal", async () => {
+			const schemaMatch = await DataModel.schemaForObject({
+				"id": 1,
+				"type": "foo",
+				"fooValue": 12
+			});
+			expect(schemaMatch).to.deep.equal(FooSchema);
+			expect(schemaMatch).to.not.deep.equal(BarSchema);
+
+			const easySchemaMatch = await EasyDataModel.schemaForObject({
+				"id": 1,
+				"fooValue": 3
+			});
+			expect(easySchemaMatch).to.deep.equal(EasyFooSchema);
+		});
+		it("Should guess properly when ambiguous", async () => {
+			const schemaMatch = await DataModel.schemaForObject({
+				"id": 1,
+				"type": "bar"
+			});
+			expect(schemaMatch).to.deep.equal(BarSchema);
+			const fieldNamedSchemaMatch = await TypeFieldDataModel.schemaForObject({
+				"id": 1,
+				"modeltype": "bar"
+			});
+			expect(fieldNamedSchemaMatch).to.deep.equal(TypeFieldBarSchema);
+
+		});
+		it("Should still prefer a perfect match to a bad type match", async () => {
+			const match = await DataModel.schemaForObject({
+				"id": 1,
+				"type": "foo",
+				"barValue": 12
+			});
+			expect(match).to.deep.equal(BarSchema);
+		});
+		it("Should still prefer a type match to fieldtype-mismatch", async () => {
+			const match = await DataModel.schemaForObject({
+				"id": 1,
+				"type": "foo",
+				"multiType": 2 //foo-type wants a string here
+			});
+			expect(match).to.deep.equal(BarSchema);
+		});
+	});
 });
 
 describe("model", () => {
