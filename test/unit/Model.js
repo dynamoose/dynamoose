@@ -3652,6 +3652,24 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to deleteItem if we pass in an entire object with unnecessary attributes with range key", async () => {
+					deleteItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+					await callType.func(User).bind(User)({"id": 1, "type": "bar", "name": "Charlie"});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 
 				it("Should return request if return request setting is set", async () => {
 					const result = await callType.func(User).bind(User)(1, {"return": "request"});
@@ -3667,6 +3685,38 @@ describe("Model", () => {
 
 					return expect(callType.func(User).bind(User)({"id": 1, "name": "Charlie"})).to.be.rejectedWith({"error": "ERROR"});
 				});
+			});
+		});
+
+		it("Should send correct params to deleteItem if we pass in an entire object with unnecessary attributes with range key", async () => {
+			deleteItemFunction = () => Promise.resolve();
+
+			const schema = {
+				"PK": {"type": String, "hashKey": true},
+				"SK": {"type": String, "rangeKey": true},
+				"someAttribute": {"type": String}
+			};
+			const ExampleModel = dynamoose.model("TestTable", schema);
+
+			const example = new ExampleModel({
+				"PK": "primarKey",
+				"SK": "sortKey",
+				"someAttribute": "someValue"
+			});
+
+			const func = (Model) => Model.delete;
+			await func(ExampleModel).bind(ExampleModel)(example);
+			expect(deleteItemParams).to.be.an("object");
+			expect(deleteItemParams).to.eql({
+				"Key": {
+					"PK": {
+						"S": "primarKey"
+					},
+					"SK": {
+						"S": "sortKey"
+					}
+				},
+				"TableName": "TestTable"
 			});
 		});
 	});

@@ -111,9 +111,15 @@ export class Document {
 	delete(this: Document): Promise<void>;
 	delete(this: Document, callback: CallbackType<void, AWSError>): void;
 	delete (this: Document, callback?: CallbackType<void, AWSError>): Promise<void> | void {
-		return this.model.delete({
-			[this.model.getHashKey()]: this[this.model.getHashKey()]
-		}, callback);
+		const hashKey = this.model.getHashKey();
+		const rangeKey = this.model.getRangeKey();
+
+		const options = {[hashKey]: this[hashKey]};
+		if (rangeKey) {
+			options[rangeKey] = this[rangeKey];
+		}
+
+		return this.model.delete(options, callback);
 	}
 
 	// Save
