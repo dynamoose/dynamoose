@@ -1561,6 +1561,19 @@ describe("Document", () => {
 					});
 				});
 
+				it("Should deleteItem with correct parameters with a range key", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+					user = new User({"id": 1, "name": "Charlie", "type": "admin"});
+
+					deleteItemFunction = () => Promise.resolve();
+					const func = (document) => util.promisify(document.delete);
+					await func(user).bind(user)();
+					expect(deleteParams).to.eql({
+						"Key": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"TableName": "User"
+					});
+				});
+
 				it("Should throw error if DynamoDB API returns an error", () => {
 					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
 					return expect(callType.func(user).bind(user)()).to.be.rejectedWith({"error": "ERROR"});
