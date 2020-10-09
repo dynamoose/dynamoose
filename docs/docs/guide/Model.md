@@ -4,7 +4,7 @@ The Model object represents a table in DynamoDB. It takes in both a name and a s
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
 
-An optional class which extends `Document` can be given right before the function bracket. This provide type checking when using operations like Model.create().
+An optional TypeScript class which extends `Document` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
 
 The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
