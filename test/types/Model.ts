@@ -17,7 +17,6 @@ export class User extends Document {
 	name: string;
 	age: number;
 }
-
 const userSchema = new dynamoose.Schema({
 	"id": String,
 	"name": {
