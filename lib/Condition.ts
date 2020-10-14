@@ -66,24 +66,24 @@ export interface BasicOperators<T = Condition> {
 	and: () => T;
 	or: () => T;
 	not: () => T;
-	parenthesis: (value: T | ConditionFunction) => T;
-	group: (value: T | ConditionFunction) => T;
+	parenthesis: (value: Condition | ConditionFunction) => T;
+	group: (value: Condition | ConditionFunction) => T;
 	where: (key: string) => T;
 	filter: (key: string) => T;
 	attribute: (key: string) => T;
 	eq: (value: any) => T;
-	lt: (value: number) => T;
-	le: (value: number) => T;
-	gt: (value: number) => T;
-	ge: (value: number) => T;
+	lt: (value: any) => T;
+	le: (value: any) => T;
+	gt: (value: any) => T;
+	ge: (value: any) => T;
 	beginsWith: (value: any) => T;
 	contains: (value: any) => T;
-	exists: (value: any) => T;
+	exists: () => T;
 	in: (value: any) => T;
 	between: (...values: any[]) => T;
 }
 
-export class Condition implements BasicOperators {
+export interface Condition extends BasicOperators {
 	settings: {
 		// TODO: fix this below, it should be a reference to `OR` not Symbol, you are only allowed to pass in OR here, not any other Symbol.
 		conditions: ConditionStorageSettingsConditions;
@@ -104,18 +104,20 @@ export class Condition implements BasicOperators {
 	filter: (key: string) => Condition;
 	attribute: (key: string) => Condition;
 	eq: (value: any) => Condition;
-	lt: (value: number) => Condition;
-	le: (value: number) => Condition;
-	gt: (value: number) => Condition;
-	ge: (value: number) => Condition;
+	lt: (value: any) => Condition;
+	le: (value: any) => Condition;
+	gt: (value: any) => Condition;
+	ge: (value: any) => Condition;
 	beginsWith: (value: any) => Condition;
 	contains: (value: any) => Condition;
-	exists: (value: any) => Condition;
+	exists: () => Condition;
 	in: (value: any) => Condition;
 	between: (...values: any[]) => Condition;
 
 	requestObject: (settings?: ConditionRequestObjectSettings) => ConditionRequestObjectResult;
+}
 
+export class Condition {
 	constructor (object?: ConditionInitalizer) {
 		if (object instanceof Condition) {
 			Object.entries(object).forEach((entry) => {
