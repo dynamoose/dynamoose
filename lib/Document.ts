@@ -184,6 +184,10 @@ export class Document {
 	}
 }
 
+export class AnyDocument extends Document {
+	[key: string]: any;
+}
+
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
 Document.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Document>, settings: DocumentObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
