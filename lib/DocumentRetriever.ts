@@ -19,7 +19,6 @@ interface DocumentRetrieverTypeInformation {
 
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
 // type DocumentRetriever = BasicOperators;
-interface DocumentRetriever extends BasicOperators {} // eslint-disable-line @typescript-eslint/no-empty-interface
 abstract class DocumentRetriever {
 	internalSettings?: {
 		model: Model<Document>;
@@ -308,15 +307,17 @@ DocumentRetriever.prototype.all = function (this: DocumentRetriever, delay = 0, 
 	return this;
 };
 
+export interface Scan<T> extends DocumentRetriever, BasicOperators<Scan<T>> {
+	exec(): Promise<ScanResponse<T>>;
+	exec(callback: CallbackType<ScanResponse<T>, AWSError>): void;
+}
 
-export class Scan extends DocumentRetriever {
-	exec(): Promise<ScanResponse<Document[]>>;
-	exec(callback: CallbackType<ScanResponse<Document[]>, AWSError>): void;
-	exec (callback?: CallbackType<ScanResponse<Document[]>, AWSError>): Promise<ScanResponse<Document[]>> | void {
+export class Scan<T> extends DocumentRetriever {
+	exec (callback?: CallbackType<ScanResponse<T>, AWSError>): Promise<ScanResponse<T>> | void {
 		return super.exec(callback);
 	}
 
-	parallel (value: number): Scan {
+	parallel (value: number): Scan<T> {
 		this.settings.parallel = value;
 		return this;
 	}
@@ -326,14 +327,17 @@ export class Scan extends DocumentRetriever {
 	}
 }
 
-export class Query extends DocumentRetriever {
-	exec(): Promise<QueryResponse<Document[]>>;
-	exec(callback: CallbackType<QueryResponse<Document[]>, AWSError>): void;
-	exec (callback?: CallbackType<QueryResponse<Document[]>, AWSError>): Promise<QueryResponse<Document[]>> | void {
+export interface Query<T> extends DocumentRetriever, BasicOperators<Query<T>> {
+	exec(): Promise<QueryResponse<T>>;
+	exec(callback: CallbackType<QueryResponse<T>, AWSError>): void;
+}
+
+export class Query<T> extends DocumentRetriever {
+	exec (callback?: CallbackType<QueryResponse<T>, AWSError>): Promise<QueryResponse<T>> | void {
 		return super.exec(callback);
 	}
 
-	sort (order: SortOrder): Query {
+	sort (order: SortOrder): Query<T> {
 		this.settings.sort = order;
 		return this;
 	}
