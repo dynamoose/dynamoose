@@ -3935,6 +3935,16 @@ describe("Model", () => {
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
+
+			it("Should keep range keys with 0 value", async () => {
+				User = dynamoose.model("User", {"id": String, "order": {"type": Number, "rangeKey": true}});
+				expect(await User.transaction.delete({"id": "foo", "order": 0})).to.eql({
+					"Delete": {
+						"Key": {"id": {"S": "foo"}, "order": {"N": "0"}},
+						"TableName": "User"
+					}
+				});
+			});
 		});
 
 		describe("Model.transaction.update", () => {

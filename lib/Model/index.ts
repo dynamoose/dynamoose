@@ -44,7 +44,7 @@ export interface ModelOptions {
 export type ModelOptionsOptional = Partial<ModelOptions>;
 
 
-type KeyObject = {[attribute: string]: string};
+type KeyObject = {[attribute: string]: string | number};
 type InputKey = string | KeyObject;
 
 // Utility functions
@@ -400,7 +400,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 			keyObject = {
 				[hashKey]: key[hashKey]
 			};
-			if (rangeKey && key[rangeKey]) {
+			if (rangeKey && (key[rangeKey] === 0 || key[rangeKey])) {
 				keyObject[rangeKey] = key[rangeKey];
 			}
 		} else {
