@@ -527,8 +527,8 @@ You can also pass in an object for the optional `settings` parameter that is an 
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| return | What the function should return. Can be null, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | null | null |
-| condition | This is an optional instance of a Condition for the delete. | [dynamoose.Condition](Condition.md) | null
+| return | What the function should return. Can be null, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String \| null | null |
+| condition | This is an optional instance of a Condition for the delete. | [dynamoose.Condition](Condition) | null
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
