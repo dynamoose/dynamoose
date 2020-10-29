@@ -16,6 +16,10 @@ describe("utils.object.clearEmpties", () => {
 			"output": {"id": 1, "name": "Bob"}
 		},
 		{
+			"input": {"emptyArray": []},
+			"output": {}
+		},
+		{
 			"input": {"id": 1, "name": "Bob", "address": {"country": "world", "zip": 12345}},
 			"output": {"id": 1, "name": "Bob", "address": {"country": "world", "zip": 12345}}
 		},
@@ -25,6 +29,10 @@ describe("utils.object.clearEmpties", () => {
 		},
 		{
 			"input": {"id": 1, "name": "Bob", "address": {"country": "world", "zip": 12345, "other": {}}},
+			"output": {"id": 1, "name": "Bob", "address": {"country": "world", "zip": 12345}}
+		},
+		{
+			"input": {"id": 1, "name": "Bob", "address": {"country": "world", "zip": 12345, "emptyArray": []}},
 			"output": {"id": 1, "name": "Bob", "address": {"country": "world", "zip": 12345}}
 		}
 	];

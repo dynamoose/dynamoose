@@ -1,7 +1,6 @@
-import {GeneralObjectOrValue} from "./types";
+import { GeneralObjectOrValue } from './types'
 
 export const clearEmpties = <T>(object: GeneralObjectOrValue<T>): GeneralObjectOrValue<T> => {
-	// TODO: implement deepClone for immutability of the passed in object?
 	Object.keys(object).forEach((key) => {
 		if (typeof object[key] !== "object") {
 			return;
@@ -14,3 +13,4 @@ export const clearEmpties = <T>(object: GeneralObjectOrValue<T>): GeneralObjectO
 
 	return object;
 };
+
