@@ -1,4 +1,4 @@
-import { GeneralObjectOrValue } from './types'
+import {GeneralObjectOrValue} from "./types";
 
 export const clearEmpties = <T>(object: GeneralObjectOrValue<T>): GeneralObjectOrValue<T> => {
 	Object.keys(object).forEach((key) => {
