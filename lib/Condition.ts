@@ -10,7 +10,7 @@ const isRawConditionObject = (object): boolean => Object.keys(object).length ===
 export type ConditionFunction = (condition: Condition) => Condition;
 // TODO: There is a problem where you can have multiple keys in one `ConditionStorageType`, which will cause problems. We need to fix that. Likely be refactoring it so that the key is part of `ConditionsConditionStorageObject`.
 type ConditionStorageType = {[key: string]: ConditionsConditionStorageObject} | typeof OR;
-type ConditionStorageTypeNested = ConditionStorageType | Array<ConditionStorageTypeNested>;
+export type ConditionStorageTypeNested = ConditionStorageType | Array<ConditionStorageTypeNested>;
 type ConditionStorageSettingsConditions = ConditionStorageTypeNested[];
 // TODO: the return value of the function below is incorrect. We need to add a property to the object that is a required string, where the property/key name is always equal to `settings.conditionString`
 type ConditionRequestObjectResult = {ExpressionAttributeNames?: DynamoDB.Types.ExpressionAttributeNameMap; ExpressionAttributeValues?: DynamoDB.Types.ExpressionAttributeValueMap};
