@@ -168,11 +168,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			return true;
 		} else {
 			if (rangeKeyOfTable) {
-				const rangeKeyInQuery = Object.entries(chart)
-					.find(([fieldName]) => fieldName !== hashKeyInQuery[0]);
-				if (rangeKeyInQuery) {
-					return true;
-				}
+				return Object.entries(chart).some(([fieldName]) => fieldName !== hashKeyInQuery[0]);
 			}
 		}
 		return false;
