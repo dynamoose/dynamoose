@@ -729,6 +729,61 @@ describe("Query", () => {
 				"KeyConditionExpression": "#qha = :qhv"
 			});
 		});
+
+		describe("using table's index", () => {
+			let LSIModel;
+
+			beforeEach(() => {
+				queryPromiseResolver = () => ({"Items": []});
+				LSIModel = dynamoose.model("Cat", {
+					"id": {
+						"type": Number,
+						"hashKey": true
+					},
+					"name": {
+						"type": String,
+						"rangeKey": true
+					},
+					"favoriteNumber": {
+						"type": Number,
+						"index": {
+							"name": "myLSI",
+							"global": false
+						}
+					}
+				});
+			});
+
+			it("Should send correct request with only hash key", async () => {
+				await LSIModel.query("id").eq(7).exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"ExpressionAttributeNames": {
+						"#qha": "id"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"}
+					},
+					"KeyConditionExpression": "#qha = :qhv"
+				});
+			});
+
+			it("Should send correct request with hash+range key", async () => {
+				await LSIModel.query("id").eq(7).where("name").eq("Charlie").exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#qra": "name"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":qrv": {"S": "Charlie"}
+					},
+					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+				});
+			});
+		});
 	});
 
 	describe("query.exists", () => {

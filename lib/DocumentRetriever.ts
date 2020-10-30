@@ -1,7 +1,7 @@
 import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
-import {Condition, ConditionInitalizer, BasicOperators} from "./Condition";
+import {Condition, ConditionInitalizer, BasicOperators, ConditionStorageTypeNested} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
@@ -157,6 +157,26 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	const indexes = await this.internalSettings.model.getIndexes();
+	function canUseIndexOfTable (hashKeyOfTable, rangeKeyOfTable, chart: ConditionStorageTypeNested): boolean {
+		const hashKeyInQuery = Object.entries(chart)
+			.find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
+		if (!hashKeyInQuery) {
+			return false;
+		}
+		const isOneKeyQuery = Object.keys(chart).length === 1;
+		if (isOneKeyQuery && hashKeyInQuery) {
+			return true;
+		} else {
+			if (rangeKeyOfTable) {
+				const rangeKeyInQuery = Object.entries(chart)
+					.find(([fieldName]) => fieldName !== hashKeyInQuery[0]);
+				if (rangeKeyInQuery) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
 	} else if (this.internalSettings.typeInformation.type === "query") {
@@ -165,20 +185,27 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			res[myItem[0]] = {"type": myItem[1].type};
 			return res;
 		}, {});
-		const index = utils.array_flatten(Object.values(indexes)).find((index) => {
-			const {hash/*, range*/} = index.KeySchema.reduce((res, item) => {
-				res[item.KeyType.toLowerCase()] = item.AttributeName;
-				return res;
-			}, {});
-			// TODO: we need to write logic here to prioritize indexes with a range key that is being queried.
-			return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
-		});
-		if (!index) {
-			if ((comparisonChart[this.internalSettings.model.getHashKey()] || {}).type !== "EQ") {
-				throw new CustomError.InvalidParameter("Index can't be found for query.");
+		const tryToGuessIndex = !canUseIndexOfTable(
+			this.internalSettings.model.getHashKey(),
+			this.internalSettings.model.getRangeKey(),
+			comparisonChart
+		);
+		if (tryToGuessIndex) {
+			const index = utils.array_flatten(Object.values(indexes)).find((index) => {
+				const {hash/*, range*/} = index.KeySchema.reduce((res, item) => {
+					res[item.KeyType.toLowerCase()] = item.AttributeName;
+					return res;
+				}, {});
+				// TODO: we need to write logic here to prioritize indexes with a range key that is being queried.
+				return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
+			});
+			if (!index) {
+				if ((comparisonChart[this.internalSettings.model.getHashKey()] || {}).type !== "EQ") {
+					throw new CustomError.InvalidParameter("Index can't be found for query.");
+				}
+			} else {
+				object.IndexName = index.IndexName;
 			}
-		} else {
-			object.IndexName = index.IndexName;
 		}
 	}
 	function moveParameterNames (val, prefix): void {
