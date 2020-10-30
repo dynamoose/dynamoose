@@ -181,12 +181,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			res[myItem[0]] = {"type": myItem[1].type};
 			return res;
 		}, {});
-		const tryToGuessIndex = !canUseIndexOfTable(
-			this.internalSettings.model.getHashKey(),
-			this.internalSettings.model.getRangeKey(),
-			comparisonChart
-		);
-		if (tryToGuessIndex) {
+		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
 			const index = utils.array_flatten(Object.values(indexes)).find((index) => {
 				const {hash/*, range*/} = index.KeySchema.reduce((res, item) => {
 					res[item.KeyType.toLowerCase()] = item.AttributeName;
@@ -196,9 +191,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 				return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
 			});
 			if (!index) {
-				if ((comparisonChart[this.internalSettings.model.getHashKey()] || {}).type !== "EQ") {
-					throw new CustomError.InvalidParameter("Index can't be found for query.");
-				}
+				throw new CustomError.InvalidParameter("Index can't be found for query.");
 			} else {
 				object.IndexName = index.IndexName;
 			}
