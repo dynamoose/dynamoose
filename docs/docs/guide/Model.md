@@ -723,7 +723,7 @@ This object has the following methods that you can call.
 
 You can pass in the same parameters into each method that you do for the normal (non-transaction) methods, except for the callback parameter.
 
-These methods are meant to only be called to instantiate the [`dynamoose.transaction`](https://dynamoosejs.com/guide/Transaction) array.
+These methods are meant to only be called to instantiate the [`dynamoose.transaction`](Transaction) array.
 
 ### Model.transaction.create
 
