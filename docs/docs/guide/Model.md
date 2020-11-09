@@ -739,7 +739,11 @@ This object has the following methods that you can call.
 
 You can pass in the same parameters into each method that you do for the normal (non-transaction) methods, except for the callback parameter.
 
-These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
+These methods are meant to only be called to instantiate the [`dynamoose.transaction`](Transaction) array.
+
+### Model.transaction.create
+
+Note that this method corresponds more closely to `Model.put`, as it will overwrite an item if it already exists in the database. For `Model.create`-like functionality you have to add an extra `Model.transaction.condition` call that ensures the item does not exist.
 
 ### Model.transaction.condition(key, condition)
 
