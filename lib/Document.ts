@@ -114,12 +114,12 @@ export class Document {
 		const hashKey = this.model.getHashKey();
 		const rangeKey = this.model.getRangeKey();
 
-		const options = {[hashKey]: this[hashKey]};
+		const key = {[hashKey]: this[hashKey]};
 		if (rangeKey) {
-			options[rangeKey] = this[rangeKey];
+			key[rangeKey] = this[rangeKey];
 		}
 
-		return this.model.delete(options, callback);
+		return this.model.delete(key, callback);
 	}
 
 	// Save
