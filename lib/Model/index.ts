@@ -937,7 +937,8 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 			getItemParams.ConsistentRead = settings.consistent;
 		}
 		if (settings.attributes) {
-			getItemParams.ProjectionExpression = settings.attributes.join(", ");
+			getItemParams.ProjectionExpression = settings.attributes.map((attribute) => "#" + attribute).join(", ");
+			getItemParams.ExpressionAttributeNames = settings.attributes.reduce((accumulator, currentValue) => (accumulator["#" + currentValue] = currentValue, accumulator), {});
 		}
 		if (settings.return === "request") {
 			if (callback) {
