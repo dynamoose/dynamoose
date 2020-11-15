@@ -1077,6 +1077,56 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send consistent (false) to getItem", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)(1, {"consistent": false});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ConsistentRead": false
+					});
+				});
+
+				it("Should send consistent (true) to getItem", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)(1, {"consistent": true});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ConsistentRead": true
+					});
+				});
+
+				it("Should get consistent (false) back in request", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request", "consistent": true});
+					expect(getItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ConsistentRead": true
+					});
+				});
+
+				it("Should get consistent (true) back in request", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request", "consistent": false});
+					expect(getItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ConsistentRead": false
+					});
+				});
+
 				it("Should send correct params to getItem if we pass in an object", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					await callType.func(User).bind(User)({"id": 1});
