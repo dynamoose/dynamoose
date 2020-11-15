@@ -166,6 +166,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 |------|-------------|------|---------|
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
 | attributes | What document attributes should be retrieved & returned. This will use the underlying `ProjectionExpression` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
+| consistent | Whether to perform a strongly consistent read or not. If this value is `undefined`, then no `ConsistentRead` parameter will be included in the request, and DynamoDB will default to an eventually consistent read. | boolean | undefined |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
@@ -738,7 +739,11 @@ This object has the following methods that you can call.
 
 You can pass in the same parameters into each method that you do for the normal (non-transaction) methods, except for the callback parameter.
 
-These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
+These methods are meant to only be called to instantiate the [`dynamoose.transaction`](Transaction) array.
+
+### Model.transaction.create
+
+Note that this method corresponds more closely to `Model.put`, as it will overwrite an item if it already exists in the database. For `Model.create`-like functionality you have to add an extra `Model.transaction.condition` call that ensures the item does not exist.
 
 ### Model.transaction.condition(key, condition)
 
