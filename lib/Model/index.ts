@@ -400,7 +400,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 			keyObject = {
 				[hashKey]: key[hashKey]
 			};
-			if (rangeKey && (key[rangeKey] === 0 || key[rangeKey])) {
+			if (rangeKey && typeof key[rangeKey] !== "undefined" && key[rangeKey] !== null) {
 				keyObject[rangeKey] = key[rangeKey];
 			}
 		} else {
