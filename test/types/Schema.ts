@@ -37,3 +37,9 @@ const shouldSucceedWithMultipleNestedSchemas = new dynamoose.Schema({
 		]
 	}
 });
+const shouldSucceedWithStringSet = new dynamoose.Schema({
+	"data": {
+		"type": Set,
+		"schema": [String]
+	}
+});
