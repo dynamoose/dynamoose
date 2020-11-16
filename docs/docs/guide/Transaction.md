@@ -4,7 +4,7 @@ DynamoDB supports running DynamoDB Transactions in your database. Transactions a
 
 You can use `dynamoose.transaction` to run a transaction on your table. This method uses either the `transactGetItems` or `transactWriteItems` DynamoDB API call to run the transaction.
 
-The `transactions` parameter must be an array of transaction objects that will be passed into the DynamoDB API. The standard way to get these is by using the `Model.transaction` methods. You can also pass Promises into this array that will resolve to an object, and Dynamoose will wait for those promises to be resolved before proceeding.
+The `transactions` parameter must be an array of transaction objects that will be passed into the DynamoDB API. The standard way to get these is by using the [`Model.transaction` methods](Model#modeltransaction). You can also pass Promises into this array that will resolve to an object, and Dynamoose will wait for those promises to be resolved before proceeding.
 
 If you pass RAW objects into the `transactions` array (without using `Model.transaction`) you must be sure that the given model has been registered with Dynamoose at some point so we can convert the response to Document instances of that Model.
 
