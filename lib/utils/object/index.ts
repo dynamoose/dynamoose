@@ -5,6 +5,7 @@ import pick = require("./pick");
 import keys = require("./keys");
 import entries = require("./entries");
 import equals = require("./equals");
+import {clearEmpties} from "./clear_empties";
 
 export = {
 	get,
@@ -13,5 +14,6 @@ export = {
 	pick,
 	keys,
 	entries,
-	equals
+	equals,
+	clearEmpties
 };
