@@ -166,8 +166,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		if (isOneKeyQuery && hashKeyInQuery) {
 			return true;
 		} else if (rangeKeyOfTable) {
-				return Object.entries(chart).some(([fieldName]) => fieldName !== hashKeyInQuery[0]);
-			}
+			return Object.entries(chart).some(([fieldName]) => fieldName !== hashKeyInQuery[0]);
 		}
 		return false;
 	}
