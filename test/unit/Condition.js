@@ -178,11 +178,11 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("name").exists(),
-				"output": {"ConditionExpression": "attribute_exists (#a0)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {}}
+				"output": {"ConditionExpression": "attribute_exists (#a0)", "ExpressionAttributeNames": {"#a0": "name"}}
 			},
 			{
 				"input": () => new Condition().where("name").not().exists(),
-				"output": {"ConditionExpression": "attribute_not_exists (#a0)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {}}
+				"output": {"ConditionExpression": "attribute_not_exists (#a0)", "ExpressionAttributeNames": {"#a0": "name"}}
 			},
 			{
 				"input": () => new Condition().where("name").in(["Charlie", "Bob"]),
