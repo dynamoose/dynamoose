@@ -13,6 +13,7 @@ import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 import {PopulateDocuments} from "../Populate";
 
 import {DynamoDB, AWSError} from "aws-sdk";
+import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
 
 // Defaults
 interface ModelWaitForActiveSettings {
@@ -46,6 +47,50 @@ export type ModelOptionsOptional = Partial<ModelOptions>;
 
 type KeyObject = {[attribute: string]: string};
 type InputKey = string | KeyObject;
+
+// Transactions
+type GetTransactionResult = Promise<GetTransactionInput>;
+type CreateTransactionResult = Promise<CreateTransactionInput>;
+type DeleteTransactionResult = Promise<DeleteTransactionInput>;
+type UpdateTransactionResult = Promise<UpdateTransactionInput>;
+type ConditionTransactionResult = Promise<ConditionTransactionInput>;
+
+export interface GetTransaction {
+	(key: InputKey): GetTransactionResult;
+	(key: InputKey, settings?: ModelGetSettings): GetTransactionResult;
+	(key: InputKey, settings: ModelGetSettings & {return: "document"}): GetTransactionResult;
+	(key: InputKey, settings: ModelGetSettings & {return: "request"}): GetTransactionResult;
+}
+export interface CreateTransaction {
+	(document: ObjectType): CreateTransactionResult;
+	(document: ObjectType, settings: DocumentSaveSettings & {return: "request"}): CreateTransactionResult;
+	(document: ObjectType, settings: DocumentSaveSettings & {return: "document"}): CreateTransactionResult;
+	(document: ObjectType, settings?: DocumentSaveSettings): CreateTransactionResult;
+}
+export interface DeleteTransaction {
+	(key: InputKey): DeleteTransactionResult;
+	(key: InputKey, settings: ModelDeleteSettings & {return: "request"}): DeleteTransactionResult;
+	(key: InputKey, settings: ModelDeleteSettings & {return: null}): DeleteTransactionResult;
+	(key: InputKey, settings?: ModelDeleteSettings): DeleteTransactionResult;
+}
+export interface UpdateTransaction {
+	(obj: ObjectType): CreateTransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType): UpdateTransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "document"}): UpdateTransactionResult;
+	(keyObj: ObjectType, updateObj: ObjectType, settings: ModelUpdateSettings & {"return": "request"}): UpdateTransactionResult;
+	(keyObj: ObjectType, updateObj?: ObjectType, settings?: ModelUpdateSettings): UpdateTransactionResult;
+}
+export interface ConditionTransaction {
+	(key: InputKey, condition: Condition): ConditionTransactionResult;
+}
+
+type TransactionType = {
+	get: GetTransaction;
+	create: CreateTransaction;
+	delete: DeleteTransaction;
+	update: UpdateTransaction;
+	condition: ConditionTransaction;
+};
 
 // Utility functions
 async function getTableDetails (model: Model<DocumentCarrier>, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
@@ -364,6 +409,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	scan: (object?: ConditionInitalizer) => Scan<T>;
 	query: (object?: ConditionInitalizer) => Query<T>;
 	methods: { document: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
+	transaction: TransactionType;
 
 	// This function returns the best matched schema for the given object input
 	async schemaForObject (object: ObjectType): Promise<Schema> {
