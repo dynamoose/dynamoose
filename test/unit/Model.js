@@ -3721,14 +3721,14 @@ describe("Model", () => {
 				});
 
 				it("Should successfully add a condition if a condition is passed in", async () => {
- 					const condition = new dynamoose.Condition().filter("id").exists();
- 					deleteItemFunction = () => Promise.resolve();
- 					await callType.func(User).bind(User)({"id": 1}, {"condition": condition});
- 					expect(deleteItemParams).to.be.an("object");
- 					expect(deleteItemParams).to.eql({
- 						"Key": {
- 							"id": {
- 								"N": "1"
+					const condition = new dynamoose.Condition().filter("id").exists();
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1}, {"condition": condition});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
  							}
  						},
  						"TableName": "User",
