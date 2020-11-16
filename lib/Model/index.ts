@@ -45,7 +45,7 @@ export interface ModelOptions {
 export type ModelOptionsOptional = Partial<ModelOptions>;
 
 
-type KeyObject = {[attribute: string]: string};
+type KeyObject = {[attribute: string]: string | number};
 type InputKey = string | KeyObject;
 
 // Transactions
@@ -447,7 +447,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 			keyObject = {
 				[hashKey]: key[hashKey]
 			};
-			if (rangeKey && key[rangeKey]) {
+			if (rangeKey && typeof key[rangeKey] !== "undefined" && key[rangeKey] !== null) {
 				keyObject[rangeKey] = key[rangeKey];
 			}
 		} else {
