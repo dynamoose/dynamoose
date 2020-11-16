@@ -9,14 +9,16 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.30.0",
-    "@typescript-eslint/parser": "^2.30.0",
+    "@types/node": "^14.14.7",
+    "@types/source-map-support": "^0.5.3",
+    "@typescript-eslint/eslint-plugin": "^4.7.0",
+    "@typescript-eslint/parser": "^4.7.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^6.8.0",
-    "mocha": "^7.1.2",
-    "nyc": "^15.0.1",
-    "typescript": "^3.9.5"
+    "eslint": "^7.13.0",
+    "mocha": "^7.2.0",
+    "nyc": "^15.1.0",
+    "typescript": "^4.0.5"
   },
   "scripts": {
     "prepare": "npm run build:clean && npm run build",
@@ -53,11 +55,9 @@
     "url": "https://github.com/dynamoose/dynamoose/issues"
   },
   "dependencies": {
-    "@types/node": "^13.13.4",
-    "@types/source-map-support": "^0.5.1",
-    "aws-sdk": "^2.668.0",
+    "aws-sdk": "^2.792.0",
     "source-map-support": "^0.5.19",
-    "uuid": "^8.0.0"
+    "uuid": "^8.3.1"
   },
   "license": "Unlicense",
   "keywords": [
