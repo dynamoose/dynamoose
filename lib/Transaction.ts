@@ -42,7 +42,6 @@ function Transaction (transactions: Transactions): TransactionReturnType;
 function Transaction (transactions: Transactions, settings: TransactionSettings): TransactionReturnType;
 function Transaction (transactions: Transactions, callback: TransactionCallback): TransactionReturnType;
 function Transaction (transaction: Transactions, settings: TransactionSettings, callback: TransactionCallback): TransactionReturnType;
-
 function Transaction (transactions: Transactions, settings?: TransactionSettings | TransactionCallback, callback?: TransactionCallback): TransactionReturnType {
 	settings = settings ?? {"return": TransactionReturnOptions.documents};
 
