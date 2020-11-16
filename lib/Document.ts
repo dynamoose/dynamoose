@@ -46,9 +46,9 @@ export class Document {
 
 	// Internal
 	model?: Model<Document>;
-	static objectToDynamo(object: ObjectType): DynamoDB.AttributeMap;
-	static objectToDynamo(object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
-	static objectToDynamo(object: ObjectType, settings: {type: "object"}): DynamoDB.AttributeMap;
+	static objectToDynamo (object: ObjectType): DynamoDB.AttributeMap;
+	static objectToDynamo (object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
+	static objectToDynamo (object: ObjectType, settings: {type: "object"}): DynamoDB.AttributeMap;
 	static objectToDynamo (object: any, settings: {type: "object" | "value"} = {"type": "object"}): DynamoDB.AttributeValue | DynamoDB.AttributeMap {
 		return (settings.type === "value" ? aws.converter().input : aws.converter().marshall)(object);
 	}
@@ -108,21 +108,27 @@ export class Document {
 	}
 
 	// Delete
-	delete(this: Document): Promise<void>;
-	delete(this: Document, callback: CallbackType<void, AWSError>): void;
+	delete (this: Document): Promise<void>;
+	delete (this: Document, callback: CallbackType<void, AWSError>): void;
 	delete (this: Document, callback?: CallbackType<void, AWSError>): Promise<void> | void {
-		return this.model.delete({
-			[this.model.getHashKey()]: this[this.model.getHashKey()]
-		}, callback);
+		const hashKey = this.model.getHashKey();
+		const rangeKey = this.model.getRangeKey();
+
+		const key = {[hashKey]: this[hashKey]};
+		if (rangeKey) {
+			key[rangeKey] = this[rangeKey];
+		}
+
+		return this.model.delete(key, callback);
 	}
 
 	// Save
-	save(this: Document): Promise<Document>;
-	save(this: Document, callback: CallbackType<Document, AWSError>): void;
-	save(this: Document, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
-	save(this: Document, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, AWSError>): void;
-	save(this: Document, settings: DocumentSaveSettings & {return: "document"}): Promise<Document>;
-	save(this: Document, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<Document, AWSError>): void;
+	save (this: Document): Promise<Document>;
+	save (this: Document, callback: CallbackType<Document, AWSError>): void;
+	save (this: Document, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
+	save (this: Document, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, AWSError>): void;
+	save (this: Document, settings: DocumentSaveSettings & {return: "document"}): Promise<Document>;
+	save (this: Document, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<Document, AWSError>): void;
 	save (this: Document, settings?: DocumentSaveSettings | CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>, callback?: CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>): void | Promise<Document | DynamoDB.PutItemInput> {
 		if (typeof settings !== "object" && typeof settings !== "undefined") {
 			callback = settings;
@@ -175,10 +181,10 @@ export class Document {
 	}
 
 	// Populate
-	populate(): Promise<Document>;
-	populate(callback: CallbackType<Document, AWSError>): void;
-	populate(settings: PopulateSettings): Promise<Document>;
-	populate(settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
+	populate (): Promise<Document>;
+	populate (callback: CallbackType<Document, AWSError>): void;
+	populate (settings: PopulateSettings): Promise<Document>;
+	populate (settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
 	populate (...args): Promise<Document> | void {
 		return PopulateDocument.bind(this)(...args);
 	}
