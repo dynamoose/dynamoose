@@ -158,8 +158,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 	}
 	const indexes = await this.internalSettings.model.getIndexes();
 	function canUseIndexOfTable (hashKeyOfTable, rangeKeyOfTable, chart: ConditionStorageTypeNested): boolean {
-		const hashKeyInQuery = Object.entries(chart)
-			.find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
+		const hashKeyInQuery = Object.entries(chart).find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
 		if (!hashKeyInQuery) {
 			return false;
 		}
