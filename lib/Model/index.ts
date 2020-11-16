@@ -231,6 +231,7 @@ interface ModelGetSettings {
 }
 interface ModelDeleteSettings {
 	return: null | "request";
+	condition?: Condition;
 }
 interface ModelBatchPutSettings {
 	return: "response" | "request";
@@ -931,11 +932,22 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 		if (typeof settings === "undefined") {
 			settings = {"return": null};
 		}
+		if (typeof settings === "object" && !settings.return) {
+			settings = {...settings, "return": null};
+		}
 
-		const deleteItemParams: DynamoDB.DeleteItemInput = {
+		let deleteItemParams: DynamoDB.DeleteItemInput = {
 			"Key": this.Document.objectToDynamo(this.convertObjectToKey(key)),
 			"TableName": this.name
 		};
+
+		if (settings.condition) {
+			deleteItemParams = {
+				...deleteItemParams,
+				...settings.condition.requestObject()
+			};
+		}
+
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.DeleteItemInput, AWSError> = callback as CallbackType<DynamoDB.DeleteItemInput, AWSError>;
