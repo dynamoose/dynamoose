@@ -3702,7 +3702,7 @@ describe("Model", () => {
 					});
 				});
 
-        it("Should send correct params to deleteItem if we pass in an entire object with unnecessary attributes with range key", async () => {
+				it("Should send correct params to deleteItem if we pass in an entire object with unnecessary attributes with range key", async () => {
 					deleteItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
 					await callType.func(User).bind(User)({"id": 1, "type": "bar", "name": "Charlie"});
