@@ -331,5 +331,6 @@ Condition.prototype.requestObject = function (this: Condition, settings: Conditi
 			return object;
 		}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
 	}
-	return main(this.settings.conditions);
+
+	return utils.object.clearEmpties(main(this.settings.conditions));
 };
