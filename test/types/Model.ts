@@ -23,7 +23,7 @@ const shouldPassWithUpdateTransaction = model.transaction.update({});
 const shouldPassWithConditionTransaction = model.transaction.condition("key", new dynamoose.Condition());
 
 // @ts-expect-error
-const shouldFailWithInvalidGetTransaction = model.transaction.get(0);
+const shouldFailWithInvalidGetTransaction = model.transaction.get();
 // @ts-expect-error
 const shouldFailWithInvalidCreateTransaction = model.transaction.create(0);
 // @ts-expect-error
