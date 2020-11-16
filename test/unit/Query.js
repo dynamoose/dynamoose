@@ -730,7 +730,7 @@ describe("Query", () => {
 			});
 		});
 
-		describe("using index of table", () => {
+		describe("Using index of table", () => {
 			let LSIModel;
 
 			beforeEach(() => {
