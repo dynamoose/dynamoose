@@ -235,7 +235,7 @@ Document.attributesWithSchema = async function (document: Document, model: Model
 
 		Object.keys(treeNode).forEach((attr) => {
 			if (attr === "0") {
-				if (!node || node.length == 0 || (typeof node === "object" && Object.keys(node).length == 0)) {
+				if (!node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
 					node = [{}]; // fake the path for arrays
 				}
 				node.forEach((a, index) => {
