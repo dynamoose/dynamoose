@@ -1887,6 +1887,26 @@ describe("Document", () => {
 				"input": {"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}, {"name": "Billy", "addresses": []}]},
 				"output": ["id", "friends", "friends.0", "friends.1", "friends.0.name", "friends.1.name", "friends.0.addresses", "friends.1.addresses", "friends.0.addresses.0", "friends.1.addresses.0", "friends.1.addresses.1", "friends.0.addresses.0.country", "friends.1.addresses.0.country", "friends.1.addresses.1.country", "friends.0.addresses.0.zip", "friends.1.addresses.0.zip", "friends.1.addresses.1.zip", "friends.2", "friends.2.name", "friends.2.addresses", "friends.2.addresses.0", "friends.2.addresses.0.zip", "friends.2.addresses.0.country"],
 				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}, "zip": Number}}]}}}]}}
+			},
+			{
+				"input": {"id": 1},
+				"output": ["id", "friends", "friends.0", "friends.0.0"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema": [String]}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [["Bob", "Tim"]]},
+				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema": [String]}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [["Bob", "Tim"], ["Scott", "Craig"]]},
+				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1", "friends.1", "friends.1.0", "friends.1.1"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema": [String]}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [[{"name": "Bob", "id": 1}, {"name": "Tim"}]]},
+				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1", "friends.0.0.id", "friends.0.1.id", "friends.0.0.name", "friends.0.1.name"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema":[{"type":"Object", "schema":{"id":{"type":"Number", "required":true}, "name":"String"}}]}]}}
 			}
 		];
 
