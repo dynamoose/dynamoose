@@ -1152,7 +1152,10 @@ describe("Model", () => {
 							}
 						},
 						"TableName": "User",
-						"ProjectionExpression": "id"
+						"ProjectionExpression": "#a0",
+						"ExpressionAttributeNames": {
+							"#a0": "id"
+						}
 					});
 				});
 
@@ -1167,7 +1170,11 @@ describe("Model", () => {
 							}
 						},
 						"TableName": "User",
-						"ProjectionExpression": "id, name"
+						"ProjectionExpression": "#a0, #a1",
+						"ExpressionAttributeNames": {
+							"#a0": "id",
+							"#a1": "name"
+						}
 					});
 				});
 
