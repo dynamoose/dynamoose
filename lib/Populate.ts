@@ -12,11 +12,11 @@ interface PopulateInternalSettings {
 	parentKey?: string;
 }
 
-export function PopulateDocument(this: Document): Promise<Document>;
-export function PopulateDocument(this: Document, callback: CallbackType<Document, AWSError>): void;
-export function PopulateDocument(this: Document, settings: PopulateSettings): Promise<Document>;
-export function PopulateDocument(this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
-export function PopulateDocument(this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): void;
+export function PopulateDocument (this: Document): Promise<Document>;
+export function PopulateDocument (this: Document, callback: CallbackType<Document, AWSError>): void;
+export function PopulateDocument (this: Document, settings: PopulateSettings): Promise<Document>;
+export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
+export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): void;
 export function PopulateDocument (this: Document, settings?: PopulateSettings | CallbackType<Document, AWSError>, callback?: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): Promise<Document> | void {
 	if (typeof settings === "function") {
 		callback = settings;
@@ -70,10 +70,10 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 	}
 }
 
-export function PopulateDocuments(this: DocumentArray<Document>): Promise<DocumentArray<Document>>;
-export function PopulateDocuments(this: DocumentArray<Document>, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
-export function PopulateDocuments(this: DocumentArray<Document>, settings: PopulateSettings): Promise<DocumentArray<Document>>;
-export function PopulateDocuments(this: DocumentArray<Document>, settings: PopulateSettings, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
+export function PopulateDocuments (this: DocumentArray<Document>): Promise<DocumentArray<Document>>;
+export function PopulateDocuments (this: DocumentArray<Document>, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
+export function PopulateDocuments (this: DocumentArray<Document>, settings: PopulateSettings): Promise<DocumentArray<Document>>;
+export function PopulateDocuments (this: DocumentArray<Document>, settings: PopulateSettings, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
 export function PopulateDocuments (this: DocumentArray<Document>, settings?: PopulateSettings | CallbackType<DocumentArray<Document>, AWSError>, callback?: CallbackType<DocumentArray<Document>, AWSError>): Promise<DocumentArray<Document>> | void {
 	if (typeof settings === "function") {
 		callback = settings;
