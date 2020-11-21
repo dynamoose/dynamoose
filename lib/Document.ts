@@ -235,7 +235,7 @@ Document.attributesWithSchema = async function (document: Document, model: Model
 
 		Object.keys(treeNode).forEach((attr) => {
 			if (attr === "0") {
-				// we check for empty objects here to handle the use case of 2d arrays, or arrays within arrays. node in that case will be an empty object.
+				// We check for empty objects here (added `typeof node === "object" && Object.keys(node).length == 0`, see PR https://github.com/dynamoose/dynamoose/pull/1034) to handle the use case of 2d arrays, or arrays within arrays. `node` in that case will be an empty object.
 				if (!node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
 					node = [{}]; // fake the path for arrays
 				}
