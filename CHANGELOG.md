@@ -2,6 +2,35 @@
 
 ---
 
+## Version 2.4.0
+
+This release fixes a lot of bugs and adds support for consistent read support to `Model.get` and support for conditional deletes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added consistent read support to `Model.get`
+- Added support for passing a condition into `Model.delete`
+- Added support for strongly typed models in TypeScript
+
+### Bug Fixes
+
+- Fixed bug where `document.delete` would fail with rangeKey
+- Transaction TypeScript improvements
+- Set schema type TypeScript improvements
+- Fixed issue related to having `0` as number for key (range or hash)
+- Fixed bug where passing in reserved keyword attributes into `Model.get` would fail
+- Improvements to how queries decide which index to use
+- Improvements to storing and retrieving documents with multi-dimensional arrays (nested arrays)
+
+### Documentation
+
+- Updated website search
+- Improvements to documentation clarity
+
+---
+
 ## Version 2.3.0
 
 This release adds major new support for single table design.
