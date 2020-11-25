@@ -1,6 +1,10 @@
 export = (saveUnknown: string[] | boolean, checkKey: string, settings = {"splitString": ".", "prefixesDisallowed": true}): boolean => {
 	if (Array.isArray(saveUnknown)) {
 		return Boolean(saveUnknown.find((key) => {
+			// explicit type checking for typescript "split is not a function" error.
+		    	if(typeof key !== 'string'){
+		                return true
+			}
 			const keyParts = key.split(settings.splitString);
 			const checkKeyParts = checkKey.split(settings.splitString);
 			let index = 0, keyPart = keyParts[0];
