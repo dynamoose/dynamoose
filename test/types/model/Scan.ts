@@ -17,6 +17,10 @@ async function scanExecUnTypedWithScanResponse (): Promise<ScanResponse<AnyDocum
 	return await UserModel.scan().exec();
 }
 
+async function scanExecTyped (): Promise<ScanResponse<User>> {
+	return UserTypedModel.scan("name").eq("Will").exec();
+}
+
 UserTypedModel.scan().exec();
 
 // scan.limit(count)

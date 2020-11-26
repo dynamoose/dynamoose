@@ -18,6 +18,10 @@ async function queryExecUnTypedQueryResponse (): Promise<QueryResponse<AnyDocume
 	return await UserModel.query().exec();
 }
 
+async function queryExecTyped (): Promise<QueryResponse<User>> {
+	return UserTypedModel.query("name").eq("Will").exec();
+}
+
 // query.limit(count)
 UserTypedModel.query("name").eq("Will").limit(5);
 
