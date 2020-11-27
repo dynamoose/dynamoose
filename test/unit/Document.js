@@ -1365,6 +1365,47 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with condition", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data1": String}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data1": "hello"});
+					await callType.func(user).bind(user)({"condition": new dynamoose.Condition("breed").eq("Terrier")});
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}},
+						"ConditionExpression": "#a0 = :v0",
+						"ExpressionAttributeNames": {
+							"#a0": "breed"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Terrier"
+							}
+						},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with condition and overwrite set to false", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data1": String}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data1": "hello"});
+					await callType.func(user).bind(user)({"condition": new dynamoose.Condition("breed").eq("Terrier"), "overwrite": false});
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}},
+						"ConditionExpression": "(#a0 = :v0) AND (attribute_not_exists(#__hash_key))",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id",
+							"#a0": "breed"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Terrier"
+							}
+						},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
