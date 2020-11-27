@@ -224,7 +224,7 @@ const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.arr
 type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
 type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor;
+type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | Schema;
 
 export interface TimestampObject {
 	createdAt?: string | string[];
@@ -737,7 +737,7 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 	let typeSettings: AttributeDefinitionTypeSettings = {};
 	if (typeof typeVal === "object" && !Array.isArray(typeVal)) {
 		typeSettings = (typeVal as {value: DateConstructor; settings?: AttributeDefinitionTypeSettings}).settings || {};
-		typeVal = typeVal.value;
+		typeVal = (typeVal as any).value;
 	}
 
 	const getType = (typeVal: AttributeType | AttributeDefinition): string => {
