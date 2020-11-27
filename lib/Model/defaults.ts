@@ -17,7 +17,7 @@ export const original: ModelOptions = {
 	},
 	"update": false,
 	"populate": false,
-	"expires": null
+	"expires": undefined
 	// "streamOptions": {
 	// 	"enabled": false,
 	// 	"type": undefined
