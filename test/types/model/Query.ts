@@ -4,6 +4,7 @@ import {UserTypedModel, UserModel, User} from "../Model";
 import {SortOrder} from "../../../dist/General";
 import {Condition} from "../../../dist";
 import {AnyDocument} from "../../../dist/Document";
+import {QueryResponse} from "../../../dist/DocumentRetriever";
 
 // query.exec([callback])
 async function queryExec (): Promise<User[]> {
@@ -12,6 +13,9 @@ async function queryExec (): Promise<User[]> {
 async function queryExecUnTyped (): Promise<AnyDocument[]> {
 	return await UserModel.query().exec();
 }
+
+const queryExecUnTypedQueryResponse: Promise<QueryResponse<AnyDocument>> = UserModel.query().exec();
+const queryExecTyped: Promise<QueryResponse<User>> = UserTypedModel.query("name").eq("Will").exec();
 
 // query.limit(count)
 UserTypedModel.query("name").eq("Will").limit(5);

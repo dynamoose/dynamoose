@@ -3,6 +3,7 @@
 import {UserTypedModel, User, UserModel} from "../Model";
 import {Condition} from "../../../dist";
 import {AnyDocument} from "../../../dist/Document";
+import {ScanResponse} from "../../../dist/DocumentRetriever";
 
 // scan.exec([callback])
 async function scanExec (): Promise<User[]> {
@@ -11,6 +12,9 @@ async function scanExec (): Promise<User[]> {
 async function scanExecUnTyped (): Promise<AnyDocument[]> {
 	return await UserModel.scan().exec();
 }
+
+const scanExecUnTypedWithScanResponse: Promise<ScanResponse<AnyDocument>> = UserModel.scan().exec();
+const scanExecTyped: Promise<ScanResponse<User>> = UserTypedModel.scan("name").eq("Will").exec();
 
 UserTypedModel.scan().exec();
 
