@@ -2,6 +2,18 @@
 
 ---
 
+## Version 2.4.1
+
+This release fixes a performance issue related to TypeScript.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Other
+
+- Fixes a memory leak related to the TypeScript target being `es6`. This was fixed by changing the target to `es2017`.
+
+---
+
 ## Version 2.4.0
 
 This release fixes a lot of bugs and adds support for consistent read support to `Model.get` and support for conditional deletes.
