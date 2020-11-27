@@ -592,10 +592,10 @@ export class Schema {
 
 // TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
 Schema.prototype.getHashKey = function (this: Schema): string {
-	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition)?.hashKey) || Object.keys(this.schemaObject)[0];
+	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.schemaObject)[0];
 };
 Schema.prototype.getRangeKey = function (this: Schema): string | void {
-	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition)?.rangeKey);
+	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).rangeKey);
 };
 
 // This function will take in an attribute and value, and throw an error if the property is required and the value is undefined or null.
