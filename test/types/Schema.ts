@@ -44,7 +44,7 @@ const shouldSucceedWithStringSet = new dynamoose.Schema({
 	}
 });
 const shouldSucceedWithDynamooseThis = new dynamoose.Schema({
-    "id": String,
-    "name": String,
-    "parent": dynamoose.THIS
+	"id": String,
+	"name": String,
+	"parent": dynamoose.THIS
 });
