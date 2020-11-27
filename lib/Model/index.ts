@@ -7,7 +7,7 @@ import Internal = require("../Internal");
 import {Serializer, SerializerOptions} from "../Serializer";
 import {Condition, ConditionInitalizer} from "../Condition";
 import {Scan, Query} from "../DocumentRetriever";
-import {CallbackType, ObjectType, FunctionType, DocumentArray, ModelType} from "../General";
+import {CallbackType, ObjectType, FunctionType, DocumentArray, ModelType, DeepPartial} from "../General";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 import {PopulateDocuments} from "../Populate";
@@ -40,9 +40,9 @@ export interface ModelOptions {
 	waitForActive: ModelWaitForActiveSettings;
 	update: boolean | ModelUpdateOptions[];
 	populate: string | string[] | boolean;
-	expires?: number | ModelExpiresSettings;
+	expires: number | ModelExpiresSettings;
 }
-export type ModelOptionsOptional = Partial<ModelOptions>;
+export type ModelOptionsOptional = DeepPartial<ModelOptions>;
 
 
 type KeyObject = {[attribute: string]: string | number};
