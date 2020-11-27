@@ -73,5 +73,6 @@ export = {
 	aws,
 	logger,
 	"UNDEFINED": Internal.Public.undefined,
-	"THIS": Internal.Public.this
+	"THIS": Internal.Public.this,
+	"NULL": Internal.Public.null
 };
