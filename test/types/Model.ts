@@ -13,6 +13,22 @@ const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 
 const model = dynamoose.model("User");
 
+const shouldPassCreateWithNoReturnSetting = model.create({"id": 1}, {"overwrite": true});
+const shouldPassGetWithNoReturnSetting = model.get({"id": 1}, {"attributes": ["something"]});
+const shouldPassDeleteWithNoReturnSetting = model.delete({"id": 1}, {"condition": new dynamoose.Condition("name").eq("Charlie")});
+const shouldPassUpdateWithNoReturnSetting = model.update({"id": 1}, {"name": "Charlie"}, {"condition": new dynamoose.Condition("name").eq("Bob")});
+const shouldPassBatchGetWithNoReturnSetting = model.batchGet([{"id": 1}, {"id": 2}], {});
+const shouldPassBatchPutWithNoReturnSetting = model.batchPut([{"id": 1}, {"id": 2}], {});
+const shouldPassBatchDeleteWithNoReturnSetting = model.batchDelete([{"id": 1}, {"id": 2}], {});
+const shouldPassCreateWithNoReturnSettingCallback = model.create({"id": 1}, {"overwrite": true}, () => {});
+const shouldPassGetWithNoReturnSettingCallback = model.get({"id": 1}, {"attributes": ["something"]}, () => {});
+const shouldPassDeleteWithNoReturnSettingCallback = model.delete({"id": 1}, {"condition": new dynamoose.Condition("name").eq("Charlie")}, () => {});
+const shouldPassUpdateWithNoReturnSettingCallback = model.update({"id": 1}, {"name": "Charlie"}, {"condition": new dynamoose.Condition("name").eq("Bob")}, () => {});
+const shouldPassBatchGetWithNoReturnSettingCallback = model.batchGet([{"id": 1}, {"id": 2}], {}, () => {});
+const shouldPassBatchPutWithNoReturnSettingCallback = model.batchPut([{"id": 1}, {"id": 2}], {}, () => {});
+const shouldPassBatchDeleteWithNoReturnSettingCallback = model.batchDelete([{"id": 1}, {"id": 2}], {}, () => {});
+
+
 const shouldSucceedWithWaitForActive = dynamoose.model("User", {"id": String}, {"waitForActive": {"enabled": true}});
 
 // @ts-expect-error
