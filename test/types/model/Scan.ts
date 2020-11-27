@@ -13,13 +13,8 @@ async function scanExecUnTyped (): Promise<AnyDocument[]> {
 	return await UserModel.scan().exec();
 }
 
-async function scanExecUnTypedWithScanResponse (): Promise<ScanResponse<AnyDocument>> {
-	return await UserModel.scan().exec();
-}
-
-async function scanExecTyped (): Promise<ScanResponse<User>> {
-	return UserTypedModel.scan("name").eq("Will").exec();
-}
+const scanExecUnTypedWithScanResponse: Promise<ScanResponse<AnyDocument>> = UserModel.scan().exec();
+const scanExecTyped: Promise<ScanResponse<User>> = UserTypedModel.scan("name").eq("Will").exec();
 
 UserTypedModel.scan().exec();
 
