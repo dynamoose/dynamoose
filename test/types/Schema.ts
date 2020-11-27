@@ -43,3 +43,11 @@ const shouldSucceedWithStringSet = new dynamoose.Schema({
 		"schema": [String]
 	}
 });
+
+// Nested Schema
+const shouldSucceedWithNestedSchema = new dynamoose.Schema({
+	"id": String,
+	"data": new dynamoose.Schema({
+		"name": String
+	})
+});
