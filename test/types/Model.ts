@@ -13,6 +13,8 @@ const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 
 const model = dynamoose.model("User");
 
+const shouldSucceedWithWaitForActive = dynamoose.model("User", {"id": String}, {"waitForActive": {"enabled": true}});
+
 // @ts-expect-error
 const shouldFailWithInvalidTransaction = model.transaction.notValid();
 
