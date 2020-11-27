@@ -14,13 +14,8 @@ async function queryExecUnTyped (): Promise<AnyDocument[]> {
 	return await UserModel.query().exec();
 }
 
-async function queryExecUnTypedQueryResponse (): Promise<QueryResponse<AnyDocument>> {
-	return await UserModel.query().exec();
-}
-
-async function queryExecTyped (): Promise<QueryResponse<User>> {
-	return UserTypedModel.query("name").eq("Will").exec();
-}
+const queryExecUnTypedQueryResponse: Promise<QueryResponse<AnyDocument>> = UserModel.query().exec();
+const queryExecTyped: Promise<QueryResponse<User>> = UserTypedModel.query("name").eq("Will").exec();
 
 // query.limit(count)
 UserTypedModel.query("name").eq("Will").limit(5);
