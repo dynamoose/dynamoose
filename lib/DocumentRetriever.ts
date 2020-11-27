@@ -286,11 +286,11 @@ interface DocumentRetrieverResponse<T> extends DocumentArray<T> {
 	lastKey?: ObjectType;
 	count: number;
 }
-interface ScanResponse<T> extends DocumentRetrieverResponse<T> {
+export interface ScanResponse<T> extends DocumentRetrieverResponse<T> {
 	scannedCount: number;
 	timesScanned: number;
 }
-interface QueryResponse<T> extends DocumentRetrieverResponse<T> {
+export interface QueryResponse<T> extends DocumentRetrieverResponse<T> {
 	queriedCount: number;
 	timesQueried: number;
 }
