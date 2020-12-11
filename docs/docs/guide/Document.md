@@ -29,6 +29,7 @@ You can also pass a settings object in as the first parameter. The following opt
 |---|---|---|---|
 | overwrite | boolean | true | If an existing document with the same hash key should be overwritten in the database. You can set this to false to not overwrite an existing document with the same hash key. |
 | return | string | `document` | If the function should return the `document` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB. |
+| condition | [`dynamoose.Condition`](Condition) | `null` | This is an optional instance of a Condition for the save. |
 
 Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 
