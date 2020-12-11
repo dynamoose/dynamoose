@@ -13,10 +13,12 @@ import {ValueType} from "./Schema";
 import {CallbackType, ObjectType} from "./General";
 import {SerializerOptions} from "./Serializer";
 import {PopulateDocument, PopulateSettings} from "./Populate";
+import {Condition} from "./Condition";
 
 export interface DocumentSaveSettings {
 	overwrite?: boolean;
 	return?: "request" | "document";
+	condition?: Condition;
 }
 export interface DocumentSettings {
 	type?: "fromDynamo" | "toDynamo";
@@ -140,14 +142,25 @@ export class Document {
 
 		const localSettings: DocumentSaveSettings = settings;
 		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
-			const putItemObj: DynamoDB.PutItemInput = {
+			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
 				"TableName": this.model.name
 			};
 
+			if (localSettings.condition) {
+				putItemObj = {
+					...putItemObj,
+					...localSettings.condition.requestObject()
+				};
+			}
+
 			if (localSettings.overwrite === false) {
-				putItemObj.ConditionExpression = "attribute_not_exists(#__hash_key)";
-				putItemObj.ExpressionAttributeNames = {"#__hash_key": this.model.getHashKey()};
+				const conditionExpression = "attribute_not_exists(#__hash_key)";
+				putItemObj.ConditionExpression = putItemObj.ConditionExpression ? `(${putItemObj.ConditionExpression}) AND (${conditionExpression})` : conditionExpression;
+				putItemObj.ExpressionAttributeNames = {
+					...putItemObj.ExpressionAttributeNames || {},
+					"#__hash_key": this.model.getHashKey()
+				};
 			}
 
 			return putItemObj;

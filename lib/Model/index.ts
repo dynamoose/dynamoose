@@ -7,7 +7,7 @@ import Internal = require("../Internal");
 import {Serializer, SerializerOptions} from "../Serializer";
 import {Condition, ConditionInitalizer} from "../Condition";
 import {Scan, Query} from "../DocumentRetriever";
-import {CallbackType, ObjectType, FunctionType, DocumentArray, ModelType} from "../General";
+import {CallbackType, ObjectType, FunctionType, DocumentArray, ModelType, DeepPartial} from "../General";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import {ModelIndexChangeType} from "../utils/dynamoose/index_changes";
 import {PopulateDocuments} from "../Populate";
@@ -40,9 +40,9 @@ export interface ModelOptions {
 	waitForActive: ModelWaitForActiveSettings;
 	update: boolean | ModelUpdateOptions[];
 	populate: string | string[] | boolean;
-	expires?: number | ModelExpiresSettings;
+	expires: number | ModelExpiresSettings;
 }
-export type ModelOptionsOptional = Partial<ModelOptions>;
+export type ModelOptionsOptional = DeepPartial<ModelOptions>;
 
 
 type KeyObject = {[attribute: string]: string | number};
@@ -225,29 +225,29 @@ async function updateTable (model: Model<DocumentCarrier>): Promise<void> {
 }
 
 interface ModelGetSettings {
-	return: "document" | "request";
+	return?: "document" | "request";
 	attributes?: string[];
 	consistent?: boolean;
 }
 interface ModelDeleteSettings {
-	return: null | "request";
+	return?: null | "request";
 	condition?: Condition;
 }
 interface ModelBatchPutSettings {
-	return: "response" | "request";
+	return?: "response" | "request";
 }
 interface ModelUpdateSettings {
-	return: "document" | "request";
+	return?: "document" | "request";
 	condition?: Condition;
 }
 interface ModelBatchGetDocumentsResponse<T> extends DocumentArray<T> {
 	unprocessedKeys: ObjectType[];
 }
 interface ModelBatchGetSettings {
-	return: "documents" | "request";
+	return?: "documents" | "request";
 }
 interface ModelBatchDeleteSettings {
-	return: "response" | "request";
+	return?: "response" | "request";
 }
 
 // Model represents one DynamoDB table
@@ -462,10 +462,12 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	// Batch Get
 	batchGet (keys: InputKey[]): Promise<ModelBatchGetDocumentsResponse<T>>;
 	batchGet (keys: InputKey[], callback: CallbackType<ModelBatchGetDocumentsResponse<T>, AWSError>): void;
-	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}): Promise<ModelBatchGetDocumentsResponse<T>>;
-	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}, callback: CallbackType<ModelBatchGetDocumentsResponse<T>, AWSError>): void;
 	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "request"}): DynamoDB.BatchGetItemInput;
 	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "request"}, callback: CallbackType<DynamoDB.BatchGetItemInput, AWSError>): void;
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings): Promise<ModelBatchGetDocumentsResponse<T>>;
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings, callback: CallbackType<ModelBatchGetDocumentsResponse<T>, AWSError>): void;
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}): Promise<ModelBatchGetDocumentsResponse<T>>;
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "documents"}, callback: CallbackType<ModelBatchGetDocumentsResponse<T>, AWSError>): void;
 	batchGet (keys: InputKey[], settings?: ModelBatchGetSettings | CallbackType<ModelBatchGetDocumentsResponse<T>, AWSError> | CallbackType<DynamoDB.BatchGetItemInput, AWSError>, callback?: CallbackType<ModelBatchGetDocumentsResponse<T>, AWSError> | CallbackType<DynamoDB.BatchGetItemInput, AWSError>): void | DynamoDB.BatchGetItemInput | Promise<ModelBatchGetDocumentsResponse<T>> {
 		if (typeof settings === "function") {
 			callback = settings;
@@ -536,6 +538,8 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	batchPut (documents: ObjectType[], callback: CallbackType<{"unprocessedItems": ObjectType[]}, AWSError>): void;
 	batchPut (documents: ObjectType[], settings: ModelBatchPutSettings & {"return": "request"}): Promise<DynamoDB.BatchWriteItemInput>;
 	batchPut (documents: ObjectType[], settings: ModelBatchPutSettings & {"return": "request"}, callback: CallbackType<DynamoDB.BatchWriteItemInput, AWSError>): void;
+	batchPut (documents: ObjectType[], settings: ModelBatchPutSettings): Promise<{"unprocessedItems": ObjectType[]}>;
+	batchPut (documents: ObjectType[], settings: ModelBatchPutSettings, callback: CallbackType<{"unprocessedItems": ObjectType[]}, AWSError>): void;
 	batchPut (documents: ObjectType[], settings: ModelBatchPutSettings & {"return": "response"}): Promise<{"unprocessedItems": ObjectType[]}>;
 	batchPut (documents: ObjectType[], settings: ModelBatchPutSettings & {"return": "response"}, callback: CallbackType<{"unprocessedItems": ObjectType[]}, AWSError>): void;
 	batchPut (documents: ObjectType[], settings?: ModelBatchPutSettings | CallbackType<{"unprocessedItems": ObjectType[]}, AWSError> | CallbackType<DynamoDB.BatchWriteItemInput, AWSError>, callback?: CallbackType<{"unprocessedItems": ObjectType[]}, AWSError> | CallbackType<DynamoDB.BatchWriteItemInput, AWSError>): void | Promise<DynamoDB.BatchWriteItemInput | {"unprocessedItems": ObjectType[]}> {
@@ -593,10 +597,12 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	// Batch Delete
 	batchDelete (keys: InputKey[]): Promise<{unprocessedItems: ObjectType[]}>;
 	batchDelete (keys: InputKey[], callback: CallbackType<{unprocessedItems: ObjectType[]}, AWSError>): void;
-	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings & {"return": "response"}): Promise<{unprocessedItems: ObjectType[]}>;
-	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings & {"return": "response"}, callback: CallbackType<{unprocessedItems: ObjectType[]}, AWSError>): Promise<{unprocessedItems: ObjectType[]}>;
 	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings & {"return": "request"}): DynamoDB.BatchWriteItemInput;
 	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings & {"return": "request"}, callback: CallbackType<DynamoDB.BatchWriteItemInput, AWSError>): void;
+	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings): Promise<{unprocessedItems: ObjectType[]}>;
+	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings, callback: CallbackType<{unprocessedItems: ObjectType[]}, AWSError>): Promise<{unprocessedItems: ObjectType[]}>;
+	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings & {"return": "response"}): Promise<{unprocessedItems: ObjectType[]}>;
+	batchDelete (keys: InputKey[], settings: ModelBatchDeleteSettings & {"return": "response"}, callback: CallbackType<{unprocessedItems: ObjectType[]}, AWSError>): Promise<{unprocessedItems: ObjectType[]}>;
 	batchDelete (keys: InputKey[], settings?: ModelBatchDeleteSettings | CallbackType<{unprocessedItems: ObjectType[]}, AWSError> | CallbackType<DynamoDB.BatchWriteItemInput, AWSError>, callback?: CallbackType<{unprocessedItems: ObjectType[]}, AWSError> | CallbackType<DynamoDB.BatchWriteItemInput, AWSError>): void | DynamoDB.BatchWriteItemInput | Promise<{unprocessedItems: ObjectType[]}> {
 		if (typeof settings === "function") {
 			callback = settings;
@@ -656,10 +662,12 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	update (obj: Partial<T>, callback: CallbackType<T, AWSError>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>): Promise<T>;
 	update (keyObj: ObjectType, updateObj: Partial<T>, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, AWSError>): void;
+	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings): Promise<T>;
+	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
+	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
 	update (keyObj: ObjectType, updateObj?: Partial<T> | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, settings?: ModelUpdateSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
 		if (typeof updateObj === "function") {
 			callback = updateObj as CallbackType<DocumentCarrier | DynamoDB.UpdateItemInput, AWSError>; // TODO: fix this, for some reason `updateObj` has a type of Function which is forcing us to type cast it
@@ -906,6 +914,8 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	create (document: Partial<T>, callback: CallbackType<T, AWSError>): void;
 	create (document: Partial<T>, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
 	create (document: Partial<T>, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, AWSError>): void;
+	create (document: Partial<T>, settings: DocumentSaveSettings): Promise<T>;
+	create (document: Partial<T>, settings: DocumentSaveSettings, callback: CallbackType<T, AWSError>): void;
 	create (document: Partial<T>, settings: DocumentSaveSettings & {return: "document"}): Promise<T>;
 	create (document: Partial<T>, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<T, AWSError>): void;
 	create (document: Partial<T>, settings?: DocumentSaveSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>): void | Promise<T> | Promise<DynamoDB.PutItemInput> {
@@ -922,6 +932,8 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	delete (key: InputKey, callback: CallbackType<void, AWSError>): void;
 	delete (key: InputKey, settings: ModelDeleteSettings & {return: "request"}): DynamoDB.DeleteItemInput;
 	delete (key: InputKey, settings: ModelDeleteSettings & {return: "request"}, callback: CallbackType<DynamoDB.DeleteItemInput, AWSError>): void;
+	delete (key: InputKey, settings: ModelDeleteSettings): Promise<void>;
+	delete (key: InputKey, settings: ModelDeleteSettings, callback: CallbackType<void, AWSError>): void;
 	delete (key: InputKey, settings: ModelDeleteSettings & {return: null}): Promise<void>;
 	delete (key: InputKey, settings: ModelDeleteSettings & {return: null}, callback: CallbackType<void, AWSError>): void;
 	delete (key: InputKey, settings?: ModelDeleteSettings | CallbackType<void, AWSError> | CallbackType<DynamoDB.DeleteItemInput, AWSError>, callback?: CallbackType<void, AWSError> | CallbackType<DynamoDB.DeleteItemInput, AWSError>): void | DynamoDB.DeleteItemInput | Promise<void> {
@@ -971,10 +983,12 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	// Get
 	get (key: InputKey): Promise<T>;
 	get (key: InputKey, callback: CallbackType<T, AWSError>): void;
-	get (key: InputKey, settings: ModelGetSettings & {return: "document"}): Promise<T>;
-	get (key: InputKey, settings: ModelGetSettings & {return: "document"}, callback: CallbackType<T, AWSError>): void;
 	get (key: InputKey, settings: ModelGetSettings & {return: "request"}): DynamoDB.GetItemInput;
 	get (key: InputKey, settings: ModelGetSettings & {return: "request"}, callback: CallbackType<DynamoDB.GetItemInput, AWSError>): void;
+	get (key: InputKey, settings: ModelGetSettings): Promise<T>;
+	get (key: InputKey, settings: ModelGetSettings, callback: CallbackType<T, AWSError>): void;
+	get (key: InputKey, settings: ModelGetSettings & {return: "document"}): Promise<T>;
+	get (key: InputKey, settings: ModelGetSettings & {return: "document"}, callback: CallbackType<T, AWSError>): void;
 	get (key: InputKey, settings?: ModelGetSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.GetItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.GetItemInput, AWSError>): void | DynamoDB.GetItemInput | Promise<T> {
 		if (typeof settings === "function") {
 			callback = settings;
