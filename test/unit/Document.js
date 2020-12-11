@@ -1896,6 +1896,14 @@ describe("Document", () => {
 			{
 				"input": {"prop": null},
 				"output": false
+			},
+			{
+				"input": {"prop": {"NULL": true}},
+				"output": true
+			},
+			{
+				"input": {"id": {"S": "foo"}, "data": {"NULL": true}},
+				"output": true
 			}
 		];
 
@@ -2007,6 +2015,16 @@ describe("Document", () => {
 				"input": [{"id": 1, "name": dynamoose.UNDEFINED}, {"defaults": true}],
 				"output": {"id": 1, "name": undefined},
 				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
+			},
+			{
+				"input": [{"id": 1, "data": null}],
+				"output": {"id": 1, "data": null},
+				"schema": {"id": Number, "data": dynamoose.NULL}
+			},
+			{
+				"input": [{"id": 1, "data": null}, {"saveUnknown": true}],
+				"output": {"id": 1, "data": null},
+				"schema": new Schema({"id": Number}, {"saveUnknown": true})
 			},
 			// TODO: uncomment these lines below
 			// {

@@ -149,6 +149,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 	const numberType = new DynamoDBType({"name": "Number", "dynamodbType": "N", "set": true, "jsType": "number"});
 	const stringType = new DynamoDBType({"name": "String", "dynamodbType": "S", "set": true, "jsType": "string"});
 	return [
+		new DynamoDBType({"name": "Null", "dynamodbType": "NULL", "set": false, "jsType": {"func": (val): boolean => val === null}}),
 		new DynamoDBType({"name": "Buffer", "dynamodbType": "B", "set": true, "jsType": Buffer, "customDynamoName": "Binary"}),
 		new DynamoDBType({"name": "Boolean", "dynamodbType": "BOOL", "jsType": "boolean"}),
 		new DynamoDBType({"name": "Array", "dynamodbType": "L", "jsType": {"func": Array.isArray}, "nestedType": true}),
@@ -392,7 +393,7 @@ export class Schema {
 			}
 			const {typeDetails, matchedTypeDetailsIndex, matchedTypeDetailsIndexes} = typeCheckResult;
 			const hasMultipleTypes = Array.isArray(typeDetails);
-			const isObject = typeof value === "object";
+			const isObject = typeof value === "object" && value !== null;
 
 			if (hasMultipleTypes) {
 				if (matchedTypeDetailsIndexes.length > 1 && isObject) {
@@ -730,7 +731,7 @@ function retrieveTypeInfo (type: string, isSet: boolean, key: string, typeSettin
 Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, settings: {standardKey?: boolean; typeIndexOptionMap?: {}} = {}): DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[] {
 	const standardKey = settings.standardKey ? key : key.replace(/\.\d+/gu, ".0");
 	const val = this.getAttributeValue(standardKey, {...settings, "standardKey": true});
-	if (!val) {
+	if (typeof val === "undefined") {
 		throw new CustomError.UnknownAttribute(`Invalid Attribute: ${key}`);
 	}
 	let typeVal = typeof val === "object" && !Array.isArray(val) ? val.type : val;
@@ -743,6 +744,7 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 	const getType = (typeVal: AttributeType | AttributeDefinition): string => {
 		let type: string;
 		const isThisType = typeVal as any === Internal.Public.this;
+		const isNullType = typeVal as any === Internal.Public.null;
 		if (typeof typeVal === "function" || isThisType) {
 			if ((typeVal as any).prototype instanceof Document || isThisType) {
 				type = "model";
@@ -762,6 +764,8 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 				const regexFuncName = /^Function ([^(]+)\(/iu;
 				[, type] = typeVal.toString().match(regexFuncName);
 			}
+		} else if (isNullType) {
+			type = "null";
 		} else {
 			type = typeVal as string;
 		}

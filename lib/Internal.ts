@@ -4,6 +4,7 @@ export = {
 	},
 	"Public": {
 		"undefined": Symbol("dynamoose.undefined"),
-		"this": Symbol("dynamoose.this")
+		"this": Symbol("dynamoose.this"),
+		"null": Symbol("dynamoose.null")
 	}
 };
