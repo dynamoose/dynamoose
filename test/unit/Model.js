@@ -2004,6 +2004,29 @@ describe("Model", () => {
 						"TableName": "User"
 					});
 				});
+
+				it("Should send correct params to putItem with value as null", async () => {
+					const User2 = dynamoose.model("User", {"id": Number, "name": dynamoose.NULL});
+
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User2).bind(User2)({"id": 1, "name": null});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"NULL": true
+							}
+						},
+						"TableName": "User"
+					});
+				});
 			});
 		});
 	});
