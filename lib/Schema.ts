@@ -263,7 +263,7 @@ interface AttributeDefinition {
 	rangeKey?: boolean;
 }
 export interface SchemaDefinition {
-	[attribute: string]: AttributeType | AttributeType[] | AttributeDefinition;
+	[attribute: string]: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
 }
 interface SchemaGetAttributeTypeSettings {
 	unknownAttributeAllowed: boolean;
