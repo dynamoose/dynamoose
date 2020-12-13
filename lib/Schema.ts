@@ -249,7 +249,7 @@ interface AttributeDefinitionTypeSettings {
 	seperator?: string;
 }
 interface AttributeDefinition {
-	type: AttributeType | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType}; // TODO add support for this being an object
+	type: AttributeType | AttributeType[] | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType | AttributeType[]}; // TODO add support for this being an object
 	schema?: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[] | SchemaDefinition | SchemaDefinition[];
 	default?: ValueType | (() => ValueType);
 	forceDefault?: boolean;
@@ -263,7 +263,7 @@ interface AttributeDefinition {
 	rangeKey?: boolean;
 }
 export interface SchemaDefinition {
-	[attribute: string]: AttributeType | AttributeDefinition;
+	[attribute: string]: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
 }
 interface SchemaGetAttributeTypeSettings {
 	unknownAttributeAllowed: boolean;
