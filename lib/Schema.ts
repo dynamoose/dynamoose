@@ -607,7 +607,26 @@ Schema.prototype.requiredCheck = async function (this: Schema, key: string, valu
 };
 
 Schema.prototype.getIndexAttributes = async function (this: Schema): Promise<{index: IndexDefinition; attribute: string}[]> {
-	return (await Promise.all(this.attributes().map(async (attribute: string) => ({"index": await this.getAttributeSettingValue("index", attribute) as IndexDefinition, attribute})))).filter((obj) => obj.index);
+	return (await Promise.all(this.attributes()
+		.map(async (attribute: string) => ({
+			"index": await this.getAttributeSettingValue("index", attribute) as IndexDefinition,
+			attribute
+		}))
+	))
+		.filter((obj) => obj.index)
+		.reduce((accumulator, currentValue) => {
+			if (Array.isArray(currentValue.index)) {
+				currentValue.index.forEach((currentIndex) => {
+					accumulator.push({
+						...currentValue,
+						"index": currentIndex
+					});
+				});
+			} else {
+				accumulator.push(currentValue);
+			}
+			return accumulator;
+		}, []);
 };
 Schema.prototype.getIndexRangeKeyAttributes = async function (this: Schema): Promise<{attribute: string}[]> {
 	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getIndexAttributes();
