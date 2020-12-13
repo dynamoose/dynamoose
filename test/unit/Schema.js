@@ -961,7 +961,6 @@ describe("Schema", () => {
 			expect(result.map((item) => ({"name": item.name, "dynamodbType": item.dynamodbType}))).to.eql([{"name": "String", "dynamodbType": "S"}, {"name": "Buffer", "dynamodbType": "B"}]);
 		});
 	});
-
 	describe("getAttributeSettingValue", () => {
 		const tests = [
 			// Defaults
@@ -1155,6 +1154,57 @@ describe("Schema", () => {
 			});
 		});
 	});
+
+	describe("getIndexAttributes", () => {
+		const tests = [
+			// Defaults
+			{
+				"name": "Should return an empty array if no indicies are defined",
+				"schema": {"id": String},
+				"output": []
+			},
+			{
+				"name": "Should return an array containing definitions for an boolean defined index",
+				"schema": {"id": {"type": String, "index": true}},
+				"output": [{"attribute": "id", "index": true}]
+			},
+			{
+				"name": "Should return an array containing definitions for an object defined index",
+				"schema": {"id": {"type": String, "index": {"global": true, "name": "id-index"}}},
+				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index"}}]
+			},
+			{
+				"name": "Should return an array containing definitions for an array defined index",
+				"schema": {"id": {"type": String, "index": [{"global": true, "name": "id-index"}]}},
+				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index"}}]
+			},
+			{
+				"name": "Should return an array containing multiple definitions for array defined indexes",
+				"schema": {"id": {"type": String, "index": [{"global": true, "name": "id-index-1"}, {"global": false, "name": "id-index-2"}]}},
+				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index-1"}}, {"attribute": "id", "index": {"global": false, "name": "id-index-2"}}]
+			},
+			{
+				"name": "Should aggregate an array containing multiple definitions for all defined indexes",
+				"schema": {"id": {"type": String, "index": [{"global": true, "name": "id-index-1"}, {"global": false, "name": "id-index-2"}]}, "uid": {"type": String, "index": {"global": true, "name": "uid-index"}}, "uuid": {"type": String}},
+				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index-1"}}, {"attribute": "id", "index": {"global": false, "name": "id-index-2"}}, {"attribute": "uid", "index": {"global": true, "name": "uid-index"}}]
+			}
+		];
+
+		tests.forEach((test) => {
+			it(test.name, async () => {
+				const schema = new dynamoose.Schema(test.schema);
+				const output = await schema.getIndexAttributes();
+				if (typeof output !== "function") {
+					expect(output).to.eql(test.output);
+				} else {
+					expect(typeof output).to.eql(typeof test.output);
+					expect(output.toString()).to.eql(test.output.toString());
+					expect(await output()).to.eql(await test.output());
+				}
+			});
+		});
+	});
+
 
 	describe("getTypePaths", () => {
 		it("Should be a function", () => {
