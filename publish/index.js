@@ -95,10 +95,26 @@ let package = require("../package.json");
 	const packageUpdateVersionsSpinner = ora("Updating versions in package.json & package-lock.json files").start();
 	await Promise.all(["package.json", "package-lock.json"].map(updateVersion));
 	packageUpdateVersionsSpinner.succeed("Updated versions in package.json & package-lock.json files");
-	// Add, Commit & Push files to Git
-	const gitCommit = ora("Committing files to Git").start();
+	// Add & Commit files to Git
+	const gitCommitPackage = ora("Committing files to Git").start();
 	await git.commit(`Bumping version to ${results.version}`, ["package.json", "package-lock.json"].map((file) => path.join(__dirname, "..", file)));
-	gitCommit.succeed("Committed files to Git");
+	gitCommitPackage.succeed("Committed files to Git");
+	// Update README
+	const readmePath = path.join(__dirname, "..", "README.md");
+	const readmeFileContents = await fs.readFile(readmePath, "utf8");
+	if (readmeFileContents.includes(package.version)) {
+		await fs.writeFile(readmePath, `${readmeFileContents.replace(package.version, results.version)}\n`);
+		const readmeUpdateVersionsSpinner = ora("Updating version in README.md").start();
+		readmeUpdateVersionsSpinner.succeed("Updated version in README.md");
+		// Add & Commit files to Git
+		const gitCommitReadme = ora("Committing files to Git").start();
+		await git.commit(`Updating README to ${results.version}`, ["README.md"].map((file) => path.join(__dirname, "..", file)));
+		gitCommitReadme.succeed("Committed files to Git");
+	} else {
+		const readmeUpdateVersionsSpinner = ora("Nothing to update in README.md").start();
+		readmeUpdateVersionsSpinner.succeed("Nothing to update in README.md");
+	}
+	// Push to GitHub
 	const gitPush = ora("Pushing files to GitHub").start();
 	await git.push("origin", branch);
 	gitPush.succeed("Pushed files to GitHub");
