@@ -2,6 +2,31 @@
 
 ---
 
+## Version 2.5.0
+
+This release adds support for the DynamoDB `null` type, along with some more TypeScript fixes, and some other cool enhancements.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added support for the DynamoDB `null` type
+- Added support for `Document.save` condition setting
+
+### Bug Fixes
+
+- Fixed TypeScript typing bugs related to Scan & Queries
+- Fixed TypeScript typing bugs related to `dynamoose.THIS`
+- Fixed TypeScript typing bugs related to `Model.waitForActive.check` setting
+- Fixed TypeScript typing bugs related to `dynamoose.THIS`
+- Fixed TypeScript typing issue with multiple type options for attribute
+
+### Documentation
+
+- Better explaination for `name` parameter representing the DynamoDB table name
+
+---
+
 ## Version 2.4.1
 
 This release fixes a performance issue related to TypeScript.
