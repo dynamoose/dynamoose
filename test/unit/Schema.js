@@ -961,6 +961,7 @@ describe("Schema", () => {
 			expect(result.map((item) => ({"name": item.name, "dynamodbType": item.dynamodbType}))).to.eql([{"name": "String", "dynamodbType": "S"}, {"name": "Buffer", "dynamodbType": "B"}]);
 		});
 	});
+
 	describe("getAttributeSettingValue", () => {
 		const tests = [
 			// Defaults
@@ -1204,7 +1205,6 @@ describe("Schema", () => {
 			});
 		});
 	});
-
 
 	describe("getTypePaths", () => {
 		it("Should be a function", () => {
