@@ -613,20 +613,20 @@ Schema.prototype.getIndexAttributes = async function (this: Schema): Promise<{in
 			attribute
 		}))
 	))
-	.filter((obj) => obj.index)
-	.reduce((accumulator, currentValue) => {
-		if (Array.isArray(currentValue.index)) {
-			currentValue.index.forEach((currentIndex) => {
-				accumulator.push({
-					...currentValue,
-					"index": currentIndex
+		.filter((obj) => obj.index)
+		.reduce((accumulator, currentValue) => {
+			if (Array.isArray(currentValue.index)) {
+				currentValue.index.forEach((currentIndex) => {
+					accumulator.push({
+						...currentValue,
+						"index": currentIndex
+					});
 				});
-			});
-		} else {
-			accumulator.push(currentValue);
-		}
-		return accumulator;
-	}, []);
+			} else {
+				accumulator.push(currentValue);
+			}
+			return accumulator;
+		}, []);
 };
 Schema.prototype.getIndexRangeKeyAttributes = async function (this: Schema): Promise<{attribute: string}[]> {
 	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getIndexAttributes();
