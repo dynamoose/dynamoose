@@ -1158,7 +1158,6 @@ describe("Schema", () => {
 
 	describe("getIndexAttributes", () => {
 		const tests = [
-			// Defaults
 			{
 				"name": "Should return an empty array if no indicies are defined",
 				"schema": {"id": String},
@@ -1195,13 +1194,7 @@ describe("Schema", () => {
 			it(test.name, async () => {
 				const schema = new dynamoose.Schema(test.schema);
 				const output = await schema.getIndexAttributes();
-				if (typeof output !== "function") {
-					expect(output).to.eql(test.output);
-				} else {
-					expect(typeof output).to.eql(typeof test.output);
-					expect(output.toString()).to.eql(test.output.toString());
-					expect(await output()).to.eql(await test.output());
-				}
+				expect(output).to.eql(test.output);
 			});
 		});
 	});
