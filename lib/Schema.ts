@@ -402,7 +402,7 @@ export class Schema {
 							const [subKey, subValue] = entry;
 
 							try {
-								const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, subValue, `${fullKey}.${subKey}`, settings, {"typeIndexOptionMap": {[key]: index}}); // TODO add {typeMap: {[key]: index}}
+								const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, subValue, `${fullKey}.${subKey}`, settings, {"typeIndexOptionMap": {[fullKey]: index}});
 								return isValidType ? 1 : 0;
 							} catch (e) {
 								return 0.5;
