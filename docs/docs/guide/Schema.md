@@ -258,11 +258,12 @@ This property is only used for the `Object` or `Array` attribute types. It is us
 }
 ```
 
-You can also define an array attribute that accepts more than one data type.
+You can also define an array attribute that accepts more than one data type. The following example will allow the `friends` attribute to be an array of strings, or an array of numbers, but the elements in the array must all be strings or must all be numbers.
 
 ```js
 {
 	"friends": {
+		"type": Array,
 		"schema": [
 			{
 				"type": Array,
