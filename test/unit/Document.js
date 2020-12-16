@@ -2627,6 +2627,16 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "friends": {"names": [1, "Bobby"]}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}},
+				"error": new Error.ValidationError("Expected friends.names.0 to be of type string, instead found type number.")
+			},
+			{
+				"input": [{"id": 1, "friends": {"names": ["Charlie", 2]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [Number]}, {"type": Array, "schema": [String]}]}}},
+				"error": new Error.ValidationError("Expected friends.names.0 to be of type number, instead found type string.")
+			},
+			{
+				"input": [{"id": 1, "friends": {"names": [1, "Bobby"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [Number]}, {"type": Array, "schema": [String]}]}}},
 				"error": new Error.ValidationError("Expected friends.names.1 to be of type number, instead found type string.")
 			},
 			{
