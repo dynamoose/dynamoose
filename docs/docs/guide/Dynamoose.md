@@ -187,3 +187,17 @@ const User = dynamoose.model("User", {"id": String, "parent": dynamoose.THIS});
 :::note
 This property might be used for other things in the future.
 :::
+
+## dynamoose.NULL
+
+Setting a schema attribute to this will cause it to use the DynamoDB `null` type.
+
+```js
+const dynamoose = require("dynamoose");
+
+const User = dynamoose.model("User", {"id": String, "parent": dynamoose.NULL});
+```
+
+:::note
+This property might be used for other things in the future.
+:::

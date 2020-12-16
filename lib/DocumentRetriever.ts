@@ -1,7 +1,7 @@
 import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
-import {Condition, ConditionInitalizer, BasicOperators} from "./Condition";
+import {Condition, ConditionInitalizer, BasicOperators, ConditionStorageTypeNested} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
@@ -19,7 +19,6 @@ interface DocumentRetrieverTypeInformation {
 
 // DocumentRetriever is used for both Scan and Query since a lot of the code is shared between the two
 // type DocumentRetriever = BasicOperators;
-interface DocumentRetriever extends BasicOperators {} // eslint-disable-line @typescript-eslint/no-empty-interface
 abstract class DocumentRetriever {
 	internalSettings?: {
 		model: Model<Document>;
@@ -158,6 +157,19 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	const indexes = await this.internalSettings.model.getIndexes();
+	function canUseIndexOfTable (hashKeyOfTable, rangeKeyOfTable, chart: ConditionStorageTypeNested): boolean {
+		const hashKeyInQuery = Object.entries(chart).find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
+		if (!hashKeyInQuery) {
+			return false;
+		}
+		const isOneKeyQuery = Object.keys(chart).length === 1;
+		if (isOneKeyQuery && hashKeyInQuery) {
+			return true;
+		} else if (rangeKeyOfTable) {
+			return Object.entries(chart).some(([fieldName]) => fieldName !== hashKeyInQuery[0]);
+		}
+		return false;
+	}
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
 	} else if (this.internalSettings.typeInformation.type === "query") {
@@ -166,20 +178,20 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			res[myItem[0]] = {"type": myItem[1].type};
 			return res;
 		}, {});
-		const index = utils.array_flatten(Object.values(indexes)).find((index) => {
-			const {hash/*, range*/} = index.KeySchema.reduce((res, item) => {
-				res[item.KeyType.toLowerCase()] = item.AttributeName;
-				return res;
-			}, {});
-			// TODO: we need to write logic here to prioritize indexes with a range key that is being queried.
-			return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
-		});
-		if (!index) {
-			if ((comparisonChart[this.internalSettings.model.getHashKey()] || {}).type !== "EQ") {
+		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
+			const index = utils.array_flatten(Object.values(indexes)).find((index) => {
+				const {hash/*, range*/} = index.KeySchema.reduce((res, item) => {
+					res[item.KeyType.toLowerCase()] = item.AttributeName;
+					return res;
+				}, {});
+				// TODO: we need to write logic here to prioritize indexes with a range key that is being queried.
+				return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
+			});
+			if (!index) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
+			} else {
+				object.IndexName = index.IndexName;
 			}
-		} else {
-			object.IndexName = index.IndexName;
 		}
 	}
 	function moveParameterNames (val, prefix): void {
@@ -274,11 +286,11 @@ interface DocumentRetrieverResponse<T> extends DocumentArray<T> {
 	lastKey?: ObjectType;
 	count: number;
 }
-interface ScanResponse<T> extends DocumentRetrieverResponse<T> {
+export interface ScanResponse<T> extends DocumentRetrieverResponse<T> {
 	scannedCount: number;
 	timesScanned: number;
 }
-interface QueryResponse<T> extends DocumentRetrieverResponse<T> {
+export interface QueryResponse<T> extends DocumentRetrieverResponse<T> {
 	queriedCount: number;
 	timesQueried: number;
 }
@@ -308,15 +320,17 @@ DocumentRetriever.prototype.all = function (this: DocumentRetriever, delay = 0, 
 	return this;
 };
 
+export interface Scan<T> extends DocumentRetriever, BasicOperators<Scan<T>> {
+	exec(): Promise<ScanResponse<T>>;
+	exec(callback: CallbackType<ScanResponse<T>, AWSError>): void;
+}
 
-export class Scan extends DocumentRetriever {
-	exec(): Promise<ScanResponse<Document[]>>;
-	exec(callback: CallbackType<ScanResponse<Document[]>, AWSError>): void;
-	exec (callback?: CallbackType<ScanResponse<Document[]>, AWSError>): Promise<ScanResponse<Document[]>> | void {
+export class Scan<T> extends DocumentRetriever {
+	exec (callback?: CallbackType<ScanResponse<T>, AWSError>): Promise<ScanResponse<T>> | void {
 		return super.exec(callback);
 	}
 
-	parallel (value: number): Scan {
+	parallel (value: number): Scan<T> {
 		this.settings.parallel = value;
 		return this;
 	}
@@ -326,14 +340,17 @@ export class Scan extends DocumentRetriever {
 	}
 }
 
-export class Query extends DocumentRetriever {
-	exec(): Promise<QueryResponse<Document[]>>;
-	exec(callback: CallbackType<QueryResponse<Document[]>, AWSError>): void;
-	exec (callback?: CallbackType<QueryResponse<Document[]>, AWSError>): Promise<QueryResponse<Document[]>> | void {
+export interface Query<T> extends DocumentRetriever, BasicOperators<Query<T>> {
+	exec(): Promise<QueryResponse<T>>;
+	exec(callback: CallbackType<QueryResponse<T>, AWSError>): void;
+}
+
+export class Query<T> extends DocumentRetriever {
+	exec (callback?: CallbackType<QueryResponse<T>, AWSError>): Promise<QueryResponse<T>> | void {
 		return super.exec(callback);
 	}
 
-	sort (order: SortOrder): Query {
+	sort (order: SortOrder): Query<T> {
 		this.settings.sort = order;
 		return this;
 	}

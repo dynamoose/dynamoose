@@ -1,6 +1,6 @@
 import entries = require("./entries");
 
-export = (a, b): boolean => {
+export = (a: any, b: any): boolean => {
 	if (typeof a !== "object" || typeof b !== "object") {
 		return a === b;
 	}

@@ -1,8 +1,10 @@
 The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save documents in the database.
 
-## dynamoose.model(name, [schema][, config])
+## dynamoose.model[&lt;Document&gt;](name, [schema][, config])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
+
+The `name` parameter is a string representing the table name that will be used to store documents created by this model.  Prefixes and suffixes may be added to this name using the `config` options.
 
 The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
@@ -14,6 +16,26 @@ const Cat = dynamoose.model("Cat", {"name": String}, {"create": false});
 
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
+```
+
+An optional TypeScript class which extends `Document` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
+
+```ts
+import * as dynamoose from "dynamoose";
+import {Document} from "dynamoose/dist/Document";
+
+// Strongly typed model
+class Cat extends Document {
+	id: number;
+	name: string;
+}
+const CatModel = dynamoose.model<Cat>("Cat", {"id": Number, "name": String});
+
+// Will raise type checking error as random is not a valid field.
+CatModel.create({"id": 1, "random": "string"});
+
+// Will return the correct type of Cat
+const cat = await CatModel.get(1);
 ```
 
 You can also pass in an array of Schema instances or schema objects into the `schema` paremeter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your document, and use that schema for all operations pertaining to that document. If no matching schema can be found, it will default to the first schema in the array.
@@ -51,8 +73,8 @@ The `config` parameter is an object used to customize settings for the model.
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
 | update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
-| expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `null`, no time to live will be active on the model. | Number \| Object | null |
-| expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | null |
+| expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
+| expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | undefined |
 | expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
 | expires.items | The options for documents with ttl. | Object | {} |
 | expires.items.returnExpired | If Dynamoose should include expired documents when returning retrieved documents. | Boolean | true |
@@ -151,6 +173,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 |------|-------------|------|---------|
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
 | attributes | What document attributes should be retrieved & returned. This will use the underlying `ProjectionExpression` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
+| consistent | Whether to perform a strongly consistent read or not. If this value is `undefined`, then no `ConsistentRead` parameter will be included in the request, and DynamoDB will default to an eventually consistent read. | boolean | undefined |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
@@ -513,6 +536,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be null, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String \| null | null |
+| condition | This is an optional instance of a Condition for the delete. | [dynamoose.Condition](Condition) | null
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
@@ -723,7 +747,11 @@ This object has the following methods that you can call.
 
 You can pass in the same parameters into each method that you do for the normal (non-transaction) methods, except for the callback parameter.
 
-These methods are only meant to only be called to instantiate the `dynamoose.transaction` array.
+These methods are meant to only be called to instantiate the [`dynamoose.transaction`](Transaction) array.
+
+### Model.transaction.create
+
+Note that this method corresponds more closely to `Model.put`, as it will overwrite an item if it already exists in the database. For `Model.create`-like functionality you have to add an extra `Model.transaction.condition` call that ensures the item does not exist.
 
 ### Model.transaction.condition(key, condition)
 

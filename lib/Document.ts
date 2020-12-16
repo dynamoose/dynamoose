@@ -13,10 +13,12 @@ import {ValueType} from "./Schema";
 import {CallbackType, ObjectType} from "./General";
 import {SerializerOptions} from "./Serializer";
 import {PopulateDocument, PopulateSettings} from "./Populate";
+import {Condition} from "./Condition";
 
 export interface DocumentSaveSettings {
 	overwrite?: boolean;
 	return?: "request" | "document";
+	condition?: Condition;
 }
 export interface DocumentSettings {
 	type?: "fromDynamo" | "toDynamo";
@@ -46,9 +48,9 @@ export class Document {
 
 	// Internal
 	model?: Model<Document>;
-	static objectToDynamo(object: ObjectType): DynamoDB.AttributeMap;
-	static objectToDynamo(object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
-	static objectToDynamo(object: ObjectType, settings: {type: "object"}): DynamoDB.AttributeMap;
+	static objectToDynamo (object: ObjectType): DynamoDB.AttributeMap;
+	static objectToDynamo (object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
+	static objectToDynamo (object: ObjectType, settings: {type: "object"}): DynamoDB.AttributeMap;
 	static objectToDynamo (object: any, settings: {type: "object" | "value"} = {"type": "object"}): DynamoDB.AttributeValue | DynamoDB.AttributeMap {
 		return (settings.type === "value" ? aws.converter().input : aws.converter().marshall)(object);
 	}
@@ -108,21 +110,27 @@ export class Document {
 	}
 
 	// Delete
-	delete(this: Document): Promise<void>;
-	delete(this: Document, callback: CallbackType<void, AWSError>): void;
+	delete (this: Document): Promise<void>;
+	delete (this: Document, callback: CallbackType<void, AWSError>): void;
 	delete (this: Document, callback?: CallbackType<void, AWSError>): Promise<void> | void {
-		return this.model.delete({
-			[this.model.getHashKey()]: this[this.model.getHashKey()]
-		}, callback);
+		const hashKey = this.model.getHashKey();
+		const rangeKey = this.model.getRangeKey();
+
+		const key = {[hashKey]: this[hashKey]};
+		if (rangeKey) {
+			key[rangeKey] = this[rangeKey];
+		}
+
+		return this.model.delete(key, callback);
 	}
 
 	// Save
-	save(this: Document): Promise<Document>;
-	save(this: Document, callback: CallbackType<Document, AWSError>): void;
-	save(this: Document, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
-	save(this: Document, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, AWSError>): void;
-	save(this: Document, settings: DocumentSaveSettings & {return: "document"}): Promise<Document>;
-	save(this: Document, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<Document, AWSError>): void;
+	save (this: Document): Promise<Document>;
+	save (this: Document, callback: CallbackType<Document, AWSError>): void;
+	save (this: Document, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
+	save (this: Document, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, AWSError>): void;
+	save (this: Document, settings: DocumentSaveSettings & {return: "document"}): Promise<Document>;
+	save (this: Document, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<Document, AWSError>): void;
 	save (this: Document, settings?: DocumentSaveSettings | CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>, callback?: CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>): void | Promise<Document | DynamoDB.PutItemInput> {
 		if (typeof settings !== "object" && typeof settings !== "undefined") {
 			callback = settings;
@@ -134,14 +142,25 @@ export class Document {
 
 		const localSettings: DocumentSaveSettings = settings;
 		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
-			const putItemObj: DynamoDB.PutItemInput = {
+			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
 				"TableName": this.model.name
 			};
 
+			if (localSettings.condition) {
+				putItemObj = {
+					...putItemObj,
+					...localSettings.condition.requestObject()
+				};
+			}
+
 			if (localSettings.overwrite === false) {
-				putItemObj.ConditionExpression = "attribute_not_exists(#__hash_key)";
-				putItemObj.ExpressionAttributeNames = {"#__hash_key": this.model.getHashKey()};
+				const conditionExpression = "attribute_not_exists(#__hash_key)";
+				putItemObj.ConditionExpression = putItemObj.ConditionExpression ? `(${putItemObj.ConditionExpression}) AND (${conditionExpression})` : conditionExpression;
+				putItemObj.ExpressionAttributeNames = {
+					...putItemObj.ExpressionAttributeNames || {},
+					"#__hash_key": this.model.getHashKey()
+				};
 			}
 
 			return putItemObj;
@@ -175,13 +194,17 @@ export class Document {
 	}
 
 	// Populate
-	populate(): Promise<Document>;
-	populate(callback: CallbackType<Document, AWSError>): void;
-	populate(settings: PopulateSettings): Promise<Document>;
-	populate(settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
+	populate (): Promise<Document>;
+	populate (callback: CallbackType<Document, AWSError>): void;
+	populate (settings: PopulateSettings): Promise<Document>;
+	populate (settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
 	populate (...args): Promise<Document> | void {
 		return PopulateDocument.bind(this)(...args);
 	}
+}
+
+export class AnyDocument extends Document {
+	[key: string]: any;
 }
 
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Document.objectFromSchema (setting timestamps, etc.)
@@ -235,7 +258,8 @@ Document.attributesWithSchema = async function (document: Document, model: Model
 
 		Object.keys(treeNode).forEach((attr) => {
 			if (attr === "0") {
-				if (!node || node.length == 0) {
+				// We check for empty objects here (added `typeof node === "object" && Object.keys(node).length == 0`, see PR https://github.com/dynamoose/dynamoose/pull/1034) to handle the use case of 2d arrays, or arrays within arrays. `node` in that case will be an empty object.
+				if (!node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
 					node = [{}]; // fake the path for arrays
 				}
 				node.forEach((a, index) => {

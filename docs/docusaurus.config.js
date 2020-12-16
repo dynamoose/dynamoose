@@ -11,7 +11,7 @@ module.exports = {
 				"alt": "Logo",
 				"src": "img/logo.svg"
 			},
-			"links": [
+			"items": [
 				{
 					"href": "https://www.npmjs.com/package/dynamoose",
 					"className": "header-link header-npm-link",
@@ -96,7 +96,7 @@ module.exports = {
 			"@docusaurus/preset-classic",
 			{
 				"docs": {
-					"routeBasePath": "",
+					"routeBasePath": "/",
 					"sidebarPath": require.resolve("./sidebars.js"),
 					"editUrl": "https://github.com/dynamoose/dynamoose/edit/master/docs",
 					"remarkPlugins": [

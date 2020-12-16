@@ -37,3 +37,46 @@ const shouldSucceedWithMultipleNestedSchemas = new dynamoose.Schema({
 		]
 	}
 });
+const shouldSucceedWithStringSet = new dynamoose.Schema({
+	"data": {
+		"type": Set,
+		"schema": [String]
+	}
+});
+
+const shouldSucceedWithDynamooseThis = new dynamoose.Schema({
+	"id": String,
+	"name": String,
+	"parent": dynamoose.THIS
+});
+
+// Nested Schema
+const shouldSucceedWithNestedSchema = new dynamoose.Schema({
+	"id": String,
+	"data": new dynamoose.Schema({
+		"name": String
+	})
+});
+
+// Array of types
+const shouldSucceedWithArrayOfTypes = new dynamoose.Schema({
+	"id": String,
+	"data": [String, Number]
+});
+const shouldSucceedWithArrayOfTypesInObject = new dynamoose.Schema({
+	"id": String,
+	"data": {
+		"type": [String, Number]
+	}
+});
+const shouldSucceedWithArrayOfTypesInNestedSchema = new dynamoose.Schema({
+	"id": String,
+	"data": {
+		"type": Array,
+		"schema": [
+			{
+				"type": [String, Number]
+			}
+		]
+	}
+});

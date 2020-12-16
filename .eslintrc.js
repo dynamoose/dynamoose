@@ -31,7 +31,9 @@ module.exports = {
 				"semi": "off",
 				"@typescript-eslint/semi": "error",
 				"space-before-function-paren": "off",
-				"@typescript-eslint/space-before-function-paren": "error"
+				"@typescript-eslint/space-before-function-paren": "error",
+				"@typescript-eslint/ban-types": "off",
+				"@typescript-eslint/explicit-module-boundary-types": "off"
 			}
 		}
 	],

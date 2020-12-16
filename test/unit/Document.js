@@ -1365,6 +1365,47 @@ describe("Document", () => {
 					}]);
 				});
 
+				it("Should save with correct object with condition", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data1": String}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data1": "hello"});
+					await callType.func(user).bind(user)({"condition": new dynamoose.Condition("breed").eq("Terrier")});
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}},
+						"ConditionExpression": "#a0 = :v0",
+						"ExpressionAttributeNames": {
+							"#a0": "breed"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Terrier"
+							}
+						},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save with correct object with condition and overwrite set to false", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data1": String}, {"create": false, "waitForActive": false});
+					user = new User({"id": 1, "data1": "hello"});
+					await callType.func(user).bind(user)({"condition": new dynamoose.Condition("breed").eq("Terrier"), "overwrite": false});
+					expect(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}},
+						"ConditionExpression": "(#a0 = :v0) AND (attribute_not_exists(#__hash_key))",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id",
+							"#a0": "breed"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Terrier"
+							}
+						},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
@@ -1557,6 +1598,19 @@ describe("Document", () => {
 					await callType.func(user).bind(user)();
 					expect(deleteParams).to.eql({
 						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					});
+				});
+
+				it("Should deleteItem with correct parameters with a range key", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+					user = new User({"id": 1, "name": "Charlie", "type": "admin"});
+
+					deleteItemFunction = () => Promise.resolve();
+					const func = (document) => util.promisify(document.delete);
+					await func(user).bind(user)();
+					expect(deleteParams).to.eql({
+						"Key": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User"
 					});
 				});
@@ -1842,6 +1896,14 @@ describe("Document", () => {
 			{
 				"input": {"prop": null},
 				"output": false
+			},
+			{
+				"input": {"prop": {"NULL": true}},
+				"output": true
+			},
+			{
+				"input": {"id": {"S": "foo"}, "data": {"NULL": true}},
+				"output": true
 			}
 		];
 
@@ -1887,6 +1949,26 @@ describe("Document", () => {
 				"input": {"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}, {"name": "Billy", "addresses": []}]},
 				"output": ["id", "friends", "friends.0", "friends.1", "friends.0.name", "friends.1.name", "friends.0.addresses", "friends.1.addresses", "friends.0.addresses.0", "friends.1.addresses.0", "friends.1.addresses.1", "friends.0.addresses.0.country", "friends.1.addresses.0.country", "friends.1.addresses.1.country", "friends.0.addresses.0.zip", "friends.1.addresses.0.zip", "friends.1.addresses.1.zip", "friends.2", "friends.2.name", "friends.2.addresses", "friends.2.addresses.0", "friends.2.addresses.0.zip", "friends.2.addresses.0.country"],
 				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}, "zip": Number}}]}}}]}}
+			},
+			{
+				"input": {"id": 1},
+				"output": ["id", "friends", "friends.0", "friends.0.0"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema": [String]}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [["Bob", "Tim"]]},
+				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema": [String]}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [["Bob", "Tim"], ["Scott", "Craig"]]},
+				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1", "friends.1", "friends.1.0", "friends.1.1"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema": [String]}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [[{"name": "Bob", "id": 1}, {"name": "Tim"}]]},
+				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1", "friends.0.0.id", "friends.0.1.id", "friends.0.0.name", "friends.0.1.name"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema":[{"type":"Object", "schema":{"id":{"type":"Number", "required":true}, "name":"String"}}]}]}}
 			}
 		];
 
@@ -1933,6 +2015,16 @@ describe("Document", () => {
 				"input": [{"id": 1, "name": dynamoose.UNDEFINED}, {"defaults": true}],
 				"output": {"id": 1, "name": undefined},
 				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
+			},
+			{
+				"input": [{"id": 1, "data": null}],
+				"output": {"id": 1, "data": null},
+				"schema": {"id": Number, "data": dynamoose.NULL}
+			},
+			{
+				"input": [{"id": 1, "data": null}, {"saveUnknown": true}],
+				"output": {"id": 1, "data": null},
+				"schema": new Schema({"id": Number}, {"saveUnknown": true})
 			},
 			// TODO: uncomment these lines below
 			// {
