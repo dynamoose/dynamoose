@@ -1077,6 +1077,56 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send consistent (false) to getItem", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)(1, {"consistent": false});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ConsistentRead": false
+					});
+				});
+
+				it("Should send consistent (true) to getItem", async () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)(1, {"consistent": true});
+					expect(getItemParams).to.be.an("object");
+					expect(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ConsistentRead": true
+					});
+				});
+
+				it("Should get consistent (false) back in request", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request", "consistent": true});
+					expect(getItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ConsistentRead": true
+					});
+				});
+
+				it("Should get consistent (true) back in request", async () => {
+					const result = await callType.func(User).bind(User)(1, {"return": "request", "consistent": false});
+					expect(getItemParams).to.not.exist;
+					expect(result).to.eql({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ConsistentRead": false
+					});
+				});
+
 				it("Should send correct params to getItem if we pass in an object", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					await callType.func(User).bind(User)({"id": 1});
@@ -1102,7 +1152,10 @@ describe("Model", () => {
 							}
 						},
 						"TableName": "User",
-						"ProjectionExpression": "id"
+						"ProjectionExpression": "#a0",
+						"ExpressionAttributeNames": {
+							"#a0": "id"
+						}
 					});
 				});
 
@@ -1117,7 +1170,11 @@ describe("Model", () => {
 							}
 						},
 						"TableName": "User",
-						"ProjectionExpression": "id, name"
+						"ProjectionExpression": "#a0, #a1",
+						"ExpressionAttributeNames": {
+							"#a0": "id",
+							"#a1": "name"
+						}
 					});
 				});
 
@@ -1951,6 +2008,29 @@ describe("Model", () => {
 				it("Should correctly handle multiple nested array types", async () => {
 					User = dynamoose.model("User", {"id": String, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}});
 					expect(await callType.func(User).bind(User)({"id": "1", "friends": {"names": ["Charlie", "Bobby"]}})).to.not.throw();
+				});
+
+				it("Should send correct params to putItem with value as null", async () => {
+					const User2 = dynamoose.model("User", {"id": Number, "name": dynamoose.NULL});
+
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User2).bind(User2)({"id": 1, "name": null});
+					expect(createItemParams).to.be.an("object");
+					expect(createItemParams).to.eql({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "id"
+						},
+						"Item": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"NULL": true
+							}
+						},
+						"TableName": "User"
+					});
 				});
 			});
 		});
@@ -3657,6 +3737,42 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to deleteItem if we pass in an entire object with unnecessary attributes with range key", async () => {
+					deleteItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "rangeKey": true}});
+					await callType.func(User).bind(User)({"id": 1, "type": "bar", "name": "Charlie"});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							},
+							"name": {
+								"S": "Charlie"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should successfully add a condition if a condition is passed in", async () => {
+					const condition = new dynamoose.Condition().filter("id").exists();
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1}, {"condition": condition});
+					expect(deleteItemParams).to.be.an("object");
+					expect(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ConditionExpression": "attribute_exists (#a0)",
+						"ExpressionAttributeNames": {
+							"#a0": "id"
+						}
+					});
+				});
 
 				it("Should return request if return request setting is set", async () => {
 					const result = await callType.func(User).bind(User)(1, {"return": "request"});
@@ -3672,6 +3788,38 @@ describe("Model", () => {
 
 					return expect(callType.func(User).bind(User)({"id": 1, "name": "Charlie"})).to.be.rejectedWith({"error": "ERROR"});
 				});
+			});
+		});
+
+		it("Should send correct params to deleteItem if we pass in an entire object with unnecessary attributes with range key", async () => {
+			deleteItemFunction = () => Promise.resolve();
+
+			const schema = {
+				"PK": {"type": String, "hashKey": true},
+				"SK": {"type": String, "rangeKey": true},
+				"someAttribute": {"type": String}
+			};
+			const ExampleModel = dynamoose.model("TestTable", schema);
+
+			const example = new ExampleModel({
+				"PK": "primarKey",
+				"SK": "sortKey",
+				"someAttribute": "someValue"
+			});
+
+			const func = (Model) => Model.delete;
+			await func(ExampleModel).bind(ExampleModel)(example);
+			expect(deleteItemParams).to.be.an("object");
+			expect(deleteItemParams).to.eql({
+				"Key": {
+					"PK": {
+						"S": "primarKey"
+					},
+					"SK": {
+						"S": "sortKey"
+					}
+				},
+				"TableName": "TestTable"
 			});
 		});
 	});
@@ -3939,6 +4087,16 @@ describe("Model", () => {
 				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+
+			it("Should keep range keys with 0 value", async () => {
+				User = dynamoose.model("User", {"id": String, "order": {"type": Number, "rangeKey": true}});
+				expect(await User.transaction.delete({"id": "foo", "order": 0})).to.eql({
+					"Delete": {
+						"Key": {"id": {"S": "foo"}, "order": {"N": "0"}},
+						"TableName": "User"
+					}
+				});
 			});
 		});
 

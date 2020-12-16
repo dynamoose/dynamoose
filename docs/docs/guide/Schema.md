@@ -72,6 +72,7 @@ const schema = new dynamoose.Schema({
 | Date | True | N | True | False | **storage** - miliseconds \| seconds (default: miliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
+| [`dynamoose.NULL`](Dynamoose#dynamoosenull) | False | NULL | False | False |   |   |
 | Schema | False | M | True | True |   | This will be converted to an Object type. |
 | Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
 | Combine | False | S | True | False | **attributes** - [string] - The attributes to store in the combine attribute.\n**seperator** - string (default: `,`) - The string used to seperate the attributes in the combine attribute. | When running `Model.update` you must update all the attributes in the combine attributes array, or none of them. This is to ensure your combine method remains in sync with your overall document. |

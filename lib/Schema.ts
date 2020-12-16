@@ -149,6 +149,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 	const numberType = new DynamoDBType({"name": "Number", "dynamodbType": "N", "set": true, "jsType": "number"});
 	const stringType = new DynamoDBType({"name": "String", "dynamodbType": "S", "set": true, "jsType": "string"});
 	return [
+		new DynamoDBType({"name": "Null", "dynamodbType": "NULL", "set": false, "jsType": {"func": (val): boolean => val === null}}),
 		new DynamoDBType({"name": "Buffer", "dynamodbType": "B", "set": true, "jsType": Buffer, "customDynamoName": "Binary"}),
 		new DynamoDBType({"name": "Boolean", "dynamodbType": "BOOL", "jsType": "boolean"}),
 		new DynamoDBType({"name": "Array", "dynamodbType": "L", "jsType": {"func": Array.isArray}, "nestedType": true}),
@@ -224,7 +225,7 @@ const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.arr
 type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
 type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor;
+type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema;
 
 export interface TimestampObject {
 	createdAt?: string | string[];
@@ -248,7 +249,7 @@ interface AttributeDefinitionTypeSettings {
 	seperator?: string;
 }
 interface AttributeDefinition {
-	type: AttributeType | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType}; // TODO add support for this being an object
+	type: AttributeType | AttributeType[] | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType | AttributeType[]}; // TODO add support for this being an object
 	schema?: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[] | SchemaDefinition | SchemaDefinition[];
 	default?: ValueType | (() => ValueType);
 	forceDefault?: boolean;
@@ -262,7 +263,7 @@ interface AttributeDefinition {
 	rangeKey?: boolean;
 }
 export interface SchemaDefinition {
-	[attribute: string]: AttributeType | AttributeDefinition;
+	[attribute: string]: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
 }
 interface SchemaGetAttributeTypeSettings {
 	unknownAttributeAllowed: boolean;
@@ -392,7 +393,7 @@ export class Schema {
 			}
 			const {typeDetails, matchedTypeDetailsIndex, matchedTypeDetailsIndexes} = typeCheckResult;
 			const hasMultipleTypes = Array.isArray(typeDetails);
-			const isObject = typeof value === "object";
+			const isObject = typeof value === "object" && value !== null;
 
 			if (hasMultipleTypes) {
 				if (matchedTypeDetailsIndexes.length > 1 && isObject) {
@@ -731,19 +732,20 @@ function retrieveTypeInfo (type: string, isSet: boolean, key: string, typeSettin
 Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, settings: {standardKey?: boolean; typeIndexOptionMap?: {}} = {}): DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[] {
 	const standardKey = settings.standardKey ? key : key.replace(/\.\d+/gu, ".0");
 	const val = this.getAttributeValue(standardKey, {...settings, "standardKey": true});
-	if (!val) {
+	if (typeof val === "undefined") {
 		throw new CustomError.UnknownAttribute(`Invalid Attribute: ${key}`);
 	}
 	let typeVal = typeof val === "object" && !Array.isArray(val) ? val.type : val;
 	let typeSettings: AttributeDefinitionTypeSettings = {};
 	if (typeof typeVal === "object" && !Array.isArray(typeVal)) {
 		typeSettings = (typeVal as {value: DateConstructor; settings?: AttributeDefinitionTypeSettings}).settings || {};
-		typeVal = typeVal.value;
+		typeVal = (typeVal as any).value;
 	}
 
 	const getType = (typeVal: AttributeType | AttributeDefinition): string => {
 		let type: string;
 		const isThisType = typeVal as any === Internal.Public.this;
+		const isNullType = typeVal as any === Internal.Public.null;
 		if (typeof typeVal === "function" || isThisType) {
 			if ((typeVal as any).prototype instanceof Document || isThisType) {
 				type = "model";
@@ -763,6 +765,8 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 				const regexFuncName = /^Function ([^(]+)\(/iu;
 				[, type] = typeVal.toString().match(regexFuncName);
 			}
+		} else if (isNullType) {
+			type = "null";
 		} else {
 			type = typeVal as string;
 		}

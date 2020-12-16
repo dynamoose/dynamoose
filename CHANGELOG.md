@@ -2,6 +2,72 @@
 
 ---
 
+## Version 2.5.0
+
+This release adds support for the DynamoDB `null` type, along with some more TypeScript fixes, and some other cool enhancements.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added support for the DynamoDB `null` type
+- Added support for `Document.save` condition setting
+
+### Bug Fixes
+
+- Fixed TypeScript typing bugs related to Scan & Queries
+- Fixed TypeScript typing bugs related to `dynamoose.THIS`
+- Fixed TypeScript typing bugs related to `Model.waitForActive.check` setting
+- Fixed TypeScript typing bugs related to `dynamoose.THIS`
+- Fixed TypeScript typing issue with multiple type options for attribute
+
+### Documentation
+
+- Better explaination for `name` parameter representing the DynamoDB table name
+
+---
+
+## Version 2.4.1
+
+This release fixes a performance issue related to TypeScript.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Other
+
+- Fixes a memory leak related to the TypeScript target being `es6`. This was fixed by changing the target to `es2017`.
+
+---
+
+## Version 2.4.0
+
+This release fixes a lot of bugs and adds support for consistent read support to `Model.get` and support for conditional deletes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added consistent read support to `Model.get`
+- Added support for passing a condition into `Model.delete`
+- Added support for strongly typed models in TypeScript
+
+### Bug Fixes
+
+- Fixed bug where `document.delete` would fail with rangeKey
+- Transaction TypeScript improvements
+- Set schema type TypeScript improvements
+- Fixed issue related to having `0` as number for key (range or hash)
+- Fixed bug where passing in reserved keyword attributes into `Model.get` would fail
+- Improvements to how queries decide which index to use
+- Improvements to storing and retrieving documents with multi-dimensional arrays (nested arrays)
+
+### Documentation
+
+- Updated website search
+- Improvements to documentation clarity
+
+---
+
 ## Version 2.3.0
 
 This release adds major new support for single table design.

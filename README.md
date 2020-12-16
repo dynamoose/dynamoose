@@ -65,9 +65,9 @@ Take a look at our [website](https://dynamoosejs.com) for information about how 
 
 ### Branch Strategy
 
-Below you will find the current branch strategy for the project. Work taking place on the branches listed below might be further ahead than the versions on NPM. All documentation links found below will also be reflective of the published version on NPM. If you would like to live dangouragely and run non released versions, you can run `npm install dynamoose/dynamoose#BRANCH` (replacing `BRANCH` with the branch listed below). You will also find the most up to date documentation in the `docs` folder of the branch.
+Below you will find the current branch strategy for the project. Work taking place on the branches listed below might be further ahead than the versions on NPM. All documentation links found below will also be reflective of the published version on NPM. If you would like to live dangerously and run non-released versions, you can run `npm install dynamoose/dynamoose#BRANCH` (replacing `BRANCH` with the branch listed below). You will also find the most up-to-date documentation in the `docs` folder of the branch.
 
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
-| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.3.x | beta | - [Documentation](https://dynamoose.now.sh/) |
-| [`v2.2.1` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.2.1) | 2.2.1 | latest | - [Documentation](https://dynamoosejs.com)
+| [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.4.x |   | - [Documentation](https://dynamoose.now.sh/) |
+| [`v2.4.0` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.4.0) | 2.4.0 | latest | - [Documentation](https://dynamoosejs.com)
