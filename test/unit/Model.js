@@ -2005,11 +2005,6 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should correctly handle multiple nested array types", async () => {
-					User = dynamoose.model("User", {"id": String, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}});
-					expect(await callType.func(User).bind(User)({"id": "1", "friends": {"names": ["Charlie", "Bobby"]}})).to.not.throw();
-				});
-
 				it("Should send correct params to putItem with value as null", async () => {
 					const User2 = dynamoose.model("User", {"id": Number, "name": dynamoose.NULL});
 

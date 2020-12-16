@@ -2610,6 +2610,26 @@ describe("Document", () => {
 				"output": {"id": 1, "data": {"name": "hello world", "id1": "1"}}
 			},
 			{
+				"input": [{"id": 1, "friends": {"names": ["Charlie", "Bobby"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}},
+				"output": {"id": 1, "friends": {"names": ["Charlie", "Bobby"]}}
+			},
+			{
+				"input": [{"id": 1, "friends": {"names": [1, 2]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}},
+				"output": {"id": 1, "friends": {"names": [1, 2]}}
+			},
+			{
+				"input": [{"id": 1, "friends": {"names": ["Charlie", 2]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}},
+				"error": new Error.ValidationError("Expected friends.names.1 to be of type string, instead found type number.")
+			},
+			{
+				"input": [{"id": 1, "friends": {"names": [1, "Bobby"]}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}},
+				"error": new Error.ValidationError("Expected friends.names.1 to be of type number, instead found type string.")
+			},
+			{
 				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1"}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
 				"error": new Error.ValidationError("Expected data.id1 to be of type number, instead found type string.")
