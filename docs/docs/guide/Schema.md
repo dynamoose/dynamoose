@@ -258,6 +258,26 @@ This property is only used for the `Object` or `Array` attribute types. It is us
 }
 ```
 
+You can also define an array attribute that accepts more than one data type. The following example will allow the `friends` attribute to be an array of strings, or an array of numbers, but the elements in the array must all be strings or must all be numbers.
+
+```js
+{
+	"friends": {
+		"type": Array,
+		"schema": [
+			{
+				"type": Array,
+				"schema": [String]
+			},
+			{
+				"type": Array,
+				"schema": [Number]
+			}
+		]
+	}
+}
+```
+
 ### default: value | function | async function
 
 You can set a default value for an attribute that will be applied upon save if the given attribute value is `null` or `undefined`. The value for the default property can either be a value or a function that will be executed when needed that should return the default value. By default there is no default value for attributes.

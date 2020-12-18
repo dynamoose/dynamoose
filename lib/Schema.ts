@@ -402,7 +402,7 @@ export class Schema {
 							const [subKey, subValue] = entry;
 
 							try {
-								const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, subValue, `${fullKey}.${subKey}`, settings, {"typeIndexOptionMap": {[key]: index}}); // TODO add {typeMap: {[key]: index}}
+								const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, subValue, `${fullKey}.${subKey}`, settings, {"typeIndexOptionMap": {[fullKey]: index}});
 								return isValidType ? 1 : 0;
 							} catch (e) {
 								return 0.5;
@@ -583,7 +583,8 @@ export class Schema {
 		}
 
 		this.attributes().forEach((key) => {
-			if (key.includes(".") && this.getAttributeSettingValue("index", key)) {
+			const attributeSettingValue = this.getAttributeSettingValue("index", key);
+			if (key.includes(".") && (Array.isArray(attributeSettingValue) ? attributeSettingValue.some((singleValue) => Boolean(singleValue)) : attributeSettingValue)) {
 				throw new CustomError.InvalidParameter("Index must be at root object and not nested in object or array.");
 			}
 		});
