@@ -76,6 +76,14 @@ describe("Schema", () => {
 		expect(() => new dynamoose.Schema({"id": String, "friend": {"type": Object, "schema": {"name": {"type": String, "index": {"global": true}}}}})).to.throw("Index must be at root object and not nested in object or array.");
 	});
 
+	it("Should throw error if passing an index with multiple data types", () => {
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": String, "index": true}]}}})).to.throw("Index must be at root object and not nested in object or array.");
+	});
+
+	it("Should not throw error if passing multiple data types for a nested array attribute", () => {
+		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}})).to.not.throw();
+	});
+
 	it.skip("Should throw error if attribute names only contains number", () => {
 		expect(() => new dynamoose.Schema({"1": String})).to.throw("Attributes names must not be numbers.");
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"1": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).to.throw("Attributes names must not be numbers.");
