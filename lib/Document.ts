@@ -408,13 +408,15 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 					"type": typeDetails
 				};
 			} catch (e) {} // eslint-disable-line no-empty
+		}).filter((item: any) => {
+			return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
 		}).map((obj: {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]} | undefined): {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult} => {
 			if (obj && Array.isArray(obj.type)) {
 				throw new Error.InvalidParameter("Combine type is not allowed to be used with multiple types.");
 			}
 
 			return obj as any;
-		}).filter((item) => item.type.name === "Combine").forEach((item) => {
+		}).forEach((item) => {
 			const {key, type} = item;
 
 			const value = type.typeSettings.attributes.map((attribute) => utils.object.get(returnObject, attribute)).filter((value) => typeof value !== "undefined" && value !== null).join(type.typeSettings.seperator);
@@ -425,7 +427,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 		await Promise.all(settings.modifiers.map(async (modifier) => {
 			return Promise.all((await Document.attributesWithSchema(returnObject, model)).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
-				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true});
+				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true, typeIndexOptionMap});
 				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
 				const isValueUndefined = typeof value === "undefined" || value === null;
 				if (modifierFunctionExists && !isValueUndefined) {
@@ -440,7 +442,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const validator = await schema.getAttributeSettingValue("validate", key, {"returnFunction": true});
+				const validator = await schema.getAttributeSettingValue("validate", key, {"returnFunction": true, typeIndexOptionMap});
 				if (validator) {
 					let result;
 					if (validator instanceof RegExp) {
@@ -486,7 +488,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const enumArray = await schema.getAttributeSettingValue("enum", key);
+				const enumArray = await schema.getAttributeSettingValue("enum", key, {"returnFunction": false, typeIndexOptionMap});
 				if (enumArray && !enumArray.includes(value)) {
 					throw new Error.ValidationError(`${key} must equal ${JSON.stringify(enumArray)}, but is set to ${value}`);
 				}

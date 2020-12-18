@@ -270,6 +270,7 @@ interface SchemaGetAttributeTypeSettings {
 }
 interface SchemaGetAttributeSettingValue {
 	returnFunction: boolean;
+	typeIndexOptionMap?: any;
 }
 
 export class Schema {
@@ -354,7 +355,16 @@ export class Schema {
 	async defaultCheck (key: string, value: ValueType, settings: any): Promise<ValueType | void> {
 		const isValueUndefined = typeof value === "undefined" || value === null;
 		if (settings.defaults && isValueUndefined || settings.forceDefault && await this.getAttributeSettingValue("forceDefault", key)) {
-			const defaultValue = await this.getAttributeSettingValue("default", key);
+			const defaultValueRaw = await this.getAttributeSettingValue("default", key);
+
+			let hasMultipleTypes;
+			try {
+				hasMultipleTypes = Array.isArray(this.getAttributeType(key));
+			} catch (e) {
+				hasMultipleTypes = false;
+			}
+
+			const defaultValue = Array.isArray(defaultValueRaw) && hasMultipleTypes ? defaultValueRaw[0] : defaultValueRaw;
 			const isDefaultValueUndefined = typeof defaultValue === "undefined" || defaultValue === null;
 			if (!isDefaultValueUndefined) {
 				return defaultValue;
@@ -367,7 +377,7 @@ export class Schema {
 			const defaultPropertyValue = (attributeValue || {})[setting];
 			return typeof defaultPropertyValue === "function" && !settings.returnFunction ? defaultPropertyValue() : defaultPropertyValue;
 		}
-		const attributeValue = this.getAttributeValue(key);
+		const attributeValue = this.getAttributeValue(key, {"typeIndexOptionMap": settings.typeIndexOptionMap});
 		if (Array.isArray(attributeValue)) {
 			return attributeValue.map(func);
 		} else {
@@ -722,7 +732,7 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType): stri
 
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
 	const previousKeyParts = [];
-	return (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part) => {
+	let result = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part) => {
 		if (Array.isArray(result)) {
 			const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
 			if (predefinedIndex !== undefined) {
@@ -734,6 +744,15 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 		previousKeyParts.push(part);
 		return utils.object.get(result.schema, part);
 	}, {"schema": this.schemaObject} as any);
+
+	if (Array.isArray(result)) {
+		const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
+		if (predefinedIndex !== undefined) {
+			result = result[predefinedIndex];
+		}
+	}
+
+	return result;
 };
 
 function retrieveTypeInfo (type: string, isSet: boolean, key: string, typeSettings: AttributeDefinitionTypeSettings): DynamoDBTypeResult | DynamoDBSetTypeResult {
@@ -754,7 +773,7 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 	if (typeof val === "undefined") {
 		throw new CustomError.UnknownAttribute(`Invalid Attribute: ${key}`);
 	}
-	let typeVal = typeof val === "object" && !Array.isArray(val) ? val.type : val;
+	let typeVal = typeof val === "object" && !Array.isArray(val) && val.type ? val.type : val;
 	let typeSettings: AttributeDefinitionTypeSettings = {};
 	if (typeof typeVal === "object" && !Array.isArray(typeVal)) {
 		typeSettings = (typeVal as {value: DateConstructor; settings?: AttributeDefinitionTypeSettings}).settings || {};
