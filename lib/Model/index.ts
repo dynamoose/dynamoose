@@ -798,15 +798,17 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 				return obj;
 			})()));
 
-			schema.attributes().map((attribute) => {
-				const type = schema.getAttributeTypeDetails(attribute);
+			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
+				return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
+			}).map((details) => {
+				const {type} = details;
 
 				if (Array.isArray(type)) {
 					throw new CustomError.InvalidParameter("Combine type is not allowed to be used with multiple types.");
 				}
 
-				return {attribute, type};
-			}).filter((details) => details.type.name === "Combine").forEach((details) => {
+				return details;
+			}).forEach((details: any) => {
 				const {invalidAttributes} = details.type.typeSettings.attributes.reduce((result, attribute) => {
 					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 					const doesExist = Boolean(expressionAttributeNameEntry);
