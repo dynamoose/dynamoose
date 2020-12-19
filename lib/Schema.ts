@@ -612,7 +612,7 @@ Schema.prototype.getRangeKey = function (this: Schema): string | void {
 // This function will take in an attribute and value, and throw an error if the property is required and the value is undefined or null.
 Schema.prototype.requiredCheck = async function (this: Schema, key: string, value: ValueType): Promise<void> {
 	const isRequired = await this.getAttributeSettingValue("required", key);
-	if ((typeof value === "undefined" || value === null) && (isRequired)) {
+	if ((typeof value === "undefined" || value === null) && (Array.isArray(isRequired) ? isRequired.some((val) => Boolean(val)) : isRequired)) {
 		throw new CustomError.ValidationError(`${key} is a required property but has no value when trying to save document`);
 	}
 };
