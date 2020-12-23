@@ -3565,6 +3565,58 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"data1": "Charlie"})).to.be.rejectedWith("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: data2.");
 				});
 
+				it("Shouldn't throw error if update with property allowing multiple types as first type", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": [String, Number]});
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": "Bob"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Shouldn't throw error if update with property allowing multiple types as second type", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": [String, Number]});
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": 2});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "2"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should throw error if using multiple types with combine type", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": ["Combine", "String"]});

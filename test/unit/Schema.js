@@ -1195,6 +1195,11 @@ describe("Schema", () => {
 				"name": "Should aggregate an array containing multiple definitions for all defined indexes",
 				"schema": {"id": {"type": String, "index": [{"global": true, "name": "id-index-1"}, {"global": false, "name": "id-index-2"}]}, "uid": {"type": String, "index": {"global": true, "name": "uid-index"}}, "uuid": {"type": String}},
 				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index-1"}}, {"attribute": "id", "index": {"global": false, "name": "id-index-2"}}, {"attribute": "uid", "index": {"global": true, "name": "uid-index"}}]
+			},
+			{
+				"name": "Should work with multiple types for single attribute",
+				"schema": {"id": String, "data": [String, Number]},
+				"output": []
 			}
 		];
 

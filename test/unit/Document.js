@@ -2454,6 +2454,16 @@ describe("Document", () => {
 				"output": {"id": 1, "data1": "hello"}
 			},
 			{
+				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo", "combine": true}],
+				"schema": {"id": Number, "data": [Number, String]},
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "required": true}],
+				"schema": {"id": Number, "data": [Number, String]},
+				"output": {"id": 1}
+			},
+			{
 				"schema": {"id": Number, "other": [{"type": "Combine"}, String]},
 				"input": [{"id": 1}, {"type": "toDynamo", "combine": true}],
 				"error": new Error.InvalidParameter("Combine type is not allowed to be used with multiple types")
