@@ -245,6 +245,7 @@ interface ModelBatchGetDocumentsResponse<T> extends DocumentArray<T> {
 }
 interface ModelBatchGetSettings {
 	return?: "documents" | "request";
+	attributes?: string[];
 }
 interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
@@ -511,6 +512,9 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 				}
 			}
 		};
+		if (settings.attributes) {
+			params.RequestItems[this.name].AttributesToGet = settings.attributes;
+		}
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.BatchGetItemInput, AWSError> = callback as CallbackType<DynamoDB.BatchGetItemInput, AWSError>;
