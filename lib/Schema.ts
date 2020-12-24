@@ -78,7 +78,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 			"name": this.name,
 			dynamodbType,
 			"nestedType": this.nestedType,
-			"isOfType": this.jsType.func ? ((val) => this.jsType.func(val, typeSettings)) : (val): {value: ValueType; type: string} => {
+			"isOfType": this.jsType.func ? (val) => this.jsType.func(val, typeSettings) : (val): {value: ValueType; type: string} => {
 				return [{"value": this.jsType, "type": "main"}, {"value": this.dynamodbType instanceof DynamoDBType ? type.jsType : null, "type": "underlying"}].filter((a) => Boolean(a.value)).find((jsType) => typeof jsType.value === "string" ? typeof val === jsType.value : val instanceof jsType.value);
 			},
 			"isSet": false,
@@ -185,9 +185,9 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 			"functions": (typeSettings: AttributeDefinitionTypeSettings): {toDynamo: (val: string | boolean | number) => string | boolean | number; fromDynamo: (val: string | boolean | number) => string | boolean | number; isOfType: (val: string | boolean | number, type: "toDynamo" | "fromDynamo") => boolean} => ({
 				"toDynamo": (val: string | boolean | number): string | boolean | number => val,
 				"fromDynamo": (val: string | boolean | number): string | boolean | number => val,
-				"isOfType": (val: string | boolean | number, type: "toDynamo" | "fromDynamo"): boolean => typeSettings.value === val
+				"isOfType": (val: string | boolean | number): boolean => typeSettings.value === val
 			})
-		}, "jsType": {"func": ((val, typeSettings): boolean => val === typeSettings.value)}, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
+		}, "jsType": {"func": (val, typeSettings): boolean => val === typeSettings.value}, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
 			switch (typeof typeSettings.value) {
 			case "string":
 				return stringType.dynamodbType as any;
