@@ -100,10 +100,18 @@ let package = require("../package.json");
 	await git.commit(`Bumping version to ${results.version}`, ["package.json", "package-lock.json"].map((file) => path.join(__dirname, "..", file)));
 	gitCommitPackage.succeed("Committed files to Git");
 	// Update README
+	const versionInfo = retrieveInformation(results.version);
+	const versionParts = versionInfo.main.split(".");
+	const shouldUpdateAllMinorVersions = versionParts.length === 3 && versionParts[2] === "0"; // If true it will update cases of `x.x` instead of `x.x.x` (ignoring patch version) as well
 	const readmePath = path.join(__dirname, "..", "README.md");
 	const readmeFileContents = await fs.readFile(readmePath, "utf8");
 	if (readmeFileContents.includes(package.version)) {
-		await fs.writeFile(readmePath, `${readmeFileContents.replace(package.version, results.version)}\n`);
+		let newREADME = readmeFileContents.replace(package.version, results.version);
+		if (shouldUpdateAllMinorVersions) {
+			let oldVersionParts = package.version.split(".");
+			newREADME = newREADME.replace(`${oldVersionParts[0]}.${oldVersionParts[1]}`, `${versionParts[0]}.${versionParts[1]}`);
+		}
+		await fs.writeFile(readmePath, `${newREADME}\n`);
 		const readmeUpdateVersionsSpinner = ora("Updating version in README.md").start();
 		readmeUpdateVersionsSpinner.succeed("Updated version in README.md");
 		// Add & Commit files to Git
@@ -123,7 +131,6 @@ let package = require("../package.json");
 	console.log("Press any key to proceed.");
 	await keypress();
 	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
-	const versionInfo = retrieveInformation(results.version);
 	const versionFriendlyTitle = `Version ${[versionInfo.main, versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : "", versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
 	const changelogTemplate = `## ${versionFriendlyTitle}\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
