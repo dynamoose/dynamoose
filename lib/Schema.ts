@@ -39,7 +39,7 @@ interface DynamoDBTypeCreationObject {
 	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
 	jsType: any;
 	nestedType?: boolean;
-	customType?: {functions: (typeSettings: AttributeDefinitionTypeSettings) => {toDynamo: (val: ValueType) => ValueType; fromDynamo: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
+	customType?: {functions: (typeSettings: AttributeDefinitionTypeSettings) => {toDynamo?: (val: ValueType) => ValueType; fromDynamo?: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
 	customDynamoName?: string | ((typeSettings?: AttributeDefinitionTypeSettings) => string);
 }
 
@@ -182,9 +182,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 		new DynamoDBType({"name": "Constant", "dynamicName": (typeSettings?: AttributeDefinitionTypeSettings): string => {
 			return `constant ${typeof typeSettings.value} (${typeSettings.value})`;
 		}, "customType": {
-			"functions": (typeSettings: AttributeDefinitionTypeSettings): {toDynamo: (val: string | boolean | number) => string | boolean | number; fromDynamo: (val: string | boolean | number) => string | boolean | number; isOfType: (val: string | boolean | number, type: "toDynamo" | "fromDynamo") => boolean} => ({
-				"toDynamo": (val: string | boolean | number): string | boolean | number => val,
-				"fromDynamo": (val: string | boolean | number): string | boolean | number => val,
+			"functions": (typeSettings: AttributeDefinitionTypeSettings): {isOfType: (val: string | boolean | number, type: "toDynamo" | "fromDynamo") => boolean} => ({
 				"isOfType": (val: string | boolean | number): boolean => typeSettings.value === val
 			})
 		}, "jsType": {"func": (val, typeSettings): boolean => val === typeSettings.value}, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
