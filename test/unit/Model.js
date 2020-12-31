@@ -1620,6 +1620,22 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to batchGetItem with attributes", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([1], {"attributes": ["id", "data"]});
+					expect(params).to.be.an("object");
+					expect(params).to.eql({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}}
+								],
+								"AttributesToGet": ["id", "data"]
+							}
+						}
+					});
+				});
+
 				it("Should return correct request if setting option return to request", async () => {
 					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
 					const paramsB = await callType.func(User).bind(User)([1], {"return": "request"});
