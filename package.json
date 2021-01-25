@@ -18,12 +18,13 @@
     "eslint": "^7.13.0",
     "mocha": "^7.2.0",
     "nyc": "^15.1.0",
+    "rimraf": "^3.0.2",
     "typescript": "^4.0.5"
   },
   "scripts": {
     "prepare": "npm run build:clean && npm run build",
     "build": "tsc",
-    "build:clean": "rm -rf dist",
+    "build:clean": "rimraf dist",
     "build:watch": "npm run build -- -w",
     "test:nocoverage": "mocha",
     "test": "nyc npm run test:nocoverage",
