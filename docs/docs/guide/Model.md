@@ -274,6 +274,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `documents`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `documents` |
+| attributes | What document attributes should be retrieved & returned. This will use the underlying `AttributesToGet` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
@@ -294,6 +295,17 @@ User.batchGet([1, 2], (error, myUsers) => {
 		console.log(myUsers);
 	}
 });
+```
+
+```js
+const User = dynamoose.model("User", {"id": Number, "name": String, "data": String});
+
+try {
+	const myUsers = await User.batchGet([1, 2], {"attributes": ["id", "data"]});
+	console.log(myUsers); // Only `id` and `data` will exist on each object (`name` will not be returned)
+} catch (error) {
+	console.error(error);
+}
 ```
 
 ```js
