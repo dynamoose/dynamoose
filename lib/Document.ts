@@ -376,7 +376,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 				const {customType} = typeDetails;
 				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
-				if (customType && !isCorrectTypeAlready) {
+				if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
 					const customValue = customType.functions[settings.type](value);
 					utils.object.set(returnObject, key, customValue);
 				}
