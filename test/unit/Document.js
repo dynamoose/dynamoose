@@ -2495,6 +2495,11 @@ describe("Document", () => {
 				"output": {"id": 1, "data": true}
 			},
 			{
+				"input": [{"id": 1, "data": 5}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": {"type": {"value": "Constant", "settings": {"value": 5}}}},
+				"output": {"id": 1, "data": 5}
+			},
+			{
 				"input": [{"id": 1, "data": false}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": {"type": {"value": "Constant", "settings": {"value": true}}}},
 				"error": new Error.InvalidParameter("Expected data to be of type constant boolean (true), instead found type boolean (false).")
