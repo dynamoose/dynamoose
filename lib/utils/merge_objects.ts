@@ -43,8 +43,10 @@ const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCom
 				} else if (returnObject[key]) {
 					if (settings.combineMethod === MergeObjectsCombineMethod.ArrayMergeNewArray) {
 						returnObject[key] = [returnObject[key], arg[key]];
-					} else {
+					} else if (typeof returnObject[key] === "number") {
 						returnObject[key] += arg[key];
+					} else {
+						returnObject[key] = arg[key];
 					}
 				} else {
 					returnObject[key] = arg[key];
