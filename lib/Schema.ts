@@ -413,8 +413,8 @@ export class Schema {
 				if (result && settings.includeAllProperties) {
 					result[fullKey] = {
 						"index": 0,
-						"matchCorrectness": 0,
-						"entryCorrectness": [0]
+						"matchCorrectness": 0.5,
+						"entryCorrectness": [0.5]
 					};
 				}
 				return result;
