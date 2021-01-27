@@ -24,6 +24,10 @@ describe("utils.merge_objects", () => {
 			"output": {"a": [{"b": "c"}, {"d": "e"}, {"f": "g"}, {"h": "i"}, {"j": "k"}]}
 		},
 		{
+			"input": [{"a": "a", "b": 1}, {"a": "b", "b": 2}, {"a": "c", "b": 3}],
+			"output": {"a": "c", "b": 6}
+		},
+		{
 			"input": [{"z": {"a": "b", "c": "d"}}, {"z": {"a": "e", "c": "f"}}],
 			"output": {"z": {"a": ["b", "e"], "c": ["d", "f"]}},
 			"main": {"combineMethod": "array_merge_new_arrray"}
