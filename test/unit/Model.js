@@ -4188,6 +4188,22 @@ describe("Model", () => {
 				});
 			});
 
+			it("Should return correct result with settings", async () => {
+				expect(await User.transaction.update({"id": 1}, {"name": "Bob"}, {"return": "request"})).to.eql({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "Bob"}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"TableName": "User"
+					}
+				});
+			});
+
 			it("Should print warning if passing callback", () => {
 				let result;
 				const oldWarn = console.warn;
