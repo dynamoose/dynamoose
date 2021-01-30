@@ -1225,12 +1225,13 @@ describe("Schema", () => {
 			{"schema": {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item1": Number}}]}, "input": {"id": "id1", "data": {"item1": "hello"}}, "output": {"data": 0}},
 			{"schema": {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item1": Number}}]}, "input": {"id": "id1", "data": {"item1": 10}}, "output": {"data": 1}},
 			{"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]}, "input": {"id": 1, "data": {"name": 1, "id1": "1", "id2": "1"}}, "output": {"data": 1}},
-			{"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]}, "input": {"id": 1, "data": {"name": 1, "id2": 2}}, "output": {"data": 1}}
+			{"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]}, "input": {"id": 1, "data": {"name": 1, "id2": 2}}, "output": {"data": 1}},
+			{"schema": {"id": Number, "data": String}, "input": {"id": 1, "data9": "Hello"}, "settings": {"includeAllProperties": true}, "output": {"id": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data9": {"index": 0, "entryCorrectness": [0.5], "matchCorrectness": 0.5}}}
 		];
 
 		tests.forEach((test) => {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with schema as ${JSON.stringify(test.schema)}`, () => {
-				expect(new dynamoose.Schema(test.schema).getTypePaths(test.input)).to.eql(test.output);
+				expect(new dynamoose.Schema(test.schema).getTypePaths(test.input, test.settings)).to.eql(test.output);
 			});
 		});
 	});

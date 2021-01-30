@@ -76,6 +76,7 @@ const schema = new dynamoose.Schema({
 | Schema | False | M | True | True |   | This will be converted to an Object type. |
 | Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
 | Combine | False | S | True | False | **attributes** - [string] - The attributes to store in the combine attribute.\n**seperator** - string (default: `,`) - The string used to seperate the attributes in the combine attribute. | When running `Model.update` you must update all the attributes in the combine attributes array, or none of them. This is to ensure your combine method remains in sync with your overall document. |
+| Constant | False | S \| N \| BOOL | True | False | **value** - string \| number \| boolean - The value this attribute should always match. |   |
 
 Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
 
@@ -206,6 +207,19 @@ The type attribute can either be a type (ex. `Object`, `Number`, etc.) or an obj
 			"value": Date,
 			"settings": {
 				"storage": "seconds" // Default: miliseconds (as shown above)
+			}
+		}
+	}
+}
+```
+
+```js
+{
+	"data": {
+		"type": {
+			"value": "Constant",
+			"settings": {
+				"value": "Hello World" // Any `data` attribute must equal `Hello World` now.
 			}
 		}
 	}
