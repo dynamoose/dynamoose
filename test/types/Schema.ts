@@ -50,6 +50,18 @@ const shouldSucceedWithDynamooseThis = new dynamoose.Schema({
 	"parent": dynamoose.THIS
 });
 
+const shouldSucceedWithConstantType = new dynamoose.Schema({
+	"id": String,
+	"data": {
+		"type": {
+			"value": "Constant",
+			"settings": {
+				"value": "Hello World"
+			}
+		}
+	}
+});
+
 // Nested Schema
 const shouldSucceedWithNestedSchema = new dynamoose.Schema({
 	"id": String,

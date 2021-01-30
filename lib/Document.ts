@@ -323,7 +323,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 		if (existsInSchema) {
 			const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
 			if (!isValidType) {
-				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof value}.`);
+				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof value}${typeDetailsArray.some((val) => val.name === "Constant") ? ` (${value})` : ""}.`);
 			} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model") {
 				validParents.push({key, "infinite": true});
 			} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
@@ -376,7 +376,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 				const {customType} = typeDetails;
 				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
-				if (customType && !isCorrectTypeAlready) {
+				if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
 					const customValue = customType.functions[settings.type](value);
 					utils.object.set(returnObject, key, customValue);
 				}
