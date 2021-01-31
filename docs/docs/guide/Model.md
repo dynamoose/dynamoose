@@ -512,6 +512,7 @@ The other method you can use is by using specific update types. These update typ
 - `$SET` - This method will set the attribute to the new value (as shown above)
 - `$ADD` - This method will add the value to the attribute. If the attribute is a number it will add the value to the existing number. If the attribute is a list, it will add the value to the list. Although this method only works for sets in DynamoDB, Dynamoose will automatically update this method to work for lists/arrays as well according to your schema. This update type does not work for any other attribute type.
 - `$REMOVE` - This method will remove the attribute from the document. Since this method doesn't require values you can pass in an array of attribute names.
+- `$DELETE` - This method will delete one or more elements from a Set.
 
 ```js
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"age": 1}});
@@ -524,6 +525,9 @@ await User.update({"id": 1}, {"$REMOVE": {"address": null}});
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": "Tim"}});
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": ["Tim"]}});
 // This will set the document name to Bob and append Tim to the list/array/set of friends where id = 1
+
+await User.update({"id": 1}, {"$DELETE": {"friends": ["Tim"]}});
+// This will delete the element Tim from the friends set on the document where id = 1
 ```
 
 You are allowed to combine these two methods into one update object.
