@@ -106,10 +106,10 @@ let package = require("../package.json");
 	const readmePath = path.join(__dirname, "..", "README.md");
 	const readmeFileContents = await fs.readFile(readmePath, "utf8");
 	if (readmeFileContents.includes(package.version)) {
-		let newREADME = readmeFileContents.replace(package.version, results.version);
+		let newREADME = readmeFileContents.replaceAll(package.version, results.version);
 		if (shouldUpdateAllMinorVersions) {
 			let oldVersionParts = package.version.split(".");
-			newREADME = newREADME.replace(`${oldVersionParts[0]}.${oldVersionParts[1]}`, `${versionParts[0]}.${versionParts[1]}`);
+			newREADME = newREADME.replaceAll(`${oldVersionParts[0]}.${oldVersionParts[1]}`, `${versionParts[0]}.${versionParts[1]}`);
 		}
 		await fs.writeFile(readmePath, `${newREADME}\n`);
 		const readmeUpdateVersionsSpinner = ora("Updating version in README.md").start();
