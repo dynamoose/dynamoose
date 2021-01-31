@@ -2,6 +2,30 @@
 
 ---
 
+## Version 2.6.0
+
+This release adds support for a new constant type along with a bunch of other improvements and fixes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added Constant type
+- Added `attributes` setting for Model.batchGet
+
+### Bug Fixes
+
+- Fixed issues with nested arrays with multiple data types
+- Fixed issue with array of indexes
+- Fixed bugs related to multiple types for attribute
+- Fixed internal method bug that had the potential to cause issues throughout codebase (only known issue related to update transactions)
+
+### Other
+
+- Added security policy
+
+---
+
 ## Version 2.5.0
 
 This release adds support for the DynamoDB `null` type, along with some more TypeScript fixes, and some other cool enhancements.
