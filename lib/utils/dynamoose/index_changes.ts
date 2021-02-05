@@ -22,7 +22,8 @@ const index_changes = async (model: Model<Document>, existingIndexes = []): Prom
 	const expectedIndexes = await model.getIndexes();
 
 	// Indexes to delete
-	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(index, searchIndex))).map((index) => ({"name": index.IndexName as string, "type": ModelIndexChangeType.delete}));
+	const identiticalProperties = ["IndexName", "KeySchema", "Projection", "ProvisionedThroughput"]; // This array represents the properties in the indexes that should match between existingIndexes (from DynamoDB) and expectedIndexes. This array will not include things like `IndexArn`, `ItemCount`, etc, since those properties do not exist in expectedIndexes
+	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(obj.pick(index, ), obj.pick(searchIndex as any, ["IndexName", "KeySchema", "Projection", "ProvisionedThroughput"])))).map((index) => ({"name": index.IndexName as string, "type": ModelIndexChangeType.delete}));
 	output.push(...deleteIndexes);
 
 	// Indexes to create
