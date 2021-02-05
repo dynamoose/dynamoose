@@ -163,6 +163,32 @@ describe("utils.dynamoose.index_changes", () => {
 					"type": "add"
 				}
 			]
+		},
+		{
+			"input": [
+				{
+					"IndexName": "data-index-1",
+					"KeySchema": [
+						{
+							"AttributeName": "data",
+							"KeyType": "HASH"
+						}
+					],
+					"Projection": {
+						"ProjectionType": "ALL"
+					},
+					"IndexStatus": "ACTIVE",
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"IndexSizeBytes": 0,
+					"ItemCount": 0,
+					"IndexArn": "arn:aws:dynamodb:ddblocal:000000000000:table/User/index/data-index-1"
+				}
+			],
+			"schema": {"id": String, "data": {"type": String, "index": {"name": "data-index-1", "global": true, "project": true}}},
+			"output": []
 		}
 	];
 
