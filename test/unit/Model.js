@@ -3703,6 +3703,106 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct parameters when adding an element to a set", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": {"type": Set, "schema": [String]}});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"data1": ["test1"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"SS": ["test1"]
+							}
+						},
+						"UpdateExpression": "ADD #a0 :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct parameters when adding multiple elements to a Set", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": {"type": Set, "schema": [String]}});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"data1": ["test1", "test2"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"SS": ["test1", "test2"]
+							}
+						},
+						"UpdateExpression": "ADD #a0 :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct parameters when removing an element from a Set", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": {"type": Set, "schema": [String]}});
+					await callType.func(User).bind(User)({"id": 1}, {"$DELETE": {"data1": ["test1"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"SS": ["test1"]
+							}
+						},
+						"UpdateExpression": "DELETE #a0 :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct parameters when removing multiple elements from a Set", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": {"type": Set, "schema": [String]}});
+					await callType.func(User).bind(User)({"id": 1}, {"$DELETE": {"data1": ["test1", "test2"]}});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "data1"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"SS": ["test1", "test2"]
+							}
+						},
+						"UpdateExpression": "DELETE #a0 :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should throw error if AWS throws error", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 
