@@ -38,6 +38,14 @@ describe("utils.object.set", () => {
 		{
 			"input": [{"data": []}, "data.0", {"hello": "world"}],
 			"output": {"data": [{"hello": "world"}]}
+		},
+		{
+			"input": [{}, "__proto__", "Hello"],
+			"output": {}
+		},
+		{
+			"input": [{}, "constructor", "Hello"],
+			"output": {}
 		}
 	];
 

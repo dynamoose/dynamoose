@@ -15,7 +15,10 @@ export = <T>(object: GeneralObject<T>, key: string, value: any): GeneralObject<T
 		objectRef = objectRef[part];
 	});
 
-	objectRef[keyParts[keyParts.length - 1]] = value;
+	const finalKey: string = keyParts[keyParts.length - 1];
+	if (finalKey !== "__proto__" && finalKey !== "constructor") {
+		objectRef[finalKey] = value;
+	}
 
 	return object;
 };
