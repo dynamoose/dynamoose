@@ -25,6 +25,7 @@ const schema = new dynamoose.Schema({
 const dynamoose = require("dynamoose");
 
 const schema = new dynamoose.Schema({
+	"id": String,
 	"person": Object,
 	"friend": Object
 }, {
