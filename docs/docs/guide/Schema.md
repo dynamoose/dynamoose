@@ -28,7 +28,10 @@ const schema = new dynamoose.Schema({
 	"person": Object,
 	"friend": Object
 }, {
-	"saveUnknown": ["person.*","friend.**"],
+	"saveUnknown": [
+		"person.*", // store 1 level deep of nested properties in `person` property
+		"friend.**" // store infinite levels deep of nested properties in `friend` property
+	],
 	"timestamps": true
 });
 ```
