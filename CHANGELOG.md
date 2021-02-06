@@ -2,6 +2,23 @@
 
 ---
 
+## Version 2.7.0
+
+This release patches a 🚨 security vulnerability 🚨.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Patch for [Prototype Pollution (GHSA-rrqm-p222-8ph2)](https://github.com/dynamoose/dynamoose/security/advisories/GHSA-rrqm-p222-8ph2)
+- Added `$DELETE` option for `Model.update`
+
+### Bug Fixes
+
+- Fixed a bug related to `update` setting being true for model with index
+
+---
+
 ## Version 2.6.0
 
 This release adds support for a new constant type along with a bunch of other improvements and fixes.
