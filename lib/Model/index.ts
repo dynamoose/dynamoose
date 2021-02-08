@@ -707,7 +707,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 				{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
 				{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}},
-				{"name": "$DELETE", "objectFromSchemaSettings": {"required": true, "defaults": true}}
+				{"name": "$DELETE", "objectFromSchemaSettings": {"defaults": true}}
 			].reverse();
 			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
 				const accumulator = await accumulatorPromise;
