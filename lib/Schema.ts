@@ -546,6 +546,14 @@ export class Schema {
 
 			utils.object.set(parsedObject, key, newValue);
 		});
+		utils.object.entries(parsedObject).forEach((entry) => {
+			const key = entry[0];
+			const value = entry[1] as any;
+
+			if (!key.endsWith(".type") && !key.endsWith(".0") && value && value.Model && value.Model instanceof Model) {
+				utils.object.set(parsedObject, key, {"type": value});
+			}
+		});
 
 		// Anytime `this.schemaObject` is modified, `this[internalCache].attributes` must be set to undefined or null
 		this.schemaObject = parsedObject;
