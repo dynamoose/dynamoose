@@ -193,7 +193,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 				})
 				.filter((index) => comparisonChart[index._hashKey]?.type === "EQ");
 
-			const index = validIndexes.find((index) => !!comparisonChart[index._rangeKey]) || validIndexes[0];
+			const index = validIndexes.find((index) => comparisonChart[index._rangeKey]) || validIndexes[0];
 
 			if (!index) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
