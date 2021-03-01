@@ -179,14 +179,22 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			return res;
 		}, {});
 		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
-			const index = utils.array_flatten(Object.values(indexes)).find((index) => {
-				const {hash/*, range*/} = index.KeySchema.reduce((res, item) => {
-					res[item.KeyType.toLowerCase()] = item.AttributeName;
-					return res;
-				}, {});
-				// TODO: we need to write logic here to prioritize indexes with a range key that is being queried.
-				return (comparisonChart[hash] || {}).type === "EQ"/* && (!range || comparisonChart[range])*/;
-			});
+			const validIndexes = utils.array_flatten(Object.values(indexes))
+				.map((index) => {
+					const {hash, range} = index.KeySchema.reduce((res, item) => {
+						res[item.KeyType.toLowerCase()] = item.AttributeName;
+						return res;
+					}, {});
+
+					index._hashKey = hash;
+					index._rangeKey = range;
+
+					return index;
+				})
+				.filter((index) => comparisonChart[index._hashKey]?.type === "EQ");
+
+			const index = validIndexes.find((index) => !!comparisonChart[index._rangeKey]) || validIndexes[0];
+
 			if (!index) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
 			} else {
