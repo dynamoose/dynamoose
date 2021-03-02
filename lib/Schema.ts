@@ -459,7 +459,7 @@ export class Schema {
 			} else if (settings.includeAllProperties) {
 				let matchCorrectness: number;
 				try {
-					const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, value, key, settings, {}); // TODO add {typeMap: {[key]: index}}
+					const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, value, fullKey, settings, {}); // TODO add {typeMap: {[key]: index}}
 					matchCorrectness = isValidType ? 1 : 0;
 				} catch (e) {
 					matchCorrectness = 0.5;
