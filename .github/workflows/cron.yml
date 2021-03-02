@@ -19,3 +19,18 @@ jobs:
           exempt-pr-labels: 'status:not-stale,status:todo,status:triage,type:discussion'
           days-before-stale: 7
           days-before-close: 3
+  nightly-merge:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Nightly Merge
+      uses: robotology/gh-action-nightly-merge@v1.3.2
+      with:
+        stable_branch: 'master'
+        development_branch: 'v3'
+        allow_ff: true
+        user_name: 'GitHub Actions'
+        user_email: 'actions@github.com'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
