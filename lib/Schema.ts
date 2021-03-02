@@ -457,7 +457,7 @@ export class Schema {
 					result[fullKey] = matchedTypeDetailsIndex;
 				}
 			} else if (settings.includeAllProperties) {
-				let matchCorrectness: number = typeCheckResult.isValidType ? 1 : 0;
+				const matchCorrectness: number = typeCheckResult.isValidType ? 1 : 0;
 				result[fullKey] = {
 					"index": 0,
 					matchCorrectness,
