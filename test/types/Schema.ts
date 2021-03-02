@@ -62,7 +62,7 @@ const shouldSucceedWithConstantType = new dynamoose.Schema({
 	}
 });
 
-const shouldSuccessWithModelAsType = new dynamoose.Schema({
+const shouldSucceedWithModelAsType = new dynamoose.Schema({
 	"id": String,
 	"item": dynamoose.model("User", {"id": String, "data": String})
 });
