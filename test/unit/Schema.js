@@ -1226,7 +1226,8 @@ describe("Schema", () => {
 			{"schema": {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item1": Number}}]}, "input": {"id": "id1", "data": {"item1": 10}}, "output": {"data": 1}},
 			{"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": String}}, {"type": Object, "schema": {"name": Number, "id2": String}}]}, "input": {"id": 1, "data": {"name": 1, "id1": "1", "id2": "1"}}, "output": {"data": 1}},
 			{"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]}, "input": {"id": 1, "data": {"name": 1, "id2": 2}}, "output": {"data": 1}},
-			{"schema": {"id": Number, "data": String}, "input": {"id": 1, "data9": "Hello"}, "settings": {"includeAllProperties": true}, "output": {"id": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data9": {"index": 0, "entryCorrectness": [0.5], "matchCorrectness": 0.5}}}
+			{"schema": {"id": Number, "data": String}, "input": {"id": 1, "data9": "Hello"}, "settings": {"includeAllProperties": true}, "output": {"id": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data9": {"index": 0, "entryCorrectness": [0.5], "matchCorrectness": 0.5}}},
+			{"schema": {"id": Number, "data": {"type": Object, "schema": {"parameter": String}}}, "input": {"id": 1, "data": {"parameter": "hello"}}, "settings": {"includeAllProperties": true}, "output": {"id": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data.parameter": {"entryCorrectness": [1], "index": 0, "matchCorrectness": 1}}}
 		];
 
 		tests.forEach((test) => {
