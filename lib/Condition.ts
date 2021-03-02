@@ -210,6 +210,10 @@ Condition.prototype.where = Condition.prototype.filter = Condition.prototype.att
 // TODO: I don't think this prototypes are being exposed which is gonna cause a lot of problems with our type definition file. Need to figure out a better way to do this since they aren't defined and are dynamic.
 types.forEach((type) => {
 	Condition.prototype[type.name] = function (this: Condition, ...args: any[]): Condition {
+		if (args.includes(undefined)) {
+			console.warn(`Dynamoose Warning: Passing \`undefined\` into a condition ${type.name} is not supported and can lead to behavior where DynamoDB returns an error related to your conditional. In a future version of Dynamoose this behavior will throw an error. If you believe your conditional is valid and you received this message in error, please submit an issue at https://github.com/dynamoose/dynamoose/issues/new/choose.`);
+		}
+
 		this.settings.pending.value = type.multipleArguments ? args : args[0];
 		this.settings.pending.type = type;
 		finalizePending(this);
