@@ -550,8 +550,16 @@ export class Schema {
 			const key = entry[0];
 			const value = entry[1] as any;
 
-			if (!key.endsWith(".type") && !key.endsWith(".0") && value && value.Model && value.Model instanceof Model) {
-				utils.object.set(parsedObject, key, {"type": value});
+			if (!key.endsWith(".type") && !key.endsWith(".0")) {
+				if (value && value.Model && value.Model instanceof Model) {
+					utils.object.set(parsedObject, key, {"type": value});
+				} else if (value && Array.isArray(value)) {
+					value.forEach((item, index) => {
+						if (item && item.Model && item.Model instanceof Model) {
+							utils.object.set(parsedObject, `${key}.${index}`, {"type": item})
+						}
+					});
+				}
 			}
 		});
 
@@ -851,7 +859,8 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 			if (Array.isArray(schemaValue[index])) {
 				schemaValue = schemaValue[index];
 			}
-			type = getType(schemaValue[0]);
+			const subValue = schemaValue[0];
+			type = getType(typeof subValue === "object" && subValue.type ? subValue.type : subValue);
 		}
 
 		const returnObject = retrieveTypeInfo(type, isSet, key, typeSettings);

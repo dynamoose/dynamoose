@@ -1552,8 +1552,6 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					// TODO: reeneable the tests below for populate with sets
-					/*
 					it("Should not populate document automatically when using set", async () => {
 						let getItemTimesCalled = 0;
 
@@ -1561,15 +1559,14 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
-						expect(user.toJSON()).to.eql({
-							"id": 1,
-							"name": "Charlie",
-							"parent": 2
-						});
+						expect(user.id).to.eql(1);
+						expect(user.name).to.eql("Charlie");
+						expect(user.parent).to.eql(new Set([2]));
+						expect(Object.keys(user.toJSON())).to.eql(["id", "name", "parent"]);
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
@@ -1580,15 +1577,14 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
-						expect(user.toJSON()).to.eql({
-							"id": 1,
-							"name": "Charlie",
-							"parent": 2
-						});
+						expect(user.id).to.eql(1);
+						expect(user.name).to.eql("Charlie");
+						expect(user.parent).to.eql(new Set([2]));
+						expect(Object.keys(user.toJSON())).to.eql(["id", "name", "parent"]);
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
@@ -1599,15 +1595,14 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
-						expect(user.toJSON()).to.eql({
-							"id": 1,
-							"name": "Charlie",
-							"parent": 2
-						});
+						expect(user.id).to.eql(1);
+						expect(user.name).to.eql("Charlie");
+						expect(user.parent).to.eql(new Set([2]));
+						expect(Object.keys(user.toJSON())).to.eql(["id", "name", "parent"]);
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
@@ -1618,18 +1613,92 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+							}
+						});
+						const user = await callType.func(User).bind(User)(1);
+						expect(user.id).to.eql(1);
+						expect(user.name).to.eql("Charlie");
+						expect(user.parent).to.eql(new Set([2]));
+						expect(Object.keys(user.toJSON())).to.eql(["id", "name", "parent"]);
+						expect(getItemTimesCalled).to.eql(1);
+					});
+
+					it("Should not populate document automatically when using array", async () => {
+						let getItemTimesCalled = 0;
+
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [dynamoose.model("Parent", {"id": Number, "data": String})]}});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								getItemTimesCalled++;
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
 						expect(user.toJSON()).to.eql({
 							"id": 1,
 							"name": "Charlie",
-							"parent": 2
+							"parent": [2]
 						});
 						expect(getItemTimesCalled).to.eql(1);
 					});
-					*/
+
+					it("Should not populate document automatically when using array if schema property is object", async () => {
+						let getItemTimesCalled = 0;
+
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [{"type": dynamoose.model("Parent", {"id": Number, "data": String})}]}});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								getItemTimesCalled++;
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+							}
+						});
+						const user = await callType.func(User).bind(User)(1);
+						expect(user.toJSON()).to.eql({
+							"id": 1,
+							"name": "Charlie",
+							"parent": [2]
+						});
+						expect(getItemTimesCalled).to.eql(1);
+					});
+
+					it("Should not populate document automatically when using array when schema property is dynamoose.THIS", async () => {
+						let getItemTimesCalled = 0;
+
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [dynamoose.THIS]}});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								getItemTimesCalled++;
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+							}
+						});
+						const user = await callType.func(User).bind(User)(1);
+						expect(user.toJSON()).to.eql({
+							"id": 1,
+							"name": "Charlie",
+							"parent": [2]
+						});
+						expect(getItemTimesCalled).to.eql(1);
+					});
+
+					it("Should not populate document automatically when using array when schema property is dynamoose.THIS if schema property is object", async () => {
+						let getItemTimesCalled = 0;
+
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [{"type": dynamoose.THIS}]}});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								getItemTimesCalled++;
+								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+							}
+						});
+						const user = await callType.func(User).bind(User)(1);
+						expect(user.toJSON()).to.eql({
+							"id": 1,
+							"name": "Charlie",
+							"parent": [2]
+						});
+						expect(getItemTimesCalled).to.eql(1);
+					});
 
 					it("Should autopopulate if model settings have populate set", async () => {
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
