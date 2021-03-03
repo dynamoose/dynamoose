@@ -556,7 +556,7 @@ export class Schema {
 				} else if (value && Array.isArray(value)) {
 					value.forEach((item, index) => {
 						if (item && item.Model && item.Model instanceof Model) {
-							utils.object.set(parsedObject, `${key}.${index}`, {"type": item})
+							utils.object.set(parsedObject, `${key}.${index}`, {"type": item});
 						}
 					});
 				}
