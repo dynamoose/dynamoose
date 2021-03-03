@@ -457,13 +457,7 @@ export class Schema {
 					result[fullKey] = matchedTypeDetailsIndex;
 				}
 			} else if (settings.includeAllProperties) {
-				let matchCorrectness: number;
-				try {
-					const {isValidType} = utils.dynamoose.getValueTypeCheckResult(this, value, key, settings, {}); // TODO add {typeMap: {[key]: index}}
-					matchCorrectness = isValidType ? 1 : 0;
-				} catch (e) {
-					matchCorrectness = 0.5;
-				}
+				const matchCorrectness: number = typeCheckResult.isValidType ? 1 : 0;
 				result[fullKey] = {
 					"index": 0,
 					matchCorrectness,
