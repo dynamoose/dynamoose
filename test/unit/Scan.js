@@ -285,6 +285,171 @@ describe("Scan", () => {
 						expect(response.populate).to.be.a("function");
 					});
 
+					it("Should populate when calling populate function", async () => {
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.THIS});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": 2
+						}]);
+						const populatedResult = await result.populate();
+						expect(populatedResult.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
+
+					it("Should populate when calling populate function with different model", async () => {
+						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": Model2});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": 2
+						}]);
+						const populatedResult = await result.populate();
+						expect(populatedResult.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": {
+								"id": 2,
+								"name": "Bob"
+							}
+						}]);
+					});
+
+					it("Should populate when calling populate function with array of different models", async () => {
+						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Array, "schema": [Model2]}});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": [2]
+						}]);
+						const populatedResult = await result.populate();
+						expect(populatedResult.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": [{
+								"id": 2,
+								"name": "Bob"
+							}]
+						}]);
+					});
+
+					it("Should populate when calling populate function with array of different models with multiple items", async () => {
+						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Array, "schema": [Model2]}});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								return params.Key.id.N === "2" ? {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})} : {"promise": () => ({"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}, {"N": "3"}]}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(result.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": [2, 3]
+						}]);
+						const populatedResult = await result.populate();
+						expect(populatedResult.toJSON()).to.eql([{
+							"id": 1,
+							"name": "Charlie",
+							"parent": [{
+								"id": 2,
+								"name": "Bob"
+							}, {
+								"id": 3,
+								"name": "Tim"
+							}]
+						}]);
+					});
+
+					it("Should populate when calling populate function with set of different models", async () => {
+						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Set, "schema": [Model2]}});
+						dynamoose.aws.ddb.set({
+							"getItem": () => {
+								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(Object.keys(result[0].toJSON())).to.eql(["id", "name", "parent"]);
+						expect(result[0].toJSON().id).to.eql(1);
+						expect(result[0].toJSON().name).to.eql("Charlie");
+						expect([...result[0].parent]).to.eql([2]);
+
+						const populatedResult = await result.populate();
+						expect(Object.keys(populatedResult[0].toJSON())).to.eql(["id", "name", "parent"]);
+						expect(populatedResult[0].toJSON().id).to.eql(1);
+						expect(populatedResult[0].toJSON().name).to.eql("Charlie");
+						expect(populatedResult[0].parent.length).to.eql(1);
+						expect([...populatedResult[0].parent][0].toJSON()).to.eql({"id": 2, "name": "Bob"});
+					});
+
+					it("Should populate when calling populate function with set of different models with multiple items", async () => {
+						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Set, "schema": [Model2]}});
+						dynamoose.aws.ddb.set({
+							"getItem": (params) => {
+								return params.Key.id.N === "2" ? {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})} : {"promise": () => ({"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}})};
+							},
+							"scan": () => {
+								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2", "3"]}}]})};
+							}
+						});
+						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
+						expect(Object.keys(result[0].toJSON())).to.eql(["id", "name", "parent"]);
+						expect(result[0].toJSON().id).to.eql(1);
+						expect(result[0].toJSON().name).to.eql("Charlie");
+						expect([...result[0].parent]).to.eql([2, 3]);
+
+						const populatedResult = await result.populate();
+						expect(Object.keys(populatedResult[0].toJSON())).to.eql(["id", "name", "parent"]);
+						expect(populatedResult[0].toJSON().id).to.eql(1);
+						expect(populatedResult[0].toJSON().name).to.eql("Charlie");
+						expect(populatedResult[0].parent.length).to.eql(2);
+						expect([...populatedResult[0].parent][0].toJSON()).to.eql({"id": 2, "name": "Bob"});
+						expect([...populatedResult[0].parent][1].toJSON()).to.eql({"id": 3, "name": "Tim"});
+					});
+
 					it("Should autopopulate if model settings have populate set", async () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
 						dynamoose.aws.ddb.set({
