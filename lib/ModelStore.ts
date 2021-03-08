@@ -20,6 +20,7 @@ const returnObject = <T extends Document>(input: Model<T> | string): Model<T> | 
 };
 returnObject.clear = (): void => {
 	models = {};
+	aliases = {};
 };
 
 export = returnObject;
