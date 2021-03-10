@@ -29,7 +29,8 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 	const {model} = this;
 	const localSettings = settings;
 	const promise = model.schemaForObject(this).then((schema) => {
-		const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model") : obj.details.name === "Model").map((obj) => obj.prop);
+		// TODO: uncomment out `/* || detail.name === "Model Set"*/` part and add relevant tests
+		const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model"/* || detail.name === "Model Set"*/) : obj.details.name === "Model" || obj.details.name === "Model Set").map((obj) => obj.prop);
 
 		return {schema, modelAttributes};
 	}).then((obj: {schema: Schema; modelAttributes: any[]}) => {
@@ -42,8 +43,11 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 			// TODO: `subModel` is currently any, we should fix that
 			const subModel = typeof typeSettings.model === "object" ? model.Document as any : typeSettings.model;
 
-			const doesPopulatePropertyExist = !(typeof this[prop] === "undefined" || this[prop] === null);
-			if (!doesPopulatePropertyExist || this[prop] instanceof subModel) {
+			prop = prop.endsWith(".0") ? prop.substring(0, prop.length - 2) : prop;
+
+			const documentPropValue = utils.object.get(this as any, prop);
+			const doesPopulatePropertyExist = !(typeof documentPropValue === "undefined" || documentPropValue === null);
+			if (!doesPopulatePropertyExist || documentPropValue instanceof subModel) {
 				return;
 			}
 			const key: string = [internalSettings.parentKey, prop].filter((a) => Boolean(a)).join(".");
@@ -54,9 +58,17 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 				return;
 			}
 
-			const subDocument = await subModel.get(this[prop]);
-			const saveDocument: Document = await PopulateDocument.bind(subDocument)(localSettings, null, {"parentKey": key});
-			this[prop] = saveDocument;
+			const isArray = Array.isArray(documentPropValue);
+			const isSet = documentPropValue instanceof Set;
+			if (isArray || isSet) {
+				const subDocuments = await Promise.all([...documentPropValue as any].map((val) => subModel.get(val)));
+				const saveDocuments = await Promise.all(subDocuments.map((doc) => PopulateDocument.bind(doc)(localSettings, null, {"parentKey": key})));
+				utils.object.set(this as any, prop, saveDocuments);
+			} else {
+				const subDocument = await subModel.get(documentPropValue);
+				const saveDocument: Document = await PopulateDocument.bind(subDocument)(localSettings, null, {"parentKey": key});
+				utils.object.set(this as any, prop, saveDocument);
+			}
 		}));
 	});
 
