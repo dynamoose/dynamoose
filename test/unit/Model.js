@@ -1878,6 +1878,15 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should return correct result after saving with defaults", async () => {
+					createItemFunction = () => Promise.resolve();
+
+					User = dynamoose.model("User", {"id": Number, "name": String, "defaultValue": {"type": String, "default": "Hello World"}});
+
+					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
+					expect(result.toJSON()).to.eql({"id": 1, "name": "Charlie", "defaultValue": "Hello World"});
+				});
+
 				it("Should send correct params to putItem", async () => {
 					createItemFunction = () => Promise.resolve();
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
