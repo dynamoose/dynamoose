@@ -242,7 +242,7 @@ const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.arr
 type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
 type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema;
+type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Document>;
 
 export interface TimestampObject {
 	createdAt?: string | string[];
@@ -539,6 +539,22 @@ export class Schema {
 			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_arrray"})(parsedSettings, subSettings);
 
 			utils.object.set(parsedObject, key, newValue);
+		});
+		utils.object.entries(parsedObject).forEach((entry) => {
+			const key = entry[0];
+			const value = entry[1] as any;
+
+			if (!key.endsWith(".type") && !key.endsWith(".0")) {
+				if (value && value.Model && value.Model instanceof Model) {
+					utils.object.set(parsedObject, key, {"type": value});
+				} else if (value && Array.isArray(value)) {
+					value.forEach((item, index) => {
+						if (item && item.Model && item.Model instanceof Model) {
+							utils.object.set(parsedObject, `${key}.${index}`, {"type": item});
+						}
+					});
+				}
+			}
 		});
 
 		// Anytime `this.schemaObject` is modified, `this[internalCache].attributes` must be set to undefined or null
@@ -837,7 +853,8 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 			if (Array.isArray(schemaValue[index])) {
 				schemaValue = schemaValue[index];
 			}
-			type = getType(schemaValue[0]);
+			const subValue = schemaValue[0];
+			type = getType(typeof subValue === "object" && subValue.type ? subValue.type : subValue);
 		}
 
 		const returnObject = retrieveTypeInfo(type, isSet, key, typeSettings);
