@@ -43,6 +43,22 @@ describe("Model", () => {
 			expect(UserB).to.eql(User);
 		});
 
+		it("Should return existing model if already exists and not passing in schema with default prefix", () => {
+			dynamoose.model.defaults.set({"prefix": "test_", "create": false, "waitForActive": false});
+
+			const User = dynamoose.model("User", {"id": String});
+			const UserB = dynamoose.model("User");
+
+			expect(UserB).to.eql(User);
+		});
+
+		it("Should return existing model if already exists and not passing in schema with prefix in first model", () => {
+			const User = dynamoose.model("User", {"id": String}, {"prefix": "test_"});
+			const UserB = dynamoose.model("test_User");
+
+			expect(UserB).to.eql(User);
+		});
+
 		it("Should store latest model in model store", () => {
 			dynamoose.model("User", {"id": String});
 			dynamoose.model("User", {"id": String, "name": String});
