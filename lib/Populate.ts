@@ -29,6 +29,7 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 	const {model} = this;
 	const localSettings = settings;
 	const promise = model.schemaForObject(this).then((schema) => {
+		// TODO: uncomment out `/* || detail.name === "Model Set"*/` part and add relevant tests
 		const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model"/* || detail.name === "Model Set"*/) : obj.details.name === "Model" || obj.details.name === "Model Set").map((obj) => obj.prop);
 
 		return {schema, modelAttributes};
