@@ -140,8 +140,11 @@ export class Document {
 			settings = {};
 		}
 
+		let savedItem;
+
 		const localSettings: DocumentSaveSettings = settings;
 		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
+			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
 				"TableName": this.model.name
@@ -182,13 +185,22 @@ export class Document {
 		if (callback) {
 			const localCallback: CallbackType<Document, AWSError> = callback as CallbackType<Document, AWSError>;
 			promise.then(() => {
-				this[internalProperties].storedInDynamo = true; localCallback(null, this);
+				this[internalProperties].storedInDynamo = true;
+
+				const returnDocument = new this.model.Document(savedItem as any);
+				returnDocument[internalProperties].storedInDynamo = true;
+
+				localCallback(null, returnDocument);
 			}).catch((error) => callback(error));
 		} else {
 			return (async (): Promise<Document> => {
 				await promise;
 				this[internalProperties].storedInDynamo = true;
-				return this;
+
+				const returnDocument = new this.model.Document(savedItem as any);
+				returnDocument[internalProperties].storedInDynamo = true;
+
+				return returnDocument;
 			})();
 		}
 	}
