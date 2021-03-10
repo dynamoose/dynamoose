@@ -293,6 +293,60 @@ describe("Query", () => {
 					});
 				});
 
+				it("Should send correct request on query.exec using array of indexes", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": [{"global": true, "rangeKey": "age", "name": "NameAgeIndex"}, {"global": true, "rangeKey": "breed", "name": "NameBreedIndex"}]}, "age": Number, "breed": String});
+					await callType.func(Model.query("name").eq("Charlie").where("age").gt(10).exec).bind(Model.query("name").eq("Charlie").where("age").gt(10))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "NameAgeIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#qra": "age"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":qrv": {"N": "10"}
+						},
+						"KeyConditionExpression": "#qha = :qhv AND #qra > :qrv"
+					});
+
+					await callType.func(Model.query("name").eq("Charlie").where("breed").eq("calico").exec).bind(Model.query("name").eq("Charlie").where("breed").eq("calico"))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "NameBreedIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#qra": "breed"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":qrv": {"S": "calico"}
+						},
+						"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+					});
+				});
+
+				it("Should send correct request on query.exec using array of indexes and unknown range key", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": [{"global": true, "name": "NameIndex"}, {"global": true, "rangeKey": "age", "name": "NameAgeIndex"}]}, "age": Number, "breed": String});
+					await callType.func(Model.query("name").eq("Charlie").where("breed").eq("calico").exec).bind(Model.query("name").eq("Charlie").where("breed").eq("calico"))();
+					expect(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "NameIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#a1": "breed"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":v1": {"S": "calico"}
+						},
+						"KeyConditionExpression": "#qha = :qhv",
+						"FilterExpression": "#a1 = :v1"
+					});
+				});
+
 				it("Should send correct request on query.exec for one object passed in", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.query({"name": "Charlie"}).exec).bind(Model.query({"name": "Charlie"}))();

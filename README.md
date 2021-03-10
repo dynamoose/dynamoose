@@ -40,7 +40,7 @@
 Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by [Mongoose](https://mongoosejs.com/)).
 
 ### Dynamoose is Sponsored by Dynobase
-​
+
 Dynobase helps you accelerate your DynamoDB workflow with code generation, faster data exploration, bookmarks and more: [https://dynobase.dev/](https://dynobase.dev/?ref=dynamoose)
 
 ### Getting Started
@@ -69,6 +69,7 @@ Below you will find the current branch strategy for the project. Work taking pla
 
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
+| [`v3`](https://github.com/dynamoose/dynamoose/tree/v3) | 3.0.0 |   | - [Documentation](https://dynamoose-git-v3-dynamoose.vercel.app/) |
 | [`master`](https://github.com/dynamoose/dynamoose/tree/master) | 2.7.x |   | - [Documentation](https://dynamoose.now.sh/) |
 | [`v2.7.0` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.7.0) | 2.7.0 | latest | - [Documentation](https://dynamoosejs.com)
 

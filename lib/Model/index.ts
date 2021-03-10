@@ -256,6 +256,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional) {
 		this.options = utils.combine_objects(options, customDefaults.get(), originalDefaults) as ModelOptions;
 		this.name = `${this.options.prefix}${name}${this.options.suffix}`;
+		this.originalName = name;
 
 		let realSchemas: Schema[];
 		if (!schema || Array.isArray(schema) && schema.length === 0) {
@@ -398,6 +399,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	}
 
 	name: string;
+	originalName: string; // Name without prefixes
 	options: ModelOptions;
 	schemas: Schema[];
 	serializer: Serializer;
