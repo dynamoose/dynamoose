@@ -1,17 +1,17 @@
-import * as AWS from "../sdk";
+import DynamoDB = require("@aws-sdk/client-dynamodb");
 
-let customDDB: AWS.DynamoDB | undefined;
-function main (): AWS.DynamoDB {
-	return customDDB || new AWS.DynamoDB();
+let customDDB: DynamoDB.DynamoDB | undefined;
+function main (): DynamoDB.DynamoDB {
+	return customDDB || new DynamoDB.DynamoDB({});
 }
-main.set = (ddb: AWS.DynamoDB): void => {
+main.set = (ddb: DynamoDB.DynamoDB): void => {
 	customDDB = ddb;
 };
 main.revert = (): void => {
 	customDDB = undefined;
 };
 main.local = (endpoint = "http://localhost:8000"): void => {
-	main.set(new AWS.DynamoDB({
+	main.set(new DynamoDB.DynamoDB({
 		endpoint
 	}));
 };
