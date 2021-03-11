@@ -2,6 +2,32 @@
 
 ---
 
+## Version 2.7.1
+
+This release has a lot of bug fixes for Dynamoose.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixing issue where with required check failing for non updating properties when using `$DELETE` in `Model.delete`
+- Prioritizing indexes with range key when querying
+- Improvements to type and schema matching for nested properties
+- Fixing issue where retrieving previously created model would ignore prefix and suffix
+- Fixing TypeScript issues with nested models
+- Fixing issue where nested models would auto-populate
+- Fixing issues with nested models within nested elements
+
+### Documentation
+
+- Making `saveUnknown` more clear in documentation
+
+### Other
+
+- Added warning when passing in `undefined` into Conditional
+
+---
+
 ## Version 2.7.0
 
 This release patches a 🚨 security vulnerability 🚨.
