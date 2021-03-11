@@ -3,7 +3,7 @@ import utils = require("./utils");
 import Internal = require("./Internal");
 import {Document, DocumentObjectFromSchemaSettings} from "./Document";
 import {Model} from "./Model";
-import {DynamoDB} from "aws-sdk";
+import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ModelType, ObjectType} from "./General";
 
 // TODO: the interfaces below are so similar, we should consider combining them into one. We also do a lot of `DynamoDBTypeResult | DynamoDBSetTypeResult` in the code base.
