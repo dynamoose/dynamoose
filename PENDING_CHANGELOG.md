@@ -11,4 +11,4 @@
 			- `input` has changed to `convertToAttr`
 			- `output` has changed to `convertToNative`
 			- For more information please refer to the AWS-SDK v3 changelogs
-
+- Node.js >=v10 now required
