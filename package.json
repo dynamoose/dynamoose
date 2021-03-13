@@ -56,7 +56,8 @@
     "url": "https://github.com/dynamoose/dynamoose/issues"
   },
   "dependencies": {
-    "aws-sdk": "^2.792.0",
+    "@aws-sdk/client-dynamodb": "^3.8.0",
+    "@aws-sdk/util-dynamodb": "^3.8.0",
     "source-map-support": "^0.5.19",
     "uuid": "^8.3.1"
   },

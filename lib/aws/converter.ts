@@ -1,10 +1,24 @@
-import * as AWS from "./sdk";
+// import * as AWS from "./sdk";
+import DynamoDBUtil = require("@aws-sdk/util-dynamodb");
 
-let customConverter: typeof AWS.DynamoDB.Converter | undefined;
-function main (): typeof AWS.DynamoDB.Converter {
-	return customConverter || AWS.DynamoDB.Converter;
+type ConverterType = {
+	marshall: typeof DynamoDBUtil.marshall;
+	unmarshall: typeof DynamoDBUtil.unmarshall;
+	convertToAttr: typeof DynamoDBUtil.convertToAttr;
+	convertToNative: typeof DynamoDBUtil.convertToNative;
+};
+
+let customConverter: ConverterType | undefined;
+const defaultConverter: ConverterType = {
+	"marshall": DynamoDBUtil.marshall,
+	"unmarshall": DynamoDBUtil.unmarshall,
+	"convertToAttr": DynamoDBUtil.convertToAttr,
+	"convertToNative": DynamoDBUtil.convertToNative
+};
+function main (): ConverterType {
+	return customConverter || defaultConverter;
 }
-main.set = (converter: typeof AWS.DynamoDB.Converter): void => {
+main.set = (converter: ConverterType): void => {
 	customConverter = converter;
 };
 main.revert = (): void => {

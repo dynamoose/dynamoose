@@ -6,20 +6,6 @@ describe("AWS", () => {
 		expect(dynamoose.aws).to.be.an("object");
 	});
 
-	describe("SDK", () => {
-		it("Should return an object", () => {
-			expect(dynamoose.aws.sdk).to.be.an("object");
-		});
-
-		it("Should return a object for config", () => {
-			expect(dynamoose.aws.sdk.config).to.be.an("object");
-		});
-
-		it("Should return a function for config.update", () => {
-			expect(dynamoose.aws.sdk.config.update).to.be.a("function");
-		});
-	});
-
 	describe("DDB", () => {
 		it("Should be a function", () => {
 			expect(dynamoose.aws.ddb).to.be.a("function");
@@ -75,14 +61,26 @@ describe("AWS", () => {
 				expect(dynamoose.aws.ddb.local).to.be.a("function");
 			});
 
-			it("Should set correct default endpoint if nothing passed in", () => {
+			it("Should set correct default endpoint if nothing passed in", async () => {
 				dynamoose.aws.ddb.local();
-				expect(dynamoose.aws.ddb().endpoint.href).to.eql("http://localhost:8000/");
+				expect(await dynamoose.aws.ddb().config.endpoint()).to.eql({
+					"hostname": "localhost",
+					"port": 8000,
+					"protocol": "http:",
+					"path": "/",
+					"query": undefined
+				});
 			});
 
-			it("Should set correct custom endpoint if custom string passed in", () => {
+			it("Should set correct custom endpoint if custom string passed in", async () => {
 				dynamoose.aws.ddb.local("http://localhost:9000");
-				expect(dynamoose.aws.ddb().endpoint.href).to.eql("http://localhost:9000/");
+				expect(await dynamoose.aws.ddb().config.endpoint()).to.eql({
+					"hostname": "localhost",
+					"port": 9000,
+					"protocol": "http:",
+					"path": "/",
+					"query": undefined
+				});
 			});
 		});
 	});
