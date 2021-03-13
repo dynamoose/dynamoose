@@ -53,7 +53,12 @@ export class Document {
 	static objectToDynamo (object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
 	static objectToDynamo (object: ObjectType, settings: {type: "object"}): AttributeMap;
 	static objectToDynamo (object: any, settings: {type: "object" | "value"} = {"type": "object"}): DynamoDB.AttributeValue | AttributeMap {
-		return (settings.type === "value" ? aws.converter().convertToAttr : aws.converter().marshall)(object);
+		if (object === undefined) {
+			return undefined;
+		}
+
+		const options = settings.type === "value" ? undefined : {"removeUndefinedValues": true};
+		return (settings.type === "value" ? aws.converter().convertToAttr : aws.converter().marshall)(object, options as any);
 	}
 	static fromDynamo (object: AttributeMap): ObjectType {
 		return aws.converter().unmarshall(object);
