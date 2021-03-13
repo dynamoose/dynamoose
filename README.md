@@ -74,4 +74,3 @@ Below you will find the current branch strategy for the project. Work taking pla
 | [`v2.7.1` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.7.1) | 2.7.1 | latest | - [Documentation](https://dynamoosejs.com)
 
 
-
