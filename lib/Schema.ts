@@ -112,12 +112,11 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 					if (type === "toDynamo") {
 						return !settings.saveUnknown && Array.isArray(val) && val.every((subValue) => result.isOfType(subValue)) || val instanceof Set && [...val].every((subValue) => result.isOfType(subValue));
 					} else {
-						const setVal = val as SetValueType; // TODO: Probably bad practice here, should figure out how to do this better.
-						return setVal.wrapperName === "Set" && setVal.type === typeName && Array.isArray(setVal.values);
+						return val instanceof Set;
 					}
 				},
-				"toDynamo": (val: GeneralValueType[]): SetValueType => ({"wrapperName": "Set", "type": typeName, "values": [...val]}),
-				"fromDynamo": (val: SetValueType): Set<ValueType> => new Set(val.values),
+				"toDynamo": (val: GeneralValueType[]): SetValueType => Array.isArray(val) ? new Set(val as any) : val as any,
+				"fromDynamo": (val: SetValueType): Set<ValueType> => val as any,
 				typeSettings
 			};
 			if (this.dynamicName) {
@@ -127,13 +126,12 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 				result.set.customType = {
 					"functions": {
 						"toDynamo": (val: GeneralValueType[]): ValueType[] => val.map(result.customType.functions.toDynamo),
-						"fromDynamo": (val: SetValueType): {values: ValueType} => ({...val, "values": val.values.map(result.customType.functions.fromDynamo)}),
+						"fromDynamo": (val: SetValueType): {values: ValueType} => new Set([...val as any].map(result.customType.functions.fromDynamo)) as any,
 						"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo"): boolean => {
 							if (type === "toDynamo") {
-								return Array.isArray(val) && val.every((item) => result.customType.functions.isOfType(item, type));
+								return (val instanceof Set || (Array.isArray(val) && new Set(val as any).size === val.length)) && [...val].every((item) => result.customType.functions.isOfType(item, type));
 							} else {
-								const setVal = val as SetValueType; // TODO: Probably bad practice here, should figure out how to do this better.
-								return setVal.wrapperName === "Set" && setVal.type === typeName && Array.isArray(setVal.values);
+								return val instanceof Set;
 							}
 						}
 					}
