@@ -65,7 +65,7 @@ const ddb = dynamoose.aws.converter(); // custom object set, or object with `@aw
 
 ## dynamoose.aws.converter.set(converter)
 
-This function is used to set a custom object of methods for Dynamoose to use when converting. This is useful for mocking the methods for situations like automated tests where you want to be able to mock certain interactions with DynamoDB. The converter object you set **must** include all the functions listed above in the [`dynamoose.aws.converter`](#dynamoose.aws.converter) section or else you will run into unexpected errors and undefined behavior.
+This function is used to set a custom object of methods for Dynamoose to use when converting. This is useful for mocking the methods for situations like automated tests where you want to be able to mock certain interactions with DynamoDB. The converter object you set **must** include all the functions listed above in the [`dynamoose.aws.converter`](#dynamooseawsconverter) section or else you will run into unexpected errors and undefined behavior.
 
 ```js
 const converter = {
