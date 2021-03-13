@@ -2263,29 +2263,29 @@ describe("Document", () => {
 				"output": {"id": 1, "items": ["hello", "world"]}
 			},
 			{
-				"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}, {"type": "fromDynamo"}],
+				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "fromDynamo"}],
 				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": {"type": Set, "schema": [String]}}}}),
 				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
 			},
 			{
-				"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}, {"type": "fromDynamo", "saveUnknown": true}],
+				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "fromDynamo", "saveUnknown": true}],
 				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
 				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
 			},
 			{
 				"input": [{"id": 1, "items": {"data": ["hello", "world"]}}, {"type": "toDynamo"}],
 				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": {"type": Set, "schema": [String]}}}}),
-				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
 			},
 			{
 				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo"}],
 				"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": {"type": Set, "schema": [String]}}}}),
-				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
 			},
 			{
 				"input": [{"id": 1, "items": {"data": new Set(["hello", "world"])}}, {"type": "toDynamo", "saveUnknown": true}],
 				"schema": new Schema({"id": Number}, {"saveUnknown": true}),
-				"output": {"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}}
+				"output": {"id": 1, "items": {"data": new Set(["hello", "world"])}}
 			},
 			{
 				"input": [{"id": 1, "data": ["hello", "world", "universe", "galaxy"]}, {"type": "toDynamo", "saveUnknown": true}],
@@ -2295,12 +2295,12 @@ describe("Document", () => {
 
 			// TODO: uncomment these
 			// {
-			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo"}],
+			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "fromDynamo"}],
 			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
 			// 	"error": new Error.ValidationError("data.1 should be a string")
 			// },
 			// {
-			// 	"input": [{"id": 1, "items": {"data": {"wrapperName": "Set", "type": "String", "values": ["hello", 1]}}}, {"type": "fromDynamo", "saveUnknown": true}],
+			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "fromDynamo", "saveUnknown": true}],
 			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
 			// 	"error": new Error.ValidationError("data.1 should be a string")
 			// },
@@ -2548,15 +2548,15 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
-				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
 			},
 			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
-				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
 			},
 			{
-				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, Number]},
 				"output": {"id": 1, "data": new Set(["hello", "world"])}
 			},
@@ -2568,7 +2568,7 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [String]}]},
-				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
 			},
 			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "toDynamo"}],
@@ -2578,15 +2578,15 @@ describe("Document", () => {
 			{
 				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
-				"output": {"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}
+				"output": {"id": 1, "data": new Set(["hello", "world"])}
 			},
 			{
-				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [String]}]},
 				"output": {"id": 1, "data": new Set(["hello", "world"])}
 			},
 			{
-				"input": [{"id": 1, "data": {"wrapperName": "Set", "type": "String", "values": ["hello", "world"]}}, {"type": "fromDynamo"}],
+				"input": [{"id": 1, "data": new Set(["hello", "world"])}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
 				"output": {"id": 1, "data": new Set(["hello", "world"])}
 			},

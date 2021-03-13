@@ -1,7 +1,6 @@
 import {Document} from "./Document";
 import {DocumentArray, CallbackType} from "./General";
 import utils = require("./utils");
-import {AWSError} from "aws-sdk";
 import {DynamoDBTypeResult, DynamoDBSetTypeResult, Schema} from "./Schema";
 
 export interface PopulateSettings {
@@ -13,11 +12,11 @@ interface PopulateInternalSettings {
 }
 
 export function PopulateDocument (this: Document): Promise<Document>;
-export function PopulateDocument (this: Document, callback: CallbackType<Document, AWSError>): void;
+export function PopulateDocument (this: Document, callback: CallbackType<Document, any>): void;
 export function PopulateDocument (this: Document, settings: PopulateSettings): Promise<Document>;
-export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
-export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): void;
-export function PopulateDocument (this: Document, settings?: PopulateSettings | CallbackType<Document, AWSError>, callback?: CallbackType<Document, AWSError> | null, internalSettings?: PopulateInternalSettings): Promise<Document> | void {
+export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, any>): void;
+export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, any> | null, internalSettings?: PopulateInternalSettings): void;
+export function PopulateDocument (this: Document, settings?: PopulateSettings | CallbackType<Document, any>, callback?: CallbackType<Document, any> | null, internalSettings?: PopulateInternalSettings): Promise<Document> | void {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {};
@@ -83,10 +82,10 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 }
 
 export function PopulateDocuments (this: DocumentArray<Document>): Promise<DocumentArray<Document>>;
-export function PopulateDocuments (this: DocumentArray<Document>, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
+export function PopulateDocuments (this: DocumentArray<Document>, callback: CallbackType<DocumentArray<Document>, any>): void;
 export function PopulateDocuments (this: DocumentArray<Document>, settings: PopulateSettings): Promise<DocumentArray<Document>>;
-export function PopulateDocuments (this: DocumentArray<Document>, settings: PopulateSettings, callback: CallbackType<DocumentArray<Document>, AWSError>): void;
-export function PopulateDocuments (this: DocumentArray<Document>, settings?: PopulateSettings | CallbackType<DocumentArray<Document>, AWSError>, callback?: CallbackType<DocumentArray<Document>, AWSError>): Promise<DocumentArray<Document>> | void {
+export function PopulateDocuments (this: DocumentArray<Document>, settings: PopulateSettings, callback: CallbackType<DocumentArray<Document>, any>): void;
+export function PopulateDocuments (this: DocumentArray<Document>, settings?: PopulateSettings | CallbackType<DocumentArray<Document>, any>, callback?: CallbackType<DocumentArray<Document>, any>): Promise<DocumentArray<Document>> | void {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {};

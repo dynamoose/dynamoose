@@ -8,7 +8,8 @@ import {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult, TimestampObject} from
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 
-import {DynamoDB, AWSError} from "aws-sdk";
+import {AttributeMap} from "./Types";
+import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ValueType} from "./Schema";
 import {CallbackType, ObjectType} from "./General";
 import {SerializerOptions} from "./Serializer";
@@ -26,7 +27,7 @@ export interface DocumentSettings {
 
 // Document represents an item in a Model that is either pending (not saved) or saved
 export class Document {
-	constructor (model: Model<Document>, object?: DynamoDB.AttributeMap | ObjectType, settings?: DocumentSettings) {
+	constructor (model: Model<Document>, object?: AttributeMap | ObjectType, settings?: DocumentSettings) {
 		const documentObject = Document.isDynamoObject(object) ? aws.converter().unmarshall(object) : object;
 		Object.keys(documentObject).forEach((key) => this[key] = documentObject[key]);
 		Object.defineProperty(this, internalProperties, {
@@ -48,13 +49,18 @@ export class Document {
 
 	// Internal
 	model?: Model<Document>;
-	static objectToDynamo (object: ObjectType): DynamoDB.AttributeMap;
+	static objectToDynamo (object: ObjectType): AttributeMap;
 	static objectToDynamo (object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
-	static objectToDynamo (object: ObjectType, settings: {type: "object"}): DynamoDB.AttributeMap;
-	static objectToDynamo (object: any, settings: {type: "object" | "value"} = {"type": "object"}): DynamoDB.AttributeValue | DynamoDB.AttributeMap {
-		return (settings.type === "value" ? aws.converter().input : aws.converter().marshall)(object);
+	static objectToDynamo (object: ObjectType, settings: {type: "object"}): AttributeMap;
+	static objectToDynamo (object: any, settings: {type: "object" | "value"} = {"type": "object"}): DynamoDB.AttributeValue | AttributeMap {
+		if (object === undefined) {
+			return undefined;
+		}
+
+		const options = settings.type === "value" ? undefined : {"removeUndefinedValues": true};
+		return (settings.type === "value" ? aws.converter().convertToAttr : aws.converter().marshall)(object, options as any);
 	}
-	static fromDynamo (object: DynamoDB.AttributeMap): ObjectType {
+	static fromDynamo (object: AttributeMap): ObjectType {
 		return aws.converter().unmarshall(object);
 	}
 	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
@@ -111,8 +117,8 @@ export class Document {
 
 	// Delete
 	delete (this: Document): Promise<void>;
-	delete (this: Document, callback: CallbackType<void, AWSError>): void;
-	delete (this: Document, callback?: CallbackType<void, AWSError>): Promise<void> | void {
+	delete (this: Document, callback: CallbackType<void, any>): void;
+	delete (this: Document, callback?: CallbackType<void, any>): Promise<void> | void {
 		const hashKey = this.model.getHashKey();
 		const rangeKey = this.model.getRangeKey();
 
@@ -126,12 +132,12 @@ export class Document {
 
 	// Save
 	save (this: Document): Promise<Document>;
-	save (this: Document, callback: CallbackType<Document, AWSError>): void;
+	save (this: Document, callback: CallbackType<Document, any>): void;
 	save (this: Document, settings: DocumentSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
-	save (this: Document, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, AWSError>): void;
+	save (this: Document, settings: DocumentSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, any>): void;
 	save (this: Document, settings: DocumentSaveSettings & {return: "document"}): Promise<Document>;
-	save (this: Document, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<Document, AWSError>): void;
-	save (this: Document, settings?: DocumentSaveSettings | CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>, callback?: CallbackType<Document, AWSError> | CallbackType<DynamoDB.PutItemInput, AWSError>): void | Promise<Document | DynamoDB.PutItemInput> {
+	save (this: Document, settings: DocumentSaveSettings & {return: "document"}, callback: CallbackType<Document, any>): void;
+	save (this: Document, settings?: DocumentSaveSettings | CallbackType<Document, any> | CallbackType<DynamoDB.PutItemInput, any>, callback?: CallbackType<Document, any> | CallbackType<DynamoDB.PutItemInput, any>): void | Promise<Document | DynamoDB.PutItemInput> {
 		if (typeof settings !== "object" && typeof settings !== "undefined") {
 			callback = settings;
 			settings = {};
@@ -167,7 +173,7 @@ export class Document {
 		});
 		if (settings.return === "request") {
 			if (callback) {
-				const localCallback: CallbackType<DynamoDB.PutItemInput, AWSError> = callback as CallbackType<DynamoDB.PutItemInput, AWSError>;
+				const localCallback: CallbackType<DynamoDB.PutItemInput, any> = callback as CallbackType<DynamoDB.PutItemInput, any>;
 				paramsPromise.then((result) => localCallback(null, result));
 				return;
 			} else {
@@ -180,7 +186,7 @@ export class Document {
 		});
 
 		if (callback) {
-			const localCallback: CallbackType<Document, AWSError> = callback as CallbackType<Document, AWSError>;
+			const localCallback: CallbackType<Document, any> = callback as CallbackType<Document, any>;
 			promise.then(() => {
 				this[internalProperties].storedInDynamo = true; localCallback(null, this);
 			}).catch((error) => callback(error));
@@ -195,9 +201,9 @@ export class Document {
 
 	// Populate
 	populate (): Promise<Document>;
-	populate (callback: CallbackType<Document, AWSError>): void;
+	populate (callback: CallbackType<Document, any>): void;
 	populate (settings: PopulateSettings): Promise<Document>;
-	populate (settings: PopulateSettings, callback: CallbackType<Document, AWSError>): void;
+	populate (settings: PopulateSettings, callback: CallbackType<Document, any>): void;
 	populate (...args): Promise<Document> | void {
 		return PopulateDocument.bind(this)(...args);
 	}

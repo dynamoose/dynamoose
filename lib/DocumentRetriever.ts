@@ -5,7 +5,6 @@ import {Condition, ConditionInitalizer, BasicOperators, ConditionStorageTypeNest
 import {Model} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
-import {AWSError} from "aws-sdk";
 import {PopulateDocuments} from "./Populate";
 
 enum DocumentRetrieverTypes {
@@ -330,11 +329,11 @@ DocumentRetriever.prototype.all = function (this: DocumentRetriever, delay = 0, 
 
 export interface Scan<T> extends DocumentRetriever, BasicOperators<Scan<T>> {
 	exec(): Promise<ScanResponse<T>>;
-	exec(callback: CallbackType<ScanResponse<T>, AWSError>): void;
+	exec(callback: CallbackType<ScanResponse<T>, any>): void;
 }
 
 export class Scan<T> extends DocumentRetriever {
-	exec (callback?: CallbackType<ScanResponse<T>, AWSError>): Promise<ScanResponse<T>> | void {
+	exec (callback?: CallbackType<ScanResponse<T>, any>): Promise<ScanResponse<T>> | void {
 		return super.exec(callback);
 	}
 
@@ -350,11 +349,11 @@ export class Scan<T> extends DocumentRetriever {
 
 export interface Query<T> extends DocumentRetriever, BasicOperators<Query<T>> {
 	exec(): Promise<QueryResponse<T>>;
-	exec(callback: CallbackType<QueryResponse<T>, AWSError>): void;
+	exec(callback: CallbackType<QueryResponse<T>, any>): void;
 }
 
 export class Query<T> extends DocumentRetriever {
-	exec (callback?: CallbackType<QueryResponse<T>, AWSError>): Promise<QueryResponse<T>> | void {
+	exec (callback?: CallbackType<QueryResponse<T>, any>): Promise<QueryResponse<T>> | void {
 		return super.exec(callback);
 	}
 
