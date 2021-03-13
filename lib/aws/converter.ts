@@ -6,7 +6,7 @@ type ConverterType = {
 	unmarshall: typeof DynamoDBUtil.unmarshall;
 	convertToAttr: typeof DynamoDBUtil.convertToAttr;
 	convertToNative: typeof DynamoDBUtil.convertToNative;
-}
+};
 
 let customConverter: ConverterType | undefined;
 const defaultConverter: ConverterType = {
@@ -14,7 +14,7 @@ const defaultConverter: ConverterType = {
 	"unmarshall": DynamoDBUtil.unmarshall,
 	"convertToAttr": DynamoDBUtil.convertToAttr,
 	"convertToNative": DynamoDBUtil.convertToNative
-}
+};
 function main (): ConverterType {
 	return customConverter || defaultConverter;
 }

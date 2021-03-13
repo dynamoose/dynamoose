@@ -98,12 +98,6 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 
 		const isSetAllowed = typeof type.set === "function" ? type.set(typeSettings) : type.set;
 		if (isSetAllowed) {
-			let typeName;
-			if (type.customDynamoName) {
-				typeName = typeof type.customDynamoName === "function" ? type.customDynamoName(typeSettings) : type.customDynamoName;
-			} else {
-				typeName = type.name;
-			}
 			result.set = {
 				"name": `${this.name} Set`,
 				"isSet": true,
@@ -129,7 +123,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 						"fromDynamo": (val: SetValueType): {values: ValueType} => new Set([...val as any].map(result.customType.functions.fromDynamo)) as any,
 						"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo"): boolean => {
 							if (type === "toDynamo") {
-								return (val instanceof Set || (Array.isArray(val) && new Set(val as any).size === val.length)) && [...val].every((item) => result.customType.functions.isOfType(item, type));
+								return (val instanceof Set || Array.isArray(val) && new Set(val as any).size === val.length) && [...val].every((item) => result.customType.functions.isOfType(item, type));
 							} else {
 								return val instanceof Set;
 							}
