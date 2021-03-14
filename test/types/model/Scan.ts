@@ -2,18 +2,18 @@
 
 import {UserTypedModel, User, UserModel} from "../Model";
 import {Condition} from "../../../dist";
-import {AnyDocument} from "../../../dist/Document";
-import {ScanResponse} from "../../../dist/DocumentRetriever";
+import {AnyItem} from "../../../dist/Item";
+import {ScanResponse} from "../../../dist/ItemRetriever";
 
 // scan.exec([callback])
 async function scanExec (): Promise<User[]> {
 	return await UserTypedModel.scan().exec();
 }
-async function scanExecUnTyped (): Promise<AnyDocument[]> {
+async function scanExecUnTyped (): Promise<AnyItem[]> {
 	return await UserModel.scan().exec();
 }
 
-const scanExecUnTypedWithScanResponse: Promise<ScanResponse<AnyDocument>> = UserModel.scan().exec();
+const scanExecUnTypedWithScanResponse: Promise<ScanResponse<AnyItem>> = UserModel.scan().exec();
 const scanExecTyped: Promise<ScanResponse<User>> = UserTypedModel.scan("name").eq("Will").exec();
 
 UserTypedModel.scan().exec();
@@ -24,7 +24,7 @@ UserTypedModel.scan().limit(5);
 // scan.startAt(key)
 async function scanStartAt (): Promise<void> {
 	const response = await UserTypedModel.scan().exec();
-	const moreDocuments = UserTypedModel.scan().startAt(response.lastKey);
+	const moreItems = UserTypedModel.scan().startAt(response.lastKey);
 }
 
 // scan.attributes(attributes)

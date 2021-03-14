@@ -12,3 +12,5 @@
 			- `output` has changed to `convertToNative`
 			- For more information please refer to the AWS-SDK v3 changelogs
 - Node.js >=v10 now required
+- Renamed `Document` to `Item`
+	- The largest user facing API change here is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`

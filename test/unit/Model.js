@@ -1235,7 +1235,7 @@ describe("Model", () => {
 					expect(user.name).to.eql("Charlie");
 				});
 
-				it("Should return object that is an instance of Document", async () => {
+				it("Should return object that is an instance of Item", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
 					expect(user).to.be.an.instanceof(User);
@@ -1492,7 +1492,7 @@ describe("Model", () => {
 				});
 
 				describe("Populate", () => {
-					it("Should not populate document automatically", async () => {
+					it("Should not populate item automatically", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.model("Parent", {"id": Number, "data": String})});
@@ -1511,7 +1511,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically if schema property is object", async () => {
+					it("Should not populate item automatically if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": dynamoose.model("Parent", {"id": Number, "data": String})}});
@@ -1530,7 +1530,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when schema property is dynamoose.THIS", async () => {
+					it("Should not populate item automatically when schema property is dynamoose.THIS", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
@@ -1549,7 +1549,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when schema property is dynamoose.THIS if schema property is object", async () => {
+					it("Should not populate item automatically when schema property is dynamoose.THIS if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": dynamoose.THIS}});
@@ -1568,7 +1568,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using set", async () => {
+					it("Should not populate item automatically when using set", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [dynamoose.model("Parent", {"id": Number, "data": String})]}});
@@ -1586,7 +1586,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using set if schema property is object", async () => {
+					it("Should not populate item automatically when using set if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [{"type": dynamoose.model("Parent", {"id": Number, "data": String})}]}});
@@ -1604,7 +1604,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using set when schema property is dynamoose.THIS", async () => {
+					it("Should not populate item automatically when using set when schema property is dynamoose.THIS", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [dynamoose.THIS]}});
@@ -1622,7 +1622,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using set when schema property is dynamoose.THIS if schema property is object", async () => {
+					it("Should not populate item automatically when using set when schema property is dynamoose.THIS if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [{"type": dynamoose.THIS}]}});
@@ -1640,7 +1640,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using array", async () => {
+					it("Should not populate item automatically when using array", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [dynamoose.model("Parent", {"id": Number, "data": String})]}});
@@ -1659,7 +1659,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using array if schema property is object", async () => {
+					it("Should not populate item automatically when using array if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [{"type": dynamoose.model("Parent", {"id": Number, "data": String})}]}});
@@ -1678,7 +1678,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using array when schema property is dynamoose.THIS", async () => {
+					it("Should not populate item automatically when using array when schema property is dynamoose.THIS", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [dynamoose.THIS]}});
@@ -1697,7 +1697,7 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate document automatically when using array when schema property is dynamoose.THIS if schema property is object", async () => {
+					it("Should not populate item automatically when using array when schema property is dynamoose.THIS if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [{"type": dynamoose.THIS}]}});
@@ -3410,10 +3410,10 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should return updated document upon success", async () => {
+				it("Should return updated item upon success", async () => {
 					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
-					expect(result.constructor.name).to.eql("Document");
+					expect(result.constructor.name).to.eql("Item");
 					expect({...result}).to.eql({
 						"id": 1,
 						"name": "Charlie"
@@ -3438,7 +3438,7 @@ describe("Model", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "validate": (val) => val.length > 10}});
 
-					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Bob"})).to.be.rejectedWith("name with a value of Bob had a validation error when trying to save the document");
+					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Bob"})).to.be.rejectedWith("name with a value of Bob had a validation error when trying to save the item");
 				});
 
 				it("Should throw error if value not in enum", () => {
@@ -3486,7 +3486,7 @@ describe("Model", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "required": true}});
 
-					return expect(callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]})).to.be.rejectedWith("name is a required property but has no value when trying to save document");
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]})).to.be.rejectedWith("name is a required property but has no value when trying to save item");
 				});
 
 				it("Should not throw error if trying to modify required property", () => {
@@ -3507,14 +3507,14 @@ describe("Model", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
 
-					return expect(callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}})).to.be.rejectedWith("data.age is a required property but has no value when trying to save document");
+					return expect(callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}})).to.be.rejectedWith("data.age is a required property but has no value when trying to save item");
 				});
 
 				it("Should throw error if trying to replace object with $SET without nested required property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
 
-					return expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"name": "Charlie"}}})).to.be.rejectedWith("data.age is a required property but has no value when trying to save document");
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"name": "Charlie"}}})).to.be.rejectedWith("data.age is a required property but has no value when trying to save item");
 				});
 
 				it("Should use default value if deleting property", async () => {
@@ -4806,7 +4806,7 @@ describe("Model", () => {
 				return [[{"id": 1, "status": "active", "name": "Bob"}, {"id": 2, "status": "not_active", "name": "Tim"}], "isActive"];
 			}, "output": [{"id": 1, "isActive": true}, {"id": 2, "isActive": false}]},
 			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "random"], "error": "Field options is required and should be an object or array"},
-			{"input": [{"id": 1, "name": "Bob"}], "error": "documentsArray must be an array of document objects"}
+			{"input": [{"id": 1, "name": "Bob"}], "error": "itemsArray must be an array of item objects"}
 		];
 		describe("Model.serializeMany", () => {
 			it("Should be a function", () => {
@@ -4823,7 +4823,7 @@ describe("Model", () => {
 					}
 				});
 
-				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} when using document instance`, () => {
+				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} when using item instance`, () => {
 					const input = typeof test.input === "function" ? test.input() : test.input;
 					if (Array.isArray(input[0])) {
 						input[0] = input[0].map((obj) => new User(obj));
@@ -4849,26 +4849,26 @@ describe("Model", () => {
 
 					if (Array.isArray(input[0])) {
 						input[0].forEach((object, index) => {
-							const document = new User(object);
+							const item = new User(object);
 
 							if (test.error) {
-								expect(() => document.serialize(input[1])).to.throw(test.error);
+								expect(() => item.serialize(input[1])).to.throw(test.error);
 							} else {
-								expect(document.serialize(input[1])).to.eql(test.output[index]);
+								expect(item.serialize(input[1])).to.eql(test.output[index]);
 							}
 						});
 					}
 				});
 
 				if (!test.error) {
-					it(`Should return same output as document.toJSON() for ${JSON.stringify(test.input)}`, () => {
+					it(`Should return same output as item.toJSON() for ${JSON.stringify(test.input)}`, () => {
 						const input = typeof test.input === "function" ? test.input() : test.input;
 
 						if (Array.isArray(input[0])) {
 							input[0].forEach((object) => {
-								const document = new User(object);
+								const item = new User(object);
 								User.serializer.default.set();
-								expect(document.serialize()).to.eql(document.toJSON());
+								expect(item.serialize()).to.eql(item.toJSON());
 							});
 						}
 					});
@@ -5038,8 +5038,8 @@ describe("Model", () => {
 		}
 
 		customMethodTests({"prefixName": "Model.methods", "methodEntryPoint": () => User.methods, "testObject": () => User, "existingMethod": "get"});
-		describe("Model.methods.document", () => {
-			customMethodTests({"prefixName": "Model.methods.document", "methodEntryPoint": () => User.methods.document, "testObject": () => user, "existingMethod": "save"});
+		describe("Model.methods.item", () => {
+			customMethodTests({"prefixName": "Model.methods.item", "methodEntryPoint": () => User.methods.item, "testObject": () => user, "existingMethod": "save"});
 		});
 	});
 });

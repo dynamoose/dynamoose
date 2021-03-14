@@ -4,15 +4,15 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../../dist");
 const {Schema, aws} = dynamoose;
-const {Document} = require("../../dist/Document");
+const {Item} = require("../../dist/Item");
 const util = require("util");
 const Error = require("../../dist/Error");
 const utils = require("../../dist/utils");
 const Internal = require("../../dist/Internal");
 
-describe("Document", () => {
+describe("Item", () => {
 	it("Should be a function", () => {
-		expect(Document).to.be.a("function");
+		expect(Item).to.be.a("function");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
@@ -69,7 +69,7 @@ describe("Document", () => {
 			});
 		});
 
-		describe("Document.prototype.toDynamo", () => {
+		describe("Item.prototype.toDynamo", () => {
 			const tests = [
 				{
 					"input": {},
@@ -89,7 +89,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("document.save", () => {
+	describe("item.save", () => {
 		let User, user, putParams = [], putItemFunction;
 		beforeEach(() => {
 			dynamoose.model.defaults.set({
@@ -119,8 +119,8 @@ describe("Document", () => {
 		});
 
 		const functionCallTypes = [
-			{"name": "Promise", "func": (document) => document.save},
-			{"name": "Callback", "func": (document) => util.promisify(document.save)}
+			{"name": "Promise", "func": (item) => item.save},
+			{"name": "Callback", "func": (item) => util.promisify(item.save)}
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
@@ -414,7 +414,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "address": {"street": "hello"}});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("address.country is a required property but has no value when trying to save document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("address.country is a required property but has no value when trying to save item");
 				});
 
 				it("Should throw type mismatch error if passing in wrong type with custom type for object", () => {
@@ -567,7 +567,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob"}]});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.0.id is a required property but has no value when trying to save document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.0.id is a required property but has no value when trying to save item");
 				});
 
 				it("Should throw error if not passing in required property in array for second item", () => {
@@ -575,7 +575,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.id is a required property but has no value when trying to save document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.id is a required property but has no value when trying to save item");
 				});
 
 				it("Should throw error if not passing in required property in array for second item with multi nested objects", () => {
@@ -583,7 +583,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}}}]}}}]}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}]});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.addresses.1.country is a required property but has no value when trying to save document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.addresses.1.country is a required property but has no value when trying to save item");
 				});
 
 				it("Should save with correct object with expires set to a number", async () => {
@@ -1019,7 +1019,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "validate": 5}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "age": 4});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the item");
 				});
 
 				// This test is here since if you want to enforce that the property exists, you must use both `required` & `validate`, not just `validate`
@@ -1061,7 +1061,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "validate": (val) => val > 5}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "age": 4});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the item");
 				});
 
 				it("Should save with correct object with validation async function", async () => {
@@ -1080,7 +1080,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "age": {"type": Number, "validate": async (val) => val > 5}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "age": 4});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the item");
 				});
 
 				it("Should save with correct object with validation RegExp", async () => {
@@ -1099,7 +1099,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "validate": /.../gu}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1, "name": "a"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name with a value of a had a validation error when trying to save the document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name with a value of a had a validation error when trying to save the item");
 				});
 
 				it("Should save with correct object with required property", async () => {
@@ -1118,7 +1118,7 @@ describe("Document", () => {
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "required": true}}, {"create": false, "waitForActive": false});
 					user = new User({"id": 1});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name is a required property but has no value when trying to save document");
+					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name is a required property but has no value when trying to save item");
 				});
 
 				it("Should save with correct object with enum property", async () => {
@@ -1235,7 +1235,7 @@ describe("Document", () => {
 					}]);
 				});
 
-				it("Should work correctly if attributes added to document after initalization", async () => {
+				it("Should work correctly if attributes added to item after initalization", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
 					user = new User();
@@ -1259,7 +1259,7 @@ describe("Document", () => {
 						game = null;
 					});
 
-					it("Should save with correct object with document instance passed in", async () => {
+					it("Should save with correct object with item instance passed in", async () => {
 						putItemFunction = () => Promise.resolve();
 						await callType.func(game).bind(game)();
 						expect(putParams).to.eql([{
@@ -1284,7 +1284,7 @@ describe("Document", () => {
 							game = new Game({"id": 2, "name": "Game 2", "user": [user]});
 						});
 
-						it("Should save with correct object with document instance as set passed in", async () => {
+						it("Should save with correct object with item instance as set passed in", async () => {
 							putItemFunction = () => Promise.resolve();
 							await callType.func(game).bind(game)();
 							expect(putParams).to.eql([{
@@ -1312,7 +1312,7 @@ describe("Document", () => {
 							game = new Game({"id": 2, "name": "Game 2", user});
 						});
 
-						it("Should save with correct object with document instance passed in", async () => {
+						it("Should save with correct object with item instance passed in", async () => {
 							putItemFunction = () => Promise.resolve();
 							await callType.func(game).bind(game)();
 							expect(putParams).to.eql([{
@@ -1343,7 +1343,7 @@ describe("Document", () => {
 							return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type string.");
 						});
 
-						it("Should throw error if trying to create document with property type as set model", () => {
+						it("Should throw error if trying to create item with property type as set model", () => {
 							const Game = dynamoose.model("Game", {"id": Number, "name": String, "user": {"type": Set, "schema": [User]}});
 							return expect(Game.create({"id": 2, "name": "Game 2", "user": [1]})).to.be.rejectedWith("user with type: model is not allowed to be a set");
 						});
@@ -1447,11 +1447,11 @@ describe("Document", () => {
 						}
 					});
 					const model = dynamoose.model("User2", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
-					const document = new model({"id": 1, "name": "Charlie"});
+					const item = new model({"id": 1, "name": "Charlie"});
 					await utils.set_immediate_promise();
 
 					let finishedSavingUser = false;
-					callType.func(document).bind(document)().then(() => finishedSavingUser = true);
+					callType.func(item).bind(item)().then(() => finishedSavingUser = true);
 
 					await utils.set_immediate_promise();
 					expect(putParams).to.eql([]);
@@ -1476,7 +1476,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("document.original", () => {
+	describe("item.original", () => {
 		let model;
 		beforeEach(() => {
 			model = dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false});
@@ -1497,40 +1497,40 @@ describe("Document", () => {
 			expect(new model({"id": 1}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
 		});
 
-		it("Should return original object if retrieving from database even after modifying document", () => {
-			const document = new model({"id": 1}, {"type": "fromDynamo"});
-			document.id = 2;
-			expect(document.original()).to.eql({"id": 1});
-			expect({...document}).to.eql({"id": 2});
+		it("Should return original object if retrieving from database even after modifying item", () => {
+			const item = new model({"id": 1}, {"type": "fromDynamo"});
+			item.id = 2;
+			expect(item.original()).to.eql({"id": 1});
+			expect({...item}).to.eql({"id": 2});
 		});
 
 		it("Shouldn't return DynamoDB object if retrieving from database", () => {
 			expect(new model({"id": {"N": "1"}}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
 		});
 
-		it("Shouldn't return DynamoDB object if retrieving from database even after modifying document", () => {
-			const document = new model({"id": {"N": "1"}}, {"type": "fromDynamo"});
-			document.id = 2;
-			expect(document.original()).to.eql({"id": 1});
-			expect({...document}).to.eql({"id": 2});
+		it("Shouldn't return DynamoDB object if retrieving from database even after modifying item", () => {
+			const item = new model({"id": {"N": "1"}}, {"type": "fromDynamo"});
+			item.id = 2;
+			expect(item.original()).to.eql({"id": 1});
+			expect({...item}).to.eql({"id": 2});
 		});
 
-		it("Shouldn't modify inner array after modifying document", () => {
-			const document = new model({"id": {"N": "1"}, "array": {"L": [{"S": "1"}]}}, {"type": "fromDynamo"});
-			document.array.push("2");
-			expect(document.original()).to.eql({"id": 1, "array": ["1"]});
-			expect({...document}).to.eql({"id": 1, "array": ["1", "2"]});
+		it("Shouldn't modify inner array after modifying item", () => {
+			const item = new model({"id": {"N": "1"}, "array": {"L": [{"S": "1"}]}}, {"type": "fromDynamo"});
+			item.array.push("2");
+			expect(item.original()).to.eql({"id": 1, "array": ["1"]});
+			expect({...item}).to.eql({"id": 1, "array": ["1", "2"]});
 		});
 
-		it("Shouldn't modify inner object after modifying document", () => {
-			const document = new model({"id": {"N": "1"}, "object": {"M": {"hello": {"S": "world"}}}}, {"type": "fromDynamo"});
-			document.object.test = "item";
-			expect(document.original()).to.eql({"id": 1, "object": {"hello": "world"}});
-			expect({...document}).to.eql({"id": 1, "object": {"hello": "world", "test": "item"}});
+		it("Shouldn't modify inner object after modifying item", () => {
+			const item = new model({"id": {"N": "1"}, "object": {"M": {"hello": {"S": "world"}}}}, {"type": "fromDynamo"});
+			item.object.test = "item";
+			expect(item.original()).to.eql({"id": 1, "object": {"hello": "world"}});
+			expect({...item}).to.eql({"id": 1, "object": {"hello": "world", "test": "item"}});
 		});
 	});
 
-	describe("document.toJSON", () => {
+	describe("item.toJSON", () => {
 		let model;
 		beforeEach(() => {
 			model = dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false});
@@ -1548,7 +1548,7 @@ describe("Document", () => {
 			expect(new model({}).constructor).to.not.eql(Object);
 		});
 
-		it("Should return empty object if no properties in document", () => {
+		it("Should return empty object if no properties in item", () => {
 			expect(new model({}).toJSON()).to.eql({});
 		});
 
@@ -1556,19 +1556,19 @@ describe("Document", () => {
 			expect(new model({"id": 1}).toJSON()).to.eql({"id": 1});
 		});
 
-		it("Should not return object that equals document", () => {
-			const document = new model({"id": 1});
-			expect(document.toJSON()).to.not.eql(document);
+		it("Should not return object that equals item", () => {
+			const item = new model({"id": 1});
+			expect(item.toJSON()).to.not.eql(item);
 		});
 
 		it("Should return JSON object even after modifying", () => {
-			const document = new model({"id": 1});
-			document.id = 2;
-			expect(document.toJSON()).to.eql({"id": 2});
+			const item = new model({"id": 1});
+			item.id = 2;
+			expect(item.toJSON()).to.eql({"id": 2});
 		});
 	});
 
-	describe("document.delete", () => {
+	describe("item.delete", () => {
 		let User, user, deleteParams, deleteItemFunction;
 		beforeEach(() => {
 			dynamoose.model.defaults.set({
@@ -1598,8 +1598,8 @@ describe("Document", () => {
 		});
 
 		const functionCallTypes = [
-			{"name": "Promise", "func": (document) => document.delete},
-			{"name": "Callback", "func": (document) => util.promisify(document.delete)}
+			{"name": "Promise", "func": (item) => item.delete},
+			{"name": "Callback", "func": (item) => util.promisify(item.delete)}
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
@@ -1617,7 +1617,7 @@ describe("Document", () => {
 					user = new User({"id": 1, "name": "Charlie", "type": "admin"});
 
 					deleteItemFunction = () => Promise.resolve();
-					const func = (document) => util.promisify(document.delete);
+					const func = (item) => util.promisify(item.delete);
 					await func(user).bind(user)();
 					expect(deleteParams).to.eql({
 						"Key": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
@@ -1633,7 +1633,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("document.populate", () => {
+	describe("item.populate", () => {
 		let User, user, Game, game, getItemParams = [], getItemFunction;
 		beforeEach(() => {
 			dynamoose.model.defaults.set({
@@ -1667,8 +1667,8 @@ describe("Document", () => {
 		});
 
 		const functionCallTypes = [
-			{"name": "Promise", "func": (document) => document.populate},
-			{"name": "Callback", "func": (document) => util.promisify(document.populate)}
+			{"name": "Promise", "func": (item) => item.populate},
+			{"name": "Callback", "func": (item) => util.promisify(item.populate)}
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
@@ -1689,10 +1689,10 @@ describe("Document", () => {
 							"name": "Charlie"
 						}
 					});
-					expect(res).to.be.a.instanceOf(Document);
+					expect(res).to.be.a.instanceOf(Item);
 				});
 
-				it("Should not call getItem if sub document already exists", async () => {
+				it("Should not call getItem if sub item already exists", async () => {
 					getItemFunction = () => Promise.resolve({
 						"Item": {...user}
 					});
@@ -1740,7 +1740,7 @@ describe("Document", () => {
 						});
 					});
 
-					it("Should not call getItem if sub document already exists", async () => {
+					it("Should not call getItem if sub item already exists", async () => {
 						getItemFunction = () => Promise.resolve({
 							"Item": {...parent}
 						});
@@ -1809,7 +1809,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("Document.isDynamoObject", () => {
+	describe("Item.isDynamoObject", () => {
 		let User;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
@@ -1924,7 +1924,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("Document.attributesWithSchema", () => {
+	describe("Item.attributesWithSchema", () => {
 		it("Should be a function", () => {
 			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).attributesWithSchema).to.be.a("function");
 		});
@@ -1990,7 +1990,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("Document.objectFromSchema", () => {
+	describe("Item.objectFromSchema", () => {
 		it("Should be a function", () => {
 			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).objectFromSchema).to.be.a("function");
 		});
@@ -2108,7 +2108,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
 			},
 			// Validations
@@ -2124,7 +2124,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": async (val) => val.length > 5}}
 			},
 			{
@@ -2139,7 +2139,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
 			},
 			{
@@ -2154,7 +2154,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
 			},
 			{
@@ -2169,7 +2169,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the document"),
+				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
 			},
 			{
@@ -2184,7 +2184,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"enum": true, "required": true}],
-				"error": new Error.ValidationError("age is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("age is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "age": {"type": Number, "enum": [10, 20], "required": true}}
 			},
 			{
@@ -2199,7 +2199,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": new Error.ValidationError("data is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("data is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": false}}, "required": true}}
 			},
 			{
@@ -2209,12 +2209,12 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test", "data": {"email": "test@test.com"}}, {"required": true}],
-				"error": new Error.ValidationError("data.name is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("data.name is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": new Error.ValidationError("data is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("data is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
 			},
 			{
@@ -2224,7 +2224,7 @@ describe("Document", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": new Error.ValidationError("hash is a required property but has no value when trying to save document"),
+				"error": new Error.ValidationError("hash is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "hash": {"type": String, "required": true}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
 			},
 			{
@@ -2363,7 +2363,7 @@ describe("Document", () => {
 			{
 				"schema": {"id": Number, "name": {"type": String, "required": true, "set": (val) => val === "" ? undefined : val}},
 				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"], "required": true}],
-				"error": new Error.ValidationError("name is a required property but has no value when trying to save document")
+				"error": new Error.ValidationError("name is a required property but has no value when trying to save item")
 			},
 			{
 				"schema": {"id": Number, "friends": {"type": Array}},
@@ -2788,7 +2788,7 @@ describe("Document", () => {
 		});
 	});
 
-	describe("Document.prepareForObjectFromSchema", () => {
+	describe("Item.prepareForObjectFromSchema", () => {
 		it("Should be a function", () => {
 			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).prepareForObjectFromSchema).to.be.a("function");
 		});
