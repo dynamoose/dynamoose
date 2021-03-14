@@ -1,0 +1,6 @@
+{
+	"dependencies": {
+		"@actions/core": "^1.2.6",
+		"source-map": "^0.7.3"
+	}
+}
