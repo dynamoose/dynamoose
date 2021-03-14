@@ -9,6 +9,7 @@ import empty_function = require("./empty_function");
 import object = require("./object");
 import dynamoose = require("./dynamoose");
 import all_elements_match from "./all_elements_match";
+import type_name from "./type_name";
 
 export = {
 	combine_objects,
@@ -21,5 +22,6 @@ export = {
 	array_flatten,
 	empty_function,
 	object,
-	dynamoose
+	dynamoose,
+	type_name
 };
