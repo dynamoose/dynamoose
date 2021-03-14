@@ -8,11 +8,11 @@ import aws = require("./aws");
 import Internal = require("./Internal");
 import utils = require("./utils");
 import logger = require("./logger");
-import {Document, AnyDocument} from "./Document";
+import {Item, AnyItem} from "./Item";
 import ModelStore = require("./ModelStore");
 import {ModelType} from "./General";
 
-const model = <T extends Document = AnyDocument>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): ModelType<T> => {
+const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): ModelType<T> => {
 	let model: Model<T>;
 	let storedSchema: Model<T>;
 	if (name) {
@@ -27,7 +27,7 @@ const model = <T extends Document = AnyDocument>(name: string, schema?: Schema |
 	} else {
 		model = new Model(name, schema, options);
 	}
-	const returnObject: any = model.Document;
+	const returnObject: any = model.Item;
 	const keys = utils.array_flatten([
 		Object.keys(model),
 		Object.keys(Object.getPrototypeOf(model)),

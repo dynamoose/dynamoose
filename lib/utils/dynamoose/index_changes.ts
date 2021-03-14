@@ -1,6 +1,6 @@
 import obj = require("../object");
 import {Model} from "../../Model";
-import {Document} from "../../Document";
+import {Item} from "../../Item";
 import {IndexItem} from "../../Schema";
 
 export enum ModelIndexChangeType {
@@ -17,7 +17,7 @@ export interface ModelIndexDeleteChange {
 	name: string;
 }
 
-const index_changes = async (model: Model<Document>, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
+const index_changes = async (model: Model<Item>, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
 	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
 	const expectedIndexes = await model.getIndexes();
 

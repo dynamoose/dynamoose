@@ -1,4 +1,4 @@
-import {Document} from "./Document";
+import {Item} from "./Item";
 import CustomError = require("./Error");
 import utils = require("./utils");
 const OR = Symbol("OR");
@@ -235,8 +235,8 @@ Condition.prototype.requestObject = function (this: Condition, settings: Conditi
 		return Object.entries((this.settings.raw as ObjectType).ExpressionAttributeValues).reduce((obj, entry) => {
 			const [key, value] = entry;
 			// TODO: we should fix this so that we can do `isDynamoItem(value)`
-			if (!Document.isDynamoObject({"key": value})) {
-				obj.ExpressionAttributeValues[key] = Document.objectToDynamo(value, {"type": "value"});
+			if (!Item.isDynamoObject({"key": value})) {
+				obj.ExpressionAttributeValues[key] = Item.objectToDynamo(value, {"type": "value"});
 			}
 			return obj;
 		}, this.settings.raw as ObjectType);
@@ -276,7 +276,7 @@ Condition.prototype.requestObject = function (this: Condition, settings: Conditi
 					}, []).join(".");
 				}
 				const toDynamo = (value: ObjectType): DynamoDB.AttributeValue => {
-					return Document.objectToDynamo(value, {"type": "value"});
+					return Item.objectToDynamo(value, {"type": "value"});
 				};
 				object.ExpressionAttributeValues[keys.value] = toDynamo(value);
 

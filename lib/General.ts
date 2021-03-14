@@ -1,4 +1,4 @@
-import {Document} from "./Document";
+import {Item} from "./Item";
 import {Model} from "./Model";
 
 // - General
@@ -8,15 +8,15 @@ export type FunctionType = (...args: any[]) => any;
 export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
 
 // - Dynamoose
-interface ModelDocumentConstructor<T extends Document> {
+interface ModelItemConstructor<T extends Item> {
 	new (object: {[key: string]: any}): T;
 	Model: Model<T>;
 }
-export type ModelType<T extends Document> = T & Model<T> & ModelDocumentConstructor<T>;
+export type ModelType<T extends Item> = T & Model<T> & ModelItemConstructor<T>;
 
-// This represents a document array. This is used for the output of functions such as `scan`, `query`, and `batchGet`. These functions can extend this property to add additional properties or functions. However this represents the shared properties/functions for all document arrays.
-export interface DocumentArray<T> extends Array<T> {
-	populate: () => Promise<DocumentArray<T>>;
+// This represents a item array. This is used for the output of functions such as `scan`, `query`, and `batchGet`. These functions can extend this property to add additional properties or functions. However this represents the shared properties/functions for all item arrays.
+export interface ItemArray<T> extends Array<T> {
+	populate: () => Promise<ItemArray<T>>;
 	toJSON: () => ObjectType;
 }
 

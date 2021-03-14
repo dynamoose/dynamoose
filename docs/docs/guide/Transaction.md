@@ -1,4 +1,4 @@
-DynamoDB supports running DynamoDB Transactions in your database. Transactions are all or nothing, meaning the entire transaction will succeed, or the entire transaction will fail. In the event the transaction fails, the state of the database will be the exact same as if the transaction didn't take place at all (ex. no documents will have been modified). You are also able to run these Transactions across multiple tables.
+DynamoDB supports running DynamoDB Transactions in your database. Transactions are all or nothing, meaning the entire transaction will succeed, or the entire transaction will fail. In the event the transaction fails, the state of the database will be the exact same as if the transaction didn't take place at all (ex. no items will have been modified). You are also able to run these Transactions across multiple tables.
 
 ## dynamoose.transaction(transactions[, settings][, callback])
 
@@ -6,7 +6,7 @@ You can use `dynamoose.transaction` to run a transaction on your table. This met
 
 The `transactions` parameter must be an array of transaction objects that will be passed into the DynamoDB API. The standard way to get these is by using the [`Model.transaction` methods](Model#modeltransaction). You can also pass Promises into this array that will resolve to an object, and Dynamoose will wait for those promises to be resolved before proceeding.
 
-If you pass RAW objects into the `transactions` array (without using `Model.transaction`) you must be sure that the given model has been registered with Dynamoose at some point so we can convert the response to Document instances of that Model.
+If you pass RAW objects into the `transactions` array (without using `Model.transaction`) you must be sure that the given model has been registered with Dynamoose at some point so we can convert the response to Item instances of that Model.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format.
 
@@ -14,7 +14,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| return | What the function should return. Can be `documents`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `documents` |
+| return | What the function should return. Can be `items`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `items` |
 | type | If Dynamoose should use `transactGetItems` or `transactWriteItems` to make the transaction call. | String | By default, if all `transactions` objects are `Get`, `transactGetItems` will be run, otherwise `transactWriteItems` will be used. |
 
 ```js

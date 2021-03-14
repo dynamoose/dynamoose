@@ -1,11 +1,11 @@
 import CustomError = require("./Error");
 import {Model} from "./Model";
-import {Document} from "./Document";
+import {Item} from "./Item";
 
 let aliases: {[name: string]: string} = {};
-let models: {[name: string]: Model<Document>} = {};
+let models: {[name: string]: Model<Item>} = {};
 
-const returnObject = <T extends Document>(input: Model<T> | string): Model<T> | never => {
+const returnObject = <T extends Item>(input: Model<T> | string): Model<T> | never => {
 	if (input instanceof Model) {
 		models[input.originalName] = input;
 		aliases[input.name] = input.originalName;

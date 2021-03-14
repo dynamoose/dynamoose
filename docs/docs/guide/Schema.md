@@ -6,8 +6,8 @@ The `options` parameter is an optional object with the following options:
 
 | Name | Type | Default | Information
 |---|---|---|---|
-| `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep (ex. `["person.*", "friend.**"]` will allow you store a property `person` with 1 level of unknown properties and `friend` with infinitely nested level unknown properties). If you retrieve documents from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
-| `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your documents for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
+| `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep (ex. `["person.*", "friend.**"]` will allow you store a property `person` with 1 level of unknown properties and `friend` with infinitely nested level unknown properties). If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
+| `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 
 ```js
 const dynamoose = require("dynamoose");
@@ -90,7 +90,7 @@ const schema = new dynamoose.Schema({
 | [`dynamoose.NULL`](Dynamoose#dynamoosenull) | False | NULL | False | False |   |   |
 | Schema | False | M | True | True |   | This will be converted to an Object type. |
 | Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
-| Combine | False | S | True | False | **attributes** - [string] - The attributes to store in the combine attribute.\n**seperator** - string (default: `,`) - The string used to seperate the attributes in the combine attribute. | When running `Model.update` you must update all the attributes in the combine attributes array, or none of them. This is to ensure your combine method remains in sync with your overall document. |
+| Combine | False | S | True | False | **attributes** - [string] - The attributes to store in the combine attribute.\n**seperator** - string (default: `,`) - The string used to seperate the attributes in the combine attribute. | When running `Model.update` you must update all the attributes in the combine attributes array, or none of them. This is to ensure your combine method remains in sync with your overall item. |
 | Constant | False | S \| N \| BOOL | True | False | **value** - string \| number \| boolean - The value this attribute should always match. |   |
 
 Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
@@ -106,7 +106,7 @@ Set's are different from Array's since they require each item in the Set be uniq
 
 When using `saveUnknown` with a set, the type recognized by Dynamoose will be the underlying JavaScript Set constructor. If you have a set type defined in your schema the underlying type will be an Array.
 
-Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a document with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
+Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a item with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
 For types that are `Nested Types`, you must define a [`schema` setting](#schema-object--array) that includes the nested schema for that given attribute.
 
@@ -122,7 +122,7 @@ In the event you have multiple types that match (Date & Number, Set & Array, mul
 
 ```js
 {
-	"date": [Number, Date] // If you pass in a Date instance, it will use Date, otherwise it will use Number. All retrieved documents from DynamoDB will use Number since there is no difference in the underlying storage of Number vs Date
+	"date": [Number, Date] // If you pass in a Date instance, it will use Date, otherwise it will use Number. All retrieved items from DynamoDB will use Number since there is no difference in the underlying storage of Number vs Date
 }
 ```
 
@@ -160,7 +160,7 @@ const gameSchema = new dynamoose.Schema({
 });
 ```
 
-You can then set documents to be a Document instance of that Model, a value of the `hashKey` (if you don't have a `rangeKey`), or an object representing the `hashKey` & `rangeKey` (if you have a `rangeKey`).
+You can then set items to be a Item instance of that Model, a value of the `hashKey` (if you don't have a `rangeKey`), or an object representing the `hashKey` & `rangeKey` (if you have a `rangeKey`).
 
 ```js
 const dad = new User({
@@ -194,7 +194,7 @@ const user = new User({
 });
 ```
 
-You can then call [`document.populate`](Document#documentpopulatesettings-callback) to populate the instances with the documents.
+You can then call [`item.populate`](Item#itempopulatesettings-callback) to populate the instances with the items.
 
 ```js
 const user = await User.get(2); // {"id": 2, "name": "Bob", "parent": 1}
@@ -372,7 +372,7 @@ You can set this property to always use the `default` value, even if a value is 
 
 ### validate: value | RegExp | function | async function
 
-You can set a validation on an attribute to ensure the value passes a given validation before saving the document. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the item exists in the document. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the document) you can enable `required`.
+You can set a validation on an attribute to ensure the value passes a given validation before saving the item. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the item exists in the item. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the item) you can enable `required`.
 
 ```js
 {
@@ -408,14 +408,14 @@ You can set a validation on an attribute to ensure the value passes a given vali
 		"validate": async (val) => {
 			const networkRequest = await axios(`https://emailvalidator.com/${val}`);
 			return networkRequest.data.isValid;
-		} // Any object that is saved will call this function and run the network request with `val` equal to the value set for the `email` property, and only allow the document to be saved if the `isValid` property in the response is true
+		} // Any object that is saved will call this function and run the network request with `val` equal to the value set for the `email` property, and only allow the item to be saved if the `isValid` property in the response is true
 	}
 }
 ```
 
 ### required: boolean
 
-You can set an attribute to be required when saving documents to DynamoDB. By default this setting is `false`.
+You can set an attribute to be required when saving items to DynamoDB. By default this setting is `false`.
 
 In the event the parent object is undefined and `required` is set to `false` on that parent attribute, the required check will not be run on child attributes.
 
@@ -460,7 +460,7 @@ This property is not a replacement for `required`. If the value is undefined or 
 
 ### get: function | async function
 
-You can use a get function on an attribute to be run whenever retrieving a document from DynamoDB. This function will only be run if the item exists in the document. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
+You can use a get function on an attribute to be run whenever retrieving a item from DynamoDB. This function will only be run if the item exists in the item. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
 
 ```js
 {
@@ -473,7 +473,7 @@ You can use a get function on an attribute to be run whenever retrieving a docum
 
 ### set: function | async function
 
-You can use a set function on an attribute to be run whenever saving a document to DynamoDB. This function will only be run if the attribute exists in the document. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
+You can use a set function on an attribute to be run whenever saving a item to DynamoDB. This function will only be run if the attribute exists in the item. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
 
 ```js
 {
@@ -484,7 +484,7 @@ You can use a set function on an attribute to be run whenever saving a document 
 }
 ```
 
-Unlike `get` this method will additionally pass in the original value as the second parameter (if avaiable). Internally Dynamoose uses the [`document.original()`](Document#documentoriginal) method to access the original value. This means that using [`Model.batchPut`](Model#modelbatchputdocuments-settings-callback), [`Model.update`](Model#modelupdatekey-updateobj-settings-callback) or any other document save method that does not have access to [`document.original()`](Document#documentoriginal) this second parameter will be `undefined`.
+Unlike `get` this method will additionally pass in the original value as the second parameter (if avaiable). Internally Dynamoose uses the [`item.original()`](Item#itemoriginal) method to access the original value. This means that using [`Model.batchPut`](Model#modelbatchputitems-settings-callback), [`Model.update`](Model#modelupdatekey-updateobj-settings-callback) or any other item save method that does not have access to [`item.original()`](Item#itemoriginal) this second parameter will be `undefined`.
 
 ```js
 {

@@ -3,18 +3,18 @@
 import {UserTypedModel, UserModel, User} from "../Model";
 import {SortOrder} from "../../../dist/General";
 import {Condition} from "../../../dist";
-import {AnyDocument} from "../../../dist/Document";
-import {QueryResponse} from "../../../dist/DocumentRetriever";
+import {AnyItem} from "../../../dist/Item";
+import {QueryResponse} from "../../../dist/ItemRetriever";
 
 // query.exec([callback])
 async function queryExec (): Promise<User[]> {
 	return await UserTypedModel.query().exec();
 }
-async function queryExecUnTyped (): Promise<AnyDocument[]> {
+async function queryExecUnTyped (): Promise<AnyItem[]> {
 	return await UserModel.query().exec();
 }
 
-const queryExecUnTypedQueryResponse: Promise<QueryResponse<AnyDocument>> = UserModel.query().exec();
+const queryExecUnTypedQueryResponse: Promise<QueryResponse<AnyItem>> = UserModel.query().exec();
 const queryExecTyped: Promise<QueryResponse<User>> = UserTypedModel.query("name").eq("Will").exec();
 
 // query.limit(count)

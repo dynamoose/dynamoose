@@ -1,10 +1,10 @@
-The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save documents in the database.
+The Model object represents a table in DynamoDB. It takes in both a name and a schema and has methods to retrieve, and save items in the database.
 
-## dynamoose.model[&lt;Document&gt;](name, [schema][, config])
+## dynamoose.model[&lt;Item&gt;](name, [schema][, config])
 
-This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Document initializer that you can use to create instances of the given model.
+This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Item initializer that you can use to create instances of the given model.
 
-The `name` parameter is a string representing the table name that will be used to store documents created by this model.  Prefixes and suffixes may be added to this name using the `config` options.
+The `name` parameter is a string representing the table name that will be used to store items created by this model.  Prefixes and suffixes may be added to this name using the `config` options.
 
 The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
@@ -18,14 +18,14 @@ const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
 ```
 
-An optional TypeScript class which extends `Document` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
+An optional TypeScript class which extends `Item` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
 
 ```ts
 import * as dynamoose from "dynamoose";
-import {Document} from "dynamoose/dist/Document";
+import {Item} from "dynamoose/dist/Item";
 
 // Strongly typed model
-class Cat extends Document {
+class Cat extends Item {
 	id: number;
 	name: string;
 }
@@ -38,7 +38,7 @@ CatModel.create({"id": 1, "random": "string"});
 const cat = await CatModel.get(1);
 ```
 
-You can also pass in an array of Schema instances or schema objects into the `schema` paremeter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your document, and use that schema for all operations pertaining to that document. If no matching schema can be found, it will default to the first schema in the array.
+You can also pass in an array of Schema instances or schema objects into the `schema` paremeter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your item, and use that schema for all operations pertaining to that item. If no matching schema can be found, it will default to the first schema in the array.
 
 :::note
 If you use multiple schemas in one model, the hash & range keys must match for all schemas.
@@ -73,11 +73,11 @@ The `config` parameter is an object used to customize settings for the model.
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
 | update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
-| expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
-| expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | undefined |
-| expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
-| expires.items | The options for documents with ttl. | Object | {} |
-| expires.items.returnExpired | If Dynamoose should include expired documents when returning retrieved documents. | Boolean | true |
+| expires | The setting to describe the time to live for items created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
+| expires.ttl | The default amount of time the item should stay alive from creation time in milliseconds. | Number | undefined |
+| expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` |
+| expires.items | The options for items with ttl. | Object | {} |
+| expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
 
 The default object is listed below.
 
@@ -163,16 +163,16 @@ async function printTableRequest() {
 
 ## Model.get(key[, settings][, callback])
 
-You can use Model.get to retrieve a document from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
+You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Document instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Item instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `document` |
-| attributes | What document attributes should be retrieved & returned. This will use the underlying `ProjectionExpression` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
+| return | What the function should return. Can be `item`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `item` |
+| attributes | What item attributes should be retrieved & returned. This will use the underlying `ProjectionExpression` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 | consistent | Whether to perform a strongly consistent read or not. If this value is `undefined`, then no `ConsistentRead` parameter will be included in the request, and DynamoDB will default to an eventually consistent read. | boolean | undefined |
 
 ```js
@@ -258,23 +258,23 @@ User.get({"id": 1}, (error, myUser) => {
 
 ## Model.batchGet(keys[, settings][, callback])
 
-You can use Model.batchGet to retrieve multiple documents from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Document instances will be the result of the promise or callback response. In the event no documents can be found in DynamoDB this method will return an empty array.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Item instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
 
 The array you receive back is a standard JavaScript array of objects. However, the array has some special properties with extra information about your scan operation that you can access. This does not prevent the ability do running loops or accessing the objects within the array.
 
 The extra properties attached to the array are:
 
-- `unprocessedKeys` - In the event there are more documents to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those documents. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
-- `populate` - A function that is an alias to [`document.populate`](Document#documentpopulatesettings-callback) and will populate all documents in the array.
+- `unprocessedKeys` - In the event there are more items to get in DynamoDB this property will be equal to an array of unprocessed keys. You can take this property and call `batchGet` again to retrieve those items. Normally DynamoDB returns this property as a DynamoDB object, but Dynamoose returns it and handles it as a standard JS object without the DynamoDB types.
+- `populate` - A function that is an alias to [`item.populate`](Item#itempopulatesettings-callback) and will populate all items in the array.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| return | What the function should return. Can be `documents`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `documents` |
-| attributes | What document attributes should be retrieved & returned. This will use the underlying `AttributesToGet` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
+| return | What the function should return. Can be `items`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `items` |
+| attributes | What item attributes should be retrieved & returned. This will use the underlying `AttributesToGet` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
@@ -374,9 +374,9 @@ User.batchGet([{"id": 1}, {"id": 2}], (error, myUsers) => {
 });
 ```
 
-## Model.create(document, [settings], [callback])
+## Model.create(item, [settings], [callback])
 
-This function lets you create a new document for a given model. This function is almost identical to creating a new document and calling `document.save`, with one key difference, this function will default to setting `overwrite` to false.
+This function lets you create a new item for a given model. This function is almost identical to creating a new item and calling `item.save`, with one key difference, this function will default to setting `overwrite` to false.
 
 If you do not pass in a `callback` parameter a promise will be returned.
 
@@ -401,9 +401,9 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 });
 ```
 
-## Model.batchPut(documents, [settings], [callback])
+## Model.batchPut(items, [settings], [callback])
 
-This saves documents to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+This saves items to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
 
@@ -467,10 +467,10 @@ You can also pass in a `settings` object parameter to define extra settings for 
 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
-| return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `document` |
+| return | What the function should return. Can be `item`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `item` |
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 
-There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
+There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
 ```js
 // The code below will set `name` to Bob for the user where `id` = 1
@@ -489,7 +489,7 @@ User.update({"id": 1}, {"name": "Bob"}, (error, user) => {
 ```
 
 ```js
-// The following code below will only update the document if the `active` property on the existing document is set to true
+// The following code below will only update the item if the `active` property on the existing item is set to true
 
 const condition = new dynamoose.Condition().where("active").eq(true);
 
@@ -511,30 +511,30 @@ The other method you can use is by using specific update types. These update typ
 
 - `$SET` - This method will set the attribute to the new value (as shown above)
 - `$ADD` - This method will add the value to the attribute. If the attribute is a number it will add the value to the existing number. If the attribute is a list, it will add the value to the list. Although this method only works for sets in DynamoDB, Dynamoose will automatically update this method to work for lists/arrays as well according to your schema. This update type does not work for any other attribute type.
-- `$REMOVE` - This method will remove the attribute from the document. Since this method doesn't require values you can pass in an array of attribute names.
+- `$REMOVE` - This method will remove the attribute from the item. Since this method doesn't require values you can pass in an array of attribute names.
 - `$DELETE` - This method will delete one or more elements from a Set.
 
 ```js
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"age": 1}});
-// This will set the document name to Bob and increase the age by 1 for the user where id = 1
+// This will set the item name to Bob and increase the age by 1 for the user where id = 1
 
 await User.update({"id": 1}, {"$REMOVE": ["address"]});
 await User.update({"id": 1}, {"$REMOVE": {"address": null}});
-// These two function calls will delete the `address` attribute for the document where id = 1
+// These two function calls will delete the `address` attribute for the item where id = 1
 
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": "Tim"}});
 await User.update({"id": 1}, {"$SET": {"name": "Bob"}, "$ADD": {"friends": ["Tim"]}});
-// This will set the document name to Bob and append Tim to the list/array/set of friends where id = 1
+// This will set the item name to Bob and append Tim to the list/array/set of friends where id = 1
 
 await User.update({"id": 1}, {"$DELETE": {"friends": ["Tim"]}});
-// This will delete the element Tim from the friends set on the document where id = 1
+// This will delete the element Tim from the friends set on the item where id = 1
 ```
 
 You are allowed to combine these two methods into one update object.
 
 ```js
 await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
-// This will set the document name to Bob and increase the age by 1 for the user where id = 1
+// This will set the item name to Bob and increase the age by 1 for the user where id = 1
 ```
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
@@ -637,7 +637,7 @@ User.delete({"id": 1}, (error) => {
 
 ## Model.batchDelete(keys[, settings][, callback])
 
-You can use Model.batchDelete to delete documents from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
 
 `keys` can be an array of strings representing the hashKey and/or an array of objects containing the hashKey & rangeKey.
 
@@ -674,7 +674,7 @@ User.batchDelete([1, 2], (error, response) => {
 	if (error) {
 		console.error(error);
 	} else {
-		console.log(`Successfully deleted documents. ${response.unprocessedItems.count} of unprocessed documents.`);
+		console.log(`Successfully deleted items. ${response.unprocessedItems.count} of unprocessed items.`);
 	}
 });
 ```
@@ -714,7 +714,7 @@ const User = dynamoose.model("User", {"id": Number, "name": {"type": String, "ra
 
 try {
 	const response = await User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}]);
-	console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
+	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
 } catch (error) {
 	console.error(error);
 }
@@ -725,7 +725,7 @@ User.batchDelete([{"id": 1, "name": "Tim"}, {"id": 2, "name": "Charlie"}], (erro
 	if (error) {
 		console.error(error);
 	} else {
-		console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
+		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
 	}
 });
 ```
@@ -735,7 +735,7 @@ const User = dynamoose.model("User", {"id": Number, "name": String});
 
 try {
 	const response = await User.batchDelete([{"id": 1}, {"id": 2}]);
-	console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
+	console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
 } catch (error) {
 	console.error(error);
 }
@@ -746,7 +746,7 @@ User.batchDelete([{"id": 1}, {"id": 2}], (error, response) => {
 	if (error) {
 		console.error(error);
 	} else {
-		console.log(`Successfully deleted document. ${response.unprocessedItems.count} of unprocessed documents.`);
+		console.log(`Successfully deleted item. ${response.unprocessedItems.count} of unprocessed items.`);
 	}
 });
 ```
@@ -901,18 +901,18 @@ const models = await User.scanAll();
 User.scanAll((err, models) => {});
 ```
 
-## Model.methods.document.set(name, function)
+## Model.methods.item.set(name, function)
 
-This function allows you to add a method to the model documents that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying document. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
+This function allows you to add a method to the model items that you can call later. When Dynamoose calls your `function` parameter, `this` will be set to the underlying item. If an existing method exists with the given name, it will be overwritten, except if you are trying to replace an internal method, then this function will fail silently.
 
 ```js
 // Setup:
 const User = new dynamoose.model("Model", ModelSchema);
-User.methods.document.set("setName", async function () {
+User.methods.item.set("setName", async function () {
 	this.name = await getRandomName();
 });
 // OR
-User.methods.document.set("setName", function (cb) {
+User.methods.item.set("setName", function (cb) {
 	getRandomName((err, name) => {
 		if (err) {
 			cb(err);
@@ -939,11 +939,11 @@ You can also pass parameters into your custom method. It is important to note th
 ```js
 // Setup:
 const User = new dynamoose.model("Model", ModelSchema);
-User.methods.document.set("setName", async function (firstName, lastName) {
+User.methods.item.set("setName", async function (firstName, lastName) {
 	this.name = await verifyName(`${firstName} ${lastName}`);
 });
 // OR
-User.methods.document.set("scanAll", function (firstName, lastName, cb) {
+User.methods.item.set("scanAll", function (firstName, lastName, cb) {
 	verifyName(`${firstName} ${lastName}`, (err, name) => {
 		if (err) {
 			cb(err);
@@ -965,12 +965,12 @@ await user.setName("Charlie", "Fish");
 console.log("Set name");
 ```
 
-## Model.methods.document.delete(name)
+## Model.methods.item.delete(name)
 
-This allows you to delete an existing method from the document. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
+This allows you to delete an existing method from the item. If no existing method is assigned for that name, the function will do nothing and no error will be thrown.
 
 ```js
-User.methods.document.delete("setName");
+User.methods.item.delete("setName");
 
 const user = new User();
 // The following lines will throw an error
@@ -981,7 +981,7 @@ user.setName((err) => {});
 
 ## Model.serializeMany(items[, serializer])
 
-This function takes in an array of `items` and serializes all of them. This function is very similar to [`document.serialize`](Document#documentserializeserializer) except it takes in an array of documents to serialize and returns an array of those documents.
+This function takes in an array of `items` and serializes all of them. This function is very similar to [`item.serialize`](Item#itemserializeserializer) except it takes in an array of items to serialize and returns an array of those items.
 
 ```js
 User.serializeMany(await User.scan().exec(), "myCustomSerializer");
@@ -997,7 +997,7 @@ The `serializer` parameter can be an object containing the following properties.
 | --- | --- | --- |
 | include | [string] | The properties you wish to include when serializing. |
 | exclude | [string] | The properties you wish to exclude when serializing. |
-| modify | (serialized: Object, original: Object) => Object | A function you want to use to modify the object in the serializer. The `serialized` parameter is the new object (after `include` & `exclude` have been applied). The `original` parameter is the original document (before `include` & `exclude` have been applied). |
+| modify | (serialized: Object, original: Object) => Object | A function you want to use to modify the object in the serializer. The `serialized` parameter is the new object (after `include` & `exclude` have been applied). The `original` parameter is the original item (before `include` & `exclude` have been applied). |
 
 ```js
 User.serializer.add("myCustomSerializer", {
@@ -1030,7 +1030,7 @@ User.serializer.delete("myCustomSerializer");
 
 ## Model.serializer.default.set([name])
 
-This function sets the default serializer for the given model. By default the default serializer has the same behavior as [`document.toJSON`](Document#documenttojson). The default serializer will be used for [`Model.serializeMany`](#modelserializemanyitems-serializer) and [`document.serialize`](Document#documentserializeserializer) if you don't pass anything into the `serializer` parameter.
+This function sets the default serializer for the given model. By default the default serializer has the same behavior as [`item.toJSON`](Item#itemtojson). The default serializer will be used for [`Model.serializeMany`](#modelserializemanyitems-serializer) and [`item.serialize`](Item#itemserializeserializer) if you don't pass anything into the `serializer` parameter.
 
 ```js
 User.serializer.default.set("myCustomSerializer");

@@ -26,26 +26,26 @@ describe("Populate", () => {
 		describe(responseType.name, () => {
 			const populateTypes = [
 				{
-					"name": "PopulateDocument",
-					"func": Populate.PopulateDocument,
+					"name": "PopulateItem",
+					"func": Populate.PopulateItem,
 					"tests": [
-						{"input": {"id": 2, "name": "Tim"}, "output": {"id": 2, "name": "Tim"}, "documents": [{"id": 1, "name": "Bob"}]},
-						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob"}}, "documents": [{"id": 1, "name": "Bob"}]},
-						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": {"id": 3, "name": "Evan"}}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}]},
-						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": "*"}},
-						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}},
-						{"schema": {"id": Number, "name": String, "parent": [dynamoose.THIS, String]}, "input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
+						{"input": {"id": 2, "name": "Tim"}, "output": {"id": 2, "name": "Tim"}, "items": [{"id": 1, "name": "Bob"}]},
+						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob"}}, "items": [{"id": 1, "name": "Bob"}]},
+						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": {"id": 3, "name": "Evan"}}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}]},
+						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": "*"}},
+						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}},
+						{"schema": {"id": Number, "name": String, "parent": [dynamoose.THIS, String]}, "input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
 					]
 				},
 				{
-					"name": "PopulateDocuments",
-					"func": Populate.PopulateDocuments,
+					"name": "PopulateItems",
+					"func": Populate.PopulateItems,
 					"tests": [
-						{"input": [{"id": 2, "name": "Tim"}], "output": [{"id": 2, "name": "Tim"}], "documents": [{"id": 1, "name": "Bob"}]},
-						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob"}}], "documents": [{"id": 1, "name": "Bob"}]},
-						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": {"id": 3, "name": "Evan"}}}], "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}]},
-						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}], "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": "*"}},
-						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}], "documents": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
+						{"input": [{"id": 2, "name": "Tim"}], "output": [{"id": 2, "name": "Tim"}], "items": [{"id": 1, "name": "Bob"}]},
+						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob"}}], "items": [{"id": 1, "name": "Bob"}]},
+						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": {"id": 3, "name": "Evan"}}}], "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}]},
+						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}], "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": "*"}},
+						{"input": [{"id": 2, "name": "Tim", "parent": 1}], "output": [{"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}], "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
 					]
 				}
 			];
@@ -74,9 +74,9 @@ describe("Populate", () => {
 								User = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
 							}
 
-							promiseFunction = (param) => ({"Item": aws.converter().marshall(test.documents.find((doc) => doc.id === parseInt(param.Key.id.N)))});
+							promiseFunction = (param) => ({"Item": aws.converter().marshall(test.items.find((doc) => doc.id === parseInt(param.Key.id.N)))});
 
-							const input = Array.isArray(test.input) ? Object.assign(test.input.map((item) => new User(item)), {"populate": Populate.PopulateDocuments, "toJSON": utils.dynamoose.documentToJSON}) : new User(test.input);
+							const input = Array.isArray(test.input) ? Object.assign(test.input.map((item) => new User(item)), {"populate": Populate.PopulateItems, "toJSON": utils.dynamoose.itemToJSON}) : new User(test.input);
 							const res = await responseType.func(input).bind(input)(test.settings || {});
 							expect(res.toJSON()).to.eql(test.output);
 						});
@@ -88,7 +88,7 @@ describe("Populate", () => {
 						};
 
 						const obj = new User({"id": 2, "name": "Tim", "parent": 1});
-						const input = populateType.name === "PopulateDocuments" ? Object.assign([obj], {"populate": Populate.PopulateDocuments}) : obj;
+						const input = populateType.name === "PopulateItems" ? Object.assign([obj], {"populate": Populate.PopulateItems}) : obj;
 						const res = responseType.func(input).bind(input)();
 						return expect(res).to.be.rejectedWith("ERROR");
 					});
