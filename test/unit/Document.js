@@ -2750,6 +2750,11 @@ describe("Document", () => {
 					return {"id": Number, "data": [{"type": Set, "schema": [Item]}, String]};
 				},
 				"error": new Error.ValidationError("Expected data to be of type Item Set, string, instead found type boolean.")
+			},
+			{
+				"input": [{"id": 1, "data": null}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": String},
+				"error": new Error.ValidationError("Expected data to be of type string, instead found type null.")
 			}
 		];
 
