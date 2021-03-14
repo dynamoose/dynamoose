@@ -170,6 +170,16 @@ describe("Document", () => {
 					expect(result).to.eql(user);
 				});
 
+				it("Should return correct result after saving with defaults", async () => {
+					putItemFunction = () => Promise.resolve();
+
+					User = dynamoose.model("User", {"id": Number, "name": String, "defaultValue": {"type": String, "default": "Hello World"}});
+					user = new User({"id": 1, "name": "Charlie"});
+
+					const result = await callType.func(user).bind(user)();
+					expect(result.toJSON()).to.eql({"id": 1, "name": "Charlie", "defaultValue": "Hello World"});
+				});
+
 				it("Should return request if return request is set as setting", async () => {
 					const result = await callType.func(user).bind(user)({"return": "request"});
 					expect(putParams).to.eql([]);
@@ -2740,6 +2750,11 @@ describe("Document", () => {
 					return {"id": Number, "data": [{"type": Set, "schema": [Item]}, String]};
 				},
 				"error": new Error.ValidationError("Expected data to be of type Item Set, string, instead found type boolean.")
+			},
+			{
+				"input": [{"id": 1, "data": null}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": String},
+				"error": new Error.ValidationError("Expected data to be of type string, instead found type null.")
 			}
 		];
 
