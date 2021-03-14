@@ -335,7 +335,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 		if (existsInSchema) {
 			const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
 			if (!isValidType) {
-				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof value}${typeDetailsArray.some((val) => val.name === "Constant") ? ` (${value})` : ""}.`);
+				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
 			} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model") {
 				validParents.push({key, "infinite": true});
 			} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
