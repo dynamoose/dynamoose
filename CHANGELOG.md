@@ -2,6 +2,23 @@
 
 ---
 
+## Version 2.7.2
+
+This release fixes a bug related to the return value of `document.save` and `Model.create`, and more.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- `document.save` & `Model.create` now return the document saved to DynamoDB
+- Type messages now display `null` when passing in a invalid type `null` value as opposed to the previous `object`
+
+### Other
+
+- Added some more TypeScript tests
+
+---
+
 ## Version 2.7.1
 
 This release has a lot of bug fixes for Dynamoose.
