@@ -10,7 +10,7 @@ interface MergeObjectsSettings {
 	combineMethod: MergeObjectsCombineMethod;
 }
 
-import {GeneralObject} from "./object/types";
+type GeneralObject<T> = { [key: string]: T };
 
 const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCombineMethod.ArrayMerge}) => <T>(...args: GeneralObject<T>[]): GeneralObject<T> => {
 	let returnObject: { [x: string]: any };
