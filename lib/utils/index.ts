@@ -6,7 +6,7 @@ import set_immediate_promise = require("./set_immediate_promise");
 import unique_array_elements = require("./unique_array_elements");
 import array_flatten = require("./array_flatten");
 import empty_function = require("./empty_function");
-import object = require("./object");
+import object = require("js-object-utilities");
 import dynamoose = require("./dynamoose");
 import all_elements_match from "./all_elements_match";
 import type_name from "./type_name";
