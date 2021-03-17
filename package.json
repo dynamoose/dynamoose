@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.792.0",
+    "js-object-utilities": "^2.0.0",
     "source-map-support": "^0.5.19",
     "uuid": "^8.3.1"
   },
