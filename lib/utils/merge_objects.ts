@@ -1,6 +1,6 @@
 // This function is used to merge objects for combining multiple responses.
 
-import { GeneralObject } from "js-object-utilities";
+import {GeneralObject} from "js-object-utilities";
 
 enum MergeObjectsCombineMethod {
 	ObjectCombine = "object_combine",
