@@ -2,6 +2,18 @@
 
 ---
 
+## Version 2.7.3
+
+This release moves internal Dynamoose object utilities to a different package.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Other
+
+- Moving internal object utilities to different package
+
+---
+
 ## Version 2.7.2
 
 This release fixes a bug related to the return value of `document.save` and `Model.create`, and more.
