@@ -1,9 +1,9 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
+		"module": "esnext",
 		"moduleResolution": "node",
 		"lib": ["es2015"],
-		"target": "es6",
+		"target": "es2017",
 		"noEmit": true
 	},
 	"include": ["./**/*"]
