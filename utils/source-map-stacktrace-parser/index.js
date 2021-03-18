@@ -33,9 +33,9 @@ const commentLines = comment.trim().split("\n");
 
 	if (commentLines.shift() === "@dynamoose/bot stacktrace-parser") {
 		const commitHash = commentLines.shift().replace("Commit Hash: ", "");
-		await simpleGit().clone("https://github.com/dynamoose/dynamoose.git");
-		await simpleGit(path.join(__dirname, "dynamoose")).checkout(commitHash);
-		await exec(`cd ${path.join(__dirname, "dynamoose")} && npm install`);
+		// await simpleGit().clone("https://github.com/dynamoose/dynamoose.git");
+		// await simpleGit(path.join(__dirname, "dynamoose")).checkout(commitHash);
+		// await exec(`cd ${path.join(__dirname, "dynamoose")} && npm install`);
 
 		for (let i = 0; i < commentLines.length; i++) {
 			const line = commentLines[i];
@@ -49,6 +49,8 @@ const commentLines = comment.trim().split("\n");
 					const consumer = await (new Promise((resolve, reject) => {
 						SourceMapConsumer.with(sourceMap, null, resolve);
 					}));
+					console.log(consumer);
+					console.log(consumer.originalPositionFor({"line": 1, "column": 1}));
 					const result = consumer.originalPositionFor({ "line": lineNumber, column });
 					console.log("result", result);
 					console.log("original file path", path.join(__dirname, "dynamoose", "dist", `${file}.map`));
