@@ -1,5 +1,7 @@
 // This function is used to merge objects for combining multiple responses.
 
+import {GeneralObject} from "js-object-utilities";
+
 enum MergeObjectsCombineMethod {
 	ObjectCombine = "object_combine",
 	ArrayMerge = "array_merge",
@@ -9,8 +11,6 @@ enum MergeObjectsCombineMethod {
 interface MergeObjectsSettings {
 	combineMethod: MergeObjectsCombineMethod;
 }
-
-import {GeneralObject} from "./object/types";
 
 const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCombineMethod.ArrayMerge}) => <T>(...args: GeneralObject<T>[]): GeneralObject<T> => {
 	let returnObject: { [x: string]: any };
