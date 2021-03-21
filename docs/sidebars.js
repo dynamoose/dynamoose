@@ -22,7 +22,8 @@ module.exports = {
 				"guide/Query",
 				"guide/Scan",
 				"guide/Transaction",
-				"guide/Dynamoose"
+				"guide/Dynamoose",
+				"guide/Logging"
 			]
 		},
 		{
