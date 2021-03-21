@@ -1,6 +1,6 @@
 const {expect} = require("chai");
 const dynamoose = require("../../dist");
-const emitter = require("../../dist/logger/emitter");
+const emitter = require("dynamoose-logger/dist/emitter");
 
 describe("Logger", () => {
 	beforeEach(() => {
