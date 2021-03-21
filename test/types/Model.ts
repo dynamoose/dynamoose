@@ -11,7 +11,9 @@ const shouldFailWithBooleanAsName = dynamoose.model(true);
 
 const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 
-const model = dynamoose.model("User");
+const model = dynamoose.model("User", {"id": Number});
+
+const shouldPassTableCreateRequest = model.table.create.request();
 
 const shouldPassCreateWithNoReturnSetting = model.create({"id": 1}, {"overwrite": true});
 const shouldPassGetWithNoReturnSetting = model.get({"id": 1}, {"attributes": ["something"]});
