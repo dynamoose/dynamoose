@@ -3,184 +3,184 @@ const dynamoose = require("../../dist");
 const emitter = require("dynamoose-logger/dist/emitter");
 
 describe("Logger", () => {
-	beforeEach(() => {
-		dynamoose.logger.providers.clear();
-		dynamoose.logger.resume();
+	beforeEach(async () => {
+		(await dynamoose.logger()).providers.clear();
+		(await dynamoose.logger()).resume();
 	});
-	afterEach(() => {
-		dynamoose.logger.providers.clear();
+	afterEach(async () => {
+		(await dynamoose.logger()).providers.clear();
 	});
 
-	it("Should be an object", () => {
-		expect(dynamoose.logger).to.be.an("object");
+	it("Should be an function", () => {
+		expect(dynamoose.logger).to.be.an("function");
 	});
 
 	describe("Status", () => {
-		describe("dynamoose.logger.status", () => {
-			it("Should be a function", () => {
-				expect(dynamoose.logger.status).to.be.a("function");
+		describe("dynamoose.logger().status", () => {
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).status).to.be.a("function");
 			});
 
-			it("Should return paused if status is paused", () => {
-				dynamoose.logger.pause();
-				expect(dynamoose.logger.status()).to.eql("paused");
+			it("Should return paused if status is paused", async () => {
+				(await dynamoose.logger()).pause();
+				expect((await dynamoose.logger()).status()).to.eql("paused");
 			});
 
-			it("Should return active if status is paused", () => {
-				dynamoose.logger.resume();
-				expect(dynamoose.logger.status()).to.eql("active");
-			});
-		});
-
-		describe("dynamoose.logger.pause", () => {
-			it("Should be a function", () => {
-				expect(dynamoose.logger.pause).to.be.a("function");
-			});
-
-			it("Should set status to paused", () => {
-				dynamoose.logger.pause();
-				expect(dynamoose.logger.status()).to.eql("paused");
+			it("Should return active if status is paused", async () => {
+				(await dynamoose.logger()).resume();
+				expect((await dynamoose.logger()).status()).to.eql("active");
 			});
 		});
 
-		describe("dynamoose.logger.resume", () => {
-			it("Should be a function", () => {
-				expect(dynamoose.logger.resume).to.be.a("function");
+		describe("dynamoose.logger().pause", () => {
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).pause).to.be.a("function");
 			});
 
-			it("Should set status to active", () => {
-				dynamoose.logger.resume();
-				expect(dynamoose.logger.status()).to.eql("active");
+			it("Should set status to paused", async () => {
+				(await dynamoose.logger()).pause();
+				expect((await dynamoose.logger()).status()).to.eql("paused");
+			});
+		});
+
+		describe("dynamoose.logger().resume", () => {
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).resume).to.be.a("function");
+			});
+
+			it("Should set status to active", async () => {
+				(await dynamoose.logger()).resume();
+				expect((await dynamoose.logger()).status()).to.eql("active");
 			});
 		});
 	});
 
-	describe("dynamoose.logger.providers", () => {
-		it("Should be an object", () => {
-			expect(dynamoose.logger.providers).to.be.an("object");
+	describe("dynamoose.logger().providers", () => {
+		it("Should be an object", async () => {
+			expect((await dynamoose.logger()).providers).to.be.an("object");
 		});
 
-		describe("dynamoose.logger.providers.list", () => {
-			beforeEach(() => {
+		describe("dynamoose.logger().providers.list", () => {
+			beforeEach(async () => {
 				const obj = [{"id": "test"}];
-				dynamoose.logger.providers.set(obj);
-				expect(dynamoose.logger.providers.list()).to.eql(obj);
+				(await dynamoose.logger()).providers.set(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql(obj);
 			});
 
-			it("Should be a function", () => {
-				expect(dynamoose.logger.providers.list).to.be.a("function");
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).providers.list).to.be.a("function");
 			});
 
-			it("Should return list of providers", () => {
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}]);
+			it("Should return list of providers", async () => {
+				expect((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}]);
 			});
 		});
 
-		describe("dynamoose.logger.providers.set", () => {
-			it("Should be a function", () => {
-				expect(dynamoose.logger.providers.set).to.be.a("function");
+		describe("dynamoose.logger().providers.set", () => {
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).providers.set).to.be.a("function");
 			});
 
-			it("Should set correctly for object", () => {
+			it("Should set correctly for object", async () => {
 				const obj = {"id": "test"};
-				dynamoose.logger.providers.set(obj);
-				expect(dynamoose.logger.providers.list()).to.eql([obj]);
+				(await dynamoose.logger()).providers.set(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql([obj]);
 			});
 
-			it("Should set correctly for array", () => {
+			it("Should set correctly for array", async () => {
 				const obj = [{"id": "test"}];
-				dynamoose.logger.providers.set(obj);
-				expect(dynamoose.logger.providers.list()).to.eql(obj);
+				(await dynamoose.logger()).providers.set(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql(obj);
 			});
 
-			it("Should set correctly for empty array", () => {
-				const originalProviders = dynamoose.logger.providers.list();
+			it("Should set correctly for empty array", async () => {
+				const originalProviders = (await dynamoose.logger()).providers.list();
 				const obj = [];
-				dynamoose.logger.providers.set(obj);
-				expect(dynamoose.logger.providers.list()).to.eql(obj);
-				expect(dynamoose.logger.providers.list()).to.eql(originalProviders);
+				(await dynamoose.logger()).providers.set(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
 			});
 
-			it("Should set correctly for nothing passed in", () => {
-				const originalProviders = dynamoose.logger.providers.list();
-				dynamoose.logger.providers.set();
-				expect(dynamoose.logger.providers.list()).to.eql([]);
-				expect(dynamoose.logger.providers.list()).to.eql(originalProviders);
+			it("Should set correctly for nothing passed in", async () => {
+				const originalProviders = (await dynamoose.logger()).providers.list();
+				(await dynamoose.logger()).providers.set();
+				expect((await dynamoose.logger()).providers.list()).to.eql([]);
+				expect((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
 			});
 
-			it("Should set correctly for undefined passed in", () => {
-				const originalProviders = dynamoose.logger.providers.list();
-				dynamoose.logger.providers.set(undefined);
-				expect(dynamoose.logger.providers.list()).to.eql([]);
-				expect(dynamoose.logger.providers.list()).to.eql(originalProviders);
+			it("Should set correctly for undefined passed in", async () => {
+				const originalProviders = (await dynamoose.logger()).providers.list();
+				(await dynamoose.logger()).providers.set(undefined);
+				expect((await dynamoose.logger()).providers.list()).to.eql([]);
+				expect((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
 			});
 
-			it("Should set correctly for null passed in", () => {
-				const originalProviders = dynamoose.logger.providers.list();
-				dynamoose.logger.providers.set(null);
-				expect(dynamoose.logger.providers.list()).to.eql([]);
-				expect(dynamoose.logger.providers.list()).to.eql(originalProviders);
+			it("Should set correctly for null passed in", async () => {
+				const originalProviders = (await dynamoose.logger()).providers.list();
+				(await dynamoose.logger()).providers.set(null);
+				expect((await dynamoose.logger()).providers.list()).to.eql([]);
+				expect((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
 			});
 		});
 
-		describe("dynamoose.logger.providers.clear", () => {
-			beforeEach(() => {
+		describe("dynamoose.logger().providers.clear", () => {
+			beforeEach(async () => {
 				const obj = [{"id": "test"}];
-				dynamoose.logger.providers.set(obj);
-				expect(dynamoose.logger.providers.list()).to.eql(obj);
+				(await dynamoose.logger()).providers.set(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql(obj);
 			});
 
-			it("Should be a function", () => {
-				expect(dynamoose.logger.providers.clear).to.be.a("function");
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).providers.clear).to.be.a("function");
 			});
 
-			it("Should set providers to empty array", () => {
-				dynamoose.logger.providers.clear();
-				expect(dynamoose.logger.providers.list()).to.eql([]);
+			it("Should set providers to empty array", async () => {
+				(await dynamoose.logger()).providers.clear();
+				expect((await dynamoose.logger()).providers.list()).to.eql([]);
 			});
 		});
 
-		describe("dynamoose.logger.providers.add", () => {
-			beforeEach(() => {
+		describe("dynamoose.logger().providers.add", () => {
+			beforeEach(async () => {
 				const obj = [{"id": "test"}];
-				dynamoose.logger.providers.set(obj);
-				expect(dynamoose.logger.providers.list()).to.eql(obj);
+				(await dynamoose.logger()).providers.set(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql(obj);
 			});
 
-			it("Should be a function", () => {
-				expect(dynamoose.logger.providers.add).to.be.a("function");
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).providers.add).to.be.a("function");
 			});
 
-			it("Should add object provider to providers", () => {
-				dynamoose.logger.providers.add({"id": "test2"});
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}, {"id": "test2"}]);
+			it("Should add object provider to providers", async () => {
+				(await dynamoose.logger()).providers.add({"id": "test2"});
+				expect((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}, {"id": "test2"}]);
 			});
 
-			it("Should add array of providers to providers", () => {
-				dynamoose.logger.providers.add([{"id": "test2"}, {"id": "test3"}]);
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}, {"id": "test2"}, {"id": "test3"}]);
+			it("Should add array of providers to providers", async () => {
+				(await dynamoose.logger()).providers.add([{"id": "test2"}, {"id": "test3"}]);
+				expect((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}, {"id": "test2"}, {"id": "test3"}]);
 			});
 		});
 
-		describe("dynamoose.logger.providers.delete", () => {
-			beforeEach(() => {
+		describe("dynamoose.logger().providers.delete", () => {
+			beforeEach(async () => {
 				const obj = [{"id": "test"}, {"id": "test2"}, {"id": "test3"}];
-				dynamoose.logger.providers.set(obj);
-				expect(dynamoose.logger.providers.list()).to.eql(obj);
+				(await dynamoose.logger()).providers.set(obj);
+				expect((await dynamoose.logger()).providers.list()).to.eql(obj);
 			});
 
-			it("Should be a function", () => {
-				expect(dynamoose.logger.providers.delete).to.be.a("function");
+			it("Should be a function", async () => {
+				expect((await dynamoose.logger()).providers.delete).to.be.a("function");
 			});
 
-			it("Should delete provider", () => {
-				dynamoose.logger.providers.delete("test2");
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}, {"id": "test3"}]);
+			it("Should delete provider", async () => {
+				(await dynamoose.logger()).providers.delete("test2");
+				expect((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}, {"id": "test3"}]);
 			});
 
-			it("Should delete multiple providers if array passed into delete", () => {
-				dynamoose.logger.providers.delete(["test2", "test3"]);
-				expect(dynamoose.logger.providers.list()).to.eql([{"id": "test"}]);
+			it("Should delete multiple providers if array passed into delete", async () => {
+				(await dynamoose.logger()).providers.delete(["test2", "test3"]);
+				expect((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}]);
 			});
 		});
 	});
@@ -200,8 +200,8 @@ describe("Logger", () => {
 				events.push(event);
 			}
 		}
-		beforeEach(() => {
-			dynamoose.logger.providers.set(new CustomProvider());
+		beforeEach(async () => {
+			(await dynamoose.logger()).providers.set(new CustomProvider());
 		});
 		afterEach(() => {
 			events = [];
@@ -222,8 +222,8 @@ describe("Logger", () => {
 			expect(events[0].metadata).to.eql({});
 		});
 
-		it("Should log event with string type", () => {
-			dynamoose.logger.providers.set(new CustomProviderMessage());
+		it("Should log event with string type", async () => {
+			(await dynamoose.logger()).providers.set(new CustomProviderMessage());
 			emitter({"level": "info", "message": "Hello World", "category": "test"});
 			expect(events).to.eql(["Hello World"]);
 		});
@@ -233,8 +233,8 @@ describe("Logger", () => {
 			expect(events[0].category).to.eql("");
 		});
 
-		it("Should not log event if paused", () => {
-			dynamoose.logger.pause();
+		it("Should not log event if paused", async () => {
+			(await dynamoose.logger()).pause();
 			emitter({"level": "info", "message": "Hello World", "category": "test"});
 			expect(events.length).to.eql(0);
 		});
@@ -267,8 +267,8 @@ describe("Logger", () => {
 					{"filter": ["error", "info"], "level": "fatal", "outcome": true}
 				];
 				tests.forEach((test) => {
-					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.level}`, () => {
-						dynamoose.logger.providers.set({
+					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.level}`, async () => {
+						(await dynamoose.logger()).providers.set({
 							"provider": new CustomProvider(),
 							"filter": {
 								"level": test.filter
@@ -300,8 +300,8 @@ describe("Logger", () => {
 					{"filter": "random:*:test", "category": "random:test", "outcome": true}
 				];
 				tests.forEach((test) => {
-					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.category}`, () => {
-						dynamoose.logger.providers.set({
+					it(`Should ${test.outcome ? "" : "not "}filter level ${typeof test.filter === "object" ? JSON.stringify(test.filter) : `"${test.filter}"`} for input of ${test.category}`, async () => {
+						(await dynamoose.logger()).providers.set({
 							"provider": new CustomProvider(),
 							"filter": {
 								"category": test.filter
@@ -319,8 +319,8 @@ describe("Logger", () => {
 		const consoleTypes = ["error", "warn", "info", "log"];
 		let logs = [];
 		let originalConsole = {};
-		beforeEach(() => {
-			dynamoose.logger.providers.set(console);
+		beforeEach(async () => {
+			(await dynamoose.logger()).providers.set(console);
 			consoleTypes.forEach((type) => {
 				originalConsole[type] = console[type];
 				console[type] = (str) => logs.push({"message": str, type});
