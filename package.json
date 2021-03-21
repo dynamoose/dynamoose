@@ -28,6 +28,7 @@
     "build:sourcemap": "tsc --sourceMap",
     "build:clean": "rimraf dist",
     "build:watch": "npm run build -- -w",
+    "build:sourcemap:watch": "npm run build:sourcemap -- -w",
     "test:nocoverage": "mocha",
     "test": "nyc npm run test:nocoverage",
     "test:debug": "npm run test:nocoverage -- --no-timeout --inspect=9229",
