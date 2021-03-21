@@ -1,4 +1,4 @@
-import obj = require("../object");
+import obj = require("js-object-utilities");
 import {Model} from "../../Model";
 import {Document} from "../../Document";
 import {IndexItem} from "../../Schema";
