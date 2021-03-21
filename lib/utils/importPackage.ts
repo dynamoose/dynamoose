@@ -8,7 +8,7 @@ export default async (name: string): Promise<any> => {
 	}
 };
 
-export const setUndefinedPackage = (name: string, result: any): void => {
+export const setUndefinedPackage = (name: string): void => {
 	undefinedPackages.push(name);
 };
 export const revertPackages = (): void => {

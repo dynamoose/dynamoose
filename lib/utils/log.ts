@@ -9,4 +9,4 @@ export default async (...args: any[]) => {
 	if (log) {
 		log(...args);
 	}
-}
+};

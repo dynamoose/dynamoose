@@ -241,7 +241,7 @@ describe("Logger", () => {
 		it("Should handle no logger gracefully", async () => {
 			importPackage.setUndefinedPackage("dynamoose-logger/dist/emitter");
 			await emitter({"level": "info", "message": "Hello World", "category": "test"});
-		})
+		});
 
 		it("Should log event with string type", async () => {
 			(await dynamoose.logger()).providers.set(new CustomProviderMessage());
@@ -263,7 +263,7 @@ describe("Logger", () => {
 		const tests = [
 			{"name": "Should throw error if no message passed in", "object": {"level": "info"}},
 			{"name": "Should throw error if no level passed in", "object": {"message": "Hello World"}},
-			{"name": "Should throw error if invalid level passed in", "object": {"message": "Hello World", "level": "random"}},
+			{"name": "Should throw error if invalid level passed in", "object": {"message": "Hello World", "level": "random"}}
 		];
 		tests.forEach((test) => {
 			it(test.name, () => {
