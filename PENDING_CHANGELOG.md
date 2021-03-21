@@ -1,4 +1,8 @@
-# Breaking Changes
+This release ________
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### 🚨 Breaking Changes 🚨
 
 - Upgraded to AWS-SDK v3
 	- This leads to a MASSIVE reduction in the size of Dynamoose
@@ -12,3 +16,17 @@
 			- `output` has changed to `convertToNative`
 			- For more information please refer to the AWS-SDK v3 changelogs
 - Node.js >=v10 now required
+
+### Major New Features
+
+### General
+
+### Bug Fixes
+
+### Documentation
+
+### Other
+
+- Removed `source-map-support` dependency
+- Source map files are no longer included in the package
+	- You can generate source map files by cloning the reposistory, running `npm install`, then running `npm run build:sourcemap`. The generated source map files will be located in the `dist` folder.

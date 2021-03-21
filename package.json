@@ -24,6 +24,7 @@
   "scripts": {
     "prepare": "npm run build:clean && npm run build",
     "build": "tsc",
+    "build:sourcemap": "tsc --sourceMap",
     "build:clean": "rimraf dist",
     "build:watch": "npm run build -- -w",
     "test:nocoverage": "mocha",
@@ -59,7 +60,6 @@
     "@aws-sdk/client-dynamodb": "^3.8.1",
     "@aws-sdk/util-dynamodb": "^3.8.1",
     "js-object-utilities": "^2.0.0",
-    "source-map-support": "^0.5.19",
     "uuid": "^8.3.2"
   },
   "license": "Unlicense",
