@@ -39,6 +39,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm install
+      - run: npm run build:sourcemap
       - name: Setup DynamoDB Local
         uses: rrainn/dynamodb-action@v1.0
       - name: Create coverage folder
