@@ -1,8 +1,8 @@
-import {DocumentArray, ObjectType} from "../../General";
-import {Document} from "../../Document";
+import {ItemArray, ObjectType} from "../../General";
+import {Item} from "../../Item";
 // import object from "../object";
 
 // TODO optimize this in the future after we add performance tests. Doing `JSON.parse(JSON.stringify()) can be kinda slow.
-export function documentToJSON (this: Document | DocumentArray<Document>): ObjectType {
+export function itemToJSON (this: Item | ItemArray<Item>): ObjectType {
 	return JSON.parse(JSON.stringify(Array.isArray(this) ? [...this] : {...this}));
 }

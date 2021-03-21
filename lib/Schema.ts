@@ -1,7 +1,7 @@
 import CustomError = require("./Error");
 import utils = require("./utils");
 import Internal = require("./Internal");
-import {Document, DocumentObjectFromSchemaSettings} from "./Document";
+import {Item, ItemObjectFromSchemaSettings} from "./Item";
 import {Model} from "./Model";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ModelType, ObjectType} from "./General";
@@ -11,7 +11,7 @@ export interface DynamoDBSetTypeResult {
 	name: string;
 	dynamicName?: (() => string);
 	dynamodbType: string; // TODO: This should probably be an enum
-	isOfType: (value: ValueType, type?: "toDynamo" | "fromDynamo", settings?: Partial<DocumentObjectFromSchemaSettings>) => boolean;
+	isOfType: (value: ValueType, type?: "toDynamo" | "fromDynamo", settings?: Partial<ItemObjectFromSchemaSettings>) => boolean;
 	isSet: true;
 	customType?: any;
 	typeSettings?: AttributeDefinitionTypeSettings;
@@ -100,7 +100,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 				"name": `${this.name} Set`,
 				"isSet": true,
 				"dynamodbType": `${dynamodbType}S`,
-				"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo", settings: Partial<DocumentObjectFromSchemaSettings> = {}): boolean => {
+				"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo", settings: Partial<ItemObjectFromSchemaSettings> = {}): boolean => {
 					if (type === "toDynamo") {
 						return !settings.saveUnknown && Array.isArray(val) && val.every((subValue) => result.isOfType(subValue)) || val instanceof Set && [...val].every((subValue) => result.isOfType(subValue));
 					} else {
@@ -192,7 +192,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 			return rangeKey ? "M" : model.schemas[0].getAttributeType(hashKey);
 		}, "set": (typeSettings?: AttributeDefinitionTypeSettings): boolean => {
 			return !typeSettings.model.Model.getRangeKey();
-		}, "jsType": {"func": (val): boolean => val.prototype instanceof Document}, "customType": {
+		}, "jsType": {"func": (val): boolean => val.prototype instanceof Item}, "customType": {
 			"functions": (typeSettings?: AttributeDefinitionTypeSettings): {toDynamo: (val: any) => any; fromDynamo: (val: any) => any; isOfType: (val: any, type: "toDynamo" | "fromDynamo") => boolean} => ({
 				"toDynamo": (val: any): any => {
 					const model = typeSettings.model.Model;
@@ -227,7 +227,7 @@ const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.arr
 type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
 type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Document>;
+type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
 
 export interface TimestampObject {
 	createdAt?: string | string[];
@@ -246,7 +246,7 @@ interface IndexDefinition {
 }
 interface AttributeDefinitionTypeSettings {
 	storage?: "miliseconds" | "seconds";
-	model?: ModelType<Document>;
+	model?: ModelType<Item>;
 	attributes?: string[];
 	seperator?: string;
 	value?: string | boolean | number;
@@ -280,7 +280,7 @@ export class Schema {
 	settings: SchemaSettings;
 	schemaObject: SchemaDefinition;
 	attributes: (object?: ObjectType) => string[];
-	async getCreateTableAttributeParams (model: Model<Document>): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
+	async getCreateTableAttributeParams (model: Model<Item>): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
 		const hashKey = this.getHashKey();
 		const AttributeDefinitions = [
 			{
@@ -341,7 +341,7 @@ export class Schema {
 			return Array.isArray(typeDetails) ? (typeDetails as any).map((detail) => detail.dynamodbType) : typeDetails.dynamodbType;
 		} catch (e) {
 			if (settings?.unknownAttributeAllowed && e.message === `Invalid Attribute: ${key}` && value) {
-				return Object.keys((Document as any).objectToDynamo(value, {"type": "value"}))[0];
+				return Object.keys((Item as any).objectToDynamo(value, {"type": "value"}))[0];
 			} else {
 				throw e;
 			}
@@ -461,7 +461,7 @@ export class Schema {
 	getSettingValue: (setting: string) => any;
 	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[];
 	getAttributeValue: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => AttributeDefinition;
-	getIndexes: (model: Model<Document>) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
+	getIndexes: (model: Model<Item>) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
 
 	constructor (object: SchemaDefinition, settings: SchemaSettings = {}) {
@@ -626,7 +626,7 @@ Schema.prototype.getRangeKey = function (this: Schema): string | void {
 Schema.prototype.requiredCheck = async function (this: Schema, key: string, value: ValueType): Promise<void> {
 	const isRequired = await this.getAttributeSettingValue("required", key);
 	if ((typeof value === "undefined" || value === null) && (Array.isArray(isRequired) ? isRequired.some((val) => Boolean(val)) : isRequired)) {
-		throw new CustomError.ValidationError(`${key} is a required property but has no value when trying to save document`);
+		throw new CustomError.ValidationError(`${key} is a required property but has no value when trying to save item`);
 	}
 };
 
@@ -662,7 +662,7 @@ export interface IndexItem {
 	Projection: {ProjectionType: "KEYS_ONLY" | "INCLUDE" | "ALL"; NonKeyAttributes?: string[]};
 	ProvisionedThroughput?: {"ReadCapacityUnits": number; "WriteCapacityUnits": number}; // TODO: this was copied from get_provisioned_throughput. We should change this to be an actual interface
 }
-Schema.prototype.getIndexes = async function (this: Schema, model: Model<Document>): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
 	return (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
@@ -798,7 +798,7 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 		const isThisType = typeVal as any === Internal.Public.this;
 		const isNullType = typeVal as any === Internal.Public.null;
 		if (typeof typeVal === "function" || isThisType) {
-			if ((typeVal as any).prototype instanceof Document || isThisType) {
+			if ((typeVal as any).prototype instanceof Item || isThisType) {
 				type = "model";
 
 				if (isThisType) {
