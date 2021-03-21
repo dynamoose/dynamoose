@@ -1,5 +1,5 @@
 import {ObjectType, ModelType} from "./General";
-import {Document} from "./Document";
+import {Item} from "./Item";
 import CustomError = require("./Error");
 import utils = require("./utils");
 
@@ -70,21 +70,21 @@ export class Serializer {
 		}
 	}
 
-	_serializeMany (documentsArray: ModelType<Document>[], nameOrOptions: SerializerOptions | string): ObjectType[] {
-		if (!documentsArray || !Array.isArray(documentsArray)) {
-			throw new CustomError.InvalidParameter("documentsArray must be an array of document objects");
+	_serializeMany (itemsArray: ModelType<Item>[], nameOrOptions: SerializerOptions | string): ObjectType[] {
+		if (!itemsArray || !Array.isArray(itemsArray)) {
+			throw new CustomError.InvalidParameter("itemsArray must be an array of item objects");
 		}
 
-		return documentsArray.map((document) => {
+		return itemsArray.map((item) => {
 			try {
-				return document.serialize(nameOrOptions);
+				return item.serialize(nameOrOptions);
 			} catch (e) {
-				return this._serialize(document, nameOrOptions);
+				return this._serialize(item, nameOrOptions);
 			}
 		});
 	}
 
-	_serialize (document: ObjectType, nameOrOptions: SerializerOptions | string = this.#defaultSerializer): ObjectType {
+	_serialize (item: ObjectType, nameOrOptions: SerializerOptions | string = this.#defaultSerializer): ObjectType {
 		let options: SerializerOptions;
 
 		if (typeof nameOrOptions === "string") {
@@ -98,13 +98,13 @@ export class Serializer {
 		}
 
 		if (Array.isArray(options)) {
-			return utils.object.pick(document, options);
+			return utils.object.pick(item, options);
 		}
 
 		return [
 			{
 				"if": Boolean(options.include),
-				"function": (): ObjectType => utils.object.pick(document, options.include)
+				"function": (): ObjectType => utils.object.pick(item, options.include)
 			},
 			{
 				"if": Boolean(options.exclude),
@@ -112,8 +112,8 @@ export class Serializer {
 			},
 			{
 				"if": Boolean(options.modify),
-				"function": (serialized: ObjectType): ObjectType => options.modify(serialized, document)
+				"function": (serialized: ObjectType): ObjectType => options.modify(serialized, item)
 			}
-		].filter((item) => item.if).reduce((serialized: ObjectType, item) => item.function(serialized), {...document});
+		].filter((item) => item.if).reduce((serialized: ObjectType, item) => item.function(serialized), {...item});
 	}
 }

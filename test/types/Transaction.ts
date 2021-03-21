@@ -9,13 +9,13 @@ const shouldPassWithArrayOfTransactions = dynamoose.transaction([model.transacti
 // @ts-expect-error
 const shouldFailWithNoArray = dynamoose.transaction(model.transaction.get("key"));
 
-const shouldPassWithTransactionSettings = dynamoose.transaction([model.transaction.get("key")], {"return": TransactionReturnOptions.documents});
+const shouldPassWithTransactionSettings = dynamoose.transaction([model.transaction.get("key")], {"return": TransactionReturnOptions.items});
 // @ts-expect-error
 const shouldFailWithInvalidTransactionSettings = dynamoose.transaction([model.transaction.get("key")], {"return": "bad"});
 
 const shouldPassWithCallback = dynamoose.transaction(
 	[model.transaction.get("key")],
-	{"return": TransactionReturnOptions.documents},
+	{"return": TransactionReturnOptions.items},
 	(a, b) => {
 		return;
 	}
@@ -23,7 +23,7 @@ const shouldPassWithCallback = dynamoose.transaction(
 
 const shouldFailWithInvalidCallback = dynamoose.transaction(
 	[model.transaction.get("key")],
-	{"return": TransactionReturnOptions.documents},
+	{"return": TransactionReturnOptions.items},
 	// @ts-expect-error
 	(a, b, c) => {
 		return;

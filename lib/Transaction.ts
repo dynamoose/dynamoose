@@ -5,11 +5,11 @@ import Error = require("./Error");
 import {Model} from "./Model";
 import * as ModelStore from "./ModelStore";
 import {CallbackType} from "./General";
-import {Document} from "./Document";
+import {Item} from "./Item";
 
 export enum TransactionReturnOptions {
 	request = "request",
-	documents = "documents"
+	items = "items"
 }
 enum TransactionType {
 	get = "get",
@@ -43,11 +43,11 @@ function Transaction (transactions: Transactions, settings: TransactionSettings)
 function Transaction (transactions: Transactions, callback: TransactionCallback): TransactionReturnType;
 function Transaction (transaction: Transactions, settings: TransactionSettings, callback: TransactionCallback): TransactionReturnType;
 function Transaction (transactions: Transactions, settings?: TransactionSettings | TransactionCallback, callback?: TransactionCallback): TransactionReturnType {
-	settings = settings ?? {"return": TransactionReturnOptions.documents};
+	settings = settings ?? {"return": TransactionReturnOptions.items};
 
 	if (typeof settings === "function") {
 		callback = settings;
-		settings = {"return": TransactionReturnOptions.documents};
+		settings = {"return": TransactionReturnOptions.items};
 	}
 	if (typeof transactions === "function") {
 		callback = transactions;
@@ -87,7 +87,7 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 
 		const modelNames: string[] = transactionObjects.map((a) => (Object.values(a)[0] as any).TableName);
 		const uniqueModelNames = utils.unique_array_elements(modelNames);
-		const models: Model<Document>[] = uniqueModelNames.map((name) => ModelStore(name));
+		const models: Model<Item>[] = uniqueModelNames.map((name) => ModelStore(name));
 		models.forEach((model, index) => {
 			if (!model) {
 				throw new Error.InvalidParameter(`Model "${uniqueModelNames[index]}" not found. Please register the model with dynamoose before using it in transactions.`);
@@ -99,8 +99,8 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 		const result: any = await ddb(transactionType as any, transactionParams as any);
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
-			const model: Model<Document> = models.find((model) => model.name === modelName);
-			return new model.Document(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
+			const model: Model<Item> = models.find((model) => model.name === modelName);
+			return new model.Item(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
 		})) : null;
 	})();
 

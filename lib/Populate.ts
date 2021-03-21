@@ -1,5 +1,5 @@
-import {Document} from "./Document";
-import {DocumentArray, CallbackType} from "./General";
+import {Item} from "./Item";
+import {ItemArray, CallbackType} from "./General";
 import utils = require("./utils");
 import {DynamoDBTypeResult, DynamoDBSetTypeResult, Schema} from "./Schema";
 
@@ -11,12 +11,12 @@ interface PopulateInternalSettings {
 	parentKey?: string;
 }
 
-export function PopulateDocument (this: Document): Promise<Document>;
-export function PopulateDocument (this: Document, callback: CallbackType<Document, any>): void;
-export function PopulateDocument (this: Document, settings: PopulateSettings): Promise<Document>;
-export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, any>): void;
-export function PopulateDocument (this: Document, settings: PopulateSettings, callback: CallbackType<Document, any> | null, internalSettings?: PopulateInternalSettings): void;
-export function PopulateDocument (this: Document, settings?: PopulateSettings | CallbackType<Document, any>, callback?: CallbackType<Document, any> | null, internalSettings?: PopulateInternalSettings): Promise<Document> | void {
+export function PopulateItem (this: Item): Promise<Item>;
+export function PopulateItem (this: Item, callback: CallbackType<Item, any>): void;
+export function PopulateItem (this: Item, settings: PopulateSettings): Promise<Item>;
+export function PopulateItem (this: Item, settings: PopulateSettings, callback: CallbackType<Item, any>): void;
+export function PopulateItem (this: Item, settings: PopulateSettings, callback: CallbackType<Item, any> | null, internalSettings?: PopulateInternalSettings): void;
+export function PopulateItem (this: Item, settings?: PopulateSettings | CallbackType<Item, any>, callback?: CallbackType<Item, any> | null, internalSettings?: PopulateInternalSettings): Promise<Item> | void {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {};
@@ -40,13 +40,13 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 			const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
 			const {typeSettings} = typeDetail;
 			// TODO: `subModel` is currently any, we should fix that
-			const subModel = typeof typeSettings.model === "object" ? model.Document as any : typeSettings.model;
+			const subModel = typeof typeSettings.model === "object" ? model.Item as any : typeSettings.model;
 
 			prop = prop.endsWith(".0") ? prop.substring(0, prop.length - 2) : prop;
 
-			const documentPropValue = utils.object.get(this as any, prop);
-			const doesPopulatePropertyExist = !(typeof documentPropValue === "undefined" || documentPropValue === null);
-			if (!doesPopulatePropertyExist || documentPropValue instanceof subModel) {
+			const itemPropValue = utils.object.get(this as any, prop);
+			const doesPopulatePropertyExist = !(typeof itemPropValue === "undefined" || itemPropValue === null);
+			if (!doesPopulatePropertyExist || itemPropValue instanceof subModel) {
 				return;
 			}
 			const key: string = [internalSettings.parentKey, prop].filter((a) => Boolean(a)).join(".");
@@ -57,16 +57,16 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 				return;
 			}
 
-			const isArray = Array.isArray(documentPropValue);
-			const isSet = documentPropValue instanceof Set;
+			const isArray = Array.isArray(itemPropValue);
+			const isSet = itemPropValue instanceof Set;
 			if (isArray || isSet) {
-				const subDocuments = await Promise.all([...documentPropValue as any].map((val) => subModel.get(val)));
-				const saveDocuments = await Promise.all(subDocuments.map((doc) => PopulateDocument.bind(doc)(localSettings, null, {"parentKey": key})));
-				utils.object.set(this as any, prop, saveDocuments);
+				const subItems = await Promise.all([...itemPropValue as any].map((val) => subModel.get(val)));
+				const saveItems = await Promise.all(subItems.map((doc) => PopulateItem.bind(doc)(localSettings, null, {"parentKey": key})));
+				utils.object.set(this as any, prop, saveItems);
 			} else {
-				const subDocument = await subModel.get(documentPropValue);
-				const saveDocument: Document = await PopulateDocument.bind(subDocument)(localSettings, null, {"parentKey": key});
-				utils.object.set(this as any, prop, saveDocument);
+				const subItem = await subModel.get(itemPropValue);
+				const saveItem: Item = await PopulateItem.bind(subItem)(localSettings, null, {"parentKey": key});
+				utils.object.set(this as any, prop, saveItem);
 			}
 		}));
 	});
@@ -74,31 +74,31 @@ export function PopulateDocument (this: Document, settings?: PopulateSettings | 
 	if (callback) {
 		promise.then(() => callback(null, this)).catch((err) => callback(err));
 	} else {
-		return (async (): Promise<Document> => {
+		return (async (): Promise<Item> => {
 			await promise;
 			return this;
 		})();
 	}
 }
 
-export function PopulateDocuments (this: DocumentArray<Document>): Promise<DocumentArray<Document>>;
-export function PopulateDocuments (this: DocumentArray<Document>, callback: CallbackType<DocumentArray<Document>, any>): void;
-export function PopulateDocuments (this: DocumentArray<Document>, settings: PopulateSettings): Promise<DocumentArray<Document>>;
-export function PopulateDocuments (this: DocumentArray<Document>, settings: PopulateSettings, callback: CallbackType<DocumentArray<Document>, any>): void;
-export function PopulateDocuments (this: DocumentArray<Document>, settings?: PopulateSettings | CallbackType<DocumentArray<Document>, any>, callback?: CallbackType<DocumentArray<Document>, any>): Promise<DocumentArray<Document>> | void {
+export function PopulateItems (this: ItemArray<Item>): Promise<ItemArray<Item>>;
+export function PopulateItems (this: ItemArray<Item>, callback: CallbackType<ItemArray<Item>, any>): void;
+export function PopulateItems (this: ItemArray<Item>, settings: PopulateSettings): Promise<ItemArray<Item>>;
+export function PopulateItems (this: ItemArray<Item>, settings: PopulateSettings, callback: CallbackType<ItemArray<Item>, any>): void;
+export function PopulateItems (this: ItemArray<Item>, settings?: PopulateSettings | CallbackType<ItemArray<Item>, any>, callback?: CallbackType<ItemArray<Item>, any>): Promise<ItemArray<Item>> | void {
 	if (typeof settings === "function") {
 		callback = settings;
 		settings = {};
 	}
 
-	const promise = Promise.all(this.map(async (document, index) => {
-		this[index] = await PopulateDocument.bind(document)(settings);
+	const promise = Promise.all(this.map(async (item, index) => {
+		this[index] = await PopulateItem.bind(item)(settings);
 	}));
 
 	if (callback) {
 		promise.then(() => callback(null, this)).catch((err) => callback(err));
 	} else {
-		return (async (): Promise<DocumentArray<Document>> => {
+		return (async (): Promise<ItemArray<Item>> => {
 			await promise;
 			return this;
 		})();

@@ -4,7 +4,7 @@ chai.use(chaiAsPromised);
 const {expect} = chai;
 const dynamoose = require("../../dist");
 const util = require("util");
-const {Query} = require("../../dist/DocumentRetriever");
+const {Query} = require("../../dist/ItemRetriever");
 
 describe("Query", () => {
 	beforeEach(() => {

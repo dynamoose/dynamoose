@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 
 import * as dynamoose from "../../dist";
-import {Document} from "../../dist/Document";
+import {Item} from "../../dist/Item";
 
 // @ts-expect-error
 const shouldFailWithNumberAsName = dynamoose.model(1);
@@ -54,7 +54,7 @@ const shouldFailWithInvalidUpdateTransaction = model.transaction.update(0);
 const shouldFailWithInvalidConditionTransaction = model.transaction.condition(0, []);
 
 // Typed Models
-export class User extends Document {
+export class User extends Item {
 	id: string;
 	name: string;
 	age: number;
