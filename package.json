@@ -24,6 +24,7 @@
   "scripts": {
     "prepare": "npm run build:clean && npm run build",
     "build": "tsc",
+    "build:sourcemap": "tsc --sourceMap",
     "build:clean": "rimraf dist",
     "build:watch": "npm run build -- -w",
     "test:nocoverage": "mocha",
