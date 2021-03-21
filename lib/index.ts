@@ -5,10 +5,10 @@ import transaction from "./Transaction";
 import aws = require("./aws");
 import Internal = require("./Internal");
 import utils = require("./utils");
-import logger = require("./logger");
 import {Item, AnyItem} from "./Item";
 import ModelStore = require("./ModelStore");
 import {ModelType} from "./General";
+import {CustomError} from "dynamoose-utils";
 
 const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): ModelType<T> => {
 	let model: Model<T>;
@@ -69,7 +69,13 @@ export = {
 	Condition,
 	transaction,
 	aws,
-	logger,
+	"logger": async () => {
+		try {
+			return await import("dynamoose-logger/dist");
+		} catch (error) {
+			throw new CustomError.OtherError("dynamoose-logger has not been installed. Install it using `npm i --save-dev dynamoose-logger`.");
+		}
+	},
 	"UNDEFINED": Internal.Public.undefined,
 	"THIS": Internal.Public.this,
 	"NULL": Internal.Public.null
