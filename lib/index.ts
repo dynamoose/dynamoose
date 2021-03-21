@@ -71,7 +71,7 @@ export = {
 	aws,
 	"logger": async () => {
 		try {
-			return await import("dynamoose-logger/dist");
+			return await utils.importPackage("dynamoose-logger");
 		} catch (error) {
 			throw new CustomError.OtherError("dynamoose-logger has not been installed. Install it using `npm i --save-dev dynamoose-logger`.");
 		}

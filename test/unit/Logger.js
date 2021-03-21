@@ -1,18 +1,34 @@
 const {expect} = require("chai");
 const dynamoose = require("../../dist");
-const emitter = require("dynamoose-logger/dist/emitter");
+const utils = require("../../dist/utils");
+const emitter = utils.log;
+const importPackage = require("../../dist/utils/importPackage");
 
 describe("Logger", () => {
 	beforeEach(async () => {
+		importPackage.revertPackages();
 		(await dynamoose.logger()).providers.clear();
 		(await dynamoose.logger()).resume();
 	});
 	afterEach(async () => {
+		importPackage.revertPackages();
 		(await dynamoose.logger()).providers.clear();
 	});
 
 	it("Should be an function", () => {
 		expect(dynamoose.logger).to.be.an("function");
+	});
+
+	it("Should throw error if package is not installed", async () => {
+		importPackage.setUndefinedPackage("dynamoose-logger");
+		let result, error;
+		try {
+			result = await dynamoose.logger();
+		} catch (e) {
+			error = e;
+		}
+		expect(result).to.not.exist;
+		expect(error.message).to.eql("dynamoose-logger has not been installed. Install it using `npm i --save-dev dynamoose-logger`.");
 	});
 
 	describe("Status", () => {
@@ -207,8 +223,8 @@ describe("Logger", () => {
 			events = [];
 		});
 
-		it("Should log event", () => {
-			emitter({"level": "info", "message": "Hello World", "category": "test"});
+		it("Should log event", async () => {
+			await emitter({"level": "info", "message": "Hello World", "category": "test"});
 			expect(events).to.be.an("array");
 			expect(events.length).to.eql(1);
 			expect(events[0]).to.be.an("object");
@@ -222,33 +238,37 @@ describe("Logger", () => {
 			expect(events[0].metadata).to.eql({});
 		});
 
+		it("Should handle no logger gracefully", async () => {
+			importPackage.setUndefinedPackage("dynamoose-logger/dist/emitter");
+			await emitter({"level": "info", "message": "Hello World", "category": "test"});
+		})
+
 		it("Should log event with string type", async () => {
 			(await dynamoose.logger()).providers.set(new CustomProviderMessage());
-			emitter({"level": "info", "message": "Hello World", "category": "test"});
+			await emitter({"level": "info", "message": "Hello World", "category": "test"});
 			expect(events).to.eql(["Hello World"]);
 		});
 
-		it("Should allow for no category", () => {
-			emitter({"level": "info", "message": "Hello World"});
+		it("Should allow for no category", async () => {
+			await emitter({"level": "info", "message": "Hello World"});
 			expect(events[0].category).to.eql("");
 		});
 
 		it("Should not log event if paused", async () => {
 			(await dynamoose.logger()).pause();
-			emitter({"level": "info", "message": "Hello World", "category": "test"});
+			await emitter({"level": "info", "message": "Hello World", "category": "test"});
 			expect(events.length).to.eql(0);
 		});
 
-		it("Should throw error if no message passed in", () => {
-			expect(() => emitter({"level": "info"})).to.throw("You must pass in a valid message, level, and category into your event object.");
-		});
-
-		it("Should throw error if no level passed in", () => {
-			expect(() => emitter({"message": "Hello World"})).to.throw("You must pass in a valid message, level, and category into your event object.");
-		});
-
-		it("Should throw error if invalid level passed in", () => {
-			expect(() => emitter({"message": "Hello World", "level": "random"})).to.throw("You must pass in a valid message, level, and category into your event object.");
+		const tests = [
+			{"name": "Should throw error if no message passed in", "object": {"level": "info"}},
+			{"name": "Should throw error if no level passed in", "object": {"message": "Hello World"}},
+			{"name": "Should throw error if invalid level passed in", "object": {"message": "Hello World", "level": "random"}},
+		];
+		tests.forEach((test) => {
+			it(test.name, () => {
+				return expect(emitter(test.object)).to.eventually.rejectedWith("You must pass in a valid message, level, and category into your event object.");
+			});
 		});
 
 		describe("Filter", () => {
@@ -274,7 +294,7 @@ describe("Logger", () => {
 								"level": test.filter
 							}
 						});
-						emitter({"level": test.level, "message": "Hello World"});
+						await emitter({"level": test.level, "message": "Hello World"});
 						expect(events.length).to.eql(test.outcome ? 0 : 1);
 					});
 				});
@@ -307,7 +327,7 @@ describe("Logger", () => {
 								"category": test.filter
 							}
 						});
-						emitter({"level": "error", "category": test.category, "message": "Hello World"});
+						await emitter({"level": "error", "category": test.category, "message": "Hello World"});
 						expect(events.length).to.eql(test.outcome ? 0 : 1);
 					});
 				});
@@ -334,38 +354,38 @@ describe("Logger", () => {
 			logs = [];
 		});
 
-		it("Should print message & category", () => {
-			emitter({"level": "fatal", "message": "Hello World", "category": "test"});
+		it("Should print message & category", async () => {
+			await emitter({"level": "fatal", "message": "Hello World", "category": "test"});
 			expect(logs).to.eql([{"message": "test - Hello World", "type": "error"}]);
 		});
 
-		it("Should print message to console.error for fatal", () => {
-			emitter({"level": "fatal", "message": "Hello World"});
+		it("Should print message to console.error for fatal", async () => {
+			await emitter({"level": "fatal", "message": "Hello World"});
 			expect(logs).to.eql([{"message": "Hello World", "type": "error"}]);
 		});
 
-		it("Should print message to console.error for error", () => {
-			emitter({"level": "error", "message": "Hello World"});
+		it("Should print message to console.error for error", async () => {
+			await emitter({"level": "error", "message": "Hello World"});
 			expect(logs).to.eql([{"message": "Hello World", "type": "error"}]);
 		});
 
-		it("Should print message to console.warn for warn", () => {
-			emitter({"level": "warn", "message": "Hello World"});
+		it("Should print message to console.warn for warn", async () => {
+			await emitter({"level": "warn", "message": "Hello World"});
 			expect(logs).to.eql([{"message": "Hello World", "type": "warn"}]);
 		});
 
-		it("Should print message to console.info for info", () => {
-			emitter({"level": "info", "message": "Hello World"});
+		it("Should print message to console.info for info", async () => {
+			await emitter({"level": "info", "message": "Hello World"});
 			expect(logs).to.eql([{"message": "Hello World", "type": "info"}]);
 		});
 
-		it("Should print message to console.log for debug", () => {
-			emitter({"level": "debug", "message": "Hello World"});
+		it("Should print message to console.log for debug", async () => {
+			await emitter({"level": "debug", "message": "Hello World"});
 			expect(logs).to.eql([{"message": "Hello World", "type": "log"}]);
 		});
 
-		it("Should print message to console.log for trace", () => {
-			emitter({"level": "trace", "message": "Hello World"});
+		it("Should print message to console.log for trace", async () => {
+			await emitter({"level": "trace", "message": "Hello World"});
 			expect(logs).to.eql([{"message": "Hello World", "type": "log"}]);
 		});
 	});
