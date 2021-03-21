@@ -17,6 +17,8 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 			- For more information please refer to the AWS-SDK v3 changelogs
 - Renamed `Document` to `Item`
 	- The largest user facing API change is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`
+- `dynamoose.logger` is now an async function instead of an object. For example, `dynamoose.logger.status()` is now `(await dynamoose.logger()).status()`
+	- You must also now install the `dynamoose-logger` package in order to use `dynamoose.logger()`, otherwise an error will be thrown.
 - Node.js >=v10 now required
 
 ### Major New Features
