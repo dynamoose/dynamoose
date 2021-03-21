@@ -59,7 +59,6 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.8.0",
     "@aws-sdk/util-dynamodb": "^3.8.0",
-    "source-map-support": "^0.5.19",
     "uuid": "^8.3.1"
   },
   "license": "Unlicense",
