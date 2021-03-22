@@ -1,6 +1,8 @@
 const {expect} = require("chai");
 const dynamoose = require("../../dist");
 const Error = require("../../dist/Error");
+const Internal = require("../../dist/Internal");
+const {internalProperties} = Internal.General;
 
 describe("Schema", () => {
 	it("Should be a function", () => {
@@ -844,7 +846,7 @@ describe("Schema", () => {
 
 		tests.forEach((test) => {
 			it(test.name, async () => {
-				expect(await new dynamoose.Schema(test.input).getCreateTableAttributeParams({"options": {"throughput": "ON_DEMAND"}})).to.eql(test.output);
+				expect(await new dynamoose.Schema(test.input).getCreateTableAttributeParams({[internalProperties]: {"options": {"throughput": "ON_DEMAND"}}})).to.eql(test.output);
 			});
 		});
 	});

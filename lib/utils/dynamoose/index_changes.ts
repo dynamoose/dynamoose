@@ -2,6 +2,8 @@ import obj = require("js-object-utilities");
 import {Model} from "../../Model";
 import {Item} from "../../Item";
 import {IndexItem} from "../../Schema";
+import Internal = require("../../Internal");
+const {internalProperties} = Internal.General;
 
 export enum ModelIndexChangeType {
 	add = "add",
@@ -19,7 +21,7 @@ export interface ModelIndexDeleteChange {
 
 const index_changes = async (model: Model<Item>, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
 	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
-	const expectedIndexes = await model.getIndexes();
+	const expectedIndexes = await model[internalProperties].getIndexes();
 
 	// Indexes to delete
 	const identiticalProperties: string[] = ["IndexName", "KeySchema", "Projection", "ProvisionedThroughput"]; // This array represents the properties in the indexes that should match between existingIndexes (from DynamoDB) and expectedIndexes. This array will not include things like `IndexArn`, `ItemCount`, etc, since those properties do not exist in expectedIndexes
