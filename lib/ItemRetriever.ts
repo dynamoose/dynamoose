@@ -6,6 +6,8 @@ import {Model} from "./Model";
 import {Item} from "./Item";
 import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
+import Internal = require("./Internal");
+const {internalProperties} = Internal.General;
 
 enum ItemRetrieverTypes {
 	scan = "scan",
@@ -172,9 +174,9 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
 	} else if (this.internalSettings.typeInformation.type === "query") {
-		const comparisonChart = this.settings.condition.settings.conditions.reduce((res, item) => {
+		const comparisonChart = this.settings.condition[internalProperties].settings.conditions.reduce((res, item) => {
 			const myItem = Object.entries(item)[0];
-			res[myItem[0]] = {"type": myItem[1].type};
+			res[myItem[0]] = {"type": (myItem[1] as any).type};
 			return res;
 		}, {});
 		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
