@@ -5,6 +5,7 @@ import {Item, ItemObjectFromSchemaSettings} from "./Item";
 import {Model} from "./Model";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ModelType, ObjectType} from "./General";
+const {internalProperties} = Internal.General;
 
 // TODO: the interfaces below are so similar, we should consider combining them into one. We also do a lot of `DynamoDBTypeResult | DynamoDBSetTypeResult` in the code base.
 export interface DynamoDBSetTypeResult {
@@ -185,19 +186,19 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 				return numberType.dynamodbType as any;
 			}
 		}}),
-		new DynamoDBType({"name": "Model", "dynamicName": (typeSettings?: AttributeDefinitionTypeSettings): string => typeSettings.model.Model.name, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
+		new DynamoDBType({"name": "Model", "dynamicName": (typeSettings?: AttributeDefinitionTypeSettings): string => typeSettings.model.Model[internalProperties].name, "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): string | string[] => {
 			const model = typeSettings.model.Model;
-			const hashKey = model.getHashKey();
-			const rangeKey = model.getRangeKey();
-			return rangeKey ? "M" : model.schemas[0].getAttributeType(hashKey);
+			const hashKey = model[internalProperties].getHashKey();
+			const rangeKey = model[internalProperties].getRangeKey();
+			return rangeKey ? "M" : model[internalProperties].schemas[0].getAttributeType(hashKey);
 		}, "set": (typeSettings?: AttributeDefinitionTypeSettings): boolean => {
-			return !typeSettings.model.Model.getRangeKey();
+			return !typeSettings.model.Model[internalProperties].getRangeKey();
 		}, "jsType": {"func": (val): boolean => val.prototype instanceof Item}, "customType": {
 			"functions": (typeSettings?: AttributeDefinitionTypeSettings): {toDynamo: (val: any) => any; fromDynamo: (val: any) => any; isOfType: (val: any, type: "toDynamo" | "fromDynamo") => boolean} => ({
 				"toDynamo": (val: any): any => {
 					const model = typeSettings.model.Model;
-					const hashKey = model.getHashKey();
-					const rangeKey = model.getRangeKey();
+					const hashKey = model[internalProperties].getHashKey();
+					const rangeKey = model[internalProperties].getRangeKey();
 					if (rangeKey) {
 						return {
 							[hashKey]: val[hashKey],
@@ -210,12 +211,12 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 				"fromDynamo": (val: any): any => val,
 				"isOfType": (val: any, type: "toDynamo" | "fromDynamo"): boolean => {
 					const model = typeSettings.model.Model;
-					const hashKey = model.getHashKey();
-					const rangeKey = model.getRangeKey();
+					const hashKey = model[internalProperties].getHashKey();
+					const rangeKey = model[internalProperties].getRangeKey();
 					if (rangeKey) {
 						return typeof val === "object" && val[hashKey] && val[rangeKey];
 					} else {
-						return utils.dynamoose.getValueTypeCheckResult(model.schemas[0], val[hashKey] ?? val, hashKey, {type}, {}).isValidType;
+						return utils.dynamoose.getValueTypeCheckResult(model[internalProperties].schemas[0], val[hashKey] ?? val, hashKey, {type}, {}).isValidType;
 					}
 				}
 			})
@@ -680,7 +681,8 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 			if (indexValue.rangeKey) {
 				dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
 			}
-			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model.options.throughput === "ON_DEMAND" ? {} : model.options);
+			console.log(model);
+			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model[internalProperties].options.throughput === "ON_DEMAND" ? {} : model[internalProperties].options);
 			// TODO: fix up the two lines below. Using too many `as` statements.
 			if ((throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput) {
 				dynamoIndexObject.ProvisionedThroughput = (throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput;
@@ -802,13 +804,17 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 				type = "model";
 
 				if (isThisType) {
-					typeSettings.model = {
-						"Model": {
-							"getHashKey": this.getHashKey.bind(this),
-							"getRangeKey": this.getRangeKey.bind(this),
-							"schemas": [this]
-						}
-					} as any;
+					const obj = {
+					};
+					Object.defineProperty(obj, internalProperties, {
+						"configurable": false,
+						"value": {}
+					});
+					obj[internalProperties].schemas = [this];
+					obj[internalProperties].getHashKey = this.getHashKey.bind(this);
+					obj[internalProperties].getRangeKey = this.getRangeKey.bind(this);
+
+					typeSettings.model = {"Model": obj} as any;
 				} else {
 					typeSettings.model = typeVal as any;
 				}
