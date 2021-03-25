@@ -5,6 +5,8 @@ const OR = Symbol("OR");
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ObjectType} from "./General";
 import {ExpressionAttributeNameMap, ExpressionAttributeValueMap} from "./Types";
+import Internal = require("./Internal");
+const {internalProperties} = Internal.General;
 
 const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
@@ -85,17 +87,6 @@ export interface BasicOperators<T = Condition> {
 }
 
 export interface Condition extends BasicOperators {
-	settings: {
-		// TODO: fix this below, it should be a reference to `OR` not Symbol, you are only allowed to pass in OR here, not any other Symbol.
-		conditions: ConditionStorageSettingsConditions;
-		pending: {
-			key?: string;
-			type?: ConditionComparisonType;
-			value?: any;
-			not?: boolean;
-		};
-		raw?: ConditionInitalizer;
-	};
 	and: () => Condition;
 	or: () => Condition;
 	not: () => Condition;
@@ -120,13 +111,15 @@ export interface Condition extends BasicOperators {
 
 export class Condition {
 	constructor (object?: ConditionInitalizer) {
+		Object.defineProperty(this, internalProperties, {
+			"configurable": false,
+			"value": {}
+		});
+
 		if (object instanceof Condition) {
-			Object.entries(object).forEach((entry) => {
-				const [key, value] = entry;
-				this[key] = value;
-			});
+			this[internalProperties].settings = object[internalProperties].settings;
 		} else {
-			this.settings = {
+			this[internalProperties].settings = {
 				"conditions": [],
 				"pending": {} // represents the pending chain of filter data waiting to be attached to the `conditions` parameter. For example, storing the key before we know what the comparison operator is.
 			};
@@ -142,7 +135,7 @@ export class Condition {
 							throw new CustomError.InvalidFilterComparison(`The type: ${valueType} is invalid.`);
 						}
 
-						this.settings.conditions.push({
+						this[internalProperties].settings.conditions.push({
 							[key]: {
 								"type": comparisonType.typeName,
 								"value": typeof value[valueType] !== "undefined" && value[valueType] !== null ? value[valueType] : value
@@ -151,10 +144,10 @@ export class Condition {
 					});
 				}
 			} else if (object) {
-				this.settings.pending.key = object;
+				this[internalProperties].settings.pending.key = object;
 			}
 		}
-		this.settings.raw = object;
+		this[internalProperties].settings.raw = object;
 
 		return this;
 	}
@@ -166,7 +159,7 @@ interface ConditionsConditionStorageObject {
 }
 
 function finalizePending (instance: Condition): void {
-	const pending = instance.settings.pending;
+	const pending = instance[internalProperties].settings.pending;
 
 	let dynamoNameType: ConditionComparisonComparatorDynamoName;
 	if (pending.not === true) {
@@ -178,34 +171,34 @@ function finalizePending (instance: Condition): void {
 		dynamoNameType = pending.type.typeName;
 	}
 
-	instance.settings.conditions.push({
+	instance[internalProperties].settings.conditions.push({
 		[pending.key]: {
 			"type": dynamoNameType,
 			"value": pending.value
 		}
 	});
 
-	instance.settings.pending = {};
+	instance[internalProperties].settings.pending = {};
 }
 
 Condition.prototype.parenthesis = Condition.prototype.group = function (this: Condition, value: Condition | ConditionFunction): Condition {
 	value = typeof value === "function" ? value(new Condition()) : value;
-	this.settings.conditions.push(value.settings.conditions);
+	this[internalProperties].settings.conditions.push(value[internalProperties].settings.conditions);
 	return this;
 };
 Condition.prototype.or = function (this: Condition): Condition {
-	this.settings.conditions.push(OR);
+	this[internalProperties].settings.conditions.push(OR);
 	return this;
 };
 Condition.prototype.and = function (this: Condition): Condition {
 	return this;
 };
 Condition.prototype.not = function (this: Condition): Condition {
-	this.settings.pending.not = !this.settings.pending.not;
+	this[internalProperties].settings.pending.not = !this[internalProperties].settings.pending.not;
 	return this;
 };
 Condition.prototype.where = Condition.prototype.filter = Condition.prototype.attribute = function (this: Condition, key: string): Condition {
-	this.settings.pending = {key};
+	this[internalProperties].settings.pending = {key};
 	return this;
 };
 // TODO: I don't think this prototypes are being exposed which is gonna cause a lot of problems with our type definition file. Need to figure out a better way to do this since they aren't defined and are dynamic.
@@ -215,8 +208,8 @@ types.forEach((type) => {
 			console.warn(`Dynamoose Warning: Passing \`undefined\` into a condition ${type.name} is not supported and can lead to behavior where DynamoDB returns an error related to your conditional. In a future version of Dynamoose this behavior will throw an error. If you believe your conditional is valid and you received this message in error, please submit an issue at https://github.com/dynamoose/dynamoose/issues/new/choose.`);
 		}
 
-		this.settings.pending.value = type.multipleArguments ? args : args[0];
-		this.settings.pending.type = type;
+		this[internalProperties].settings.pending.value = type.multipleArguments ? args : args[0];
+		this[internalProperties].settings.pending.type = type;
 		finalizePending(this);
 		return this;
 	};
@@ -231,16 +224,16 @@ interface ConditionRequestObjectSettings {
 	conditionStringType: "array" | "string";
 }
 Condition.prototype.requestObject = function (this: Condition, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): ConditionRequestObjectResult {
-	if (this.settings.raw && utils.object.equals(Object.keys(this.settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
-		return Object.entries((this.settings.raw as ObjectType).ExpressionAttributeValues).reduce((obj, entry) => {
+	if (this[internalProperties].settings.raw && utils.object.equals(Object.keys(this[internalProperties].settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
+		return Object.entries((this[internalProperties].settings.raw as ObjectType).ExpressionAttributeValues).reduce((obj, entry) => {
 			const [key, value] = entry;
 			// TODO: we should fix this so that we can do `isDynamoItem(value)`
 			if (!Item.isDynamoObject({"key": value})) {
 				obj.ExpressionAttributeValues[key] = Item.objectToDynamo(value, {"type": "value"});
 			}
 			return obj;
-		}, this.settings.raw as ObjectType);
-	} else if (this.settings.conditions.length === 0) {
+		}, this[internalProperties].settings.raw as ObjectType);
+	} else if (this[internalProperties].settings.conditions.length === 0) {
 		return {};
 	}
 
@@ -337,5 +330,5 @@ Condition.prototype.requestObject = function (this: Condition, settings: Conditi
 		}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
 	}
 
-	return utils.object.clearEmpties(main(this.settings.conditions));
+	return utils.object.clearEmpties(main(this[internalProperties].settings.conditions));
 };

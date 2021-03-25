@@ -6,6 +6,8 @@ import {Model} from "./Model";
 import {Item} from "./Item";
 import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
+import Internal = require("./Internal");
+const {internalProperties} = Internal.General;
 
 enum ItemRetrieverTypes {
 	scan = "scan",
@@ -64,7 +66,7 @@ abstract class ItemRetriever {
 			array["toJSON"] = utils.dynamoose.itemToJSON;
 			return array;
 		};
-		const promise = this.internalSettings.model.pendingTaskPromise().then(() => this.getRequest()).then((request) => {
+		const promise = this.internalSettings.model[internalProperties].pendingTaskPromise().then(() => this.getRequest()).then((request) => {
 			const allRequest = (extraParameters = {}): any => {
 				let promise: Promise<any> = ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters});
 				timesRequested++;
@@ -146,7 +148,7 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
 	const object: any = {
 		...this.settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
-		"TableName": this.internalSettings.model.name
+		"TableName": this.internalSettings.model[internalProperties].name
 	};
 
 	if (this.settings.limit) {
@@ -155,7 +157,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 	if (this.settings.startAt) {
 		object.ExclusiveStartKey = Item.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Item.objectToDynamo(this.settings.startAt);
 	}
-	const indexes = await this.internalSettings.model.getIndexes();
+	const indexes = await this.internalSettings.model[internalProperties].getIndexes();
 	function canUseIndexOfTable (hashKeyOfTable, rangeKeyOfTable, chart: ConditionStorageTypeNested): boolean {
 		const hashKeyInQuery = Object.entries(chart).find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
 		if (!hashKeyInQuery) {
@@ -172,12 +174,12 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
 	} else if (this.internalSettings.typeInformation.type === "query") {
-		const comparisonChart = this.settings.condition.settings.conditions.reduce((res, item) => {
+		const comparisonChart = this.settings.condition[internalProperties].settings.conditions.reduce((res, item) => {
 			const myItem = Object.entries(item)[0];
-			res[myItem[0]] = {"type": myItem[1].type};
+			res[myItem[0]] = {"type": (myItem[1] as any).type};
 			return res;
 		}, {});
-		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
+		if (!canUseIndexOfTable(this.internalSettings.model[internalProperties].getHashKey(), this.internalSettings.model[internalProperties].getRangeKey(), comparisonChart)) {
 			const validIndexes = utils.array_flatten(Object.values(indexes))
 				.map((index) => {
 					const {hash, range} = index.KeySchema.reduce((res, item) => {
@@ -243,9 +245,9 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 				moveParameterNames(range, "qr");
 			}
 		} else {
-			moveParameterNames(this.internalSettings.model.getHashKey(), "qh");
-			if (this.internalSettings.model.getRangeKey()) {
-				moveParameterNames(this.internalSettings.model.getRangeKey(), "qr");
+			moveParameterNames(this.internalSettings.model[internalProperties].getHashKey(), "qh");
+			if (this.internalSettings.model[internalProperties].getRangeKey()) {
+				moveParameterNames(this.internalSettings.model[internalProperties].getRangeKey(), "qr");
 			}
 		}
 	}

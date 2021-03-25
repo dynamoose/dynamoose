@@ -9,6 +9,7 @@ const util = require("util");
 const Error = require("../../dist/Error");
 const utils = require("../../dist/utils");
 const Internal = require("../../dist/Internal");
+const {internalProperties} = Internal.General;
 
 describe("Item", () => {
 	it("Should be a function", () => {
@@ -1456,12 +1457,12 @@ describe("Item", () => {
 					await utils.set_immediate_promise();
 					expect(putParams).to.eql([]);
 					expect(finishedSavingUser).to.be.false;
-					expect(model.Model.pendingTasks.length).to.eql(1);
+					expect(model.Model[internalProperties].pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model.pendingTaskPromise();
+					await model.Model[internalProperties].pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(putParams).to.eql([{
 						"Item": {
