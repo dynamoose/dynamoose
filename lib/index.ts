@@ -45,16 +45,14 @@ const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaD
 						if (typeof subValue === "object") {
 							main(newKey);
 						} else {
-							utils.object.set(returnObject, newKey, typeof subValue === "function" ? subValue.bind(model) : subValue);
+							utils.object.set(returnObject, newKey, subValue.bind(model));
 						}
 					});
 				}
 			};
 			main(key);
-		} else if (typeof model[key] === "function") {
-			returnObject[key] = model[key].bind(model);
 		} else {
-			returnObject[key] = model[key];
+			returnObject[key] = model[key].bind(model);
 		}
 	});
 	return returnObject as any;

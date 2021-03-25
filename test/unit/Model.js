@@ -8,6 +8,7 @@ const Internal = require("../../dist/Internal");
 const utils = require("../../dist/utils");
 const util = require("util");
 const ModelStore = require("../../dist/ModelStore");
+const {internalProperties} = Internal.General;
 
 describe("Model", () => {
 	beforeEach(() => {
@@ -63,7 +64,7 @@ describe("Model", () => {
 			dynamoose.model("User", {"id": String});
 			dynamoose.model("User", {"id": String, "name": String});
 
-			expect(ModelStore("User").schemas[0].schemaObject).to.eql({"id": String, "name": String});
+			expect(ModelStore("User")[internalProperties].schemas[0][internalProperties].schemaObject).to.eql({"id": String, "name": String});
 		});
 
 		it("Should throw error if passing in empty array for schema parameter", () => {
@@ -81,15 +82,15 @@ describe("Model", () => {
 		it("Should create a schema if not passing in schema instance", () => {
 			const schema = {"name": String};
 			const Cat = dynamoose.model("Cat", schema);
-			expect(Cat.Model.schemas).to.not.eql([schema]);
-			expect(Cat.Model.schemas[0]).to.be.an.instanceof(dynamoose.Schema);
+			expect(Cat.Model[internalProperties].schemas).to.not.eql([schema]);
+			expect(Cat.Model[internalProperties].schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should use schema instance if passed in", () => {
 			const schema = new dynamoose.Schema({"name": String});
 			const Cat = dynamoose.model("Cat", schema);
-			expect(Cat.Model.schemas).to.eql([schema]);
-			expect(Cat.Model.schemas[0]).to.be.an.instanceof(dynamoose.Schema);
+			expect(Cat.Model[internalProperties].schemas).to.eql([schema]);
+			expect(Cat.Model[internalProperties].schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should not fail with initialization if table doesn't exist", async () => {
@@ -145,8 +146,8 @@ describe("Model", () => {
 							const extension = "MyApp";
 							const tableName = "Users";
 							const model = optionC.func(optionB.value, extension, tableName, {"id": String});
-							expect(model.Model.name).to.include(extension);
-							expect(model.Model.name).to.not.eql(tableName);
+							expect(model.Model[internalProperties].name).to.include(extension);
+							expect(model.Model[internalProperties].name).to.not.eql(tableName);
 						});
 					});
 				});
@@ -155,13 +156,13 @@ describe("Model", () => {
 
 		describe("Model.ready", () => {
 			it("Should not be ready to start", () => {
-				expect(dynamoose.model("Cat", {"id": String}, {"create": false}).Model.ready).to.be.false;
+				expect(dynamoose.model("Cat", {"id": String}, {"create": false}).Model[internalProperties].ready).to.be.false;
 			});
 
 			it("Should set ready after setup flow", async () => {
 				const model = dynamoose.model("Cat", {"id": String}, {"create": false});
 				await utils.set_immediate_promise();
-				expect(model.Model.ready).to.be.true;
+				expect(model.Model[internalProperties].ready).to.be.true;
 			});
 
 			it("Should resolve pendingTaskPromises after model is ready", async () => {
@@ -177,7 +178,7 @@ describe("Model", () => {
 				await utils.set_immediate_promise();
 
 				let pendingTaskPromiseResolved = false;
-				model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+				model.Model[internalProperties].pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
 
 				await utils.set_immediate_promise();
 				expect(pendingTaskPromiseResolved).to.be.false;
@@ -185,10 +186,10 @@ describe("Model", () => {
 				describeTableResponse = {
 					"Table": {"TableStatus": "ACTIVE"}
 				};
-				await model.Model.pendingTaskPromise();
+				await model.Model[internalProperties].pendingTaskPromise();
 				await utils.set_immediate_promise();
 				expect(pendingTaskPromiseResolved).to.be.true;
-				expect(model.Model.pendingTasks).to.eql([]);
+				expect(model.Model[internalProperties].pendingTasks).to.eql([]);
 			});
 
 			it("Should immediately resolve pendingTaskPromises promise if table is already ready", async () => {
@@ -196,7 +197,7 @@ describe("Model", () => {
 				await utils.set_immediate_promise();
 
 				let pendingTaskPromiseResolved = false;
-				model.Model.pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+				model.Model[internalProperties].pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
 
 				await utils.set_immediate_promise();
 
@@ -609,7 +610,7 @@ describe("Model", () => {
 								}
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}}, {"update": updateOption});
-							await model.Model.pendingTaskPromise();
+							await model.Model[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{
@@ -689,7 +690,7 @@ describe("Model", () => {
 								}
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String}}, {"update": updateOption});
-							await model.Model.pendingTaskPromise();
+							await model.Model[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{
@@ -878,7 +879,7 @@ describe("Model", () => {
 								return Promise.resolve(obj);
 							};
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}, "status": {"type": String, "index": {"global": true}}}, {"update": updateOption});
-							await model.Model.pendingTaskPromise();
+							await model.Model[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(describeTableFunctionCalledTimes).to.eql(5);
 							expect(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
@@ -1013,7 +1014,7 @@ describe("Model", () => {
 				};
 				const tableName = "Cat";
 				const model = dynamoose.model(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
-				await model.Model.pendingTaskPromise();
+				await model.Model[internalProperties].pendingTaskPromise();
 				expect(updateTTLParams).to.eql([{
 					"TableName": tableName,
 					"TimeToLiveSpecification": {
@@ -1800,12 +1801,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expect(calledGetItem).to.be.false;
 					expect(user).to.not.exist;
-					expect(model.Model.pendingTasks.length).to.eql(1);
+					expect(model.Model[internalProperties].pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model.pendingTaskPromise();
+					await model.Model[internalProperties].pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(calledGetItem).to.be.true;
 					expect({...user}).to.eql({"id": 1, "name": "Charlie"});
@@ -2062,12 +2063,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expect(calledBatchGetItem).to.be.false;
 					expect(users).to.not.exist;
-					expect(model.Model.pendingTasks.length).to.eql(1);
+					expect(model.Model[internalProperties].pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model.pendingTaskPromise();
+					await model.Model[internalProperties].pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(calledBatchGetItem).to.be.true;
 					expect(users.map((user) => ({...user}))).to.eql([{"id": 1, "name": "Charlie"}]);

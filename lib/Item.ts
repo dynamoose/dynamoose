@@ -94,8 +94,8 @@ export class Item {
 
 	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
 	async prepareForResponse (): Promise<Item> {
-		if (this.model.options.populate) {
-			return this.populate({"properties": this.model.options.populate});
+		if (this.model[internalProperties].options.populate) {
+			return this.populate({"properties": this.model[internalProperties].options.populate});
 		}
 		return this;
 	}
@@ -119,8 +119,8 @@ export class Item {
 	delete (this: Item): Promise<void>;
 	delete (this: Item, callback: CallbackType<void, any>): void;
 	delete (this: Item, callback?: CallbackType<void, any>): Promise<void> | void {
-		const hashKey = this.model.getHashKey();
-		const rangeKey = this.model.getRangeKey();
+		const hashKey = this.model[internalProperties].getHashKey();
+		const rangeKey = this.model[internalProperties].getRangeKey();
 
 		const key = {[hashKey]: this[hashKey]};
 		if (rangeKey) {
@@ -153,7 +153,7 @@ export class Item {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
-				"TableName": this.model.name
+				"TableName": this.model[internalProperties].name
 			};
 
 			if (localSettings.condition) {
@@ -168,7 +168,7 @@ export class Item {
 				putItemObj.ConditionExpression = putItemObj.ConditionExpression ? `(${putItemObj.ConditionExpression}) AND (${conditionExpression})` : conditionExpression;
 				putItemObj.ExpressionAttributeNames = {
 					...putItemObj.ExpressionAttributeNames || {},
-					"#__hash_key": this.model.getHashKey()
+					"#__hash_key": this.model[internalProperties].getHashKey()
 				};
 			}
 
@@ -183,7 +183,7 @@ export class Item {
 				return paramsPromise;
 			}
 		}
-		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.model.pendingTaskPromise()]).then((promises) => {
+		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.model[internalProperties].pendingTaskPromise()]).then((promises) => {
 			const [putItemObj] = promises;
 			return ddb("putItem", putItemObj);
 		});
@@ -228,12 +228,12 @@ export class AnyItem extends Item {
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Item.objectFromSchema (setting timestamps, etc.)
 Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
-		const schema: Schema = await model.schemaForObject(object);
-		if (schema.settings.timestamps && settings.type === "toDynamo") {
+		const schema: Schema = await model[internalProperties].schemaForObject(object);
+		if (schema[internalProperties].settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
 
-			const createdAtProperties: string[] = ((Array.isArray((schema.settings.timestamps as TimestampObject).createdAt) ? (schema.settings.timestamps as TimestampObject).createdAt : [(schema.settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
-			const updatedAtProperties: string[] = ((Array.isArray((schema.settings.timestamps as TimestampObject).updatedAt) ? (schema.settings.timestamps as TimestampObject).updatedAt : [(schema.settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
+			const createdAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).createdAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).createdAt : [(schema[internalProperties].settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
+			const updatedAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).updatedAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).updatedAt : [(schema[internalProperties].settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
 			if (object[internalProperties] && !object[internalProperties].storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
 				createdAtProperties.forEach((prop) => {
 					utils.object.set(object as any, prop, date);
@@ -252,7 +252,7 @@ Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item
 // https://stackoverflow.com/a/59928314/894067
 const attributesWithSchemaCache: ObjectType = {};
 Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Promise<string[]> {
-	const schema: Schema = await model.schemaForObject(item);
+	const schema: Schema = await model[internalProperties].schemaForObject(item);
 	const attributes = schema.attributes();
 	const itemID = utils.object.keys(item as any).join("");
 	if (attributesWithSchemaCache[itemID] && attributesWithSchemaCache[itemID][attributes.join()]) {
@@ -319,12 +319,12 @@ export interface ItemObjectFromSchemaSettings {
 }
 // This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
 Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
-	if (settings.checkExpiredItem && model.options.expires && ((model.options.expires as ModelExpiresSettings).items || {}).returnExpired === false && object[(model.options.expires as ModelExpiresSettings).attribute] && object[(model.options.expires as ModelExpiresSettings).attribute] * 1000 < Date.now()) {
+	if (settings.checkExpiredItem && model[internalProperties].options.expires && ((model[internalProperties].options.expires as ModelExpiresSettings).items || {}).returnExpired === false && object[(model[internalProperties].options.expires as ModelExpiresSettings).attribute] && object[(model[internalProperties].options.expires as ModelExpiresSettings).attribute] * 1000 < Date.now()) {
 		return undefined;
 	}
 
 	const returnObject = {...object};
-	const schema: Schema = settings.schema || await model.schemaForObject(returnObject);
+	const schema: Schema = settings.schema || await model[internalProperties].schemaForObject(returnObject);
 	const schemaAttributes = schema.attributes(returnObject);
 
 	// Type check
