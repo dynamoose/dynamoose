@@ -229,11 +229,11 @@ export class AnyItem extends Item {
 Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
 		const schema: Schema = await model[internalProperties].schemaForObject(object);
-		if (schema.settings.timestamps && settings.type === "toDynamo") {
+		if (schema[internalProperties].settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
 
-			const createdAtProperties: string[] = ((Array.isArray((schema.settings.timestamps as TimestampObject).createdAt) ? (schema.settings.timestamps as TimestampObject).createdAt : [(schema.settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
-			const updatedAtProperties: string[] = ((Array.isArray((schema.settings.timestamps as TimestampObject).updatedAt) ? (schema.settings.timestamps as TimestampObject).updatedAt : [(schema.settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
+			const createdAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).createdAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).createdAt : [(schema[internalProperties].settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
+			const updatedAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).updatedAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).updatedAt : [(schema[internalProperties].settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
 			if (object[internalProperties] && !object[internalProperties].storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
 				createdAtProperties.forEach((prop) => {
 					utils.object.set(object as any, prop, date);

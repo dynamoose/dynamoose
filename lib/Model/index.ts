@@ -339,7 +339,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 			options.expires = utils.combine_objects(options.expires as any, {"attribute": "ttl"});
 
 			realSchemas.forEach((schema) => {
-				schema.schemaObject[(options.expires as ModelExpiresSettings).attribute] = {
+				schema[internalProperties].schemaObject[(options.expires as ModelExpiresSettings).attribute] = {
 					"type": {
 						"value": Date,
 						"settings": {

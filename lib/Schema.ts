@@ -498,13 +498,13 @@ export class Schema {
 			const [key, value] = entry;
 			let newValue = {
 				"type": Object,
-				"schema": (value as any).schemaObject
+				"schema": (value as any)[internalProperties].schemaObject
 			};
 			if (key.endsWith(".schema")) {
-				newValue = (value as any).schemaObject;
+				newValue = (value as any)[internalProperties].schemaObject;
 			}
 
-			const subSettings = {...(value as any).settings};
+			const subSettings = {...(value as any)[internalProperties].settings};
 			Object.entries(subSettings).forEach((entry) => {
 				const [settingsKey, settingsValue] = entry;
 				switch (settingsKey) {
@@ -543,9 +543,13 @@ export class Schema {
 			}
 		});
 
-		// Anytime `this.schemaObject` is modified, `this[internalCache].attributes` must be set to undefined or null
-		this.schemaObject = parsedObject;
-		this.settings = parsedSettings;
+		Object.defineProperty(this, internalProperties, {
+			"configurable": false,
+			"value": {
+				"schemaObject": parsedObject,
+				"settings": parsedSettings
+			}
+		});
 
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
 			Object.keys(object).forEach((key) => {
@@ -559,7 +563,7 @@ export class Schema {
 				}
 			});
 		};
-		checkAttributeNameDots(this.schemaObject);
+		checkAttributeNameDots(this[internalProperties].schemaObject);
 
 		const checkMultipleArraySchemaElements = (key: string): void => {
 			let attributeType: string[] = [];
@@ -617,10 +621,10 @@ export class Schema {
 
 // TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
 Schema.prototype.getHashKey = function (this: Schema): string {
-	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.schemaObject)[0];
+	return Object.keys(this[internalProperties].schemaObject).find((key) => (this[internalProperties].schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this[internalProperties].schemaObject)[0];
 };
 Schema.prototype.getRangeKey = function (this: Schema): string | void {
-	return Object.keys(this.schemaObject).find((key) => (this.schemaObject[key] as AttributeDefinition).rangeKey);
+	return Object.keys(this[internalProperties].schemaObject).find((key) => (this[internalProperties].schemaObject[key] as AttributeDefinition).rangeKey);
 };
 
 // This function will take in an attribute and value, and throw an error if the property is required and the value is undefined or null.
@@ -681,7 +685,6 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 			if (indexValue.rangeKey) {
 				dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
 			}
-			console.log(model);
 			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model[internalProperties].options.throughput === "ON_DEMAND" ? {} : model[internalProperties].options);
 			// TODO: fix up the two lines below. Using too many `as` statements.
 			if ((throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput) {
@@ -702,7 +705,7 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 };
 
 Schema.prototype.getSettingValue = function (this: Schema, setting: string): any {
-	return this.settings[setting];
+	return this[internalProperties].settings[setting];
 };
 
 function attributesAction (this: Schema, object?: ObjectType): string[] {
@@ -739,7 +742,7 @@ function attributesAction (this: Schema, object?: ObjectType): string[] {
 		}, []);
 	};
 
-	return main(this.schemaObject);
+	return main(this[internalProperties].schemaObject);
 }
 Schema.prototype.attributes = function (this: Schema, object?: ObjectType): string[] {
 	return attributesAction.call(this, object);
@@ -758,7 +761,7 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 		}
 		previousKeyParts.push(part);
 		return utils.object.get(result.schema, part);
-	}, {"schema": this.schemaObject} as any);
+	}, {"schema": this[internalProperties].schemaObject} as any);
 
 	if (Array.isArray(result)) {
 		const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
