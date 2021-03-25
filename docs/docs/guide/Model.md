@@ -73,10 +73,11 @@ The `config` parameter is an object used to customize settings for the model.
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
 | update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
+| populate | If Dynamoose should automatically run [`document.populate`](Document#documentpopulatesettings-callback) on retrieved items. | Boolean | false |
 | expires | The setting to describe the time to live for documents created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
 | expires.ttl | The default amount of time the document should stay alive from creation time in milliseconds. | Number | undefined |
-| expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` |
-| expires.items | The options for documents with ttl. | Object | {} |
+| expires.attribute | The attribute name for where the document time to live attribute. | String | `ttl` (if `expires` is set to a number) |
+| expires.items | The options for documents with ttl. | Object |   |
 | expires.items.returnExpired | If Dynamoose should include expired documents when returning retrieved documents. | Boolean | true |
 
 The default object is listed below.
@@ -85,9 +86,9 @@ The default object is listed below.
 {
 	"create": true,
 	"throughput": {
-		"read": 5,
-		"write": 5
-	}, // Same as `"throughput": 5`
+		"read": 1,
+		"write": 1
+	},
 	"prefix": "",
 	"suffix": "",
 	"waitForActive": {
@@ -98,7 +99,8 @@ The default object is listed below.
 		}
 	},
 	"update": false,
-	"expires": null
+	"populate": false,
+	"expires": undefined
 }
 ```
 
