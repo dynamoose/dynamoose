@@ -12,6 +12,7 @@ import {PopulateItems} from "../Populate";
 import {AttributeMap} from "../Types";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
+import {Table} from "../Table";
 const {internalProperties} = Internal.General;
 
 // Transactions
@@ -146,6 +147,15 @@ export class Model<T extends ItemCarrier = AnyItem> {
 			return this[internalProperties].schemas[0].getRangeKey();
 		};
 
+		this[internalProperties].table = (): Table => {
+			const table = this[internalProperties]._table;
+			if (!table) {
+				throw new CustomError.OtherError(`No table has been registered for ${this.name} model. Use \`new dynamoose.Table\` to register a table for this model.`);
+			}
+
+			return table;
+		};
+
 		let realSchemas: Schema[];
 		if (!schema || Array.isArray(schema) && schema.length === 0) {
 			throw new CustomError.MissingSchemaError(`Schema hasn't been registered for model "${name}".\nUse "dynamoose.model(name, schema)"`);
@@ -191,7 +201,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 			}},
 			{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": (key: string, condition: Condition): DynamoDB.ConditionCheck => ({
 				"Key": this.Item.objectToDynamo(this[internalProperties].convertObjectToKey(key)),
-				"TableName": this[internalProperties].table[internalProperties].name,
+				"TableName": this[internalProperties].table()[internalProperties].name,
 				...condition ? condition.requestObject() : {}
 			} as any)}
 		].reduce((accumulator: ObjectType, currentValue) => {
@@ -261,8 +271,8 @@ export class Model<T extends ItemCarrier = AnyItem> {
 
 		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 		const prepareResponse = async (response: DynamoDB.BatchGetItemOutput): Promise<ModelBatchGetItemsResponse<ItemCarrier>> => {
-			const tmpResult = await Promise.all(response.Responses[this[internalProperties].table[internalProperties].name].map((item) => itemify(item)));
-			const unprocessedArray = response.UnprocessedKeys[this[internalProperties].table[internalProperties].name] ? response.UnprocessedKeys[this[internalProperties].table[internalProperties].name].Keys : [];
+			const tmpResult = await Promise.all(response.Responses[this[internalProperties].table()[internalProperties].name].map((item) => itemify(item)));
+			const unprocessedArray = response.UnprocessedKeys[this[internalProperties].table()[internalProperties].name] ? response.UnprocessedKeys[this[internalProperties].table()[internalProperties].name].Keys : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item)));
 			const startArray: ModelBatchGetItemsResponse<ItemCarrier> = Object.assign([], {
 				"unprocessedKeys": [],
@@ -286,13 +296,13 @@ export class Model<T extends ItemCarrier = AnyItem> {
 
 		const params: DynamoDB.BatchGetItemInput = {
 			"RequestItems": {
-				[this[internalProperties].table[internalProperties].name]: {
+				[this[internalProperties].table()[internalProperties].name]: {
 					"Keys": keyObjects.map((key) => this.Item.objectToDynamo(key))
 				}
 			}
 		};
 		if (settings.attributes) {
-			params.RequestItems[this[internalProperties].table[internalProperties].name].AttributesToGet = settings.attributes;
+			params.RequestItems[this[internalProperties].table()[internalProperties].name].AttributesToGet = settings.attributes;
 		}
 		if (settings.return === "request") {
 			if (callback) {
@@ -303,7 +313,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 				return params;
 			}
 		}
-		const promise = this[internalProperties].table[internalProperties].pendingTaskPromise().then(() => ddb("batchGetItem", params));
+		const promise = this[internalProperties].table()[internalProperties].pendingTaskPromise().then(() => ddb("batchGetItem", params));
 
 		if (callback) {
 			const localCallback: CallbackType<ItemCarrier[], any> = callback as CallbackType<ItemCarrier[], any>;
@@ -335,7 +345,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		}
 
 		const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
-			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this[internalProperties].table[internalProperties].name] ? response.UnprocessedItems[this[internalProperties].table[internalProperties].name] : [];
+			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this[internalProperties].table()[internalProperties].name] ? response.UnprocessedItems[this[internalProperties].table()[internalProperties].name] : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item.PutRequest.Item)));
 			return items.reduce((result: {unprocessedItems: ObjectType[]}, item) => {
 				const unprocessedItem = tmpResultUnprocessed.find((searchItem) => Object.keys(item).every((keyProperty) => searchItem[keyProperty] === item[keyProperty]));
@@ -348,7 +358,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 
 		const paramsPromise: Promise<DynamoDB.BatchWriteItemInput> = (async (): Promise<DynamoDB.BatchWriteItemInput> => ({
 			"RequestItems": {
-				[this[internalProperties].table[internalProperties].name]: await Promise.all(items.map(async (item) => ({
+				[this[internalProperties].table()[internalProperties].name]: await Promise.all(items.map(async (item) => ({
 					"PutRequest": {
 						"Item": await new this.Item(item as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]})
 					}
@@ -364,7 +374,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 				return paramsPromise;
 			}
 		}
-		const promise = this[internalProperties].table[internalProperties].pendingTaskPromise().then(() => paramsPromise).then((params) => ddb("batchWriteItem", params));
+		const promise = this[internalProperties].table()[internalProperties].pendingTaskPromise().then(() => paramsPromise).then((params) => ddb("batchWriteItem", params));
 
 		if (callback) {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, any> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, any>;
@@ -398,7 +408,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		const keyObjects: KeyObject[] = keys.map((key) => this[internalProperties].convertObjectToKey(key));
 
 		const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
-			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this[internalProperties].table[internalProperties].name] ? response.UnprocessedItems[this[internalProperties].table[internalProperties].name] : [];
+			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[this[internalProperties].table()[internalProperties].name] ? response.UnprocessedItems[this[internalProperties].table()[internalProperties].name] : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item.DeleteRequest.Key)));
 			return keyObjects.reduce((result, key) => {
 				const item = tmpResultUnprocessed.find((item) => Object.keys(key).every((keyProperty) => item[keyProperty] === key[keyProperty]));
@@ -411,7 +421,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 
 		const params: DynamoDB.BatchWriteItemInput = {
 			"RequestItems": {
-				[this[internalProperties].table[internalProperties].name]: keyObjects.map((key) => ({
+				[this[internalProperties].table()[internalProperties].name]: keyObjects.map((key) => ({
 					"DeleteRequest": {
 						"Key": this.Item.objectToDynamo(key)
 					}
@@ -427,7 +437,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 				return params;
 			}
 		}
-		const promise = this[internalProperties].table[internalProperties].pendingTaskPromise().then(() => ddb("batchWriteItem", params));
+		const promise = this[internalProperties].table()[internalProperties].pendingTaskPromise().then(() => ddb("batchWriteItem", params));
 
 		if (callback) {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, any> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, any>;
@@ -666,13 +676,13 @@ export class Model<T extends ItemCarrier = AnyItem> {
 
 		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"});
 		const localSettings: ModelUpdateSettings = settings;
-		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this[internalProperties].table[internalProperties].pendingTaskPromise().then(async () => ({
+		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this[internalProperties].table()[internalProperties].pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(keyObj),
 			"ReturnValues": "ALL_NEW",
 			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? localSettings.condition.requestObject({"index": {"start": index, "set": (i): void => {
 				index = i;
 			}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}, await getUpdateExpressionObject()),
-			"TableName": this[internalProperties].table[internalProperties].name
+			"TableName": this[internalProperties].table()[internalProperties].name
 		}));
 		if (settings.return === "request") {
 			if (callback) {
@@ -736,7 +746,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 
 		let deleteItemParams: DynamoDB.DeleteItemInput = {
 			"Key": this.Item.objectToDynamo(this[internalProperties].convertObjectToKey(key)),
-			"TableName": this[internalProperties].table[internalProperties].name
+			"TableName": this[internalProperties].table()[internalProperties].name
 		};
 
 		if (settings.condition) {
@@ -755,7 +765,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 				return deleteItemParams;
 			}
 		}
-		const promise = this[internalProperties].table[internalProperties].pendingTaskPromise().then(() => ddb("deleteItem", deleteItemParams));
+		const promise = this[internalProperties].table()[internalProperties].pendingTaskPromise().then(() => ddb("deleteItem", deleteItemParams));
 
 		if (callback) {
 			promise.then(() => callback()).catch((error) => callback(error));
@@ -789,7 +799,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 
 		const getItemParams: DynamoDB.GetItemInput = {
 			"Key": this.Item.objectToDynamo(this[internalProperties].convertObjectToKey(key)),
-			"TableName": this[internalProperties].table[internalProperties].name
+			"TableName": this[internalProperties].table()[internalProperties].name
 		};
 		if (settings.consistent !== undefined && settings.consistent !== null) {
 			getItemParams.ConsistentRead = settings.consistent;
@@ -807,7 +817,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 				return getItemParams;
 			}
 		}
-		const promise = this[internalProperties].table[internalProperties].pendingTaskPromise().then(() => ddb("getItem", getItemParams));
+		const promise = this[internalProperties].table()[internalProperties].pendingTaskPromise().then(() => ddb("getItem", getItemParams));
 
 		if (callback) {
 			const localCallback: CallbackType<ItemCarrier, any> = callback as CallbackType<ItemCarrier, any>;

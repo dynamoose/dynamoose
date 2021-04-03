@@ -60,7 +60,7 @@ const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaD
 	Object.defineProperty(returnObject, "name", {
 		"configurable": false,
 		"value": returnObject.Model.name
-	})
+	});
 
 	return returnObject as any;
 };

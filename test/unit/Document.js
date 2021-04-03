@@ -1538,7 +1538,7 @@ describe("Item", () => {
 						}
 					});
 					const model = dynamoose.model("User2", {"id": Number, "name": String});
-					new dynamoose.Table("User2", [model], {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}})
+					new dynamoose.Table("User2", [model], {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
 					const item = new model({"id": 1, "name": "Charlie"});
 					await utils.set_immediate_promise();
 
@@ -1548,12 +1548,12 @@ describe("Item", () => {
 					await utils.set_immediate_promise();
 					expect(putParams).to.eql([]);
 					expect(finishedSavingUser).to.be.false;
-					expect(model.Model[internalProperties].table[internalProperties].pendingTasks.length).to.eql(1);
+					expect(model.Model[internalProperties].table()[internalProperties].pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table[internalProperties].pendingTaskPromise();
+					await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(putParams).to.eql([{
 						"Item": {

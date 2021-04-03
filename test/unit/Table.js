@@ -559,7 +559,7 @@ describe("Table", () => {
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table[internalProperties].pendingTaskPromise();
+							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{
@@ -640,7 +640,7 @@ describe("Table", () => {
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table[internalProperties].pendingTaskPromise();
+							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(updateTableParams).to.eql([
 								{
@@ -830,7 +830,7 @@ describe("Table", () => {
 							};
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}, "status": {"type": String, "index": {"global": true}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table[internalProperties].pendingTaskPromise();
+							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expect(describeTableFunctionCalledTimes).to.eql(5);
 							expect(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
@@ -967,7 +967,7 @@ describe("Table", () => {
 				const tableName = "Cat";
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"expires": {"ttl": 1000, "attribute": "expires"}});
-				await model.Model[internalProperties].table[internalProperties].pendingTaskPromise();
+				await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 				expect(updateTTLParams).to.eql([{
 					"TableName": tableName,
 					"TimeToLiveSpecification": {
@@ -1007,7 +1007,7 @@ describe("Table", () => {
 		const tests = [
 			{"name": "No options", "options": {}, "input": "Table", "output": "Table"},
 			{"name": "Prefix", "options": {"prefix": "MyApp_"}, "input": "Table", "output": "MyApp_Table"},
-			{"name": "Suffix", "options": {"suffix": "_Table"}, "input": "User", "output": "User_Table"},
+			{"name": "Suffix", "options": {"suffix": "_Table"}, "input": "User", "output": "User_Table"}
 		];
 
 		tests.forEach((test) => {

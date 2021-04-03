@@ -123,11 +123,11 @@ export class Table {
 			});
 		}
 		this[internalProperties].models = models.map((model: any) => {
-			if (model.Model[internalProperties].table) {
+			if (model.Model[internalProperties]._table) {
 				throw new CustomError.InvalidParameter(`Model ${model[internalProperties].name} has already been assigned to a table.`);
 			}
 
-			model.Model[internalProperties].table = this;
+			model.Model[internalProperties]._table = this;
 			return model;
 		});
 
