@@ -1003,6 +1003,29 @@ describe("Table", () => {
 		});
 	});
 
+	describe("table.name", () => {
+		const tests = [
+			{"name": "No options", "options": {}, "input": "Table", "output": "Table"},
+			{"name": "Prefix", "options": {"prefix": "MyApp_"}, "input": "Table", "output": "MyApp_Table"},
+			{"name": "Suffix", "options": {"suffix": "_Table"}, "input": "User", "output": "User_Table"},
+		];
+
+		tests.forEach((test) => {
+			describe(test.name, () => {
+				it("Should return correct value", () => {
+					const table = new dynamoose.Table(test.input, [dynamoose.model("Cat", {"id": String})], test.options);
+					expect(table.name).to.eql(test.output);
+				});
+			});
+		});
+
+		it("Should not be able to set", () => {
+			const table = new dynamoose.Table("Table", [dynamoose.model("Cat", {"id": String})]);
+			table.name = "RandomString";
+			expect(table.name).to.eql("Table");
+		});
+	});
+
 	describe("table.create()", () => {
 		it("Should be a function", () => {
 			const model = dynamoose.model("User", {"id": String});
