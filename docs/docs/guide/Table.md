@@ -24,8 +24,8 @@ The `config` parameter is an object used to customize settings for the table.
 | throughput | An object with settings for what the throughput for the table should be on creation, or a number which will use the same throughput for both read and write. If this is set to `ON_DEMAND` the table will use the `PAY_PER_REQUEST` billing mode. If the table is not created by Dynamoose, this object has no effect. | Object \| Number \| String |  |
 | throughput.read | What the read throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
 | throughput.write | What the write throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
-| prefix | A string that should be prepended to the table name. | String | "" |
-| suffix | A string that should be appended to the table name. | String | "" |
+| prefix | A string that should be prepended to the table name. | String |   |
+| suffix | A string that should be appended to the table name. | String |   |
 | waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. For production environments we recommend setting this value to `false`. | Object |  |
 | waitForActive.enabled | If Dynamoose should wait for the table to be active before running actions on it. | Boolean | true |
 | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
