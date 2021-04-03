@@ -919,12 +919,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expect(calledGetItem).to.be.false;
 					expect(user).to.not.exist;
-					expect(model.Model[internalProperties].table[internalProperties].pendingTasks.length).to.eql(1);
+					expect(model.Model[internalProperties].table()[internalProperties].pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table[internalProperties].pendingTaskPromise();
+					await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(calledGetItem).to.be.true;
 					expect({...user}).to.eql({"id": 1, "name": "Charlie"});
@@ -1184,12 +1184,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expect(calledBatchGetItem).to.be.false;
 					expect(users).to.not.exist;
-					expect(model.Model[internalProperties].table[internalProperties].pendingTasks.length).to.eql(1);
+					expect(model.Model[internalProperties].table()[internalProperties].pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table[internalProperties].pendingTaskPromise();
+					await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expect(calledBatchGetItem).to.be.true;
 					expect(users.map((user) => ({...user}))).to.eql([{"id": 1, "name": "Charlie"}]);

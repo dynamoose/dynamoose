@@ -95,8 +95,8 @@ export class Item {
 
 	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
 	async prepareForResponse (): Promise<Item> {
-		if (this.model[internalProperties].table[internalProperties].options.populate) {
-			return this.populate({"properties": this.model[internalProperties].table[internalProperties].options.populate});
+		if (this.model[internalProperties].table()[internalProperties].options.populate) {
+			return this.populate({"properties": this.model[internalProperties].table()[internalProperties].options.populate});
 		}
 		return this;
 	}
@@ -154,7 +154,7 @@ export class Item {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
-				"TableName": this.model[internalProperties].table[internalProperties].name
+				"TableName": this.model[internalProperties].table()[internalProperties].name
 			};
 
 			if (localSettings.condition) {
@@ -184,7 +184,7 @@ export class Item {
 				return paramsPromise;
 			}
 		}
-		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.model[internalProperties].table[internalProperties].pendingTaskPromise()]).then((promises) => {
+		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.model[internalProperties].table()[internalProperties].pendingTaskPromise()]).then((promises) => {
 			const [putItemObj] = promises;
 			return ddb("putItem", putItemObj);
 		});
@@ -320,7 +320,7 @@ export interface ItemObjectFromSchemaSettings {
 }
 // This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
 Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
-	if (settings.checkExpiredItem && model[internalProperties].table[internalProperties].options.expires && ((model[internalProperties].table[internalProperties].options.expires as TableExpiresSettings).items || {}).returnExpired === false && object[(model[internalProperties].table[internalProperties].options.expires as TableExpiresSettings).attribute] && object[(model[internalProperties].table[internalProperties].options.expires as TableExpiresSettings).attribute] * 1000 < Date.now()) {
+	if (settings.checkExpiredItem && model[internalProperties].table()[internalProperties].options.expires && ((model[internalProperties].table()[internalProperties].options.expires as TableExpiresSettings).items || {}).returnExpired === false && object[(model[internalProperties].table()[internalProperties].options.expires as TableExpiresSettings).attribute] && object[(model[internalProperties].table()[internalProperties].options.expires as TableExpiresSettings).attribute] * 1000 < Date.now()) {
 		return undefined;
 	}
 
