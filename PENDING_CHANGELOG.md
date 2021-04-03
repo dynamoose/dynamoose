@@ -5,7 +5,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 ### 🚨 Breaking Changes 🚨
 
 - Upgraded to AWS-SDK v3
-	- This leads to a MASSIVE reduction in the size of Dynamoose
+	- This leads to a MASSIVE reduction in the package size of Dynamoose
 	- Only users using the `dynamoose.aws` object will be impacted (if you are only using `dynamoose.aws.ddb.local`, there will be no breaking changes)
 	- In depth changelog:
 		- `dynamoose.aws.sdk` has been removed
