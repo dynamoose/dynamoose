@@ -37,6 +37,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 ### General
 
 - Added `table.create()` method to create a table manually
+- Added `table.name` property to be able to access table name
 
 ### Bug Fixes
 
