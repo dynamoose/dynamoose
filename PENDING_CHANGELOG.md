@@ -15,6 +15,17 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 			- `input` has changed to `convertToAttr`
 			- `output` has changed to `convertToNative`
 			- For more information please refer to the AWS-SDK v3 changelogs
+- Added `dynamoose.Table` class. `dynamoose.model` now represents an entity or type of data (ex. User, Movie, Order), and `dynamoose.Table` represents a single DynamoDB table. The example below show how to convert your code to this new syntax.
+```
+// If you have the following code in v2:
+
+const User = dynamoose.model("User", {"id": String});
+
+// It will be converted to this in v3:
+
+const User = dynamoose.model("User", {"id": String});
+const DBTable = new dynamoose.Table("DBTable", [User]);
+```
 - Renamed `Document` to `Item`
 	- The largest user facing API change is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`
 - `dynamoose.logger` is now an async function instead of an object. For example, `dynamoose.logger.status()` is now `(await dynamoose.logger()).status()`
@@ -25,13 +36,15 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 
 ### General
 
+- Added `table.create()` method to create a table manually
+
 ### Bug Fixes
 
 ### Documentation
 
 ### Other
 
-- Removed `source-map-support` dependency
+- Move `source-map-support` into `devDependencies`
 - Source map files are no longer included in the package
 	- You can generate source map files by cloning the reposistory, running `npm install`, then running `npm run build:sourcemap`. The generated source map files will be located in the `dist` folder.
 - Made a lot of internal properties private
