@@ -111,7 +111,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.get", () => {
+	describe("model.get()", () => {
 		let User, getItemParams, getItemFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -920,7 +920,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.batchGet", () => {
+	describe("model.batchGet()", () => {
 		let User, params, promiseFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -1185,7 +1185,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.create", () => {
+	describe("model.create()", () => {
 		let User, createItemParams, createItemFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -1411,7 +1411,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.batchPut", () => {
+	describe("model.batchPut()", () => {
 		let User, params, promiseFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -1540,7 +1540,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.update", () => {
+	describe("model.update()", () => {
 		let User, updateItemParams, updateItemFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
@@ -3263,7 +3263,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.delete", () => {
+	describe("model.delete()", () => {
 		let User, deleteItemParams, deleteItemFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -3442,7 +3442,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.batchDelete", () => {
+	describe("model.batchDelete()", () => {
 		let User, params, promiseFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -3547,7 +3547,7 @@ describe("Model", () => {
 		});
 	});
 
-	describe("Model.transaction", () => {
+	describe("model.transaction", () => {
 		let User;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -4193,7 +4193,7 @@ describe("Model", () => {
 	});
 });
 
-describe("model", () => {
+describe("Model Item Instance", () => {
 	beforeEach(() => {
 		dynamoose.Table.defaults.set({"create": false, "waitForActive": false});
 	});
