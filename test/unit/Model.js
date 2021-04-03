@@ -111,6 +111,19 @@ describe("Model", () => {
 		});
 	});
 
+	describe("model.name", () => {
+		it("Should return correct value", () => {
+			const model = dynamoose.model("Cat", {"id": String});
+			expect(model.name).to.eql("Cat");
+		});
+
+		it("Should not be able to set", () => {
+			const model = dynamoose.model("Cat", {"id": String});
+			model.name = "Dog";
+			expect(model.name).to.eql("Cat");
+		});
+	});
+
 	describe("model.get()", () => {
 		let User, getItemParams, getItemFunction;
 		beforeEach(() => {

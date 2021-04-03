@@ -102,6 +102,17 @@ The default object is listed below.
 }
 ```
 
+## model.name
+
+This property is a string that represents the model name.
+
+This property is unable to be set.
+
+```js
+const User = dynamoose.model("User", {"id": String});
+
+console.log(User.name); // User
+```
 
 ## model.get(key[, settings][, callback])
 
