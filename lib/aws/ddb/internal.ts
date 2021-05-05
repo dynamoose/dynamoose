@@ -27,21 +27,17 @@ async function main (method: "transactWriteItems", params: DynamoDB.TransactWrit
 
 async function main (method: string, params: any): Promise<any> {
 	const func = ddb()[method](params);
-    func.on("extractError", ({ error, httpResponse }) => {
-        try {
-          if (error) {
-            const { CancellationReasons } = JSON.parse(httpResponse.body.toString());
-            error.cancellationReasons = CancellationReasons;
-          }
-        } catch (err) {
-            throw err;
-        }
-    });
+	func.on("extractError", ({error, httpResponse}) => {
+		if (error) {
+			const {CancellationReasons} = JSON.parse(httpResponse.body.toString());
+			error.cancellationReasons = CancellationReasons;
+		}
+	});
 
-    log({ "level": "debug", "category": `aws:dynamodb:${method}:request`, "message": JSON.stringify(params, null, 4), "payload": { "request": params } });
-    const result = await func.promise();
-    log({ "level": "debug", "category": `aws:dynamodb:${method}:response`, "message": typeof result === "undefined" ? "undefined" : JSON.stringify(result, null, 4), "payload": { "response": result } });
-    return result;
+	log({"level": "debug", "category": `aws:dynamodb:${method}:request`, "message": JSON.stringify(params, null, 4), "payload": {"request": params}});
+	const result = await func.promise();
+	log({"level": "debug", "category": `aws:dynamodb:${method}:response`, "message": typeof result === "undefined" ? "undefined" : JSON.stringify(result, null, 4), "payload": {"response": result}});
+	return result;
 }
 
 export = main;
