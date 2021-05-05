@@ -27,10 +27,11 @@ async function main (method: "transactWriteItems", params: DynamoDB.TransactWrit
 
 async function main (method: string, params: any): Promise<any> {
 	const func = ddb()[method](params);
+  // Retrieve Dynamodb Transactions
 	func.on("extractError", ({error, httpResponse}) => {
 		if (error) {
 			const {CancellationReasons} = JSON.parse(httpResponse.body.toString());
-			error.cancellationReasons = CancellationReasons;
+			error.CancellationReasons = CancellationReasons;
 		}
 	});
 
