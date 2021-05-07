@@ -27,13 +27,16 @@ async function main (method: "transactWriteItems", params: DynamoDB.TransactWrit
 
 async function main (method: string, params: any): Promise<any> {
 	const func = ddb()[method](params);
-	// Retrieve Dynamodb Transactions Cancellation Reasons Error
-	func.on("extractError", ({error, httpResponse}) => {
-		if (error) {
-			const {CancellationReasons} = JSON.parse(httpResponse.body.toString());
-			error.CancellationReasons = CancellationReasons;
-		}
-	});
+
+	// Retrieve Dynamodb Transactions Cancellation Reasons Error if method related to transaction
+	if (method === "transactGetItems" || method === "transactWriteItems") {
+		func.on("extractError", ({error, httpResponse}) => {
+			if (error) {
+				const {CancellationReasons} = JSON.parse(httpResponse.body.toString());
+				error.CancellationReasons = CancellationReasons;
+			}
+		});
+	}
 
 	log({"level": "debug", "category": `aws:dynamodb:${method}:request`, "message": JSON.stringify(params, null, 4), "payload": {"request": params}});
 	const result = await func.promise();
