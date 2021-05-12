@@ -471,7 +471,7 @@ You can also pass in a `settings` object parameter to define extra settings for 
 |------|-------------|------|---------|
 | return | What the function should return. Can be `document`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `document` |
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
-| returnValues | Set which documents to return after the update. Valid values are: `NONE`, `ALL_OLD`, `UPDATED_OLD`, `ALL_NEW` `UPDATED_NEW` | String | `ALL_NEW`
+| returnValues | Set which documents to return after the update. This setting will be passed into the DynamoDB `ReturnValues` parameter. | String | `ALL_NEW`
 
 There are two different methods for specifying what you'd like to edit in the document. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
