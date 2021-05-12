@@ -317,7 +317,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 			setupFlow.push(() => createTable(this));
 		}
 		// Wait for Active
-		if (typeof this.options.waitForActive !== "boolean" && (this.options.waitForActive || {}).enabled) {
+		if ((this.options.waitForActive || {}).enabled) {
 			setupFlow.push(() => waitForActive(this, false));
 		}
 		// Update Time To Live
