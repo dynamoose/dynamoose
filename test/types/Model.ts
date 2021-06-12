@@ -33,6 +33,7 @@ const shouldPassBatchDeleteWithNoReturnSettingCallback = model.batchDelete([{"id
 
 const shouldSucceedWithWaitForActiveAsObject = dynamoose.model("User", {"id": String}, {"waitForActive": {"enabled": true}});
 const shouldSucceedWithWaitForActiveSetToFalse = dynamoose.model("User", {"id": String}, {"waitForActive": false});
+const shouldSucceedWithWaitForActiveSetToTrue = dynamoose.model("User", {"id": String}, {"waitForActive": true});
 
 // @ts-expect-error
 const shouldFailWithInvalidTransaction = model.transaction.notValid();
