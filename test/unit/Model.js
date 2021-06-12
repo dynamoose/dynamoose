@@ -109,6 +109,11 @@ describe("Model", () => {
 			expect(failed).to.be.false;
 			process.removeListener("unhandledRejection", errorHandler);
 		});
+
+		it("Should throw an error if trying to access table with no table", () => {
+			const model = dynamoose.model("User", {"id": String});
+			expect(model.Model[internalProperties].table).to.throw("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
+		});
 	});
 
 	describe("model.name", () => {
