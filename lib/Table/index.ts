@@ -9,7 +9,6 @@ import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {IndexItem} from "../Schema";
 import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
-import {Condition} from "../Condition";
 
 // This class represents a single DynamoDB table
 export class Table {
