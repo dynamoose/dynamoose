@@ -372,7 +372,7 @@ describe("Model", () => {
 		});
 
 		describe("Wait For Active", () => {
-			let describeTableParams = [], describeTableFunction;
+			let describeTableParams = [], describeTableFunction, updateTableParams = [];
 			beforeEach(() => {
 				dynamoose.model.defaults.set({
 					"create": false,
@@ -387,17 +387,25 @@ describe("Model", () => {
 			});
 			beforeEach(() => {
 				describeTableParams = [];
+				updateTableParams = [];
 				dynamoose.aws.ddb.set({
 					"describeTable": (params) => {
 						describeTableParams.push(params);
 						return {
 							"promise": () => describeTableFunction(params)
 						};
+					},
+					"updateTable": (params) => {
+						updateTableParams.push(params);
+						return {
+							"promise": () => Promise.resolve()
+						};
 					}
 				});
 			});
 			afterEach(() => {
 				describeTableParams = [];
+				updateTableParams = [];
 				describeTableFunction = null;
 				dynamoose.aws.ddb.revert();
 			});
@@ -471,6 +479,44 @@ describe("Model", () => {
 				expect(describeTableParams).to.eql([{
 					"TableName": tableName
 				}]);
+			});
+
+			it("Should call updateTable even if table is still being created when waitForActive is set to false", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "CREATING"
+					}
+				});
+				dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": false});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([{
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 2
+					},
+					"TableName": tableName
+				}]);
+			});
+
+			it("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "CREATING"
+					}
+				});
+				dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": true});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([]);
 			});
 		});
 
