@@ -1,6 +1,5 @@
 const {expect} = require("chai");
 const dynamoose = require("../../dist");
-const Error = require("../../dist/Error");
 const Internal = require("../../dist/Internal");
 const utils = require("../../dist/utils");
 const {internalProperties} = Internal.General;
