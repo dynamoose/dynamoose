@@ -1,7 +1,6 @@
 import CustomError = require("./Error");
 import {Model} from "./Model";
 import {Item} from "./Item";
-import Internal = require("./Internal");
 
 let models: {[name: string]: Model<Item>} = {};
 
