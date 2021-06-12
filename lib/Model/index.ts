@@ -239,6 +239,7 @@ interface ModelBatchPutSettings {
 interface ModelUpdateSettings {
 	return?: "document" | "request";
 	condition?: Condition;
+	returnValues?: DynamoDB.ReturnValue;
 }
 interface ModelBatchGetDocumentsResponse<T> extends DocumentArray<T> {
 	unprocessedKeys: ObjectType[];
@@ -891,7 +892,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.pendingTaskPromise().then(async () => ({
 			"Key": this.Document.objectToDynamo(keyObj),
-			"ReturnValues": "ALL_NEW",
+			"ReturnValues": localSettings.returnValues || "ALL_NEW",
 			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? localSettings.condition.requestObject({"index": {"start": index, "set": (i): void => {
 				index = i;
 			}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}, await getUpdateExpressionObject()),
