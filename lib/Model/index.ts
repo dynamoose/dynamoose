@@ -37,7 +37,7 @@ export interface ModelOptions {
 	throughput: "ON_DEMAND" | number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
-	waitForActive: false | ModelWaitForActiveSettings;
+	waitForActive: boolean | ModelWaitForActiveSettings;
 	update: boolean | ModelUpdateOptions[];
 	populate: string | string[] | boolean;
 	expires: number | ModelExpiresSettings;
