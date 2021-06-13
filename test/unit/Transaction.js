@@ -59,6 +59,7 @@ describe("Transaction", () => {
 			it("Should throw error with extracted cancellation reasons if transactions cancelled", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => ({
+						"on": () => undefined,
 						"promise": () => Promise.reject({
 							"CancellationReasons": [{
 								"Code": "ConditionalCheckFailed",
@@ -97,6 +98,7 @@ describe("Transaction", () => {
 					"transactGetItems": (params) => {
 						transactParams = params;
 						return {
+							"on": () => undefined,
 							"promise": () => Promise.resolve({})
 						};
 					}
@@ -133,6 +135,7 @@ describe("Transaction", () => {
 					"transactWriteItems": (params) => {
 						transactParams = params;
 						return {
+							"on": () => undefined,
 							"promise": () => Promise.resolve({})
 						};
 					}
@@ -166,6 +169,7 @@ describe("Transaction", () => {
 			it("Should use correct response from AWS", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => ({
+						"on": () => undefined,
 						"promise": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}, {"Item": {"id": {"N": "2"}, "name": {"S": "My Credit"}}}]})
 					})
 				});
@@ -181,6 +185,7 @@ describe("Transaction", () => {
 			it("Should return null if no response from AWS", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => ({
+						"on": () => undefined,
 						"promise": () => Promise.resolve({})
 					})
 				});
@@ -196,6 +201,7 @@ describe("Transaction", () => {
 					"transactWriteItems": (params) => {
 						transactParams = params;
 						return {
+							"on": () => undefined,
 							"promise": () => Promise.resolve({})
 						};
 					}
@@ -213,6 +219,7 @@ describe("Transaction", () => {
 					"transactGetItems": (params) => {
 						transactParams = params;
 						return {
+							"on": () => undefined,
 							"promise": () => Promise.resolve({})
 						};
 					}
