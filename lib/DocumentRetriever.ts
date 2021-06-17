@@ -2,7 +2,7 @@ import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
 import {Condition, ConditionInitalizer, BasicOperators, ConditionStorageTypeNested} from "./Condition";
-import {Model} from "./Model";
+import {Model, ModelIndexes} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
 import {AWSError} from "aws-sdk";
@@ -167,6 +167,25 @@ function canUseIndexOfTable (hashKeyOfTable: string, rangeKeyOfTable: string | v
 	return false;
 }
 
+function findBestIndex (indexes: ModelIndexes, comparisonChart: ConditionStorageTypeNested): string | null {
+	const validIndexes = utils.array_flatten(Object.values(indexes))
+		.map((index) => {
+			const {hash, range} = index.KeySchema.reduce((res, item) => {
+				res[item.KeyType.toLowerCase()] = item.AttributeName;
+				return res;
+			}, {});
+
+			index._hashKey = hash;
+			index._rangeKey = range;
+
+			return index;
+		})
+		.filter((index) => comparisonChart[index._hashKey]?.type === "EQ");
+
+	const index = validIndexes.find((index) => comparisonChart[index._rangeKey]) || validIndexes[0];
+	return index?.IndexName ?? null;
+}
+
 DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever): Promise<any> {
 	const object: any = {
 		...this.settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
@@ -189,26 +208,9 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			return res;
 		}, {});
 		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
-			const validIndexes = utils.array_flatten(Object.values(indexes))
-				.map((index) => {
-					const {hash, range} = index.KeySchema.reduce((res, item) => {
-						res[item.KeyType.toLowerCase()] = item.AttributeName;
-						return res;
-					}, {});
-
-					index._hashKey = hash;
-					index._rangeKey = range;
-
-					return index;
-				})
-				.filter((index) => comparisonChart[index._hashKey]?.type === "EQ");
-
-			const index = validIndexes.find((index) => comparisonChart[index._rangeKey]) || validIndexes[0];
-
-			if (!index) {
+			object.IndexName = findBestIndex(indexes, comparisonChart);
+			if (!object.IndexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
-			} else {
-				object.IndexName = index.IndexName;
 			}
 		}
 	}
