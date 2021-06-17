@@ -144,6 +144,29 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 	}
 });
 
+function canUseIndexOfTable (hashKeyOfTable: string, rangeKeyOfTable: string | void, chart: ConditionStorageTypeNested): boolean {
+	const hashKeyInQuery = Object.entries(chart).find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
+
+	// If no hash key exists in the query, the table index cannot be used
+	if (!hashKeyInQuery) {
+		return false;
+	}
+
+	// If the hash key is the only key in the query, the table index can be used
+	const isOneKeyQuery = Object.keys(chart).length === 1;
+	if (isOneKeyQuery) {
+		return true;
+	}
+
+	// If the table has a range key, then the table index can be used if both the hash key and range key are specified
+	if (rangeKeyOfTable) {
+		return Object.entries(chart).some(([fieldName]) => fieldName === rangeKeyOfTable);
+	}
+
+	// Otherwise, the table index cannot be used
+	return false;
+}
+
 DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever): Promise<any> {
 	const object: any = {
 		...this.settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
@@ -157,19 +180,6 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	const indexes = await this.internalSettings.model.getIndexes();
-	function canUseIndexOfTable (hashKeyOfTable, rangeKeyOfTable, chart: ConditionStorageTypeNested): boolean {
-		const hashKeyInQuery = Object.entries(chart).find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
-		if (!hashKeyInQuery) {
-			return false;
-		}
-		const isOneKeyQuery = Object.keys(chart).length === 1;
-		if (isOneKeyQuery && hashKeyInQuery) {
-			return true;
-		} else if (rangeKeyOfTable) {
-			return Object.entries(chart).some(([fieldName]) => fieldName !== hashKeyInQuery[0]);
-		}
-		return false;
-	}
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
 	} else if (this.internalSettings.typeInformation.type === "query") {
