@@ -1004,7 +1004,7 @@ describe("Query", () => {
 				});
 			});
 
-			it("Should send correct request with hash+range key", async () => {
+			it("Should send correct request with LSI", async () => {
 				await LSIModel.query("id").eq(7).where("name").eq("Charlie").exec();
 				expect(queryParams).to.eql({
 					"TableName": "Cat",
