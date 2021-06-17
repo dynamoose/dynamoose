@@ -988,6 +988,22 @@ describe("Query", () => {
 			});
 
 			it("Should send correct request with hash+range key", async () => {
+				await LSIModel.query("id").eq(7).where("name").eq("Charlie").exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#qra": "name"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":qrv": {"S": "Charlie"}
+					},
+					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+				});
+			});
+
+			it("Should send correct request with LSI", async () => {
 				await LSIModel.query("id").eq(7).where("favoriteNumber").eq(2).exec();
 				expect(queryParams).to.eql({
 					"TableName": "Cat",
@@ -999,22 +1015,6 @@ describe("Query", () => {
 					"ExpressionAttributeValues": {
 						":qhv": {"N": "7"},
 						":qrv": {"N": "2"}
-					},
-					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
-				});
-			});
-
-			it("Should send correct request with LSI", async () => {
-				await LSIModel.query("id").eq(7).where("name").eq("Charlie").exec();
-				expect(queryParams).to.eql({
-					"TableName": "Cat",
-					"ExpressionAttributeNames": {
-						"#qha": "id",
-						"#qra": "name"
-					},
-					"ExpressionAttributeValues": {
-						":qhv": {"N": "7"},
-						":qrv": {"S": "Charlie"}
 					},
 					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
 				});
