@@ -158,9 +158,9 @@ function canUseIndexOfTable (hashKeyOfTable: string, rangeKeyOfTable: string | v
 		return true;
 	}
 
-	// If the table has a range key, then the table index can be used if both the hash key and range key are specified
-	if (rangeKeyOfTable) {
-		return Object.entries(chart).some(([fieldName]) => fieldName === rangeKeyOfTable);
+	// If the table has a range key and it exists in the query, the table index can be used
+	if (rangeKeyOfTable && chart[rangeKeyOfTable]) {
+		return true;
 	}
 
 	// Otherwise, the table index cannot be used
