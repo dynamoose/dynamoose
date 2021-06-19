@@ -21,6 +21,7 @@ describe("DocumentRetriever", () => {
 		it("Should be correct for only hash key", () => {
 			expect(canUseIndexOfTable("hashKey", null, {"hashKey": {"type": "EQ"}})).to.be.true;
 			expect(canUseIndexOfTable("hashKey", null, {"hashKey": {"type": "EQ"}, "key2": {"type": "EQ"}})).to.be.false;
+			expect(canUseIndexOfTable("hashKey", null, {"hashKey": {"type": "GE"}})).to.be.false;
 			expect(canUseIndexOfTable("hashKey", null, {"key1": {"type": "EQ"}})).to.be.false;
 			expect(canUseIndexOfTable("hashKey", null, {"key1": {"type": "EQ"}, "key2": {"type": "EQ"}})).to.be.false;
 		});
@@ -30,6 +31,8 @@ describe("DocumentRetriever", () => {
 			expect(canUseIndexOfTable("hashKey", "rangeKey", {"hashKey": {"type": "EQ"}, "rangeKey": {"type": "EQ"}})).to.be.true;
 			expect(canUseIndexOfTable("hashKey", "rangeKey", {"hashKey": {"type": "EQ"}, "rangeKey": {"type": "EQ"}, "key3": {"type": "EQ"}})).to.be.true;
 			expect(canUseIndexOfTable("hashKey", "rangeKey", {"hashKey": {"type": "EQ"}, "key2": {"type": "EQ"}})).to.be.false;
+			expect(canUseIndexOfTable("hashKey", "rangeKey", {"hashKey": {"type": "GE"}})).to.be.false;
+			expect(canUseIndexOfTable("hashKey", "rangeKey", {"rangeKey": {"type": "EQ"}})).to.be.false;
 			expect(canUseIndexOfTable("hashKey", "rangeKey", {"key1": {"type": "EQ"}})).to.be.false;
 			expect(canUseIndexOfTable("hashKey", "rangeKey", {"key1": {"type": "EQ"}, "key2": {"type": "EQ"}})).to.be.false;
 			expect(canUseIndexOfTable("hashKey", "rangeKey", {"key1": {"type": "EQ"}, "rangeKey": {"type": "EQ"}})).to.be.false;
@@ -118,11 +121,21 @@ describe("DocumentRetriever", () => {
 			})).to.eq("MyGSI4");
 
 			expect(findBestIndex(indexes, {
+				"attr2": {"type": "GE"},
+				"attr3": {"type": "EQ"}
+			})).to.eq("MyGSI5");
+
+			expect(findBestIndex(indexes, {
 				"attr3": {"type": "EQ"}
 			})).to.eq("MyGSI5");
 
 			expect(findBestIndex(indexes, {
 				"attr1": {"type": "GE"}
+			})).to.be.null;
+
+			expect(findBestIndex(indexes, {
+				"attr1": {"type": "GE"},
+				"attr2": {"type": "GE"}
 			})).to.be.null;
 
 			expect(findBestIndex(indexes, {
