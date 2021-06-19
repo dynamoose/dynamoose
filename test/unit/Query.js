@@ -957,7 +957,12 @@ describe("Query", () => {
 				LSIModel = dynamoose.model("Cat", {
 					"id": {
 						"type": Number,
-						"hashKey": true
+						"hashKey": true,
+						"index": {
+							"name": "myGSI",
+							"rangeKey": "favoriteColor",
+							"global": true
+						}
 					},
 					"name": {
 						"type": String,
@@ -969,7 +974,8 @@ describe("Query", () => {
 							"name": "myLSI",
 							"global": false
 						}
-					}
+					},
+					"favoriteColor": String
 				});
 			});
 
@@ -1003,7 +1009,7 @@ describe("Query", () => {
 				});
 			});
 
-			it("Should send correct request with LSI", async () => {
+			it("Should send correct request with LSI and EQ on rangeKey", async () => {
 				await LSIModel.query("id").eq(7).where("favoriteNumber").eq(2).exec();
 				expect(queryParams).to.eql({
 					"TableName": "Cat",
@@ -1015,6 +1021,40 @@ describe("Query", () => {
 					"ExpressionAttributeValues": {
 						":qhv": {"N": "7"},
 						":qrv": {"N": "2"}
+					},
+					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+				});
+			});
+
+			it("Should send correct request with LSI and GE on rangeKey", async () => {
+				await LSIModel.query("id").eq(7).where("favoriteNumber").ge(2).exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"IndexName": "myLSI",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#qra": "favoriteNumber"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":qrv": {"N": "2"}
+					},
+					"KeyConditionExpression": "#qha = :qhv AND #qra >= :qrv"
+				});
+			});
+
+			it("Should send correct request with GSI", async () => {
+				await LSIModel.query("id").eq(7).where("favoriteColor").eq("red").exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"IndexName": "myGSI",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#qra": "favoriteColor"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":qrv": {"S": "red"}
 					},
 					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
 				});
