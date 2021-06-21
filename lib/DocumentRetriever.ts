@@ -1,8 +1,8 @@
 import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
-import {Condition, ConditionInitalizer, BasicOperators, ConditionStorageTypeNested} from "./Condition";
-import {Model, ModelIndexes} from "./Model";
+import {Condition, ConditionInitalizer, BasicOperators} from "./Condition";
+import {Model} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
 import {AWSError} from "aws-sdk";
