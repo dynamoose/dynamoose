@@ -144,48 +144,6 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 	}
 });
 
-function canUseIndexOfTable (hashKeyOfTable: string, rangeKeyOfTable: string | void, chart: ConditionStorageTypeNested): boolean {
-	const hashKeyInQuery = Object.entries(chart).find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
-
-	// If no hash key exists in the query, the table index cannot be used
-	if (!hashKeyInQuery) {
-		return false;
-	}
-
-	// If the hash key is the only key in the query, the table index can be used
-	const isOneKeyQuery = Object.keys(chart).length === 1;
-	if (isOneKeyQuery) {
-		return true;
-	}
-
-	// If the table has a range key and it exists in the query, the table index can be used
-	if (rangeKeyOfTable && chart[rangeKeyOfTable]) {
-		return true;
-	}
-
-	// Otherwise, the table index cannot be used
-	return false;
-}
-
-function findBestIndex (indexes: ModelIndexes, comparisonChart: ConditionStorageTypeNested): string | null {
-	const validIndexes = utils.array_flatten(Object.values(indexes))
-		.map((index) => {
-			const {hash, range} = index.KeySchema.reduce((res, item) => {
-				res[item.KeyType.toLowerCase()] = item.AttributeName;
-				return res;
-			}, {});
-
-			index._hashKey = hash;
-			index._rangeKey = range;
-
-			return index;
-		})
-		.filter((index) => comparisonChart[index._hashKey]?.type === "EQ");
-
-	const index = validIndexes.find((index) => comparisonChart[index._rangeKey]) || validIndexes[0];
-	return index?.IndexName ?? null;
-}
-
 DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever): Promise<any> {
 	const object: any = {
 		...this.settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
@@ -207,8 +165,8 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			res[myItem[0]] = {"type": myItem[1].type};
 			return res;
 		}, {});
-		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
-			object.IndexName = findBestIndex(indexes, comparisonChart);
+		if (!utils.can_use_index_of_table(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
+			object.IndexName = utils.find_best_index(indexes, comparisonChart);
 			if (!object.IndexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
 			}
