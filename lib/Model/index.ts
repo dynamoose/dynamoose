@@ -253,6 +253,10 @@ interface ModelBatchGetSettings {
 interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
 }
+export interface ModelIndexes {
+	GlobalSecondaryIndexes?: IndexItem[];
+	LocalSecondaryIndexes?: IndexItem[];
+}
 
 // Model represents one DynamoDB table
 export class Model<T extends DocumentCarrier = AnyDocument> {
@@ -426,7 +430,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 		return this.schemas[highestSchemaCorrectnessScoreIndex];
 	}
 
-	async getIndexes (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+	async getIndexes (): Promise<ModelIndexes> {
 		return (await Promise.all(this.schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
 			Object.entries(indexes).forEach((entry) => {
 				const [key, value] = entry;

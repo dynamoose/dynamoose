@@ -1,7 +1,7 @@
 import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
-import {Condition, ConditionInitalizer, BasicOperators, ConditionStorageTypeNested} from "./Condition";
+import {Condition, ConditionInitalizer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Document} from "./Document";
 import {CallbackType, ObjectType, DocumentArray, SortOrder} from "./General";
@@ -157,19 +157,6 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		object.ExclusiveStartKey = Document.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Document.objectToDynamo(this.settings.startAt);
 	}
 	const indexes = await this.internalSettings.model.getIndexes();
-	function canUseIndexOfTable (hashKeyOfTable, rangeKeyOfTable, chart: ConditionStorageTypeNested): boolean {
-		const hashKeyInQuery = Object.entries(chart).find(([fieldName, {type}]) => type === "EQ" && fieldName === hashKeyOfTable);
-		if (!hashKeyInQuery) {
-			return false;
-		}
-		const isOneKeyQuery = Object.keys(chart).length === 1;
-		if (isOneKeyQuery && hashKeyInQuery) {
-			return true;
-		} else if (rangeKeyOfTable) {
-			return Object.entries(chart).some(([fieldName]) => fieldName !== hashKeyInQuery[0]);
-		}
-		return false;
-	}
 	if (this.settings.index) {
 		object.IndexName = this.settings.index;
 	} else if (this.internalSettings.typeInformation.type === "query") {
@@ -178,27 +165,10 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			res[myItem[0]] = {"type": myItem[1].type};
 			return res;
 		}, {});
-		if (!canUseIndexOfTable(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
-			const validIndexes = utils.array_flatten(Object.values(indexes))
-				.map((index) => {
-					const {hash, range} = index.KeySchema.reduce((res, item) => {
-						res[item.KeyType.toLowerCase()] = item.AttributeName;
-						return res;
-					}, {});
-
-					index._hashKey = hash;
-					index._rangeKey = range;
-
-					return index;
-				})
-				.filter((index) => comparisonChart[index._hashKey]?.type === "EQ");
-
-			const index = validIndexes.find((index) => comparisonChart[index._rangeKey]) || validIndexes[0];
-
-			if (!index) {
+		if (!utils.can_use_index_of_table(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
+			object.IndexName = utils.find_best_index(indexes, comparisonChart);
+			if (!object.IndexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
-			} else {
-				object.IndexName = index.IndexName;
 			}
 		}
 	}
