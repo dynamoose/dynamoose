@@ -10,6 +10,8 @@ import object = require("js-object-utilities");
 import dynamoose = require("./dynamoose");
 import all_elements_match from "./all_elements_match";
 import type_name from "./type_name";
+import find_best_index from "./find_best_index";
+import can_use_index_of_table from "./can_use_index_of_table";
 
 export = {
 	combine_objects,
@@ -23,5 +25,7 @@ export = {
 	empty_function,
 	object,
 	dynamoose,
-	type_name
+	type_name,
+	find_best_index,
+	can_use_index_of_table
 };
