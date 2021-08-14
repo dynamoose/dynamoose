@@ -67,16 +67,17 @@ The `config` parameter is an object used to customize settings for the model.
 | throughput.write | What the write throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
 | prefix | A string that should be prepended to every model name. | String | "" |
 | suffix | A string that should be appended to every model name. | String | "" |
-| waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. For production environments we recommend setting this value to `false`. | Object |  |
+| waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. For production environments we recommend setting this value to `false`. | Object \| Boolean |  |
 | waitForActive.enabled | If Dynamoose should wait for the table to be active before running actions on it. | Boolean | true |
 | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
 | update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
+| populate | If Dynamoose should automatically run [`document.populate`](Document#documentpopulatesettings-callback) on retrieved items. | Boolean | false |
 | expires | The setting to describe the time to live for items created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
 | expires.ttl | The default amount of time the item should stay alive from creation time in milliseconds. | Number | undefined |
-| expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` |
-| expires.items | The options for items with ttl. | Object | {} |
+| expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` (if `expires` is set to a number) |
+| expires.items | The options for items with ttl. | Object |  |
 | expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
 
 The default object is listed below.
@@ -85,9 +86,9 @@ The default object is listed below.
 {
 	"create": true,
 	"throughput": {
-		"read": 5,
-		"write": 5
-	}, // Same as `"throughput": 5`
+		"read": 1,
+		"write": 1
+	},
 	"prefix": "",
 	"suffix": "",
 	"waitForActive": {
@@ -98,7 +99,8 @@ The default object is listed below.
 		}
 	},
 	"update": false,
-	"expires": null
+	"populate": false,
+	"expires": undefined
 }
 ```
 
@@ -469,6 +471,7 @@ You can also pass in a `settings` object parameter to define extra settings for 
 |------|-------------|------|---------|
 | return | What the function should return. Can be `item`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `item` |
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
+| returnValues | Set which documents to return after the update. This setting will be passed into the DynamoDB `ReturnValues` parameter. | String | `ALL_NEW`
 
 There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
