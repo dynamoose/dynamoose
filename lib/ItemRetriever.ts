@@ -166,7 +166,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 			res[myItem[0]] = {"type": (myItem[1] as any).type};
 			return res;
 		}, {});
-		if (!utils.can_use_index_of_table(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
+		if (!utils.can_use_index_of_table(this.internalSettings.model[internalProperties].getHashKey(), this.internalSettings.model[internalProperties].getRangeKey(), comparisonChart)) {
 			object.IndexName = utils.find_best_index(indexes, comparisonChart);
 			if (!object.IndexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
