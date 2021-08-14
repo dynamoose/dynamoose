@@ -19,7 +19,7 @@
     "mocha": "^7.2.0",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.0.5"
+    "typescript": "^4.3.5"
   },
   "scripts": {
     "prepare": "npm run build:clean && npm run build",
