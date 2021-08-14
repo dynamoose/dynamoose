@@ -38,7 +38,7 @@ export interface ModelOptions {
 	throughput: "ON_DEMAND" | number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
-	waitForActive: ModelWaitForActiveSettings;
+	waitForActive: boolean | ModelWaitForActiveSettings;
 	update: boolean | ModelUpdateOptions[];
 	populate: string | string[] | boolean;
 	expires: number | ModelExpiresSettings;
@@ -164,23 +164,25 @@ function waitForActive (model: Model<ItemCarrier>, forceRefreshOnFirstAttempt = 
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check (count: number): Promise<void> {
-			try {
-				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
-				const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
-				if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
-					return resolve();
+			if (typeof model[internalProperties].options.waitForActive !== "boolean") {
+				try {
+					// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
+					const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
+					if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
+						return resolve();
+					}
+				} catch (e) {
+					return reject(e);
 				}
-			} catch (e) {
-				return reject(e);
-			}
 
-			if (count > 0) {
-				model[internalProperties].options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model[internalProperties].options.waitForActive.check.frequency);
-			}
-			if (Date.now() - start >= model[internalProperties].options.waitForActive.check.timeout) {
-				return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
-			} else {
-				check(++count);
+				if (count > 0) {
+					model[internalProperties].options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model[internalProperties].options.waitForActive.check.frequency);
+				}
+				if (Date.now() - start >= model[internalProperties].options.waitForActive.check.timeout) {
+					return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
+				} else {
+					check(++count);
+				}
 			}
 		}
 		check(0);
@@ -240,6 +242,7 @@ interface ModelBatchPutSettings {
 interface ModelUpdateSettings {
 	return?: "item" | "request";
 	condition?: Condition;
+	returnValues?: DynamoDB.ReturnValue;
 }
 interface ModelBatchGetItemsResponse<T> extends ItemArray<T> {
 	unprocessedKeys: ObjectType[];
@@ -250,6 +253,10 @@ interface ModelBatchGetSettings {
 }
 interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
+}
+export interface ModelIndexes {
+	GlobalSecondaryIndexes?: IndexItem[];
+	LocalSecondaryIndexes?: IndexItem[];
 }
 
 // Model represents one DynamoDB table
@@ -368,7 +375,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 			setupFlow.push(() => createTable(this));
 		}
 		// Wait for Active
-		if ((this[internalProperties].options.waitForActive || {}).enabled) {
+		if (this[internalProperties].options.waitForActive === true || (this[internalProperties].options.waitForActive || {}).enabled) {
 			setupFlow.push(() => waitForActive(this, false));
 		}
 		// Update Time To Live
@@ -468,6 +475,53 @@ export class Model<T extends ItemCarrier = AnyItem> {
 	query: (object?: ConditionInitalizer) => Query<T>;
 	methods: { item: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 	transaction: TransactionType;
+
+	// This function returns the best matched schema for the given object input
+	async schemaForObject (object: ObjectType): Promise<Schema> {
+		const schemaCorrectnessScores: number[] = this[internalProperties].schemas.map((schema) => schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true})).map((obj) => Object.values(obj).map((obj: any) => obj?.matchCorrectness || 0)).map((array) => Math.min(...array));
+		const highestSchemaCorrectnessScoreIndex: number = schemaCorrectnessScores.indexOf(Math.max(...schemaCorrectnessScores));
+
+		return this[internalProperties].schemas[highestSchemaCorrectnessScoreIndex];
+	}
+
+	async getIndexes (): Promise<ModelIndexes> {
+		return (await Promise.all(this[internalProperties].schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
+			Object.entries(indexes).forEach((entry) => {
+				const [key, value] = entry;
+				result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value]) : value;
+			});
+
+			return result;
+		}, {});
+	}
+	async getCreateTableAttributeParams (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
+		// TODO: implement this
+		return this[internalProperties].schemas[0].getCreateTableAttributeParams(this);
+	}
+	getHashKey (): string {
+		return this[internalProperties].schemas[0].getHashKey();
+	}
+	getRangeKey (): string | void {
+		return this[internalProperties].schemas[0].getRangeKey();
+	}
+	convertObjectToKey (key: InputKey): KeyObject {
+		let keyObject: KeyObject;
+		const hashKey = this.getHashKey();
+		if (typeof key === "object") {
+			const rangeKey = this.getRangeKey();
+			keyObject = {
+				[hashKey]: key[hashKey]
+			};
+			if (rangeKey && typeof key[rangeKey] !== "undefined" && key[rangeKey] !== null) {
+				keyObject[rangeKey] = key[rangeKey];
+			}
+		} else {
+			keyObject = {
+				[hashKey]: key
+			};
+		}
+		return keyObject;
+	}
 
 	// Batch Get
 	batchGet (keys: InputKey[]): Promise<ModelBatchGetItemsResponse<T>>;
@@ -894,11 +948,11 @@ export class Model<T extends ItemCarrier = AnyItem> {
 			};
 		};
 
-		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo"});
+		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
 		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this[internalProperties].pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(keyObj),
-			"ReturnValues": "ALL_NEW",
+			"ReturnValues": localSettings.returnValues || "ALL_NEW",
 			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? localSettings.condition.requestObject({"index": {"start": index, "set": (i): void => {
 				index = i;
 			}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}, await getUpdateExpressionObject()),

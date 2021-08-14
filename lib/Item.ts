@@ -250,14 +250,9 @@ Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item
 };
 // This function will return a list of attributes combining both the schema attributes with the item attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in item), adding the indexes for each item in the item set.
 // https://stackoverflow.com/a/59928314/894067
-const attributesWithSchemaCache: ObjectType = {};
 Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Promise<string[]> {
 	const schema: Schema = await model[internalProperties].schemaForObject(item);
 	const attributes = schema.attributes();
-	const itemID = utils.object.keys(item as any).join("");
-	if (attributesWithSchemaCache[itemID] && attributesWithSchemaCache[itemID][attributes.join()]) {
-		return attributesWithSchemaCache[itemID][attributes.join()];
-	}
 	// build a tree out of schema attributes
 	const root = {};
 	attributes.forEach((attribute) => {
@@ -298,7 +293,6 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 	const out = [];
 	traverse(item, root, [], (val) => out.push(val.join(".")));
 	const result = out.slice(1);
-	attributesWithSchemaCache[itemID] = {[attributes.join()]: result};
 	return result;
 };
 export interface ItemObjectFromSchemaSettings {

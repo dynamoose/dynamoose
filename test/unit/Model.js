@@ -373,7 +373,7 @@ describe("Model", () => {
 		});
 
 		describe("Wait For Active", () => {
-			let describeTableParams = [], describeTableFunction;
+			let describeTableParams = [], describeTableFunction, updateTableParams = [];
 			beforeEach(() => {
 				dynamoose.model.defaults.set({
 					"create": false,
@@ -388,17 +388,25 @@ describe("Model", () => {
 			});
 			beforeEach(() => {
 				describeTableParams = [];
+				updateTableParams = [];
 				dynamoose.aws.ddb.set({
 					"describeTable": (params) => {
 						describeTableParams.push(params);
 						return {
 							"promise": () => describeTableFunction(params)
 						};
+					},
+					"updateTable": (params) => {
+						updateTableParams.push(params);
+						return {
+							"promise": () => Promise.resolve()
+						};
 					}
 				});
 			});
 			afterEach(() => {
 				describeTableParams = [];
+				updateTableParams = [];
 				describeTableFunction = null;
 				dynamoose.aws.ddb.revert();
 			});
@@ -472,6 +480,44 @@ describe("Model", () => {
 				expect(describeTableParams).to.eql([{
 					"TableName": tableName
 				}]);
+			});
+
+			it("Should call updateTable even if table is still being created when waitForActive is set to false", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "CREATING"
+					}
+				});
+				dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": false});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([{
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 2
+					},
+					"TableName": tableName
+				}]);
+			});
+
+			it("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "CREATING"
+					}
+				});
+				dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": true});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([]);
 			});
 		});
 
@@ -3411,6 +3457,31 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem with returnValues", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"returnValues": "NONE"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "NONE"
+					});
+				});
+
 				it("Should return updated item upon success", async () => {
 					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
@@ -3418,6 +3489,17 @@ describe("Model", () => {
 					expect({...result}).to.eql({
 						"id": 1,
 						"name": "Charlie"
+					});
+				});
+
+				it("Should return updated item with object property upon success", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
+					const result = await callType.func(User).bind(User)({"id": 1, "address": {"zip": 12345, "country": "world"}});
+					expect(result.constructor.name).to.eql("Item");
+					expect({...result}).to.eql({
+						"id": 1,
+						"address": {"zip": 12345, "country": "world"}
 					});
 				});
 
