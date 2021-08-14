@@ -244,14 +244,10 @@ Document.prepareForObjectFromSchema = async function<T>(object: T, model: Model<
 };
 // This function will return a list of attributes combining both the schema attributes with the document attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in document), adding the indexes for each item in the document set.
 // https://stackoverflow.com/a/59928314/894067
-const attributesWithSchemaCache: ObjectType = {};
 Document.attributesWithSchema = async function (document: Document, model: Model<Document>): Promise<string[]> {
 	const schema: Schema = await model.schemaForObject(document);
 	const attributes = schema.attributes();
 	const documentID = utils.object.keys(document as any).join("");
-	if (attributesWithSchemaCache[documentID] && attributesWithSchemaCache[documentID][attributes.join()]) {
-		return attributesWithSchemaCache[documentID][attributes.join()];
-	}
 	// build a tree out of schema attributes
 	const root = {};
 	attributes.forEach((attribute) => {
@@ -292,7 +288,6 @@ Document.attributesWithSchema = async function (document: Document, model: Model
 	const out = [];
 	traverse(document, root, [], (val) => out.push(val.join(".")));
 	const result = out.slice(1);
-	attributesWithSchemaCache[documentID] = {[attributes.join()]: result};
 	return result;
 };
 export interface DocumentObjectFromSchemaSettings {
