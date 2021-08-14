@@ -247,7 +247,6 @@ Document.prepareForObjectFromSchema = async function<T>(object: T, model: Model<
 Document.attributesWithSchema = async function (document: Document, model: Model<Document>): Promise<string[]> {
 	const schema: Schema = await model.schemaForObject(document);
 	const attributes = schema.attributes();
-	const documentID = utils.object.keys(document as any).join("");
 	// build a tree out of schema attributes
 	const root = {};
 	attributes.forEach((attribute) => {
