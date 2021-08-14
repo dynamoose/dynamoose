@@ -44,6 +44,8 @@ UserTypedModel.query("name").eq("Will").using("name-index");
 // query.sort(order)
 UserTypedModel.query("name").eq("Will").sort(SortOrder.ascending);
 UserTypedModel.query("name").eq("Will").sort(SortOrder.descending);
+UserTypedModel.query("name").eq("Will").sort("ascending");
+UserTypedModel.query("name").eq("Will").sort("descending");
 
 // query.all([delay[, max]])
 UserTypedModel.query("name").eq("Will").all();
