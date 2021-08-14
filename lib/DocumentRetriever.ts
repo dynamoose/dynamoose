@@ -34,7 +34,7 @@ abstract class DocumentRetriever {
 		consistent?: boolean;
 		count?: boolean;
 		parallel?: number;
-		sort?: SortOrder;
+		sort?: SortOrder | `${SortOrder}`;
 	};
 	getRequest: (this: DocumentRetriever) => Promise<any>;
 	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
@@ -328,7 +328,7 @@ export class Query<T> extends DocumentRetriever {
 		return super.exec(callback);
 	}
 
-	sort (order: SortOrder): Query<T> {
+	sort (order: SortOrder | `${SortOrder}`): Query<T> {
 		this.settings.sort = order;
 		return this;
 	}
