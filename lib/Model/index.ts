@@ -37,7 +37,7 @@ export interface ModelOptions {
 	throughput: "ON_DEMAND" | number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
-	waitForActive: ModelWaitForActiveSettings;
+	waitForActive: boolean | ModelWaitForActiveSettings;
 	update: boolean | ModelUpdateOptions[];
 	populate: string | string[] | boolean;
 	expires: number | ModelExpiresSettings;
@@ -163,23 +163,25 @@ function waitForActive (model: Model<DocumentCarrier>, forceRefreshOnFirstAttemp
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check (count: number): Promise<void> {
-			try {
-				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
-				const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
-				if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
-					return resolve();
+			if (typeof model.options.waitForActive !== "boolean") {
+				try {
+					// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
+					const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
+					if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
+						return resolve();
+					}
+				} catch (e) {
+					return reject(e);
 				}
-			} catch (e) {
-				return reject(e);
-			}
 
-			if (count > 0) {
-				model.options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model.options.waitForActive.check.frequency);
-			}
-			if (Date.now() - start >= model.options.waitForActive.check.timeout) {
-				return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
-			} else {
-				check(++count);
+				if (count > 0) {
+					model.options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model.options.waitForActive.check.frequency);
+				}
+				if (Date.now() - start >= model.options.waitForActive.check.timeout) {
+					return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
+				} else {
+					check(++count);
+				}
 			}
 		}
 		check(0);
@@ -251,6 +253,10 @@ interface ModelBatchGetSettings {
 interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
 }
+export interface ModelIndexes {
+	GlobalSecondaryIndexes?: IndexItem[];
+	LocalSecondaryIndexes?: IndexItem[];
+}
 
 // Model represents one DynamoDB table
 export class Model<T extends DocumentCarrier = AnyDocument> {
@@ -316,7 +322,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 			setupFlow.push(() => createTable(this));
 		}
 		// Wait for Active
-		if ((this.options.waitForActive || {}).enabled) {
+		if (this.options.waitForActive === true || (this.options.waitForActive || {}).enabled) {
 			setupFlow.push(() => waitForActive(this, false));
 		}
 		// Update Time To Live
@@ -424,7 +430,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 		return this.schemas[highestSchemaCorrectnessScoreIndex];
 	}
 
-	async getIndexes (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
+	async getIndexes (): Promise<ModelIndexes> {
 		return (await Promise.all(this.schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
 			Object.entries(indexes).forEach((entry) => {
 				const [key, value] = entry;
