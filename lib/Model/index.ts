@@ -476,53 +476,6 @@ export class Model<T extends ItemCarrier = AnyItem> {
 	methods: { item: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 	transaction: TransactionType;
 
-	// This function returns the best matched schema for the given object input
-	async schemaForObject (object: ObjectType): Promise<Schema> {
-		const schemaCorrectnessScores: number[] = this[internalProperties].schemas.map((schema) => schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true})).map((obj) => Object.values(obj).map((obj: any) => obj?.matchCorrectness || 0)).map((array) => Math.min(...array));
-		const highestSchemaCorrectnessScoreIndex: number = schemaCorrectnessScores.indexOf(Math.max(...schemaCorrectnessScores));
-
-		return this[internalProperties].schemas[highestSchemaCorrectnessScoreIndex];
-	}
-
-	async getIndexes (): Promise<ModelIndexes> {
-		return (await Promise.all(this[internalProperties].schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
-			Object.entries(indexes).forEach((entry) => {
-				const [key, value] = entry;
-				result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value]) : value;
-			});
-
-			return result;
-		}, {});
-	}
-	async getCreateTableAttributeParams (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
-		// TODO: implement this
-		return this[internalProperties].schemas[0].getCreateTableAttributeParams(this);
-	}
-	getHashKey (): string {
-		return this[internalProperties].schemas[0].getHashKey();
-	}
-	getRangeKey (): string | void {
-		return this[internalProperties].schemas[0].getRangeKey();
-	}
-	convertObjectToKey (key: InputKey): KeyObject {
-		let keyObject: KeyObject;
-		const hashKey = this.getHashKey();
-		if (typeof key === "object") {
-			const rangeKey = this.getRangeKey();
-			keyObject = {
-				[hashKey]: key[hashKey]
-			};
-			if (rangeKey && typeof key[rangeKey] !== "undefined" && key[rangeKey] !== null) {
-				keyObject[rangeKey] = key[rangeKey];
-			}
-		} else {
-			keyObject = {
-				[hashKey]: key
-			};
-		}
-		return keyObject;
-	}
-
 	// Batch Get
 	batchGet (keys: InputKey[]): Promise<ModelBatchGetItemsResponse<T>>;
 	batchGet (keys: InputKey[], callback: CallbackType<ModelBatchGetItemsResponse<T>, any>): void;
