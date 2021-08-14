@@ -1229,10 +1229,10 @@ describe("Schema", () => {
 			{"schema": {"id": Number, "data": String}, "input": {"id": 1, "data9": "Hello"}, "settings": {"includeAllProperties": true}, "output": {"id": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data9": {"index": 0, "entryCorrectness": [0.5], "matchCorrectness": 0.5}}},
 			{"schema": {"id": Number, "data": {"type": Object, "schema": {"parameter": String}}}, "input": {"id": 1, "data": {"parameter": "hello"}}, "settings": {"includeAllProperties": true}, "output": {"id": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data.parameter": {"entryCorrectness": [1], "index": 0, "matchCorrectness": 1}}},
 			{"schema": {"id": Number, "data": {"type": Object, "schema": {"parameter": Number}}}, "input": {"id": 1, "data": {"parameter": "hello"}}, "settings": {"includeAllProperties": true}, "output": {"id": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data": {"index": 0, "entryCorrectness": [1], "matchCorrectness": 1}, "data.parameter": {"entryCorrectness": [0], "index": 0, "matchCorrectness": 0}}},
-			// this function is ideally used to determine exact type of the object when there is a choice in schema definition around a property , so this function should return {} for simple strict schemas  
-			// as demonstated in below two test cases , highlight simple strict schemas where this function just returns empty 
+			// this function is ideally used to determine exact type of the object when there is a choice in schema definition around a property , so this function should return {} for simple strict schemas
+			// as demonstated in below two test cases , highlight simple strict schemas where this function just returns empty
 			{"schema": {"id": String, "data": Buffer}, "input": {"id": "id1", "data": Buffer.from("hello world")}, "output": {}},
-			{"schema": {"id": String, "data": String}, "input": {"id": "id1", "data": "hello world"}, "output": {}},
+			{"schema": {"id": String, "data": String}, "input": {"id": "id1", "data": "hello world"}, "output": {}}
 		];
 
 		tests.forEach((test) => {
