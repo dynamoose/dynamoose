@@ -167,9 +167,6 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		}, {});
 		if (!utils.can_use_index_of_table(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
 			object.IndexName = utils.find_best_index(indexes, comparisonChart);
-			if (!object.IndexName) {
-				throw new CustomError.InvalidParameter("Index can't be found for query.");
-			}
 		}
 	}
 	function moveParameterNames (val, prefix): void {
