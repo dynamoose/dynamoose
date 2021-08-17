@@ -800,6 +800,14 @@ describe("Query", () => {
 					});
 				});
 
+				it("Should not throw error if query contains hash key and additional filter expression", () => {
+					queryPromiseResolver = () => ({"Items": []});
+					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": {"type": Number, "hashKey": true}, "name": String}));
+
+					return expect(callType.func(Model.query("id").eq(111).filter("name").eq("Charlie").exec).bind(
+						Model.query("id").eq(111).filter("name").eq("Charlie"))()).to.not.be.rejectedWith("Index can't be found for query.");
+				});
+
 				it("Should throw error if no indexes exist on model", () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": String}));
