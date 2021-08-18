@@ -12,17 +12,32 @@ describe("utils.find_best_index", () => {
 			]
 		};
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"}
-		})).to.eq("MyGSI1");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI1"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "GE"}
-		})).to.be.null;
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "EQ"}
-		})).to.be.null;
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
+
+		expect(find_best_index("tableHashKey", indexes, {
+			"attr1": {"type": "EQ"},
+			"tableHashKey": {"type": "EQ"}
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI1"});
+
+		expect(find_best_index("tableHashKey", indexes, {
+			"attr2": {"type": "EQ"},
+			"tableHashKey": {"type": "EQ"}
+		})).to.deep.eq({"tableIndex": true});
+
+		expect(find_best_index("tableHashKey", indexes, {
+			"attr2": {"type": "EQ"},
+			"tableHashKey": {"type": "GE"}
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
 	});
 
 	it("Should find the best index with multiple GSI", () => {
@@ -51,60 +66,70 @@ describe("utils.find_best_index", () => {
 			]
 		};
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"}
-		})).to.eq("MyGSI1");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI1"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"},
 			"attr2": {"type": "GE"}
-		})).to.eq("MyGSI2");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI2"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"},
 			"attr3": {"type": "GE"}
-		})).to.eq("MyGSI3");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI3"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"},
 			"attr2": {"type": "GE"},
 			"attr3": {"type": "GE"}
-		})).to.eq("MyGSI2");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI2"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "EQ"}
-		})).to.eq("MyGSI4");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI4"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "EQ"},
 			"attr3": {"type": "GE"}
-		})).to.eq("MyGSI4");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI4"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "GE"},
 			"attr3": {"type": "EQ"}
-		})).to.eq("MyGSI5");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI5"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr3": {"type": "EQ"}
-		})).to.eq("MyGSI5");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI5"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "GE"}
-		})).to.be.null;
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
+			"attr1": {"type": "GE"},
+			"tableHashKey": {"type": "EQ"}
+		})).to.deep.eq({"tableIndex": true});
+
+		expect(find_best_index("tableHashKey", indexes, {
+			"attr1": {"type": "GE"},
+			"tableHashKey": {"type": "GE"}
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
+
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "GE"},
 			"attr2": {"type": "GE"}
-		})).to.be.null;
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "GE"}
-		})).to.be.null;
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr3": {"type": "GE"}
-		})).to.be.null;
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
 	});
 
 	it("Should find the best index with one GSI and one LSI", () => {
@@ -123,14 +148,14 @@ describe("utils.find_best_index", () => {
 			]
 		};
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "EQ"}
-		})).to.eq("MyGSI1");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI1"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"},
 			"attr2": {"type": "GE"}
-		})).to.eq("MyLSI1");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyLSI1"});
 	});
 
 	it("Should find the best index with multiple GSI and LSI", () => {
@@ -157,32 +182,32 @@ describe("utils.find_best_index", () => {
 			]
 		};
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "EQ"}
-		})).to.eq("MyGSI1");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI1"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "EQ"},
 			"attr4": {"type": "EQ"}
-		})).to.eq("MyGSI1");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI1"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr2": {"type": "EQ"},
 			"attr3": {"type": "GE"}
-		})).to.eq("MyGSI2");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyGSI2"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"},
 			"attr2": {"type": "GE"}
-		})).to.eq("MyLSI1");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyLSI1"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr1": {"type": "EQ"},
 			"attr3": {"type": "GE"}
-		})).to.eq("MyLSI2");
+		})).to.deep.eq({"tableIndex": false, "indexName": "MyLSI2"});
 
-		expect(find_best_index(indexes, {
+		expect(find_best_index("tableHashKey", indexes, {
 			"attr3": {"type": "EQ"}
-		})).to.be.null;
+		})).to.deep.eq({"tableIndex": false, "indexName": null});
 	});
 });
