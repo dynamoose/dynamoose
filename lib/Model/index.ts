@@ -673,6 +673,14 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	// Update
 	update (obj: Partial<T>): Promise<T>;
 	update (obj: Partial<T>, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>): Promise<T>;
+	update (keyObj: InputKey, updateObj: Partial<T>, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, AWSError>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings): Promise<T>;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>): Promise<T>;
 	update (keyObj: ObjectType, updateObj: Partial<T>, callback: CallbackType<T, AWSError>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
@@ -681,7 +689,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, AWSError>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: ObjectType, updateObj?: Partial<T> | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, settings?: ModelUpdateSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
+	update (keyObj: InputKey | ObjectType, updateObj?: Partial<T> | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, settings?: ModelUpdateSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
 		if (typeof updateObj === "function") {
 			callback = updateObj as CallbackType<DocumentCarrier | DynamoDB.UpdateItemInput, AWSError>; // TODO: fix this, for some reason `updateObj` has a type of Function which is forcing us to type cast it
 			updateObj = null;
