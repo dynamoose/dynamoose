@@ -166,7 +166,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			return res;
 		}, {});
 		if (!utils.can_use_index_of_table(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
-			const indexSpec = utils.find_best_index(this.internalSettings.model.getHashKey(), indexes, comparisonChart);
+			const indexSpec = utils.find_best_index(indexes, comparisonChart);
 			if (!indexSpec.tableIndex) {
 				if (!indexSpec.indexName) {
 					throw new CustomError.InvalidParameter("Index can't be found for query.");
