@@ -46,7 +46,7 @@ export type ModelOptionsOptional = DeepPartial<ModelOptions>;
 
 
 type KeyObject = {[attribute: string]: string | number};
-type InputKey = string | KeyObject;
+type InputKey = string | number | KeyObject;
 
 // Transactions
 type GetTransactionResult = Promise<GetTransactionInput>;
