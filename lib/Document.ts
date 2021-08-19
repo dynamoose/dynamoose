@@ -468,7 +468,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 	if (settings.required) {
 		let attributesToCheck = await Document.attributesWithSchema(returnObject, model);
 		if (settings.required === "nested") {
-			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute.startsWith(key)));
+			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute === key || attribute.startsWith(key + ".")));
 		}
 		await Promise.all(attributesToCheck.map(async (key) => {
 			const check = async (): Promise<void> => {
