@@ -46,7 +46,7 @@ describe("utils.find_best_index", () => {
 	it("Should find the best index with multiple GSI", () => {
 		const indexes = {
 			"TableIndex": {
-				"KeySchema": [{"AttributeName": "tableHashKey", "KeyType": "HASH"}]
+				"KeySchema": [{"AttributeName": "tableHashKey", "KeyType": "HASH"}, {"AttributeName": "tableRangeKey", "KeyType": "RANGE"}]
 			},
 			"GlobalSecondaryIndexes": [
 				{

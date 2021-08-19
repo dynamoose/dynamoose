@@ -205,22 +205,15 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		}
 	}
 	if (this.internalSettings.typeInformation.type === "query") {
-		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName);
-		if (index) {
-			const {hash, range} = index.KeySchema.reduce((res, item) => {
-				res[item.KeyType.toLowerCase()] = item.AttributeName;
-				return res;
-			}, {});
+		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
+		const {hash, range} = index.KeySchema.reduce((res, item) => {
+			res[item.KeyType.toLowerCase()] = item.AttributeName;
+			return res;
+		}, {});
 
-			moveParameterNames(hash, "qh");
-			if (range) {
-				moveParameterNames(range, "qr");
-			}
-		} else {
-			moveParameterNames(this.internalSettings.model.getHashKey(), "qh");
-			if (this.internalSettings.model.getRangeKey()) {
-				moveParameterNames(this.internalSettings.model.getRangeKey(), "qr");
-			}
+		moveParameterNames(hash, "qh");
+		if (range) {
+			moveParameterNames(range, "qr");
 		}
 	}
 	if (this.settings.consistent) {
