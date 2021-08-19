@@ -165,15 +165,14 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			res[myItem[0]] = {"type": myItem[1].type};
 			return res;
 		}, {});
-		if (!utils.can_use_index_of_table(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
-			const indexSpec = utils.find_best_index(indexes, comparisonChart);
-			if (!indexSpec.tableIndex) {
-				if (!indexSpec.indexName) {
-					throw new CustomError.InvalidParameter("Index can't be found for query.");
-				}
 
-				object.IndexName = indexSpec.indexName;
+		const indexSpec = utils.find_best_index(indexes, comparisonChart);
+		if (!indexSpec.tableIndex) {
+			if (!indexSpec.indexName) {
+				throw new CustomError.InvalidParameter("Index can't be found for query.");
 			}
+
+			object.IndexName = indexSpec.indexName;
 		}
 	}
 	function moveParameterNames (val, prefix): void {
