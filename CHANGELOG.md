@@ -2,6 +2,21 @@
 
 ---
 
+## Version 2.8.1
+
+This release includes a few critical bug fixes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fix issue where query would fail with `Index can't be found for query` error when querying table itself
+- Resolve issue where Model.update would fail if beginning of attribute was identical to another attribute and marked as required
+- Fix issue in TypeScript where you couldn't pass a number value in for a key parameter
+- Resolved bug where passing a string or number in for Model.update key parameter would throw error
+
+---
+
 ## Version 2.8.0
 
 This release contains general stability improvements to Dynamoose.
