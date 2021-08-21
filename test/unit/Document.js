@@ -2052,6 +2052,12 @@ describe("Document", () => {
 				"error": new Error.TypeMismatch("Expected id to be of type number, instead found type string."),
 				"schema": {"id": Number}
 			},
+			{
+				// https://github.com/dynamoose/dynamoose/issues/1212
+				"input": [{"someField": "hello"}, {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}],
+				"output": {"someField": "hello"},
+				"schema": {"someField": {"type": String, "required": true}, "someFieldAndMore": {"type": String, "required": true}}
+			},
 			// Defaults
 			{
 				"input": {},
