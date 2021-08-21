@@ -165,11 +165,14 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 			res[myItem[0]] = {"type": myItem[1].type};
 			return res;
 		}, {});
-		if (!utils.can_use_index_of_table(this.internalSettings.model.getHashKey(), this.internalSettings.model.getRangeKey(), comparisonChart)) {
-			object.IndexName = utils.find_best_index(indexes, comparisonChart);
-			if (!object.IndexName) {
+
+		const indexSpec = utils.find_best_index(indexes, comparisonChart);
+		if (!indexSpec.tableIndex) {
+			if (!indexSpec.indexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
 			}
+
+			object.IndexName = indexSpec.indexName;
 		}
 	}
 	function moveParameterNames (val, prefix): void {
@@ -202,22 +205,15 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		}
 	}
 	if (this.internalSettings.typeInformation.type === "query") {
-		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName);
-		if (index) {
-			const {hash, range} = index.KeySchema.reduce((res, item) => {
-				res[item.KeyType.toLowerCase()] = item.AttributeName;
-				return res;
-			}, {});
+		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
+		const {hash, range} = index.KeySchema.reduce((res, item) => {
+			res[item.KeyType.toLowerCase()] = item.AttributeName;
+			return res;
+		}, {});
 
-			moveParameterNames(hash, "qh");
-			if (range) {
-				moveParameterNames(range, "qr");
-			}
-		} else {
-			moveParameterNames(this.internalSettings.model.getHashKey(), "qh");
-			if (this.internalSettings.model.getRangeKey()) {
-				moveParameterNames(this.internalSettings.model.getRangeKey(), "qr");
-			}
+		moveParameterNames(hash, "qh");
+		if (range) {
+			moveParameterNames(range, "qr");
 		}
 	}
 	if (this.settings.consistent) {

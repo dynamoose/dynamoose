@@ -428,16 +428,15 @@ describe("Query", () => {
 					await callType.func(query.exec).bind(query)();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
-						"IndexName": "nameGlobalIndex",
 						"ExpressionAttributeNames": {
-							"#qha": "name",
-							"#a1": "id"
+							"#qha": "id",
+							"#a0": "name"
 						},
 						"ExpressionAttributeValues": {
-							":qhv": {"S": "Charlie"},
-							":v1": {"S": "test"}
+							":qhv": {"S": "test"},
+							":v0": {"S": "Charlie"}
 						},
-						"FilterExpression": "#a1 = :v1",
+						"FilterExpression": "#a0 = :v0",
 						"KeyConditionExpression": "#qha = :qhv"
 					});
 				});
@@ -975,7 +974,8 @@ describe("Query", () => {
 							"global": false
 						}
 					},
-					"favoriteColor": String
+					"favoriteColor": String,
+					"favoriteShape": String
 				});
 			});
 
@@ -1057,6 +1057,23 @@ describe("Query", () => {
 						":qrv": {"S": "red"}
 					},
 					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+				});
+			});
+
+			it("Should send correct request with hash key and filter", async () => {
+				await LSIModel.query("id").eq(7).filter("favoriteShape").eq("square").exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#a1": "favoriteShape"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":v1": {"S": "square"}
+					},
+					"FilterExpression": "#a1 = :v1",
+					"KeyConditionExpression": "#qha = :qhv"
 				});
 			});
 		});

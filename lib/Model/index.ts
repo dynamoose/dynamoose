@@ -1,5 +1,5 @@
 import CustomError = require("../Error");
-import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem} from "../Schema";
+import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
 import {Document as DocumentCarrier, DocumentSaveSettings, DocumentSettings, DocumentObjectFromSchemaSettings, AnyDocument} from "../Document";
 import utils = require("../utils");
 import ddb = require("../aws/ddb/internal");
@@ -254,6 +254,7 @@ interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
 }
 export interface ModelIndexes {
+	TableIndex?: TableIndex;
 	GlobalSecondaryIndexes?: IndexItem[];
 	LocalSecondaryIndexes?: IndexItem[];
 }
@@ -432,9 +433,12 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 
 	async getIndexes (): Promise<ModelIndexes> {
 		return (await Promise.all(this.schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
-			Object.entries(indexes).forEach((entry) => {
-				const [key, value] = entry;
-				result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value]) : value;
+			Object.entries(indexes).forEach(([key, value]) => {
+				if (key === "TableIndex") {
+					result[key] = value as TableIndex;
+				} else {
+					result[key] = result[key] ? utils.unique_array_elements([...result[key], ...(value as IndexItem[])]) : value;
+				}
 			});
 
 			return result;
