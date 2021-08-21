@@ -343,8 +343,12 @@ export class Schema {
 
 		const {GlobalSecondaryIndexes, LocalSecondaryIndexes} = await this.getIndexes(model);
 
-		if (GlobalSecondaryIndexes) response.GlobalSecondaryIndexes = GlobalSecondaryIndexes;
-		if (LocalSecondaryIndexes) response.LocalSecondaryIndexes = LocalSecondaryIndexes;
+		if (GlobalSecondaryIndexes) {
+			response.GlobalSecondaryIndexes = GlobalSecondaryIndexes;
+		}
+		if (LocalSecondaryIndexes) {
+			response.LocalSecondaryIndexes = LocalSecondaryIndexes;
+		}
 
 		return response;
 	}
