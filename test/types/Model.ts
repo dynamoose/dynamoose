@@ -33,6 +33,12 @@ const shouldPassBatchDeleteWithNoReturnSettingCallback = model.batchDelete([{"id
 const shouldPassUpdateWithDefaultReturnValuesSetting = model.update({"id": 1}, {"attributes": ["something"]}, {"returnValues": "ALL_NEW"});
 const shouldPassUpdateWithCustomReturnValuesSetting = model.update({"id": 1}, {"attributes": ["something"]}, {"returnValues": "NONE"});
 
+const shouldPassGetWithStringAsKey = model.get("id");
+const shouldPassGetWithNumberAsKey = model.get(1);
+
+const shouldPassUpdateWithStringAsKey = model.update("id", {"value": "hello world"});
+const shouldPassUpdateWithNumberAsKey = model.update(1, {"value": "hello world"});
+
 const shouldSucceedWithWaitForActiveAsObject = dynamoose.model("User", {"id": String}, {"waitForActive": {"enabled": true}});
 const shouldSucceedWithWaitForActiveSetToFalse = dynamoose.model("User", {"id": String}, {"waitForActive": false});
 const shouldSucceedWithWaitForActiveSetToTrue = dynamoose.model("User", {"id": String}, {"waitForActive": true});
