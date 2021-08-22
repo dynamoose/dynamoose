@@ -98,20 +98,18 @@ describe("Model", () => {
 			const itemsCalled = [];
 			dynamoose.aws.ddb.set({
 				"createTable": () => {
-					return {
-						"promise": () => new Promise((resolve) => {
-							itemsCalled.push("createTable");
-							setTimeout(() => {
-								itemsCalled.push("createTableDone");
-								resolve();
-							}, 100);
-						})
-					};
+					return new Promise((resolve) => {
+						itemsCalled.push("createTable");
+						setTimeout(() => {
+							itemsCalled.push("createTableDone");
+							resolve();
+						}, 100);
+					});
 				},
-				"describeTable": () => ({"promise": () => {
+				"describeTable": () => {
 					itemsCalled.push("describeTable");
 					return itemsCalled.includes("createTableDone") ? Promise.resolve({"Table": {"TableStatus": "ACTIVE"}}) : Promise.reject();
-				}})
+				}
 			});
 
 			const tableName = "Cat";
@@ -170,9 +168,7 @@ describe("Model", () => {
 					"Table": {"TableStatus": "CREATING"}
 				};
 				dynamoose.aws.ddb.set({
-					"describeTable": () => ({
-						"promise": () => Promise.resolve(describeTableResponse)
-					})
+					"describeTable": () => Promise.resolve(describeTableResponse)
 				});
 				const model = dynamoose.model("Cat", {"id": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0}}});
 				await utils.set_immediate_promise();
@@ -217,11 +213,9 @@ describe("Model", () => {
 				dynamoose.aws.ddb.set({
 					"createTable": (params) => {
 						createTableParams = params;
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					},
-					"describeTable": () => ({"promise": () => Promise.resolve()})
+					"describeTable": () => Promise.resolve()
 				});
 			});
 			afterEach(() => {
@@ -330,11 +324,9 @@ describe("Model", () => {
 				dynamoose.aws.ddb.set({
 					"createTable": (params) => {
 						createTableParams = params;
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					},
-					"describeTable": () => ({"promise": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})})
+					"describeTable": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})
 				});
 
 				const tableName = "Cat";
@@ -354,21 +346,15 @@ describe("Model", () => {
 				dynamoose.aws.ddb.set({
 					"createTable": (params) => {
 						createTableParams = params;
-						return {
-							"promise": function () {
-								self = this;
-								return Promise.resolve();
-							}
-						};
+						self = this;
+						return Promise.resolve();
 					},
-					"describeTable": () => ({"promise": () => Promise.resolve()})
+					"describeTable": () => Promise.resolve()
 				});
 
 				dynamoose.model("Cat", {"id": String});
 				await utils.set_immediate_promise();
 				expect(self).to.be.an("object");
-				expect(Object.keys(self)).to.eql(["promise"]);
-				expect(self.promise).to.exist;
 			});
 		});
 
@@ -392,15 +378,11 @@ describe("Model", () => {
 				dynamoose.aws.ddb.set({
 					"describeTable": (params) => {
 						describeTableParams.push(params);
-						return {
-							"promise": () => describeTableFunction(params)
-						};
+						return describeTableFunction(params);
 					},
 					"updateTable": (params) => {
 						updateTableParams.push(params);
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					}
 				});
 			});
@@ -533,15 +515,11 @@ describe("Model", () => {
 				updateTableParams = [];
 				dynamoose.aws.ddb.set({
 					"describeTable": () => {
-						return {
-							"promise": describeTableFunction
-						};
+						return describeTableFunction();
 					},
 					"updateTable": (params) => {
 						updateTableParams.push(params);
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					}
 				});
 			});
@@ -985,28 +963,22 @@ describe("Model", () => {
 				updateTTLParams = [];
 				dynamoose.aws.ddb.set({
 					"describeTable": () => {
-						return {
-							"promise": () => Promise.resolve({
-								"Table": {
-									"ProvisionedThroughput": {
-										"ReadCapacityUnits": 1,
-										"WriteCapacityUnits": 1
-									},
-									"TableStatus": "ACTIVE"
-								}
-							})
-						};
+						return Promise.resolve({
+							"Table": {
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 1
+								},
+								"TableStatus": "ACTIVE"
+							}
+						});
 					},
 					"updateTimeToLive": (params) => {
 						updateTTLParams.push(params);
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					},
 					"describeTimeToLive": () => {
-						return describeTTLFunction ? describeTTLFunction() : {
-							"promise": () => Promise.resolve(describeTTL)
-						};
+						return describeTTLFunction ? describeTTLFunction() : Promise.resolve(describeTTL);
 					}
 				});
 			});
@@ -1050,13 +1022,9 @@ describe("Model", () => {
 			it("Should call updateTimeToLive with correct parameters for custom attribute if TTL is disabling", async () => {
 				const startTime = Date.now();
 				let timesCalledDescribeTTL = 0;
-				describeTTLFunction = () => {
-					return {
-						"promise": async () => {
-							timesCalledDescribeTTL++;
-							return Promise.resolve(timesCalledDescribeTTL < 2 ? {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLING"}} : {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLED"}});
-						}
-					};
+				describeTTLFunction = async () => {
+					timesCalledDescribeTTL++;
+					return Promise.resolve(timesCalledDescribeTTL < 2 ? {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLING"}} : {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLED"}});
 				};
 				const tableName = "Cat";
 				const model = dynamoose.model(tableName, {"id": String}, {"expires": {"ttl": 1000, "attribute": "expires"}});
@@ -1104,7 +1072,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"getItem": (params) => {
 					getItemParams = params;
-					return {"promise": getItemFunction};
+					return getItemFunction();
 				}
 			});
 		});
@@ -1546,7 +1514,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1565,7 +1533,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1584,7 +1552,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1603,7 +1571,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1622,7 +1590,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1640,7 +1608,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1658,7 +1626,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1676,7 +1644,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1694,7 +1662,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1713,7 +1681,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1732,7 +1700,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1751,7 +1719,7 @@ describe("Model", () => {
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
 								getItemTimesCalled++;
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1767,7 +1735,7 @@ describe("Model", () => {
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
-								return {"promise": () => params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}}};
+								return params.Key.id.N === "1" ? {"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}} : {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							}
 						});
 						const user = await callType.func(User).bind(User)(1);
@@ -1831,12 +1799,8 @@ describe("Model", () => {
 						"Table": {"TableStatus": "CREATING"}
 					};
 					dynamoose.aws.ddb.set({
-						"describeTable": () => ({
-							"promise": () => Promise.resolve(describeTableResponse)
-						}),
-						"getItem": () => ({
-							"promise": getItemFunction
-						})
+						"describeTable": () => Promise.resolve(describeTableResponse),
+						"getItem": getItemFunction
 					});
 					const model = dynamoose.model("User", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
 					await utils.set_immediate_promise();
@@ -1870,7 +1834,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"batchGetItem": (paramsB) => {
 					params = paramsB;
-					return {"promise": promiseFunction};
+					return promiseFunction();
 				}
 			});
 		});
@@ -2040,10 +2004,10 @@ describe("Model", () => {
 						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"batchGetItem": () => {
-								return {"promise": () => ({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]}, "UnprocessedKeys": {}})};
+								return {"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]}, "UnprocessedKeys": {}};
 							}
 						});
 						const result = await callType.func(User).bind(User)([1]);
@@ -2093,12 +2057,8 @@ describe("Model", () => {
 						"Table": {"TableStatus": "CREATING"}
 					};
 					dynamoose.aws.ddb.set({
-						"describeTable": () => ({
-							"promise": () => Promise.resolve(describeTableResponse)
-						}),
-						"batchGetItem": () => ({
-							"promise": promiseFunction
-						})
+						"describeTable": () => Promise.resolve(describeTableResponse),
+						"batchGetItem": promiseFunction
 					});
 					const model = dynamoose.model("User", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
 					await utils.set_immediate_promise();
@@ -2130,7 +2090,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"putItem": (params) => {
 					createItemParams = params;
-					return {"promise": createItemFunction};
+					return createItemFunction();
 				}
 			});
 		});
@@ -2350,7 +2310,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"batchWriteItem": (paramsB) => {
 					params = paramsB;
-					return {"promise": promiseFunction};
+					return promiseFunction();
 				}
 			});
 		});
@@ -2477,7 +2437,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"updateItem": (params) => {
 					updateItemParams = params;
-					return {"promise": updateItemFunction};
+					return updateItemFunction();
 				}
 			});
 		});
@@ -4176,7 +4136,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"deleteItem": (params) => {
 					deleteItemParams = params;
-					return {"promise": deleteItemFunction};
+					return deleteItemFunction();
 				}
 			});
 		});
@@ -4351,7 +4311,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"batchWriteItem": (paramsB) => {
 					params = paramsB;
-					return {"promise": promiseFunction};
+					return promiseFunction();
 				}
 			});
 		});
