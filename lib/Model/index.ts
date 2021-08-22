@@ -1,5 +1,5 @@
 import CustomError = require("../Error");
-import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem} from "../Schema";
+import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
 import utils = require("../utils");
 import ddb = require("../aws/ddb/internal");
@@ -47,7 +47,7 @@ export type ModelOptionsOptional = DeepPartial<ModelOptions>;
 
 
 type KeyObject = {[attribute: string]: string | number};
-type InputKey = string | KeyObject;
+type InputKey = string | number | KeyObject;
 
 // Transactions
 type GetTransactionResult = Promise<GetTransactionInput>;
@@ -255,6 +255,7 @@ interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
 }
 export interface ModelIndexes {
+	TableIndex?: TableIndex;
 	GlobalSecondaryIndexes?: IndexItem[];
 	LocalSecondaryIndexes?: IndexItem[];
 }
@@ -274,9 +275,12 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		// Methods
 		this[internalProperties].getIndexes = async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> => {
 			return (await Promise.all(this[internalProperties].schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
-				Object.entries(indexes).forEach((entry) => {
-					const [key, value] = entry;
-					result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value]) : value;
+				Object.entries(indexes).forEach(([key, value]) => {
+					if (key === "TableIndex") {
+						result[key] = value as TableIndex;
+					} else {
+						result[key] = result[key] ? utils.unique_array_elements([...result[key], ...(value as IndexItem[])]) : value;
+					}
 				});
 
 				return result;
@@ -680,6 +684,14 @@ export class Model<T extends ItemCarrier = AnyItem> {
 	// Update
 	update (obj: Partial<T>): Promise<T>;
 	update (obj: Partial<T>, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>): Promise<T>;
+	update (keyObj: InputKey, updateObj: Partial<T>, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, any>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings): Promise<T>;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
+	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, any>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>): Promise<T>;
 	update (keyObj: ObjectType, updateObj: Partial<T>, callback: CallbackType<T, any>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
@@ -688,7 +700,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "item"}): Promise<T>;
 	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "item"}, callback: CallbackType<T, any>): void;
-	update (keyObj: ObjectType, updateObj?: Partial<T> | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, settings?: ModelUpdateSettings | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
+	update (keyObj: InputKey | ObjectType, updateObj?: Partial<T> | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, settings?: ModelUpdateSettings | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
 		if (typeof updateObj === "function") {
 			callback = updateObj as CallbackType<ItemCarrier | DynamoDB.UpdateItemInput, any>; // TODO: fix this, for some reason `updateObj` has a type of Function which is forcing us to type cast it
 			updateObj = null;
@@ -904,7 +916,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
 		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this[internalProperties].pendingTaskPromise().then(async () => ({
-			"Key": this.Item.objectToDynamo(keyObj),
+			"Key": this.Item.objectToDynamo(this[internalProperties].convertObjectToKey(keyObj)),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",
 			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? localSettings.condition.requestObject({"index": {"start": index, "set": (i): void => {
 				index = i;

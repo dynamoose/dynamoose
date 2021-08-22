@@ -166,11 +166,14 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 			res[myItem[0]] = {"type": (myItem[1] as any).type};
 			return res;
 		}, {});
-		if (!utils.can_use_index_of_table(this.internalSettings.model[internalProperties].getHashKey(), this.internalSettings.model[internalProperties].getRangeKey(), comparisonChart)) {
-			object.IndexName = utils.find_best_index(indexes, comparisonChart);
-			if (!object.IndexName) {
+
+		const indexSpec = utils.find_best_index(indexes, comparisonChart);
+		if (!indexSpec.tableIndex) {
+			if (!indexSpec.indexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
 			}
+
+			object.IndexName = indexSpec.indexName;
 		}
 	}
 	function moveParameterNames (val, prefix): void {
@@ -203,22 +206,15 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		}
 	}
 	if (this.internalSettings.typeInformation.type === "query") {
-		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName);
-		if (index) {
-			const {hash, range} = index.KeySchema.reduce((res, item) => {
-				res[item.KeyType.toLowerCase()] = item.AttributeName;
-				return res;
-			}, {});
+		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
+		const {hash, range} = index.KeySchema.reduce((res, item) => {
+			res[item.KeyType.toLowerCase()] = item.AttributeName;
+			return res;
+		}, {});
 
-			moveParameterNames(hash, "qh");
-			if (range) {
-				moveParameterNames(range, "qr");
-			}
-		} else {
-			moveParameterNames(this.internalSettings.model[internalProperties].getHashKey(), "qh");
-			if (this.internalSettings.model[internalProperties].getRangeKey()) {
-				moveParameterNames(this.internalSettings.model[internalProperties].getRangeKey(), "qr");
-			}
+		moveParameterNames(hash, "qh");
+		if (range) {
+			moveParameterNames(range, "qr");
 		}
 	}
 	if (this.settings.consistent) {
