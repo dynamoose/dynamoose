@@ -66,9 +66,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": (params) => {
 						transactParams = params;
-						return {
-							"promise": () => Promise.resolve({})
-						};
+						return () => Promise.resolve({});
 					}
 				});
 
@@ -102,9 +100,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactWriteItems": (params) => {
 						transactParams = params;
-						return {
-							"promise": () => Promise.resolve({})
-						};
+						return () => Promise.resolve({});
 					}
 				});
 
@@ -135,9 +131,7 @@ describe("Transaction", () => {
 
 			it("Should use correct response from AWS", () => {
 				dynamoose.aws.ddb.set({
-					"transactGetItems": () => ({
-						"promise": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}, {"Item": {"id": {"N": "2"}, "name": {"S": "My Credit"}}}]})
-					})
+					"transactGetItems": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}, {"Item": {"id": {"N": "2"}, "name": {"S": "My Credit"}}}]})
 				});
 
 				dynamoose.model("User", {"id": Number, "name": String});
@@ -150,9 +144,7 @@ describe("Transaction", () => {
 
 			it("Should return null if no response from AWS", () => {
 				dynamoose.aws.ddb.set({
-					"transactGetItems": () => ({
-						"promise": () => Promise.resolve({})
-					})
+					"transactGetItems": () => Promise.resolve({})
 				});
 
 				dynamoose.model("User", {"id": Number, "name": String});
@@ -165,9 +157,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactWriteItems": (params) => {
 						transactParams = params;
-						return {
-							"promise": () => Promise.resolve({})
-						};
+						return () => Promise.resolve({});
 					}
 				});
 
@@ -182,9 +172,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": (params) => {
 						transactParams = params;
-						return {
-							"promise": () => Promise.resolve({})
-						};
+						return () => Promise.resolve({});
 					}
 				});
 

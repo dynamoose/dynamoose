@@ -100,7 +100,7 @@ describe("Item", () => {
 			aws.ddb.set({
 				"putItem": (params) => {
 					putParams.push(params);
-					return {"promise": putItemFunction};
+					return putItemFunction();
 				}
 			});
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -1201,11 +1201,9 @@ describe("Item", () => {
 					aws.ddb.set({
 						"putItem": (params) => {
 							putParams.push(params);
-							return {"promise": putItemFunction};
+							return putItemFunction();
 						},
-						"getItem": () => ({
-							"promise": () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}}})
-						})
+						"getItem": () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}}})
 					});
 
 					putItemFunction = () => Promise.resolve();
@@ -1439,12 +1437,10 @@ describe("Item", () => {
 						"Table": {"TableStatus": "CREATING"}
 					};
 					aws.ddb.set({
-						"describeTable": () => ({
-							"promise": () => Promise.resolve(describeTableResponse)
-						}),
+						"describeTable": () => Promise.resolve(describeTableResponse),
 						"putItem": (params) => {
 							putParams.push(params);
-							return {"promise": putItemFunction};
+							return putItemFunction();
 						}
 					});
 					const model = dynamoose.model("User2", {"id": Number, "name": String}, {"waitForActive": {"enabled": true, "check": {"frequency": 0, "timeout": 100}}});
@@ -1579,7 +1575,7 @@ describe("Item", () => {
 			aws.ddb.set({
 				"deleteItem": (params) => {
 					deleteParams = params;
-					return {"promise": deleteItemFunction};
+					return deleteItemFunction();
 				}
 			});
 			User = dynamoose.model("User", {"id": Number, "name": String});
@@ -1644,7 +1640,7 @@ describe("Item", () => {
 			aws.ddb.set({
 				"getItem": (params) => {
 					getItemParams.push(params);
-					return {"promise": getItemFunction};
+					return getItemFunction();
 				}
 			});
 			User = dynamoose.model("User", {"id": Number, "name": String});
