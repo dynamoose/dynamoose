@@ -20,7 +20,7 @@ describe("Scan", () => {
 		dynamoose.aws.ddb.set({
 			"scan": (request) => {
 				scanParams = request;
-				return {"promise": scanPromiseResolver};
+				return scanPromiseResolver();
 			}
 		});
 	});
@@ -290,10 +290,10 @@ describe("Scan", () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.THIS});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"scan": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]};
 							}
 						});
 						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
@@ -318,10 +318,10 @@ describe("Scan", () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": Model2});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"scan": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]};
 							}
 						});
 						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
@@ -346,10 +346,10 @@ describe("Scan", () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Array, "schema": [Model2]}});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"scan": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}]};
 							}
 						});
 						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
@@ -374,10 +374,10 @@ describe("Scan", () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Array, "schema": [Model2]}});
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
-								return params.Key.id.N === "2" ? {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})} : {"promise": () => ({"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}})};
+								return params.Key.id.N === "2" ? {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}} : {"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}};
 							},
 							"scan": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}, {"N": "3"}]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}, {"N": "3"}]}}]};
 							}
 						});
 						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
@@ -405,10 +405,10 @@ describe("Scan", () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Set, "schema": [Model2]}});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"scan": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}]};
 							}
 						});
 						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
@@ -430,10 +430,10 @@ describe("Scan", () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Set, "schema": [Model2]}});
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
-								return params.Key.id.N === "2" ? {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})} : {"promise": () => ({"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}})};
+								return params.Key.id.N === "2" ? {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}} : {"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}};
 							},
 							"scan": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2", "3"]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2", "3"]}}]};
 							}
 						});
 						const result = await callType.func(Model.scan("name").eq("Charlie").exec).bind(Model.scan("name").eq("Charlie"))();
@@ -455,10 +455,10 @@ describe("Scan", () => {
 						Model = dynamoose.model("Cat", {"id": Number, "name": String, "parent": dynamoose.THIS}, {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"scan": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]};
 							}
 						});
 						const result = await callType.func(Model.scan().exec).bind(Model.scan())();
