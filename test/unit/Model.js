@@ -2090,7 +2090,7 @@ describe("Model", () => {
 			dynamoose.aws.ddb.set({
 				"putItem": (params) => {
 					createItemParams = params;
-					return createItemFunction
+					return createItemFunction;
 				}
 			});
 		});
