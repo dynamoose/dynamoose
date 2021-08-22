@@ -66,7 +66,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": (params) => {
 						transactParams = params;
-						return () => Promise.resolve({});
+						return Promise.resolve({});
 					}
 				});
 
@@ -100,7 +100,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactWriteItems": (params) => {
 						transactParams = params;
-						return () => Promise.resolve({});
+						return Promise.resolve({});
 					}
 				});
 
@@ -157,7 +157,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactWriteItems": (params) => {
 						transactParams = params;
-						return () => Promise.resolve({});
+						return Promise.resolve({});
 					}
 				});
 
@@ -172,7 +172,7 @@ describe("Transaction", () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": (params) => {
 						transactParams = params;
-						return () => Promise.resolve({});
+						return Promise.resolve({});
 					}
 				});
 
