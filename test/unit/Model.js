@@ -8,7 +8,6 @@ const Internal = require("../../dist/Internal");
 const utils = require("../../dist/utils");
 const util = require("util");
 const ModelStore = require("../../dist/ModelStore");
-const { object } = require("../../dist/utils");
 
 describe("Model", () => {
 	beforeEach(() => {
