@@ -18,7 +18,9 @@ export default function deep_copy<T> (obj: T): T {
 	if (obj instanceof Object) {
 		copy = {};
 		for (const attr in obj) {
-			if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = deep_copy(obj[attr]);
+			if (Object.prototype.hasOwnProperty.call(obj, attr)) {
+				copy[attr] = deep_copy(obj[attr]);
+			}
 		}
 		return copy;
 	}
