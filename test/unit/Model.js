@@ -8,6 +8,7 @@ const Internal = require("../../dist/Internal");
 const utils = require("../../dist/utils");
 const util = require("util");
 const ModelStore = require("../../dist/ModelStore");
+const { object } = require("../../dist/utils");
 
 describe("Model", () => {
 	beforeEach(() => {
@@ -3548,6 +3549,15 @@ describe("Model", () => {
 						"id": 1,
 						"address": {"zip": 12345, "country": "world"}
 					});
+				});
+
+				it("Should not delete keys from object", async () => {
+					const obj = {"id": 1, "address": {"zip": 12345, "country": "world"}};
+
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
+					await callType.func(User).bind(User)(obj);
+					expect(obj).to.deep.eql({"id": 1, "address": {"zip": 12345, "country": "world"}});
 				});
 
 				it("Should not throw error if validation passes", () => {
