@@ -11,6 +11,7 @@ import dynamoose = require("./dynamoose");
 import all_elements_match from "./all_elements_match";
 import type_name from "./type_name";
 import find_best_index from "./find_best_index";
+import deep_copy from "./deep_copy";
 
 export = {
 	combine_objects,
@@ -25,5 +26,6 @@ export = {
 	object,
 	dynamoose,
 	type_name,
-	find_best_index
+	find_best_index,
+	deep_copy
 };

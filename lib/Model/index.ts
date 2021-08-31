@@ -705,7 +705,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 		}
 		if (!updateObj) {
 			const hashKeyName = this.getHashKey();
-			updateObj = keyObj as Partial<T>;
+			updateObj = utils.deep_copy(keyObj) as Partial<T>;
 			keyObj = {
 				[hashKeyName]: keyObj[hashKeyName]
 			};

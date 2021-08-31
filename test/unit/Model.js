@@ -4717,6 +4717,12 @@ describe("Model", () => {
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
+
+			it("Should not delete keys from object", () => {
+				const obj = {"id": 1, "name": "Bob"};
+				User.transaction.update(obj, utils.empty_function);
+				expect(obj).to.eql({"id": 1, "name": "Bob"});
+			});
 		});
 
 		describe("Model.transaction.condition", () => {
