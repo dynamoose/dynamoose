@@ -20,22 +20,42 @@ describe("utils.deep_copy", () => {
 	it("Should return a deep copy of the passed class", () => {
 		class Test {
 			constructor () {
-				this.test = "Test";
+				this.foo = "Test";
 			}
 		}
 
 		const original = new Test();
 		const copy = utils.deep_copy(original);
-		expect(copy.test).to.equal("Test");
 
-		original.test = "Test 2";
+		expect(copy.foo).to.equal("Test");
 
-		expect(original.test).to.equal("Test 2");
-		expect(copy.test).to.equal("Test");
+		original.foo = "Test 2";
+
+		expect(original.foo).to.equal("Test 2");
+		expect(copy.foo).to.equal("Test");
+	});
+
+	it("Should not copy prototype", () => {
+		function Test () {
+			this.foo = "Test";
+		}
+
+		Test.prototype = {"bar": "bar_val"};
+
+		const original = new Test();
+		const copy = utils.deep_copy(original);
+
+		expect(copy.foo).to.equal("Test");
+
+		original.foo = "Test 2";
+
+		expect(original.foo).to.equal("Test 2");
+		expect(copy.foo).to.equal("Test");
+		expect(copy.bar).to.be.undefined;
 	});
 
 	it("Should return a deep copy of the passed date", () => {
-		const original = new Date(2021, 2, 1);
+		const original = new Date("Mon, 01 Mar 2021 07:00:00 GMT");
 		const copy = utils.deep_copy(original);
 		expect(copy.toUTCString()).to.equal("Mon, 01 Mar 2021 07:00:00 GMT");
 
