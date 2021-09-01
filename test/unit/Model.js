@@ -2338,6 +2338,64 @@ describe("Model", () => {
 						"TableName": "User"
 					});
 				});
+
+				it("Should not mutate original object if properties not in schema", async () => {
+					createItemFunction = () => Promise.resolve();
+					const obj = {"id": 1, "random": "data"};
+					await callType.func(User).bind(User)(obj);
+					expect(obj).to.be.an("object");
+					expect(obj).to.deep.eql({
+						"id": 1,
+						"random": "data"
+					});
+				});
+
+				it("Should not mutate original object if nested object properties not in schema", async () => {
+					createItemFunction = () => Promise.resolve();
+					const obj = {"id": 1, "randomdata": {"hello": "world"}};
+					await callType.func(User).bind(User)(obj);
+					expect(obj).to.be.an("object");
+					expect(obj).to.deep.eql({
+						"id": 1,
+						"randomdata": {
+							"hello": "world"
+						}
+					});
+				});
+
+				it("Should return correct result after saving with timestamps", async () => {
+					createItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
+					const date1 = Date.now();
+					const obj = {"id": 1, "name": "Charlie"};
+					const result = await callType.func(User).bind(User)(obj);
+
+					// Check original timestamps
+					expect(result.id).to.eql(1);
+					expect(result.name).to.eql("Charlie");
+					expect(result.createdAt).to.be.a("number");
+					expect(result.createdAt).to.be.within(date1 - 10, date1 + 10);
+					expect(result.updatedAt).to.be.a("number");
+					expect(result.updatedAt).to.be.within(date1 - 10, date1 + 10);
+
+					await new Promise((resolve) => setTimeout(resolve, 20));
+
+					const date2 = Date.now();
+
+					// Mutate document and re-save
+					result.name = "Charlie 2";
+					const result2 = await result.save();
+
+					expect(result.toJSON()).to.eql(result2.toJSON());
+					[result, result2].forEach((r) => {
+						expect(r.id).to.eql(1);
+						expect(r.name).to.eql("Charlie 2");
+						expect(r.createdAt).to.be.a("number");
+						expect(r.createdAt).to.be.within(date1 - 10, date1 + 10);
+						expect(r.updatedAt).to.be.a("number");
+						expect(r.updatedAt).to.be.within(date2 - 10, date2 + 10);
+					});
+				});
 			});
 		});
 	});
