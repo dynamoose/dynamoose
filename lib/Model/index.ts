@@ -349,7 +349,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 		class Document extends DocumentCarrier {
 			static Model: Model<DocumentCarrier>;
 			constructor (object: DynamoDB.AttributeMap | ObjectType = {}, settings: DocumentSettings = {}) {
-				super(self, object, settings);
+				super(self, utils.deep_copy(object), settings);
 			}
 		}
 		Document.Model = self;

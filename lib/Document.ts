@@ -33,7 +33,7 @@ export class Document {
 			"configurable": false,
 			"value": {}
 		});
-		this[internalProperties].originalObject = JSON.parse(JSON.stringify(documentObject));
+		this[internalProperties].originalObject = utils.deep_copy(documentObject);
 		this[internalProperties].originalSettings = {...settings};
 
 		Object.defineProperty(this, "model", {
@@ -224,7 +224,7 @@ Document.prepareForObjectFromSchema = async function<T>(object: T, model: Model<
 	if (settings.updateTimestamps) {
 		const schema: Schema = await model.schemaForObject(object);
 		if (schema.settings.timestamps && settings.type === "toDynamo") {
-			const date = new Date();
+			const date = Date.now();
 
 			const createdAtProperties: string[] = ((Array.isArray((schema.settings.timestamps as TimestampObject).createdAt) ? (schema.settings.timestamps as TimestampObject).createdAt : [(schema.settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
 			const updatedAtProperties: string[] = ((Array.isArray((schema.settings.timestamps as TimestampObject).updatedAt) ? (schema.settings.timestamps as TimestampObject).updatedAt : [(schema.settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
