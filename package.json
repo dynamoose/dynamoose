@@ -58,7 +58,6 @@
   "dependencies": {
     "aws-sdk": "^2.968.0",
     "js-object-utilities": "^2.0.0",
-    "lodash.clonedeep": "^4.5.0",
     "source-map-support": "^0.5.19",
     "uuid": "^8.3.2"
   },
