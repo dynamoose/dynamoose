@@ -72,7 +72,7 @@ describe("utils.deep_copy", () => {
 
 	it("Should return a deep copy of the passed class instances", () => {
 		class PersonWrapper {
-			constructor(name, age) {
+			constructor (name, age) {
 				this.name = name;
 				this.age = age;
 			}
@@ -91,13 +91,13 @@ describe("utils.deep_copy", () => {
 
 	it("Should return a deep copy of the passed multiple nested class instances", () => {
 		class NameWrapper {
-			constructor(name) {
+			constructor (name) {
 				this.name = name;
 			}
 		}
 
 		class PersonWrapper {
-			constructor(name, age) {
+			constructor (name, age) {
 				this.name = name;
 				this.age = age;
 			}
