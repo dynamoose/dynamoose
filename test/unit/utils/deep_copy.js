@@ -117,6 +117,19 @@ describe("utils.deep_copy", () => {
 		expect(copy.name.constructor).to.deep.equal(NameWrapper);
 	});
 
+	it("Should forward errors from class instantiation", () => {
+		class PersonWrapper {
+			constructor (name, age) {
+				this.name = name;
+				this.age = age;
+
+				if (!name || !age) throw new Error("Name and age are required");
+			}
+		}
+		const original = new PersonWrapper("Tim", 20);
+		expect(() => utils.deep_copy(original)).to.throw("Name and age are required");
+	});
+
 	it("Should return a deep copy of the passed set", () => {
 		const original = new Set(["Hello", "World", "Universe"]);
 		const copy = utils.deep_copy(original);
@@ -140,27 +153,40 @@ describe("utils.deep_copy", () => {
 		expect(copy.constructor).to.deep.equal(original.constructor);
 	});
 
+	it("Should throw when passed an invalid DynamoDB set", () => {
+		const original = dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]});
+		const copy = utils.deep_copy(original);
+		expect(copy).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]}));
+
+		original.values[0] = "Welcome";
+
+		expect(original).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Welcome", "World", "Universe"]}));
+		expect(copy).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]}));
+		expect(copy.constructor).to.deep.equal(original.constructor);
+	});
+
 	it("Should return a deep copy of the passed map", () => {
 		const original = new Map();
 		original.set("a", 1);
 		original.set("b", 2);
+
 		const copy = utils.deep_copy(original);
-		expect(Object.fromEntries(copy)).to.deep.equal({"a": 1, "b": 2});
+		expect(Array.from(copy.entries())).to.deep.equal([["a", 1], ["b", 2]]);
 
 		original.delete("b");
 
-		expect(Object.fromEntries(original)).to.deep.equal({"a": 1});
-		expect(Object.fromEntries(copy)).to.deep.equal({"a": 1, "b": 2});
+		expect(Array.from(original.entries())).to.deep.equal([["a", 1]]);
+		expect(Array.from(copy.entries())).to.deep.equal([["a", 1], ["b", 2]]);
 	});
 
 	it("Should return a deep copy of the passed buffer", () => {
 		let original = Buffer.from("Hello World!");
 		const copy = utils.deep_copy(original);
-		expect(copy.toString()).to.deep.equal("Hello World!");
+		expect(copy.toString()).to.equal("Hello World!");
 
 		original[0] = 0;
 
-		expect(original.toString()).to.deep.equal("\u0000ello World!");
-		expect(copy.toString()).to.deep.equal("Hello World!");
+		expect(original.toString()).to.equal("\u0000ello World!");
+		expect(copy.toString()).to.equal("Hello World!");
 	});
 });
