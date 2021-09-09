@@ -57,33 +57,59 @@ describe("Transaction", () => {
 			});
 
 			it("Should throw error with extracted cancellation reasons if transactions cancelled", () => {
+				const error = new Error("Transaction error!");
+
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => ({
-						"on": () => undefined,
-						"promise": () => Promise.reject({
-							"CancellationReasons": [{
-								"Code": "ConditionalCheckFailed",
-								"Message": "The conditional request failed"
-							},
-							{
-								"Code": "ConditionalCheckFailed",
-								"Message": "The conditional request failed"
-							}]
-						})
+						"on": (event, callback) => callback({
+							"error": error,
+							"httpResponse": {
+								"body": `{
+									"CancellationReasons": [{
+										"Code": "ConditionalCheckFailed",
+										"Message": "The conditional request failed"
+									},
+									{
+										"Code": "ConditionalCheckFailed",
+										"Message": "The conditional request failed"
+									}]
+								}`
+							}
+						}),
+						"promise": () => Promise.reject(error)
 					})
 				});
 
 				dynamoose.model("User", {"id": Number, "name": String});
 				dynamoose.model("Credit", {"id": Number, "name": String});
-				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.be.rejectedWith({
-					"CancellationReasons": [{
-						"Code": "ConditionalCheckFailed",
-						"Message": "The conditional request failed"
-					},
-					{
-						"Code": "ConditionalCheckFailed",
-						"Message": "The conditional request failed"
-					}]
+				expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.eventually.be.rejectedWith("Transaction error!").then((error) => {
+					expect(error.CancellationReasons).to.deep.equal([
+						{
+							"Code": "ConditionalCheckFailed",
+							"Message": "The conditional request failed"
+						},
+						{
+							"Code": "ConditionalCheckFailed",
+							"Message": "The conditional request failed"
+						}
+					]);
+				});
+			});
+
+			it("Should throw error with extracted cancellation reasons if transactions cancelled", () => {
+				const error = new Error("Transaction error!");
+
+				dynamoose.aws.ddb.set({
+					"transactGetItems": () => ({
+						"on": (event, callback) => callback({"error": null}),
+						"promise": () => Promise.reject(error)
+					})
+				});
+
+				dynamoose.model("User", {"id": Number, "name": String});
+				dynamoose.model("Credit", {"id": Number, "name": String});
+				expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).to.eventually.be.rejectedWith("Transaction error!").then((error) => {
+					expect(error.CancellationReasons).to.be.undefined;
 				});
 			});
 
