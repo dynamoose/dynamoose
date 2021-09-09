@@ -117,19 +117,6 @@ describe("utils.deep_copy", () => {
 		expect(copy.name.constructor).to.deep.equal(NameWrapper);
 	});
 
-	it("Should forward errors from class instantiation", () => {
-		class PersonWrapper {
-			constructor (name, age) {
-				this.name = name;
-				this.age = age;
-
-				if (!name || !age) throw new Error("Name and age are required");
-			}
-		}
-		const original = new PersonWrapper("Tim", 20);
-		expect(() => utils.deep_copy(original)).to.throw("Name and age are required");
-	});
-
 	it("Should return a deep copy of the passed set", () => {
 		const original = new Set(["Hello", "World", "Universe"]);
 		const copy = utils.deep_copy(original);
