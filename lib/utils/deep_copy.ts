@@ -35,15 +35,7 @@ export default function deep_copy<T> (obj: T): T {
 	// Handle Object
 	if (obj instanceof Object) {
 		if (obj.constructor !== Object) {
-			try {
-				copy = new (obj.constructor as any)();
-			} catch (error) {
-				if (error.code === "InvalidSetType" && error.message === "Sets can contain string, number, or binary values") {
-					copy = new (obj.constructor as any)((obj as any).values);
-				} else {
-					throw error;
-				}
-			}
+			copy = Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 		} else {
 			copy = {};
 		}
