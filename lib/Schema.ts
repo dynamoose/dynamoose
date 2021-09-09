@@ -2,7 +2,7 @@ import CustomError = require("./Error");
 import utils = require("./utils");
 import Internal = require("./Internal");
 import {Document, DocumentObjectFromSchemaSettings} from "./Document";
-import {Model} from "./Model";
+import {Model, ModelIndexes} from "./Model";
 import {DynamoDB} from "aws-sdk";
 import {ModelType, ObjectType} from "./General";
 
@@ -336,11 +336,21 @@ export class Schema {
 			});
 		});
 
-		return {
+		const response: any = {
 			AttributeDefinitions,
-			KeySchema,
-			...await this.getIndexes(model)
+			KeySchema
 		};
+
+		const {GlobalSecondaryIndexes, LocalSecondaryIndexes} = await this.getIndexes(model);
+
+		if (GlobalSecondaryIndexes) {
+			response.GlobalSecondaryIndexes = GlobalSecondaryIndexes;
+		}
+		if (LocalSecondaryIndexes) {
+			response.LocalSecondaryIndexes = LocalSecondaryIndexes;
+		}
+
+		return response;
 	}
 	// This function has the same behavior as `getAttributeType` except if the schema has multiple types, it will throw an error. This is useful for attribute definitions and keys for when you are only allowed to have one type for an attribute
 	private getSingleAttributeType (key: string, value?: ValueType, settings?: SchemaGetAttributeTypeSettings): string {
@@ -421,7 +431,7 @@ export class Schema {
 			}
 			const {typeDetails, matchedTypeDetailsIndex, matchedTypeDetailsIndexes} = typeCheckResult;
 			const hasMultipleTypes = Array.isArray(typeDetails);
-			const isObject = typeof value === "object" && value !== null;
+			const isObject = typeof value === "object" && !(value instanceof Buffer) && value !== null;
 
 			if (hasMultipleTypes) {
 				if (matchedTypeDetailsIndexes.length > 1 && isObject) {
@@ -476,7 +486,7 @@ export class Schema {
 	getSettingValue: (setting: string) => any;
 	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[];
 	getAttributeValue: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => AttributeDefinition;
-	getIndexes: (model: Model<Document>) => Promise<{ GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[] }>;
+	getIndexes: (model: Model<Document>) => Promise<ModelIndexes>;
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
 
 	constructor (object: SchemaDefinition, settings: SchemaSettings = {}) {
@@ -671,14 +681,17 @@ Schema.prototype.getIndexRangeKeyAttributes = async function (this: Schema): Pro
 	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getIndexAttributes();
 	return indexes.map((index) => index.index.rangeKey).filter((a) => Boolean(a)).map((a) => ({"attribute": a}));
 };
+export interface TableIndex {
+	KeySchema: ({AttributeName: string; KeyType: "HASH" | "RANGE"})[];
+}
 export interface IndexItem {
 	IndexName: string;
 	KeySchema: ({AttributeName: string; KeyType: "HASH" | "RANGE"})[];
 	Projection: {ProjectionType: "KEYS_ONLY" | "INCLUDE" | "ALL"; NonKeyAttributes?: string[]};
 	ProvisionedThroughput?: {"ReadCapacityUnits": number; "WriteCapacityUnits": number}; // TODO: this was copied from get_provisioned_throughput. We should change this to be an actual interface
 }
-Schema.prototype.getIndexes = async function (this: Schema, model: Model<Document>): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> {
-	return (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
+Schema.prototype.getIndexes = async function (this: Schema, model: Model<Document>): Promise<ModelIndexes> {
+	const indexes: ModelIndexes = (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
 
@@ -712,6 +725,15 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Documen
 
 		return accumulator;
 	}, {});
+
+	indexes.TableIndex = {"KeySchema": [{"AttributeName": this.getHashKey(), "KeyType": "HASH"}]};
+
+	const rangeKey = this.getRangeKey();
+	if (rangeKey) {
+		indexes.TableIndex.KeySchema.push({"AttributeName": rangeKey, "KeyType": "RANGE"});
+	}
+
+	return indexes;
 };
 
 Schema.prototype.getSettingValue = function (this: Schema, setting: string): any {

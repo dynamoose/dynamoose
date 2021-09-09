@@ -2338,6 +2338,64 @@ describe("Model", () => {
 						"TableName": "User"
 					});
 				});
+
+				it("Should not mutate original object if properties not in schema", async () => {
+					createItemFunction = () => Promise.resolve();
+					const obj = {"id": 1, "random": "data"};
+					await callType.func(User).bind(User)(obj);
+					expect(obj).to.be.an("object");
+					expect(obj).to.deep.eql({
+						"id": 1,
+						"random": "data"
+					});
+				});
+
+				it("Should not mutate original object if nested object properties not in schema", async () => {
+					createItemFunction = () => Promise.resolve();
+					const obj = {"id": 1, "randomdata": {"hello": "world"}};
+					await callType.func(User).bind(User)(obj);
+					expect(obj).to.be.an("object");
+					expect(obj).to.deep.eql({
+						"id": 1,
+						"randomdata": {
+							"hello": "world"
+						}
+					});
+				});
+
+				it("Should return correct result after saving with timestamps", async () => {
+					createItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
+					const date1 = Date.now();
+					const obj = {"id": 1, "name": "Charlie"};
+					const result = await callType.func(User).bind(User)(obj);
+
+					// Check original timestamps
+					expect(result.id).to.eql(1);
+					expect(result.name).to.eql("Charlie");
+					expect(result.createdAt).to.be.a("number");
+					expect(result.createdAt).to.be.within(date1 - 10, date1 + 10);
+					expect(result.updatedAt).to.be.a("number");
+					expect(result.updatedAt).to.be.within(date1 - 10, date1 + 10);
+
+					await new Promise((resolve) => setTimeout(resolve, 20));
+
+					const date2 = Date.now();
+
+					// Mutate document and re-save
+					result.name = "Charlie 2";
+					const result2 = await result.save();
+
+					expect(result.toJSON()).to.eql(result2.toJSON());
+					[result, result2].forEach((r) => {
+						expect(r.id).to.eql(1);
+						expect(r.name).to.eql("Charlie 2");
+						expect(r.createdAt).to.be.a("number");
+						expect(r.createdAt).to.be.within(date1 - 10, date1 + 10);
+						expect(r.updatedAt).to.be.a("number");
+						expect(r.updatedAt).to.be.within(date2 - 10, date2 + 10);
+					});
+				});
 			});
 		});
 	});
@@ -2551,6 +2609,54 @@ describe("Model", () => {
 				it("Should send correct params to updateItem for trying to update unknown properties", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "random": "hello world"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for trying to pass string as key", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)("id", {"name": "Charlie", "random": "hello world"});
+					expect(updateItemParams).to.be.an("object");
+					expect(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"S": "id"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem for trying to pass number as key", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(1, {"name": "Charlie", "random": "hello world"});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -3489,6 +3595,26 @@ describe("Model", () => {
 						"id": 1,
 						"name": "Charlie"
 					});
+				});
+
+				it("Should return updated document with object property upon success", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
+					const result = await callType.func(User).bind(User)({"id": 1, "address": {"zip": 12345, "country": "world"}});
+					expect(result.constructor.name).to.eql("Document");
+					expect({...result}).to.eql({
+						"id": 1,
+						"address": {"zip": 12345, "country": "world"}
+					});
+				});
+
+				it("Should not delete keys from object", async () => {
+					const obj = {"id": 1, "address": {"zip": 12345, "country": "world"}};
+
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
+					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "address": {"M": {"zip": {"N": "12345"}, "country": {"S": "world"}}}}});
+					await callType.func(User).bind(User)(obj);
+					expect(obj).to.deep.eql({"id": 1, "address": {"zip": 12345, "country": "world"}});
 				});
 
 				it("Should not throw error if validation passes", () => {
@@ -4657,6 +4783,12 @@ describe("Model", () => {
 				console.warn = oldWarn;
 
 				expect(result).to.eql("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+			});
+
+			it("Should not delete keys from object", () => {
+				const obj = {"id": 1, "name": "Bob"};
+				User.transaction.update(obj, utils.empty_function);
+				expect(obj).to.eql({"id": 1, "name": "Bob"});
 			});
 		});
 

@@ -497,7 +497,9 @@ Unlike `get` this method will additionally pass in the original value as the sec
 
 ### index: boolean | object | array
 
-You can define indexes on properties to be created or updated upon model initialization. If you pass in an array for the value of this setting it must be an array of index objects. By default no indexes are specified on the attribute.
+Indexes on your DynamoDB tables must be defined in your Dynamoose schema. If you have the update option set to true on your model settings, and a Dynamoose schema index does not already exist on the DynamoDB table, it will be created on model initialization. Similarily, indexes on your DynamoDB table that do not exist in your Dynamoose schema will be deleted.
+
+If you pass in an array for the value of this setting it must be an array of index objects. By default no indexes are specified on the attribute.
 
 Your index object can contain the following properties:
 
