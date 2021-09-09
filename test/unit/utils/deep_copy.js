@@ -41,7 +41,7 @@ describe("utils.deep_copy", () => {
 		const copy = utils.deep_copy(original);
 		expect(copy.toUTCString()).to.equal("Mon, 01 Mar 2021 07:00:00 GMT");
 
-		original.setDate(2);
+		original.setUTCDate(2);
 
 		expect(original.toUTCString()).to.equal("Tue, 02 Mar 2021 07:00:00 GMT");
 		expect(copy.toUTCString()).to.equal("Mon, 01 Mar 2021 07:00:00 GMT");
