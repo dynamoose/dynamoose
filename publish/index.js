@@ -89,6 +89,9 @@ let package = require("../package.json");
 		let fileContents = await fs.readFile(currentPath);
 		const fileContentsJSON = JSON.parse(fileContents);
 		fileContentsJSON.version = results.version;
+		if (fileContentsJSON[""]) {
+			fileContentsJSON[""].version = results.version;
+		}
 		fileContents = JSON.stringify(fileContentsJSON, null, 2);
 		await fs.writeFile(currentPath, `${fileContents}\n`);
 	};
