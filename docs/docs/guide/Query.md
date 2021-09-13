@@ -75,7 +75,8 @@ Although the `.lastKey` property returns a standard (non DynamoDB) object, you c
 
 ```js
 const response = await Cat.query("name").eq("Will").exec();
-const moreItems = Cat.query("name").eq("Will").startAt(response.lastKey);
+const moreItems = await Cat.query("name").eq("Will").startAt(response.lastKey).exec();
+>>>>>>> master
 ```
 
 ## query.attributes(attributes)
