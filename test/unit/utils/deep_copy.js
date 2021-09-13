@@ -129,26 +129,28 @@ describe("utils.deep_copy", () => {
 	});
 
 	it("Should return a deep copy of the passed DynamoDB set", () => {
-		const original = dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]});
+		const original = dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]});
 		const copy = utils.deep_copy(original);
-		expect(copy).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]}));
 
-		original.values[0] = "Welcome";
+		expect(copy).to.deep.equal(dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]}));
 
-		expect(original).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Welcome", "World", "Universe"]}));
-		expect(copy).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]}));
+		original.delete("Universe");
+		original.add("Peace");
+
+		expect(original).to.deep.equal(dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Peace"]}));
 		expect(copy.constructor).to.deep.equal(original.constructor);
 	});
 
 	it("Should throw when passed an invalid DynamoDB set", () => {
-		const original = dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]});
+		const original = dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]});
 		const copy = utils.deep_copy(original);
-		expect(copy).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]}));
+		expect(copy).to.deep.equal(dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]}));
 
-		original.values[0] = "Welcome";
+		original.delete("Universe");
+		original.add("Peace");
 
-		expect(original).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Welcome", "World", "Universe"]}));
-		expect(copy).to.deep.equal(dynamoose.aws.converter().output({"SS": ["Hello", "World", "Universe"]}));
+		expect(original).to.deep.equal(dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Peace"]}));
+		expect(copy).to.deep.equal(dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]}));
 		expect(copy.constructor).to.deep.equal(original.constructor);
 	});
 
