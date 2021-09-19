@@ -146,7 +146,7 @@ export class Table {
 			setupFlow.push(() => createTable(this));
 		}
 		// Wait for Active
-		if ((this[internalProperties].options.waitForActive || {}).enabled) {
+		if (this[internalProperties].options.waitForActive === true || (this[internalProperties].options.waitForActive || {}).enabled) {
 			setupFlow.push(() => waitForActive(this, false));
 		}
 		// Update Time To Live
@@ -259,7 +259,7 @@ export interface TableOptions {
 	throughput: "ON_DEMAND" | number | {read: number; write: number};
 	prefix: string;
 	suffix: string;
-	waitForActive: TableWaitForActiveSettings;
+	waitForActive: boolean | TableWaitForActiveSettings;
 	update: boolean | TableUpdateOptions[];
 	populate: string | string[] | boolean;
 	expires: number | TableExpiresSettings;

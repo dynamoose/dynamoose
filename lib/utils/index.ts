@@ -12,6 +12,7 @@ import all_elements_match from "./all_elements_match";
 import type_name from "./type_name";
 import importPackage from "./importPackage";
 import log from "./log";
+import find_best_index from "./find_best_index";
 
 export = {
 	combine_objects,
@@ -27,5 +28,6 @@ export = {
 	dynamoose,
 	type_name,
 	importPackage,
-	log
+	log,
+	find_best_index
 };

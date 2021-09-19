@@ -81,23 +81,25 @@ export function waitForActive (table: Table, forceRefreshOnFirstAttempt = true) 
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check (count: number): Promise<void> {
-			try {
-				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
-				const tableDetails = (await getTableDetails(table, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
-				if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
-					return resolve();
+			if (typeof table[internalProperties].options.waitForActive !== "boolean") {
+				try {
+					// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
+					const tableDetails = (await getTableDetails(table, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
+					if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
+						return resolve();
+					}
+				} catch (e) {
+					return reject(e);
 				}
-			} catch (e) {
-				return reject(e);
-			}
 
-			if (count > 0) {
-				table[internalProperties].options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(table[internalProperties].options.waitForActive.check.frequency);
-			}
-			if (Date.now() - start >= table[internalProperties].options.waitForActive.check.timeout) {
-				return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
-			} else {
-				check(++count);
+				if (count > 0) {
+					table[internalProperties].options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(table[internalProperties].options.waitForActive.check.frequency);
+				}
+				if (Date.now() - start >= table[internalProperties].options.waitForActive.check.timeout) {
+					return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
+				} else {
+					check(++count);
+				}
 			}
 		}
 		check(0);

@@ -10,6 +10,7 @@ const shouldFailWithNumberAsName = dynamoose.model(1);
 const shouldFailWithBooleanAsName = dynamoose.model(true);
 
 const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
+const shouldSucceedWithOnlyNameAndSchemaObject = dynamoose.model("User", {"id": String});
 
 const model = dynamoose.model("User", {"id": Number});
 
@@ -30,8 +31,14 @@ const shouldPassBatchGetWithNoReturnSettingCallback = model.batchGet([{"id": 1},
 const shouldPassBatchPutWithNoReturnSettingCallback = model.batchPut([{"id": 1}, {"id": 2}], {}, () => {});
 const shouldPassBatchDeleteWithNoReturnSettingCallback = model.batchDelete([{"id": 1}, {"id": 2}], {}, () => {});
 
+const shouldPassUpdateWithDefaultReturnValuesSetting = model.update({"id": 1}, {"attributes": ["something"]}, {"returnValues": "ALL_NEW"});
+const shouldPassUpdateWithCustomReturnValuesSetting = model.update({"id": 1}, {"attributes": ["something"]}, {"returnValues": "NONE"});
 
-const shouldSucceedWithWaitForActive = dynamoose.model("User", {"id": String});
+const shouldPassGetWithStringAsKey = model.get("id");
+const shouldPassGetWithNumberAsKey = model.get(1);
+
+const shouldPassUpdateWithStringAsKey = model.update("id", {"value": "hello world"});
+const shouldPassUpdateWithNumberAsKey = model.update(1, {"value": "hello world"});
 
 // @ts-expect-error
 const shouldFailWithInvalidTransaction = model.transaction.notValid();

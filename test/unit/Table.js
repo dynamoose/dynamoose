@@ -99,9 +99,7 @@ describe("Table", () => {
 					"Table": {"TableStatus": "CREATING"}
 				};
 				dynamoose.aws.ddb.set({
-					"describeTable": () => ({
-						"promise": () => Promise.resolve(describeTableResponse)
-					})
+					"describeTable": () => Promise.resolve(describeTableResponse)
 				});
 				const Model = dynamoose.model("Cat", {"id": String});
 				const Table = new dynamoose.Table("Cat", [Model], {"waitForActive": {"enabled": true, "check": {"frequency": 0}}});
@@ -266,11 +264,9 @@ describe("Table", () => {
 				dynamoose.aws.ddb.set({
 					"createTable": (params) => {
 						createTableParams = params;
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					},
-					"describeTable": () => ({"promise": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})})
+					"describeTable": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})
 				});
 
 				const tableName = "Cat";
@@ -290,29 +286,24 @@ describe("Table", () => {
 			it("Should bind request to function being called", async () => {
 				let self;
 				dynamoose.aws.ddb.set({
-					"createTable": (params) => {
+					"createTable": function (params) {
 						createTableParams = params;
-						return {
-							"promise": function () {
-								self = this;
-								return Promise.resolve();
-							}
-						};
+						self = this;
+						return Promise.resolve();
 					},
-					"describeTable": () => ({"promise": () => Promise.resolve()})
+					"describeTable": () => Promise.resolve()
 				});
 
 				const model = dynamoose.model("Cat", {"id": String});
 				new dynamoose.Table("Cat", [model]);
 				await utils.set_immediate_promise();
 				expect(self).to.be.an("object");
-				expect(Object.keys(self)).to.eql(["promise"]);
-				expect(self.promise).to.exist;
+				expect(Object.keys(self)).to.eql(["createTable", "describeTable"]);
 			});
 		});
 
 		describe("Wait For Active", () => {
-			let describeTableParams = [], describeTableFunction;
+			let describeTableParams = [], describeTableFunction, updateTableParams = [];
 			beforeEach(() => {
 				dynamoose.Table.defaults.set({
 					"create": false,
@@ -330,14 +321,17 @@ describe("Table", () => {
 				dynamoose.aws.ddb.set({
 					"describeTable": (params) => {
 						describeTableParams.push(params);
-						return {
-							"promise": () => describeTableFunction(params)
-						};
+						return describeTableFunction(params);
+					},
+					"updateTable": (params) => {
+						updateTableParams.push(params);
+						return Promise.resolve();
 					}
 				});
 			});
 			afterEach(() => {
 				describeTableParams = [];
+				updateTableParams = [];
 				describeTableFunction = null;
 				dynamoose.aws.ddb.revert();
 			});
@@ -417,6 +411,46 @@ describe("Table", () => {
 					"TableName": tableName
 				}]);
 			});
+
+			it("Should call updateTable even if table is still being created when waitForActive is set to false", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "CREATING"
+					}
+				});
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": false});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([{
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 2
+					},
+					"TableName": tableName
+				}]);
+			});
+
+			it("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 2,
+							"WriteCapacityUnits": 2
+						},
+						"TableStatus": "CREATING"
+					}
+				});
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": true});
+				await utils.set_immediate_promise();
+				expect(updateTableParams).to.eql([]);
+			});
 		});
 
 		describe("Update", () => {
@@ -430,16 +464,10 @@ describe("Table", () => {
 			beforeEach(() => {
 				updateTableParams = [];
 				dynamoose.aws.ddb.set({
-					"describeTable": () => {
-						return {
-							"promise": describeTableFunction
-						};
-					},
+					"describeTable": () => describeTableFunction(),
 					"updateTable": (params) => {
 						updateTableParams.push(params);
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					}
 				});
 			});
@@ -889,28 +917,22 @@ describe("Table", () => {
 				updateTTLParams = [];
 				dynamoose.aws.ddb.set({
 					"describeTable": () => {
-						return {
-							"promise": () => Promise.resolve({
-								"Table": {
-									"ProvisionedThroughput": {
-										"ReadCapacityUnits": 1,
-										"WriteCapacityUnits": 1
-									},
-									"TableStatus": "ACTIVE"
-								}
-							})
-						};
+						return Promise.resolve({
+							"Table": {
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 1
+								},
+								"TableStatus": "ACTIVE"
+							}
+						});
 					},
 					"updateTimeToLive": (params) => {
 						updateTTLParams.push(params);
-						return {
-							"promise": () => Promise.resolve()
-						};
+						return Promise.resolve();
 					},
 					"describeTimeToLive": () => {
-						return describeTTLFunction ? describeTTLFunction() : {
-							"promise": () => Promise.resolve(describeTTL)
-						};
+						return describeTTLFunction ? describeTTLFunction() : Promise.resolve(describeTTL);
 					}
 				});
 			});
@@ -956,12 +978,8 @@ describe("Table", () => {
 				const startTime = Date.now();
 				let timesCalledDescribeTTL = 0;
 				describeTTLFunction = () => {
-					return {
-						"promise": async () => {
-							timesCalledDescribeTTL++;
-							return Promise.resolve(timesCalledDescribeTTL < 2 ? {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLING"}} : {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLED"}});
-						}
-					};
+					timesCalledDescribeTTL++;
+					return Promise.resolve(timesCalledDescribeTTL < 2 ? {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLING"}} : {"TimeToLiveDescription": {"TimeToLiveStatus": "DISABLED"}});
 				};
 				const tableName = "Cat";
 				const model = dynamoose.model(tableName, {"id": String});

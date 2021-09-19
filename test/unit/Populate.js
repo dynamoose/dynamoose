@@ -56,7 +56,7 @@ describe("Populate", () => {
 					beforeEach(() => {
 						dynamoose.aws.ddb.set({
 							"getItem": (param) => {
-								return {"promise": () => promiseFunction(param)};
+								return promiseFunction(param);
 							}
 						});
 					});
