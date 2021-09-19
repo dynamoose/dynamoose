@@ -424,6 +424,20 @@ describe("Model", () => {
 				}]);
 			});
 
+			it("Should call describeTable with correct parameters when waitForActive is set to true", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE"
+					}
+				});
+				dynamoose.model(tableName, {"id": String}, {"waitForActive": true});
+				await utils.set_immediate_promise();
+				expect(describeTableParams).to.eql([{
+					"TableName": tableName
+				}]);
+			});
+
 			it("Should call describeTable with correct parameters multiple times", async () => {
 				const tableName = "Cat";
 				describeTableFunction = () => Promise.resolve({
