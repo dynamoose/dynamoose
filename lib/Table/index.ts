@@ -109,7 +109,7 @@ export class Table {
 			}
 			options.expires = utils.combine_objects(options.expires as any, {"attribute": "ttl"});
 
-			models.flatMap((model: any) => model.Model[internalProperties].schemas).forEach((schema) => {
+			utils.array_flatten(models.map((model: any) => model.Model[internalProperties].schemas)).forEach((schema) => {
 				schema[internalProperties].schemaObject[(options.expires as TableExpiresSettings).attribute] = {
 					"type": {
 						"value": Date,
