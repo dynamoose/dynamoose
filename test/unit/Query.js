@@ -20,7 +20,7 @@ describe("Query", () => {
 		dynamoose.aws.ddb.set({
 			"query": (request) => {
 				queryParams = request;
-				return {"promise": queryPromiseResolver};
+				return queryPromiseResolver();
 			}
 		});
 	});
@@ -446,16 +446,15 @@ describe("Query", () => {
 					await callType.func(query.exec).bind(query)();
 					expect(queryParams).to.eql({
 						"TableName": "Cat",
-						"IndexName": "nameGlobalIndex",
 						"ExpressionAttributeNames": {
-							"#qha": "name",
-							"#a1": "id"
+							"#qha": "id",
+							"#a0": "name"
 						},
 						"ExpressionAttributeValues": {
-							":qhv": {"S": "Charlie"},
-							":v1": {"S": "test"}
+							":qhv": {"S": "test"},
+							":v0": {"S": "Charlie"}
 						},
-						"FilterExpression": "#a1 = :v1",
+						"FilterExpression": "#a0 = :v0",
 						"KeyConditionExpression": "#qha = :qhv"
 					});
 				});
@@ -641,10 +640,10 @@ describe("Query", () => {
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"query": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]};
 							}
 						});
 						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
@@ -671,10 +670,10 @@ describe("Query", () => {
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"query": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]};
 							}
 						});
 						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
@@ -701,10 +700,10 @@ describe("Query", () => {
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"query": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}]}}]};
 							}
 						});
 						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
@@ -731,10 +730,10 @@ describe("Query", () => {
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
-								return params.Key.id.N === "2" ? {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})} : {"promise": () => ({"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}})};
+								return params.Key.id.N === "2" ? {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}} : {"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}};
 							},
 							"query": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}, {"N": "3"}]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"L": [{"N": "2"}, {"N": "3"}]}}]};
 							}
 						});
 						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
@@ -764,10 +763,10 @@ describe("Query", () => {
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"query": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2"]}}]};
 							}
 						});
 						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
@@ -791,10 +790,10 @@ describe("Query", () => {
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
-								return params.Key.id.N === "2" ? {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})} : {"promise": () => ({"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}})};
+								return params.Key.id.N === "2" ? {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}} : {"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}}};
 							},
 							"query": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2", "3"]}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"NS": ["2", "3"]}}]};
 							}
 						});
 						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
@@ -817,10 +816,10 @@ describe("Query", () => {
 						new dynamoose.Table("Cat", [Model], {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
-								return {"promise": () => ({"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}})};
+								return {"Item": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
 							},
 							"query": () => {
-								return {"promise": () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]})};
+								return {"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "parent": {"N": "2"}}]};
 							}
 						});
 						const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
@@ -994,7 +993,12 @@ describe("Query", () => {
 				LSIModel = dynamoose.model("Cat", {
 					"id": {
 						"type": Number,
-						"hashKey": true
+						"hashKey": true,
+						"index": {
+							"name": "myGSI",
+							"rangeKey": "favoriteColor",
+							"global": true
+						}
 					},
 					"name": {
 						"type": String,
@@ -1006,7 +1010,9 @@ describe("Query", () => {
 							"name": "myLSI",
 							"global": false
 						}
-					}
+					},
+					"favoriteColor": String,
+					"favoriteShape": String
 				});
 				new dynamoose.Table("Cat", [LSIModel]);
 			});
@@ -1038,6 +1044,74 @@ describe("Query", () => {
 						":qrv": {"S": "Charlie"}
 					},
 					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+				});
+			});
+
+			it("Should send correct request with LSI and EQ on rangeKey", async () => {
+				await LSIModel.query("id").eq(7).where("favoriteNumber").eq(2).exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"IndexName": "myLSI",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#qra": "favoriteNumber"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":qrv": {"N": "2"}
+					},
+					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+				});
+			});
+
+			it("Should send correct request with LSI and GE on rangeKey", async () => {
+				await LSIModel.query("id").eq(7).where("favoriteNumber").ge(2).exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"IndexName": "myLSI",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#qra": "favoriteNumber"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":qrv": {"N": "2"}
+					},
+					"KeyConditionExpression": "#qha = :qhv AND #qra >= :qrv"
+				});
+			});
+
+			it("Should send correct request with GSI", async () => {
+				await LSIModel.query("id").eq(7).where("favoriteColor").eq("red").exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"IndexName": "myGSI",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#qra": "favoriteColor"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":qrv": {"S": "red"}
+					},
+					"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+				});
+			});
+
+			it("Should send correct request with hash key and filter", async () => {
+				await LSIModel.query("id").eq(7).filter("favoriteShape").eq("square").exec();
+				expect(queryParams).to.eql({
+					"TableName": "Cat",
+					"ExpressionAttributeNames": {
+						"#qha": "id",
+						"#a1": "favoriteShape"
+					},
+					"ExpressionAttributeValues": {
+						":qhv": {"N": "7"},
+						":v1": {"S": "square"}
+					},
+					"FilterExpression": "#a1 = :v1",
+					"KeyConditionExpression": "#qha = :qhv"
 				});
 			});
 		});
