@@ -517,7 +517,8 @@ describe("Model", () => {
 				}]);
 			});
 
-			it("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
+			// The following test is disabled due to the fact that it will continously call `describeTableFunction` even after the test is complete. This causes intermittent issues with other tests.
+			it.skip("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
 				const tableName = "Cat";
 				describeTableFunction = () => Promise.resolve({
 					"Table": {
