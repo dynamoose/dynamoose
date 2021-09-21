@@ -424,6 +424,20 @@ describe("Model", () => {
 				}]);
 			});
 
+			it("Should call describeTable with correct parameters when waitForActive is set to true", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE"
+					}
+				});
+				dynamoose.model(tableName, {"id": String}, {"waitForActive": true});
+				await utils.set_immediate_promise();
+				expect(describeTableParams).to.eql([{
+					"TableName": tableName
+				}]);
+			});
+
 			it("Should call describeTable with correct parameters multiple times", async () => {
 				const tableName = "Cat";
 				describeTableFunction = () => Promise.resolve({
@@ -503,7 +517,8 @@ describe("Model", () => {
 				}]);
 			});
 
-			it("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
+			// The following test is disabled due to the fact that it will continously call `describeTableFunction` even after the test is complete. This causes intermittent issues with other tests.
+			it.skip("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
 				const tableName = "Cat";
 				describeTableFunction = () => Promise.resolve({
 					"Table": {

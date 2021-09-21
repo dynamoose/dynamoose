@@ -16,9 +16,13 @@ import {DynamoDB, AWSError} from "aws-sdk";
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
 
 // Defaults
+interface ModelWaitForActiveCheckSettings {
+	timeout: number;
+	frequency: number;
+}
 interface ModelWaitForActiveSettings {
 	enabled: boolean;
-	check: {timeout: number; frequency: number};
+	check: ModelWaitForActiveCheckSettings;
 }
 export interface ModelExpiresSettings {
 	ttl: number;
@@ -163,25 +167,24 @@ function waitForActive (model: Model<DocumentCarrier>, forceRefreshOnFirstAttemp
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check (count: number): Promise<void> {
-			if (typeof model.options.waitForActive !== "boolean") {
-				try {
-					// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
-					const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
-					if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
-						return resolve();
-					}
-				} catch (e) {
-					return reject(e);
+			try {
+				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
+				const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
+				if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
+					return resolve();
 				}
+			} catch (e) {
+				return reject(e);
+			}
 
-				if (count > 0) {
-					model.options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model.options.waitForActive.check.frequency);
-				}
-				if (Date.now() - start >= model.options.waitForActive.check.timeout) {
-					return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
-				} else {
-					check(++count);
-				}
+			const checkSettings: ModelWaitForActiveCheckSettings = typeof model.options.waitForActive === "boolean" ? (originalDefaults.waitForActive as ModelWaitForActiveSettings).check : model.options.waitForActive.check;
+			if (count > 0) {
+				checkSettings.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(checkSettings.frequency);
+			}
+			if (Date.now() - start >= checkSettings.timeout) {
+				return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
+			} else {
+				check(++count);
 			}
 		}
 		check(0);
