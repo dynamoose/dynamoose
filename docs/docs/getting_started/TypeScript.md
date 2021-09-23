@@ -5,7 +5,7 @@ This guide is only useful if you are using Dynamoose with [TypeScript](https://t
 ## Summary
 
 :::caution
-Dynamoose [TypeScript](https://typescriptlang.org) Support is in **beta**.
+Dynamoose [TypeScript](https://typescriptlang.org) Support is in **beta** and is only available in v3 onwards. Until general availability of v3 you need to make sure you have [installed](Install) the latest pre-release version of Dynamoose.
 :::
 
 Dynamoose is built entirely in [TypeScript](https://typescriptlang.org) and ships with TypeScript Typings. This means that when using Dynamoose in TypeScript you will have access to all of the autocomplete and type safety features that TypeScript offers.
