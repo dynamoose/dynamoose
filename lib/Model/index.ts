@@ -48,6 +48,15 @@ export interface ModelOptions {
 }
 export type ModelOptionsOptional = DeepPartial<ModelOptions>;
 
+export type ModelUpdateSpecialFields<T> = {
+	$SET?: Partial<T>
+	$ADD?: Record<keyof T, any>
+	$REMOVE?: Array<keyof T> | Record<keyof T, null>
+	$DELETE?: Record<keyof T, any>
+};
+
+export type ModelUpdateObject<T> = Partial<T> & ModelUpdateSpecialFields<T>;
+
 
 type KeyObject = {[attribute: string]: string | number};
 type InputKey = string | number | KeyObject;
@@ -678,25 +687,25 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 	}
 
 	// Update
-	update (obj: Partial<T>): Promise<T>;
-	update (obj: Partial<T>, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>): Promise<T>;
-	update (keyObj: InputKey, updateObj: Partial<T>, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, AWSError>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings): Promise<T>;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>): Promise<T>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, AWSError>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings): Promise<T>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
-	update (keyObj: InputKey | ObjectType, updateObj?: Partial<T> | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, settings?: ModelUpdateSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
+	update (obj: ModelUpdateObject<T>): Promise<T>;
+	update (obj: ModelUpdateObject<T>, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>): Promise<T>;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, AWSError>): void;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings): Promise<T>;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
+	update (keyObj: InputKey, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>): Promise<T>;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, AWSError>): void;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings): Promise<T>;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
+	update (keyObj: ObjectType, updateObj: ModelUpdateObject<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, AWSError>): void;
+	update (keyObj: InputKey | ObjectType, updateObj?: ModelUpdateObject<T> | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, settings?: ModelUpdateSettings | CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>, callback?: CallbackType<T, AWSError> | CallbackType<DynamoDB.UpdateItemInput, AWSError>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
 		if (typeof updateObj === "function") {
 			callback = updateObj as CallbackType<DocumentCarrier | DynamoDB.UpdateItemInput, AWSError>; // TODO: fix this, for some reason `updateObj` has a type of Function which is forcing us to type cast it
 			updateObj = null;
@@ -708,7 +717,7 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 		}
 		if (!updateObj) {
 			const hashKeyName = this.getHashKey();
-			updateObj = utils.deep_copy(keyObj) as Partial<T>;
+			updateObj = utils.deep_copy(keyObj) as ModelUpdateObject<T>;
 			keyObj = {
 				[hashKeyName]: keyObj[hashKeyName]
 			};
