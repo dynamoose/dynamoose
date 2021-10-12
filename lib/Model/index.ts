@@ -50,9 +50,9 @@ export type ModelOptionsOptional = DeepPartial<ModelOptions>;
 
 export type ModelUpdateSpecialFields<T> = {
 	$SET?: Partial<T>
-	$ADD?: Record<keyof T, any>
-	$REMOVE?: Array<keyof T> | Record<keyof T, null>
-	$DELETE?: Record<keyof T, any>
+	$ADD?: Partial<Record<keyof T, any>>
+	$REMOVE?: Array<keyof T> | Partial<Record<keyof T, null>>
+	$DELETE?: Partial<Record<keyof T, any>>
 };
 
 export type ModelUpdateObject<T> = Partial<T> & ModelUpdateSpecialFields<T>;
