@@ -17,9 +17,13 @@ import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, Upd
 const {internalProperties} = Internal.General;
 
 // Defaults
+interface ModelWaitForActiveCheckSettings {
+	timeout: number;
+	frequency: number;
+}
 interface ModelWaitForActiveSettings {
 	enabled: boolean;
-	check: {timeout: number; frequency: number};
+	check: ModelWaitForActiveCheckSettings;
 }
 export interface ModelExpiresSettings {
 	ttl: number;
@@ -164,25 +168,24 @@ function waitForActive (model: Model<ItemCarrier>, forceRefreshOnFirstAttempt = 
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check (count: number): Promise<void> {
-			if (typeof model[internalProperties].options.waitForActive !== "boolean") {
-				try {
-					// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
-					const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
-					if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
-						return resolve();
-					}
-				} catch (e) {
-					return reject(e);
+			try {
+				// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
+				const tableDetails = (await getTableDetails(model, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
+				if (tableDetails.TableStatus === "ACTIVE" && (tableDetails.GlobalSecondaryIndexes ?? []).every((val) => val.IndexStatus === "ACTIVE")) {
+					return resolve();
 				}
+			} catch (e) {
+				return reject(e);
+			}
 
-				if (count > 0) {
-					model[internalProperties].options.waitForActive.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(model[internalProperties].options.waitForActive.check.frequency);
-				}
-				if (Date.now() - start >= model[internalProperties].options.waitForActive.check.timeout) {
-					return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
-				} else {
-					check(++count);
-				}
+			const checkSettings: ModelWaitForActiveCheckSettings = typeof model[internalProperties].options.waitForActive === "boolean" ? (originalDefaults.waitForActive as ModelWaitForActiveSettings).check : model[internalProperties].options.waitForActive.check;
+			if (count > 0) {
+				checkSettings.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(checkSettings.frequency);
+			}
+			if (Date.now() - start >= checkSettings.timeout) {
+				return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
+			} else {
+				check(++count);
 			}
 		}
 		check(0);
@@ -405,7 +408,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		class Item extends ItemCarrier {
 			static Model: Model<ItemCarrier>;
 			constructor (object: AttributeMap | ObjectType = {}, settings: ItemSettings = {}) {
-				super(self, object, settings);
+				super(self, utils.deep_copy(object), settings);
 			}
 		}
 		Item.Model = self;
@@ -712,7 +715,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		}
 		if (!updateObj) {
 			const hashKeyName = this[internalProperties].getHashKey();
-			updateObj = keyObj as Partial<T>;
+			updateObj = utils.deep_copy(keyObj) as Partial<T>;
 			keyObj = {
 				[hashKeyName]: keyObj[hashKeyName]
 			};
