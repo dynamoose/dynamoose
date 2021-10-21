@@ -76,7 +76,7 @@ Although the `.lastKey` property returns a standard (non DynamoDB) object, you c
 
 ```js
 const response = await Cat.scan().exec();
-const moreItems = Cat.scan().startAt(response.lastKey);
+const moreItems = await Cat.scan().startAt(response.lastKey).exec();
 ```
 
 ## scan.attributes(attributes)
