@@ -52,7 +52,7 @@ export class Table {
 			return (await Promise.all(this[internalProperties].models.map((model) => model.Model[internalProperties].getIndexes(this)))).reduce((result, indexes) => {
 				Object.entries(indexes).forEach((entry) => {
 					const [key, value] = entry;
-					result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value]) : value;
+					result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value as any]) : value;
 				});
 
 				return result;
