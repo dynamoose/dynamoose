@@ -2,6 +2,26 @@
 
 ---
 
+## Version 2.8.2
+
+This release fixes a few major bugs.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixed bug where Model initialization would fail if `waitForActive: true`
+- Fixing multiple bugs where objects passed into Dynamoose functions would be mutated
+
+### Documentation
+
+- Added FAQ about empty arrays or objects
+- Improved schema index documentation
+- Improving `Scan.startAt` & `Query.startAt` example in documentation
+- Fixing issue where `\n` appeared in schema attribute type documentation appeared instead of new line
+
+---
+
 ## Version 2.8.1
 
 This release includes a few critical bug fixes.

@@ -188,7 +188,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		class Item extends ItemCarrier {
 			static Model: Model<ItemCarrier>;
 			constructor (object: AttributeMap | ObjectType = {}, settings: ItemSettings = {}) {
-				super(self, object, settings);
+				super(self, utils.deep_copy(object), settings);
 			}
 		}
 		Item.Model = self;
@@ -489,7 +489,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		}
 		if (!updateObj) {
 			const hashKeyName = this[internalProperties].getHashKey();
-			updateObj = keyObj as Partial<T>;
+			updateObj = utils.deep_copy(keyObj) as Partial<T>;
 			keyObj = {
 				[hashKeyName]: keyObj[hashKeyName]
 			};
