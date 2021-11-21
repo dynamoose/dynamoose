@@ -9,7 +9,7 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "@types/node": "^16.6.1",
+    "@types/node": "^16.11.9",
     "@typescript-eslint/eslint-plugin": "^4.29.1",
     "@typescript-eslint/parser": "^4.29.1",
     "chai": "^4.3.4",
@@ -19,7 +19,8 @@
     "mocha": "^8.3.2",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.3.5"
+    "source-map-support": "^0.5.21",
+    "typescript": "^4.5.2"
   },
   "scripts": {
     "prepare": "npm run build:clean && npm run build",
@@ -58,8 +59,8 @@
     "url": "https://github.com/dynamoose/dynamoose/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.8.1",
-    "@aws-sdk/util-dynamodb": "^3.8.1",
+    "@aws-sdk/client-dynamodb": "^3.42.0",
+    "@aws-sdk/util-dynamodb": "^3.42.0",
     "dynamoose-utils": "^3.0.0-alpha.2",
     "js-object-utilities": "^2.0.0"
   },
