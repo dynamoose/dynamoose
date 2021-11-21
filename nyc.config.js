@@ -3,7 +3,6 @@ module.exports = {
 		"test",
 		"coverage",
 		".eslintrc.js",
-		".mocharc.js",
 		"publish",
 		"utils/source-map-stacktrace-parser",
 		"docs",
