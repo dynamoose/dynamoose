@@ -4,5 +4,5 @@ const shouldSucceedWithWaitForActiveAsObject = new dynamoose.Table("Table", [], 
 const shouldSucceedWithWaitForActiveSetToFalse = new dynamoose.Table("Table", [], {"waitForActive": false});
 const shouldSucceedWithWaitForActiveSetToTrue = new dynamoose.Table("Table", [], {"waitForActive": true});
 
-const shouldAllowForAccessingHashKey = (new dynamoose.Table("Table", [])).hashKey;
-const shouldAllowForAccessingRangeKey = (new dynamoose.Table("Table", [])).rangeKey;
+const shouldAllowForAccessingHashKey = new dynamoose.Table("Table", []).hashKey;
+const shouldAllowForAccessingRangeKey = new dynamoose.Table("Table", []).rangeKey;
