@@ -369,11 +369,13 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			} else {
 				const defaultValue = await schema.defaultCheck(key, value as ValueType, settings);
 				const isDefaultValueUndefined = Array.isArray(defaultValue) ? defaultValue.some((defaultValue) => typeof defaultValue === "undefined" || defaultValue === null) : typeof defaultValue === "undefined" || defaultValue === null;
+				const parentKey = utils.parentKey(key);
+				const parentValue = parentKey.length === 0 ? returnObject : utils.object.get(returnObject, parentKey);
 				if (!isDefaultValueUndefined) {
 					const {isValidType, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, defaultValue, key, settings, {typeIndexOptionMap});
 					if (!isValidType) {
 						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof defaultValue}.`);
-					} else {
+					} else if (typeof parentValue !== "undefined" && parentValue !== null) {
 						utils.object.set(returnObject, key, defaultValue);
 					}
 				}

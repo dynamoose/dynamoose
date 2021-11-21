@@ -424,6 +424,18 @@ describe("Item", () => {
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
 					expectChai(putParams).to.eql([{
+						"Item": {"id": {"N": "1"}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should handle nested attributes inside object correctly for default value with object not passed in with default value", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "address": {"type": Object, "default": {}, "schema": {"street": String, "country": {"type": String, "default": "world"}}}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"S": "world"}}}},
 						"TableName": "User"
 					}]);
@@ -2216,6 +2228,21 @@ describe("Item", () => {
 				"input": [{}, {"defaults": true}],
 				"output": {"id": "id"},
 				"schema": {"id": {"type": String, "default": () => "id"}}
+			},
+			{
+				"input": [{"id": "id"}, {"defaults": true}],
+				"output": {"id": "id"},
+				"schema": {"id": String, "data": {"type": Object, "schema": {"name": {"type": String, "default": "Charlie"}}}}
+			},
+			{
+				"input": [{"id": "id", "data": {}}, {"defaults": true}],
+				"output": {"id": "id", "data": {"name": "Charlie"}},
+				"schema": {"id": String, "data": {"type": Object, "schema": {"name": {"type": String, "default": "Charlie"}}}}
+			},
+			{
+				"input": [{"id": "id"}, {"defaults": true}],
+				"output": {"id": "id", "data": {"name": "Charlie"}},
+				"schema": {"id": String, "data": {"type": Object, "schema": {"name": {"type": String, "default": "Charlie"}}, "default": {}}}
 			},
 			{
 				"input": {},
