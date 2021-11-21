@@ -38,6 +38,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 - Added `table.create()` method to create a table manually
 - Added `table.name` property to be able to access table name
+- Added `table.hashKey` property to be able to access table's hash key
+- Added `table.rangeKey` property to be able to access table's range key
 - Added `model.name` property to be able to access model name
 
 ### Bug Fixes
@@ -49,5 +51,5 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 - Source map files are no longer included in the package
 	- You can generate source map files by cloning the reposistory, running `npm install`, then running `npm run build:sourcemap`. The generated source map files will be located in the `dist` folder.
 - Made a lot of internal properties private
-	- This is not considered a breaking change since only documented properties, classes, methods, and functions are included in breaking changes. You should only be using documented properties, classes, methods, and functions in Dynamoose. Anything not documented is subject to change at anytime. Read more at [this FAQ item](https://dynamoosejs.com/other/FAQ#can-i-use-an-undocumented-property-class-method-or-function-in-dynamoose).
+	- This is not considered a breaking change since only documented properties, classes, methods, and functions are included in breaking changes. You should only be using documented properties, classes, methods, and functions in Dynamoose. Anything not documented is subject to change at anytime, and can lead to unexpected behavior. Read more at [this FAQ item](https://dynamoosejs.com/other/FAQ#can-i-use-an-undocumented-property-class-method-or-function-in-dynamoose).
 - Moved `source-map-support` package into `devDependencies`
