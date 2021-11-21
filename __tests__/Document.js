@@ -1,26 +1,23 @@
-const chaiAsPromised = require("chai-as-promised");
-const chai = require("chai");
-chai.use(chaiAsPromised);
-const {expect} = chai;
+const {expect: expectChai} = require("chai");
 const dynamoose = require("../dist");
 const {Schema, aws} = dynamoose;
 const {Item} = require("../dist/Item");
 const util = require("util");
-const Error = require("../dist/Error");
+const CustomError = require("../dist/Error");
 const utils = require("../dist/utils");
 const Internal = require("../dist/Internal");
 const {internalProperties} = Internal.General;
 
 describe("Item", () => {
 	it("Should be a function", () => {
-		expect(Item).to.be.a("function");
+		expectChai(Item).to.be.a("function");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
 		const User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
 		const user = new User({"id": 1, "name": "Bob"});
-		expect(user[Internal.General.internalProperties]).to.exist;
-		expect({...user}[Internal.General.internalProperties]).to.not.exist;
+		expectChai(user[Internal.General.internalProperties]).to.exist;
+		expectChai({...user}[Internal.General.internalProperties]).to.not.exist;
 	});
 
 	describe("DynamoDB Conversation Methods", () => {
@@ -46,7 +43,7 @@ describe("Item", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-					expect(User.objectToDynamo(test.input)).to.eql(test.output);
+					expectChai(User.objectToDynamo(test.input)).to.eql(test.output);
 				});
 			});
 		});
@@ -65,7 +62,7 @@ describe("Item", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-					expect(User.fromDynamo(test.input)).to.eql(test.output);
+					expectChai(User.fromDynamo(test.input)).to.eql(test.output);
 				});
 			});
 		});
@@ -84,7 +81,7 @@ describe("Item", () => {
 
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with settings ${JSON.stringify(test.settings)}`, async () => {
-					expect(await new User(test.input).toDynamo(test.settings)).to.eql(test.output);
+					expectChai(await new User(test.input).toDynamo(test.settings)).to.eql(test.output);
 				});
 			});
 		});
@@ -117,7 +114,7 @@ describe("Item", () => {
 		});
 
 		it("Should be a function", () => {
-			expect(user.save).to.be.a("function");
+			expectChai(user.save).to.be.a("function");
 		});
 
 		const functionCallTypes = [
@@ -129,7 +126,7 @@ describe("Item", () => {
 				it("Should save with correct parameters", async () => {
 					putItemFunction = () => Promise.resolve();
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User"
 					}]);
@@ -144,9 +141,9 @@ describe("Item", () => {
 					putItemFunction = () => Promise.resolve();
 					const resultA = await callType.func(user).bind(user)();
 					const resultB = await callType.func(robot).bind(robot)();
-					expect(resultA).to.eql(user);
-					expect(resultB).to.eql(robot);
-					expect(putParams).to.eql([{
+					expectChai(resultA).to.eql(user);
+					expectChai(resultB).to.eql(robot);
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User"
 					}, {
@@ -162,7 +159,7 @@ describe("Item", () => {
 
 					putItemFunction = () => Promise.resolve();
 					await callType.func(robot).bind(robot)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "2"}},
 						"TableName": "Robot"
 					}]);
@@ -171,7 +168,7 @@ describe("Item", () => {
 				it("Should return correct result after saving", async () => {
 					putItemFunction = () => Promise.resolve();
 					const result = await callType.func(user).bind(user)();
-					expect(result).to.eql(user);
+					expectChai(result).to.eql(user);
 				});
 
 				it("Should return correct result after saving with defaults", async () => {
@@ -182,13 +179,13 @@ describe("Item", () => {
 					user = new User({"id": 1, "name": "Charlie"});
 
 					const result = await callType.func(user).bind(user)();
-					expect(result.toJSON()).to.eql({"id": 1, "name": "Charlie", "defaultValue": "Hello World"});
+					expectChai(result.toJSON()).to.eql({"id": 1, "name": "Charlie", "defaultValue": "Hello World"});
 				});
 
 				it("Should return request if return request is set as setting", async () => {
 					const result = await callType.func(user).bind(user)({"return": "request"});
-					expect(putParams).to.eql([]);
-					expect(result).to.eql({
+					expectChai(putParams).to.eql([]);
+					expectChai(result).to.eql({
 						"Item": {
 							"id": {"N": "1"},
 							"name": {"S": "Charlie"}
@@ -203,7 +200,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"name": undefined, "id": 1});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}},
 						"TableName": "User"
 					}]);
@@ -215,7 +212,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": undefined});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}},
 						"TableName": "User"
 					}]);
@@ -227,7 +224,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": ["Charlie", "Tim", "Bob"]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Tim", "Bob"]}},
 						"TableName": "User"
 					}]);
@@ -239,7 +236,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": new Set(["Charlie", "Tim", "Bob"])});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "friends": {"SS": ["Charlie", "Tim", "Bob"]}},
 						"TableName": "User"
 					}]);
@@ -252,7 +249,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": new Set(["Charlie", "Tim", "Bob"])});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "friends": {"SS": ["Tim"]}},
 						"TableName": "User"
 					}]);
@@ -264,7 +261,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "numbers": [5, 7]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}},
 						"TableName": "User"
 					}]);
@@ -276,7 +273,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "numbers": new Set([5, 7])});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "numbers": {"NS": ["5", "7"]}},
 						"TableName": "User"
 					}]);
@@ -289,7 +286,7 @@ describe("Item", () => {
 					const time = new Date();
 					user = new User({"id": 1, "times": [time, new Date(0)]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "times": {"NS": [`${time.getTime()}`, "0"]}},
 						"TableName": "User"
 					}]);
@@ -301,7 +298,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "data": Buffer.from("testdata")});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "data": {"B": Buffer.from("testdata")}},
 						"TableName": "User"
 					}]);
@@ -313,7 +310,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "data": [Buffer.from("testdata"), Buffer.from("testdata2")]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}},
 						"TableName": "User"
 					}]);
@@ -325,7 +322,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "data": new Set([Buffer.from("testdata"), Buffer.from("testdata2")])});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}},
 						"TableName": "User"
 					}]);
@@ -335,7 +332,7 @@ describe("Item", () => {
 					putItemFunction = () => Promise.resolve();
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)({"overwrite": false});
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User",
 						"ConditionExpression": "attribute_not_exists(#__hash_key)",
@@ -352,7 +349,7 @@ describe("Item", () => {
 					const birthday = new Date();
 					user = new User({"id": 1, "name": "Charlie", birthday});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${birthday.getTime()}`}},
 						"TableName": "User"
 					}]);
@@ -365,7 +362,7 @@ describe("Item", () => {
 					const birthday = new Date();
 					user = new User({"id": 1, "name": "Charlie", "birthday": birthday.getTime()});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${birthday.getTime()}`}},
 						"TableName": "User"
 					}]);
@@ -378,7 +375,7 @@ describe("Item", () => {
 					const birthday = new Date();
 					user = new User({"id": 1, "name": "Charlie", "birthday": [birthday.getTime(), birthday]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"L": [{"N": `${birthday.getTime()}`}, {"N": `${birthday.getTime()}`}]}},
 						"TableName": "User"
 					}]);
@@ -390,7 +387,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"street": "hello", "country": "world"}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}},
 						"TableName": "User"
 					}]);
@@ -402,7 +399,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"street": "hello", "country": "world", "random": "test"}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}},
 						"TableName": "User"
 					}]);
@@ -414,7 +411,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"street": "hello"}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "hello"}, "country": {"S": "world"}}}},
 						"TableName": "User"
 					}]);
@@ -426,7 +423,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"S": "world"}}}},
 						"TableName": "User"
 					}]);
@@ -438,7 +435,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"street": "hello"}});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("address.country is a required property but has no value when trying to save item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("address.country is a required property but has no value when trying to save item"));
 				});
 
 				it("Should throw type mismatch error if passing in wrong type with custom type for object", () => {
@@ -447,7 +444,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": "test"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected address to be of type object, instead found type string.");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected address to be of type object, instead found type string."));
 				});
 
 				it("Should throw type mismatch error if passing in wrong type for nested object attribute", () => {
@@ -456,7 +453,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"country": true}});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected address.country to be of type string, instead found type boolean.");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected address.country to be of type string, instead found type boolean."));
 				});
 
 				it("Should save correct object with nested objects and saveUnknown set to true", async () => {
@@ -465,7 +462,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"data": {"country": "world"}, "name": "Home"}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}},
 						"TableName": "User"
 					}]);
@@ -477,7 +474,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"data": {"country": "world"}, "name": "Home"}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}},
 						"TableName": "User"
 					}]);
@@ -489,7 +486,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"country": "world", "zip": 12345}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"S": "world"}, "zip": {"N": "12345"}}}},
 						"TableName": "User"
 					}]);
@@ -501,7 +498,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"country": "world", "zip": 12345, "metadata": {"name": "Home"}}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"S": "world"}, "zip": {"N": "12345"}, "metadata": {"M": {}}}}},
 						"TableName": "User"
 					}]);
@@ -513,7 +510,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "address": {"country": "world", "zip": 12345, "metadata": {"name": "Home"}}});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"S": "world"}, "zip": {"N": "12345"}, "metadata": {"M": {"name": {"S": "Home"}}}}}},
 						"TableName": "User"
 					}]);
@@ -525,7 +522,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "addresses": [{"country": "world", "zip": 12345, "metadata": [{"name": "Home"}]}]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "addresses": {"L": [{"M": {}}]}},
 						"TableName": "User"
 					}]);
@@ -537,7 +534,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "addresses": [{"country": "world", "zip": 12345, "metadata": [{"name": "Home"}]}]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "addresses": {"L": [{"M": {"country": {"S": "world"}, "zip": {"N": "12345"}, "metadata": {"L": [{"M": {"name": {"S": "Home"}}}]}}}]}},
 						"TableName": "User"
 					}]);
@@ -549,7 +546,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": ["Tim", "Bob"]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}},
 						"TableName": "User"
 					}]);
@@ -561,7 +558,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": ["Tim", "Bob"]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "friends": {"L": [{"S": "Tim"}, {"S": "Bob"}]}},
 						"TableName": "User"
 					}]);
@@ -573,7 +570,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": [{"name": "Tim", "id": 1}, {"name": "Bob", "id": 2}]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "friends": {"L": [{"M": {"name": {"S": "Tim"}, "id": {"N": "1"}}}, {"M": {"name": {"S": "Bob"}, "id": {"N": "2"}}}]}},
 						"TableName": "User"
 					}]);
@@ -585,7 +582,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": [{"name": "Tim", "data": ["hello", "world"]}, {"name": "Bob", "data": ["random", "data"]}]});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "friends": {"L": [{"M": {"name": {"S": "Tim"}, "data": {"L": [{"S": "hello"}, {"S": "world"}]}}}, {"M": {"name": {"S": "Bob"}, "data": {"L": [{"S": "random"}, {"S": "data"}]}}}]}},
 						"TableName": "User"
 					}]);
@@ -597,7 +594,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": [true]});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected friends.0 to be of type object, instead found type boolean.");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected friends.0 to be of type object, instead found type boolean."));
 				});
 
 				it("Should throw error if not passing in required property in array", () => {
@@ -606,7 +603,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": [{"name": "Bob"}]});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.0.id is a required property but has no value when trying to save item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("friends.0.id is a required property but has no value when trying to save item"));
 				});
 
 				it("Should throw error if not passing in required property in array for second item", () => {
@@ -615,7 +612,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": [{"name": "Bob", "id": 1}, {"name": "Tim"}]});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.id is a required property but has no value when trying to save item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("friends.1.id is a required property but has no value when trying to save item"));
 				});
 
 				it("Should throw error if not passing in required property in array for second item with multi nested objects", () => {
@@ -624,7 +621,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "friends": [{"name": "Bob", "addresses": [{"country": "world"}]}, {"name": "Tim", "addresses": [{"country": "moon"}, {"zip": 12345}]}]});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("friends.1.addresses.1.country is a required property but has no value when trying to save item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("friends.1.addresses.1.country is a required property but has no value when trying to save item"));
 				});
 
 				it("Should save with correct object with expires set to a number", async () => {
@@ -633,12 +630,12 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User], {"create": false, "waitForActive": false, "expires": 10000});
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
 					const expectedTTL = (Date.now() + 10000) / 1000;
-					expect(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+					expectChai(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
 				});
 
 				it("Should store whole number for expires", async () => {
@@ -647,7 +644,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User], {"create": false, "waitForActive": false, "expires": 10000});
 					user = new User({"id": 1, "name": "Charlie", "ttl": new Date(1002)});
 					await callType.func(user).bind(user)();
-					expect(parseFloat(putParams[0].Item.ttl.N) % 1).to.eql(0);
+					expectChai(parseFloat(putParams[0].Item.ttl.N) % 1).to.eql(0);
 				});
 
 				it("Should save with correct object with expires set to object", async () => {
@@ -656,12 +653,12 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User], {"create": false, "waitForActive": false, "expires": {"attribute": "expires", "ttl": 10000}});
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
 					const expectedTTL = (Date.now() + 10000) / 1000;
-					expect(parseInt(putParams[0].Item.expires.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+					expectChai(parseInt(putParams[0].Item.expires.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
 				});
 
 				it("Should save with correct object with expires set to object with no attribute", async () => {
@@ -670,12 +667,12 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User], {"create": false, "waitForActive": false, "expires": {"ttl": 10000}});
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
 					const expectedTTL = (Date.now() + 10000) / 1000;
-					expect(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
+					expectChai(parseInt(putParams[0].Item.ttl.N)).to.be.within(expectedTTL - 1000, expectedTTL + 1000);
 				});
 
 				it("Should save with correct object with timestamps set to true", async () => {
@@ -684,28 +681,28 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.createdAt).to.be.a("object");
-					expect(putParams[0].Item.updatedAt).to.be.a("object");
-					expect(putParams[0].Item.updatedAt.N).to.eql(putParams[0].Item.createdAt.N);
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.createdAt).to.be.a("object");
+					expectChai(putParams[0].Item.updatedAt).to.be.a("object");
+					expectChai(putParams[0].Item.updatedAt.N).to.eql(putParams[0].Item.createdAt.N);
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.a("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.createdAt).to.be.a("object");
-					expect(putParams[1].Item.updatedAt).to.be.a("object");
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.a("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.createdAt).to.be.a("object");
+					expectChai(putParams[1].Item.updatedAt).to.be.a("object");
 
-					expect(putParams[1].Item.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
-					expect(parseInt(putParams[1].Item.updatedAt.N)).to.be.above(parseInt(putParams[0].Item.updatedAt.N));
+					expectChai(putParams[1].Item.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
+					expectChai(parseInt(putParams[1].Item.updatedAt.N)).to.be.above(parseInt(putParams[0].Item.updatedAt.N));
 				});
 
 				it("Should save with correct object with custom timestamps attribute names", async () => {
@@ -714,28 +711,28 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.created).to.be.a("object");
-					expect(putParams[0].Item.updated).to.be.a("object");
-					expect(putParams[0].Item.updated.N).to.eql(putParams[0].Item.created.N);
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.created).to.be.a("object");
+					expectChai(putParams[0].Item.updated).to.be.a("object");
+					expectChai(putParams[0].Item.updated.N).to.eql(putParams[0].Item.created.N);
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.a("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.created).to.be.a("object");
-					expect(putParams[1].Item.updated).to.be.a("object");
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.a("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.created).to.be.a("object");
+					expectChai(putParams[1].Item.updated).to.be.a("object");
 
-					expect(putParams[1].Item.created.N).to.eql(putParams[0].Item.created.N);
-					expect(parseInt(putParams[1].Item.updated.N)).to.be.above(parseInt(putParams[0].Item.updated.N));
+					expectChai(putParams[1].Item.created.N).to.eql(putParams[0].Item.created.N);
+					expectChai(parseInt(putParams[1].Item.updated.N)).to.be.above(parseInt(putParams[0].Item.updated.N));
 				});
 
 				it("Should save with correct object with custom timestamps with multiple attribute names", async () => {
@@ -744,39 +741,39 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.a1).to.be.a("object");
-					expect(putParams[0].Item.a2).to.be.a("object");
-					expect(putParams[0].Item.b1).to.be.a("object");
-					expect(putParams[0].Item.b2).to.be.a("object");
-					expect(putParams[0].Item.a1.N).to.eql(putParams[0].Item.a2.N);
-					expect(putParams[0].Item.b1.N).to.eql(putParams[0].Item.b2.N);
-					expect(putParams[0].Item.a1.N).to.eql(putParams[0].Item.b1.N);
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.a1).to.be.a("object");
+					expectChai(putParams[0].Item.a2).to.be.a("object");
+					expectChai(putParams[0].Item.b1).to.be.a("object");
+					expectChai(putParams[0].Item.b2).to.be.a("object");
+					expectChai(putParams[0].Item.a1.N).to.eql(putParams[0].Item.a2.N);
+					expectChai(putParams[0].Item.b1.N).to.eql(putParams[0].Item.b2.N);
+					expectChai(putParams[0].Item.a1.N).to.eql(putParams[0].Item.b1.N);
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.a("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.a1).to.be.a("object");
-					expect(putParams[1].Item.a2).to.be.a("object");
-					expect(putParams[1].Item.b1).to.be.a("object");
-					expect(putParams[1].Item.b2).to.be.a("object");
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.a("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.a1).to.be.a("object");
+					expectChai(putParams[1].Item.a2).to.be.a("object");
+					expectChai(putParams[1].Item.b1).to.be.a("object");
+					expectChai(putParams[1].Item.b2).to.be.a("object");
 
-					expect(putParams[1].Item.a1.N).to.eql(putParams[1].Item.a2.N);
-					expect(putParams[1].Item.b1.N).to.eql(putParams[1].Item.b2.N);
-					expect(parseInt(putParams[1].Item.a1.N)).to.be.below(parseInt(putParams[1].Item.b1.N));
-					expect(parseInt(putParams[1].Item.b1.N)).to.be.above(parseInt(putParams[0].Item.b1.N));
-					expect(parseInt(putParams[1].Item.b2.N)).to.be.above(parseInt(putParams[0].Item.b2.N));
-					expect(parseInt(putParams[1].Item.a1.N)).to.eql(parseInt(putParams[0].Item.a1.N));
-					expect(parseInt(putParams[1].Item.a2.N)).to.eql(parseInt(putParams[0].Item.a2.N));
+					expectChai(putParams[1].Item.a1.N).to.eql(putParams[1].Item.a2.N);
+					expectChai(putParams[1].Item.b1.N).to.eql(putParams[1].Item.b2.N);
+					expectChai(parseInt(putParams[1].Item.a1.N)).to.be.below(parseInt(putParams[1].Item.b1.N));
+					expectChai(parseInt(putParams[1].Item.b1.N)).to.be.above(parseInt(putParams[0].Item.b1.N));
+					expectChai(parseInt(putParams[1].Item.b2.N)).to.be.above(parseInt(putParams[0].Item.b2.N));
+					expectChai(parseInt(putParams[1].Item.a1.N)).to.eql(parseInt(putParams[0].Item.a1.N));
+					expectChai(parseInt(putParams[1].Item.a2.N)).to.eql(parseInt(putParams[0].Item.a2.N));
 				});
 
 				it("Should save with correct object with timestamps with nested schemas", async () => {
@@ -785,40 +782,40 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie", "friend": {"name": "Tim"}});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.an("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.friend).to.be.an("object");
-					expect(putParams[0].Item.friend.M).to.be.an("object");
-					expect(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
-					expect(putParams[0].Item.createdAt).to.be.an("object");
-					expect(putParams[0].Item.updatedAt).to.be.an("object");
-					expect(putParams[0].Item.friend.M.createdAt).to.be.an("object");
-					expect(putParams[0].Item.friend.M.updatedAt).to.be.an("object");
-					expect(putParams[0].Item.friend.M.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
-					expect(putParams[0].Item.friend.M.updatedAt.N).to.eql(putParams[0].Item.updatedAt.N);
-					expect(putParams[0].Item.friend.M.createdAt.N).to.eql(putParams[0].Item.friend.M.updatedAt.N);
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.an("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.friend).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
+					expectChai(putParams[0].Item.createdAt).to.be.an("object");
+					expectChai(putParams[0].Item.updatedAt).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.createdAt).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.updatedAt).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
+					expectChai(putParams[0].Item.friend.M.updatedAt.N).to.eql(putParams[0].Item.updatedAt.N);
+					expectChai(putParams[0].Item.friend.M.createdAt.N).to.eql(putParams[0].Item.friend.M.updatedAt.N);
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.an("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.friend).to.be.an("object");
-					expect(putParams[1].Item.friend.M).to.be.an("object");
-					expect(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
-					expect(putParams[1].Item.createdAt).to.be.an("object");
-					expect(putParams[1].Item.updatedAt).to.be.an("object");
-					expect(putParams[1].Item.friend.M.createdAt).to.be.an("object");
-					expect(putParams[1].Item.friend.M.updatedAt).to.be.an("object");
-					expect(putParams[1].Item.friend.M.createdAt.N).to.eql(putParams[1].Item.createdAt.N);
-					expect(putParams[1].Item.friend.M.updatedAt.N).to.eql(putParams[1].Item.updatedAt.N);
-					expect(parseInt(putParams[1].Item.friend.M.createdAt.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedAt.N));
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.an("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.friend).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
+					expectChai(putParams[1].Item.createdAt).to.be.an("object");
+					expectChai(putParams[1].Item.updatedAt).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.createdAt).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.updatedAt).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.createdAt.N).to.eql(putParams[1].Item.createdAt.N);
+					expectChai(putParams[1].Item.friend.M.updatedAt.N).to.eql(putParams[1].Item.updatedAt.N);
+					expectChai(parseInt(putParams[1].Item.friend.M.createdAt.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedAt.N));
 				});
 
 				it("Should save with correct object with custom timestamp attributes with nested schemas", async () => {
@@ -827,40 +824,40 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie", "friend": {"name": "Tim"}});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.an("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.friend).to.be.an("object");
-					expect(putParams[0].Item.friend.M).to.be.an("object");
-					expect(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
-					expect(putParams[0].Item.created).to.be.an("object");
-					expect(putParams[0].Item.updated).to.be.an("object");
-					expect(putParams[0].Item.friend.M.created).to.be.an("object");
-					expect(putParams[0].Item.friend.M.updated).to.be.an("object");
-					expect(putParams[0].Item.friend.M.created.N).to.eql(putParams[0].Item.created.N);
-					expect(putParams[0].Item.friend.M.updated.N).to.eql(putParams[0].Item.updated.N);
-					expect(putParams[0].Item.friend.M.created.N).to.eql(putParams[0].Item.friend.M.updated.N);
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.an("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.friend).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
+					expectChai(putParams[0].Item.created).to.be.an("object");
+					expectChai(putParams[0].Item.updated).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.created).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.updated).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.created.N).to.eql(putParams[0].Item.created.N);
+					expectChai(putParams[0].Item.friend.M.updated.N).to.eql(putParams[0].Item.updated.N);
+					expectChai(putParams[0].Item.friend.M.created.N).to.eql(putParams[0].Item.friend.M.updated.N);
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.an("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.friend).to.be.an("object");
-					expect(putParams[1].Item.friend.M).to.be.an("object");
-					expect(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
-					expect(putParams[1].Item.created).to.be.an("object");
-					expect(putParams[1].Item.updated).to.be.an("object");
-					expect(putParams[1].Item.friend.M.created).to.be.an("object");
-					expect(putParams[1].Item.friend.M.updated).to.be.an("object");
-					expect(putParams[1].Item.friend.M.created.N).to.eql(putParams[1].Item.created.N);
-					expect(putParams[1].Item.friend.M.updated.N).to.eql(putParams[1].Item.updated.N);
-					expect(parseInt(putParams[1].Item.friend.M.created.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updated.N));
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.an("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.friend).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
+					expectChai(putParams[1].Item.created).to.be.an("object");
+					expectChai(putParams[1].Item.updated).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.created).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.updated).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.created.N).to.eql(putParams[1].Item.created.N);
+					expectChai(putParams[1].Item.friend.M.updated.N).to.eql(putParams[1].Item.updated.N);
+					expectChai(parseInt(putParams[1].Item.friend.M.created.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updated.N));
 				});
 
 				it("Should save with correct object with multiple custom timestamps attributes with nested schemas", async () => {
@@ -869,54 +866,54 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie", "friend": {"name": "Tim"}});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.an("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.friend).to.be.an("object");
-					expect(putParams[0].Item.friend.M).to.be.an("object");
-					expect(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
-					expect(putParams[0].Item.createdA).to.be.an("object");
-					expect(putParams[0].Item.createdB).to.be.an("object");
-					expect(putParams[0].Item.updatedA).to.be.an("object");
-					expect(putParams[0].Item.updatedB).to.be.an("object");
-					expect(putParams[0].Item.friend.M.createdC).to.be.an("object");
-					expect(putParams[0].Item.friend.M.createdD).to.be.an("object");
-					expect(putParams[0].Item.friend.M.updatedC).to.be.an("object");
-					expect(putParams[0].Item.friend.M.updatedD).to.be.an("object");
-					expect(putParams[0].Item.friend.M.createdC.N).to.eql(putParams[0].Item.createdA.N);
-					expect(putParams[0].Item.friend.M.createdD.N).to.eql(putParams[0].Item.createdB.N);
-					expect(putParams[0].Item.friend.M.updatedC.N).to.eql(putParams[0].Item.updatedA.N);
-					expect(putParams[0].Item.friend.M.updatedD.N).to.eql(putParams[0].Item.updatedB.N);
-					expect(putParams[0].Item.friend.M.createdC.N).to.eql(putParams[0].Item.friend.M.updatedC.N);
-					expect(putParams[0].Item.friend.M.createdD.N).to.eql(putParams[0].Item.friend.M.updatedD.N);
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.an("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.friend).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.name).to.eql({"S": "Tim"});
+					expectChai(putParams[0].Item.createdA).to.be.an("object");
+					expectChai(putParams[0].Item.createdB).to.be.an("object");
+					expectChai(putParams[0].Item.updatedA).to.be.an("object");
+					expectChai(putParams[0].Item.updatedB).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.createdC).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.createdD).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.updatedC).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.updatedD).to.be.an("object");
+					expectChai(putParams[0].Item.friend.M.createdC.N).to.eql(putParams[0].Item.createdA.N);
+					expectChai(putParams[0].Item.friend.M.createdD.N).to.eql(putParams[0].Item.createdB.N);
+					expectChai(putParams[0].Item.friend.M.updatedC.N).to.eql(putParams[0].Item.updatedA.N);
+					expectChai(putParams[0].Item.friend.M.updatedD.N).to.eql(putParams[0].Item.updatedB.N);
+					expectChai(putParams[0].Item.friend.M.createdC.N).to.eql(putParams[0].Item.friend.M.updatedC.N);
+					expectChai(putParams[0].Item.friend.M.createdD.N).to.eql(putParams[0].Item.friend.M.updatedD.N);
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.an("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.friend).to.be.an("object");
-					expect(putParams[1].Item.friend.M).to.be.an("object");
-					expect(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
-					expect(putParams[1].Item.createdA).to.be.an("object");
-					expect(putParams[1].Item.createdB).to.be.an("object");
-					expect(putParams[1].Item.updatedA).to.be.an("object");
-					expect(putParams[1].Item.updatedB).to.be.an("object");
-					expect(putParams[1].Item.friend.M.createdC).to.be.an("object");
-					expect(putParams[1].Item.friend.M.createdD).to.be.an("object");
-					expect(putParams[1].Item.friend.M.updatedC).to.be.an("object");
-					expect(putParams[1].Item.friend.M.updatedD).to.be.an("object");
-					expect(putParams[1].Item.friend.M.createdC.N).to.eql(putParams[1].Item.createdA.N);
-					expect(putParams[1].Item.friend.M.createdD.N).to.eql(putParams[1].Item.createdB.N);
-					expect(putParams[1].Item.friend.M.updatedC.N).to.eql(putParams[1].Item.updatedA.N);
-					expect(putParams[1].Item.friend.M.updatedD.N).to.eql(putParams[1].Item.updatedB.N);
-					expect(parseInt(putParams[1].Item.friend.M.createdC.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedC.N));
-					expect(parseInt(putParams[1].Item.friend.M.createdD.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedD.N));
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.an("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.friend).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.name).to.eql({"S": "Tim"});
+					expectChai(putParams[1].Item.createdA).to.be.an("object");
+					expectChai(putParams[1].Item.createdB).to.be.an("object");
+					expectChai(putParams[1].Item.updatedA).to.be.an("object");
+					expectChai(putParams[1].Item.updatedB).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.createdC).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.createdD).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.updatedC).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.updatedD).to.be.an("object");
+					expectChai(putParams[1].Item.friend.M.createdC.N).to.eql(putParams[1].Item.createdA.N);
+					expectChai(putParams[1].Item.friend.M.createdD.N).to.eql(putParams[1].Item.createdB.N);
+					expectChai(putParams[1].Item.friend.M.updatedC.N).to.eql(putParams[1].Item.updatedA.N);
+					expectChai(putParams[1].Item.friend.M.updatedD.N).to.eql(putParams[1].Item.updatedB.N);
+					expectChai(parseInt(putParams[1].Item.friend.M.createdC.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedC.N));
+					expectChai(parseInt(putParams[1].Item.friend.M.createdD.N)).to.be.below(parseInt(putParams[1].Item.friend.M.updatedD.N));
 				});
 
 				it("Should save with correct object with timestamps but no createdAt timestamp", async () => {
@@ -925,25 +922,25 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.createdAt).to.not.exist;
-					expect(putParams[0].Item.updatedAt).to.be.a("object");
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.createdAt).to.not.exist;
+					expectChai(putParams[0].Item.updatedAt).to.be.a("object");
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.a("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.createdAt).to.not.exist;
-					expect(putParams[1].Item.updatedAt).to.be.a("object");
-					expect(parseInt(putParams[1].Item.updatedAt.N)).to.be.above(parseInt(putParams[0].Item.updatedAt.N));
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.a("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.createdAt).to.not.exist;
+					expectChai(putParams[1].Item.updatedAt).to.be.a("object");
+					expectChai(parseInt(putParams[1].Item.updatedAt.N)).to.be.above(parseInt(putParams[0].Item.updatedAt.N));
 				});
 
 				it("Should save with correct object with timestamps but no updatedAt timestamp", async () => {
@@ -952,26 +949,26 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams[0].TableName).to.eql("User");
-					expect(putParams[0].Item).to.be.a("object");
-					expect(putParams[0].Item.id).to.eql({"N": "1"});
-					expect(putParams[0].Item.name).to.eql({"S": "Charlie"});
-					expect(putParams[0].Item.createdAt).to.be.a("object");
-					expect(putParams[0].Item.updatedAt).to.not.exist;
+					expectChai(putParams[0].TableName).to.eql("User");
+					expectChai(putParams[0].Item).to.be.a("object");
+					expectChai(putParams[0].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[0].Item.name).to.eql({"S": "Charlie"});
+					expectChai(putParams[0].Item.createdAt).to.be.a("object");
+					expectChai(putParams[0].Item.updatedAt).to.not.exist;
 
 					await utils.timeout(5);
 
 					user.name = "Bob"; // eslint-disable-line require-atomic-updates
 					await callType.func(user).bind(user)();
 
-					expect(putParams[1].TableName).to.eql("User");
-					expect(putParams[1].Item).to.be.a("object");
-					expect(putParams[1].Item.id).to.eql({"N": "1"});
-					expect(putParams[1].Item.name).to.eql({"S": "Bob"});
-					expect(putParams[1].Item.createdAt).to.be.a("object");
-					expect(putParams[1].Item.updatedAt).to.not.exist;
+					expectChai(putParams[1].TableName).to.eql("User");
+					expectChai(putParams[1].Item).to.be.a("object");
+					expectChai(putParams[1].Item.id).to.eql({"N": "1"});
+					expectChai(putParams[1].Item.name).to.eql({"S": "Bob"});
+					expectChai(putParams[1].Item.createdAt).to.be.a("object");
+					expectChai(putParams[1].Item.updatedAt).to.not.exist;
 
-					expect(putParams[1].Item.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
+					expectChai(putParams[1].Item.createdAt.N).to.eql(putParams[0].Item.createdAt.N);
 				});
 
 				it("Should throw type mismatch error if passing in wrong type with custom type", () => {
@@ -980,14 +977,14 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie", "birthday": "test"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected birthday to be of type date, instead found type string.");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected birthday to be of type date, instead found type string."));
 				});
 
 				it("Should save with correct object with more properties than in schema", async () => {
 					putItemFunction = () => Promise.resolve();
 					user = new User({"id": 1, "name": "Charlie", "hello": "world"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User"
 					}]);
@@ -999,7 +996,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}},
 						"TableName": "User"
 					}]);
@@ -1011,7 +1008,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
 						"TableName": "User"
 					}]);
@@ -1023,7 +1020,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
 						"TableName": "User"
 					}]);
@@ -1035,7 +1032,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
 						"TableName": "User"
 					}]);
@@ -1047,7 +1044,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected age to be of type number, instead found type boolean.");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected age to be of type number, instead found type boolean."));
 				});
 
 				it("Should save with correct object with default value as custom type", async () => {
@@ -1057,7 +1054,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "timestamp": {"N": `${date.getTime()}`}},
 						"TableName": "User"
 					}]);
@@ -1069,7 +1066,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "age": 5});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "age": {"N": "5"}},
 						"TableName": "User"
 					}]);
@@ -1081,7 +1078,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "age": 4});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("age with a value of 4 had a validation error when trying to save the item"));
 				});
 
 				// This test is here since if you want to enforce that the property exists, you must use both `required` & `validate`, not just `validate`
@@ -1094,7 +1091,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 					await callType.func(user).bind(user)();
-					expect(didRun).to.be.false;
+					expectChai(didRun).to.be.false;
 				});
 
 				it("Should run validation function if property is falsy", async () => {
@@ -1106,7 +1103,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "data": false});
 					await callType.func(user).bind(user)();
-					expect(didRun).to.be.true;
+					expectChai(didRun).to.be.true;
 				});
 
 				it("Should save with correct object with validation function", async () => {
@@ -1115,7 +1112,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "age": 6});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "age": {"N": "6"}},
 						"TableName": "User"
 					}]);
@@ -1127,7 +1124,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "age": 4});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("age with a value of 4 had a validation error when trying to save the item"));
 				});
 
 				it("Should save with correct object with validation async function", async () => {
@@ -1136,7 +1133,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "age": 6});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "age": {"N": "6"}},
 						"TableName": "User"
 					}]);
@@ -1148,7 +1145,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "age": 4});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("age with a value of 4 had a validation error when trying to save the item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("age with a value of 4 had a validation error when trying to save the item"));
 				});
 
 				it("Should save with correct object with validation RegExp", async () => {
@@ -1157,7 +1154,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Tom"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
 						"TableName": "User"
 					}]);
@@ -1169,7 +1166,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "a"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name with a value of a had a validation error when trying to save the item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("name with a value of a had a validation error when trying to save the item"));
 				});
 
 				it("Should save with correct object with required property", async () => {
@@ -1178,7 +1175,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Tom"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
 						"TableName": "User"
 					}]);
@@ -1190,7 +1187,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name is a required property but has no value when trying to save item");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("name is a required property but has no value when trying to save item"));
 				});
 
 				it("Should save with correct object with enum property", async () => {
@@ -1199,7 +1196,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Tom"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
 						"TableName": "User"
 					}]);
@@ -1211,7 +1208,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Bob"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("name must equal [\"Tim\",\"Tom\"], but is set to Bob");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.ValidationError("name must equal [\"Tim\",\"Tom\"], but is set to Bob"));
 				});
 
 				it("Should save with correct object with forceDefault property", async () => {
@@ -1220,7 +1217,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Tom"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Tim"}},
 						"TableName": "User"
 					}]);
@@ -1232,7 +1229,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Tom"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
 						"TableName": "User"
 					}]);
@@ -1244,7 +1241,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Tom"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Tom"}},
 						"TableName": "User"
 					}]);
@@ -1256,7 +1253,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Tom"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}},
 						"TableName": "User"
 					}]);
@@ -1268,7 +1265,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
 						"TableName": "User"
 					}]);
@@ -1294,9 +1291,9 @@ describe("Item", () => {
 					user = await User.get("1");
 					user.name = "Charlie";
 					await callType.func(user).bind(user)();
-					expect(newVal).to.eql("Charlie");
-					expect(oldVal).to.eql("Charlie-set");
-					expect(putParams).to.eql([{
+					expectChai(newVal).to.eql("Charlie");
+					expectChai(oldVal).to.eql("Charlie-set");
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
 						"TableName": "User"
 					}]);
@@ -1308,7 +1305,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie-set"}},
 						"TableName": "User"
 					}]);
@@ -1322,7 +1319,7 @@ describe("Item", () => {
 					user.id = 1;
 					user.name = "Charlie";
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User"
 					}]);
@@ -1343,7 +1340,7 @@ describe("Item", () => {
 					it("Should save with correct object with item instance passed in", async () => {
 						putItemFunction = () => Promise.resolve();
 						await callType.func(game).bind(game)();
-						expect(putParams).to.eql([{
+						expectChai(putParams).to.eql([{
 							"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"N": "1"}},
 							"TableName": "Game"
 						}]);
@@ -1353,7 +1350,7 @@ describe("Item", () => {
 						putItemFunction = () => Promise.resolve();
 						game = new Game({"id": 2, "name": "Game 2", "user": user.id});
 						await callType.func(game).bind(game)();
-						expect(putParams).to.eql([{
+						expectChai(putParams).to.eql([{
 							"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"N": "1"}},
 							"TableName": "Game"
 						}]);
@@ -1369,7 +1366,7 @@ describe("Item", () => {
 						it("Should save with correct object with item instance as set passed in", async () => {
 							putItemFunction = () => Promise.resolve();
 							await callType.func(game).bind(game)();
-							expect(putParams).to.eql([{
+							expectChai(putParams).to.eql([{
 								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"NS": ["1"]}},
 								"TableName": "Game"
 							}]);
@@ -1379,7 +1376,7 @@ describe("Item", () => {
 							putItemFunction = () => Promise.resolve();
 							game = new Game({"id": 2, "name": "Game 2", "user": [user.id]});
 							await callType.func(game).bind(game)();
-							expect(putParams).to.eql([{
+							expectChai(putParams).to.eql([{
 								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"NS": ["1"]}},
 								"TableName": "Game"
 							}]);
@@ -1399,7 +1396,7 @@ describe("Item", () => {
 						it("Should save with correct object with item instance passed in", async () => {
 							putItemFunction = () => Promise.resolve();
 							await callType.func(game).bind(game)();
-							expect(putParams).to.eql([{
+							expectChai(putParams).to.eql([{
 								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"M": {"pk": {"S": "hello"}, "sk": {"S": "world"}}}},
 								"TableName": "Game"
 							}]);
@@ -1409,7 +1406,7 @@ describe("Item", () => {
 							putItemFunction = () => Promise.resolve();
 							game = new Game({"id": 2, "name": "Game 2", "user": {"pk": user.pk, "sk": user.sk}});
 							await callType.func(game).bind(game)();
-							expect(putParams).to.eql([{
+							expectChai(putParams).to.eql([{
 								"Item": {"id": {"N": "2"}, "name": {"S": "Game 2"}, "user": {"M": {"pk": {"S": "hello"}, "sk": {"S": "world"}}}},
 								"TableName": "Game"
 							}]);
@@ -1418,26 +1415,26 @@ describe("Item", () => {
 						it("Should throw error if passing object with one property in", () => {
 							putItemFunction = () => Promise.resolve();
 							game = new Game({"id": 2, "name": "Game 2", "user": {"pk": user.pk}});
-							return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type object.");
+							return expect(callType.func(game).bind(game)()).rejects.toEqual(new CustomError.TypeMismatch("Expected user to be of type User, instead found type object."));
 						});
 
 						it("Should throw error if passing object with one value passed in in", () => {
 							putItemFunction = () => Promise.resolve();
 							game = new Game({"id": 2, "name": "Game 2", "user": user.pk});
-							return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type string.");
+							return expect(callType.func(game).bind(game)()).rejects.toEqual(new CustomError.TypeMismatch("Expected user to be of type User, instead found type string."));
 						});
 
 						it("Should throw error if trying to create item with property type as set model", () => {
 							const Game = dynamoose.model("Game", {"id": Number, "name": String, "user": {"type": Set, "schema": [User]}});
 							new dynamoose.Table("Game", [Game]);
-							return expect(Game.create({"id": 2, "name": "Game 2", "user": [1]})).to.be.rejectedWith("user with type: model is not allowed to be a set");
+							return expect(Game.create({"id": 2, "name": "Game 2", "user": [1]})).rejects.toEqual(new CustomError.InvalidType("user with type: model is not allowed to be a set"));
 						});
 					});
 
 					it("Should throw error if passing random type in", () => {
 						putItemFunction = () => Promise.resolve();
 						game = new Game({"id": 2, "name": "Game 2", "user": "hello"});
-						return expect(callType.func(game).bind(game)()).to.be.rejectedWith("Expected user to be of type User, instead found type string.");
+						return expect(callType.func(game).bind(game)()).rejects.toEqual(new CustomError.TypeMismatch("Expected user to be of type User, instead found type string."));
 					});
 				});
 
@@ -1447,7 +1444,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "name": "Charlie", "age": "test"});
 
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected age to be of type number, instead found type string."));
 				});
 
 				it("Should save with correct object with combine attribute", async () => {
@@ -1456,7 +1453,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "data1": "hello", "data2": "world"});
 					await callType.func(user).bind(user)();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}, "data2": {"S": "world"}, "combine": {"S": "hello,world"}},
 						"TableName": "User"
 					}]);
@@ -1468,7 +1465,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "data1": "hello"});
 					await callType.func(user).bind(user)({"condition": new dynamoose.Condition("breed").eq("Terrier")});
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}},
 						"ConditionExpression": "#a0 = :v0",
 						"ExpressionAttributeNames": {
@@ -1489,7 +1486,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					user = new User({"id": 1, "data1": "hello"});
 					await callType.func(user).bind(user)({"condition": new dynamoose.Condition("breed").eq("Terrier"), "overwrite": false});
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "data1": {"S": "hello"}},
 						"ConditionExpression": "(#a0 = :v0) AND (attribute_not_exists(#__hash_key))",
 						"ExpressionAttributeNames": {
@@ -1513,12 +1510,12 @@ describe("Item", () => {
 					} catch (e) {
 						error = e;
 					}
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User"
 					}]);
-					expect(result).to.not.exist;
-					expect(error).to.eql({"error": "Error"});
+					expectChai(result).to.not.exist;
+					expectChai(error).to.eql({"error": "Error"});
 				});
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
@@ -1542,23 +1539,23 @@ describe("Item", () => {
 					callType.func(item).bind(item)().then(() => finishedSavingUser = true);
 
 					await utils.set_immediate_promise();
-					expect(putParams).to.eql([]);
-					expect(finishedSavingUser).to.be.false;
-					expect(model.Model[internalProperties].table()[internalProperties].pendingTasks.length).to.eql(1);
+					expectChai(putParams).to.eql([]);
+					expectChai(finishedSavingUser).to.be.false;
+					expectChai(model.Model[internalProperties].table()[internalProperties].pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
 					await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 					await utils.set_immediate_promise();
-					expect(putParams).to.eql([{
+					expectChai(putParams).to.eql([{
 						"Item": {
 							"id": {"N": "1"},
 							"name": {"S": "Charlie"}
 						},
 						"TableName": "User2"
 					}]);
-					expect(finishedSavingUser).to.be.true;
+					expectChai(finishedSavingUser).to.be.true;
 				});
 			});
 		});
@@ -1574,47 +1571,47 @@ describe("Item", () => {
 		});
 
 		it("Should be a function", () => {
-			expect(new model({}).original).to.be.a("function");
+			expectChai(new model({}).original).to.be.a("function");
 		});
 
 		it("Should return null if not retrieving from database", () => {
-			expect(new model({}).original()).to.eql(null);
+			expectChai(new model({}).original()).to.eql(null);
 		});
 
 		it("Should return original object if retrieving from database", () => {
-			expect(new model({"id": 1}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
+			expectChai(new model({"id": 1}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
 		});
 
 		it("Should return original object if retrieving from database even after modifying item", () => {
 			const item = new model({"id": 1}, {"type": "fromDynamo"});
 			item.id = 2;
-			expect(item.original()).to.eql({"id": 1});
-			expect({...item}).to.eql({"id": 2});
+			expectChai(item.original()).to.eql({"id": 1});
+			expectChai({...item}).to.eql({"id": 2});
 		});
 
 		it("Shouldn't return DynamoDB object if retrieving from database", () => {
-			expect(new model({"id": {"N": "1"}}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
+			expectChai(new model({"id": {"N": "1"}}, {"type": "fromDynamo"}).original()).to.eql({"id": 1});
 		});
 
 		it("Shouldn't return DynamoDB object if retrieving from database even after modifying item", () => {
 			const item = new model({"id": {"N": "1"}}, {"type": "fromDynamo"});
 			item.id = 2;
-			expect(item.original()).to.eql({"id": 1});
-			expect({...item}).to.eql({"id": 2});
+			expectChai(item.original()).to.eql({"id": 1});
+			expectChai({...item}).to.eql({"id": 2});
 		});
 
 		it("Shouldn't modify inner array after modifying item", () => {
 			const item = new model({"id": {"N": "1"}, "array": {"L": [{"S": "1"}]}}, {"type": "fromDynamo"});
 			item.array.push("2");
-			expect(item.original()).to.eql({"id": 1, "array": ["1"]});
-			expect({...item}).to.eql({"id": 1, "array": ["1", "2"]});
+			expectChai(item.original()).to.eql({"id": 1, "array": ["1"]});
+			expectChai({...item}).to.eql({"id": 1, "array": ["1", "2"]});
 		});
 
 		it("Shouldn't modify inner object after modifying item", () => {
 			const item = new model({"id": {"N": "1"}, "object": {"M": {"hello": {"S": "world"}}}}, {"type": "fromDynamo"});
 			item.object.test = "item";
-			expect(item.original()).to.eql({"id": 1, "object": {"hello": "world"}});
-			expect({...item}).to.eql({"id": 1, "object": {"hello": "world", "test": "item"}});
+			expectChai(item.original()).to.eql({"id": 1, "object": {"hello": "world"}});
+			expectChai({...item}).to.eql({"id": 1, "object": {"hello": "world", "test": "item"}});
 		});
 	});
 
@@ -1628,31 +1625,31 @@ describe("Item", () => {
 		});
 
 		it("Should be a function", () => {
-			expect(new model({}).toJSON).to.be.a("function");
+			expectChai(new model({}).toJSON).to.be.a("function");
 		});
 
 		it("Should set result constructor to Object", () => {
-			expect(new model({}).toJSON().constructor).to.eql(Object);
-			expect(new model({}).constructor).to.not.eql(Object);
+			expectChai(new model({}).toJSON().constructor).to.eql(Object);
+			expectChai(new model({}).constructor).to.not.eql(Object);
 		});
 
 		it("Should return empty object if no properties in item", () => {
-			expect(new model({}).toJSON()).to.eql({});
+			expectChai(new model({}).toJSON()).to.eql({});
 		});
 
 		it("Should return JSON object", () => {
-			expect(new model({"id": 1}).toJSON()).to.eql({"id": 1});
+			expectChai(new model({"id": 1}).toJSON()).to.eql({"id": 1});
 		});
 
 		it("Should not return object that equals item", () => {
 			const item = new model({"id": 1});
-			expect(item.toJSON()).to.not.eql(item);
+			expectChai(item.toJSON()).to.not.eql(item);
 		});
 
 		it("Should return JSON object even after modifying", () => {
 			const item = new model({"id": 1});
 			item.id = 2;
-			expect(item.toJSON()).to.eql({"id": 2});
+			expectChai(item.toJSON()).to.eql({"id": 2});
 		});
 	});
 
@@ -1683,7 +1680,7 @@ describe("Item", () => {
 		});
 
 		it("Should be a function", () => {
-			expect(user.delete).to.be.a("function");
+			expectChai(user.delete).to.be.a("function");
 		});
 
 		const functionCallTypes = [
@@ -1695,7 +1692,7 @@ describe("Item", () => {
 				it("Should deleteItem with correct parameters", async () => {
 					deleteItemFunction = () => Promise.resolve();
 					await callType.func(user).bind(user)();
-					expect(deleteParams).to.eql({
+					expectChai(deleteParams).to.eql({
 						"Key": {"id": {"N": "1"}},
 						"TableName": "User"
 					});
@@ -1709,7 +1706,7 @@ describe("Item", () => {
 					deleteItemFunction = () => Promise.resolve();
 					const func = (item) => util.promisify(item.delete);
 					await func(user).bind(user)();
-					expect(deleteParams).to.eql({
+					expectChai(deleteParams).to.eql({
 						"Key": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
 						"TableName": "User"
 					});
@@ -1717,7 +1714,7 @@ describe("Item", () => {
 
 				it("Should throw error if DynamoDB API returns an error", () => {
 					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
-					return expect(callType.func(user).bind(user)()).to.be.rejectedWith({"error": "ERROR"});
+					return expect(callType.func(user).bind(user)()).rejects.toEqual({"error": "ERROR"});
 				});
 			});
 		});
@@ -1755,7 +1752,7 @@ describe("Item", () => {
 		});
 
 		it("Should be a function", () => {
-			expect(game.populate).to.be.a("function");
+			expectChai(game.populate).to.be.a("function");
 		});
 
 		const functionCallTypes = [
@@ -1769,11 +1766,11 @@ describe("Item", () => {
 						"Item": {...user}
 					});
 					const res = await callType.func(game).bind(game)();
-					expect(getItemParams).to.eql([{
+					expectChai(getItemParams).to.eql([{
 						"Key": {"id": {"N": "1"}},
 						"TableName": "User"
 					}]);
-					expect(res.toJSON()).to.eql({
+					expectChai(res.toJSON()).to.eql({
 						"id": 2,
 						"name": "Game 2",
 						"user": {
@@ -1781,7 +1778,7 @@ describe("Item", () => {
 							"name": "Charlie"
 						}
 					});
-					expect(res).to.be.a.instanceOf(Item);
+					expectChai(res).to.be.a.instanceOf(Item);
 				});
 
 				it("Should not call getItem if sub item already exists", async () => {
@@ -1790,8 +1787,8 @@ describe("Item", () => {
 					});
 					game = new Game({"id": 2, "name": "Game 2", "user": user});
 					const res = await callType.func(game).bind(game)();
-					expect(getItemParams).to.eql([]);
-					expect(res.toJSON()).to.eql({
+					expectChai(getItemParams).to.eql([]);
+					expectChai(res.toJSON()).to.eql({
 						"id": 2,
 						"name": "Game 2",
 						"user": {
@@ -1815,7 +1812,7 @@ describe("Item", () => {
 							"Item": {...parent}
 						});
 						const res = await callType.func(child).bind(child)();
-						expect(getItemParams).to.eql([{
+						expectChai(getItemParams).to.eql([{
 							"Key": {
 								"id": {
 									"N": "1"
@@ -1823,7 +1820,7 @@ describe("Item", () => {
 							},
 							"TableName": "User"
 						}]);
-						expect(res.toJSON()).to.eql({
+						expectChai(res.toJSON()).to.eql({
 							"id": 2,
 							"name": "Tim",
 							"parent": {
@@ -1839,8 +1836,8 @@ describe("Item", () => {
 						});
 						child = new User({"id": 2, "name": "Tim", "parent": parent});
 						const res = await callType.func(child).bind(child)();
-						expect(getItemParams).to.eql([]);
-						expect(res.toJSON()).to.eql({
+						expectChai(getItemParams).to.eql([]);
+						expectChai(res.toJSON()).to.eql({
 							"id": 2,
 							"name": "Tim",
 							"parent": {
@@ -1887,7 +1884,7 @@ describe("Item", () => {
 					new dynamoose.Table("User", [User]);
 					const user = new User(test.input);
 
-					return expect(user.conformToSchema(test.settings || undefined)).to.be.rejectedWith("Expected age to be of type number, instead found type string.");
+					return expect(user.conformToSchema(test.settings || undefined)).rejects.toEqual(new CustomError.TypeMismatch("Expected age to be of type number, instead found type string."));
 				});
 			} else {
 				it(`Should modify ${JSON.stringify(test.input)} correctly for schema ${JSON.stringify(test.schema)}`, async () => {
@@ -1897,8 +1894,8 @@ describe("Item", () => {
 
 					const obj = await user.conformToSchema(test.settings || undefined);
 
-					expect({...user}).to.eql(test.output);
-					expect(obj).to.eql(user);
+					expectChai({...user}).to.eql(test.output);
+					expectChai(obj).to.eql(user);
 				});
 			}
 		});
@@ -1914,7 +1911,7 @@ describe("Item", () => {
 		});
 
 		it("Should be a function", () => {
-			expect(User.isDynamoObject).to.be.a("function");
+			expectChai(User.isDynamoObject).to.be.a("function");
 		});
 
 		const tests = [
@@ -2014,14 +2011,14 @@ describe("Item", () => {
 
 		tests.forEach((test) => {
 			it(`Should return ${test.output} for ${JSON.stringify(test.input)}`, () => {
-				expect(User.isDynamoObject(test.input)).to.eql(test.output);
+				expectChai(User.isDynamoObject(test.input)).to.eql(test.output);
 			});
 		});
 	});
 
 	describe("Item.attributesWithSchema", () => {
 		it("Should be a function", () => {
-			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).attributesWithSchema).to.be.a("function");
+			expectChai(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).attributesWithSchema).to.be.a("function");
 		});
 
 		const tests = [
@@ -2080,7 +2077,7 @@ describe("Item", () => {
 		tests.forEach((test) => {
 			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
 				const model = dynamoose.model("User", test.schema, {"create": false, "waitForActive": false});
-				expect((await model.attributesWithSchema(test.input, model.Model)).sort()).to.eql(test.output.sort());
+				expectChai((await model.attributesWithSchema(test.input, model.Model)).sort()).to.eql(test.output.sort());
 			});
 		});
 	});
@@ -2098,7 +2095,7 @@ describe("Item", () => {
 		});
 
 		it("Should be a function", () => {
-			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).objectFromSchema).to.be.a("function");
+			expectChai(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).objectFromSchema).to.be.a("function");
 		});
 
 		const tests = [
@@ -2155,7 +2152,7 @@ describe("Item", () => {
 			// },
 			{
 				"input": {"id": "hello"},
-				"error": new Error.TypeMismatch("Expected id to be of type number, instead found type string."),
+				"error": new CustomError.TypeMismatch("Expected id to be of type number, instead found type string."),
 				"schema": {"id": Number}
 			},
 			{
@@ -2216,11 +2213,11 @@ describe("Item", () => {
 					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
 					return {"id": Number, "data": {"type": Item, "default": true}};
 				},
-				"error": new Error.ValidationError("Expected data to be of type Item, instead found type boolean.")
+				"error": new CustomError.ValidationError("Expected data to be of type Item, instead found type boolean.")
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
+				"error": new CustomError.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
 			},
 			// Validations
@@ -2236,7 +2233,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
+				"error": new CustomError.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": async (val) => val.length > 5}}
 			},
 			{
@@ -2251,7 +2248,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
+				"error": new CustomError.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
 			},
 			{
@@ -2266,7 +2263,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
+				"error": new CustomError.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
 			},
 			{
@@ -2281,7 +2278,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"validate": true}],
-				"error": new Error.ValidationError("id with a value of test had a validation error when trying to save the item"),
+				"error": new CustomError.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
 			},
 			{
@@ -2296,7 +2293,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"enum": true, "required": true}],
-				"error": new Error.ValidationError("age is a required property but has no value when trying to save item"),
+				"error": new CustomError.ValidationError("age is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "age": {"type": Number, "enum": [10, 20], "required": true}}
 			},
 			{
@@ -2311,7 +2308,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": new Error.ValidationError("data is a required property but has no value when trying to save item"),
+				"error": new CustomError.ValidationError("data is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": false}}, "required": true}}
 			},
 			{
@@ -2321,12 +2318,12 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test", "data": {"email": "test@test.com"}}, {"required": true}],
-				"error": new Error.ValidationError("data.name is a required property but has no value when trying to save item"),
+				"error": new CustomError.ValidationError("data.name is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": new Error.ValidationError("data is a required property but has no value when trying to save item"),
+				"error": new CustomError.ValidationError("data is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": {"name": {"type": String, "required": true}}, "required": true}}
 			},
 			{
@@ -2336,7 +2333,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
-				"error": new Error.ValidationError("hash is a required property but has no value when trying to save item"),
+				"error": new CustomError.ValidationError("hash is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "hash": {"type": String, "required": true}, "data": {"type": Object, "schema": {"email": String, "name": {"type": String, "required": true}}}}
 			},
 			{
@@ -2421,17 +2418,17 @@ describe("Item", () => {
 			// {
 			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "fromDynamo"}],
 			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
-			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// 	"error": new CustomError.ValidationError("data.1 should be a string")
 			// },
 			// {
 			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "fromDynamo", "saveUnknown": true}],
 			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
-			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// 	"error": new CustomError.ValidationError("data.1 should be a string")
 			// },
 			// {
 			// 	"input": [{"id": 1, "items": {"data": ["hello", 1]}}, {"type": "toDynamo"}],
 			// 	"schema": new Schema({"id": Number, "items": {"type": Object, "schema": {"data": [String]}}}),
-			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// 	"error": new CustomError.ValidationError("data.1 should be a string")
 			// },
 			// {
 			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo"}],
@@ -2441,7 +2438,7 @@ describe("Item", () => {
 			// {
 			// 	"input": [{"id": 1, "items": {"data": new Set(["hello", 1])}}, {"type": "toDynamo", "saveUnknown": true}],
 			// 	"schema": new Schema({"id": Number}, {"saveUnknown": true}),
-			// 	"error": new Error.ValidationError("data.1 should be a string")
+			// 	"error": new CustomError.ValidationError("data.1 should be a string")
 			// },
 
 			{
@@ -2462,12 +2459,12 @@ describe("Item", () => {
 			{
 				"input": [{"id": 1, "items": [1, 10000, "test"]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [Date]}}),
-				"error": new Error.ValidationError("Expected items.2 to be of type date, instead found type string.")
+				"error": new CustomError.ValidationError("Expected items.2 to be of type date, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "items": [{"birthday": 1}, {"birthday": 10000}, {"birthday": "test"}]}, {"type": "fromDynamo", "customTypesDynamo": true}],
 				"schema": new Schema({"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"birthday": Date}}]}}),
-				"error": new Error.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
+				"error": new CustomError.ValidationError("Expected items.2.birthday to be of type date, instead found type string.")
 			},
 			{
 				"schema": {"id": Number, "name": {"type": String, "set": (val) => val === "" ? undefined : val}},
@@ -2477,7 +2474,7 @@ describe("Item", () => {
 			{
 				"schema": {"id": Number, "name": {"type": String, "required": true, "set": (val) => val === "" ? undefined : val}},
 				"input": [{"id": 1, "name": ""}, {"type": "toDynamo", "modifiers": ["set"], "required": true}],
-				"error": new Error.ValidationError("name is a required property but has no value when trying to save item")
+				"error": new CustomError.ValidationError("name is a required property but has no value when trying to save item")
 			},
 			{
 				"schema": {"id": Number, "friends": {"type": Array}},
@@ -2590,7 +2587,7 @@ describe("Item", () => {
 			{
 				"schema": {"id": Number, "other": [{"type": "Combine"}, String]},
 				"input": [{"id": 1}, {"type": "toDynamo", "combine": true}],
-				"error": new Error.InvalidParameter("Combine type is not allowed to be used with multiple types")
+				"error": new CustomError.InvalidParameter("Combine type is not allowed to be used with multiple types.")
 			},
 			// Constant Type
 			{
@@ -2601,7 +2598,7 @@ describe("Item", () => {
 			{
 				"input": [{"id": 1, "data": "Hello Universe"}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": {"type": {"value": "Constant", "settings": {"value": "Hello World"}}}},
-				"error": new Error.InvalidParameter("Expected data to be of type constant string (Hello World), instead found type string (Hello Universe).")
+				"error": new CustomError.InvalidParameter("Expected data to be of type constant string (Hello World), instead found type string (Hello Universe).")
 			},
 			{
 				"input": [{"id": 1, "data": 5}, {"type": "fromDynamo"}],
@@ -2611,7 +2608,7 @@ describe("Item", () => {
 			{
 				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": {"type": {"value": "Constant", "settings": {"value": 5}}}},
-				"error": new Error.InvalidParameter("Expected data to be of type constant number (5), instead found type number (2).")
+				"error": new CustomError.InvalidParameter("Expected data to be of type constant number (5), instead found type number (2).")
 			},
 			{
 				"input": [{"id": 1, "data": true}, {"type": "fromDynamo"}],
@@ -2626,7 +2623,7 @@ describe("Item", () => {
 			{
 				"input": [{"id": 1, "data": false}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": {"type": {"value": "Constant", "settings": {"value": true}}}},
-				"error": new Error.InvalidParameter("Expected data to be of type constant boolean (true), instead found type boolean (false).")
+				"error": new CustomError.InvalidParameter("Expected data to be of type constant boolean (true), instead found type boolean (false).")
 			},
 			// Multiple Types
 			{
@@ -2792,32 +2789,32 @@ describe("Item", () => {
 			{
 				"input": [{"id": 1, "friends": {"names": ["Charlie", 2]}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}},
-				"error": new Error.ValidationError("Expected friends.names.1 to be of type string, instead found type number.")
+				"error": new CustomError.ValidationError("Expected friends.names.1 to be of type string, instead found type number.")
 			},
 			{
 				"input": [{"id": 1, "friends": {"names": [1, "Bobby"]}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [Number]}]}}},
-				"error": new Error.ValidationError("Expected friends.names.0 to be of type string, instead found type number.")
+				"error": new CustomError.ValidationError("Expected friends.names.0 to be of type string, instead found type number.")
 			},
 			{
 				"input": [{"id": 1, "friends": {"names": ["Charlie", 2]}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [Number]}, {"type": Array, "schema": [String]}]}}},
-				"error": new Error.ValidationError("Expected friends.names.0 to be of type number, instead found type string.")
+				"error": new CustomError.ValidationError("Expected friends.names.0 to be of type number, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "friends": {"names": [1, "Bobby"]}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "friends": {"type": Object, "schema": {"names": [{"type": Array, "schema": [Number]}, {"type": Array, "schema": [String]}]}}},
-				"error": new Error.ValidationError("Expected friends.names.1 to be of type number, instead found type string.")
+				"error": new CustomError.ValidationError("Expected friends.names.1 to be of type number, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "data": {"name": "hello world", "id1": "1"}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
-				"error": new Error.ValidationError("Expected data.id1 to be of type number, instead found type string.")
+				"error": new CustomError.ValidationError("Expected data.id1 to be of type number, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "data": {"name": 1, "id2": 2}}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Object, "schema": {"name": String, "id1": Number}}, {"type": Object, "schema": {"name": Number, "id2": String}}]},
-				"error": new Error.ValidationError("Expected data.id2 to be of type string, instead found type number.")
+				"error": new CustomError.ValidationError("Expected data.id2 to be of type string, instead found type number.")
 			},
 			{
 				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
@@ -2855,7 +2852,7 @@ describe("Item", () => {
 					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
 					return {"id": Number, "data": [Item, String]};
 				},
-				"error": new Error.ValidationError("Expected data to be of type Item, string, instead found type boolean.")
+				"error": new CustomError.ValidationError("Expected data to be of type Item, string, instead found type boolean.")
 			},
 			{
 				"input": [{"id": 1, "data": true}, {"type": "fromDynamo"}],
@@ -2863,12 +2860,12 @@ describe("Item", () => {
 					const Item = dynamoose.model("Item", {"id": Number, "data": String}, {"create": false, "waitForActive": false});
 					return {"id": Number, "data": [{"type": Set, "schema": [Item]}, String]};
 				},
-				"error": new Error.ValidationError("Expected data to be of type Item Set, string, instead found type boolean.")
+				"error": new CustomError.ValidationError("Expected data to be of type Item Set, string, instead found type boolean.")
 			},
 			{
 				"input": [{"id": 1, "data": null}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": String},
-				"error": new Error.ValidationError("Expected data to be of type string, instead found type null.")
+				"error": new CustomError.ValidationError("Expected data to be of type string, instead found type null.")
 			}
 		];
 
@@ -2893,11 +2890,11 @@ describe("Item", () => {
 			const testFunc = test.test || it;
 			if (test.error) {
 				testFunc(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
-					return expect(func().model.objectFromSchema(...func().input)).to.be.rejectedWith(test.error.message);
+					return expect(func().model.objectFromSchema(...func().input)).rejects.toEqual(new CustomError.InvalidParameter(test.error.message));
 				});
 			} else {
 				testFunc(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
-					expect(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
+					expectChai(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
 				});
 			}
 		});
@@ -2905,7 +2902,7 @@ describe("Item", () => {
 
 	describe("Item.prepareForObjectFromSchema", () => {
 		it("Should be a function", () => {
-			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).prepareForObjectFromSchema).to.be.a("function");
+			expectChai(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).prepareForObjectFromSchema).to.be.a("function");
 		});
 
 		const internalProperties = require("../dist/Internal").General.internalProperties;
@@ -3009,7 +3006,7 @@ describe("Item", () => {
 			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
 				const res = func();
 				const result = await res.model.prepareForObjectFromSchema(...res.input);
-				expect(result).to.eql(typeof test.output === "function" ? test.output(result) : test.output);
+				expectChai(result).to.eql(typeof test.output === "function" ? test.output(result) : test.output);
 			});
 		});
 	});
