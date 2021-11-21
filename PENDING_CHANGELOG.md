@@ -53,6 +53,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### Documentation
 
+- Migrated documentation from Vercel to [Cloudflare Pages](https://pages.cloudflare.com/) for PR & branch builds
+
 ### Other
 
 - Source map files are no longer included in the package
