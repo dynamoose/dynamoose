@@ -338,7 +338,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
 			if (!isValidType) {
 				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
-			} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || ((matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny)) {
+			} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny) {
 				validParents.push({key, "infinite": true});
 			} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
 				// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
