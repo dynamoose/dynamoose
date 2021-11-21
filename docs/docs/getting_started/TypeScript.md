@@ -30,7 +30,7 @@ TypeScript Beta Support means that typings might be wrong or missing. This can i
 
 ### Should I trust the documentation or TypeScript Typings more?
 
-In the event the documentation and TypeScript typings don't line up or give different information, you should always consider the documentation as the primary source of truth. If you have reason to believe both are incorrrect or the TypeScript typings are more accurate than the documentation, please submit a pull request or issue.
+In the event the documentation and TypeScript typings don't line up or give different information, you should always consider the documentation as the primary source of truth. If you have reason to believe both are incorrect or the TypeScript typings are more accurate than the documentation, please submit a pull request or issue.
 
 ### Is there any differences between using Dynamoose with TypeScript and JavaScript?
 
@@ -40,7 +40,7 @@ No. There is no differences between using Dynamoose with TypeScript and JavaScri
 
 TypeScript support includes support for all functions/methods, and properties of Dynamoose. It does **not** have typings or contracts between your Schema and Items you create. All type checks between your Schema and Items is handled at runtime as part of Dynamoose, and not part of the TypeScript typings.
 
-At some point we hope to explore the potiental of adding typings to ensure your Items conform to your Schemas. However this raises a lot of questions regarding if it's even possible to have such dynamic typings in TypeScript, as well as edge cases that have not been considered yet.
+At some point we hope to explore the potential of adding typings to ensure your Items conform to your Schemas. However this raises a lot of questions regarding if it's even possible to have such dynamic typings in TypeScript, as well as edge cases that have not been considered yet.
 
 ### What should I do if I have additional questions?
 

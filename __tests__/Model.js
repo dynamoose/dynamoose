@@ -1955,7 +1955,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem with seperate key and update objects", async () => {
+				it("Should send correct params to updateItem with separate key and update objects", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
 					expectChai(updateItemParams).to.be.an("object");
@@ -1979,7 +1979,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem with seperate key and update objects with rangeKey", async () => {
+				it("Should send correct params to updateItem with separate key and update objects with rangeKey", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
 					new dynamoose.Table("User", [User]);
@@ -2008,7 +2008,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem with seperate key and update objects and multiple updates", async () => {
+				it("Should send correct params to updateItem with separate key and update objects and multiple updates", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "age": 5});
 					expectChai(updateItemParams).to.be.an("object");
@@ -2036,7 +2036,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem with seperate key and update objects and multiple updates with rangeKey", async () => {
+				it("Should send correct params to updateItem with separate key and update objects and multiple updates with rangeKey", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"pk": Number, "sk": {"type": Number, "rangeKey": true}, "name": String, "age": Number});
 					new dynamoose.Table("User", [User]);

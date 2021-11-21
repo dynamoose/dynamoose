@@ -38,7 +38,7 @@ CatModel.create({"id": 1, "random": "string"});
 const cat = await CatModel.get(1);
 ```
 
-You can also pass in an array of Schema instances or schema objects into the `schema` paremeter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your item, and use that schema for all operations pertaining to that item. If no matching schema can be found, it will default to the first schema in the array.
+You can also pass in an array of Schema instances or schema objects into the `schema` parameter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your item, and use that schema for all operations pertaining to that item. If no matching schema can be found, it will default to the first schema in the array.
 
 :::note
 If you use multiple schemas in one model, the hash & range keys must match for all schemas.
@@ -51,7 +51,7 @@ const Cat = dynamoose.model("Cat", [
 ]);
 ```
 
-If you don't pass the `schema` parameter it is required that you have an existing model already registed with that name. This will use the existing model already registered.
+If you don't pass the `schema` parameter it is required that you have an existing model already registered with that name. This will use the existing model already registered.
 
 ```js
 const Cat = dynamoose.model("Cat"); // Will reference existing model, or if no model exists already with name `Cat` it will throw an error.
@@ -65,7 +65,7 @@ The `config` parameter is an object used to customize settings for the model.
 | throughput | An object with settings for what the throughput for the table should be on creation, or a number which will use the same throughput for both read and write. If this is set to `ON_DEMAND` the table will use the `PAY_PER_REQUEST` billing mode. If the table is not created by Dynamoose, this object has no effect. | Object \| Number \| String |  |
 | throughput.read | What the read throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
 | throughput.write | What the write throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
-| prefix | A string that should be prepended to every model name. | String | "" |
+| prefix | A string that should be pre-pended to every model name. | String | "" |
 | suffix | A string that should be appended to every model name. | String | "" |
 | waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. For production environments we recommend setting this value to `false`. | Object \| Boolean |  |
 | waitForActive.enabled | If Dynamoose should wait for the table to be active before running actions on it. | Boolean | true |

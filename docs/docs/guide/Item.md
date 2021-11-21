@@ -88,7 +88,7 @@ myUser.delete((error) => {
 
 ## item.populate([settings], [callback])
 
-This allows you to populate a item with item instances for the subitems you are referencing in your schema. This function will return a promise, or call the `callback` paramter function upon completion.
+This allows you to populate a item with item instances for the subitems you are referencing in your schema. This function will return a promise, or call the `callback` parameter function upon completion.
 
 The `settings` parameter is an object you can pass in with the following properties:
 
