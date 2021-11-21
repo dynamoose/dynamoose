@@ -632,9 +632,7 @@ export class Schema {
 			try {
 				this.getAttributeType(key);
 			} catch (e) {
-				if (e.message.includes("is not allowed to be a set")) {
-
-				} else {
+				if (!e.message.includes("is not allowed to be a set")) {
 					throw new CustomError.InvalidParameter(`Attribute ${key} does not have a valid type.`);
 				}
 			}
