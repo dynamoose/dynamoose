@@ -2831,7 +2831,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": 1, "data": 1}, {"type": "fromDynamo", "customTypesDynamo": true}],
-				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "miliseconds"}}]},
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "milliseconds"}}]},
 				"output": {"id": 1, "data": new Date(1)}
 			},
 			{
@@ -2841,7 +2841,7 @@ describe("Item", () => {
 			},
 			{
 				"input": [{"id": 1, "data": "hello world"}, {"type": "fromDynamo", "customTypesDynamo": true}],
-				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "miliseconds"}}]},
+				"schema": {"id": Number, "data": [String, {"value": Date, "settings": {"storage": "milliseconds"}}]},
 				"output": {"id": 1, "data": "hello world"}
 			},
 			{

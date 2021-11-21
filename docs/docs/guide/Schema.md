@@ -84,7 +84,7 @@ const schema = new dynamoose.Schema({
 | Boolean | False | BOOL | False | False |   |   |
 | Number | True | N | False | False |   |   |
 | Buffer | True | B | False | False |   |   |
-| Date | True | N | True | False | **storage** - miliseconds \| seconds (default: miliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
+| Date | True | N | True | False | **storage** - milliseconds \| seconds (default: milliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
 | [`dynamoose.type.NULL`](Dynamoose#dynamoosetypenull) | False | NULL | False | False |   |   |
@@ -221,7 +221,7 @@ The type attribute can either be a type (ex. `Object`, `Number`, etc.) or an obj
 		"type": {
 			"value": Date,
 			"settings": {
-				"storage": "seconds" // Default: miliseconds (as shown above)
+				"storage": "seconds" // Default: milliseconds (as shown above)
 			}
 		}
 	}
