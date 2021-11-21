@@ -2135,6 +2135,41 @@ describe("Item", () => {
 				"schema": {"id": Number, "data": dynamoose.type.NULL}
 			},
 			{
+				"input": {"id": 1, "name": "Charlie"},
+				"output": {"id": 1, "name": "Charlie"},
+				"schema": {"id": Number, "name": dynamoose.type.ANY}
+			},
+			{
+				"input": {"id": 1, "name": 5},
+				"output": {"id": 1, "name": 5},
+				"schema": {"id": Number, "name": dynamoose.type.ANY}
+			},
+			{
+				"input": {"id": 1, "name": true},
+				"output": {"id": 1, "name": true},
+				"schema": {"id": Number, "name": dynamoose.type.ANY}
+			},
+			{
+				"input": {"id": 1, "name": ["Test"]},
+				"output": {"id": 1, "name": []},
+				"schema": {"id": Number, "name": dynamoose.type.ANY}
+			},
+			{
+				"input": {"id": 1, "name": {"hello": "world"}},
+				"output": {"id": 1, "name": {}},
+				"schema": {"id": Number, "name": dynamoose.type.ANY}
+			},
+			{
+				"input": {"id": 1, "name": []},
+				"output": {"id": 1, "name": []},
+				"schema": {"id": Number, "name": dynamoose.type.ANY}
+			},
+			{
+				"input": {"id": 1, "name": {}},
+				"output": {"id": 1, "name": {}},
+				"schema": {"id": Number, "name": dynamoose.type.ANY}
+			},
+			{
 				"input": [{"id": 1, "data": null}, {"saveUnknown": true}],
 				"output": {"id": 1, "data": null},
 				"schema": new Schema({"id": Number}, {"saveUnknown": true})
@@ -2295,6 +2330,26 @@ describe("Item", () => {
 				"input": [{"id": "test"}, {"enum": true, "required": true}],
 				"error": new CustomError.ValidationError("age is a required property but has no value when trying to save item"),
 				"schema": {"id": {"type": String}, "age": {"type": Number, "enum": [10, 20], "required": true}}
+			},
+			{
+				"input": {"id": "test", "data": {"hello": "world"}},
+				"output": {"id": "test", "data": {"hello": "world"}},
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": dynamoose.type.ANY}}
+			},
+			{
+				"input": {"id": "test", "data": ["hello", "world"]},
+				"output": {"id": "test", "data": ["hello", "world"]},
+				"schema": {"id": {"type": String}, "data": {"type": Array, "schema": dynamoose.type.ANY}}
+			},
+			{
+				"input": {"id": "test", "data": {"hello": {"world": "universe"}}},
+				"output": {"id": "test", "data": {"hello": {"world": "universe"}}},
+				"schema": {"id": {"type": String}, "data": {"type": Object, "schema": dynamoose.type.ANY}}
+			},
+			{
+				"input": {"id": "test", "data": ["hello", {"world": "universe"}]},
+				"output": {"id": "test", "data": ["hello", {"world": "universe"}]},
+				"schema": {"id": {"type": String}, "data": {"type": Array, "schema": dynamoose.type.ANY}}
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
