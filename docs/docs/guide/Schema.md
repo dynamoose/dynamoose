@@ -311,6 +311,8 @@ You can also define an array attribute that accepts more than one data type. The
 
 You can set a default value for an attribute that will be applied upon save if the given attribute value is `null` or `undefined`. The value for the default property can either be a value or a function that will be executed when needed that should return the default value. By default there is no default value for attributes.
 
+Default values will only be applied if the parent object exists. This means for values where you apply a `default` value to a nested attribute, it will only be applied if the parent object exists. If you do not want this behavior, consider setting a `default` value for the parent object to an empty object (`{}`) or an empty array (`[]`).
+
 ```js
 {
 	"age": {
