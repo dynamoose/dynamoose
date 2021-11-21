@@ -49,7 +49,7 @@ It is highly recommended (although not required) to follow the pattern below bef
 
 #### During
 
-1. **Create a fork & branch** - Before contributing to Dynamoose you must create a fork of the [main repository](https://github.com/dynamoose/dynamoose) and create a branch on your fork. It is highly discouraged from using a primary branch (ex. `master` or `alpha`) to make your changes. This is due to the fact that if you enable `Allow edits from maintainers` option, maintainers might commit directly to your primary branch which could cause problems if others are using your fork in their applications.
+1. **Create a fork & branch** - Before contributing to Dynamoose you must create a fork of the [main repository](https://github.com/dynamoose/dynamoose) and create a branch on your fork. It is highly discouraged from using a primary branch (ex. `main` or `alpha`) to make your changes. This is due to the fact that if you enable `Allow edits from maintainers` option, maintainers might commit directly to your primary branch which could cause problems if others are using your fork in their applications.
 2. **Install dependencies** - Run `npm install` to install all the dependencies of the project.
 3. **Maintain consistency throughout** - While working in the project, we highly encourage you to maintain the same coding style that the rest of the project uses. This means looking around at similar code and trying to adopt the same style and conventions in your code.
 4. **Run tests & linter often** - It is highly encouraged to run `npm test` & `npm run lint` often to ensure you are conforming to the project guidelines. In order for a pull request to be merged all tests must pass, the linter must throw no errors, and test code coverage must not decrease.
@@ -100,4 +100,4 @@ The following section is unlikely to be useful to general contributors to Dynamo
 
 In order to release a version of Dynamoose you can kick off this process by running `node publish`. This will kick off the release process. Following the steps it guides you through should lead to a successful release. Please [contact me](https://charlie.fish/contact) or message me on the Dynamoose Slack (Charlie Fish) if you have questions or run into any issues.
 
-It is important to note that you must have write permissions to the `master` branch in order for this process to be successful.
+It is important to note that you must have write permissions to the `main` branch in order for this process to be successful.
