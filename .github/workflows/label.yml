@@ -8,7 +8,7 @@ jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@v2
+      - uses: actions/labeler@v3
         # Limiting this to dynamoose/dynamoose repo until GitHub adds support for this to work in forked repos
         # https://github.com/actions/labeler/issues/36
         # https://github.com/actions/labeler/issues/12
