@@ -6,7 +6,7 @@ export default async (...args: any[]) => {
 		log = await importPackage("dynamoose-logger/dist/emitter");
 	} catch (e) {} // eslint-disable-line no-empty
 
-	if (log) {
+	if (log && typeof log === "function") {
 		log(...args);
 	}
 };

@@ -4,7 +4,8 @@ export default async (name: string): Promise<any> => {
 	if (undefinedPackages.includes(name)) {
 		throw new Error("Package can not be found.");
 	} else {
-		return await import(name);
+		const pkg = await import(name);
+		return pkg;
 	}
 };
 
