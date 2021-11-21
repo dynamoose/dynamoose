@@ -1,4 +1,4 @@
-const {expect: expectChai} = require("chai");
+const {"expect": expectChai} = require("chai");
 const utils = require("../../dist/utils");
 
 describe("Timeout", () => {

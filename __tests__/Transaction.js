@@ -1,4 +1,4 @@
-const {expect: expectChai} = require("chai");
+const {"expect": expectChai} = require("chai");
 const dynamoose = require("../dist");
 const util = require("util");
 const ModelStore = require("../dist/ModelStore");
