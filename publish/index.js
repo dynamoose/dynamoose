@@ -164,12 +164,13 @@ let package = require("../package.json");
 	}
 	// Create PR
 	const gitPR = ora("Creating PR on GitHub").start();
+	const labels = [versionInfo.isPrerelease ? "type:prerelease" : "type:version"];
 	const pr = (await octokit.pulls.create({
 		"owner": "dynamoose",
 		"repo": "dynamoose",
 		"title": versionFriendlyTitle,
 		"body": versionChangelog,
-		"labels": ["version"],
+		labels,
 		"head": branch,
 		"base": results.branch
 	})).data;
