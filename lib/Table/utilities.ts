@@ -73,6 +73,7 @@ export async function updateTimeToLive (table: Table): Promise<void> {
 	case "DISABLED":
 		await updateTTL();
 		break;
+	/* istanbul ignore next */
 	default:
 		break;
 	}

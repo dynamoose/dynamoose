@@ -1,12 +1,12 @@
 import {CustomError} from "dynamoose-utils";
-import {CallbackType, DeepPartial, InputKey, KeyObject, ObjectType} from "../General";
+import {CallbackType, DeepPartial, ObjectType} from "../General";
 import Internal = require("../Internal");
 const {internalProperties} = Internal.General;
 import {Model} from "../Model";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import utils = require("../utils");
 import DynamoDB = require("@aws-sdk/client-dynamodb");
-import {IndexItem} from "../Schema";
+import {IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
 
@@ -17,14 +17,14 @@ export class Table {
 	name: string;
 
 	constructor (name: string, models: Model[], options: TableOptionsOptional = {}) {
-		// Check name arguement
+		// Check name argument
 		if (!name) {
 			throw new CustomError.InvalidParameter("Name must be passed into table constructor.");
 		}
 		if (typeof name !== "string") {
 			throw new CustomError.InvalidParameterType("Name passed into table constructor should be of type string.");
 		}
-		// Check model arguement
+		// Check model argument
 		if (!models) {
 			throw new CustomError.InvalidParameter("Models must be passed into table constructor.");
 		}
@@ -48,57 +48,44 @@ export class Table {
 		});
 
 		// Methods
-		this[internalProperties].getIndexes = async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> => {
-			return (await Promise.all(this[internalProperties].models.map((model) => model.Model[internalProperties].getIndexes(this)))).reduce((result, indexes) => {
-				Object.entries(indexes).forEach((entry) => {
-					const [key, value] = entry;
-					result[key] = result[key] ? utils.unique_array_elements([...result[key], ...value as any]) : value;
+		this[internalProperties].getIndexes = async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
+			return (await Promise.all(this[internalProperties].models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model[internalProperties].getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
+				Object.entries(indexes).forEach(([key, value]) => {
+					if (key === "TableIndex") {
+						result[key] = value as TableIndex;
+					} else {
+						result[key] = result[key] ? utils.unique_array_elements([...result[key], ...(value as IndexItem[])]) : value;
+					}
 				});
 
 				return result;
 			}, {});
 		};
-		this[internalProperties].convertObjectToKey = (key: InputKey): KeyObject => {
-			let keyObject: KeyObject;
-			const hashKey = this[internalProperties].getHashKey();
-			if (typeof key === "object") {
-				const rangeKey = this[internalProperties].getRangeKey();
-				keyObject = {
-					[hashKey]: key[hashKey]
-				};
-				if (rangeKey && typeof key[rangeKey] !== "undefined" && key[rangeKey] !== null) {
-					keyObject[rangeKey] = key[rangeKey];
-				}
-			} else {
-				keyObject = {
-					[hashKey]: key
-				};
-			}
-			return keyObject;
-		};
 		// This function returns the best matched model for the given object input
 		this[internalProperties].modelForObject = async (object: ObjectType): Promise<Model<ItemCarrier>> => {
-			const modelCorrectnessScores: number[] = this[internalProperties].models.map((model) => model.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true})).map((obj) => Object.values(obj).map((obj) => (obj as any)?.matchCorrectness || 0)).map((array) => Math.min(...array));
-			const highestModelCorrectnessScoreIndex: number = modelCorrectnessScores.indexOf(Math.max(...modelCorrectnessScores));
+			const models = this[internalProperties].models;
+			const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model[internalProperties].schemaCorrectnessScores(object)));
+			const highestModelSchemaCorrectnessScore = Math.max(...modelSchemaCorrectnessScores);
+			const bestModelIndex = modelSchemaCorrectnessScores.indexOf(highestModelSchemaCorrectnessScore);
 
-			return this[internalProperties].models[highestModelCorrectnessScoreIndex];
+			return models[bestModelIndex];
 		};
 		this[internalProperties].getCreateTableAttributeParams = async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
 			// TODO: implement this
 			return this[internalProperties].models[0].Model[internalProperties].getCreateTableAttributeParams(this);
 		};
 		this[internalProperties].getHashKey = (): string => {
-			return this[internalProperties].models[0].getHashKey();
+			return this[internalProperties].models[0].Model[internalProperties].getHashKey();
 		};
 		this[internalProperties].getRangeKey = (): string | void => {
-			return this[internalProperties].models[0].getRangeKey();
+			return this[internalProperties].models[0].Model[internalProperties].getRangeKey();
 		};
 
 		if (!utils.all_elements_match(models.map((model: any) => model.Model[internalProperties].getHashKey()))) {
-			throw new CustomError.InvalidParameter("hashKey's for all models's must match.");
+			throw new CustomError.InvalidParameter("hashKey's for all models must match.");
 		}
 		if (!utils.all_elements_match(models.map((model: any) => model.Model[internalProperties].getRangeKey()).filter((key) => Boolean(key)))) {
-			throw new CustomError.InvalidParameter("rangeKey's for all models's must match.");
+			throw new CustomError.InvalidParameter("rangeKey's for all models must match.");
 		}
 		if (options.expires) {
 			if (typeof options.expires === "number") {
@@ -123,7 +110,7 @@ export class Table {
 		}
 		this[internalProperties].models = models.map((model: any) => {
 			if (model.Model[internalProperties]._table) {
-				throw new CustomError.InvalidParameter(`Model ${model[internalProperties].name} has already been assigned to a table.`);
+				throw new CustomError.InvalidParameter(`Model ${model.Model.name} has already been assigned to a table.`);
 			}
 
 			model.Model[internalProperties]._table = this;

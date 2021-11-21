@@ -106,7 +106,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 		});
 
 		// Methods
-		this[internalProperties].getIndexes = async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]}> => {
+		this[internalProperties].getIndexes = async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
 			return (await Promise.all(this[internalProperties].schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
 				Object.entries(indexes).forEach(([key, value]) => {
 					if (key === "TableIndex") {
@@ -137,9 +137,13 @@ export class Model<T extends ItemCarrier = AnyItem> {
 			}
 			return keyObject;
 		};
+		this[internalProperties].schemaCorrectnessScores = (object: ObjectType): number[] => {
+			const schemaCorrectnessScores: number[] = this[internalProperties].schemas.map((schema) => schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true})).map((obj) => Object.values(obj).map((obj) => (obj as any)?.matchCorrectness || 0)).map((array) => Math.min(...array));
+			return schemaCorrectnessScores;
+		};
 		// This function returns the best matched schema for the given object input
 		this[internalProperties].schemaForObject = async (object: ObjectType): Promise<Schema> => {
-			const schemaCorrectnessScores: number[] = this[internalProperties].schemas.map((schema) => schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true})).map((obj) => Object.values(obj).map((obj) => (obj as any)?.matchCorrectness || 0)).map((array) => Math.min(...array));
+			const schemaCorrectnessScores = this[internalProperties].schemaCorrectnessScores(object);
 			const highestSchemaCorrectnessScoreIndex: number = schemaCorrectnessScores.indexOf(Math.max(...schemaCorrectnessScores));
 
 			return this[internalProperties].schemas[highestSchemaCorrectnessScoreIndex];
