@@ -55,23 +55,23 @@ module.exports = {
 					"items": [
 						{
 							"label": "Sponsor Dynamoose",
-							"href": "https://github.com/dynamoose/dynamoose/blob/master/SPONSOR.md"
+							"href": "https://github.com/dynamoose/dynamoose/blob/main/SPONSOR.md"
 						},
 						{
 							"label": "Contributing Guidelines",
-							"href": "https://github.com/dynamoose/dynamoose/blob/master/CONTRIBUTING.md"
+							"href": "https://github.com/dynamoose/dynamoose/blob/main/CONTRIBUTING.md"
 						},
 						{
 							"label": "Code of Conduct",
-							"href": "https://github.com/dynamoose/dynamoose/blob/master/CODE_OF_CONDUCT.md"
+							"href": "https://github.com/dynamoose/dynamoose/blob/main/CODE_OF_CONDUCT.md"
 						},
 						{
 							"label": "Changelog",
-							"href": "https://github.com/dynamoose/dynamoose/blob/master/CHANGELOG.md"
+							"href": "https://github.com/dynamoose/dynamoose/blob/main/CHANGELOG.md"
 						},
 						{
 							"label": "License",
-							"href": "https://github.com/dynamoose/dynamoose/blob/master/LICENSE"
+							"href": "https://github.com/dynamoose/dynamoose/blob/main/LICENSE"
 						}
 					]
 				}
@@ -89,7 +89,7 @@ module.exports = {
 				"docs": {
 					"routeBasePath": "/",
 					"sidebarPath": require.resolve("./sidebars.js"),
-					"editUrl": "https://github.com/dynamoose/dynamoose/edit/master/docs",
+					"editUrl": "https://github.com/dynamoose/dynamoose/edit/main/docs",
 					"remarkPlugins": [
 						require("./src/plugins/remark-npm2yarn")
 					]
