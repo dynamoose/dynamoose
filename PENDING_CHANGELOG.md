@@ -55,6 +55,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 ### Documentation
 
 - Migrated documentation from Vercel to [Cloudflare Pages](https://pages.cloudflare.com/) for PR & branch builds
+- Dynamoose's website now respects your OS color theme preference instead of always defaulting to light mode.
 
 ### Other
 
