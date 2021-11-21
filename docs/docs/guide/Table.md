@@ -113,6 +113,30 @@ const DynamoTable = new dynamoose.Table("Table", [Model], {"prefix": "MyApp_"});
 console.log(DynamoTable.name); // MyApp_Table
 ```
 
+## table.hashKey
+
+This property is a string that represents the table's hashKey.
+
+This property is unable to be set.
+
+```js
+const DynamoTable = new dynamoose.Table("Table", [Model]);
+
+console.log(DynamoTable.hashKey); // id
+```
+
+## table.rangeKey
+
+This property is a string that represents the table's rangeKey. It is possible this value will be `undefined` if your table doesn't have a range key.
+
+This property is unable to be set.
+
+```js
+const DynamoTable = new dynamoose.Table("Table", [Model]);
+
+console.log(DynamoTable.rangeKey); // data
+```
+
 ## table.create([config][, callback])
 
 This method can be used to manually create the given table. You can also pass a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format.
