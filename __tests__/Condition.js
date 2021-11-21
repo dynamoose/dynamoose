@@ -53,11 +53,10 @@ describe("Condition", () => {
 				"input": () => new Condition({"id": {"lt": "5"}}),
 				"output": {"ConditionExpression": "#a0 < :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
 			},
-			// TODO: fix the test below
-			// {
-			// 	"input": () => new Condition({"id": {"ne": "5"}}),
-			// 	"output": {"ConditionExpression": "#a0 <> :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
-			// },
+			{
+				"input": () => new Condition({"id": {"ne": "5"}}),
+				"output": {"ConditionExpression": "#a0 <> :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
+			},
 			{
 				"input": () => new Condition({"id": {"random": "5"}}),
 				"error": "The type: random is invalid."

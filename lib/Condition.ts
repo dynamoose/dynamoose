@@ -26,6 +26,7 @@ interface ConditionComparisonType {
 }
 enum ConditionComparisonComparatorName {
 	equals = "eq",
+	notEquals = "ne",
 	lessThan = "lt",
 	lessThanEquals = "le",
 	greaterThan = "gt",
@@ -53,6 +54,7 @@ enum ConditionComparisonComparatorDynamoName {
 }
 const types: ConditionComparisonType[] = [
 	{"name": ConditionComparisonComparatorName.equals, "typeName": ConditionComparisonComparatorDynamoName.equals, "not": ConditionComparisonComparatorDynamoName.notEquals},
+	{"name": ConditionComparisonComparatorName.notEquals, "typeName": ConditionComparisonComparatorDynamoName.notEquals, "not": ConditionComparisonComparatorDynamoName.equals},
 	{"name": ConditionComparisonComparatorName.lessThan, "typeName": ConditionComparisonComparatorDynamoName.lessThan, "not": ConditionComparisonComparatorDynamoName.greaterThanEquals},
 	{"name": ConditionComparisonComparatorName.lessThanEquals, "typeName": ConditionComparisonComparatorDynamoName.lessThanEquals, "not": ConditionComparisonComparatorDynamoName.greaterThan},
 	{"name": ConditionComparisonComparatorName.greaterThan, "typeName": ConditionComparisonComparatorDynamoName.greaterThan, "not": ConditionComparisonComparatorDynamoName.lessThanEquals},
