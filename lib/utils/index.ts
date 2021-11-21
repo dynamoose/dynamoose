@@ -14,6 +14,8 @@ import importPackage from "./importPackage";
 import log from "./log";
 import find_best_index from "./find_best_index";
 import deep_copy from "./deep_copy";
+import childKey from "./childKey";
+import parentKey from "./parentKey";
 
 export = {
 	combine_objects,
@@ -31,5 +33,7 @@ export = {
 	importPackage,
 	log,
 	find_best_index,
-	deep_copy
+	deep_copy,
+	childKey,
+	parentKey
 };
