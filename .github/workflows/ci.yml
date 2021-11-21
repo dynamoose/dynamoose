@@ -45,12 +45,12 @@ jobs:
       - run: npm install
       - run: npm run build:sourcemap
       - name: Setup DynamoDB Local
-        uses: rrainn/dynamodb-action@v2
+        uses: rrainn/dynamodb-action@v2.0.0
       - name: Create coverage folder
         run: mkdir -p ./coverage
       - run: npm test
       - name: Coveralls
-        uses: coverallsapp/github-action@v1.1.3
+        uses: coverallsapp/github-action@1.1.3
         continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
     needs: [lint, test]
     steps:
       - name: Coveralls Finished
-        uses: coverallsapp/github-action@v1.1.3
+        uses: coverallsapp/github-action@1.1.3
         continue-on-error: true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
