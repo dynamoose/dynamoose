@@ -4,7 +4,7 @@
 
 This document houses information about the Dynamoose Security Policy.
 
-While reading this document, please remember that the [LICENSE](https://github.com/dynamoose/dynamoose/blob/master/LICENSE) takes priority over this document. For example, the fact that this software is provided as is without warranty of any kind, and in no event shall the authors be liable for any claim, etc.
+While reading this document, please remember that the [LICENSE](https://github.com/dynamoose/dynamoose/blob/main/LICENSE) takes priority over this document. For example, the fact that this software is provided as is without warranty of any kind, and in no event shall the authors be liable for any claim, etc.
 
 ## Supported Versions
 

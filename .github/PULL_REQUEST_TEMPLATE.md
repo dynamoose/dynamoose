@@ -67,6 +67,6 @@
 - [ ] I have searched through the GitHub pull requests to ensure this PR has not already been submitted
 - [ ] I have updated the Dynamoose documentation (if required) given the changes I made
 - [ ] I have added/updated the Dynamoose test cases (if required) given the changes I made
-- [ ] I agree that all changes made in this pull request may be distributed and are made available in accordance with the [Dynamoose license](https://github.com/dynamoose/dynamoose/blob/master/LICENSE)
+- [ ] I agree that all changes made in this pull request may be distributed and are made available in accordance with the [Dynamoose license](https://github.com/dynamoose/dynamoose/blob/main/LICENSE)
 - [ ] All of my commits and commit messages are detailed, explain what changes were made, and are easy to follow and understand
 - [ ] I have filled out all fields above
