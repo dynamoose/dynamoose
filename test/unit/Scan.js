@@ -52,12 +52,12 @@ describe("Scan", () => {
 		it("Should set pending key if string passed into scan function", () => {
 			const id = "id";
 			const scan = Model.scan(id);
-			expect(scan.settings.condition[internalProperties].settings.pending).to.eql({"key": id});
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": id});
 		});
 
 		it("Should set filters correctly for object passed into scan function", () => {
 			const scan = Model.scan({"name": {"eq": "Charlie"}, "id": {"le": 5}});
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
 		});
 
 		it("Should throw error if unknown comparison operator is passed in", () => {
@@ -527,9 +527,9 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct property", () => {
-			expect(Model.scan().settings.condition[internalProperties].settings.pending.not).to.be.undefined;
-			expect(Model.scan().not().settings.condition[internalProperties].settings.pending.not).to.be.true;
-			expect(Model.scan().not().not().settings.condition[internalProperties].settings.pending.not).to.be.false;
+			expect(Model.scan()[internalProperties].settings.condition[internalProperties].settings.pending.not).to.be.undefined;
+			expect(Model.scan().not()[internalProperties].settings.condition[internalProperties].settings.pending.not).to.be.true;
+			expect(Model.scan().not().not()[internalProperties].settings.condition[internalProperties].settings.pending.not).to.be.false;
 		});
 	});
 
@@ -543,9 +543,9 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct property", () => {
-			expect(Model.scan().settings.condition[internalProperties].settings.pending).to.eql({});
-			expect(Model.scan().where("id").settings.condition[internalProperties].settings.pending).to.eql({"key": "id"});
-			expect(Model.scan().where("id").where("name").settings.condition[internalProperties].settings.pending).to.eql({"key": "name"});
+			expect(Model.scan()[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expect(Model.scan().where("id")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "id"});
+			expect(Model.scan().where("id").where("name")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "name"});
 		});
 	});
 
@@ -559,9 +559,9 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct property", () => {
-			expect(Model.scan().settings.condition[internalProperties].settings.pending).to.eql({});
-			expect(Model.scan().filter("id").settings.condition[internalProperties].settings.pending).to.eql({"key": "id"});
-			expect(Model.scan().filter("id").filter("name").settings.condition[internalProperties].settings.pending).to.eql({"key": "name"});
+			expect(Model.scan()[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expect(Model.scan().filter("id")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "id"});
+			expect(Model.scan().filter("id").filter("name")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "name"});
 		});
 	});
 
@@ -576,12 +576,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").eq("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().eq("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
 		});
 	});
 
@@ -596,12 +596,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").exists();
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": undefined}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": undefined}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().exists();
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": undefined}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": undefined}}]);
 		});
 	});
 
@@ -616,12 +616,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").lt("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().lt("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 		});
 	});
 
@@ -636,12 +636,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").le("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().le("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 		});
 	});
 
@@ -656,12 +656,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").gt("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().gt("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
 		});
 	});
 
@@ -676,12 +676,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").ge("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().ge("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
 		});
 	});
 
@@ -696,7 +696,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").beginsWith("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -716,12 +716,12 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").contains("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
 		});
 
 		it("Should set correct settings on the scan object with not()", () => {
 			const scan = Model.scan().filter("id").not().contains("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
 		});
 	});
 
@@ -736,7 +736,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").in("test");
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "IN", "value": "test"}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "IN", "value": "test"}}]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -756,7 +756,7 @@ describe("Scan", () => {
 
 		it("Should set correct settings on the scan object", () => {
 			const scan = Model.scan().filter("id").between(1, 2);
-			expect(scan.settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
+			expect(scan[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
 		});
 
 		it("Should throw error with not()", () => {
@@ -772,7 +772,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().limit(5);
-			expect(scan.settings.limit).to.eql(5);
+			expect(scan[internalProperties].settings.limit).to.eql(5);
 		});
 
 		it("Should send correct request on scan.exec", async () => {
@@ -789,7 +789,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().startAt({"id": 5});
-			expect(scan.settings.startAt).to.eql({"id": 5});
+			expect(scan[internalProperties].settings.startAt).to.eql({"id": 5});
 		});
 
 		it("Should send correct request on scan.exec", async () => {
@@ -800,7 +800,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance if passing in DynamoDB object", () => {
 			const scan = Model.scan().startAt({"id": {"N": "5"}});
-			expect(scan.settings.startAt).to.eql({"id": {"N": "5"}});
+			expect(scan[internalProperties].settings.startAt).to.eql({"id": {"N": "5"}});
 		});
 
 		it("Should send correct request on scan.exec if passing in DynamoDB object", async () => {
@@ -817,7 +817,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().attributes(["id"]);
-			expect(scan.settings.attributes).to.eql(["id"]);
+			expect(scan[internalProperties].settings.attributes).to.eql(["id"]);
 		});
 
 		it("Should send correct request on scan.exec", async () => {
@@ -863,7 +863,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().parallel(5);
-			expect(scan.settings.parallel).to.eql(5);
+			expect(scan[internalProperties].settings.parallel).to.eql(5);
 		});
 
 		it("Should send correct request on scan.exec", async () => {
@@ -892,7 +892,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().count();
-			expect(scan.settings.count).to.be.true;
+			expect(scan[internalProperties].settings.count).to.be.true;
 		});
 
 		it("Should send correct request on scan.exec", async () => {
@@ -915,7 +915,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().consistent();
-			expect(scan.settings.consistent).to.be.true;
+			expect(scan[internalProperties].settings.consistent).to.be.true;
 		});
 
 		it("Should send correct request on scan.exec", async () => {
@@ -932,7 +932,7 @@ describe("Scan", () => {
 
 		it("Should set correct setting on scan instance", () => {
 			const scan = Model.scan().using("customIndex");
-			expect(scan.settings.index).to.eql("customIndex");
+			expect(scan[internalProperties].settings.index).to.eql("customIndex");
 		});
 
 		it("Should send correct request on scan.exec", async () => {
@@ -952,15 +952,15 @@ describe("Scan", () => {
 		});
 
 		it("Should set correct default options", () => {
-			expect(Model.scan().all().settings.all).to.eql({"delay": 0, "max": 0});
+			expect(Model.scan().all()[internalProperties].settings.all).to.eql({"delay": 0, "max": 0});
 		});
 
 		it("Should set correct option for delay", () => {
-			expect(Model.scan().all(5).settings.all).to.eql({"delay": 5, "max": 0});
+			expect(Model.scan().all(5)[internalProperties].settings.all).to.eql({"delay": 5, "max": 0});
 		});
 
 		it("Should set correct option for max", () => {
-			expect(Model.scan().all(0, 5).settings.all).to.eql({"delay": 0, "max": 5});
+			expect(Model.scan().all(0, 5)[internalProperties].settings.all).to.eql({"delay": 0, "max": 5});
 		});
 
 		it("Should handle delay correctly on scan.exec", async () => {
