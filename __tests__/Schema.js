@@ -21,6 +21,26 @@ describe("Schema", () => {
 		expect(() => new dynamoose.Schema({})).to.throw("Schema initalization parameter must not be an empty object.");
 	});
 
+	it("Should throw an error if invalid random type passed in", () => {
+		expect(() => new dynamoose.Schema({"id": "random"})).to.throw("Attribute id does not have a valid type.");
+	});
+
+	it("Should throw an error if any type passed in", () => {
+		expect(() => new dynamoose.Schema({"id": "any"})).to.throw("Attribute id does not have a valid type.");
+	});
+
+	it("Should throw an error if null type passed in", () => {
+		expect(() => new dynamoose.Schema({"id": "null"})).to.throw("Attribute id does not have a valid type.");
+	});
+
+	it("Should throw an error if ANY type passed in", () => {
+		expect(() => new dynamoose.Schema({"id": "ANY"})).to.throw("Attribute id does not have a valid type.");
+	});
+
+	it("Should throw an error if NULL type passed in", () => {
+		expect(() => new dynamoose.Schema({"id": "NULL"})).to.throw("Attribute id does not have a valid type.");
+	});
+
 	it("Shouldn't throw an error if object passed in", () => {
 		expect(() => new dynamoose.Schema({"id": String})).to.not.throw();
 	});
@@ -195,9 +215,7 @@ describe("Schema", () => {
 					"favoritePictures": {"type": Set, "schema": [Buffer]},
 					"favoriteTypes": {"type": Set, "schema": [Boolean]},
 					"favoriteObjects": {"type": Set, "schema": [Object]},
-					"favoriteFriends": {"type": Set, "schema": [Array]},
-					"emptyItem": Symbol,
-					"emptyItems": {"type": Set, "schema": [Symbol]}
+					"favoriteFriends": {"type": Set, "schema": [Array]}
 				}
 			},
 			{

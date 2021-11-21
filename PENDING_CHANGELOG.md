@@ -36,6 +36,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 	- `dynamoose.UNDEFINED` is now `dynamoose.type.UNDEFINED`.
 	- `dynamoose.THIS` is now `dynamoose.type.THIS`.
 	- `dynamoose.NULL` is now `dynamoose.type.NULL`.
+- Stricter validation of Schema types. If you pass in an invalid schema attribute type, it will now throw an error upon initialization.
+	- For example, `new dynamoose.Schema({"id": "random"})` will now throw an error.
 - Node.js >=v10 now required.
 
 ### Major New Features

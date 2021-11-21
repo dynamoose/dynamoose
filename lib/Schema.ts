@@ -627,6 +627,18 @@ export class Schema {
 				throw new CustomError.InvalidParameter("Index must be at root object and not nested in object or array.");
 			}
 		});
+
+		this.attributes().forEach((key) => {
+			try {
+				this.getAttributeType(key);
+			} catch (e) {
+				if (e.message.includes("is not allowed to be a set")) {
+
+				} else {
+					throw new CustomError.InvalidParameter(`Attribute ${key} does not have a valid type.`);
+				}
+			}
+		});
 	}
 }
 
@@ -853,6 +865,10 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 			type = "null";
 		} else if (isAnyType) {
 			type = "any";
+		} else if ((typeVal as string).toLowerCase() === "null") {
+			throw new Error("Please use dynamoose.type.NULL instead of \"null\" for your type attribute.");
+		} else if ((typeVal as string).toLowerCase() === "any") {
+			throw new Error("Please use dynamoose.type.ANY instead of \"any\" for your type attribute.");
 		} else {
 			type = typeVal as string;
 		}
