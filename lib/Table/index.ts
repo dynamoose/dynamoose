@@ -198,10 +198,10 @@ export class Table {
 		// }, {});
 	}
 
-	get hashKey(): string {
+	get hashKey (): string {
 		return this[internalProperties].getHashKey();
 	}
-	get rangeKey(): string | undefined {
+	get rangeKey (): string | undefined {
 		return this[internalProperties].getRangeKey();
 	}
 
