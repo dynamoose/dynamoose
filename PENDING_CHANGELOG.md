@@ -42,6 +42,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### General
 
+- Added `dynamoose.type.ANY` type to allow for schema attributes to be any type. This also works for the `schema` setting on Schema properties.
 - Added `table.create()` method to create a table manually.
 - Added `table.name` property to be able to access table name.
 - Added `table.hashKey` property to be able to access table's hash key.

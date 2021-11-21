@@ -132,6 +132,38 @@ const User = dynamoose.model("User", {"id": String, "parent": dynamoose.type.NUL
 This property might be used for other things in the future.
 :::
 
+## dynamoose.type.ANY
+
+Setting a schema type attribute to this will allow it to be any type.
+
+```js
+const dynamoose = require("dynamoose");
+
+const User = dynamoose.model("User", {"id": String, "value": dynamoose.type.ANY});
+```
+
+Keep in mind the above code won't allow for nested attributes (attributes within objects or arrays). You must use the [`schema`](Schema#schema-object--array) attribute to define the nested time of the attribute.
+
+You can also set the [`schema`](Schema#schema-object--array) attribute to this to allow the schema to be any type.
+
+```js
+const dynamoose = require("dynamoose");
+
+const User = dynamoose.model("User", {"id": String, "value": {"type": Object, "schema": dynamoose.type.ANY}});
+```
+
+If you want to allow for the value to be anything as well as all nested attributes to be anything, you can use the following code.
+
+```js
+const dynamoose = require("dynamoose");
+
+const User = dynamoose.model("User", {"id": String, "value": {"type": dynamoose.type.ANY, "schema": dynamoose.type.ANY}});
+```
+
+:::note
+This property might be used for other things in the future.
+:::
+
 ## dynamoose.type.CONSTANT(value)
 
 Setting a schema attribute to this type will act as a constant type based on the value you pass in.

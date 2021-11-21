@@ -36,9 +36,9 @@ export interface DynamoDBTypeResult {
 interface DynamoDBTypeCreationObject {
 	name: string;
 	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
-	dynamodbType: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
+	dynamodbType?: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
 	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
-	jsType: any;
+	jsType?: any;
 	nestedType?: boolean;
 	customType?: {functions: (typeSettings: AttributeDefinitionTypeSettings) => {toDynamo?: (val: ValueType) => ValueType; fromDynamo?: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
 }
@@ -47,9 +47,9 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 	// TODO: since the code below will always be the exact same as DynamoDBTypeCreationObject we should see if there is a way to make it more DRY and not repeat it
 	name: string;
 	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
-	dynamodbType: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
+	dynamodbType?: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
 	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
-	jsType: any;
+	jsType?: any;
 	nestedType?: boolean;
 	customType?: {functions: (typeSettings?: AttributeDefinitionTypeSettings) => {toDynamo: (val: ValueType) => ValueType; fromDynamo: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
 
@@ -141,6 +141,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 	const stringType = new DynamoDBType({"name": "String", "dynamodbType": "S", "set": true, "jsType": "string"});
 	const booleanType = new DynamoDBType({"name": "Boolean", "dynamodbType": "BOOL", "jsType": "boolean"});
 	return [
+		new DynamoDBType({"name": "Any", "jsType": {"func": (): boolean => true}}),
 		new DynamoDBType({"name": "Null", "dynamodbType": "NULL", "set": false, "jsType": {"func": (val): boolean => val === null}}),
 		new DynamoDBType({"name": "Buffer", "dynamodbType": "B", "set": true, "jsType": Buffer}),
 		booleanType,
@@ -824,6 +825,7 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 		let type: string;
 		const isThisType = typeVal as any === Internal.Public.this;
 		const isNullType = typeVal as any === Internal.Public.null;
+		const isAnyType = typeVal as any === Internal.Public.any;
 		if (typeof typeVal === "function" || isThisType) {
 			if ((typeVal as any).prototype instanceof Item || isThisType) {
 				type = "model";
@@ -849,6 +851,8 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 			}
 		} else if (isNullType) {
 			type = "null";
+		} else if (isAnyType) {
+			type = "any";
 		} else {
 			type = typeVal as string;
 		}

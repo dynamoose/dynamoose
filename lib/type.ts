@@ -4,6 +4,7 @@ export = {
 	"UNDEFINED": Internal.Public.undefined,
 	"THIS": Internal.Public.this,
 	"NULL": Internal.Public.null,
+	"ANY": Internal.Public.any,
 	"CONSTANT": (value: string | number | boolean) => ({
 		"value": "Constant",
 		"settings": {
