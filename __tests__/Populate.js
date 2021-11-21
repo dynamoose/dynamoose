@@ -1,4 +1,4 @@
-const {expect: expectChai} = require("chai");
+const {"expect": expectChai} = require("chai");
 const Populate = require("../dist/Populate");
 const dynamoose = require("../dist");
 const aws = require("../dist/aws");
