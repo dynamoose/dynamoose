@@ -3,6 +3,7 @@ const dynamoose = require("../../dist");
 const Internal = require("../../dist/Internal");
 const utils = require("../../dist/utils");
 const {internalProperties} = Internal.General;
+const util = require("util");
 
 describe("Table", () => {
 	beforeEach(() => {
@@ -10,6 +11,7 @@ describe("Table", () => {
 	});
 	afterEach(() => {
 		dynamoose.Table.defaults.set({});
+		dynamoose.aws.ddb.revert();
 	});
 
 	it("Should be a function", () => {
@@ -43,6 +45,24 @@ describe("Table", () => {
 
 		it("Should throw an error if empty array passed into second arguemnt", () => {
 			expect(() => new dynamoose.Table("Table", [])).to.throw("Models passed into table constructor should be an array of models.");
+		});
+
+		it("Should throw an error if model passed in is already assigned to table", () => {
+			const model = dynamoose.model("User", {"id": String});
+			new dynamoose.Table("Table", [model]);
+			expect(() => new dynamoose.Table("Table", [model])).to.throw("Model User has already been assigned to a table.");
+		});
+
+		it("Should throw an error if models passed in with different hashKey's", () => {
+			const model = dynamoose.model("User", {"id": String});
+			const model2 = dynamoose.model("Movie", {"_id": String});
+			expect(() => new dynamoose.Table("Table", [model, model2])).to.throw("hashKey's for all models must match.");
+		});
+
+		it("Should throw an error if models passed in with different rangeKey's", () => {
+			const model = dynamoose.model("User", {"id": String, "name": {"type": String, "rangeKey": true}});
+			const model2 = dynamoose.model("Movie", {"id": String, "date": {"type": Date, "rangeKey": true}});
+			expect(() => new dynamoose.Table("Table", [model, model2])).to.throw("rangeKey's for all models must match.");
 		});
 
 		it("Should succeed if constructing table correctly", () => {
@@ -1050,42 +1070,222 @@ describe("Table", () => {
 			expect(table.create).to.be.a("function");
 		});
 
-		it("Should return correct result", async () => {
-			const model = dynamoose.model("User", {"id": String});
-			const table = new dynamoose.Table("User", [model]);
-			expect(await table.create({"return": "request"})).to.eql({
-				"TableName": "User",
-				"ProvisionedThroughput": {
-					"ReadCapacityUnits": 1,
-					"WriteCapacityUnits": 1
-				},
-				"AttributeDefinitions": [
-					{
-						"AttributeName": "id",
-						"AttributeType": "S"
-					}
-				],
-				"KeySchema": [
-					{
-						"AttributeName": "id",
-						"KeyType": "HASH"
-					}
-				]
+		const functionCallTypes = [
+			{"name": "Promise", "func": (table) => table.create},
+			{"name": "Callback", "func": (table) => util.promisify(table.create)}
+		];
+		functionCallTypes.forEach((callType) => {
+			describe(callType.name, () => {
+				it("Should return correct result", async () => {
+					const model = dynamoose.model("User", {"id": String});
+					const table = new dynamoose.Table("User", [model]);
+					expect(await callType.func(table).bind(table)({"return": "request"})).to.eql({
+						"TableName": "User",
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						},
+						"AttributeDefinitions": [
+							{
+								"AttributeName": "id",
+								"AttributeType": "S"
+							}
+						],
+						"KeySchema": [
+							{
+								"AttributeName": "id",
+								"KeyType": "HASH"
+							}
+						]
+					});
+				});
+
+				it("Should return correct result with no settings passed in", async () => {
+					const model = dynamoose.model("User", {"id": String});
+					const table = new dynamoose.Table("User", [model]);
+
+					let createTableParams;
+					dynamoose.aws.ddb.set({
+						"createTable": (params) => {
+							createTableParams = params;
+							return params;
+						}
+					});
+					await callType.func(table).bind(table)();
+					expect(createTableParams).to.eql({
+						"TableName": "User",
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						},
+						"AttributeDefinitions": [
+							{
+								"AttributeName": "id",
+								"AttributeType": "S"
+							}
+						],
+						"KeySchema": [
+							{
+								"AttributeName": "id",
+								"KeyType": "HASH"
+							}
+						]
+					});
+				});
+
+				it("Should reject if has multiple types for hashKey", () => {
+					const model = dynamoose.model("User", {"id": [String, Number]});
+					const table = new dynamoose.Table("User", [model]);
+
+					return expect(callType.func(table).bind(table)({"return": "request"})).to.eventually.rejectedWith("You can not have multiple types for attribute definition: id.");
+				});
+
+				it("Should reject if has multiple types for rangeKey", () => {
+					const model = dynamoose.model("User", {"id": String, "rangeKey": {"type": [String, Number], "rangeKey": true}});
+					const table = new dynamoose.Table("User", [model]);
+
+					return expect(callType.func(table).bind(table)({"return": "request"})).to.eventually.rejectedWith("You can not have multiple types for attribute definition: rangeKey.");
+				});
 			});
 		});
+	});
 
-		it("Should reject if has multiple types for hashKey", () => {
-			const model = dynamoose.model("User", {"id": [String, Number]});
-			const table = new dynamoose.Table("User", [model]);
+	describe("modelForObject", () => {
+		it("Should return correct model", async () => {
+			const model = dynamoose.model("User", {"id": String, "name": String});
+			const model2 = dynamoose.model("User2", {"id": String, "data": String});
+			const table = new dynamoose.Table("Table", [model, model2]);
 
-			return expect(table.create({"return": "request"})).to.eventually.rejectedWith("You can not have multiple types for attribute definition: id.");
+			expect(await table[internalProperties].modelForObject({"id": "1", "name": "John"})).to.eql(model);
+			expect(await table[internalProperties].modelForObject({"id": "1", "data": "John"})).to.eql(model2);
 		});
 
-		it("Should reject if has multiple types for rangeKey", () => {
-			const model = dynamoose.model("User", {"id": String, "rangeKey": {"type": [String, Number], "rangeKey": true}});
-			const table = new dynamoose.Table("User", [model]);
+		it("Should return correct model for sub-schemas", async () => {
+			const model = dynamoose.model("User", [{"id": String, "name": String}, {"id": String, "data": String, "item": String}]);
+			const model2 = dynamoose.model("User2", {"id": String, "data": String});
+			const table = new dynamoose.Table("Table", [model, model2]);
 
-			return expect(table.create({"return": "request"})).to.eventually.rejectedWith("You can not have multiple types for attribute definition: rangeKey.");
+			expect(await table[internalProperties].modelForObject({"id": "1", "name": "John"})).to.eql(model);
+			expect(await table[internalProperties].modelForObject({"id": "1", "data": "John"})).to.eql(model);
+			expect(await table[internalProperties].modelForObject({"id": "1", "data": "John", "item": "Smith"})).to.eql(model);
+		});
+	});
+
+	describe("getIndexes", () => {
+		it("Should return only 1 index if duplicates exist across models", async () => {
+			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "index": {"global": true}}});
+			const model2 = dynamoose.model("User2", {"id": String, "data": {"type": String, "index": {"global": true}}});
+			const table = new dynamoose.Table("User", [model, model2]);
+
+			expect(await table[internalProperties].getIndexes()).to.eql({
+				"GlobalSecondaryIndexes": [
+					{
+						"IndexName": "dataGlobalIndex",
+						"KeySchema": [
+							{
+								"AttributeName": "data",
+								"KeyType": "HASH"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					}
+				],
+				"TableIndex": {
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					]
+				}
+			});
+			expect(await table[internalProperties].getIndexes()).to.eql(await model.Model[internalProperties].getIndexes());
+			expect(await table[internalProperties].getIndexes()).to.eql(await model2.Model[internalProperties].getIndexes());
+		});
+
+		it("Should return all indexes from all models", async () => {
+			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "index": {"global": true}}});
+			const model2 = dynamoose.model("User2", {"id": String, "data2": {"type": String, "index": {"global": true}}});
+			const table = new dynamoose.Table("User", [model, model2]);
+
+			expect(await table[internalProperties].getIndexes()).to.eql({
+				"GlobalSecondaryIndexes": [
+					{
+						"IndexName": "dataGlobalIndex",
+						"KeySchema": [
+							{
+								"AttributeName": "data",
+								"KeyType": "HASH"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					},
+					{
+						"IndexName": "data2GlobalIndex",
+						"KeySchema": [
+							{
+								"AttributeName": "data2",
+								"KeyType": "HASH"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					}
+				],
+				"TableIndex": {
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					]
+				}
+			});
+		});
+	});
+
+	describe("getHashKey", () => {
+		it("Should return first attribute if no hash key defined", () => {
+			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": Number}));
+			const table = new dynamoose.Table("User", [model]);
+			expect(table[internalProperties].getHashKey()).to.eql("id");
+		});
+
+		it("Should return hash key if set to true", () => {
+			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": {"type": Number, "hashKey": true}}));
+			const table = new dynamoose.Table("User", [model]);
+			expect(table[internalProperties].getHashKey()).to.eql("age");
+		});
+	});
+
+	describe("getRangeKey", () => {
+		it("Should return undefined if no range key defined", () => {
+			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": Number}));
+			const table = new dynamoose.Table("User", [model]);
+			expect(table[internalProperties].getRangeKey()).to.eql(undefined);
+		});
+
+		it("Should return range key if set to true", () => {
+			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": {"type": Number, "rangeKey": true}}));
+			const table = new dynamoose.Table("User", [model]);
+			expect(table[internalProperties].getRangeKey()).to.eql("age");
 		});
 	});
 });
