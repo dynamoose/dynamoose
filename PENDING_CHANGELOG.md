@@ -31,6 +31,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 - `dynamoose.logger` is now an async function instead of an object. For example, `dynamoose.logger.status()` is now `(await dynamoose.logger()).status()`
 	- You must also now install the `dynamoose-logger` package in order to use `dynamoose.logger()`, otherwise an error will be thrown.
 - Renaming `seperator` to `separator` in Combine type settings to fix typo.
+- Renaming `miliseconds` to `milliseconds` in Date type settings to fix typo.
 - Migrate properties to new `dynamoose.type` object
 	- `dynamoose.UNDEFINED` is now `dynamoose.type.UNDEFINED`
 	- `dynamoose.THIS` is now `dynamoose.type.THIS`

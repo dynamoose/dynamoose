@@ -950,8 +950,8 @@ describe("Schema", () => {
 			expect(functions.fromDynamo(1582246653000)).to.eql(new Date(1582246653000));
 		});
 
-		it("Should have correct custom type for date with custom storage settings as miliseconds", () => {
-			const functions = new dynamoose.Schema({"id": {"type": {"value": Date, "settings": {"storage": "miliseconds"}}}}).getAttributeTypeDetails("id").customType.functions;
+		it("Should have correct custom type for date with custom storage settings as milliseconds", () => {
+			const functions = new dynamoose.Schema({"id": {"type": {"value": Date, "settings": {"storage": "milliseconds"}}}}).getAttributeTypeDetails("id").customType.functions;
 			expect(functions.toDynamo).to.exist;
 			expect(functions.fromDynamo).to.exist;
 			expect(functions.toDynamo(new Date(1582246653000))).to.eql(1582246653000);

@@ -246,7 +246,7 @@ interface IndexDefinition {
 	throughput?: "ON_DEMAND" | number | {read: number; write: number};
 }
 interface AttributeDefinitionTypeSettings {
-	storage?: "miliseconds" | "seconds";
+	storage?: "milliseconds" | "seconds";
 	model?: ModelType<Item>;
 	attributes?: string[];
 	separator?: string;
