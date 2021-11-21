@@ -77,7 +77,7 @@ export class Table {
 		this[internalProperties].getHashKey = (): string => {
 			return this[internalProperties].models[0].Model[internalProperties].getHashKey();
 		};
-		this[internalProperties].getRangeKey = (): string | void => {
+		this[internalProperties].getRangeKey = (): string | undefined => {
 			return this[internalProperties].models[0].Model[internalProperties].getRangeKey();
 		};
 
@@ -196,6 +196,13 @@ export class Table {
 
 		// 	return accumulator;
 		// }, {});
+	}
+
+	get hashKey (): string {
+		return this[internalProperties].getHashKey();
+	}
+	get rangeKey (): string | undefined {
+		return this[internalProperties].getRangeKey();
 	}
 
 	create (): Promise<void>

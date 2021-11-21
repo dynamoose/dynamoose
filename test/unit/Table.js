@@ -1063,6 +1063,28 @@ describe("Table", () => {
 		});
 	});
 
+	describe("table.hashKey", () => {
+		it("Should return correct value", () => {
+			const model = dynamoose.model("User", {"id": String});
+			const table = new dynamoose.Table("User", [model]);
+			expect(table.hashKey).to.eql("id");
+		});
+	});
+
+	describe("table.rangeKey", () => {
+		it("Should return undefined if doesn't exist", () => {
+			const model = dynamoose.model("User", {"id": String});
+			const table = new dynamoose.Table("User", [model]);
+			expect(table.rangeKey).to.be.undefined;
+		});
+
+		it("Should return correct value", () => {
+			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "rangeKey": true}});
+			const table = new dynamoose.Table("User", [model]);
+			expect(table.rangeKey).to.eql("data");
+		});
+	});
+
 	describe("table.create()", () => {
 		it("Should be a function", () => {
 			const model = dynamoose.model("User", {"id": String});
