@@ -17,6 +17,7 @@ module.exports = {
 			"items": [
 				"guide/Schema",
 				"guide/Model",
+				"guide/Table",
 				"guide/Item",
 				"guide/Condition",
 				"guide/Query",
@@ -38,7 +39,7 @@ module.exports = {
 			"items": [
 				{
 					"type": "link",
-					"label": "",
+					"label": "Dynobase",
 					"href": "https://dynobase.dev/?ref=dynamoose"
 				}
 			]

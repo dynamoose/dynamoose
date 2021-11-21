@@ -10,6 +10,7 @@ const shouldFailWithNumberAsName = dynamoose.model(1);
 const shouldFailWithBooleanAsName = dynamoose.model(true);
 
 const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
+const shouldSucceedWithOnlyNameAndSchemaObject = dynamoose.model("User", {"id": String});
 
 const model = dynamoose.model("User", {"id": Number});
 
@@ -38,10 +39,6 @@ const shouldPassGetWithNumberAsKey = model.get(1);
 
 const shouldPassUpdateWithStringAsKey = model.update("id", {"value": "hello world"});
 const shouldPassUpdateWithNumberAsKey = model.update(1, {"value": "hello world"});
-
-const shouldSucceedWithWaitForActiveAsObject = dynamoose.model("User", {"id": String}, {"waitForActive": {"enabled": true}});
-const shouldSucceedWithWaitForActiveSetToFalse = dynamoose.model("User", {"id": String}, {"waitForActive": false});
-const shouldSucceedWithWaitForActiveSetToTrue = dynamoose.model("User", {"id": String}, {"waitForActive": true});
 
 // @ts-expect-error
 const shouldFailWithInvalidTransaction = model.transaction.notValid();
