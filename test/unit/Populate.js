@@ -13,7 +13,7 @@ describe("Populate", () => {
 
 	let User;
 	beforeEach(() => {
-		User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
+		User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.type.THIS});
 		new dynamoose.Table("User", [User], {"create": false, "waitForActive": false});
 	});
 	afterEach(() => {
@@ -35,7 +35,7 @@ describe("Populate", () => {
 						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": {"id": 3, "name": "Evan"}}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}]},
 						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": "*"}},
 						{"input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}},
-						{"schema": {"id": Number, "name": String, "parent": [dynamoose.THIS, String]}, "input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
+						{"schema": {"id": Number, "name": String, "parent": [dynamoose.type.THIS, String]}, "input": {"id": 2, "name": "Tim", "parent": 1}, "output": {"id": 2, "name": "Tim", "parent": {"id": 1, "name": "Bob", "parent": 3}}, "items": [{"id": 1, "name": "Bob", "parent": 3}, {"id": 3, "name": "Evan"}], "settings": {"properties": ["*"]}}
 					]
 				},
 				{

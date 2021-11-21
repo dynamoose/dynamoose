@@ -90,7 +90,7 @@ dynamoose.aws.converter.revert();
 
 For Dynamoose logging information refer to the [logging](Logging) documentation.
 
-## dynamoose.UNDEFINED
+## dynamoose.type.UNDEFINED
 
 Setting an attribute value to this will cause it to bypass the `default` value, and set it to `undefined` in the database.
 
@@ -98,36 +98,56 @@ Setting an attribute value to this will cause it to bypass the `default` value, 
 const dynamoose = require("dynamoose");
 
 const User = dynamoose.model("User", {"id": String, "name": {"type": String, "default": "Bob"}});
-const user = new User({"id": 1, "name": dynamoose.UNDEFINED});
+const user = new User({"id": 1, "name": dynamoose.type.UNDEFINED});
 await user.save();
 // {"id": 1}
 // will be saved to the database (notice the `name` property is undefined and did not use the `default` property)
 ```
 
-## dynamoose.THIS
+## dynamoose.type.THIS
 
 Setting a schema attribute to this will cause it to reference itself for populating objects.
 
 ```js
 const dynamoose = require("dynamoose");
 
-const User = dynamoose.model("User", {"id": String, "parent": dynamoose.THIS});
+const User = dynamoose.model("User", {"id": String, "parent": dynamoose.type.THIS});
 ```
 
 :::note
 This property might be used for other things in the future.
 :::
 
-## dynamoose.NULL
+## dynamoose.type.NULL
 
 Setting a schema attribute to this will cause it to use the DynamoDB `null` type.
 
 ```js
 const dynamoose = require("dynamoose");
 
-const User = dynamoose.model("User", {"id": String, "parent": dynamoose.NULL});
+const User = dynamoose.model("User", {"id": String, "parent": dynamoose.type.NULL});
 ```
 
 :::note
 This property might be used for other things in the future.
 :::
+
+## dynamoose.type.CONSTANT(value)
+
+Setting a schema attribute to this type will act as a constant type based on the value you pass in.
+
+```js
+const dynamoose = require("dynamoose");
+
+const User = dynamoose.model("User", {"id": String, "type": dynamoose.type.CONSTANT("user")});
+```
+
+## dynamoose.type.COMBINE(attributes[, separator])
+
+Setting a schema attribute to this type will act as a combine type based on the attribute array you pass in along with the separator string.
+
+```js
+const dynamoose = require("dynamoose");
+
+const User = dynamoose.model("User", {"id": String, "firstName": String, "lastName": String, "fullName": dynamoose.type.COMBINE(["firstName", "lastName"], " ")});
+```

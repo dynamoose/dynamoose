@@ -13,6 +13,7 @@ import {AttributeMap} from "../Types";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
 import {Table} from "../Table";
+import type = require("../type");
 const {internalProperties} = Internal.General;
 
 // Transactions
@@ -542,7 +543,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 					} catch (e) {} // eslint-disable-line no-empty
 					const attributeExists = schema.attributes().includes(subKey);
-					const dynamooseUndefined = require("../index").UNDEFINED;
+					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
 						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
 					}
@@ -643,7 +644,7 @@ export class Model<T extends ItemCarrier = AnyItem> {
 					returnObject.ExpressionAttributeValues[`:v${nextIndex}`] = details.type.typeSettings.attributes.map((attribute) => {
 						const [expressionAttributeNameKey] = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 						return returnObject.ExpressionAttributeValues[expressionAttributeNameKey.replace("#a", ":v")];
-					}).filter((value) => typeof value !== "undefined" && value !== null).join(details.type.typeSettings.seperator);
+					}).filter((value) => typeof value !== "undefined" && value !== null).join(details.type.typeSettings.separator);
 					returnObject.UpdateExpression.SET.push(`#a${nextIndex} = :v${nextIndex}`);
 				}
 			});

@@ -87,10 +87,10 @@ const schema = new dynamoose.Schema({
 | Date | True | N | True | False | **storage** - miliseconds \| seconds (default: miliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
-| [`dynamoose.NULL`](Dynamoose#dynamoosenull) | False | NULL | False | False |   |   |
+| [`dynamoose.type.NULL`](Dynamoose#dynamoosetypenull) | False | NULL | False | False |   |   |
 | Schema | False | M | True | True |   | This will be converted to an Object type. |
 | Model | Only if no `rangeKey` for model's schema | S \| N \| B \| M | True | If `rangeKey` in model's schema |   | Model Types are setup a bit differently. [Read below](#model-types) for more information. |
-| Combine | False | S | True | False | **attributes** - [string] - The attributes to store in the combine attribute.<br/>**seperator** - string (default: `,`) - The string used to seperate the attributes in the combine attribute. | When running `Model.update` you must update all the attributes in the combine attributes array, or none of them. This is to ensure your combine method remains in sync with your overall item. |
+| Combine | False | S | True | False | **attributes** - [string] - The attributes to store in the combine attribute.<br/>**separator** - string (default: `,`) - The string used to seperate the attributes in the combine attribute. | When running `Model.update` you must update all the attributes in the combine attributes array, or none of them. This is to ensure your combine method remains in sync with your overall item. |
 | Constant | False | S \| N \| BOOL | True | False | **value** - string \| number \| boolean - The value this attribute should always match. |   |
 
 Set's are different from Array's since they require each item in the Set be unique. If you use a Set, it will use the underlying JavaScript Set instance as opposed to an Array. If you use a set you will define the type surrounded by brackets in the [`schema`](#schema-object--array) setting. For example to define a string set you would do something like:
@@ -131,13 +131,13 @@ You are also not allowed to have multiple types on any `hashKey` or `rangeKey` a
 
 ## Model Types
 
-For Model types, you must pass in another model or `dynamoose.THIS` (to reference your own model).
+For Model types, you must pass in another model or `dynamoose.type.THIS` (to reference your own model).
 
 ```js
 const userSchema = new dynamoose.Schema({
 	"id": String,
 	"name": String,
-	"parent": dynamoose.THIS
+	"parent": dynamoose.type.THIS
 });
 ```
 

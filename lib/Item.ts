@@ -432,7 +432,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		}).forEach((item) => {
 			const {key, type} = item;
 
-			const value = type.typeSettings.attributes.map((attribute) => utils.object.get(returnObject, attribute)).filter((value) => typeof value !== "undefined" && value !== null).join(type.typeSettings.seperator);
+			const value = type.typeSettings.attributes.map((attribute) => utils.object.get(returnObject, attribute)).filter((value) => typeof value !== "undefined" && value !== null).join(type.typeSettings.separator);
 			utils.object.set(returnObject, key, value);
 		});
 	}

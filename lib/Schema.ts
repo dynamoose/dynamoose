@@ -249,7 +249,7 @@ interface AttributeDefinitionTypeSettings {
 	storage?: "miliseconds" | "seconds";
 	model?: ModelType<Item>;
 	attributes?: string[];
-	seperator?: string;
+	separator?: string;
 	value?: string | boolean | number;
 }
 interface AttributeDefinition {
