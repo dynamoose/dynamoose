@@ -155,10 +155,10 @@ describe("Item", () => {
 					}]);
 				});
 
-				it("Should not use default if dynamoose.UNDEFINED used as value for that property", async () => {
+				it("Should not use default if dynamoose.type.UNDEFINED used as value for that property", async () => {
 					const Robot = dynamoose.model("Robot", {"id": Number, "age": {"type": Number, "default": 1}});
 					new dynamoose.Table("Robot", [Robot]);
-					const robot = new Robot({"id": 2, "age": dynamoose.UNDEFINED});
+					const robot = new Robot({"id": 2, "age": dynamoose.type.UNDEFINED});
 
 					putItemFunction = () => Promise.resolve();
 					await callType.func(robot).bind(robot)();
@@ -1804,7 +1804,7 @@ describe("Item", () => {
 				describe("Own Model (this)", () => {
 					let child, parent;
 					beforeEach(() => {
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.type.THIS});
 						new dynamoose.Table("User", [User]);
 						parent = new User({"id": 1, "name": "Tom"});
 						child = new User({"id": 2, "name": "Tim", "parent": 1});
@@ -2117,14 +2117,14 @@ describe("Item", () => {
 				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
 			},
 			{
-				"input": [{"id": 1, "name": dynamoose.UNDEFINED}, {"defaults": true}],
+				"input": [{"id": 1, "name": dynamoose.type.UNDEFINED}, {"defaults": true}],
 				"output": {"id": 1, "name": undefined},
 				"schema": {"id": Number, "name": {"type": String, "default": "Charlie"}}
 			},
 			{
 				"input": [{"id": 1, "data": null}],
 				"output": {"id": 1, "data": null},
-				"schema": {"id": Number, "data": dynamoose.NULL}
+				"schema": {"id": Number, "data": dynamoose.type.NULL}
 			},
 			{
 				"input": [{"id": 1, "data": null}, {"saveUnknown": true}],
@@ -2502,67 +2502,67 @@ describe("Item", () => {
 			},
 			// Combine Type
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
 				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo", "combine": true}],
 				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello-world"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
 				"input": [{"id": 1, "data1": "hello", "data2": "world", "combine": "random"}, {"type": "toDynamo", "combine": true}],
 				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello-world"}
 			},
 			{
-				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
 				"input": [{"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}, {"type": "toDynamo", "combine": true}],
 				"output": {"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"], "combine": "hello,hola-world,universe"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "!"}}}},
 				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo", "combine": true}],
 				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello!world"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "!"}}}},
 				"input": [{"id": 1, "data1": "hello"}, {"type": "toDynamo", "combine": true}],
 				"output": {"id": 1, "data1": "hello", "combine": "hello"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
 				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "fromDynamo", "combine": true}],
 				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello-world"}
 			},
 			{
-				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
 				"input": [{"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}, {"type": "fromDynamo", "combine": true}],
 				"output": {"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"], "combine": "hello,hola-world,universe"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "!"}}}},
 				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "fromDynamo", "combine": true}],
 				"output": {"id": 1, "data1": "hello", "data2": "world", "combine": "hello!world"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "!"}}}},
 				"input": [{"id": 1, "data1": "hello"}, {"type": "fromDynamo", "combine": true}],
 				"output": {"id": 1, "data1": "hello", "combine": "hello"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
 				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo"}],
 				"output": {"id": 1, "data1": "hello", "data2": "world"}
 			},
 			{
-				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "-"}}}},
+				"schema": {"id": Number, "data1": {"type": Array, "schema": [String]}, "data2": {"type": Array, "schema": [String]}, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
 				"input": [{"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}, {"type": "toDynamo"}],
 				"output": {"id": 1, "data1": ["hello", "hola"], "data2": ["world", "universe"]}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "!"}}}},
 				"input": [{"id": 1, "data1": "hello", "data2": "world"}, {"type": "toDynamo"}],
 				"output": {"id": 1, "data1": "hello", "data2": "world"}
 			},
 			{
-				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "seperator": "!"}}}},
+				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "!"}}}},
 				"input": [{"id": 1, "data1": "hello"}, {"type": "toDynamo"}],
 				"output": {"id": 1, "data1": "hello"}
 			},

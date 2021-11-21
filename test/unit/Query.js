@@ -636,7 +636,7 @@ describe("Query", () => {
 					});
 
 					it("Should populate when calling populate function", async () => {
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.THIS});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.type.THIS});
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
@@ -812,7 +812,7 @@ describe("Query", () => {
 					});
 
 					it("Should autopopulate if model settings have populate set", async () => {
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.THIS});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.type.THIS});
 						new dynamoose.Table("Cat", [Model], {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {

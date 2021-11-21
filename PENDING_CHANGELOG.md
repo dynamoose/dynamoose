@@ -30,6 +30,11 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 	- The largest user facing API change is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`
 - `dynamoose.logger` is now an async function instead of an object. For example, `dynamoose.logger.status()` is now `(await dynamoose.logger()).status()`
 	- You must also now install the `dynamoose-logger` package in order to use `dynamoose.logger()`, otherwise an error will be thrown.
+- Renaming `seperator` to `separator` in Combine type settings to fix typo.
+- Migrate properties to new `dynamoose.type` object
+	- `dynamoose.UNDEFINED` is now `dynamoose.type.UNDEFINED`
+	- `dynamoose.THIS` is now `dynamoose.type.THIS`
+	- `dynamoose.NULL` is now `dynamoose.type.NULL`
 - Node.js >=v10 now required
 
 ### Major New Features
@@ -41,6 +46,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 - Added `table.hashKey` property to be able to access table's hash key
 - Added `table.rangeKey` property to be able to access table's range key
 - Added `model.name` property to be able to access model name
+- Added `dynamoose.type.CONSTANT` helper function to create a constant type
+- Added `dynamoose.type.COMBINE` helper function to create a combine type
 
 ### Bug Fixes
 

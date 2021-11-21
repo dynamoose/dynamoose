@@ -3,13 +3,13 @@ import {Schema, SchemaDefinition} from "./Schema";
 import {Condition} from "./Condition";
 import transaction from "./Transaction";
 import aws = require("./aws");
-import Internal = require("./Internal");
 import utils = require("./utils");
 import {Item, AnyItem} from "./Item";
 import ModelStore = require("./ModelStore");
 import {ModelType} from "./General";
 import {CustomError} from "dynamoose-utils";
 import {Table} from "./Table";
+import type = require("./type");
 
 const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[]): ModelType<T> => {
 	let model: Model<T>;
@@ -82,7 +82,5 @@ export = {
 			throw new CustomError.OtherError("dynamoose-logger has not been installed. Install it using `npm i --save-dev dynamoose-logger`.");
 		}
 	},
-	"UNDEFINED": Internal.Public.undefined,
-	"THIS": Internal.Public.this,
-	"NULL": Internal.Public.null
+	type
 };

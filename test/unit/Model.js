@@ -638,10 +638,10 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate item automatically when schema property is dynamoose.THIS", async () => {
+					it("Should not populate item automatically when schema property is dynamoose.type.THIS", async () => {
 						let getItemTimesCalled = 0;
 
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.type.THIS});
 						new dynamoose.Table("User", [User]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -658,10 +658,10 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate item automatically when schema property is dynamoose.THIS if schema property is object", async () => {
+					it("Should not populate item automatically when schema property is dynamoose.type.THIS if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": dynamoose.THIS}});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": dynamoose.type.THIS}});
 						new dynamoose.Table("User", [User]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -716,10 +716,10 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate item automatically when using set when schema property is dynamoose.THIS", async () => {
+					it("Should not populate item automatically when using set when schema property is dynamoose.type.THIS", async () => {
 						let getItemTimesCalled = 0;
 
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [dynamoose.THIS]}});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [dynamoose.type.THIS]}});
 						new dynamoose.Table("User", [User]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -735,10 +735,10 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate item automatically when using set when schema property is dynamoose.THIS if schema property is object", async () => {
+					it("Should not populate item automatically when using set when schema property is dynamoose.type.THIS if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [{"type": dynamoose.THIS}]}});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Set, "schema": [{"type": dynamoose.type.THIS}]}});
 						new dynamoose.Table("User", [User]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -794,10 +794,10 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate item automatically when using array when schema property is dynamoose.THIS", async () => {
+					it("Should not populate item automatically when using array when schema property is dynamoose.type.THIS", async () => {
 						let getItemTimesCalled = 0;
 
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [dynamoose.THIS]}});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [dynamoose.type.THIS]}});
 						new dynamoose.Table("User", [User]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -814,10 +814,10 @@ describe("Model", () => {
 						expect(getItemTimesCalled).to.eql(1);
 					});
 
-					it("Should not populate item automatically when using array when schema property is dynamoose.THIS if schema property is object", async () => {
+					it("Should not populate item automatically when using array when schema property is dynamoose.type.THIS if schema property is object", async () => {
 						let getItemTimesCalled = 0;
 
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [{"type": dynamoose.THIS}]}});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": {"type": Array, "schema": [{"type": dynamoose.type.THIS}]}});
 						new dynamoose.Table("User", [User]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -835,7 +835,7 @@ describe("Model", () => {
 					});
 
 					it("Should autopopulate if model settings have populate set", async () => {
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.type.THIS});
 						new dynamoose.Table("User", [User], {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -1109,7 +1109,7 @@ describe("Model", () => {
 					});
 
 					it("Should autopopulate if model settings have populate set", async () => {
-						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.THIS});
+						User = dynamoose.model("User", {"id": Number, "name": String, "parent": dynamoose.type.THIS});
 						new dynamoose.Table("User", [User], {"populate": "*"});
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
@@ -1393,7 +1393,7 @@ describe("Model", () => {
 				});
 
 				it("Should send correct params to putItem with value as null", async () => {
-					const User2 = dynamoose.model("User", {"id": Number, "name": dynamoose.NULL});
+					const User2 = dynamoose.model("User", {"id": Number, "name": dynamoose.type.NULL});
 					new dynamoose.Table("User", [User2]);
 
 					createItemFunction = () => Promise.resolve();
@@ -2119,11 +2119,11 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property", async () => {
+				it("Should send correct params to updateItem when using dynamoose.type.UNDEFINED to delete default property", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
 					new dynamoose.Table("User", [User]);
-					await callType.func(User).bind(User)({"id": 1, "name": dynamoose.UNDEFINED});
+					await callType.func(User).bind(User)({"id": 1, "name": dynamoose.type.UNDEFINED});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -2140,11 +2140,11 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property using $REMOVE", async () => {
+				it("Should send correct params to updateItem when using dynamoose.type.UNDEFINED to delete default property using $REMOVE", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
 					new dynamoose.Table("User", [User]);
-					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"name": dynamoose.UNDEFINED}});
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": {"name": dynamoose.type.UNDEFINED}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
@@ -2161,11 +2161,11 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to updateItem when using dynamoose.UNDEFINED to delete default property using $SET", async () => {
+				it("Should send correct params to updateItem when using dynamoose.type.UNDEFINED to delete default property using $SET", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": () => "Charlie"}, "age": Number});
 					new dynamoose.Table("User", [User]);
-					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": dynamoose.UNDEFINED}});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": dynamoose.type.UNDEFINED}});
 					expect(updateItemParams).to.be.an("object");
 					expect(updateItemParams).to.eql({
 						"ExpressionAttributeNames": {
