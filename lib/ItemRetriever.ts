@@ -21,22 +21,22 @@ interface ItemRetrieverTypeInformation {
 // ItemRetriever is used for both Scan and Query since a lot of the code is shared between the two
 // type ItemRetriever = BasicOperators;
 abstract class ItemRetriever {
-	internalSettings?: {
-		model: Model<Item>;
-		typeInformation: ItemRetrieverTypeInformation;
-	};
-	settings: {
-		condition: Condition;
-		limit?: number;
-		all?: {delay: number; max: number};
-		startAt?: any;
-		attributes?: string[];
-		index?: string;
-		consistent?: boolean;
-		count?: boolean;
-		parallel?: number;
-		sort?: SortOrder | `${SortOrder}`;
-	};
+	// internalSettings?: {
+	// 	model: Model<Item>;
+	// 	typeInformation: ItemRetrieverTypeInformation;
+	// };
+	// settings: {
+	// 	condition: Condition;
+	// 	limit?: number;
+	// 	all?: {delay: number; max: number};
+	// 	startAt?: any;
+	// 	attributes?: string[];
+	// 	index?: string;
+	// 	consistent?: boolean;
+	// 	count?: boolean;
+	// 	parallel?: number;
+	// 	sort?: SortOrder | `${SortOrder}`;
+	// };
 	getRequest: (this: ItemRetriever) => Promise<any>;
 	all: (this: ItemRetriever, delay?: number, max?: number) => ItemRetriever;
 	limit: (this: ItemRetriever, value: number) => ItemRetriever;
@@ -51,40 +51,40 @@ abstract class ItemRetriever {
 			if (Array.isArray(result)) {
 				result = utils.merge_objects(...result);
 			}
-			if (this.settings.count) {
+			if (this[internalProperties].settings.count) {
 				return {
 					"count": result.Count,
-					[`${this.internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`]
+					[`${this[internalProperties].internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this[internalProperties].internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => await new this.internalSettings.model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"})))).filter((a) => Boolean(a));
-			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this.internalSettings.model.Item.fromDynamo(key)) : this.internalSettings.model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
+			const array: any = (await Promise.all(result.Items.map(async (item) => await new this[internalProperties].internalSettings.model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"})))).filter((a) => Boolean(a));
+			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this[internalProperties].internalSettings.model.Item.fromDynamo(key)) : this[internalProperties].internalSettings.model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
-			array[`${this.internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}Count`];
-			array[`times${utils.capitalize_first_letter(this.internalSettings.typeInformation.pastTense)}`] = timesRequested;
+			array[`${this[internalProperties].internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this[internalProperties].internalSettings.typeInformation.pastTense)}Count`];
+			array[`times${utils.capitalize_first_letter(this[internalProperties].internalSettings.typeInformation.pastTense)}`] = timesRequested;
 			array["populate"] = PopulateItems;
 			array["toJSON"] = utils.dynamoose.itemToJSON;
 			return array;
 		};
-		const promise = this.internalSettings.model[internalProperties].table()[internalProperties].pendingTaskPromise().then(() => this.getRequest()).then((request) => {
+		const promise = this[internalProperties].internalSettings.model[internalProperties].table()[internalProperties].pendingTaskPromise().then(() => this.getRequest()).then((request) => {
 			const allRequest = (extraParameters = {}): any => {
-				let promise: Promise<any> = ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters});
+				let promise: Promise<any> = ddb(this[internalProperties].internalSettings.typeInformation.type as any, {...request, ...extraParameters});
 				timesRequested++;
 
-				if (this.settings.all) {
+				if (this[internalProperties].settings.all) {
 					promise = promise.then(async (result) => {
-						if (this.settings.all.delay && this.settings.all.delay > 0) {
-							await utils.timeout(this.settings.all.delay);
+						if (this[internalProperties].settings.all.delay && this[internalProperties].settings.all.delay > 0) {
+							await utils.timeout(this[internalProperties].settings.all.delay);
 						}
 
 						let lastKey = result.LastEvaluatedKey;
 						let requestedTimes = 1;
-						while (lastKey && (this.settings.all.max === 0 || requestedTimes < this.settings.all.max)) {
-							if (this.settings.all.delay && this.settings.all.delay > 0) {
-								await utils.timeout(this.settings.all.delay);
+						while (lastKey && (this[internalProperties].settings.all.max === 0 || requestedTimes < this[internalProperties].settings.all.max)) {
+							if (this[internalProperties].settings.all.delay && this[internalProperties].settings.all.delay > 0) {
+								await utils.timeout(this[internalProperties].settings.all.delay);
 							}
 
-							const nextRequest: any = await ddb(this.internalSettings.typeInformation.type as any, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
+							const nextRequest: any = await ddb(this[internalProperties].internalSettings.typeInformation.type as any, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
 							timesRequested++;
 							result = utils.merge_objects(result, nextRequest);
 							// The operation below is safe because right above we are overwriting the entire `result` variable, so there is no chance it'll be reassigned based on an outdated value since it's already been overwritten. There might be a better way to do this than ignoring the rule on the line below.
@@ -100,8 +100,8 @@ abstract class ItemRetriever {
 				return promise;
 			};
 
-			if (this.settings.parallel) {
-				return Promise.all(new Array(this.settings.parallel).fill(0).map((a, index) => allRequest({"Segment": index})));
+			if (this[internalProperties].settings.parallel) {
+				return Promise.all(new Array(this[internalProperties].settings.parallel).fill(0).map((a, index) => allRequest({"Segment": index})));
 			} else {
 				return allRequest();
 			}
@@ -120,17 +120,18 @@ abstract class ItemRetriever {
 	}
 
 	constructor (model: Model<Item>, typeInformation: ItemRetrieverTypeInformation, object?: ConditionInitalizer) {
-		this.internalSettings = {model, typeInformation};
+		this[internalProperties] = {};
+		this[internalProperties].internalSettings = {model, typeInformation};
 
 		let condition: Condition;
 		try {
 			condition = new Condition(object);
 		} catch (e) {
-			e.message = `${e.message.replace(" is invalid.", "")} is invalid for the ${this.internalSettings.typeInformation.type} operation.`;
+			e.message = `${e.message.replace(" is invalid.", "")} is invalid for the ${this[internalProperties].internalSettings.typeInformation.type} operation.`;
 			throw e;
 		}
 
-		this.settings = {
+		this[internalProperties].settings = {
 			"condition": condition
 		};
 	}
@@ -139,7 +140,7 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 	const [key, func] = prototype;
 	if (key !== "requestObject") {
 		ItemRetriever.prototype[key] = function (this: ItemRetriever, ...args): ItemRetriever {
-			func.bind(this.settings.condition)(...args);
+			func.bind(this[internalProperties].settings.condition)(...args);
 			return this;
 		};
 	}
@@ -147,21 +148,21 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
 	const object: any = {
-		...this.settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
-		"TableName": this.internalSettings.model[internalProperties].table()[internalProperties].name
+		...this[internalProperties].settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
+		"TableName": this[internalProperties].internalSettings.model[internalProperties].table()[internalProperties].name
 	};
 
-	if (this.settings.limit) {
-		object.Limit = this.settings.limit;
+	if (this[internalProperties].settings.limit) {
+		object.Limit = this[internalProperties].settings.limit;
 	}
-	if (this.settings.startAt) {
-		object.ExclusiveStartKey = Item.isDynamoObject(this.settings.startAt) ? this.settings.startAt : this.internalSettings.model.Item.objectToDynamo(this.settings.startAt);
+	if (this[internalProperties].settings.startAt) {
+		object.ExclusiveStartKey = Item.isDynamoObject(this[internalProperties].settings.startAt) ? this[internalProperties].settings.startAt : this[internalProperties].internalSettings.model.Item.objectToDynamo(this[internalProperties].settings.startAt);
 	}
-	const indexes = await this.internalSettings.model[internalProperties].getIndexes();
-	if (this.settings.index) {
-		object.IndexName = this.settings.index;
-	} else if (this.internalSettings.typeInformation.type === "query") {
-		const comparisonChart = this.settings.condition[internalProperties].settings.conditions.reduce((res, item) => {
+	const indexes = await this[internalProperties].internalSettings.model[internalProperties].getIndexes();
+	if (this[internalProperties].settings.index) {
+		object.IndexName = this[internalProperties].settings.index;
+	} else if (this[internalProperties].internalSettings.typeInformation.type === "query") {
+		const comparisonChart = this[internalProperties].settings.condition[internalProperties].settings.conditions.reduce((res, item) => {
 			const myItem = Object.entries(item)[0];
 			res[myItem[0]] = {"type": (myItem[1] as any).type};
 			return res;
@@ -205,7 +206,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 			utils.object.delete(object.FilterExpression, previousElementIndex);
 		}
 	}
-	if (this.internalSettings.typeInformation.type === "query") {
+	if (this[internalProperties].internalSettings.typeInformation.type === "query") {
 		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
 		const {hash, range} = index.KeySchema.reduce((res, item) => {
 			res[item.KeyType.toLowerCase()] = item.AttributeName;
@@ -217,24 +218,24 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 			moveParameterNames(range, "qr");
 		}
 	}
-	if (this.settings.consistent) {
-		object.ConsistentRead = this.settings.consistent;
+	if (this[internalProperties].settings.consistent) {
+		object.ConsistentRead = this[internalProperties].settings.consistent;
 	}
-	if (this.settings.count) {
+	if (this[internalProperties].settings.count) {
 		object.Select = "COUNT";
 	}
-	if (this.settings.parallel) {
-		object.TotalSegments = this.settings.parallel;
+	if (this[internalProperties].settings.parallel) {
+		object.TotalSegments = this[internalProperties].settings.parallel;
 	}
-	if (this.settings.sort === SortOrder.descending) {
+	if (this[internalProperties].settings.sort === SortOrder.descending) {
 		object.ScanIndexForward = false;
 	}
-	if (this.settings.attributes) {
+	if (this[internalProperties].settings.attributes) {
 		if (!object.ExpressionAttributeNames) {
 			object.ExpressionAttributeNames = {};
 		}
 
-		object.ProjectionExpression = this.settings.attributes.map((attribute) => {
+		object.ProjectionExpression = this[internalProperties].settings.attributes.map((attribute) => {
 			let expressionAttributeName = "";
 
 			expressionAttributeName = (Object.entries(object.ExpressionAttributeNames).find((entry) => entry[1] === attribute) || [])[0];
@@ -286,12 +287,12 @@ const settings: (SettingDefinition | string)[] = [
 settings.forEach((item) => {
 	ItemRetriever.prototype[(item as SettingDefinition).name || (item as string)] = function (value): ItemRetriever {
 		const key: string = (item as SettingDefinition).settingsName || (item as SettingDefinition).name || (item as string);
-		this.settings[key] = (item as SettingDefinition).boolean ? !this.settings[key] : value;
+		this[internalProperties].settings[key] = (item as SettingDefinition).boolean ? !this[internalProperties].settings[key] : value;
 		return this;
 	};
 });
 ItemRetriever.prototype.all = function (this: ItemRetriever, delay = 0, max = 0): ItemRetriever {
-	this.settings.all = {delay, max};
+	this[internalProperties].settings.all = {delay, max};
 	return this;
 };
 
@@ -306,7 +307,7 @@ export class Scan<T> extends ItemRetriever {
 	}
 
 	parallel (value: number): Scan<T> {
-		this.settings.parallel = value;
+		this[internalProperties].settings.parallel = value;
 		return this;
 	}
 
@@ -326,7 +327,7 @@ export class Query<T> extends ItemRetriever {
 	}
 
 	sort (order: SortOrder | `${SortOrder}`): Query<T> {
-		this.settings.sort = order;
+		this[internalProperties].settings.sort = order;
 		return this;
 	}
 
