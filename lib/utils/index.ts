@@ -16,6 +16,7 @@ import find_best_index from "./find_best_index";
 import deep_copy from "./deep_copy";
 import childKey from "./childKey";
 import parentKey from "./parentKey";
+import async_reduce from "./async_reduce";
 
 export = {
 	combine_objects,
@@ -35,5 +36,6 @@ export = {
 	find_best_index,
 	deep_copy,
 	childKey,
-	parentKey
+	parentKey,
+	async_reduce
 };

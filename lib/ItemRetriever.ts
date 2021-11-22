@@ -148,7 +148,7 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
 	const object: any = {
-		...this[internalProperties].settings.condition.requestObject({"conditionString": "FilterExpression", "conditionStringType": "array"}),
+		...await this[internalProperties].settings.condition.requestObject(this[internalProperties].internalSettings.model, {"conditionString": "FilterExpression", "conditionStringType": "array"}),
 		"TableName": this[internalProperties].internalSettings.model[internalProperties].table()[internalProperties].name
 	};
 

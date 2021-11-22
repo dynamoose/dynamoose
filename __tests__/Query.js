@@ -612,6 +612,30 @@ describe("Query", () => {
 					});
 				});
 
+				it("Should send correct request on query.exec if we have a set setting for property", async () => {
+					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}, "set": (val) => val + " Test"}, "favoriteNumber": Number});
+					new dynamoose.Table("Cat", [Model]);
+
+					queryPromiseResolver = () => ({"Items": []});
+					await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
+					expectChai(queryParams).to.eql({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie Test"}
+						},
+						"KeyConditionExpression": "#qha = :qhv"
+					});
+				});
+
+				it.skip("Should throw an error when passing in incorrect type in key", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					expect(callType.func(Model.query("name").eq(5).exec).bind(Model.query("name").eq(5))()).rejects.toEqual(new CustomError.InvalidType("test"));
+				});
+
 				it("Should return correct result with get function for attribute", async () => {
 					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": {"type": String, "index": {"global": true}, "get": (val) => `${val}-get`}}));
 					new dynamoose.Table("Cat", [Model]);

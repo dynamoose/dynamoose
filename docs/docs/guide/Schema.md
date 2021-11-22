@@ -475,7 +475,7 @@ You can use a get function on an attribute to be run whenever retrieving a item 
 
 ### set: function | async function
 
-You can use a set function on an attribute to be run whenever saving a item to DynamoDB. This function will only be run if the attribute exists in the item. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
+You can use a set function on an attribute to be run whenever saving a item to DynamoDB. It will also be used when retrieving an item based on this attribute (ie. `get`, `query`, `update`, etc). This function will only be run if the attribute exists in the item. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
 
 ```js
 {
