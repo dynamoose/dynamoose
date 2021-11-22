@@ -20,6 +20,12 @@ describe("Item", () => {
 		expectChai({...user}[Internal.General.internalProperties]).to.not.exist;
 	});
 
+	it("Should store properties attribute name set to model correctly", () => {
+		const User = dynamoose.model("User", {"id": Number, "model": String}, {"create": false, "waitForActive": false});
+		const user = new User({"id": 1, "model": "data"});
+		expect(user.model).toEqual("data");
+	});
+
 	describe("DynamoDB Conversation Methods", () => {
 		let User;
 		beforeEach(() => {
@@ -2948,6 +2954,11 @@ describe("Item", () => {
 				"input": [{"id": 1, "data": null}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": String},
 				"error": new CustomError.ValidationError("Expected data to be of type string, instead found type null.")
+			},
+			{
+				"input": [{"id": 1, "model": ["hello", "world"]}, {"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}],
+				"schema": {"id": Number, "model": {"type": Array, "schema": [String]}},
+				"output": {"id": 1, "model": ["hello", "world"]}
 			}
 		];
 

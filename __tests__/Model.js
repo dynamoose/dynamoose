@@ -1330,6 +1330,56 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to putItem if item has model property name", async () => {
+					const schema = new dynamoose.Schema({
+						"_id": String,
+						"model": {
+							"type": Array,
+							"schema": [
+								{
+									"type": Object,
+									"schema": {
+										"_id": String,
+										"text": String
+									}
+								}
+							]
+						}
+					});
+					User = dynamoose.model("User", schema);
+					new dynamoose.Table("User", [User]);
+
+					createItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"_id": "1", "model": [{"_id": "12345678", "text": "someText"}]});
+					expectChai(createItemParams).to.be.an("object");
+					expect(createItemParams).toEqual({
+						"ConditionExpression": "attribute_not_exists(#__hash_key)",
+						"ExpressionAttributeNames": {
+							"#__hash_key": "_id"
+						},
+						"Item": {
+							"_id": {
+								"S": "1"
+							},
+							"model": {
+								"L": [
+									{
+										"M": {
+											"_id": {
+												"S": "12345678"
+											},
+											"text": {
+												"S": "someText"
+											}
+										}
+									}
+								]
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it("Should not include attributes that do not exist in schema", async () => {
 					createItemFunction = () => Promise.resolve();
 					await callType.func(User).bind(User)({"id": 1, "name": "Charlie", "hello": "world"});
