@@ -3,6 +3,7 @@ const dynamoose = require("../dist");
 const util = require("util");
 const {Scan} = require("../dist/ItemRetriever");
 const {internalProperties} = require("../dist/Internal").General;
+const CustomError = require("../dist/Error");
 
 describe("Scan", () => {
 	beforeEach(() => {
@@ -260,6 +261,30 @@ describe("Scan", () => {
 						"FilterExpression": "#a0 = :v0 AND #a1 <= :v1 AND (#a2 = :v2 AND #a3 = :v3)",
 						"TableName": "Cat"
 					});
+				});
+
+				it("Should send correct request on scan.exec if we have a set setting for property", async () => {
+					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "set": (val) => val + " Test"}, "favoriteNumber": Number});
+					new dynamoose.Table("Cat", [Model]);
+
+					scanPromiseResolver = () => ({"Items": []});
+					const scan = Model.scan({"name": "Charlie"});
+					await callType.func(scan.exec).bind(scan)();
+					expectChai(scanParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "Charlie Test"}
+						},
+						"FilterExpression": "#a0 = :v0",
+						"TableName": "Cat"
+					});
+				});
+
+				it.skip("Should throw an error when passing in incorrect type in key", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					expect(callType.func(Model.scan("name").eq(5).exec).bind(Model.scan("name").eq(5))()).rejects.toEqual(new CustomError.InvalidType("test"));
 				});
 
 				it("Should not include - in filter expression", async () => {

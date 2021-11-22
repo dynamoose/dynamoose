@@ -28,6 +28,12 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 ```
 - Renamed `Document` to `Item`.
 	- The largest user facing API change is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`.
+- `set` Schema attribute settings are now used when retrieving items (ie. `get`, `query`, `update`, etc).
+- Passing `{"return": "request"}` as a setting into the following methods are now preformed asynchronously:
+	- `Model.get`
+	- `Model.delete`
+	- `Model.batchGet`
+	- `Model.batchDelete`
 - Default values are now only applied if the parent object exists. For example nested object properties with a default value will only be applied if the parent object exists. If this is not what you intended, consider adding a `default` value of an empty object (`{}`) or array (`[]`) to the parent attribute.
 - `dynamoose.logger` is now an async function instead of an object. For example, `dynamoose.logger.status()` is now `(await dynamoose.logger()).status()`.
 	- You must also now install the `dynamoose-logger` package in order to use `dynamoose.logger()`, otherwise an error will be thrown.

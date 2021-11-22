@@ -304,6 +304,28 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to getItem if we have a set setting for property", async () => {
+					User = dynamoose.model("User", {"id": {"type": Number, "set": (val) => val + 1}, "name": String});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "2"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)({"id": 1});
+					expectChai(getItemParams).to.be.an("object");
+					expectChai(getItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "2"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it.skip("Should throw an error when passing in incorrect type in key", () => {
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "2"}, "name": {"S": "Charlie"}}});
+					return expect(callType.func(User).bind(User)({"id": "Hello"})).rejects.toEqual(new CustomError.TypeMismatch("Expected id to be of type number, instead found type string."));
+				});
+
 				it("Should return object with correct values", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const user = await callType.func(User).bind(User)(1);
@@ -1022,6 +1044,30 @@ describe("Model", () => {
 							}
 						}
 					});
+				});
+
+				it("Should send correct params to batchGetItem if we have a set setting for property", async () => {
+					User = dynamoose.model("User", {"id": {"type": Number, "set": (val) => val + 1}, "name": String});
+					new dynamoose.Table("User", [User]);
+
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "2"}, "name": {"S": "Charlie"}}, {"id": {"N": "3"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([1, 2]);
+					expectChai(params).to.be.an("object");
+					expectChai(params).to.eql({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"id": {"N": "2"}},
+									{"id": {"N": "3"}}
+								]
+							}
+						}
+					});
+				});
+
+				it.skip("Should throw an error when passing in incorrect type in key", async () => {
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "2"}, "name": {"S": "Charlie"}}, {"id": {"N": "3"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {}});
+					expect(callType.func(User).bind(User)(["hello", "world"])).rejects.toEqual(new CustomError.InvalidType("test"));
 				});
 
 				it("Should return correct result from batchGet", async () => {
@@ -2689,6 +2735,65 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem if we have a set setting for key property", async () => {
+					User = dynamoose.model("User", {"id": {"type": Number, "set": (val) => val + 1}, "name": String, "age": Number});
+					new dynamoose.Table("User", [User]);
+
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(1, {"name": "Charlie", "random": "hello world"});
+					expectChai(updateItemParams).to.be.an("object");
+					expectChai(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "2"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem if we have a set setting for set property", async () => {
+					User = dynamoose.model("User", {"id": {"type": Number, "set": (val) => val + 1}, "name": {"type": String, "set": (val) => val + " Test"}, "age": Number});
+					new dynamoose.Table("User", [User]);
+
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(1, {"name": "Charlie"});
+					expectChai(updateItemParams).to.be.an("object");
+					expectChai(updateItemParams).to.eql({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Charlie Test"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "2"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it.skip("Should throw an error when passing in incorrect type in key", () => {
+					updateItemFunction = () => Promise.resolve({});
+					return expect(callType.func(User).bind(User)("random", {"name": "Charlie"})).rejects.toEqual(new CustomError.TypeMismatch("Expected id to be of type number, instead found type string."));
+				});
+
 				it("Should return updated item upon success", async () => {
 					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					const result = await callType.func(User).bind(User)({"id": 1, "name": "Charlie"});
@@ -3532,6 +3637,28 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to deleteItem if we have a set setting for property", async () => {
+					User = dynamoose.model("User", {"id": {"type": Number, "set": (val) => val + 1}, "name": String});
+					new dynamoose.Table("User", [User]);
+
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1});
+					expectChai(deleteItemParams).to.be.an("object");
+					expectChai(deleteItemParams).to.eql({
+						"Key": {
+							"id": {
+								"N": "2"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it.skip("Should throw an error when passing in incorrect type in key", () => {
+					deleteItemFunction = () => Promise.resolve();
+					return expect(callType.func(User).bind(User)({"id": "random"})).rejects.toEqual(new CustomError.TypeMismatch("Expected id to be of type number, instead found type string."));
+				});
+
 				it("Should successfully add a condition if a condition is passed in", async () => {
 					const condition = new dynamoose.Condition().filter("id").exists();
 					deleteItemFunction = () => Promise.resolve();
@@ -3651,6 +3778,36 @@ describe("Model", () => {
 							]
 						}
 					});
+				});
+
+				it("Should should send correct parameters to batchWriteItem if we have a set setting for property", async () => {
+					User = dynamoose.model("User", {"id": {"type": Number, "set": (val) => val + 1}, "name": String});
+					new dynamoose.Table("User", [User]);
+
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					await callType.func(User).bind(User)([1, 2]);
+					expectChai(params).to.be.an("object");
+					expectChai(params).to.eql({
+						"RequestItems": {
+							"User": [
+								{
+									"DeleteRequest": {
+										"Key": {"id": {"N": "2"}}
+									}
+								},
+								{
+									"DeleteRequest": {
+										"Key": {"id": {"N": "3"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it.skip("Should throw an error when passing in incorrect type in key", async () => {
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					expect(callType.func(User).bind(User)(["hello", "world"])).rejects.toEqual(new CustomError.InvalidType("test"));
 				});
 
 				it("Should return correct result from batchDelete with no UnprocessedItems", async () => {

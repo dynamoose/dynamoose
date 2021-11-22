@@ -167,10 +167,10 @@ export class Table {
 		// 		delete response.ReturnValues;
 		// 		return response;
 		// 	}},
-		// 	{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": (key: string, condition: Condition): DynamoDB.ConditionCheck => ({
+		// 	{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": async (key: string, condition: Condition): Promise<DynamoDB.ConditionCheck> => ({
 		// 		"Key": this[internalProperties].models[0].Item.objectToDynamo(this[internalProperties].convertObjectToKey(key)),
 		// 		"TableName": this[internalProperties].name,
-		// 		...condition ? condition.requestObject() : {}
+		// 		...condition ? await condition.requestObject(this) : {}
 		// 	} as any)}
 		// ].reduce((accumulator: ObjectType, currentValue) => {
 		// 	const {key, modifier} = currentValue;

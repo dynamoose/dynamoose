@@ -151,7 +151,7 @@ export class Item {
 		let savedItem;
 
 		const localSettings: ItemSaveSettings = settings;
-		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then((item) => {
+		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then(async (item) => {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
@@ -161,7 +161,7 @@ export class Item {
 			if (localSettings.condition) {
 				putItemObj = {
 					...putItemObj,
-					...localSettings.condition.requestObject()
+					...await localSettings.condition.requestObject(this.model)
 				};
 			}
 
@@ -312,6 +312,7 @@ export interface ItemObjectFromSchemaSettings {
 	combine?: boolean;
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
+	typeCheck?: boolean;
 }
 // This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
 Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
@@ -324,42 +325,44 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	const schemaAttributes = schema.attributes(returnObject);
 
 	// Type check
-	const validParents = []; // This array is used to allow for set contents to not be type checked
-	const keysToDelete = [];
 	const typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
-	const checkTypeFunction = (item): void => {
-		const [key, value] = item;
-		if (validParents.find((parent) => key.startsWith(parent.key) && (parent.infinite || key.split(".").length === parent.key.split(".").length + 1))) {
-			return;
-		}
-		const genericKey = key.replace(/\.\d+/gu, ".0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
-		const existsInSchema = schemaAttributes.includes(genericKey);
-		if (existsInSchema) {
-			const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
-			if (!isValidType) {
-				throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
-			} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny) {
-				validParents.push({key, "infinite": true});
-			} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
-				// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
-				value.forEach((subValue, index: number, array: any[]) => {
-					if (index === 0 || typeof subValue !== typeof array[0]) {
-						checkTypeFunction([`${key}.${index}`, subValue]);
-					} else if (keysToDelete.includes(`${key}.0`) && typeof subValue === typeof array[0]) {
-						keysToDelete.push(`${key}.${index}`);
-					}
-				});
-				validParents.push({key});
+	if (settings.typeCheck === undefined || settings.typeCheck === true) {
+		const validParents = []; // This array is used to allow for set contents to not be type checked
+		const keysToDelete = [];
+		const checkTypeFunction = (item): void => {
+			const [key, value] = item;
+			if (validParents.find((parent) => key.startsWith(parent.key) && (parent.infinite || key.split(".").length === parent.key.split(".").length + 1))) {
+				return;
 			}
-		} else {
-			// Check saveUnknown
-			if (!settings.saveUnknown || !utils.dynamoose.wildcard_allowed_check(schema.getSettingValue("saveUnknown"), key)) {
-				keysToDelete.push(key);
+			const genericKey = key.replace(/\.\d+/gu, ".0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
+			const existsInSchema = schemaAttributes.includes(genericKey);
+			if (existsInSchema) {
+				const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
+				if (!isValidType) {
+					throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
+				} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny) {
+					validParents.push({key, "infinite": true});
+				} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
+					// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
+					value.forEach((subValue, index: number, array: any[]) => {
+						if (index === 0 || typeof subValue !== typeof array[0]) {
+							checkTypeFunction([`${key}.${index}`, subValue]);
+						} else if (keysToDelete.includes(`${key}.0`) && typeof subValue === typeof array[0]) {
+							keysToDelete.push(`${key}.${index}`);
+						}
+					});
+					validParents.push({key});
+				}
+			} else {
+				// Check saveUnknown
+				if (!settings.saveUnknown || !utils.dynamoose.wildcard_allowed_check(schema.getSettingValue("saveUnknown"), key)) {
+					keysToDelete.push(key);
+				}
 			}
-		}
-	};
-	utils.object.entries(returnObject).filter((item) => item[1] !== undefined && item[1] !== dynamooseUndefined).map(checkTypeFunction);
-	keysToDelete.reverse().forEach((key) => utils.object.delete(returnObject, key));
+		};
+		utils.object.entries(returnObject).filter((item) => item[1] !== undefined && item[1] !== dynamooseUndefined).map(checkTypeFunction);
+		keysToDelete.reverse().forEach((key) => utils.object.delete(returnObject, key));
+	}
 
 	if (settings.defaults || settings.forceDefault) {
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
