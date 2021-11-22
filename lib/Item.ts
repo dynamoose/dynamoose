@@ -38,11 +38,12 @@ export class Item {
 		});
 		this[internalProperties].originalObject = utils.deep_copy(itemObject);
 		this[internalProperties].originalSettings = {...settings};
+		this[internalProperties].model = model;
 
-		Object.defineProperty(this, "model", {
-			"configurable": false,
-			"value": model
-		});
+		// Object.defineProperty(this, "model", {
+		// 	"configurable": false,
+		// 	"value": model
+		// });
 
 		if (settings.type === "fromDynamo") {
 			this[internalProperties].storedInDynamo = true;
@@ -96,8 +97,8 @@ export class Item {
 
 	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
 	async prepareForResponse (): Promise<Item> {
-		if (this.model[internalProperties].table()[internalProperties].options.populate) {
-			return this.populate({"properties": this.model[internalProperties].table()[internalProperties].options.populate});
+		if (this[internalProperties].model[internalProperties].table()[internalProperties].options.populate) {
+			return this.populate({"properties": this[internalProperties].model[internalProperties].table()[internalProperties].options.populate});
 		}
 		return this;
 	}
@@ -114,22 +115,22 @@ export class Item {
 
 	// Serializer
 	serialize (nameOrOptions?: SerializerOptions | string): ObjectType {
-		return this.model.serializer._serialize(this, nameOrOptions);
+		return this[internalProperties].model.serializer._serialize(this, nameOrOptions);
 	}
 
 	// Delete
 	delete (this: Item): Promise<void>;
 	delete (this: Item, callback: CallbackType<void, any>): void;
 	delete (this: Item, callback?: CallbackType<void, any>): Promise<void> | void {
-		const hashKey = this.model[internalProperties].getHashKey();
-		const rangeKey = this.model[internalProperties].getRangeKey();
+		const hashKey = this[internalProperties].model[internalProperties].getHashKey();
+		const rangeKey = this[internalProperties].model[internalProperties].getRangeKey();
 
 		const key = {[hashKey]: this[hashKey]};
 		if (rangeKey) {
 			key[rangeKey] = this[rangeKey];
 		}
 
-		return this.model.delete(key, callback);
+		return this[internalProperties].model.delete(key, callback);
 	}
 
 	// Save
@@ -155,13 +156,13 @@ export class Item {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
-				"TableName": this.model[internalProperties].table()[internalProperties].name
+				"TableName": this[internalProperties].model[internalProperties].table()[internalProperties].name
 			};
 
 			if (localSettings.condition) {
 				putItemObj = {
 					...putItemObj,
-					...await localSettings.condition.requestObject(this.model)
+					...await localSettings.condition.requestObject(this[internalProperties].model)
 				};
 			}
 
@@ -170,7 +171,7 @@ export class Item {
 				putItemObj.ConditionExpression = putItemObj.ConditionExpression ? `(${putItemObj.ConditionExpression}) AND (${conditionExpression})` : conditionExpression;
 				putItemObj.ExpressionAttributeNames = {
 					...putItemObj.ExpressionAttributeNames || {},
-					"#__hash_key": this.model[internalProperties].getHashKey()
+					"#__hash_key": this[internalProperties].model[internalProperties].getHashKey()
 				};
 			}
 
@@ -185,7 +186,7 @@ export class Item {
 				return paramsPromise;
 			}
 		}
-		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.model[internalProperties].table()[internalProperties].pendingTaskPromise()]).then((promises) => {
+		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this[internalProperties].model[internalProperties].table()[internalProperties].pendingTaskPromise()]).then((promises) => {
 			const [putItemObj] = promises;
 			return ddb("putItem", putItemObj);
 		});
@@ -195,7 +196,7 @@ export class Item {
 			promise.then(() => {
 				this[internalProperties].storedInDynamo = true;
 
-				const returnItem = new this.model.Item(savedItem as any);
+				const returnItem = new this[internalProperties].model.Item(savedItem as any);
 				returnItem[internalProperties].storedInDynamo = true;
 
 				localCallback(null, returnItem);
@@ -205,7 +206,7 @@ export class Item {
 				await promise;
 				this[internalProperties].storedInDynamo = true;
 
-				const returnItem = new this.model.Item(savedItem as any);
+				const returnItem = new this[internalProperties].model.Item(savedItem as any);
 				returnItem[internalProperties].storedInDynamo = true;
 
 				return returnItem;
@@ -522,8 +523,8 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 		...settings,
 		"type": "toDynamo"
 	};
-	await Item.prepareForObjectFromSchema(this, this.model, newSettings);
-	const object = await Item.objectFromSchema(this, this.model, newSettings);
+	await Item.prepareForObjectFromSchema(this, this[internalProperties].model, newSettings);
+	const object = await Item.objectFromSchema(this, this[internalProperties].model, newSettings);
 	return Item.objectToDynamo(object);
 };
 // This function will modify the item to conform to the Schema
@@ -532,8 +533,8 @@ Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjec
 	if (settings.type === "fromDynamo") {
 		item = await this.prepareForResponse();
 	}
-	await Item.prepareForObjectFromSchema(item, item.model, settings);
-	const expectedObject = await Item.objectFromSchema(item, item.model, settings);
+	await Item.prepareForObjectFromSchema(item, item[internalProperties].model, settings);
+	const expectedObject = await Item.objectFromSchema(item, item[internalProperties].model, settings);
 	if (!expectedObject) {
 		return expectedObject;
 	}

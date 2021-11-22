@@ -27,7 +27,7 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 		internalSettings = {};
 	}
 
-	const {model} = this;
+	const {model} = this[internalProperties];
 	const localSettings = settings;
 	const promise = model[internalProperties].schemaForObject(this).then((schema) => {
 		// TODO: uncomment out `/* || detail.name === "Model Set"*/` part and add relevant tests

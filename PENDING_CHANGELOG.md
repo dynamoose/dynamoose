@@ -62,6 +62,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### Bug Fixes
 
+- Fixed bug where using `model` as an attribute name in your Schema would cause random TypeMismatch errors.
+
 ### Documentation
 
 - Dynamoose's website now respects your OS color theme preference instead of always defaulting to light mode.
