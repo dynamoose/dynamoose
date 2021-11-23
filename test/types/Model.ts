@@ -11,6 +11,7 @@ const shouldFailWithBooleanAsName = dynamoose.model(true);
 
 const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 const shouldSucceedWithOnlyNameAndSchemaObject = dynamoose.model("User", {"id": String});
+const shouldSucceedWithNameAndSchemaInstance = dynamoose.model("User", new dynamoose.Schema({id: String}));
 
 const model = dynamoose.model("User", {"id": Number});
 
