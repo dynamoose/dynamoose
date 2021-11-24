@@ -1,4 +1,4 @@
-import "source-map-support/register";
+import * as sourceMapSupport from "source-map-support";
 
 import {Model, ModelOptionsOptional} from "./Model";
 import {Schema, SchemaDefinition} from "./Schema";
@@ -11,6 +11,12 @@ import logger = require("./logger");
 import {Document, AnyDocument} from "./Document";
 import ModelStore = require("./ModelStore");
 import {ModelType} from "./General";
+
+/* istanbul ignore next */
+if (!Error.prepareStackTrace) {
+	// Register source map support only if someone else hasn't already:
+	sourceMapSupport.install();
+}
 
 const model = <T extends Document = AnyDocument>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional = {}): ModelType<T> => {
 	let model: Model<T>;
