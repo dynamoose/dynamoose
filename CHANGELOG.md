@@ -2,6 +2,24 @@
 
 ---
 
+## Version 2.8.3
+
+This release fixes a bug if you started `source-map-support` yourself where Dynamoose would try to do the same and would lead to conflicts.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Not registering `source-map-support` if already initialized.
+
+### Other
+
+- Renamed primary branch from `master` to `main`.
+- Added Node.js v16.x to CI test suite.
+- General v3 alpha README fixes.
+
+---
+
 ## Version 2.8.2
 
 This release fixes a few major bugs.
