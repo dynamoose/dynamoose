@@ -281,6 +281,74 @@ describe("Table", () => {
 				});
 			});
 
+			it("Should call createTable with correct parameters when tags are specified", async () => {
+				const tableName = "Cat";
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"tags": {"hello": "world"}});
+				await utils.set_immediate_promise();
+				expectChai(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"Tags": [
+						{
+							"Key": "hello",
+							"Value": "world"
+						}
+					],
+					"TableName": tableName
+				});
+			});
+
+			it("Should call createTable with correct parameters when multiple tags are specified", async () => {
+				const tableName = "Cat";
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"tags": {"hello": "world", "foo": "bar"}});
+				await utils.set_immediate_promise();
+				expectChai(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"Tags": [
+						{
+							"Key": "hello",
+							"Value": "world"
+						},
+						{
+							"Key": "foo",
+							"Value": "bar"
+						}
+					],
+					"TableName": tableName
+				});
+			});
+
 			it("Shouldn't call createTable if table already exists", async () => {
 				dynamoose.aws.ddb.set({
 					"createTable": (params) => {
@@ -477,7 +545,7 @@ describe("Table", () => {
 		});
 
 		describe("Update", () => {
-			let describeTableFunction, updateTableParams = [];
+			let describeTableFunction, listTagsOfResourceFunction, updateTableParams = [], tagResourceParams = [], untagResourceParams = [];
 			beforeEach(() => {
 				dynamoose.Table.defaults.set({
 					"create": false,
@@ -486,17 +554,34 @@ describe("Table", () => {
 			});
 			beforeEach(() => {
 				updateTableParams = [];
+				tagResourceParams = [];
+				untagResourceParams = [];
+				listTagsOfResourceFunction = () => Promise.resolve({
+					"Tags": []
+				});
 				dynamoose.aws.ddb.set({
 					"describeTable": () => describeTableFunction(),
 					"updateTable": (params) => {
 						updateTableParams.push(params);
+						return Promise.resolve();
+					},
+					"listTagsOfResource": (params) => listTagsOfResourceFunction(params),
+					"tagResource": (params) => {
+						tagResourceParams.push(params);
+						return Promise.resolve();
+					},
+					"untagResource": (params) => {
+						untagResourceParams.push(params);
 						return Promise.resolve();
 					}
 				});
 			});
 			afterEach(() => {
 				updateTableParams = [];
+				tagResourceParams = [];
+				untagResourceParams = [];
 				describeTableFunction = null;
+				listTagsOfResourceFunction = null;
 				dynamoose.aws.ddb.revert();
 			});
 
@@ -927,6 +1012,210 @@ describe("Table", () => {
 					});
 				});
 			});
+
+			describe("Tags", () => {
+				beforeEach(() => {
+					describeTableFunction = (params) => Promise.resolve({
+						"Table": {
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableStatus": "ACTIVE",
+							"TableArn": "arn"
+						}
+					});
+				});
+				it("Should not call listTagsOfResource if \"tags\" not included in update array", async () => {
+					const tableName = "Cat";
+					let didCall = false;
+					listTagsOfResourceFunction = () => {
+						didCall = true;
+						return Promise.resolve({
+							"Tags": [
+								{
+									"Key": "hello",
+									"Value": "world"
+								}
+							]
+						});
+					};
+					const model = dynamoose.model(tableName, {"id": String});
+					new dynamoose.Table(tableName, [model], {"update": ["indexes"]});
+					await utils.set_immediate_promise();
+					expect(didCall).toEqual(false);
+				});
+
+				const updateOptions = [
+					true,
+					["tags"]
+				];
+				updateOptions.forEach((updateOption) => {
+					describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
+						it("Should remove existing tags if no tags passed into table object", async () => {
+							const tableName = "Cat";
+							listTagsOfResourceFunction = () => Promise.resolve({
+								"Tags": [
+									{
+										"Key": "hello",
+										"Value": "world"
+									}
+								]
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption});
+							await utils.set_immediate_promise();
+							expect(tagResourceParams).toEqual([]);
+							expect(untagResourceParams).toEqual([
+								{
+									"ResourceArn": "arn",
+									"TagKeys": ["hello"]
+								}
+							]);
+						});
+
+						it("Should remove multiple existing tags if no tags passed into table object", async () => {
+							const tableName = "Cat";
+							listTagsOfResourceFunction = () => Promise.resolve({
+								"Tags": [
+									{
+										"Key": "hello",
+										"Value": "world"
+									},
+									{
+										"Key": "foo",
+										"Value": "bar"
+									}
+								]
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption});
+							await utils.set_immediate_promise();
+							expect(tagResourceParams).toEqual([]);
+							expect(untagResourceParams).toEqual([
+								{
+									"ResourceArn": "arn",
+									"TagKeys": ["hello", "foo"]
+								}
+							]);
+						});
+
+						it("Should remove multiple existing tags if pagination for listTagsOfResource exists if no tags passed into table object", async () => {
+							const tableName = "Cat";
+							let listTagsOfResourceFunctionParamsArray = [];
+							listTagsOfResourceFunction = (params) => {
+								listTagsOfResourceFunctionParamsArray.push(params);
+								return Promise.resolve(listTagsOfResourceFunctionParamsArray.length === 1 ? {
+									"Tags": [
+										{
+											"Key": "hello",
+											"Value": "world"
+										}
+									],
+									"NextToken": "next"
+								} : {
+									"Tags": [
+										{
+											"Key": "foo",
+											"Value": "bar"
+										}
+									]
+								});
+							};
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption});
+							await utils.set_immediate_promise();
+							expect(listTagsOfResourceFunctionParamsArray).toEqual([
+								{
+									"ResourceArn": "arn"
+								},
+								{
+									"ResourceArn": "arn",
+									"NextToken": "next"
+								}
+							]);
+							expect(tagResourceParams).toEqual([]);
+							expect(untagResourceParams).toEqual([
+								{
+									"ResourceArn": "arn",
+									"TagKeys": ["hello", "foo"]
+								}
+							]);
+						});
+
+						it("Should not take any action if tags match", async () => {
+							const tableName = "Cat";
+							listTagsOfResourceFunction = () => Promise.resolve({
+								"Tags": [
+									{
+										"Key": "hello",
+										"Value": "world"
+									}
+								]
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption, "tags": {"hello": "world"}});
+							await utils.set_immediate_promise();
+							expect(tagResourceParams).toEqual([]);
+							expect(untagResourceParams).toEqual([]);
+						});
+
+						it("Should delete and readd tags if values mismatch", async () => {
+							const tableName = "Cat";
+							listTagsOfResourceFunction = () => Promise.resolve({
+								"Tags": [
+									{
+										"Key": "hello",
+										"Value": "world"
+									}
+								]
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption, "tags": {"hello": "universe"}});
+							await utils.set_immediate_promise();
+							expect(tagResourceParams).toEqual([
+								{
+									"ResourceArn": "arn",
+									"Tags": [
+										{
+											"Key": "hello",
+											"Value": "universe"
+										}
+									]
+								}
+							]);
+							expect(untagResourceParams).toEqual([
+								{
+									"ResourceArn": "arn",
+									"TagKeys": ["hello"]
+								}
+							]);
+						});
+
+						it("Should add tags properly", async () => {
+							const tableName = "Cat";
+							listTagsOfResourceFunction = () => Promise.resolve({
+								"Tags": []
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption, "tags": {"hello": "universe"}});
+							await utils.set_immediate_promise();
+							expect(tagResourceParams).toEqual([
+								{
+									"ResourceArn": "arn",
+									"Tags": [
+										{
+											"Key": "hello",
+											"Value": "universe"
+										}
+									]
+								}
+							]);
+							expect(untagResourceParams).toEqual([]);
+						});
+					});
+				});
+			});
 		});
 
 		describe("Time To Live", () => {
@@ -957,7 +1246,10 @@ describe("Table", () => {
 					},
 					"describeTimeToLive": () => {
 						return describeTTLFunction ? describeTTLFunction() : Promise.resolve(describeTTL);
-					}
+					},
+					"listTagsOfResource": () => Promise.resolve({
+						"Tags": []
+					})
 				});
 			});
 			afterEach(() => {

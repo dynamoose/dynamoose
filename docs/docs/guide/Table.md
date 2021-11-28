@@ -31,12 +31,13 @@ The `config` parameter is an object used to customize settings for the table.
 | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
 | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
-| update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
+| update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`, `tags`. | Boolean \| [String] | false |
 | expires | The setting to describe the time to live for items created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
 | expires.ttl | The default amount of time the item should stay alive from creation time in milliseconds. | Number | undefined |
 | expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` |
 | expires.items | The options for items with ttl. | Object | {} |
 | expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
+| tags | An object containing key value pairs that should be added to the table as tags. | Object | {} |
 
 The default object is listed below.
 
@@ -57,7 +58,8 @@ The default object is listed below.
 		}
 	},
 	"update": false,
-	"expires": null
+	"expires": null,
+	"tags": {}
 }
 ```
 
