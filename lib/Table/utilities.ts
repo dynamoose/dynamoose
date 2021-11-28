@@ -184,11 +184,9 @@ export async function updateTable (table: Table): Promise<void> {
 	}
 	// Tags
 	if (updateAll || (table[internalProperties].options.update as TableUpdateOptions[]).includes(TableUpdateOptions.tags)) {
-		console.log("1");
 		const currentTags = (await getTagDetails(table)).Tags;
 		const expectedTags: {[key: string]: string} = table[internalProperties].options.tags;
 
-		console.log(currentTags, expectedTags);
 		let tableDetails: DynamoDB.DescribeTableOutput;
 
 		const tagsToDelete = currentTags.filter((tag) => expectedTags[tag.Key] !== tag.Value).map((tag) => tag.Key);
