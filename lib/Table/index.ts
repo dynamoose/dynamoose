@@ -246,7 +246,8 @@ export interface TableExpiresSettings {
 export enum TableUpdateOptions {
 	ttl = "ttl",
 	indexes = "indexes",
-	throughput = "throughput"
+	throughput = "throughput",
+	tags = "tags"
 }
 export interface TableOptions {
 	create: boolean;
@@ -257,5 +258,6 @@ export interface TableOptions {
 	update: boolean | TableUpdateOptions[];
 	populate: string | string[] | boolean;
 	expires: number | TableExpiresSettings;
+	tags: {[key: string]: string};
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;

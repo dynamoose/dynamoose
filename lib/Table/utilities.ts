@@ -6,6 +6,8 @@ import ddb = require("../aws/ddb/internal");
 import utils = require("../utils");
 import {CustomError} from "dynamoose-utils";
 import {TableIndexChangeType} from "../utils/dynamoose/index_changes";
+import timeout = require("../utils/timeout");
+
 
 // Utility functions
 export async function getTableDetails (table: Table, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
@@ -25,12 +27,49 @@ export async function getTableDetails (table: Table, settings: {allowError?: boo
 
 	return table[internalProperties].latestTableDetails;
 }
+function getExpectedTags (table: Table): DynamoDB.Tag[] | undefined {
+	const tagEntries: [string, string][] = Object.entries(table[internalProperties].options.tags);
+	if (tagEntries.length === 0) {
+		return undefined;
+	} else {
+		return tagEntries.map(([Key, Value]) => ({
+			Key,
+			Value
+		}));
+	}
+}
+export async function getTagDetails (table: Table): Promise<DynamoDB.ListTagsOfResourceOutput> {
+	const tableDetails = await getTableDetails(table);
+	let tags: DynamoDB.ListTagsOfResourceOutput = await ddb("listTagsOfResource", {
+		"ResourceArn": tableDetails.Table.TableArn
+	});
+
+	while (tags.NextToken) {
+		// TODO: The timeout below causes tests to fail, so we disable it for now. We should also probably only run a timeout if we get an error from AWS.
+		// await timeout(100); // You can call ListTagsOfResource up to 10 times per second, per account.
+		const nextTags = await ddb("listTagsOfResource", {
+			"ResourceArn": tableDetails.Table.TableArn,
+			"NextToken": tags.NextToken
+		});
+		tags.NextToken = nextTags.NextToken;
+		tags.Tags = [...tags.Tags, ...nextTags.Tags];
+	}
+
+	return tags;
+}
 export async function createTableRequest (table: Table): Promise<DynamoDB.CreateTableInput> {
-	return {
+	const object: DynamoDB.CreateTableInput = {
 		"TableName": table[internalProperties].name,
 		...utils.dynamoose.get_provisioned_throughput(table[internalProperties].options),
 		...await table[internalProperties].getCreateTableAttributeParams()
 	};
+
+	const tags = getExpectedTags(table);
+	if (tags) {
+		object.Tags = tags;
+	}
+
+	return object;
 }
 // Setting `force` to true will create the table even if the table is already believed to be active
 export function createTable (table: Table): Promise<void | (() => Promise<void>)>;
@@ -142,5 +181,35 @@ export async function updateTable (table: Table): Promise<void> {
 			await ddb("updateTable", params);
 			await waitForActive(table)();
 		}, Promise.resolve());
+	}
+	// Tags
+	if (updateAll || (table[internalProperties].options.update as TableUpdateOptions[]).includes(TableUpdateOptions.tags)) {
+		console.log("1");
+		const currentTags = (await getTagDetails(table)).Tags;
+		const expectedTags: {[key: string]: string} = table[internalProperties].options.tags;
+
+		console.log(currentTags, expectedTags);
+		let tableDetails: DynamoDB.DescribeTableOutput;
+
+		const tagsToDelete = currentTags.filter((tag) => expectedTags[tag.Key] !== tag.Value).map((tag) => tag.Key);
+		if (tagsToDelete.length > 0) {
+			tableDetails = await getTableDetails(table);
+			await ddb("untagResource", {
+				"ResourceArn": tableDetails.Table.TableArn,
+				"TagKeys": tagsToDelete
+			});
+		}
+
+		const tagsToAdd = Object.keys(expectedTags).filter((key) => tagsToDelete.includes(key) || !currentTags.some((tag) => tag.Key === key));
+		if (tagsToAdd.length > 0) {
+			tableDetails = tableDetails || await getTableDetails(table);
+			await ddb("tagResource", {
+				"ResourceArn": tableDetails.Table.TableArn,
+				"Tags": tagsToAdd.map((key) => ({
+					"Key": key,
+					"Value": expectedTags[key]
+				}))
+			});
+		}
 	}
 }

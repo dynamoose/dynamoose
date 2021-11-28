@@ -46,11 +46,13 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 - Stricter validation of Schema types. If you pass in an invalid schema attribute type, it will now throw an error upon initialization.
 	- For example, `new dynamoose.Schema({"id": "random"})` will now throw an error.
 - Node.js >=v12 now required.
+- New IAM roles (`listTagsOfResource`, `tagResource`, `untagResource`) required if `update` is set to true.
 
 ### Major New Features
 
 ### General
 
+- Added `tags` setting to Table, to be able to add tags to a table.
 - Added `dynamoose.type.ANY` type to allow for schema attributes to be any type. This also works for the `schema` setting on Schema properties.
 - Added `table.create()` method to create a table manually.
 - Added `table.name` property to be able to access table name.

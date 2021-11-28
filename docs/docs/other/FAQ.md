@@ -4,7 +4,7 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 
 | Dynamoose Action | IAM Permission | Notes |
 |------------------|----------------|-------|
-| new Model() | `createTable`, `describeTable`, `updateTable`, `updateTimeToLive`, `describeTimeToLive` | `createTable` is only used if `create` is set to true. `describeTable` is only used if `waitForActive` OR `create` is set to true. `updateTable` is only used if `update` is set to true. `updateTimeToLive` & `describeTimeToLive` is only used if `create` or `update` is set to true and there is an `expires` setting on the model. |
+| new Model() | `createTable`, `describeTable`, `updateTable`, `updateTimeToLive`, `describeTimeToLive`, `listTagsOfResource`, `tagResource`, `untagResource` | `createTable` is only used if `create` is set to true. `describeTable` is only used if `waitForActive` OR `create` is set to true. `updateTable` is only used if `update` is set to true. `updateTimeToLive` & `describeTimeToLive` is only used if `create` or `update` is set to true and there is an `expires` setting on the model. `listTagsOfResource`, `tagResource`, `untagResource` are only used if `update` is set to true or includes `tags` in the array of strings. |
 | Model.get | `getItem` |  |
 | Model.batchGet | `batchGetItem` |  |
 | Model.scan | `scan` | This permission is only required on `scan.exec` |

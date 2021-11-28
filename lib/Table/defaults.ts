@@ -17,7 +17,8 @@ export const original: TableOptions = {
 	},
 	"update": false,
 	"populate": false,
-	"expires": undefined
+	"expires": undefined,
+	"tags": {},
 	// "streamOptions": {
 	// 	"enabled": false,
 	// 	"type": undefined

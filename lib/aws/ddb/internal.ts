@@ -2,12 +2,17 @@ import * as ddb from "./index";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import utils = require("../../utils");
 
+// NOTE: If you add new functions below remember to add to FAQ page for what IAM roles are required
+
 // Table
 async function main (method: "describeTable", params: DynamoDB.DescribeTableInput): Promise<DynamoDB.DescribeTableOutput>;
 async function main (method: "createTable", params: DynamoDB.CreateTableInput): Promise<DynamoDB.CreateTableOutput>;
 async function main (method: "updateTable", params: DynamoDB.UpdateTableInput): Promise<DynamoDB.UpdateTableOutput>;
 async function main (method: "updateTimeToLive", params: DynamoDB.UpdateTimeToLiveInput): Promise<DynamoDB.UpdateTimeToLiveOutput>;
 async function main (method: "describeTimeToLive", params: DynamoDB.DescribeTimeToLiveInput): Promise<DynamoDB.DescribeTimeToLiveOutput>;
+async function main (method: "listTagsOfResource", params: DynamoDB.ListTagsOfResourceCommandInput): Promise<DynamoDB.ListTagsOfResourceCommandOutput>;
+async function main (method: "tagResource", params: DynamoDB.TagResourceCommandInput): Promise<DynamoDB.TagResourceCommandOutput>;
+async function main (method: "untagResource", params: DynamoDB.UntagResourceCommandInput): Promise<DynamoDB.UntagResourceCommandOutput>;
 
 // Item
 async function main (method: "getItem", params: DynamoDB.GetItemInput): Promise<DynamoDB.GetItemOutput>;
