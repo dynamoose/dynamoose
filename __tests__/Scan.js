@@ -316,7 +316,7 @@ describe("Scan", () => {
 					});
 
 					it("Should populate when calling populate function", async () => {
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": dynamoose.type.THIS});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "parent": dynamoose.type.THIS});
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
@@ -346,7 +346,7 @@ describe("Scan", () => {
 					it("Should populate when calling populate function with different model", async () => {
 						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
 						new dynamoose.Table("Dog", [Model2]);
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": Model2});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "parent": Model2});
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
@@ -376,7 +376,7 @@ describe("Scan", () => {
 					it("Should populate when calling populate function with array of different models", async () => {
 						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
 						new dynamoose.Table("Dog", [Model2]);
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Array, "schema": [Model2]}});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "parent": {"type": Array, "schema": [Model2]}});
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
@@ -406,7 +406,7 @@ describe("Scan", () => {
 					it("Should populate when calling populate function with array of different models with multiple items", async () => {
 						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
 						new dynamoose.Table("Dog", [Model2]);
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Array, "schema": [Model2]}});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "parent": {"type": Array, "schema": [Model2]}});
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {
@@ -439,7 +439,7 @@ describe("Scan", () => {
 					it("Should populate when calling populate function with set of different models", async () => {
 						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
 						new dynamoose.Table("Dog", [Model2]);
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Set, "schema": [Model2]}});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "parent": {"type": Set, "schema": [Model2]}});
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": () => {
@@ -466,7 +466,7 @@ describe("Scan", () => {
 					it("Should populate when calling populate function with set of different models with multiple items", async () => {
 						const Model2 = dynamoose.model("Dog", {"id": Number, "name": String});
 						new dynamoose.Table("Dog", [Model2]);
-						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}, "parent": {"type": Set, "schema": [Model2]}});
+						Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "parent": {"type": Set, "schema": [Model2]}});
 						new dynamoose.Table("Cat", [Model]);
 						dynamoose.aws.ddb.set({
 							"getItem": (params) => {

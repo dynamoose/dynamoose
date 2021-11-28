@@ -47,6 +47,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 	- For example, `new dynamoose.Schema({"id": "random"})` will now throw an error.
 - Node.js >=v12 now required.
 - New IAM roles (`listTagsOfResource`, `tagResource`, `untagResource`) required if `update` is set to true.
+- `index.global` property has been removed within Schema Attribute Settings. It has been replaced with `index.type`, which accepts `"global"` or `"local"` as values. This setting remains optional (however, the default value has changed).
+- Indexes by default will be global as opposed to local.
 
 ### Major New Features
 

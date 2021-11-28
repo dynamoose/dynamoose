@@ -693,7 +693,7 @@ describe("Table", () => {
 									"TableStatus": "ACTIVE"
 								}
 							});
-							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}});
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
 							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
@@ -964,7 +964,7 @@ describe("Table", () => {
 								}
 								return Promise.resolve(obj);
 							};
-							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"global": true}}, "status": {"type": String, "index": {"global": true}}});
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}, "status": {"type": String, "index": {"type": "global"}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
 							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
 							await utils.set_immediate_promise();
@@ -1493,8 +1493,8 @@ describe("Table", () => {
 
 	describe("getIndexes", () => {
 		it("Should return only 1 index if duplicates exist across models", async () => {
-			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "index": {"global": true}}});
-			const model2 = dynamoose.model("User2", {"id": String, "data": {"type": String, "index": {"global": true}}});
+			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "index": {"type": "global"}}});
+			const model2 = dynamoose.model("User2", {"id": String, "data": {"type": String, "index": {"type": "global"}}});
 			const table = new dynamoose.Table("User", [model, model2]);
 
 			expectChai(await table[internalProperties].getIndexes()).to.eql({
@@ -1530,8 +1530,8 @@ describe("Table", () => {
 		});
 
 		it("Should return all indexes from all models", async () => {
-			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "index": {"global": true}}});
-			const model2 = dynamoose.model("User2", {"id": String, "data2": {"type": String, "index": {"global": true}}});
+			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "index": {"type": "global"}}});
+			const model2 = dynamoose.model("User2", {"id": String, "data2": {"type": String, "index": {"type": "global"}}});
 			const table = new dynamoose.Table("User", [model, model2]);
 
 			expectChai(await table[internalProperties].getIndexes()).to.eql({
