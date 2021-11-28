@@ -518,7 +518,8 @@ describe("Table", () => {
 									"TableStatus": "ACTIVE"
 								}
 							});
-							dynamoose.model(tableName, {"id": String}, {"throughput": {"read": 1, "write": 2}, "update": updateOption});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": updateOption});
 							await utils.set_immediate_promise();
 							expectChai(updateTableParams).to.eql([]);
 						});
