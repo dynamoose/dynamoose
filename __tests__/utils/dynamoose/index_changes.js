@@ -8,7 +8,7 @@ describe("utils.dynamoose.index_changes", () => {
 	});
 
 	const tests = [
-		{"input": [], "schema": {"id": String, "name": {"type": String, "index": {"global": true}}}, "output": [
+		{"input": [], "schema": {"id": String, "name": {"type": String, "index": {"type": "global"}}}, "output": [
 			{
 				"spec": {
 					"IndexName": "nameGlobalIndex",
@@ -46,7 +46,7 @@ describe("utils.dynamoose.index_changes", () => {
 					"WriteCapacityUnits": 1
 				}
 			}
-		], "schema": {"id": String, "name": {"type": String, "index": {"global": true}}}, "output": []},
+		], "schema": {"id": String, "name": {"type": String, "index": {"type": "global"}}}, "output": []},
 		{"input": [
 			{
 				"IndexName": "nameGlobalIndex2",
@@ -64,7 +64,7 @@ describe("utils.dynamoose.index_changes", () => {
 					"WriteCapacityUnits": 1
 				}
 			}
-		], "schema": {"id": String, "name": {"type": String, "index": {"global": true}}}, "output": [
+		], "schema": {"id": String, "name": {"type": String, "index": {"type": "global"}}}, "output": [
 			{
 				"name": "nameGlobalIndex2",
 				"type": "delete"
@@ -114,7 +114,7 @@ describe("utils.dynamoose.index_changes", () => {
 		]},
 		{
 			"input": [],
-			"schema": [{"id": String, "data1": String, "data": {"type": String, "index": {"global": true, "rangeKey": "data1"}}}, {"id": String, "data2": String, "data": {"type": String, "index": {"global": true, "rangeKey": "data2"}}}],
+			"schema": [{"id": String, "data1": String, "data": {"type": String, "index": {"type": "global", "rangeKey": "data1"}}}, {"id": String, "data2": String, "data": {"type": String, "index": {"type": "global", "rangeKey": "data2"}}}],
 			"output": [
 				{
 					"spec": {
@@ -187,7 +187,7 @@ describe("utils.dynamoose.index_changes", () => {
 					"IndexArn": "arn:aws:dynamodb:ddblocal:000000000000:table/User/index/data-index-1"
 				}
 			],
-			"schema": {"id": String, "data": {"type": String, "index": {"name": "data-index-1", "global": true, "project": true}}},
+			"schema": {"id": String, "data": {"type": String, "index": {"name": "data-index-1", "type": "global", "project": true}}},
 			"output": []
 		}
 	];

@@ -95,7 +95,7 @@ describe("Schema", () => {
 	});
 
 	it("Should throw error if using index as nested attribute", () => {
-		expect(() => new dynamoose.Schema({"id": String, "friend": {"type": Object, "schema": {"name": {"type": String, "index": {"global": true}}}}})).to.throw("Index must be at root object and not nested in object or array.");
+		expect(() => new dynamoose.Schema({"id": String, "friend": {"type": Object, "schema": {"name": {"type": String, "index": {"type": "global"}}}}})).to.throw("Index must be at root object and not nested in object or array.");
 	});
 
 	it("Should throw error if passing an index with multiple data types", () => {
@@ -430,20 +430,16 @@ describe("Schema", () => {
 							"KeyType": "HASH"
 						}
 					],
-					"LocalSecondaryIndexes": [
+					"GlobalSecondaryIndexes": [
 						{
-							"IndexName": "ageLocalIndex",
+							"IndexName": "ageGlobalIndex",
 							"Projection": {
 								"ProjectionType": "ALL"
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						}
@@ -474,36 +470,28 @@ describe("Schema", () => {
 							"KeyType": "HASH"
 						}
 					],
-					"LocalSecondaryIndexes": [
+					"GlobalSecondaryIndexes": [
 						{
-							"IndexName": "ageLocalIndex",
+							"IndexName": "ageGlobalIndex",
 							"Projection": {
 								"ProjectionType": "ALL"
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						},
 						{
-							"IndexName": "nameLocalIndex",
+							"IndexName": "nameGlobalIndex",
 							"Projection": {
 								"ProjectionType": "ALL"
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "name",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						}
@@ -530,7 +518,7 @@ describe("Schema", () => {
 							"KeyType": "HASH"
 						}
 					],
-					"LocalSecondaryIndexes": [
+					"GlobalSecondaryIndexes": [
 						{
 							"IndexName": "ageIndex",
 							"Projection": {
@@ -538,12 +526,8 @@ describe("Schema", () => {
 							},
 							"KeySchema": [
 								{
-									"AttributeName": "id",
-									"KeyType": "HASH"
-								},
-								{
 									"AttributeName": "age",
-									"KeyType": "RANGE"
+									"KeyType": "HASH"
 								}
 							]
 						}
@@ -552,7 +536,7 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return correct result with global index as object",
-				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "rangeKey": "id", "project": true, "throughput": 5}}},
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "type": "global", "rangeKey": "id", "project": true, "throughput": 5}}},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -596,7 +580,7 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return correct result with global index as object with rangeKey as different property",
-				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "rangeKey": "type", "project": true, "throughput": 5}}, "type": String},
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "type": "global", "rangeKey": "type", "project": true, "throughput": 5}}, "type": String},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -644,7 +628,7 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return correct result with index and project as null",
-				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "project": null}}},
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "type": "global", "project": null}}},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -680,7 +664,7 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return correct result with index and project as true",
-				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "project": null}}},
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "type": "global", "project": null}}},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -716,7 +700,7 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return correct result with index and project as false",
-				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "project": false}}},
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "type": "global", "project": false}}},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -752,7 +736,7 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return correct result with index and project as array",
-				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "global": true, "project": ["name"]}, "name": String, "address": String}},
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "ageIndex", "type": "global", "project": ["name"]}, "name": String, "address": String}},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -788,8 +772,44 @@ describe("Schema", () => {
 				}
 			},
 			{
-				"name": "Should return correct result with index and no name as local index",
+				"name": "Should return correct result with index and no name as index with type undefined",
 				"input": {"id": String, "age": {"type": Number, "index": {"name": ""}}},
+				"output": {
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						},
+						{
+							"AttributeName": "age",
+							"AttributeType": "N"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"GlobalSecondaryIndexes": [
+						{
+							"IndexName": "ageGlobalIndex",
+							"KeySchema": [
+								{
+									"AttributeName": "age",
+									"KeyType": "HASH"
+								}
+							],
+							"Projection": {
+								"ProjectionType": "ALL"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Should return correct result with index and no name as local index",
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "", "type": "local"}}},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -829,7 +849,7 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return correct result with index and no name as global index",
-				"input": {"id": String, "age": {"type": Number, "index": {"name": "", "global": true}}},
+				"input": {"id": String, "age": {"type": Number, "index": {"name": "", "type": "global"}}},
 				"output": {
 					"AttributeDefinitions": [
 						{
@@ -1201,23 +1221,23 @@ describe("Schema", () => {
 			},
 			{
 				"name": "Should return an array containing definitions for an object defined index",
-				"schema": {"id": {"type": String, "index": {"global": true, "name": "id-index"}}},
-				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index"}}]
+				"schema": {"id": {"type": String, "index": {"type": "global", "name": "id-index"}}},
+				"output": [{"attribute": "id", "index": {"type": "global", "name": "id-index"}}]
 			},
 			{
 				"name": "Should return an array containing definitions for an array defined index",
-				"schema": {"id": {"type": String, "index": [{"global": true, "name": "id-index"}]}},
-				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index"}}]
+				"schema": {"id": {"type": String, "index": [{"type": "global", "name": "id-index"}]}},
+				"output": [{"attribute": "id", "index": {"type": "global", "name": "id-index"}}]
 			},
 			{
 				"name": "Should return an array containing multiple definitions for array defined indexes",
-				"schema": {"id": {"type": String, "index": [{"global": true, "name": "id-index-1"}, {"global": false, "name": "id-index-2"}]}},
-				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index-1"}}, {"attribute": "id", "index": {"global": false, "name": "id-index-2"}}]
+				"schema": {"id": {"type": String, "index": [{"type": "global", "name": "id-index-1"}, {"type": "local", "name": "id-index-2"}]}},
+				"output": [{"attribute": "id", "index": {"type": "global", "name": "id-index-1"}}, {"attribute": "id", "index": {"type": "local", "name": "id-index-2"}}]
 			},
 			{
 				"name": "Should aggregate an array containing multiple definitions for all defined indexes",
-				"schema": {"id": {"type": String, "index": [{"global": true, "name": "id-index-1"}, {"global": false, "name": "id-index-2"}]}, "uid": {"type": String, "index": {"global": true, "name": "uid-index"}}, "uuid": {"type": String}},
-				"output": [{"attribute": "id", "index": {"global": true, "name": "id-index-1"}}, {"attribute": "id", "index": {"global": false, "name": "id-index-2"}}, {"attribute": "uid", "index": {"global": true, "name": "uid-index"}}]
+				"schema": {"id": {"type": String, "index": [{"type": "global", "name": "id-index-1"}, {"type": "local", "name": "id-index-2"}]}, "uid": {"type": String, "index": {"type": "global", "name": "uid-index"}}, "uuid": {"type": String}},
+				"output": [{"attribute": "id", "index": {"type": "global", "name": "id-index-1"}}, {"attribute": "id", "index": {"type": "local", "name": "id-index-2"}}, {"attribute": "uid", "index": {"type": "global", "name": "uid-index"}}]
 			},
 			{
 				"name": "Should work with multiple types for single attribute",

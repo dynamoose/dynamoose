@@ -239,9 +239,13 @@ interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
 	saveUnknown?: boolean | string[];
 }
+export enum IndexType {
+	global = "global",
+	local = "local"
+}
 interface IndexDefinition {
 	name?: string;
-	global?: boolean;
+	type?: IndexType;
 	rangeKey?: string;
 	project?: boolean | string[];
 	throughput?: "ON_DEMAND" | number | {read: number; write: number};
@@ -695,16 +699,17 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 	const indexes: ModelIndexes = (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
+		const isGlobalIndex = indexValue.type === "global" || !indexValue.type;
 
 		const dynamoIndexObject: IndexItem = {
-			"IndexName": indexValue.name || `${attributeValue}${indexValue.global ? "GlobalIndex" : "LocalIndex"}`,
+			"IndexName": indexValue.name || `${attributeValue}${isGlobalIndex ? "GlobalIndex" : "LocalIndex"}`,
 			"KeySchema": [],
 			"Projection": {"ProjectionType": "KEYS_ONLY"}
 		};
 		if (indexValue.project || typeof indexValue.project === "undefined" || indexValue.project === null) {
 			dynamoIndexObject.Projection = Array.isArray(indexValue.project) ? {"ProjectionType": "INCLUDE", "NonKeyAttributes": indexValue.project} : {"ProjectionType": "ALL"};
 		}
-		if (indexValue.global) {
+		if (isGlobalIndex) {
 			dynamoIndexObject.KeySchema.push({"AttributeName": attributeValue, "KeyType": "HASH"});
 			if (indexValue.rangeKey) {
 				dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
@@ -718,7 +723,7 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 			dynamoIndexObject.KeySchema.push({"AttributeName": this.getHashKey(), "KeyType": "HASH"});
 			dynamoIndexObject.KeySchema.push({"AttributeName": attributeValue, "KeyType": "RANGE"});
 		}
-		const accumulatorKey = indexValue.global ? "GlobalSecondaryIndexes" : "LocalSecondaryIndexes";
+		const accumulatorKey = isGlobalIndex ? "GlobalSecondaryIndexes" : "LocalSecondaryIndexes";
 		if (!accumulator[accumulatorKey]) {
 			accumulator[accumulatorKey] = [];
 		}
