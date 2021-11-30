@@ -1,0 +1,17 @@
+import DynamoDB = require("@aws-sdk/client-dynamodb");
+declare function main(method: "describeTable", params: DynamoDB.DescribeTableInput): Promise<DynamoDB.DescribeTableOutput>;
+declare function main(method: "createTable", params: DynamoDB.CreateTableInput): Promise<DynamoDB.CreateTableOutput>;
+declare function main(method: "updateTable", params: DynamoDB.UpdateTableInput): Promise<DynamoDB.UpdateTableOutput>;
+declare function main(method: "updateTimeToLive", params: DynamoDB.UpdateTimeToLiveInput): Promise<DynamoDB.UpdateTimeToLiveOutput>;
+declare function main(method: "describeTimeToLive", params: DynamoDB.DescribeTimeToLiveInput): Promise<DynamoDB.DescribeTimeToLiveOutput>;
+declare function main(method: "getItem", params: DynamoDB.GetItemInput): Promise<DynamoDB.GetItemOutput>;
+declare function main(method: "deleteItem", params: DynamoDB.DeleteItemInput): Promise<DynamoDB.DeleteItemOutput>;
+declare function main(method: "updateItem", params: DynamoDB.UpdateItemInput): Promise<DynamoDB.UpdateItemOutput>;
+declare function main(method: "putItem", params: DynamoDB.PutItemInput): Promise<DynamoDB.PutItemOutput>;
+declare function main(method: "batchWriteItem", params: DynamoDB.BatchWriteItemInput): Promise<DynamoDB.BatchWriteItemOutput>;
+declare function main(method: "batchGetItem", params: DynamoDB.BatchGetItemInput): Promise<DynamoDB.BatchGetItemOutput>;
+declare function main(method: "query", params: DynamoDB.QueryInput): Promise<DynamoDB.QueryOutput>;
+declare function main(method: "scan", params: DynamoDB.ScanInput): Promise<DynamoDB.ScanOutput>;
+declare function main(method: "transactGetItems", params: DynamoDB.TransactGetItemsInput): Promise<DynamoDB.TransactGetItemsOutput>;
+declare function main(method: "transactWriteItems", params: DynamoDB.TransactWriteItemsInput): Promise<DynamoDB.TransactWriteItemsOutput>;
+export = main;
