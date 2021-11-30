@@ -6,7 +6,7 @@ import aws = require("./aws");
 import Internal = require("./Internal");
 import utils = require("./utils");
 import {Item, AnyItem} from "./Item";
-import ModelStore = require("./ModelStore");
+import * as ModelStore from './ModelStore';
 import {ModelType} from "./General";
 import {CustomError} from "dynamoose-utils";
 
@@ -23,7 +23,7 @@ const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaD
 	if (!schema && storedSchema) {
 		model = storedSchema;
 	} else {
-		model = new Model(name, schema, options);
+		model = new Model(name, schema, options, ModelStore);
 	}
 	const returnObject: any = model.Item;
 	const keys = utils.array_flatten([

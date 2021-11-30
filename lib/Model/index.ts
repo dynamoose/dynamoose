@@ -262,7 +262,7 @@ export interface ModelIndexes {
 
 // Model represents one DynamoDB table
 export class Model<T extends ItemCarrier = AnyItem> {
-	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional) {
+	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelOptionsOptional, ModelStore: (model: Model) => void) {
 		Object.defineProperty(this, internalProperties, {
 			"configurable": false,
 			"value": {}
@@ -459,7 +459,6 @@ export class Model<T extends ItemCarrier = AnyItem> {
 			return accumulator;
 		}, {});
 
-		const ModelStore = require("../ModelStore");
 		ModelStore(this);
 	}
 
