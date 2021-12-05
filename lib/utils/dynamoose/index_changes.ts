@@ -20,7 +20,7 @@ export interface ModelIndexDeleteChange {
 
 const index_changes = async (table: Table, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
 	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
-	const expectedIndexes = await table[internalProperties].getIndexes();
+	const expectedIndexes = await table.getInternalProperties(internalProperties).getIndexes();
 
 	// Indexes to delete
 	const identiticalProperties: string[] = ["IndexName", "KeySchema", "Projection", "ProvisionedThroughput"]; // This array represents the properties in the indexes that should match between existingIndexes (from DynamoDB) and expectedIndexes. This array will not include things like `IndexArn`, `ItemCount`, etc, since those properties do not exist in expectedIndexes

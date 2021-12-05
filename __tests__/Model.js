@@ -937,12 +937,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expectChai(calledGetItem).to.be.false;
 					expectChai(user).to.not.exist;
-					expectChai(model.Model[internalProperties].table()[internalProperties].pendingTasks.length).to.eql(1);
+					expectChai(model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
+					await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expectChai(calledGetItem).to.be.true;
 					expectChai({...user}).to.eql({"id": 1, "name": "Charlie"});
@@ -1222,12 +1222,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expectChai(calledBatchGetItem).to.be.false;
 					expectChai(users).to.not.exist;
-					expectChai(model.Model[internalProperties].table()[internalProperties].pendingTasks.length).to.eql(1);
+					expectChai(model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
+					await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expectChai(calledBatchGetItem).to.be.true;
 					expectChai(users.map((user) => ({...user}))).to.eql([{"id": 1, "name": "Charlie"}]);

@@ -105,14 +105,14 @@ describe("Table", () => {
 			it("Should not be ready to start", () => {
 				const Model = dynamoose.model("Cat", {"id": String});
 				const Table = new dynamoose.Table("Cat", [Model], {"create": false});
-				expectChai(Table[internalProperties].ready).to.be.false;
+				expectChai(Table.getInternalProperties(internalProperties).ready).to.be.false;
 			});
 
 			it("Should set ready after setup flow", async () => {
 				const Model = dynamoose.model("Cat", {"id": String});
 				const Table = new dynamoose.Table("Cat", [Model], {"create": false, "waitForActive": false});
 				await utils.set_immediate_promise();
-				expectChai(Table[internalProperties].ready).to.be.true;
+				expectChai(Table.getInternalProperties(internalProperties).ready).to.be.true;
 			});
 
 			it("Should resolve pendingTaskPromises after model is ready", async () => {
@@ -128,7 +128,7 @@ describe("Table", () => {
 				await utils.set_immediate_promise();
 
 				let pendingTaskPromiseResolved = false;
-				Table[internalProperties].pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+				Table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
 
 				await utils.set_immediate_promise();
 				expectChai(pendingTaskPromiseResolved).to.be.false;
@@ -136,10 +136,10 @@ describe("Table", () => {
 				describeTableResponse = {
 					"Table": {"TableStatus": "ACTIVE"}
 				};
-				await Table[internalProperties].pendingTaskPromise();
+				await Table.getInternalProperties(internalProperties).pendingTaskPromise();
 				await utils.set_immediate_promise();
 				expectChai(pendingTaskPromiseResolved).to.be.true;
-				expectChai(Table[internalProperties].pendingTasks).to.eql([]);
+				expectChai(Table.getInternalProperties(internalProperties).pendingTasks).to.eql([]);
 			});
 
 			it("Should immediately resolve pendingTaskPromises promise if table is already ready", async () => {
@@ -148,7 +148,7 @@ describe("Table", () => {
 				await utils.set_immediate_promise();
 
 				let pendingTaskPromiseResolved = false;
-				Table[internalProperties].pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
+				Table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
 
 				await utils.set_immediate_promise();
 
@@ -774,7 +774,7 @@ describe("Table", () => {
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
+							await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expectChai(updateTableParams).to.eql([
 								{
@@ -855,7 +855,7 @@ describe("Table", () => {
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
+							await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expectChai(updateTableParams).to.eql([
 								{
@@ -1045,7 +1045,7 @@ describe("Table", () => {
 							};
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}, "status": {"type": String, "index": {"type": "global"}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
+							await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expectChai(describeTableFunctionCalledTimes).to.eql(5);
 							expectChai(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
@@ -1532,7 +1532,7 @@ describe("Table", () => {
 				const tableName = "Cat";
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"expires": {"ttl": 1000, "attribute": "expires"}});
-				await model.Model[internalProperties].table()[internalProperties].pendingTaskPromise();
+				await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
 				expectChai(updateTTLParams).to.eql([{
 					"TableName": tableName,
 					"TimeToLiveSpecification": {
@@ -1708,8 +1708,8 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data": String});
 			const table = new dynamoose.Table("Table", [model, model2]);
 
-			expectChai(await table[internalProperties].modelForObject({"id": "1", "name": "John"})).to.eql(model);
-			expectChai(await table[internalProperties].modelForObject({"id": "1", "data": "John"})).to.eql(model2);
+			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).to.eql(model);
+			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).to.eql(model2);
 		});
 
 		it("Should return correct model for sub-schemas", async () => {
@@ -1717,9 +1717,9 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data": String});
 			const table = new dynamoose.Table("Table", [model, model2]);
 
-			expectChai(await table[internalProperties].modelForObject({"id": "1", "name": "John"})).to.eql(model);
-			expectChai(await table[internalProperties].modelForObject({"id": "1", "data": "John"})).to.eql(model);
-			expectChai(await table[internalProperties].modelForObject({"id": "1", "data": "John", "item": "Smith"})).to.eql(model);
+			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).to.eql(model);
+			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).to.eql(model);
+			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John", "item": "Smith"})).to.eql(model);
 		});
 	});
 
@@ -1729,7 +1729,7 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data": {"type": String, "index": {"type": "global"}}});
 			const table = new dynamoose.Table("User", [model, model2]);
 
-			expectChai(await table[internalProperties].getIndexes()).to.eql({
+			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql({
 				"GlobalSecondaryIndexes": [
 					{
 						"IndexName": "dataGlobalIndex",
@@ -1757,8 +1757,8 @@ describe("Table", () => {
 					]
 				}
 			});
-			expectChai(await table[internalProperties].getIndexes()).to.eql(await model.Model[internalProperties].getIndexes());
-			expectChai(await table[internalProperties].getIndexes()).to.eql(await model2.Model[internalProperties].getIndexes());
+			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model.Model[internalProperties].getIndexes());
+			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model2.Model[internalProperties].getIndexes());
 		});
 
 		it("Should return all indexes from all models", async () => {
@@ -1766,7 +1766,7 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data2": {"type": String, "index": {"type": "global"}}});
 			const table = new dynamoose.Table("User", [model, model2]);
 
-			expectChai(await table[internalProperties].getIndexes()).to.eql({
+			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql({
 				"GlobalSecondaryIndexes": [
 					{
 						"IndexName": "dataGlobalIndex",
@@ -1817,13 +1817,13 @@ describe("Table", () => {
 		it("Should return first attribute if no hash key defined", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": Number}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table[internalProperties].getHashKey()).to.eql("id");
+			expectChai(table.getInternalProperties(internalProperties).getHashKey()).to.eql("id");
 		});
 
 		it("Should return hash key if set to true", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": {"type": Number, "hashKey": true}}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table[internalProperties].getHashKey()).to.eql("age");
+			expectChai(table.getInternalProperties(internalProperties).getHashKey()).to.eql("age");
 		});
 	});
 
@@ -1831,13 +1831,13 @@ describe("Table", () => {
 		it("Should return undefined if no range key defined", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": Number}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table[internalProperties].getRangeKey()).to.eql(undefined);
+			expectChai(table.getInternalProperties(internalProperties).getRangeKey()).to.eql(undefined);
 		});
 
 		it("Should return range key if set to true", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": {"type": Number, "rangeKey": true}}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table[internalProperties].getRangeKey()).to.eql("age");
+			expectChai(table.getInternalProperties(internalProperties).getRangeKey()).to.eql("age");
 		});
 	});
 });
