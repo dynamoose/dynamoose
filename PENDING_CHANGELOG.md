@@ -56,6 +56,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 - Added `tags` setting to Table, to be able to add tags to a table.
 - Added `dynamoose.type.ANY` type to allow for schema attributes to be any type. This also works for the `schema` setting on Schema properties.
+- Added `tableClass` option to Table settings to allow for setting a table to DynamoDB's new infrequent access class option.
 - Added `table.create()` method to create a table manually.
 - Added `table.name` property to be able to access table name.
 - Added `table.hashKey` property to be able to access table's hash key.
