@@ -2,6 +2,7 @@
 
 import * as dynamoose from "../../dist";
 import {Item} from "../../dist/Item";
+import { IndexType } from "../../dist/Schema";
 
 // @ts-expect-error
 const shouldFailWithNumberAsName = dynamoose.model(1);
@@ -11,7 +12,7 @@ const shouldFailWithBooleanAsName = dynamoose.model(true);
 
 const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 const shouldSucceedWithOnlyNameAndSchemaObject = dynamoose.model("User", {"id": String});
-const shouldSucceedWithNameAndSchemaInstance = dynamoose.model("User", new dynamoose.Schema({id: String}));
+const shouldSucceedWithNameAndSchemaInstance = dynamoose.model("User", new dynamoose.Schema({"id": String}));
 
 const model = dynamoose.model("User", {"id": Number});
 
@@ -72,7 +73,7 @@ const userSchema = new dynamoose.Schema({
 	"name": {
 		"type": String,
 		"index": {
-			"global": true
+			"type": IndexType.global
 		}
 	},
 	"age": Number
