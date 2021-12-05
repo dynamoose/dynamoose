@@ -10,14 +10,37 @@ import {IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
 import {TableClass} from "./types";
+import {InternalPropertiesClass} from "../InternalPropertiesClass";
+
+interface TableInternalProperties {
+	options: TableOptions;
+	name: string;
+	originalName: string;
+
+	ready: boolean;
+	alreadyCreated: boolean;
+	pendingTasks: any[];
+	pendingTaskPromise: () => Promise<void>;
+	models: any[];
+	// Stores the latest result from `describeTable` for the given table
+	latestTableDetails?: DynamoDB.DescribeTableOutput;
+
+	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
+	modelForObject: (object: ObjectType) => Promise<Model<ItemCarrier>>;
+	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
+	getHashKey: () => string;
+	getRangeKey: () => string;
+}
 
 // This class represents a single DynamoDB table
-export class Table {
-	transaction: any;
+export class Table extends InternalPropertiesClass<TableInternalProperties> {
+	// transaction: any;
 	static defaults: TableOptions;
 	name: string;
 
 	constructor (name: string, models: Model[], options: TableOptionsOptional = {}) {
+		super();
+
 		// Check name argument
 		if (!name) {
 			throw new CustomError.InvalidParameter("Name must be passed into table constructor.");
@@ -33,54 +56,71 @@ export class Table {
 			throw new CustomError.InvalidParameterType("Models passed into table constructor should be an array of models.");
 		}
 
+		const storedOptions = utils.combine_objects(options, customDefaults.get(), originalDefaults) as TableOptions;
+		this.setInternalProperties(internalProperties, {
+			"options": storedOptions,
+			"name": `${storedOptions.prefix}${name}${storedOptions.suffix}`,
+			"originalName": name, // This represents the name before prefix and suffix were added
 
-		Object.defineProperty(this, internalProperties, {
-			"configurable": false,
-			"value": {}
+			// Represents if model is ready to be used for actions such as "get", "put", etc. This property being true does not guarantee anything on the DynamoDB server. It only guarantees that Dynamoose has finished the initialization steps required to allow the model to function as expected on the client side.
+			"ready": false,
+			// Represents if the table in DynamoDB was created prior to initialization. This will only be updated if `create` is true.
+			"alreadyCreated": false,
+			// Represents an array of promise resolver functions to be called when Model.ready gets set to true (at the end of the setup flow)
+			"pendingTasks": [],
+			// Returns a promise that will be resolved after the Model is ready. This is used in all Model operations (Model.get, Item.save) to `await` at the beginning before running the AWS SDK method to ensure the Model is setup before running actions on it.
+			"pendingTaskPromise": (): Promise<void> => {
+				return this.getInternalProperties(internalProperties).ready ? Promise.resolve() : new Promise((resolve) => {
+					this.getInternalProperties(internalProperties).pendingTasks.push(resolve);
+				});
+			},
+			"models": models.map((model: any) => {
+				if (model.Model[internalProperties]._table) {
+					throw new CustomError.InvalidParameter(`Model ${model.Model.name} has already been assigned to a table.`);
+				}
+
+				model.Model[internalProperties]._table = this;
+				return model;
+			}),
+
+			"getIndexes": async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
+				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model[internalProperties].getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
+					Object.entries(indexes).forEach(([key, value]) => {
+						if (key === "TableIndex") {
+							result[key] = value as TableIndex;
+						} else {
+							result[key] = result[key] ? utils.unique_array_elements([...result[key], ...(value as IndexItem[])]) : value;
+						}
+					});
+
+					return result;
+				}, {});
+			},
+			// This function returns the best matched model for the given object input
+			"modelForObject": async (object: ObjectType): Promise<Model<ItemCarrier>> => {
+				const models = this.getInternalProperties(internalProperties).models;
+				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model[internalProperties].schemaCorrectnessScores(object)));
+				const highestModelSchemaCorrectnessScore = Math.max(...modelSchemaCorrectnessScores);
+				const bestModelIndex = modelSchemaCorrectnessScores.indexOf(highestModelSchemaCorrectnessScore);
+
+				return models[bestModelIndex];
+			},
+			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
+				// TODO: implement this
+				return this.getInternalProperties(internalProperties).models[0].Model[internalProperties].getCreateTableAttributeParams(this);
+			},
+			"getHashKey": (): string => {
+				return this.getInternalProperties(internalProperties).models[0].Model[internalProperties].getHashKey();
+			},
+			"getRangeKey": (): string => {
+				return this.getInternalProperties(internalProperties).models[0].Model[internalProperties].getRangeKey();
+			}
 		});
-
-		this[internalProperties].options = utils.combine_objects(options, customDefaults.get(), originalDefaults) as TableOptions;
-		this[internalProperties].name = `${this[internalProperties].options.prefix}${name}${this[internalProperties].options.suffix}`;
-		this[internalProperties].originalName = name; // This represents the name before prefix and suffix were added
 
 		Object.defineProperty(this, "name", {
 			"configurable": false,
-			"value": this[internalProperties].name
+			"value": this.getInternalProperties(internalProperties).name
 		});
-
-		// Methods
-		this[internalProperties].getIndexes = async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
-			return (await Promise.all(this[internalProperties].models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model[internalProperties].getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
-				Object.entries(indexes).forEach(([key, value]) => {
-					if (key === "TableIndex") {
-						result[key] = value as TableIndex;
-					} else {
-						result[key] = result[key] ? utils.unique_array_elements([...result[key], ...(value as IndexItem[])]) : value;
-					}
-				});
-
-				return result;
-			}, {});
-		};
-		// This function returns the best matched model for the given object input
-		this[internalProperties].modelForObject = async (object: ObjectType): Promise<Model<ItemCarrier>> => {
-			const models = this[internalProperties].models;
-			const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model[internalProperties].schemaCorrectnessScores(object)));
-			const highestModelSchemaCorrectnessScore = Math.max(...modelSchemaCorrectnessScores);
-			const bestModelIndex = modelSchemaCorrectnessScores.indexOf(highestModelSchemaCorrectnessScore);
-
-			return models[bestModelIndex];
-		};
-		this[internalProperties].getCreateTableAttributeParams = async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
-			// TODO: implement this
-			return this[internalProperties].models[0].Model[internalProperties].getCreateTableAttributeParams(this);
-		};
-		this[internalProperties].getHashKey = (): string => {
-			return this[internalProperties].models[0].Model[internalProperties].getHashKey();
-		};
-		this[internalProperties].getRangeKey = (): string | undefined => {
-			return this[internalProperties].models[0].Model[internalProperties].getRangeKey();
-		};
 
 		if (!utils.all_elements_match(models.map((model: any) => model.Model[internalProperties].getHashKey()))) {
 			throw new CustomError.InvalidParameter("hashKey's for all models must match.");
@@ -109,40 +149,23 @@ export class Table {
 				};
 			});
 		}
-		this[internalProperties].models = models.map((model: any) => {
-			if (model.Model[internalProperties]._table) {
-				throw new CustomError.InvalidParameter(`Model ${model.Model.name} has already been assigned to a table.`);
-			}
-
-			model.Model[internalProperties]._table = this;
-			return model;
-		});
 
 		// Setup flow
-		this[internalProperties].ready = false; // Represents if model is ready to be used for actions such as "get", "put", etc. This property being true does not guarantee anything on the DynamoDB server. It only guarantees that Dynamoose has finished the initalization steps required to allow the model to function as expected on the client side.
-		this[internalProperties].alreadyCreated = false; // Represents if the table in DynamoDB was created prior to initalization. This will only be updated if `create` is true.
-		this[internalProperties].pendingTasks = []; // Represents an array of promise resolver functions to be called when Model.ready gets set to true (at the end of the setup flow)
-		this[internalProperties].latestTableDetails = null; // Stores the latest result from `describeTable` for the given table
-		this[internalProperties].pendingTaskPromise = (): Promise<void> => { // Returns a promise that will be resolved after the Model is ready. This is used in all Model operations (Model.get, Item.save) to `await` at the beginning before running the AWS SDK method to ensure the Model is setup before running actions on it.
-			return this[internalProperties].ready ? Promise.resolve() : new Promise((resolve) => {
-				this[internalProperties].pendingTasks.push(resolve);
-			});
-		};
 		const setupFlow = []; // An array of setup actions to be run in order
 		// Create table
-		if (this[internalProperties].options.create) {
+		if (this.getInternalProperties(internalProperties).options.create) {
 			setupFlow.push(() => createTable(this));
 		}
 		// Wait for Active
-		if (this[internalProperties].options.waitForActive === true || (this[internalProperties].options.waitForActive || {}).enabled) {
+		if (this.getInternalProperties(internalProperties).options.waitForActive === true || (typeof this.getInternalProperties(internalProperties).options.waitForActive === "object" && (this.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings)?.enabled)) {
 			setupFlow.push(() => waitForActive(this, false));
 		}
 		// Update Time To Live
-		if ((this[internalProperties].options.create || (Array.isArray(this[internalProperties].options.update) ? this[internalProperties].options.update.includes(TableUpdateOptions.ttl) : this[internalProperties].options.update)) && options.expires) {
+		if ((this.getInternalProperties(internalProperties).options.create || (Array.isArray(this.getInternalProperties(internalProperties).options.update) ? (this.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.ttl) : this.getInternalProperties(internalProperties).options.update)) && options.expires) {
 			setupFlow.push(() => updateTimeToLive(this));
 		}
 		// Update
-		if (this[internalProperties].options.update && !this[internalProperties].alreadyCreated) {
+		if (this.getInternalProperties(internalProperties).options.update && !this.getInternalProperties(internalProperties).alreadyCreated) {
 			setupFlow.push(() => updateTable(this));
 		}
 
@@ -152,9 +175,9 @@ export class Table {
 				return typeof flow === "function" ? flow() : flow;
 			});
 		}, Promise.resolve());
-		setupFlowPromise.then(() => this[internalProperties].ready = true).then(() => {
-			this[internalProperties].pendingTasks.forEach((task) => task());
-			this[internalProperties].pendingTasks = [];
+		setupFlowPromise.then(() => this.getInternalProperties(internalProperties).ready = true).then(() => {
+			this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task());
+			this.getInternalProperties(internalProperties).pendingTasks = [];
 		});
 
 		// this.transaction = [
@@ -169,8 +192,8 @@ export class Table {
 		// 		return response;
 		// 	}},
 		// 	{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": async (key: string, condition: Condition): Promise<DynamoDB.ConditionCheck> => ({
-		// 		"Key": this[internalProperties].models[0].Item.objectToDynamo(this[internalProperties].convertObjectToKey(key)),
-		// 		"TableName": this[internalProperties].name,
+		// 		"Key": this.getInternalProperties(internalProperties).models[0].Item.objectToDynamo(this.getInternalProperties(internalProperties).convertObjectToKey(key)),
+		// 		"TableName": this.getInternalProperties(internalProperties).name,
 		// 		...condition ? await condition.requestObject(this) : {}
 		// 	} as any)}
 		// ].reduce((accumulator: ObjectType, currentValue) => {
@@ -200,10 +223,10 @@ export class Table {
 	}
 
 	get hashKey (): string {
-		return this[internalProperties].getHashKey();
+		return this.getInternalProperties(internalProperties).getHashKey();
 	}
 	get rangeKey (): string | undefined {
-		return this[internalProperties].getRangeKey();
+		return this.getInternalProperties(internalProperties).getRangeKey();
 	}
 
 	create (): Promise<void>
@@ -233,7 +256,7 @@ interface TableCreateOptions {
 	return: "request" | undefined;
 }
 
-interface TableWaitForActiveSettings {
+export interface TableWaitForActiveSettings {
 	enabled: boolean;
 	check: {timeout: number; frequency: number};
 }
