@@ -6,7 +6,6 @@ import ddb = require("../aws/ddb/internal");
 import utils = require("../utils");
 import {CustomError} from "dynamoose-utils";
 import {TableIndexChangeType} from "../utils/dynamoose/index_changes";
-import timeout = require("../utils/timeout");
 import {TableClass} from "./types";
 
 // Utility functions
@@ -40,7 +39,7 @@ function getExpectedTags (table: Table): DynamoDB.Tag[] | undefined {
 }
 export async function getTagDetails (table: Table): Promise<DynamoDB.ListTagsOfResourceOutput> {
 	const tableDetails = await getTableDetails(table);
-	let tags: DynamoDB.ListTagsOfResourceOutput = await ddb("listTagsOfResource", {
+	const tags: DynamoDB.ListTagsOfResourceOutput = await ddb("listTagsOfResource", {
 		"ResourceArn": tableDetails.Table.TableArn
 	});
 
@@ -219,7 +218,7 @@ export async function updateTable (table: Table): Promise<void> {
 		const tableDetails = (await getTableDetails(table)).Table;
 		const expectedDynamoDBTableClass = table[internalProperties].options.tableClass === TableClass.infrequentAccess ? DynamoDB.TableClass.STANDARD_INFREQUENT_ACCESS : DynamoDB.TableClass.STANDARD;
 
-		if ((!tableDetails.TableClassSummary && expectedDynamoDBTableClass !== DynamoDB.TableClass.STANDARD) || (tableDetails.TableClassSummary && tableDetails.TableClassSummary.TableClass !== expectedDynamoDBTableClass)) {
+		if (!tableDetails.TableClassSummary && expectedDynamoDBTableClass !== DynamoDB.TableClass.STANDARD || tableDetails.TableClassSummary && tableDetails.TableClassSummary.TableClass !== expectedDynamoDBTableClass) {
 			const object: DynamoDB.UpdateTableInput = {
 				"TableName": table[internalProperties].name,
 				"TableClass": expectedDynamoDBTableClass

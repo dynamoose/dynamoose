@@ -1094,7 +1094,7 @@ describe("Table", () => {
 
 			describe("Tags", () => {
 				beforeEach(() => {
-					describeTableFunction = (params) => Promise.resolve({
+					describeTableFunction = () => Promise.resolve({
 						"Table": {
 							"ProvisionedThroughput": {
 								"ReadCapacityUnits": 1,
