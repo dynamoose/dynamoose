@@ -2,7 +2,7 @@
 
 import * as dynamoose from "../../dist";
 import {Item} from "../../dist/Item";
-import { IndexType } from "../../dist/Schema";
+import {IndexType} from "../../dist/Schema";
 
 // @ts-expect-error
 const shouldFailWithNumberAsName = dynamoose.model(1);
