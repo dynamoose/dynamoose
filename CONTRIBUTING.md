@@ -35,7 +35,7 @@ One of the most important things when submitting an issue is to provide a *Minim
 - *Complete* – Provide all parts needed to reproduce your problem
 - *Reproducible* – Test the code to make sure it reproduces the problem
 
-Without following these steps when creating code examples it is nearly impossible for us to debug your issue. Help us help you by putting time and care into code examples. Not following this guideline puts your issue at risk for being closed.
+Without following these steps when creating code examples it is nearly impossible for us to debug your issue. Help us by putting time and care into code examples so that we also can help you. Not following this guideline puts your issue at risk of being closed.
 
 ### Submitting a Pull Request (PR)
 
@@ -44,7 +44,7 @@ It is highly recommended (although not required) to follow the pattern below bef
 #### Before
 
 1. **Identify a need in the project** - This can be a bug, feature request, or other change.
-2. **Create a detailed issue to gauge interest** - Although most pull requests are merged, we don't want you to waste time creating a pull request that doesn't have the support of the community. This doesn't mean that even if the community supports an issue that the corresponding pull request will be merged, but it increases the chances with community support. *This step is highly encouraged for larger contributions, but not required. For smaller contributions (typos, adding tests, updating documentation, minor code changes, etc.) it is not necessary to create a separate issue.*
+2. **Create a detailed issue to gauge interest** - Although most pull requests are merged, we don't want you to waste time creating a pull request that doesn't have the support of the community. This doesn't mean that even if the community supports an issue that the corresponding pull request will be merged, but it increases the chances with community support. *This step is highly encouraged for larger contributions, but not required. For smaller contributions (typos, adding tests, updating documentaion, minor code changes, etc.) it is not necessary to create a separate issue.*
 3. **Read through the `package.json`** - The `package.json` file in the root of the repository has a **lot** of useful information about the project. Especially read through the `scripts` section, as a lot of those scripts can help speed up your development process when working in Dynamoose. There are scripts for running tests, building the website, debugging code, fixing lint issues, etc.
 
 #### During
@@ -58,7 +58,7 @@ It is highly recommended (although not required) to follow the pattern below bef
 	2. **Code Coverage Must Not Decrease** - Your pull request will not be merged if it decreases the code coverage for tests, so it is important to write tests to ensure any code added or modified is covered by tests.
 	3. **No Log Output** - It is also important that your tests do not print any output to the console or logs, this includes `console.log`, UncaughtPromiseExceptions, etc. All logs printed should come directly from Jest.
 	4. **One Test Must Fail Prior to Code Changes** - At *least* one test you write should fail without the code changes you have made.
-	5. **Self Contained and Static** - All tests should be self contained and should not rely on each other in order to pass. All tests must also be static and have no potiental of failing based on random or outside factors.
+	5. **Self Contained and Static** - All tests should be self contained and should not rely on each other in order to pass. All tests must also be static and have no potential of failing based on random or outside factors.
 	6. **Logic inside Jest Blocks** - All test logic should take place within Jest blocks (ex. `it`, `before`, `beforeEach`, `after` or `afterEach`). No interaction with Dynamoose or outside references should take place outside of those blocks (ex. you should not create models or schemas in the global or `describe` scope).
 6. **Update documentation** - For anything that effects users using Dynamoose, documentation should be added/deleted/modified to reflect the changes you have made. It is important to ensure the documentation you write is as clear as possible, giving examples, and attempting to answer as many relevant questions as possible.
 7. **Commit small & often** - Please commit changes often and keep commit size to a minimum. It is highly discouraged from creating one massive commit with all of your changes in it. Every commit should also aim to pass the linter and tests. Commit messages should also be detailed enough to give a good explanation of the change made. Commit messages such as `changes` or `did stuff` are considered **poor** commit messages.
