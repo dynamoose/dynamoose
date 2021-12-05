@@ -349,6 +349,85 @@ describe("Table", () => {
 				});
 			});
 
+			it("Should call createTable with correct parameters when tableClass is undefined", async () => {
+				const tableName = "Cat";
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {});
+				await utils.set_immediate_promise();
+				expectChai(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"TableName": tableName
+				});
+			});
+
+			it("Should call createTable with correct parameters when tableClass is standard", async () => {
+				const tableName = "Cat";
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
+				await utils.set_immediate_promise();
+				expectChai(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"TableName": tableName
+				});
+			});
+
+			it("Should call createTable with correct parameters when tableClass is infrequent access", async () => {
+				const tableName = "Cat";
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
+				await utils.set_immediate_promise();
+				expectChai(createTableParams).to.eql({
+					"AttributeDefinitions": [
+						{
+							"AttributeName": "id",
+							"AttributeType": "S"
+						}
+					],
+					"KeySchema": [
+						{
+							"AttributeName": "id",
+							"KeyType": "HASH"
+						}
+					],
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"TableName": tableName,
+					"TableClass": "STANDARD_INFREQUENT_ACCESS"
+				});
+			});
+
 			it("Shouldn't call createTable if table already exists", async () => {
 				dynamoose.aws.ddb.set({
 					"createTable": (params) => {
@@ -1212,6 +1291,159 @@ describe("Table", () => {
 								}
 							]);
 							expect(untagResourceParams).toEqual([]);
+						});
+					});
+				});
+			});
+
+			describe("Table Class", () => {
+				const updateOptions = [
+					true,
+					["tableClass"]
+				];
+				updateOptions.forEach((updateOption) => {
+					describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
+						it("Should not call updateTable if table class is standard and undefined in table initialization", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE",
+									"TableClassSummary": {
+										"TableClass": "STANDARD"
+									}
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
+
+						it("Should not call updateTable if table class is standard and standard in table initialization", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE",
+									"TableClassSummary": {
+										"TableClass": "STANDARD"
+									}
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
+
+						it("Should not call updateTable if table class is infrequent access and infrequent access in table initialization", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE",
+									"TableClassSummary": {
+										"TableClass": "STANDARD_INFREQUENT_ACCESS"
+									}
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
+
+						it("Should not call updateTable if table class is undefined and standard in table initialization", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
+
+						it("Should call updateTable if table class is undefined and infrequent access in table initialization", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([{
+								"TableName": tableName,
+								"TableClass": "STANDARD_INFREQUENT_ACCESS"
+							}]);
+						});
+
+						it("Should call updateTable if table class is standard and infrequent access in table initialization", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE",
+									"TableClassSummary": {
+										"TableClass": "STANDARD"
+									}
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([{
+								"TableName": tableName,
+								"TableClass": "STANDARD_INFREQUENT_ACCESS"
+							}]);
+						});
+
+						it("Should call updateTable if table class is infrequent access and standard in table initialization", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE",
+									"TableClassSummary": {
+										"TableClass": "STANDARD_INFREQUENT_ACCESS"
+									}
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([{
+								"TableName": tableName,
+								"TableClass": "STANDARD"
+							}]);
 						});
 					});
 				});
