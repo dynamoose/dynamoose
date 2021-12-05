@@ -7,7 +7,7 @@ import utils = require("../utils");
 import {CustomError} from "dynamoose-utils";
 import {TableIndexChangeType} from "../utils/dynamoose/index_changes";
 import timeout = require("../utils/timeout");
-
+import {TableClass} from "./types";
 
 // Utility functions
 export async function getTableDetails (table: Table, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
@@ -63,6 +63,10 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 		...utils.dynamoose.get_provisioned_throughput(table[internalProperties].options),
 		...await table[internalProperties].getCreateTableAttributeParams()
 	};
+
+	if (table[internalProperties].options.tableClass === TableClass.infrequentAccess) {
+		object.TableClass = DynamoDB.TableClass.STANDARD_INFREQUENT_ACCESS;
+	}
 
 	const tags = getExpectedTags(table);
 	if (tags) {
@@ -208,6 +212,20 @@ export async function updateTable (table: Table): Promise<void> {
 					"Value": expectedTags[key]
 				}))
 			});
+		}
+	}
+	// Table Class
+	if (updateAll || (table[internalProperties].options.update as TableUpdateOptions[]).includes(TableUpdateOptions.tableClass)) {
+		const tableDetails = (await getTableDetails(table)).Table;
+		const expectedDynamoDBTableClass = table[internalProperties].options.tableClass === TableClass.infrequentAccess ? DynamoDB.TableClass.STANDARD_INFREQUENT_ACCESS : DynamoDB.TableClass.STANDARD;
+
+		if ((!tableDetails.TableClassSummary && expectedDynamoDBTableClass !== DynamoDB.TableClass.STANDARD) || (tableDetails.TableClassSummary && tableDetails.TableClassSummary.TableClass !== expectedDynamoDBTableClass)) {
+			const object: DynamoDB.UpdateTableInput = {
+				"TableName": table[internalProperties].name,
+				"TableClass": expectedDynamoDBTableClass
+			};
+			await ddb("updateTable", object);
+			await waitForActive(table)();
 		}
 	}
 }

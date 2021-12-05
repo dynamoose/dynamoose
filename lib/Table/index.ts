@@ -9,6 +9,7 @@ import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
+import { TableClass } from "./types";
 
 // This class represents a single DynamoDB table
 export class Table {
@@ -247,7 +248,8 @@ export enum TableUpdateOptions {
 	ttl = "ttl",
 	indexes = "indexes",
 	throughput = "throughput",
-	tags = "tags"
+	tags = "tags",
+	tableClass = "tableClass"
 }
 export interface TableOptions {
 	create: boolean;
@@ -259,5 +261,6 @@ export interface TableOptions {
 	populate: string | string[] | boolean;
 	expires: number | TableExpiresSettings;
 	tags: {[key: string]: string};
+	tableClass: TableClass;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;

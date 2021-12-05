@@ -1,4 +1,5 @@
 import {TableOptions, TableOptionsOptional} from "./index";
+import {TableClass} from "./types";
 
 export const original: TableOptions = {
 	"create": true,
@@ -19,6 +20,7 @@ export const original: TableOptions = {
 	"populate": false,
 	"expires": undefined,
 	"tags": {},
+	"tableClass": TableClass.standard
 	// "streamOptions": {
 	// 	"enabled": false,
 	// 	"type": undefined
