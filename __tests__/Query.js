@@ -50,12 +50,12 @@ describe("Query", () => {
 		it("Should set pending key if string passed into query function", () => {
 			const id = "id";
 			const query = Model.query(id);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": id});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({"key": id});
 		});
 
 		it("Should set filters correctly for object passed into query function", () => {
 			const query = Model.query({"name": {"eq": "Charlie"}, "id": {"le": 5}});
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"name": {"type": "EQ", "value": "Charlie"}}, {"id": {"type": "LE", "value": 5}}]);
 		});
 
 		it("Should throw error if unknown comparison operator is passed in", () => {
@@ -906,9 +906,9 @@ describe("Query", () => {
 		});
 
 		it("Should set correct property", () => {
-			expectChai(Model.query()[internalProperties].settings.condition[internalProperties].settings.pending.not).to.be.undefined;
-			expectChai(Model.query().not()[internalProperties].settings.condition[internalProperties].settings.pending.not).to.be.true;
-			expectChai(Model.query().not().not()[internalProperties].settings.condition[internalProperties].settings.pending.not).to.be.false;
+			expectChai(Model.query().getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending.not).to.be.undefined;
+			expectChai(Model.query().not().getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending.not).to.be.true;
+			expectChai(Model.query().not().not().getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending.not).to.be.false;
 		});
 	});
 
@@ -926,9 +926,9 @@ describe("Query", () => {
 		});
 
 		it("Should set correct property", () => {
-			expectChai(Model.query()[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
-			expectChai(Model.query().where("id")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "id"});
-			expectChai(Model.query().where("id").where("name")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "name"});
+			expectChai(Model.query().getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
+			expectChai(Model.query().where("id").getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({"key": "id"});
+			expectChai(Model.query().where("id").where("name").getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({"key": "name"});
 		});
 	});
 
@@ -942,9 +942,9 @@ describe("Query", () => {
 		});
 
 		it("Should set correct property", () => {
-			expectChai(Model.query()[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
-			expectChai(Model.query().filter("id")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "id"});
-			expectChai(Model.query().filter("id").filter("name")[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({"key": "name"});
+			expectChai(Model.query().getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
+			expectChai(Model.query().filter("id").getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({"key": "id"});
+			expectChai(Model.query().filter("id").filter("name").getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({"key": "name"});
 		});
 	});
 
@@ -959,14 +959,14 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").eq("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "EQ", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().eq("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "NE", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should send correct request", async () => {
@@ -1150,14 +1150,14 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").exists("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "EXISTS", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().exists("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "NOT_EXISTS", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should send correct request", async () => {
@@ -1208,14 +1208,14 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").lt("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().lt("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should send correct request", async () => {
@@ -1249,14 +1249,14 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").le("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().le("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should send correct request", async () => {
@@ -1290,14 +1290,14 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").gt("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "GT", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().gt("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "LE", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should send correct request", async () => {
@@ -1331,14 +1331,14 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").ge("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "GE", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().ge("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "LT", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should send correct request", async () => {
@@ -1372,8 +1372,8 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").beginsWith("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should throw error with not()", () => {
@@ -1412,14 +1412,14 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").contains("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "CONTAINS", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should set correct settings on the query object with not()", () => {
 			const query = Model.query().filter("id").not().contains("test");
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "NOT_CONTAINS", "value": "test"}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should send correct request", async () => {
@@ -1472,8 +1472,8 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").in(["test", "other"]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "IN", "value": ["test", "other"]}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "IN", "value": ["test", "other"]}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should throw error with not()", () => {
@@ -1535,8 +1535,8 @@ describe("Query", () => {
 
 		it("Should set correct settings on the query object", () => {
 			const query = Model.query().filter("id").between(1, 2);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
-			expectChai(query[internalProperties].settings.condition[internalProperties].settings.pending).to.eql({});
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).to.eql([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
+			expectChai(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).to.eql({});
 		});
 
 		it("Should throw error with not()", () => {
@@ -1552,7 +1552,7 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance", () => {
 			const query = Model.query().limit(5);
-			expectChai(query[internalProperties].settings.limit).to.eql(5);
+			expectChai(query.getInternalProperties(internalProperties).settings.limit).to.eql(5);
 		});
 
 		it("Should send correct request on query.exec", async () => {
@@ -1569,7 +1569,7 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance", () => {
 			const query = Model.query().startAt({"id": 5});
-			expectChai(query[internalProperties].settings.startAt).to.eql({"id": 5});
+			expectChai(query.getInternalProperties(internalProperties).settings.startAt).to.eql({"id": 5});
 		});
 
 		it("Should send correct request on query.exec", async () => {
@@ -1580,7 +1580,7 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance if passing in DynamoDB object", () => {
 			const query = Model.query().startAt({"id": {"N": "5"}});
-			expectChai(query[internalProperties].settings.startAt).to.eql({"id": {"N": "5"}});
+			expectChai(query.getInternalProperties(internalProperties).settings.startAt).to.eql({"id": {"N": "5"}});
 		});
 
 		it("Should send correct request on query.exec if passing in DynamoDB object", async () => {
@@ -1597,7 +1597,7 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance", () => {
 			const query = Model.query().attributes(["id"]);
-			expectChai(query[internalProperties].settings.attributes).to.eql(["id"]);
+			expectChai(query.getInternalProperties(internalProperties).settings.attributes).to.eql(["id"]);
 		});
 
 		it("Should send correct request on query.exec", async () => {
@@ -1646,7 +1646,7 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance", () => {
 			const query = Model.query().count();
-			expectChai(query[internalProperties].settings.count).to.be.true;
+			expectChai(query.getInternalProperties(internalProperties).settings.count).to.be.true;
 		});
 
 		it("Should send correct request on query.exec", async () => {
@@ -1669,7 +1669,7 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance", () => {
 			const query = Model.query().consistent();
-			expectChai(query[internalProperties].settings.consistent).to.be.true;
+			expectChai(query.getInternalProperties(internalProperties).settings.consistent).to.be.true;
 		});
 
 		it("Should send correct request on query.exec", async () => {
@@ -1686,7 +1686,7 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance", () => {
 			const query = Model.query().using("customIndex");
-			expectChai(query[internalProperties].settings.index).to.eql("customIndex");
+			expectChai(query.getInternalProperties(internalProperties).settings.index).to.eql("customIndex");
 		});
 
 		it("Should send correct request on query.exec", async () => {
@@ -1703,17 +1703,17 @@ describe("Query", () => {
 
 		it("Should set correct setting on query instance for nothing", () => {
 			const query = Model.query();
-			expectChai(query[internalProperties].settings.sort).to.not.exist;
+			expectChai(query.getInternalProperties(internalProperties).settings.sort).to.not.exist;
 		});
 
 		it("Should set correct setting on query instance for ascending", () => {
 			const query = Model.query().sort("ascending");
-			expectChai(query[internalProperties].settings.sort).to.eql("ascending");
+			expectChai(query.getInternalProperties(internalProperties).settings.sort).to.eql("ascending");
 		});
 
 		it("Should set correct setting on query instance for descending", () => {
 			const query = Model.query().sort("descending");
-			expectChai(query[internalProperties].settings.sort).to.eql("descending");
+			expectChai(query.getInternalProperties(internalProperties).settings.sort).to.eql("descending");
 		});
 
 		it("Should send correct request on query.exec for nothing", async () => {
@@ -1745,15 +1745,15 @@ describe("Query", () => {
 		});
 
 		it("Should set correct default options", () => {
-			expectChai(Model.query().all()[internalProperties].settings.all).to.eql({"delay": 0, "max": 0});
+			expectChai(Model.query().all().getInternalProperties(internalProperties).settings.all).to.eql({"delay": 0, "max": 0});
 		});
 
 		it("Should set correct option for delay", () => {
-			expectChai(Model.query().all(5)[internalProperties].settings.all).to.eql({"delay": 5, "max": 0});
+			expectChai(Model.query().all(5).getInternalProperties(internalProperties).settings.all).to.eql({"delay": 5, "max": 0});
 		});
 
 		it("Should set correct option for max", () => {
-			expectChai(Model.query().all(0, 5)[internalProperties].settings.all).to.eql({"delay": 0, "max": 5});
+			expectChai(Model.query().all(0, 5).getInternalProperties(internalProperties).settings.all).to.eql({"delay": 0, "max": 5});
 		});
 
 		it("Should handle delay correctly on query.exec", async () => {
