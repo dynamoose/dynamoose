@@ -888,7 +888,7 @@ describe("Schema", () => {
 		tests.forEach((test) => {
 			it(test.name, async () => {
 				const table = {"getInternalProperties": () => ({"options": {"throughput": "ON_DEMAND"}})};
-				const model = {[internalProperties]: {"table": () => table}};
+				const model = {"getInternalProperties": () => ({"table": () => table})};
 				expect(await new dynamoose.Schema(test.input).getCreateTableAttributeParams(model)).to.eql(test.output);
 			});
 		});

@@ -45,7 +45,7 @@ describe("Model", () => {
 			dynamoose.model("User", {"id": String});
 			dynamoose.model("User", {"id": String, "name": String});
 
-			expectChai(ModelStore("User")[internalProperties].schemas[0][internalProperties].schemaObject).to.eql({"id": String, "name": String});
+			expectChai(ModelStore("User").getInternalProperties(internalProperties).schemas[0][internalProperties].schemaObject).to.eql({"id": String, "name": String});
 		});
 
 		it("Should throw error if passing in empty array for schema parameter", () => {
@@ -63,15 +63,15 @@ describe("Model", () => {
 		it("Should create a schema if not passing in schema instance", () => {
 			const schema = {"name": String};
 			const Cat = dynamoose.model("Cat", schema);
-			expectChai(Cat.Model[internalProperties].schemas).to.not.eql([schema]);
-			expectChai(Cat.Model[internalProperties].schemas[0]).to.be.an.instanceof(dynamoose.Schema);
+			expectChai(Cat.Model.getInternalProperties(internalProperties).schemas).to.not.eql([schema]);
+			expectChai(Cat.Model.getInternalProperties(internalProperties).schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should use schema instance if passed in", () => {
 			const schema = new dynamoose.Schema({"name": String});
 			const Cat = dynamoose.model("Cat", schema);
-			expectChai(Cat.Model[internalProperties].schemas).to.eql([schema]);
-			expectChai(Cat.Model[internalProperties].schemas[0]).to.be.an.instanceof(dynamoose.Schema);
+			expectChai(Cat.Model.getInternalProperties(internalProperties).schemas).to.eql([schema]);
+			expectChai(Cat.Model.getInternalProperties(internalProperties).schemas[0]).to.be.an.instanceof(dynamoose.Schema);
 		});
 
 		it("Should not fail with initialization if table doesn't exist", async () => {
@@ -107,7 +107,7 @@ describe("Model", () => {
 
 		it("Should throw an error if trying to access table with no table", () => {
 			const model = dynamoose.model("User", {"id": String});
-			expectChai(model.Model[internalProperties].table).to.throw("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
+			expectChai(model.Model.getInternalProperties(internalProperties).table).to.throw("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
 		});
 	});
 
@@ -937,12 +937,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expectChai(calledGetItem).to.be.false;
 					expectChai(user).to.not.exist;
-					expectChai(model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
+					expectChai(model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
+					await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expectChai(calledGetItem).to.be.true;
 					expectChai({...user}).to.eql({"id": 1, "name": "Charlie"});
@@ -1222,12 +1222,12 @@ describe("Model", () => {
 					await utils.set_immediate_promise();
 					expectChai(calledBatchGetItem).to.be.false;
 					expectChai(users).to.not.exist;
-					expectChai(model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
+					expectChai(model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
+					await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expectChai(calledBatchGetItem).to.be.true;
 					expectChai(users.map((user) => ({...user}))).to.eql([{"id": 1, "name": "Charlie"}]);

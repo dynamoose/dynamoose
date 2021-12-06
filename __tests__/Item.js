@@ -1559,12 +1559,12 @@ describe("Item", () => {
 					await utils.set_immediate_promise();
 					expectChai(putParams).to.eql([]);
 					expectChai(finishedSavingUser).to.be.false;
-					expectChai(model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
+					expectChai(model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTasks.length).to.eql(1);
 
 					describeTableResponse = {
 						"Table": {"TableStatus": "ACTIVE"}
 					};
-					await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
+					await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 					await utils.set_immediate_promise();
 					expectChai(putParams).to.eql([{
 						"Item": {
