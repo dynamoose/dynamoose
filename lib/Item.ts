@@ -17,6 +17,7 @@ import {SerializerOptions} from "./Serializer";
 import {PopulateItem, PopulateSettings} from "./Populate";
 import {Condition} from "./Condition";
 import {TableExpiresSettings} from "./Table";
+import { InternalPropertiesClass } from "./InternalPropertiesClass";
 
 export interface ItemSaveSettings {
 	overwrite?: boolean;
@@ -27,31 +28,30 @@ export interface ItemSettings {
 	type?: "fromDynamo" | "toDynamo";
 }
 
+interface ItemInternalProperties {
+	originalObject: any;
+	originalSettings: ItemSettings;
+	model: Model<Item>;
+	storedInDynamo: boolean;
+}
+
 // Item represents an item in a Model that is either pending (not saved) or saved
-export class Item {
+export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	constructor (model: Model<Item>, object?: AttributeMap | ObjectType, settings?: ItemSettings) {
+		super();
+
 		const itemObject = Item.isDynamoObject(object) ? aws.converter().unmarshall(object) : object;
 		Object.keys(itemObject).forEach((key) => this[key] = itemObject[key]);
-		Object.defineProperty(this, internalProperties, {
-			"configurable": false,
-			"value": {}
+
+		this.setInternalProperties(internalProperties, {
+			"originalObject": utils.deep_copy(itemObject),
+			"originalSettings": {...settings},
+			model,
+			"storedInDynamo": settings.type === "fromDynamo"
 		});
-		this[internalProperties].originalObject = utils.deep_copy(itemObject);
-		this[internalProperties].originalSettings = {...settings};
-		this[internalProperties].model = model;
-
-		// Object.defineProperty(this, "model", {
-		// 	"configurable": false,
-		// 	"value": model
-		// });
-
-		if (settings.type === "fromDynamo") {
-			this[internalProperties].storedInDynamo = true;
-		}
 	}
 
 	// Internal
-	model?: Model<Item>;
 	static objectToDynamo (object: ObjectType): AttributeMap;
 	static objectToDynamo (object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
 	static objectToDynamo (object: ObjectType, settings: {type: "object"}): AttributeMap;
@@ -97,15 +97,15 @@ export class Item {
 
 	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
 	async prepareForResponse (): Promise<Item> {
-		if (this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate) {
-			return this.populate({"properties": this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate});
+		if (this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate) {
+			return this.populate({"properties": this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate});
 		}
 		return this;
 	}
 
 	// Original
 	original (): ObjectType | null {
-		return this[internalProperties].originalSettings.type === "fromDynamo" ? this[internalProperties].originalObject : null;
+		return this.getInternalProperties(internalProperties).originalSettings.type === "fromDynamo" ? this.getInternalProperties(internalProperties).originalObject : null;
 	}
 
 	// toJSON
@@ -115,22 +115,22 @@ export class Item {
 
 	// Serializer
 	serialize (nameOrOptions?: SerializerOptions | string): ObjectType {
-		return this[internalProperties].model.serializer._serialize(this, nameOrOptions);
+		return this.getInternalProperties(internalProperties).model.serializer._serialize(this, nameOrOptions);
 	}
 
 	// Delete
 	delete (this: Item): Promise<void>;
 	delete (this: Item, callback: CallbackType<void, any>): void;
 	delete (this: Item, callback?: CallbackType<void, any>): Promise<void> | void {
-		const hashKey = this[internalProperties].model.getInternalProperties(internalProperties).getHashKey();
-		const rangeKey = this[internalProperties].model.getInternalProperties(internalProperties).getRangeKey();
+		const hashKey = this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).getHashKey();
+		const rangeKey = this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).getRangeKey();
 
 		const key = {[hashKey]: this[hashKey]};
 		if (rangeKey) {
 			key[rangeKey] = this[rangeKey];
 		}
 
-		return this[internalProperties].model.delete(key, callback);
+		return this.getInternalProperties(internalProperties).model.delete(key, callback);
 	}
 
 	// Save
@@ -156,13 +156,13 @@ export class Item {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
-				"TableName": this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
+				"TableName": this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
 			};
 
 			if (localSettings.condition) {
 				putItemObj = {
 					...putItemObj,
-					...await localSettings.condition.requestObject(this[internalProperties].model)
+					...await localSettings.condition.requestObject(this.getInternalProperties(internalProperties).model)
 				};
 			}
 
@@ -171,7 +171,7 @@ export class Item {
 				putItemObj.ConditionExpression = putItemObj.ConditionExpression ? `(${putItemObj.ConditionExpression}) AND (${conditionExpression})` : conditionExpression;
 				putItemObj.ExpressionAttributeNames = {
 					...putItemObj.ExpressionAttributeNames || {},
-					"#__hash_key": this[internalProperties].model.getInternalProperties(internalProperties).getHashKey()
+					"#__hash_key": this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).getHashKey()
 				};
 			}
 
@@ -186,7 +186,7 @@ export class Item {
 				return paramsPromise;
 			}
 		}
-		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise()]).then((promises) => {
+		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise()]).then((promises) => {
 			const [putItemObj] = promises;
 			return ddb("putItem", putItemObj);
 		});
@@ -194,20 +194,20 @@ export class Item {
 		if (callback) {
 			const localCallback: CallbackType<Item, any> = callback as CallbackType<Item, any>;
 			promise.then(() => {
-				this[internalProperties].storedInDynamo = true;
+				this.getInternalProperties(internalProperties).storedInDynamo = true;
 
-				const returnItem = new this[internalProperties].model.Item(savedItem as any);
-				returnItem[internalProperties].storedInDynamo = true;
+				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
+				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
 
 				localCallback(null, returnItem);
 			}).catch((error) => callback(error));
 		} else {
 			return (async (): Promise<Item> => {
 				await promise;
-				this[internalProperties].storedInDynamo = true;
+				this.getInternalProperties(internalProperties).storedInDynamo = true;
 
-				const returnItem = new this[internalProperties].model.Item(savedItem as any);
-				returnItem[internalProperties].storedInDynamo = true;
+				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
+				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
 
 				return returnItem;
 			})();
@@ -229,7 +229,7 @@ export class AnyItem extends Item {
 }
 
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Item.objectFromSchema (setting timestamps, etc.)
-Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
+Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesClass<any>>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
 		const schema: Schema = await model.getInternalProperties(internalProperties).schemaForObject(object);
 		if (schema[internalProperties].settings.timestamps && settings.type === "toDynamo") {
@@ -237,7 +237,7 @@ Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item
 
 			const createdAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).createdAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).createdAt : [(schema[internalProperties].settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
 			const updatedAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).updatedAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).updatedAt : [(schema[internalProperties].settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
-			if (object[internalProperties] && !object[internalProperties].storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
+			if (object.getInternalProperties && object.getInternalProperties(internalProperties) && !object.getInternalProperties(internalProperties).storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
 				createdAtProperties.forEach((prop) => {
 					utils.object.set(object as any, prop, date);
 				});
@@ -523,8 +523,8 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 		...settings,
 		"type": "toDynamo"
 	};
-	await Item.prepareForObjectFromSchema(this, this[internalProperties].model, newSettings);
-	const object = await Item.objectFromSchema(this, this[internalProperties].model, newSettings);
+	await Item.prepareForObjectFromSchema(this, this.getInternalProperties(internalProperties).model, newSettings);
+	const object = await Item.objectFromSchema(this, this.getInternalProperties(internalProperties).model, newSettings);
 	return Item.objectToDynamo(object);
 };
 // This function will modify the item to conform to the Schema
@@ -533,8 +533,8 @@ Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjec
 	if (settings.type === "fromDynamo") {
 		item = await this.prepareForResponse();
 	}
-	await Item.prepareForObjectFromSchema(item, item[internalProperties].model, settings);
-	const expectedObject = await Item.objectFromSchema(item, item[internalProperties].model, settings);
+	await Item.prepareForObjectFromSchema(item, item.getInternalProperties(internalProperties).model, settings);
+	const expectedObject = await Item.objectFromSchema(item, item.getInternalProperties(internalProperties).model, settings);
 	if (!expectedObject) {
 		return expectedObject;
 	}
