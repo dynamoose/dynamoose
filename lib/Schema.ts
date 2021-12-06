@@ -5,6 +5,7 @@ import {Item, ItemObjectFromSchemaSettings} from "./Item";
 import {Model, ModelIndexes} from "./Model";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ModelType, ObjectType} from "./General";
+import { InternalPropertiesClass } from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;
 
 // TODO: the interfaces below are so similar, we should consider combining them into one. We also do a lot of `DynamoDBTypeResult | DynamoDBSetTypeResult` in the code base.
@@ -282,7 +283,174 @@ interface SchemaGetAttributeSettingValue {
 	typeIndexOptionMap?: any;
 }
 
-export class Schema {
+interface SchemaInternalProperties {
+	schemaObject: SchemaDefinition;
+	settings: SchemaSettings;
+}
+
+export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
+	constructor (object: SchemaDefinition, settings: SchemaSettings = {}) {
+		super();
+
+		if (!object || typeof object !== "object" || Array.isArray(object)) {
+			throw new CustomError.InvalidParameterType("Schema initalization parameter must be an object.");
+		}
+		if (Object.keys(object).length === 0) {
+			throw new CustomError.InvalidParameter("Schema initalization parameter must not be an empty object.");
+		}
+
+		if (settings.timestamps === true) {
+			settings.timestamps = {
+				"createdAt": "createdAt",
+				"updatedAt": "updatedAt"
+			};
+		}
+		if (settings.timestamps) {
+			const createdAtArray = Array.isArray(settings.timestamps.createdAt) ? settings.timestamps.createdAt : [settings.timestamps.createdAt];
+			const updatedAtArray = Array.isArray(settings.timestamps.updatedAt) ? settings.timestamps.updatedAt : [settings.timestamps.updatedAt];
+
+			[...createdAtArray, ...updatedAtArray].forEach((prop) => {
+				if (object[prop]) {
+					throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
+				}
+
+				object[prop] = Date;
+			});
+		}
+
+		let parsedSettings = {...settings};
+		const parsedObject = {...object};
+		utils.object.entries(parsedObject).filter((entry) => entry[1] instanceof Schema).forEach((entry) => {
+			const [key, value] = entry;
+			let newValue = {
+				"type": Object,
+				"schema": (value as any).getInternalProperties(internalProperties).schemaObject
+			};
+			if (key.endsWith(".schema")) {
+				newValue = (value as any).getInternalProperties(internalProperties).schemaObject;
+			}
+
+			const subSettings = {...(value as any).getInternalProperties(internalProperties).settings};
+			Object.entries(subSettings).forEach((entry) => {
+				const [settingsKey, settingsValue] = entry;
+				switch (settingsKey) {
+				case "saveUnknown":
+					subSettings[settingsKey] = typeof subSettings[settingsKey] === "boolean" ? [`${key}.**`] : (settingsValue as any).map((val) => `${key}.${val}`);
+					break;
+				case "timestamps":
+					subSettings[settingsKey] = Object.entries(subSettings[settingsKey]).reduce((obj, entity) => {
+						const [subKey, subValue] = entity;
+
+						obj[subKey] = Array.isArray(subValue) ? subValue.map((subValue) => `${key}.${subValue}`) : `${key}.${subValue}`;
+
+						return obj;
+					}, {});
+					break;
+				}
+			});
+			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_arrray"})(parsedSettings, subSettings);
+
+			utils.object.set(parsedObject, key, newValue);
+		});
+		utils.object.entries(parsedObject).forEach((entry) => {
+			const key = entry[0];
+			const value = entry[1] as any;
+
+			if (!key.endsWith(".type") && !key.endsWith(".0")) {
+				if (value && value.Model && value.Model instanceof Model) {
+					utils.object.set(parsedObject, key, {"type": value});
+				} else if (value && Array.isArray(value)) {
+					value.forEach((item, index) => {
+						if (item && item.Model && item.Model instanceof Model) {
+							utils.object.set(parsedObject, `${key}.${index}`, {"type": item});
+						}
+					});
+				}
+			}
+		});
+
+		this.setInternalProperties(internalProperties, {
+			"schemaObject": parsedObject,
+			"settings": parsedSettings
+		});
+
+		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
+			Object.keys(object).forEach((key) => {
+				if (key.includes(".")) {
+					throw new CustomError.InvalidParameter("Attributes must not contain dots.");
+				}
+
+				// TODO: lots of `as` statements in the two lines below. We should clean that up.
+				if (typeof object[key] === "object" && object[key] !== null && (object[key] as AttributeDefinition).schema) {
+					checkAttributeNameDots((object[key] as AttributeDefinition).schema as SchemaDefinition/*, key*/);
+				}
+			});
+		};
+		checkAttributeNameDots(this.getInternalProperties(internalProperties).schemaObject);
+
+		const checkMultipleArraySchemaElements = (key: string): void => {
+			let attributeType: string[] = [];
+			try {
+				const tmpAttributeType = this.getAttributeType(key);
+				attributeType = Array.isArray(tmpAttributeType) ? tmpAttributeType : [tmpAttributeType];
+			} catch (e) {} // eslint-disable-line no-empty
+
+			if (attributeType.some((type) => type === "L") && ((this.getAttributeValue(key).schema || []) as any).length > 1) {
+				throw new CustomError.InvalidParameter("You must only pass one element into schema array.");
+			}
+		};
+		this.attributes().forEach((key) => checkMultipleArraySchemaElements(key));
+
+		const hashrangeKeys = this.attributes().reduce((val, key) => {
+			const hashKey = this.getAttributeSettingValue("hashKey", key);
+			const rangeKey = this.getAttributeSettingValue("rangeKey", key);
+
+			const isHashKey = Array.isArray(hashKey) ? hashKey.every((item) => Boolean(item)) : hashKey;
+			const isRangeKey = Array.isArray(rangeKey) ? rangeKey.every((item) => Boolean(item)) : rangeKey;
+
+			if (isHashKey) {
+				val.hashKeys.push(key);
+			}
+			if (isRangeKey) {
+				val.rangeKeys.push(key);
+			}
+			if (isHashKey && isRangeKey) {
+				val.hashAndRangeKeyAttributes.push(key);
+			}
+
+			return val;
+		}, {"hashKeys": [], "rangeKeys": [], "hashAndRangeKeyAttributes": []});
+		const keyTypes = ["hashKey", "rangeKey"];
+		keyTypes.forEach((keyType) => {
+			if (hashrangeKeys[`${keyType}s`].length > 1) {
+				throw new CustomError.InvalidParameter(`Only one ${keyType} allowed per schema.`);
+			}
+			if (hashrangeKeys[`${keyType}s`].find((key) => key.includes("."))) {
+				throw new CustomError.InvalidParameter(`${keyType} must be at root object and not nested in object or array.`);
+			}
+		});
+		if (hashrangeKeys.hashAndRangeKeyAttributes.length > 0) {
+			throw new CustomError.InvalidParameter(`Attribute ${hashrangeKeys.hashAndRangeKeyAttributes[0]} must not be both hashKey and rangeKey`);
+		}
+
+		this.attributes().forEach((key) => {
+			const attributeSettingValue = this.getAttributeSettingValue("index", key);
+			if (key.includes(".") && (Array.isArray(attributeSettingValue) ? attributeSettingValue.some((singleValue) => Boolean(singleValue)) : attributeSettingValue)) {
+				throw new CustomError.InvalidParameter("Index must be at root object and not nested in object or array.");
+			}
+		});
+
+		this.attributes().forEach((key) => {
+			try {
+				this.getAttributeType(key);
+			} catch (e) {
+				if (!e.message.includes("is not allowed to be a set")) {
+					throw new CustomError.InvalidParameter(`Attribute ${key} does not have a valid type.`);
+				}
+			}
+		});
+	}
+
 	settings: SchemaSettings;
 	schemaObject: SchemaDefinition;
 	attributes: (object?: ObjectType) => string[];
@@ -479,177 +647,14 @@ export class Schema {
 	getAttributeValue: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => AttributeDefinition;
 	getIndexes: (model: Model<Item>) => Promise<ModelIndexes>;
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
-
-	constructor (object: SchemaDefinition, settings: SchemaSettings = {}) {
-		if (!object || typeof object !== "object" || Array.isArray(object)) {
-			throw new CustomError.InvalidParameterType("Schema initalization parameter must be an object.");
-		}
-		if (Object.keys(object).length === 0) {
-			throw new CustomError.InvalidParameter("Schema initalization parameter must not be an empty object.");
-		}
-
-		if (settings.timestamps === true) {
-			settings.timestamps = {
-				"createdAt": "createdAt",
-				"updatedAt": "updatedAt"
-			};
-		}
-		if (settings.timestamps) {
-			const createdAtArray = Array.isArray(settings.timestamps.createdAt) ? settings.timestamps.createdAt : [settings.timestamps.createdAt];
-			const updatedAtArray = Array.isArray(settings.timestamps.updatedAt) ? settings.timestamps.updatedAt : [settings.timestamps.updatedAt];
-
-			[...createdAtArray, ...updatedAtArray].forEach((prop) => {
-				if (object[prop]) {
-					throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
-				}
-
-				object[prop] = Date;
-			});
-		}
-
-		let parsedSettings = {...settings};
-		const parsedObject = {...object};
-		utils.object.entries(parsedObject).filter((entry) => entry[1] instanceof Schema).forEach((entry) => {
-			const [key, value] = entry;
-			let newValue = {
-				"type": Object,
-				"schema": (value as any)[internalProperties].schemaObject
-			};
-			if (key.endsWith(".schema")) {
-				newValue = (value as any)[internalProperties].schemaObject;
-			}
-
-			const subSettings = {...(value as any)[internalProperties].settings};
-			Object.entries(subSettings).forEach((entry) => {
-				const [settingsKey, settingsValue] = entry;
-				switch (settingsKey) {
-				case "saveUnknown":
-					subSettings[settingsKey] = typeof subSettings[settingsKey] === "boolean" ? [`${key}.**`] : (settingsValue as any).map((val) => `${key}.${val}`);
-					break;
-				case "timestamps":
-					subSettings[settingsKey] = Object.entries(subSettings[settingsKey]).reduce((obj, entity) => {
-						const [subKey, subValue] = entity;
-
-						obj[subKey] = Array.isArray(subValue) ? subValue.map((subValue) => `${key}.${subValue}`) : `${key}.${subValue}`;
-
-						return obj;
-					}, {});
-					break;
-				}
-			});
-			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_arrray"})(parsedSettings, subSettings);
-
-			utils.object.set(parsedObject, key, newValue);
-		});
-		utils.object.entries(parsedObject).forEach((entry) => {
-			const key = entry[0];
-			const value = entry[1] as any;
-
-			if (!key.endsWith(".type") && !key.endsWith(".0")) {
-				if (value && value.Model && value.Model instanceof Model) {
-					utils.object.set(parsedObject, key, {"type": value});
-				} else if (value && Array.isArray(value)) {
-					value.forEach((item, index) => {
-						if (item && item.Model && item.Model instanceof Model) {
-							utils.object.set(parsedObject, `${key}.${index}`, {"type": item});
-						}
-					});
-				}
-			}
-		});
-
-		Object.defineProperty(this, internalProperties, {
-			"configurable": false,
-			"value": {
-				"schemaObject": parsedObject,
-				"settings": parsedSettings
-			}
-		});
-
-		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
-			Object.keys(object).forEach((key) => {
-				if (key.includes(".")) {
-					throw new CustomError.InvalidParameter("Attributes must not contain dots.");
-				}
-
-				// TODO: lots of `as` statements in the two lines below. We should clean that up.
-				if (typeof object[key] === "object" && object[key] !== null && (object[key] as AttributeDefinition).schema) {
-					checkAttributeNameDots((object[key] as AttributeDefinition).schema as SchemaDefinition/*, key*/);
-				}
-			});
-		};
-		checkAttributeNameDots(this[internalProperties].schemaObject);
-
-		const checkMultipleArraySchemaElements = (key: string): void => {
-			let attributeType: string[] = [];
-			try {
-				const tmpAttributeType = this.getAttributeType(key);
-				attributeType = Array.isArray(tmpAttributeType) ? tmpAttributeType : [tmpAttributeType];
-			} catch (e) {} // eslint-disable-line no-empty
-
-			if (attributeType.some((type) => type === "L") && ((this.getAttributeValue(key).schema || []) as any).length > 1) {
-				throw new CustomError.InvalidParameter("You must only pass one element into schema array.");
-			}
-		};
-		this.attributes().forEach((key) => checkMultipleArraySchemaElements(key));
-
-		const hashrangeKeys = this.attributes().reduce((val, key) => {
-			const hashKey = this.getAttributeSettingValue("hashKey", key);
-			const rangeKey = this.getAttributeSettingValue("rangeKey", key);
-
-			const isHashKey = Array.isArray(hashKey) ? hashKey.every((item) => Boolean(item)) : hashKey;
-			const isRangeKey = Array.isArray(rangeKey) ? rangeKey.every((item) => Boolean(item)) : rangeKey;
-
-			if (isHashKey) {
-				val.hashKeys.push(key);
-			}
-			if (isRangeKey) {
-				val.rangeKeys.push(key);
-			}
-			if (isHashKey && isRangeKey) {
-				val.hashAndRangeKeyAttributes.push(key);
-			}
-
-			return val;
-		}, {"hashKeys": [], "rangeKeys": [], "hashAndRangeKeyAttributes": []});
-		const keyTypes = ["hashKey", "rangeKey"];
-		keyTypes.forEach((keyType) => {
-			if (hashrangeKeys[`${keyType}s`].length > 1) {
-				throw new CustomError.InvalidParameter(`Only one ${keyType} allowed per schema.`);
-			}
-			if (hashrangeKeys[`${keyType}s`].find((key) => key.includes("."))) {
-				throw new CustomError.InvalidParameter(`${keyType} must be at root object and not nested in object or array.`);
-			}
-		});
-		if (hashrangeKeys.hashAndRangeKeyAttributes.length > 0) {
-			throw new CustomError.InvalidParameter(`Attribute ${hashrangeKeys.hashAndRangeKeyAttributes[0]} must not be both hashKey and rangeKey`);
-		}
-
-		this.attributes().forEach((key) => {
-			const attributeSettingValue = this.getAttributeSettingValue("index", key);
-			if (key.includes(".") && (Array.isArray(attributeSettingValue) ? attributeSettingValue.some((singleValue) => Boolean(singleValue)) : attributeSettingValue)) {
-				throw new CustomError.InvalidParameter("Index must be at root object and not nested in object or array.");
-			}
-		});
-
-		this.attributes().forEach((key) => {
-			try {
-				this.getAttributeType(key);
-			} catch (e) {
-				if (!e.message.includes("is not allowed to be a set")) {
-					throw new CustomError.InvalidParameter(`Attribute ${key} does not have a valid type.`);
-				}
-			}
-		});
-	}
 }
 
 // TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
 Schema.prototype.getHashKey = function (this: Schema): string {
-	return Object.keys(this[internalProperties].schemaObject).find((key) => (this[internalProperties].schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this[internalProperties].schemaObject)[0];
+	return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.getInternalProperties(internalProperties).schemaObject)[0];
 };
 Schema.prototype.getRangeKey = function (this: Schema): string | void {
-	return Object.keys(this[internalProperties].schemaObject).find((key) => (this[internalProperties].schemaObject[key] as AttributeDefinition).rangeKey);
+	return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).rangeKey);
 };
 
 // This function will take in an attribute and value, and throw an error if the property is required and the value is undefined or null.
@@ -743,7 +748,7 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 };
 
 Schema.prototype.getSettingValue = function (this: Schema, setting: string): any {
-	return this[internalProperties].settings[setting];
+	return this.getInternalProperties(internalProperties).settings[setting];
 };
 
 function attributesAction (this: Schema, object?: ObjectType): string[] {
@@ -780,7 +785,7 @@ function attributesAction (this: Schema, object?: ObjectType): string[] {
 		}, []);
 	};
 
-	return main(this[internalProperties].schemaObject);
+	return main(this.getInternalProperties(internalProperties).schemaObject);
 }
 Schema.prototype.attributes = function (this: Schema, object?: ObjectType): string[] {
 	return attributesAction.call(this, object);
@@ -799,7 +804,7 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 		}
 		previousKeyParts.push(part);
 		return utils.object.get(result.schema, part);
-	}, {"schema": this[internalProperties].schemaObject} as any);
+	}, {"schema": this.getInternalProperties(internalProperties).schemaObject} as any);
 
 	if (Array.isArray(result)) {
 		const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];

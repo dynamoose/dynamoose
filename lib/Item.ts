@@ -232,11 +232,11 @@ export class AnyItem extends Item {
 Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesClass<any>>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
 		const schema: Schema = await model.getInternalProperties(internalProperties).schemaForObject(object);
-		if (schema[internalProperties].settings.timestamps && settings.type === "toDynamo") {
+		if (schema.getInternalProperties(internalProperties).settings.timestamps && settings.type === "toDynamo") {
 			const date = Date.now();
 
-			const createdAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).createdAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).createdAt : [(schema[internalProperties].settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
-			const updatedAtProperties: string[] = ((Array.isArray((schema[internalProperties].settings.timestamps as TimestampObject).updatedAt) ? (schema[internalProperties].settings.timestamps as TimestampObject).updatedAt : [(schema[internalProperties].settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
+			const createdAtProperties: string[] = ((Array.isArray((schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).createdAt) ? (schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).createdAt : [(schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
+			const updatedAtProperties: string[] = ((Array.isArray((schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).updatedAt) ? (schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).updatedAt : [(schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
 			if (object.getInternalProperties && object.getInternalProperties(internalProperties) && !object.getInternalProperties(internalProperties).storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
 				createdAtProperties.forEach((prop) => {
 					utils.object.set(object as any, prop, date);

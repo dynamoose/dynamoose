@@ -45,7 +45,7 @@ describe("Model", () => {
 			dynamoose.model("User", {"id": String});
 			dynamoose.model("User", {"id": String, "name": String});
 
-			expectChai(ModelStore("User").getInternalProperties(internalProperties).schemas[0][internalProperties].schemaObject).to.eql({"id": String, "name": String});
+			expectChai(ModelStore("User").getInternalProperties(internalProperties).schemas[0].getInternalProperties(internalProperties).schemaObject).to.eql({"id": String, "name": String});
 		});
 
 		it("Should throw error if passing in empty array for schema parameter", () => {
