@@ -2,19 +2,24 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Debug Jest Tests",
 			"type": "node",
 			"request": "launch",
-			"name": "npm run test:debug",
-			"runtimeExecutable": "npm",
 			"runtimeArgs": [
-				"run",
-				"test:debug"
+				"--inspect-brk",
+				"${workspaceRoot}/node_modules/.bin/jest",
+				"--runInBand"
 			],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
 			"port": 9229,
-			"internalConsoleOptions": "openOnSessionStart",
-			"skipFiles": [
-				"<node_internals>/**"
-			]
+			"preLaunchTask": "npm: build:sourcemap"
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach",
+			"port": 9229
 		}
 	]
 }
