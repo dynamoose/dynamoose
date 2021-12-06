@@ -75,16 +75,19 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 				});
 			},
 			"models": models.map((model: any) => {
-				if (model.Model[internalProperties]._table) {
+				if (model.Model.getInternalProperties(internalProperties)._table) {
 					throw new CustomError.InvalidParameter(`Model ${model.Model.name} has already been assigned to a table.`);
 				}
 
-				model.Model[internalProperties]._table = this;
+				model.Model.setInternalProperties(internalProperties, {
+					...model.Model.getInternalProperties(internalProperties),
+					"_table": this
+				});
 				return model;
 			}),
 
 			"getIndexes": async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
-				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model[internalProperties].getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
+				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model.getInternalProperties(internalProperties).getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
 					Object.entries(indexes).forEach(([key, value]) => {
 						if (key === "TableIndex") {
 							result[key] = value as TableIndex;
@@ -99,7 +102,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			// This function returns the best matched model for the given object input
 			"modelForObject": async (object: ObjectType): Promise<Model<ItemCarrier>> => {
 				const models = this.getInternalProperties(internalProperties).models;
-				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model[internalProperties].schemaCorrectnessScores(object)));
+				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model.getInternalProperties(internalProperties).schemaCorrectnessScores(object)));
 				const highestModelSchemaCorrectnessScore = Math.max(...modelSchemaCorrectnessScores);
 				const bestModelIndex = modelSchemaCorrectnessScores.indexOf(highestModelSchemaCorrectnessScore);
 
@@ -107,13 +110,13 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			},
 			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
 				// TODO: implement this
-				return this.getInternalProperties(internalProperties).models[0].Model[internalProperties].getCreateTableAttributeParams(this);
+				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getCreateTableAttributeParams(this);
 			},
 			"getHashKey": (): string => {
-				return this.getInternalProperties(internalProperties).models[0].Model[internalProperties].getHashKey();
+				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getHashKey();
 			},
 			"getRangeKey": (): string => {
-				return this.getInternalProperties(internalProperties).models[0].Model[internalProperties].getRangeKey();
+				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
 			}
 		});
 
@@ -122,10 +125,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			"value": this.getInternalProperties(internalProperties).name
 		});
 
-		if (!utils.all_elements_match(models.map((model: any) => model.Model[internalProperties].getHashKey()))) {
+		if (!utils.all_elements_match(models.map((model: any) => model.Model.getInternalProperties(internalProperties).getHashKey()))) {
 			throw new CustomError.InvalidParameter("hashKey's for all models must match.");
 		}
-		if (!utils.all_elements_match(models.map((model: any) => model.Model[internalProperties].getRangeKey()).filter((key) => Boolean(key)))) {
+		if (!utils.all_elements_match(models.map((model: any) => model.Model.getInternalProperties(internalProperties).getRangeKey()).filter((key) => Boolean(key)))) {
 			throw new CustomError.InvalidParameter("rangeKey's for all models must match.");
 		}
 		if (options.expires) {
@@ -137,7 +140,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			}
 			options.expires = utils.combine_objects(options.expires as any, {"attribute": "ttl"});
 
-			utils.array_flatten(models.map((model: any) => model.Model[internalProperties].schemas)).forEach((schema) => {
+			utils.array_flatten(models.map((model: any) => model.Model.getInternalProperties(internalProperties).schemas)).forEach((schema) => {
 				schema[internalProperties].schemaObject[(options.expires as TableExpiresSettings).attribute] = {
 					"type": {
 						"value": Date,
@@ -157,7 +160,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			setupFlow.push(() => createTable(this));
 		}
 		// Wait for Active
-		if (this.getInternalProperties(internalProperties).options.waitForActive === true || (typeof this.getInternalProperties(internalProperties).options.waitForActive === "object" && (this.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings)?.enabled)) {
+		if (this.getInternalProperties(internalProperties).options.waitForActive === true || typeof this.getInternalProperties(internalProperties).options.waitForActive === "object" && (this.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings)?.enabled) {
 			setupFlow.push(() => waitForActive(this, false));
 		}
 		// Update Time To Live

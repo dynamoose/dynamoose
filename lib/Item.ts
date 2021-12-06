@@ -97,8 +97,8 @@ export class Item {
 
 	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
 	async prepareForResponse (): Promise<Item> {
-		if (this[internalProperties].model[internalProperties].table().getInternalProperties(internalProperties).options.populate) {
-			return this.populate({"properties": this[internalProperties].model[internalProperties].table().getInternalProperties(internalProperties).options.populate});
+		if (this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate) {
+			return this.populate({"properties": this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate});
 		}
 		return this;
 	}
@@ -122,8 +122,8 @@ export class Item {
 	delete (this: Item): Promise<void>;
 	delete (this: Item, callback: CallbackType<void, any>): void;
 	delete (this: Item, callback?: CallbackType<void, any>): Promise<void> | void {
-		const hashKey = this[internalProperties].model[internalProperties].getHashKey();
-		const rangeKey = this[internalProperties].model[internalProperties].getRangeKey();
+		const hashKey = this[internalProperties].model.getInternalProperties(internalProperties).getHashKey();
+		const rangeKey = this[internalProperties].model.getInternalProperties(internalProperties).getRangeKey();
 
 		const key = {[hashKey]: this[hashKey]};
 		if (rangeKey) {
@@ -156,7 +156,7 @@ export class Item {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
-				"TableName": this[internalProperties].model[internalProperties].table().getInternalProperties(internalProperties).name
+				"TableName": this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
 			};
 
 			if (localSettings.condition) {
@@ -171,7 +171,7 @@ export class Item {
 				putItemObj.ConditionExpression = putItemObj.ConditionExpression ? `(${putItemObj.ConditionExpression}) AND (${conditionExpression})` : conditionExpression;
 				putItemObj.ExpressionAttributeNames = {
 					...putItemObj.ExpressionAttributeNames || {},
-					"#__hash_key": this[internalProperties].model[internalProperties].getHashKey()
+					"#__hash_key": this[internalProperties].model.getInternalProperties(internalProperties).getHashKey()
 				};
 			}
 
@@ -186,7 +186,7 @@ export class Item {
 				return paramsPromise;
 			}
 		}
-		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this[internalProperties].model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise()]).then((promises) => {
+		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this[internalProperties].model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise()]).then((promises) => {
 			const [putItemObj] = promises;
 			return ddb("putItem", putItemObj);
 		});
@@ -231,7 +231,7 @@ export class AnyItem extends Item {
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Item.objectFromSchema (setting timestamps, etc.)
 Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
-		const schema: Schema = await model[internalProperties].schemaForObject(object);
+		const schema: Schema = await model.getInternalProperties(internalProperties).schemaForObject(object);
 		if (schema[internalProperties].settings.timestamps && settings.type === "toDynamo") {
 			const date = Date.now();
 
@@ -254,7 +254,7 @@ Item.prepareForObjectFromSchema = async function<T>(object: T, model: Model<Item
 // This function will return a list of attributes combining both the schema attributes with the item attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in item), adding the indexes for each item in the item set.
 // https://stackoverflow.com/a/59928314/894067
 Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Promise<string[]> {
-	const schema: Schema = await model[internalProperties].schemaForObject(item);
+	const schema: Schema = await model.getInternalProperties(internalProperties).schemaForObject(item);
 	const attributes = schema.attributes();
 	// build a tree out of schema attributes
 	const root = {};
@@ -317,12 +317,12 @@ export interface ItemObjectFromSchemaSettings {
 }
 // This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
 Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
-	if (settings.checkExpiredItem && model[internalProperties].table().getInternalProperties(internalProperties).options.expires && ((model[internalProperties].table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).items || {}).returnExpired === false && object[(model[internalProperties].table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] && object[(model[internalProperties].table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] * 1000 < Date.now()) {
+	if (settings.checkExpiredItem && model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires && ((model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).items || {}).returnExpired === false && object[(model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] && object[(model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] * 1000 < Date.now()) {
 		return undefined;
 	}
 
 	const returnObject = {...object};
-	const schema: Schema = settings.schema || await model[internalProperties].schemaForObject(returnObject);
+	const schema: Schema = settings.schema || await model.getInternalProperties(internalProperties).schemaForObject(returnObject);
 	const schemaAttributes = schema.attributes(returnObject);
 
 	// Type check

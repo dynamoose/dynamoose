@@ -774,7 +774,7 @@ describe("Table", () => {
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
+							await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expectChai(updateTableParams).to.eql([
 								{
@@ -855,7 +855,7 @@ describe("Table", () => {
 							});
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
+							await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expectChai(updateTableParams).to.eql([
 								{
@@ -1045,7 +1045,7 @@ describe("Table", () => {
 							};
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}, "status": {"type": String, "index": {"type": "global"}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
-							await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
+							await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
 							expectChai(describeTableFunctionCalledTimes).to.eql(5);
 							expectChai(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
@@ -1532,7 +1532,7 @@ describe("Table", () => {
 				const tableName = "Cat";
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"expires": {"ttl": 1000, "attribute": "expires"}});
-				await model.Model[internalProperties].table().getInternalProperties(internalProperties).pendingTaskPromise();
+				await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 				expectChai(updateTTLParams).to.eql([{
 					"TableName": tableName,
 					"TimeToLiveSpecification": {
@@ -1757,8 +1757,8 @@ describe("Table", () => {
 					]
 				}
 			});
-			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model.Model[internalProperties].getIndexes());
-			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model2.Model[internalProperties].getIndexes());
+			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model.Model.getInternalProperties(internalProperties).getIndexes());
+			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model2.Model.getInternalProperties(internalProperties).getIndexes());
 		});
 
 		it("Should return all indexes from all models", async () => {
