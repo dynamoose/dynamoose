@@ -16,8 +16,10 @@ describe("Item", () => {
 	it("Should not have internalProperties if use spread operator on object", () => {
 		const User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
 		const user = new User({"id": 1, "name": "Bob"});
-		expectChai(user[Internal.General.internalProperties]).to.exist;
+		expectChai(user[Internal.General.internalProperties]).to.not.exist;
 		expectChai({...user}[Internal.General.internalProperties]).to.not.exist;
+		expectChai(user.getInternalProperties).to.exist;
+		expectChai({...user}.getInternalProperties).to.not.exist;
 	});
 
 	it("Should store properties attribute name set to model correctly", () => {
@@ -2998,7 +3000,6 @@ describe("Item", () => {
 			expectChai(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).prepareForObjectFromSchema).to.be.a("function");
 		});
 
-		const internalProperties = require("../dist/Internal").General.internalProperties;
 		const tests = [
 			{
 				"input": [{}, {}],
@@ -3023,14 +3024,14 @@ describe("Item", () => {
 				"schema": new dynamoose.Schema({"id": String}, {"timestamps": true})
 			},
 			{
-				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": true}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"input": [Object.assign({}, {"getInternalProperties": () => ({"storedInDynamo": true})}), {"updateTimestamps": true, "type": "toDynamo"}],
 				"output": (result) => ({
 					"updatedAt": result.updatedAt || new Date()
 				}),
 				"schema": new dynamoose.Schema({"id": String}, {"timestamps": true})
 			},
 			{
-				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"input": [Object.assign({}, {"getInternalProperties": () => ({"storedInDynamo": false})}), {"updateTimestamps": true, "type": "toDynamo"}],
 				"output": (result) => ({
 					"updatedAt": result.updatedAt || new Date(),
 					"createdAt": result.createdAt || new Date()
@@ -3038,7 +3039,7 @@ describe("Item", () => {
 				"schema": new dynamoose.Schema({"id": String}, {"timestamps": true})
 			},
 			{
-				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": {"createdAt": true, "updatedAt": true}, "type": "toDynamo"}],
+				"input": [Object.assign({}, {"getInternalProperties": () => ({"storedInDynamo": false})}), {"updateTimestamps": {"createdAt": true, "updatedAt": true}, "type": "toDynamo"}],
 				"output": (result) => ({
 					"updatedAt": result.updatedAt || new Date(),
 					"createdAt": result.createdAt || new Date()
@@ -3046,21 +3047,21 @@ describe("Item", () => {
 				"schema": new dynamoose.Schema({"id": String}, {"timestamps": true})
 			},
 			{
-				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": {"createdAt": true, "updatedAt": false}, "type": "toDynamo"}],
+				"input": [Object.assign({}, {"getInternalProperties": () => ({"storedInDynamo": false})}), {"updateTimestamps": {"createdAt": true, "updatedAt": false}, "type": "toDynamo"}],
 				"output": (result) => ({
 					"createdAt": result.createdAt || new Date()
 				}),
 				"schema": new dynamoose.Schema({"id": String}, {"timestamps": true})
 			},
 			{
-				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": {"createdAt": false, "updatedAt": true}, "type": "toDynamo"}],
+				"input": [Object.assign({}, {"getInternalProperties": () => ({"storedInDynamo": false})}), {"updateTimestamps": {"createdAt": false, "updatedAt": true}, "type": "toDynamo"}],
 				"output": (result) => ({
 					"updatedAt": result.updatedAt || new Date()
 				}),
 				"schema": new dynamoose.Schema({"id": String}, {"timestamps": true})
 			},
 			{
-				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"input": [Object.assign({}, {"getInternalProperties": () => ({"storedInDynamo": false})}), {"updateTimestamps": true, "type": "toDynamo"}],
 				"output": (result) => ({
 					"updated": result.updated || new Date(),
 					"created": result.created || new Date()
@@ -3068,7 +3069,7 @@ describe("Item", () => {
 				"schema": new dynamoose.Schema({"id": String}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}})
 			},
 			{
-				"input": [Object.assign({}, {[internalProperties]: {"storedInDynamo": false}}), {"updateTimestamps": true, "type": "toDynamo"}],
+				"input": [Object.assign({}, {"getInternalProperties": () => ({"storedInDynamo": false})}), {"updateTimestamps": true, "type": "toDynamo"}],
 				"output": (result) => ({
 					"a": result.a || new Date(),
 					"b": result.b || new Date(),
@@ -3098,6 +3099,18 @@ describe("Item", () => {
 
 			it(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
 				const res = func();
+
+				if (res.input[0].getInternalProperties) {
+					const getInternalProperties = res.input[0].getInternalProperties;
+					delete res.input[0].getInternalProperties;
+					Object.defineProperty(res.input[0], "getInternalProperties", {
+						"value": getInternalProperties,
+						"configurable": false,
+						"writable": false,
+						"enumerable": false
+					});
+				}
+
 				const result = await res.model.prepareForObjectFromSchema(...res.input);
 				expectChai(result).to.eql(typeof test.output === "function" ? test.output(result) : test.output);
 			});
