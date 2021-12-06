@@ -1,7 +1,8 @@
 const {"expect": expectChai} = require("chai");
 const Populate = require("../dist/Populate");
 const dynamoose = require("../dist");
-const aws = require("../dist/aws");
+const awsPkg = require("../dist/aws").AWS;
+const aws = new awsPkg();
 const util = require("util");
 const utils = require("../dist/utils");
 

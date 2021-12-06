@@ -5,7 +5,7 @@ import {Item, ItemObjectFromSchemaSettings} from "./Item";
 import {Model, ModelIndexes} from "./Model";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ModelType, ObjectType} from "./General";
-import { InternalPropertiesClass } from "./InternalPropertiesClass";
+import {InternalPropertiesClass} from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;
 
 // TODO: the interfaces below are so similar, we should consider combining them into one. We also do a lot of `DynamoDBTypeResult | DynamoDBSetTypeResult` in the code base.
@@ -525,7 +525,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			return Array.isArray(typeDetails) ? (typeDetails as any).map((detail) => detail.dynamodbType) : typeDetails.dynamodbType;
 		} catch (e) {
 			if (settings?.unknownAttributeAllowed && e.message === `Invalid Attribute: ${key}` && value) {
-				return Object.keys((Item as any).objectToDynamo(value, {"type": "value"}))[0];
+				return Object.keys(Item.objectToDynamo(value, {"type": "value"}))[0];
 			} else {
 				throw e;
 			}

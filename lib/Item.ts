@@ -1,4 +1,4 @@
-import aws = require("./aws");
+import awsConverter = require("./aws/converter");
 import ddb = require("./aws/ddb/internal");
 import utils = require("./utils");
 import Error = require("./Error");
@@ -17,7 +17,7 @@ import {SerializerOptions} from "./Serializer";
 import {PopulateItem, PopulateSettings} from "./Populate";
 import {Condition} from "./Condition";
 import {TableExpiresSettings} from "./Table";
-import { InternalPropertiesClass } from "./InternalPropertiesClass";
+import {InternalPropertiesClass} from "./InternalPropertiesClass";
 
 export interface ItemSaveSettings {
 	overwrite?: boolean;
@@ -40,7 +40,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	constructor (model: Model<Item>, object?: AttributeMap | ObjectType, settings?: ItemSettings) {
 		super();
 
-		const itemObject = Item.isDynamoObject(object) ? aws.converter().unmarshall(object) : object;
+		const itemObject = Item.isDynamoObject(object) ? awsConverter().unmarshall(object) : object;
 		Object.keys(itemObject).forEach((key) => this[key] = itemObject[key]);
 
 		this.setInternalProperties(internalProperties, {
@@ -61,10 +61,10 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		}
 
 		const options = settings.type === "value" ? undefined : {"removeUndefinedValues": true};
-		return (settings.type === "value" ? aws.converter().convertToAttr : aws.converter().marshall)(object, options as any);
+		return (settings.type === "value" ? awsConverter().convertToAttr : awsConverter().marshall)(object, options as any);
 	}
 	static fromDynamo (object: AttributeMap): ObjectType {
-		return aws.converter().unmarshall(object);
+		return awsConverter().unmarshall(object);
 	}
 	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
 	static isDynamoObject (object: ObjectType, recurrsive?: boolean): boolean | null {
@@ -149,6 +149,8 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			settings = {};
 		}
 
+		const table = this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table();
+
 		let savedItem;
 
 		const localSettings: ItemSaveSettings = settings;
@@ -156,7 +158,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
-				"TableName": this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
+				"TableName": table.getInternalProperties(internalProperties).name
 			};
 
 			if (localSettings.condition) {
@@ -186,9 +188,9 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 				return paramsPromise;
 			}
 		}
-		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise()]).then((promises) => {
+		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, table.getInternalProperties(internalProperties).pendingTaskPromise()]).then((promises) => {
 			const [putItemObj] = promises;
-			return ddb("putItem", putItemObj);
+			return ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
 		});
 
 		if (callback) {
