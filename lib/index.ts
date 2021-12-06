@@ -2,14 +2,14 @@ import {Model} from "./Model";
 import {Schema, SchemaDefinition} from "./Schema";
 import {Condition} from "./Condition";
 import transaction from "./Transaction";
-import aws = require("./aws");
 import utils = require("./utils");
 import {Item, AnyItem} from "./Item";
 import ModelStore = require("./ModelStore");
 import {ModelType} from "./General";
 import {CustomError} from "dynamoose-utils";
-import {Table} from "./Table";
+import {Table} from "./Table/index";
 import type = require("./type");
+import {Instance} from "./Instance";
 
 const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[]): ModelType<T> => {
 	let model: Model<T>;
@@ -70,11 +70,11 @@ Table.defaults = {
 
 export = {
 	model,
-	Table,
+	"Table": Instance.default.Table,
 	Schema,
 	Condition,
 	transaction,
-	aws,
+	"aws": Instance.default.aws,
 	"logger": async () => {
 		try {
 			return await utils.importPackage("dynamoose-logger");
