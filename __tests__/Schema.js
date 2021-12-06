@@ -46,17 +46,17 @@ describe("Schema", () => {
 	});
 
 	it("Should set correct settings value", () => {
-		expect(new dynamoose.Schema({"id": String}, {"saveUnknown": true})[internalProperties].settings).to.eql({"saveUnknown": true});
+		expect(new dynamoose.Schema({"id": String}, {"saveUnknown": true}).getInternalProperties(internalProperties).settings).to.eql({"saveUnknown": true});
 	});
 
 	it("Should set correct settings value default value of empty object", () => {
-		expect(new dynamoose.Schema({"id": String})[internalProperties].settings).to.eql({});
+		expect(new dynamoose.Schema({"id": String}).getInternalProperties(internalProperties).settings).to.eql({});
 	});
 
 	it("Should throw error if timestamps already exists in schema", () => {
-		expect(() => new dynamoose.Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true})[internalProperties].settings).to.throw("Timestamp attributes must not be defined in schema.");
-		expect(() => new dynamoose.Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}})[internalProperties].settings).to.throw("Timestamp attributes must not be defined in schema.");
-		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": ["created", "a1"], "updatedAt": ["updated", "b1"]}})[internalProperties].settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true}).getInternalProperties(internalProperties).settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).getInternalProperties(internalProperties).settings).to.throw("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": ["created", "a1"], "updatedAt": ["updated", "b1"]}}).getInternalProperties(internalProperties).settings).to.throw("Timestamp attributes must not be defined in schema.");
 	});
 
 	it("Should throw error if passing multiple schema elements into array", () => {
@@ -124,7 +124,7 @@ describe("Schema", () => {
 
 	describe("Nested Schemas", () => {
 		it("Should have correct schemaObject for nested schemas", () => {
-			expect(new dynamoose.Schema({"id": Number, "parent": new dynamoose.Schema({"name": String})})[internalProperties].schemaObject).to.eql({
+			expect(new dynamoose.Schema({"id": Number, "parent": new dynamoose.Schema({"name": String})}).getInternalProperties(internalProperties).schemaObject).to.eql({
 				"id": Number,
 				"parent": {
 					"type": Object,
@@ -136,7 +136,7 @@ describe("Schema", () => {
 		});
 
 		it("Should have correct schemaObject for nested schemas when defined as schema", () => {
-			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String})}})[internalProperties].schemaObject).to.eql({
+			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String})}}).getInternalProperties(internalProperties).schemaObject).to.eql({
 				"id": Number,
 				"parent": {
 					"type": Object,
@@ -148,7 +148,7 @@ describe("Schema", () => {
 		});
 
 		it("Should have correct schemaObject for nested schemas when defined as schema and other settings", () => {
-			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String}), "required": true}})[internalProperties].schemaObject).to.eql({
+			expect(new dynamoose.Schema({"id": Number, "parent": {"type": Object, "schema": new dynamoose.Schema({"name": String}), "required": true}}).getInternalProperties(internalProperties).schemaObject).to.eql({
 				"id": Number,
 				"parent": {
 					"type": Object,
@@ -161,7 +161,7 @@ describe("Schema", () => {
 		});
 
 		it("Should have correct schemaObject for nested schemas as array", () => {
-			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})]}})[internalProperties].schemaObject).to.eql({
+			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})]}}).getInternalProperties(internalProperties).schemaObject).to.eql({
 				"id": Number,
 				"parents": {
 					"type": Array,
@@ -176,7 +176,7 @@ describe("Schema", () => {
 		});
 
 		it("Should have correct schemaObject for nested schemas as array and other settings", () => {
-			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})], "required": true}})[internalProperties].schemaObject).to.eql({
+			expect(new dynamoose.Schema({"id": Number, "parents": {"type": Array, "schema": [new dynamoose.Schema({"name": String})], "required": true}}).getInternalProperties(internalProperties).schemaObject).to.eql({
 				"id": Number,
 				"parents": {
 					"type": Array,
