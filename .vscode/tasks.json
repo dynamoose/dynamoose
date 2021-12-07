@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build:sourcemap",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build:sourcemap",
+			"detail": "tsc --sourceMap"
+		}
+	]
+}
