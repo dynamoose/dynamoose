@@ -17,7 +17,7 @@ import {SerializerOptions} from "./Serializer";
 import {PopulateItem, PopulateSettings} from "./Populate";
 import {Condition} from "./Condition";
 import {TableExpiresSettings} from "./Table";
-import { InternalPropertiesClass } from "./InternalPropertiesClass";
+import {InternalPropertiesClass} from "./InternalPropertiesClass";
 
 export interface ItemSaveSettings {
 	overwrite?: boolean;
