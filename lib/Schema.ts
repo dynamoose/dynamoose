@@ -5,7 +5,7 @@ import {Item, ItemObjectFromSchemaSettings} from "./Item";
 import {Model, ModelIndexes} from "./Model";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {ModelType, ObjectType} from "./General";
-import { InternalPropertiesClass } from "./InternalPropertiesClass";
+import {InternalPropertiesClass} from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;
 
 // TODO: the interfaces below are so similar, we should consider combining them into one. We also do a lot of `DynamoDBTypeResult | DynamoDBSetTypeResult` in the code base.
