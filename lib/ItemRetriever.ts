@@ -7,7 +7,7 @@ import {Item} from "./Item";
 import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
 import Internal = require("./Internal");
-import { InternalPropertiesClass } from "./InternalPropertiesClass";
+import {InternalPropertiesClass} from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;
 
 enum ItemRetrieverTypes {
