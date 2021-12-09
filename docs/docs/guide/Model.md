@@ -460,7 +460,7 @@ This function lets you update an existing item in the database. You can either p
 `key` can be a string representing the hashKey or an object containing the hashKey & rangeKey.
 
 ```js
-await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
+await User.update({"id": 1}, {"name": "Bob"}); // This code will set `name` to Bob for the user where `id` = 1
 ```
 
 If you do not pass in a `callback` parameter a promise will be returned.
