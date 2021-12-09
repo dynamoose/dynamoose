@@ -24,7 +24,7 @@ const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaD
 	if (!schema && storedSchema) {
 		model = storedSchema;
 	} else {
-		model = new Model(name, schema);
+		model = new Model(name, schema, ModelStore);
 	}
 	const returnObject: any = model.Item;
 	const keys = utils.array_flatten([
