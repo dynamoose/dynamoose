@@ -1,5 +1,4 @@
 const dynamoose = require("../dist");
-const utils = require("../dist/utils");
 
 describe("dynamoose.Instance", () => {
 	it("Should exist", () => {

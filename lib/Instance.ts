@@ -1,4 +1,3 @@
-import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {AWS} from "./aws";
 import {Model} from "./Model";
 import {Table as PrimaryTable, TableOptionsOptional} from "./Table";
