@@ -525,7 +525,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			return Array.isArray(typeDetails) ? (typeDetails as any).map((detail) => detail.dynamodbType) : typeDetails.dynamodbType;
 		} catch (e) {
 			if (settings?.unknownAttributeAllowed && e.message === `Invalid Attribute: ${key}` && value) {
-				return Object.keys((Item as any).objectToDynamo(value, {"type": "value"}))[0];
+				return Object.keys(Item.objectToDynamo(value, {"type": "value"}))[0];
 			} else {
 				throw e;
 			}

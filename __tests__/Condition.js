@@ -1,6 +1,7 @@
 const chai = require("chai");
 const {"expect": expectChai} = chai;
 const dynamoose = require("../dist");
+const {Instance} = require("../dist/Instance");
 const {Condition} = dynamoose;
 
 describe("Condition", () => {
@@ -245,10 +246,20 @@ describe("Condition", () => {
 
 		tests.forEach((test) => {
 			it(`Should ${test.error ? "throw" : "return"} ${JSON.stringify(test.error || test.output)} for ${JSON.stringify(test.input)}`, async () => {
+				const model = {
+					"getInternalProperties": () => ({
+						"table": () => ({
+							"getInternalProperties": () => ({
+								"instance": Instance.default
+							})
+						}),
+						"schemaForObject": () => new dynamoose.Schema({"id": String})
+					})
+				};
 				if (test.error) {
-					return expectChai(() => test.input().requestObject(undefined, test.settings)).to.throw(test.error);
+					return expectChai(() => test.input().requestObject(model, test.settings)).to.throw(test.error);
 				} else {
-					return expectChai(await test.input().requestObject(undefined, test.settings)).to.eql(test.output);
+					return expectChai(await test.input().requestObject(model, test.settings)).to.eql(test.output);
 				}
 			});
 		});

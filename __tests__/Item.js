@@ -9,12 +9,24 @@ const Internal = require("../dist/Internal");
 const {internalProperties} = Internal.General;
 
 describe("Item", () => {
+	beforeEach(() => {
+		dynamoose.Table.defaults.set({
+			"create": false,
+			"update": false,
+			"waitForActive": false
+		});
+	});
+	afterEach(() => {
+		dynamoose.Table.defaults.set({});
+	});
+
 	it("Should be a function", () => {
 		expectChai(Item).to.be.a("function");
 	});
 
 	it("Should not have internalProperties if use spread operator on object", () => {
-		const User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+		const User = dynamoose.model("User", {"id": Number, "name": String}, {});
+		new dynamoose.Table("User", [User], {"create": false, "waitForActive": false});
 		const user = new User({"id": 1, "name": "Bob"});
 		expectChai(user[Internal.General.internalProperties]).to.not.exist;
 		expectChai({...user}[Internal.General.internalProperties]).to.not.exist;
@@ -23,7 +35,8 @@ describe("Item", () => {
 	});
 
 	it("Should store properties attribute name set to model correctly", () => {
-		const User = dynamoose.model("User", {"id": Number, "model": String}, {"create": false, "waitForActive": false});
+		const User = dynamoose.model("User", {"id": Number, "model": String}, {});
+		new dynamoose.Table("User", [User], {"create": false, "waitForActive": false});
 		const user = new User({"id": 1, "model": "data"});
 		expect(user.model).toEqual("data");
 	});
@@ -31,7 +44,8 @@ describe("Item", () => {
 	describe("DynamoDB Conversation Methods", () => {
 		let User;
 		beforeEach(() => {
-			User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+			User = dynamoose.model("User", {"id": Number, "name": String}, {});
+			new dynamoose.Table("User", [User], {"create": false, "waitForActive": false});
 		});
 		afterEach(() => {
 			User = null;
@@ -1584,7 +1598,8 @@ describe("Item", () => {
 	describe("item.original", () => {
 		let model;
 		beforeEach(() => {
-			model = dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false});
+			model = dynamoose.model("User", {"id": Number}, {});
+			new dynamoose.Table("User", [model]);
 		});
 		afterEach(() => {
 			model = null;
@@ -1638,7 +1653,8 @@ describe("Item", () => {
 	describe("item.toJSON", () => {
 		let model;
 		beforeEach(() => {
-			model = dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false});
+			model = dynamoose.model("User", {"id": Number}, {});
+			new dynamoose.Table("User", [model]);
 		});
 		afterEach(() => {
 			model = null;
