@@ -1331,7 +1331,7 @@ describe("Item", () => {
 					}]);
 				});
 
-				it("Should work correctly if attributes added to item after initalization", async () => {
+				it("Should work correctly if attributes added to item after initialization", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
 					new dynamoose.Table("User", [User]);

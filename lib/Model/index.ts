@@ -5,7 +5,7 @@ import utils = require("../utils");
 import ddb = require("../aws/ddb/internal");
 import Internal = require("../Internal");
 import {Serializer, SerializerOptions} from "../Serializer";
-import {Condition, ConditionInitalizer} from "../Condition";
+import {Condition, ConditionInitializer} from "../Condition";
 import {Scan, Query} from "../ItemRetriever";
 import {CallbackType, ObjectType, FunctionType, ItemArray, ModelType, KeyObject, InputKey} from "../General";
 import {PopulateItems} from "../Populate";
@@ -275,8 +275,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	// latestTableDetails: DynamoDB.DescribeTableOutput;
 	// pendingTaskPromise: () => Promise<void>;
 	Item: typeof ItemCarrier;
-	scan: (object?: ConditionInitalizer) => Scan<T>;
-	query: (object?: ConditionInitalizer) => Query<T>;
+	scan: (object?: ConditionInitializer) => Scan<T>;
+	query: (object?: ConditionInitializer) => Query<T>;
 	methods: { item: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 	transaction: TransactionType;
 
@@ -905,10 +905,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 }
 
 
-Model.prototype.scan = function (object?: ConditionInitalizer): Scan<ItemCarrier> {
+Model.prototype.scan = function (object?: ConditionInitializer): Scan<ItemCarrier> {
 	return new Scan(this, object);
 };
-Model.prototype.query = function (object?: ConditionInitalizer): Query<ItemCarrier> {
+Model.prototype.query = function (object?: ConditionInitializer): Query<ItemCarrier> {
 	return new Query(this, object);
 };
 

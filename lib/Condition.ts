@@ -67,7 +67,7 @@ const types: ConditionComparisonType[] = [
 	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in},
 	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true}
 ];
-export type ConditionInitalizer = Condition | ObjectType | string;
+export type ConditionInitializer = Condition | ObjectType | string;
 
 export interface BasicOperators<T = Condition> {
 	and: () => T;
@@ -129,12 +129,12 @@ interface ConditionInternalProperties {
 			type?: ConditionComparisonType;
 			value?: any;
 		}; // represents the pending chain of filter data waiting to be attached to the `conditions` parameter. For example, storing the key before we know what the comparison operator is.
-		raw?: ConditionInitalizer;
+		raw?: ConditionInitializer;
 	}
 }
 
 export class Condition extends InternalPropertiesClass<ConditionInternalProperties> {
-	constructor (object?: ConditionInitalizer) {
+	constructor (object?: ConditionInitializer) {
 		super();
 
 		if (object instanceof Condition) {
