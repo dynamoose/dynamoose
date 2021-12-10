@@ -54,6 +54,8 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 	using: (this: ItemRetriever, value: string) => ItemRetriever;
 	exec (this: ItemRetriever, callback?: any): any {
 		let timesRequested = 0;
+		const {model} = this.getInternalProperties(internalProperties).internalSettings;
+		const table = model.getInternalProperties(internalProperties).table();
 		const prepareForReturn = async (result): Promise<any> => {
 			if (Array.isArray(result)) {
 				result = utils.merge_objects(...result);
@@ -64,8 +66,8 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 					[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => await new (this.getInternalProperties(internalProperties).internalSettings.model).Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"})))).filter((a) => Boolean(a));
-			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => this.getInternalProperties(internalProperties).internalSettings.model.Item.fromDynamo(key)) : this.getInternalProperties(internalProperties).internalSettings.model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
+			const array: any = (await Promise.all(result.Items.map(async (item) => await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"})))).filter((a) => Boolean(a));
+			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => model.Item.fromDynamo(key)) : model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
 			array[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`];
 			array[`times${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}`] = timesRequested;
@@ -73,9 +75,9 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 			array["toJSON"] = utils.dynamoose.itemToJSON;
 			return array;
 		};
-		const promise = this.getInternalProperties(internalProperties).internalSettings.model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(() => this.getRequest()).then((request) => {
+		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => this.getRequest()).then((request) => {
 			const allRequest = (extraParameters = {}): any => {
-				let promise: Promise<any> = ddb(this.getInternalProperties(internalProperties).internalSettings.typeInformation.type as any, {...request, ...extraParameters});
+				let promise: Promise<any> = ddb(table.getInternalProperties(internalProperties).instance, this.getInternalProperties(internalProperties).internalSettings.typeInformation.type as any, {...request, ...extraParameters});
 				timesRequested++;
 
 				if (this.getInternalProperties(internalProperties).settings.all) {
@@ -91,7 +93,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 								await utils.timeout(this.getInternalProperties(internalProperties).settings.all.delay);
 							}
 
-							const nextRequest: any = await ddb(this.getInternalProperties(internalProperties).internalSettings.typeInformation.type as any, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
+							const nextRequest: any = await ddb(table.getInternalProperties(internalProperties).instance, this.getInternalProperties(internalProperties).internalSettings.typeInformation.type as any, {...request, ...extraParameters, "ExclusiveStartKey": lastKey});
 							timesRequested++;
 							result = utils.merge_objects(result, nextRequest);
 							// The operation below is safe because right above we are overwriting the entire `result` variable, so there is no chance it'll be reassigned based on an outdated value since it's already been overwritten. There might be a better way to do this than ignoring the rule on the line below.
@@ -159,18 +161,21 @@ Object.entries(Condition.prototype).forEach((prototype) => {
 });
 
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
+	const {model} = this.getInternalProperties(internalProperties).internalSettings;
+	const table = model.getInternalProperties(internalProperties).table();
+
 	const object: any = {
-		...await this.getInternalProperties(internalProperties).settings.condition.requestObject(this.getInternalProperties(internalProperties).internalSettings.model, {"conditionString": "FilterExpression", "conditionStringType": "array"}),
-		"TableName": this.getInternalProperties(internalProperties).internalSettings.model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
+		...await this.getInternalProperties(internalProperties).settings.condition.requestObject(model, {"conditionString": "FilterExpression", "conditionStringType": "array"}),
+		"TableName": table.getInternalProperties(internalProperties).name
 	};
 
 	if (this.getInternalProperties(internalProperties).settings.limit) {
 		object.Limit = this.getInternalProperties(internalProperties).settings.limit;
 	}
 	if (this.getInternalProperties(internalProperties).settings.startAt) {
-		object.ExclusiveStartKey = Item.isDynamoObject(this.getInternalProperties(internalProperties).settings.startAt) ? this.getInternalProperties(internalProperties).settings.startAt : this.getInternalProperties(internalProperties).internalSettings.model.Item.objectToDynamo(this.getInternalProperties(internalProperties).settings.startAt);
+		object.ExclusiveStartKey = Item.isDynamoObject(this.getInternalProperties(internalProperties).settings.startAt) ? this.getInternalProperties(internalProperties).settings.startAt : model.Item.objectToDynamo(this.getInternalProperties(internalProperties).settings.startAt);
 	}
-	const indexes = await this.getInternalProperties(internalProperties).internalSettings.model.getInternalProperties(internalProperties).getIndexes();
+	const indexes = await model.getInternalProperties(internalProperties).getIndexes();
 	if (this.getInternalProperties(internalProperties).settings.index) {
 		object.IndexName = this.getInternalProperties(internalProperties).settings.index;
 	} else if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {

@@ -4171,6 +4171,11 @@ describe("Model", () => {
 		let User;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String, "friend": {"type": Object, "schema": {"id": Number, "name": String}}});
+			new dynamoose.Table("User", [User], {
+				"create": false,
+				"update": false,
+				"waitForActive": false
+			});
 		});
 		afterEach(() => {
 			User = null;
@@ -4403,6 +4408,11 @@ describe("Model", () => {
 		let User, user;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
+			new dynamoose.Table("User", [User], {
+				"create": false,
+				"update": false,
+				"waitForActive": false
+			});
 			user = new User();
 		});
 		afterEach(() => {
@@ -4578,6 +4588,7 @@ describe("Model Item Instance", () => {
 	beforeEach(() => {
 		const schema = new dynamoose.Schema({"name": String});
 		Cat = dynamoose.model("Cat", schema);
+		new dynamoose.Table("Cat", [Cat]);
 	});
 
 	it("Should allow creating instance of Model", () => {

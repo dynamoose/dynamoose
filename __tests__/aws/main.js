@@ -41,7 +41,7 @@ describe("AWS", () => {
 			});
 
 			it("Should be a function", () => {
-				expect(dynamoose.aws.ddb.set).to.be.a("function");
+				expect(dynamoose.aws.ddb.revert).to.be.a("function");
 			});
 
 			it("Should return original object after reverting", () => {
@@ -120,7 +120,7 @@ describe("AWS", () => {
 			});
 
 			it("Should be a function", () => {
-				expect(dynamoose.aws.converter.set).to.be.a("function");
+				expect(dynamoose.aws.converter.revert).to.be.a("function");
 			});
 
 			it("Should return original object after reverting", () => {
