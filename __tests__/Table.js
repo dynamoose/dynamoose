@@ -40,11 +40,11 @@ describe("Table", () => {
 			expectChai(() => new dynamoose.Table("Table", 1)).to.throw("Models passed into table constructor should be an array of models.");
 		});
 
-		it("Should throw an error if array of strings passed into second arguemnt", () => {
+		it("Should throw an error if array of strings passed into second argument", () => {
 			expectChai(() => new dynamoose.Table("Table", ["hello", "world"])).to.throw("Models passed into table constructor should be an array of models.");
 		});
 
-		it("Should throw an error if empty array passed into second arguemnt", () => {
+		it("Should throw an error if empty array passed into second argument", () => {
 			expectChai(() => new dynamoose.Table("Table", [])).to.throw("Models passed into table constructor should be an array of models.");
 		});
 

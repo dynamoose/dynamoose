@@ -14,11 +14,11 @@ describe("Schema", () => {
 	});
 
 	it("Should throw an error if nothing passed in", () => {
-		expect(() => new dynamoose.Schema()).to.throw("Schema initalization parameter must be an object.");
+		expect(() => new dynamoose.Schema()).to.throw("Schema initialization parameter must be an object.");
 	});
 
 	it("Should throw an error if empty object passed in", () => {
-		expect(() => new dynamoose.Schema({})).to.throw("Schema initalization parameter must not be an empty object.");
+		expect(() => new dynamoose.Schema({})).to.throw("Schema initialization parameter must not be an empty object.");
 	});
 
 	it("Should throw an error if invalid random type passed in", () => {

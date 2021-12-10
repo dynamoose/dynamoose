@@ -67,7 +67,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		return awsConverter().unmarshall(object);
 	}
 	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
-	static isDynamoObject (object: ObjectType, recurrsive?: boolean): boolean | null {
+	static isDynamoObject (object: ObjectType, recursive?: boolean): boolean | null {
 		function isValid (value): boolean {
 			if (typeof value === "undefined" || value === null) {
 				return false;
@@ -85,7 +85,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		if (keys.length === 0) {
 			return null;
 		} else {
-			return recurrsive ? isValid(object) : values.every((value) => isValid(value));
+			return recursive ? isValid(object) : values.every((value) => isValid(value));
 		}
 	}
 
@@ -317,7 +317,7 @@ export interface ItemObjectFromSchemaSettings {
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 	typeCheck?: boolean;
 }
-// This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a typemismatch.
+// This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a type mismatch.
 Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
 	if (settings.checkExpiredItem && model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires && ((model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).items || {}).returnExpired === false && object[(model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] && object[(model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] * 1000 < Date.now()) {
 		return undefined;
