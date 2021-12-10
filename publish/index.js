@@ -134,7 +134,7 @@ let package = require("../package.json");
 	await git.push("origin", branch);
 	gitPush.succeed("Pushed files to GitHub");
 	// Changelog
-	console.log("This tool will now open a web browser with a list of commits since the last verison.\nPlease use this information to fill out a change log.\n");
+	console.log("This tool will now open a web browser with a list of commits since the last version.\nPlease use this information to fill out a change log.\n");
 	console.log("Press any key to proceed.");
 	await keypress();
 	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
