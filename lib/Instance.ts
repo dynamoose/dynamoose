@@ -3,7 +3,7 @@ import {Model} from "./Model";
 import {Table as PrimaryTable, TableOptionsOptional} from "./Table";
 
 export interface PrimaryTableInterface extends PrimaryTable {
-	new (name: string, models: Model[], options: TableOptionsOptional): PrimaryTable;
+	new (name: string, models: Model[], options?: TableOptionsOptional): PrimaryTable;
 }
 
 export class Instance {
