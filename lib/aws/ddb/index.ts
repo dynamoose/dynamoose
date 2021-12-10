@@ -7,8 +7,8 @@ export interface DDBInterface {
 	local: (endpoint: string) => void;
 }
 
-export default function (ddb?: DynamoDB.DynamoDB): DDBInterface {
-	let customDDB: DynamoDB.DynamoDB = ddb ?? new DynamoDB.DynamoDB({});
+export default function (): DDBInterface {
+	let customDDB: DynamoDB.DynamoDB = new DynamoDB.DynamoDB({});
 
 	const func = (): DynamoDB.DynamoDB => customDDB;
 	func.set = (ddb: DynamoDB.DynamoDB): void => {
