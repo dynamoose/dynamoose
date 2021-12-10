@@ -71,6 +71,7 @@ Table.defaults = {
 export = {
 	model,
 	"Table": Instance.default.Table,
+	Instance,
 	Schema,
 	Condition,
 	transaction,
