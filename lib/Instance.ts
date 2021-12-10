@@ -3,10 +3,6 @@ import {AWS} from "./aws";
 import {Model} from "./Model";
 import {Table as PrimaryTable, TableOptionsOptional} from "./Table";
 
-export interface InstanceSettings {
-	ddb?: DynamoDB.DynamoDB;
-}
-
 export interface PrimaryTableInterface extends PrimaryTable {
 	new (name: string, models: Model[], options: TableOptionsOptional): PrimaryTable;
 }
@@ -17,13 +13,8 @@ export class Instance {
 	aws: AWS;
 	Table: PrimaryTableInterface;
 
-	constructor (settings?: InstanceSettings) {
+	constructor () {
 		this.aws = new AWS();
-
-		if (settings?.ddb) {
-			this.aws.ddb.set(settings.ddb);
-		}
-
 		this.Table = getInstanceTable(this) as any;
 	}
 }
