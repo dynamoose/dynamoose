@@ -157,316 +157,366 @@ describe("Table", () => {
 		});
 
 		describe("Creation", () => {
-			let createTableParams = null;
-			beforeEach(() => {
-				dynamoose.Table.defaults.set({
-					"waitForActive": false
+			const testTypes = [
+				{"name": "Default", "func": () => dynamoose},
+				{"name": "Instance", "func": () => new dynamoose.Instance()}
+			];
+			testTypes.forEach((testType) => {
+				describe(testType.name, () => {
+					let createTableParams = null, instance = null;
+					beforeEach(() => {
+						instance = testType.func();
+						createTableParams = null;
+
+						dynamoose.Table.defaults.set({
+							"waitForActive": false
+						});
+						instance.aws.ddb.set({
+							"createTable": (params) => {
+								createTableParams = params;
+								return {
+									"promise": () => Promise.resolve()
+								};
+							},
+							"describeTable": () => ({"promise": () => Promise.resolve()})
+						});
+					});
+					afterEach(() => {
+						instance.aws.ddb.revert();
+
+						createTableParams = null;
+						instance = null;
+					});
+
+					it("Should call createTable with correct parameters", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model]);
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters with capacity as number", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"throughput": 1});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters with capacity as object", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"throughput": {"read": 2, "write": 3}});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 2,
+								"WriteCapacityUnits": 3
+							},
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters with capacity as ON_DEMAND", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"throughput": "ON_DEMAND"});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"BillingMode": "PAY_PER_REQUEST",
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters when tags are specified", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"tags": {"hello": "world"}});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"Tags": [
+								{
+									"Key": "hello",
+									"Value": "world"
+								}
+							],
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters when multiple tags are specified", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"tags": {"hello": "world", "foo": "bar"}});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"Tags": [
+								{
+									"Key": "hello",
+									"Value": "world"
+								},
+								{
+									"Key": "foo",
+									"Value": "bar"
+								}
+							],
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters when tableClass is undefined", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters when tableClass is standard", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"tableClass": "standard"});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableName": tableName
+						});
+					});
+
+					it("Should call createTable with correct parameters when tableClass is infrequent access", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"tableClass": "infrequentAccess"});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableName": tableName,
+							"TableClass": "STANDARD_INFREQUENT_ACCESS"
+						});
+					});
+
+					it("Shouldn't call createTable if table already exists", async () => {
+						instance.aws.ddb.set({
+							"createTable": (params) => {
+								createTableParams = params;
+								return Promise.resolve();
+							},
+							"describeTable": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})
+						});
+
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model]);
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql(null);
+					});
+
+					it("Should not call createTable if create option set to false", async () => {
+						const model = dynamoose.model("Cat", {"id": String});
+						new instance.Table("Cat", [model], {"create": false});
+						await utils.set_immediate_promise();
+						expectChai(createTableParams).to.eql(null);
+					});
+
+					it("Should bind request to function being called", async () => {
+						let self;
+						instance.aws.ddb.set({
+							"createTable": function (params) {
+								createTableParams = params;
+								self = this;
+								return Promise.resolve();
+							},
+							"describeTable": () => Promise.resolve()
+						});
+
+						const model = dynamoose.model("Cat", {"id": String});
+						new instance.Table("Cat", [model]);
+						await utils.set_immediate_promise();
+						expectChai(self).to.be.an("object");
+						expectChai(Object.keys(self)).to.eql(["createTable", "describeTable"]);
+					});
+
+					if (testType.name === "Instance") {
+						it("Should not call original ddb createTable", async () => {
+							let originalCreateTableParams = null;
+							dynamoose.aws.ddb.set({
+								"createTable": (params) => {
+									originalCreateTableParams = params;
+									return {
+										"promise": () => Promise.resolve()
+									};
+								},
+								"describeTable": () => ({"promise": () => Promise.resolve()})
+							});
+
+							const tableName = "Cat";
+							const model = dynamoose.model(tableName, {"id": String});
+							new instance.Table(tableName, [model]);
+							await utils.set_immediate_promise();
+							expectChai(createTableParams).to.eql({
+								"AttributeDefinitions": [
+									{
+										"AttributeName": "id",
+										"AttributeType": "S"
+									}
+								],
+								"KeySchema": [
+									{
+										"AttributeName": "id",
+										"KeyType": "HASH"
+									}
+								],
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 1
+								},
+								"TableName": tableName
+							});
+							expect(originalCreateTableParams).toBeNull();
+						});
+					}
 				});
-			});
-			beforeEach(() => {
-				createTableParams = null;
-				dynamoose.aws.ddb.set({
-					"createTable": (params) => {
-						createTableParams = params;
-						return {
-							"promise": () => Promise.resolve()
-						};
-					},
-					"describeTable": () => ({"promise": () => Promise.resolve()})
-				});
-			});
-			afterEach(() => {
-				createTableParams = null;
-				dynamoose.aws.ddb.revert();
-			});
-
-			it("Should call createTable with correct parameters", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model]);
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 1
-					},
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters with capacity as number", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"throughput": 1});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 1
-					},
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters with capacity as object", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"throughput": {"read": 2, "write": 3}});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 2,
-						"WriteCapacityUnits": 3
-					},
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters with capacity as ON_DEMAND", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"throughput": "ON_DEMAND"});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"BillingMode": "PAY_PER_REQUEST",
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters when tags are specified", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"tags": {"hello": "world"}});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 1
-					},
-					"Tags": [
-						{
-							"Key": "hello",
-							"Value": "world"
-						}
-					],
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters when multiple tags are specified", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"tags": {"hello": "world", "foo": "bar"}});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 1
-					},
-					"Tags": [
-						{
-							"Key": "hello",
-							"Value": "world"
-						},
-						{
-							"Key": "foo",
-							"Value": "bar"
-						}
-					],
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters when tableClass is undefined", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 1
-					},
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters when tableClass is standard", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 1
-					},
-					"TableName": tableName
-				});
-			});
-
-			it("Should call createTable with correct parameters when tableClass is infrequent access", async () => {
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql({
-					"AttributeDefinitions": [
-						{
-							"AttributeName": "id",
-							"AttributeType": "S"
-						}
-					],
-					"KeySchema": [
-						{
-							"AttributeName": "id",
-							"KeyType": "HASH"
-						}
-					],
-					"ProvisionedThroughput": {
-						"ReadCapacityUnits": 1,
-						"WriteCapacityUnits": 1
-					},
-					"TableName": tableName,
-					"TableClass": "STANDARD_INFREQUENT_ACCESS"
-				});
-			});
-
-			it("Shouldn't call createTable if table already exists", async () => {
-				dynamoose.aws.ddb.set({
-					"createTable": (params) => {
-						createTableParams = params;
-						return Promise.resolve();
-					},
-					"describeTable": () => Promise.resolve({"Table": {"TableStatus": "ACTIVE"}})
-				});
-
-				const tableName = "Cat";
-				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model]);
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql(null);
-			});
-
-			it("Should not call createTable if create option set to false", async () => {
-				const model = dynamoose.model("Cat", {"id": String});
-				new dynamoose.Table("Cat", [model], {"create": false});
-				await utils.set_immediate_promise();
-				expectChai(createTableParams).to.eql(null);
-			});
-
-			it("Should bind request to function being called", async () => {
-				let self;
-				dynamoose.aws.ddb.set({
-					"createTable": function (params) {
-						createTableParams = params;
-						self = this;
-						return Promise.resolve();
-					},
-					"describeTable": () => Promise.resolve()
-				});
-
-				const model = dynamoose.model("Cat", {"id": String});
-				new dynamoose.Table("Cat", [model]);
-				await utils.set_immediate_promise();
-				expectChai(self).to.be.an("object");
-				expectChai(Object.keys(self)).to.eql(["createTable", "describeTable"]);
 			});
 		});
 
