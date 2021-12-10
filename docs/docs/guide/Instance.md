@@ -15,13 +15,13 @@ This object has the same interface as [`dynamoose.aws`](Dynamoose#dynamooseaws).
 ```js
 const otherDynamooseInstance = new dynamoose.Instance();
 
-otherDynamooseInstance.aws.ddb.set({
+otherDynamooseInstance.aws.ddb.set(new DynamoDB.DynamoDB({
 	"region": "us-west-1"
-});
+}));
 
-dynamoose.aws.ddb.set({
+dynamoose.aws.ddb.set(new DynamoDB.DynamoDB({
 	"region": "us-east-1"
-});
+}));
 ```
 
 :::note
