@@ -52,6 +52,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### Major New Features
 
+- Added support for multiple Dynamoose instances (`dynamoose.Instance`). This allows you easily make requests to multiple AWS DynamoDB regions.
+
 ### General
 
 - Added `tags` setting to Table, to be able to add tags to a table.
