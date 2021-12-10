@@ -5,7 +5,7 @@ import {GeneralObject} from "js-object-utilities";
 enum MergeObjectsCombineMethod {
 	ObjectCombine = "object_combine",
 	ArrayMerge = "array_merge",
-	ArrayMergeNewArray = "array_merge_new_arrray"
+	ArrayMergeNewArray = "array_merge_new_array"
 }
 
 interface MergeObjectsSettings {

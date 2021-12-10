@@ -15,7 +15,7 @@ describe("Model", () => {
 		dynamoose.Table.defaults.set({});
 	});
 
-	it("Should have a model proprety on the dynamoose object", () => {
+	it("Should have a model property on the dynamoose object", () => {
 		expectChai(dynamoose.model).to.exist;
 	});
 
@@ -1667,7 +1667,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should should send correct parameters to batchWriteItem with combine atttribute", async () => {
+				it("Should should send correct parameters to batchWriteItem with combine attribute", async () => {
 					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
 					new dynamoose.Table("User", [User]);
@@ -3757,7 +3757,7 @@ describe("Model", () => {
 			new dynamoose.Table("TestTable", [ExampleModel]);
 
 			const example = new ExampleModel({
-				"PK": "primarKey",
+				"PK": "primaryKey",
 				"SK": "sortKey",
 				"someAttribute": "someValue"
 			});
@@ -3768,7 +3768,7 @@ describe("Model", () => {
 			expectChai(deleteItemParams).to.eql({
 				"Key": {
 					"PK": {
-						"S": "primarKey"
+						"S": "primaryKey"
 					},
 					"SK": {
 						"S": "sortKey"
@@ -4171,6 +4171,11 @@ describe("Model", () => {
 		let User;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String, "friend": {"type": Object, "schema": {"id": Number, "name": String}}});
+			new dynamoose.Table("User", [User], {
+				"create": false,
+				"update": false,
+				"waitForActive": false
+			});
 		});
 		afterEach(() => {
 			User = null;
@@ -4403,6 +4408,11 @@ describe("Model", () => {
 		let User, user;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
+			new dynamoose.Table("User", [User], {
+				"create": false,
+				"update": false,
+				"waitForActive": false
+			});
 			user = new User();
 		});
 		afterEach(() => {
@@ -4578,6 +4588,7 @@ describe("Model Item Instance", () => {
 	beforeEach(() => {
 		const schema = new dynamoose.Schema({"name": String});
 		Cat = dynamoose.model("Cat", schema);
+		new dynamoose.Table("Cat", [Cat]);
 	});
 
 	it("Should allow creating instance of Model", () => {

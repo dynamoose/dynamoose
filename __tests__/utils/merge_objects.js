@@ -30,7 +30,7 @@ describe("utils.merge_objects", () => {
 		{
 			"input": [{"z": {"a": "b", "c": "d"}}, {"z": {"a": "e", "c": "f"}}],
 			"output": {"z": {"a": ["b", "e"], "c": ["d", "f"]}},
-			"main": {"combineMethod": "array_merge_new_arrray"}
+			"main": {"combineMethod": "array_merge_new_array"}
 		},
 		{
 			"input": [{"a": {"b": "c"}}, {"a": {"d": "e"}}],

@@ -1,19 +1,26 @@
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 
-let customDDB: DynamoDB.DynamoDB | undefined;
-function main (): DynamoDB.DynamoDB {
-	return customDDB || new DynamoDB.DynamoDB({});
+export interface DDBInterface {
+	(): DynamoDB.DynamoDB;
+	set: (ddb: DynamoDB.DynamoDB) => void;
+	revert: () => void;
+	local: (endpoint: string) => void;
 }
-main.set = (ddb: DynamoDB.DynamoDB): void => {
-	customDDB = ddb;
-};
-main.revert = (): void => {
-	customDDB = undefined;
-};
-main.local = (endpoint = "http://localhost:8000"): void => {
-	main.set(new DynamoDB.DynamoDB({
-		endpoint
-	}));
-};
 
-export = main;
+export default function (ddb?: DynamoDB.DynamoDB): DDBInterface {
+	let customDDB: DynamoDB.DynamoDB = ddb ?? new DynamoDB.DynamoDB({});
+
+	const func = (): DynamoDB.DynamoDB => customDDB;
+	func.set = (ddb: DynamoDB.DynamoDB): void => {
+		customDDB = ddb;
+	};
+	func.revert = () => {
+		customDDB = new DynamoDB.DynamoDB({});
+	};
+	func.local = (endpoint = "http://localhost:8000"): void => {
+		func.set(new DynamoDB.DynamoDB({
+			endpoint
+		}));
+	};
+	return func;
+}
