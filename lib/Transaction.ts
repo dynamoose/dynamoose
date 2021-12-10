@@ -98,7 +98,8 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 		await Promise.all(models.map((model) => model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise()));
 
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-		const result: any = await ddb(transactionType as any, transactionParams as any);
+		// TODO: NEED to throw error here if all models aren't of the same instance
+		const result: any = await ddb(models[0].getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).instance, transactionType as any, transactionParams as any);
 		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
 			const modelName: string = modelNames[index];
 			const model: Model<Item> = models.find((model) => model.name === modelName);

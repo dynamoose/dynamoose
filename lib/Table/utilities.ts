@@ -11,7 +11,7 @@ import {TableClass} from "./types";
 // Utility functions
 export async function getTableDetails (table: Table, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
 	const func = async (): Promise<void> => {
-		const tableDetails: DynamoDB.DescribeTableOutput = await ddb("describeTable", {"TableName": table.getInternalProperties(internalProperties).name});
+		const tableDetails: DynamoDB.DescribeTableOutput = await ddb(table.getInternalProperties(internalProperties).instance, "describeTable", {"TableName": table.getInternalProperties(internalProperties).name});
 		table.getInternalProperties(internalProperties).latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
 	};
 	if (settings.forceRefresh || !table.getInternalProperties(internalProperties).latestTableDetails) {
@@ -39,14 +39,15 @@ function getExpectedTags (table: Table): DynamoDB.Tag[] | undefined {
 }
 export async function getTagDetails (table: Table): Promise<DynamoDB.ListTagsOfResourceOutput> {
 	const tableDetails = await getTableDetails(table);
-	const tags: DynamoDB.ListTagsOfResourceOutput = await ddb("listTagsOfResource", {
+	const instance = table.getInternalProperties(internalProperties).instance;
+	const tags: DynamoDB.ListTagsOfResourceOutput = await ddb(instance, "listTagsOfResource", {
 		"ResourceArn": tableDetails.Table.TableArn
 	});
 
 	while (tags.NextToken) {
 		// TODO: The timeout below causes tests to fail, so we disable it for now. We should also probably only run a timeout if we get an error from AWS.
 		// await timeout(100); // You can call ListTagsOfResource up to 10 times per second, per account.
-		const nextTags = await ddb("listTagsOfResource", {
+		const nextTags = await ddb(instance, "listTagsOfResource", {
 			"ResourceArn": tableDetails.Table.TableArn,
 			"NextToken": tags.NextToken
 		});
@@ -83,20 +84,21 @@ export async function createTable (table: Table, force = false): Promise<void | 
 		table.getInternalProperties(internalProperties).alreadyCreated = true;
 		return (): Promise<void> => Promise.resolve.bind(Promise)();
 	}
-	await ddb("createTable", await createTableRequest(table));
+	await ddb(table.getInternalProperties(internalProperties).instance, "createTable", await createTableRequest(table));
 }
 export async function updateTimeToLive (table: Table): Promise<void> {
 	let ttlDetails;
+	const instance = table.getInternalProperties(internalProperties).instance;
 
 	async function updateDetails (): Promise<void> {
-		ttlDetails = await ddb("describeTimeToLive", {
+		ttlDetails = await ddb(instance, "describeTimeToLive", {
 			"TableName": table.getInternalProperties(internalProperties).name
 		});
 	}
 	await updateDetails();
 
 	function updateTTL (): Promise<DynamoDB.UpdateTimeToLiveOutput> {
-		return ddb("updateTimeToLive", {
+		return ddb(instance, "updateTimeToLive", {
 			"TableName": table.getInternalProperties(internalProperties).name,
 			"TimeToLiveSpecification": {
 				"AttributeName": (table.getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute,
@@ -150,6 +152,7 @@ export function waitForActive (table: Table, forceRefreshOnFirstAttempt = true) 
 }
 export async function updateTable (table: Table): Promise<void> {
 	const updateAll = typeof table.getInternalProperties(internalProperties).options.update === "boolean" && table.getInternalProperties(internalProperties).options.update;
+	const instance = table.getInternalProperties(internalProperties).instance;
 	// Throughput
 	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.throughput)) {
 		const currentThroughput = (await getTableDetails(table)).Table;
@@ -161,7 +164,7 @@ export async function updateTable (table: Table): Promise<void> {
 				"TableName": table.getInternalProperties(internalProperties).name,
 				...expectedThroughput
 			};
-			await ddb("updateTable", object);
+			await ddb(instance, "updateTable", object);
 			await waitForActive(table)();
 		}
 	}
@@ -181,7 +184,7 @@ export async function updateTable (table: Table): Promise<void> {
 			} else {
 				params.GlobalSecondaryIndexUpdates = [{"Delete": {"IndexName": index.name}}];
 			}
-			await ddb("updateTable", params);
+			await ddb(instance, "updateTable", params);
 			await waitForActive(table)();
 		}, Promise.resolve());
 	}
@@ -195,7 +198,7 @@ export async function updateTable (table: Table): Promise<void> {
 		const tagsToDelete = currentTags.filter((tag) => expectedTags[tag.Key] !== tag.Value).map((tag) => tag.Key);
 		if (tagsToDelete.length > 0) {
 			tableDetails = await getTableDetails(table);
-			await ddb("untagResource", {
+			await ddb(instance, "untagResource", {
 				"ResourceArn": tableDetails.Table.TableArn,
 				"TagKeys": tagsToDelete
 			});
@@ -204,7 +207,7 @@ export async function updateTable (table: Table): Promise<void> {
 		const tagsToAdd = Object.keys(expectedTags).filter((key) => tagsToDelete.includes(key) || !currentTags.some((tag) => tag.Key === key));
 		if (tagsToAdd.length > 0) {
 			tableDetails = tableDetails || await getTableDetails(table);
-			await ddb("tagResource", {
+			await ddb(instance, "tagResource", {
 				"ResourceArn": tableDetails.Table.TableArn,
 				"Tags": tagsToAdd.map((key) => ({
 					"Key": key,
@@ -223,7 +226,7 @@ export async function updateTable (table: Table): Promise<void> {
 				"TableName": table.getInternalProperties(internalProperties).name,
 				"TableClass": expectedDynamoDBTableClass
 			};
-			await ddb("updateTable", object);
+			await ddb(instance, "updateTable", object);
 			await waitForActive(table)();
 		}
 	}

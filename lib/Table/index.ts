@@ -11,12 +11,14 @@ import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
 import {TableClass} from "./types";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
+import {Instance} from "../Instance";
 
 interface TableInternalProperties {
 	options: TableOptions;
 	name: string;
 	originalName: string;
 
+	instance: Instance;
 	ready: boolean;
 	alreadyCreated: boolean;
 	pendingTasks: any[];
@@ -38,7 +40,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	static defaults: TableOptions;
 	name: string;
 
-	constructor (name: string, models: Model[], options: TableOptionsOptional = {}) {
+	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional = {}) {
 		super();
 
 		// Check name argument
@@ -62,6 +64,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			"name": `${storedOptions.prefix}${name}${storedOptions.suffix}`,
 			"originalName": name, // This represents the name before prefix and suffix were added
 
+			instance,
 			// Represents if model is ready to be used for actions such as "get", "put", etc. This property being true does not guarantee anything on the DynamoDB server. It only guarantees that Dynamoose has finished the initialization steps required to allow the model to function as expected on the client side.
 			"ready": false,
 			// Represents if the table in DynamoDB was created prior to initialization. This will only be updated if `create` is true.

@@ -55,6 +55,10 @@ Dynamoose currently stores/uses the following converter methods from `@aws-sdk/u
 - convertToAttr
 - convertToNative
 
+:::note
+`dynamoose.aws.converter` is a global object. Meaning if you take advantage of [Dynamoose Instances](Instance), all instances will share the same `dynamoose.aws.converter` object. There is currently no way to set a custom `dynamoose.aws.converter` object for a specific instance.
+:::
+
 ## dynamoose.aws.converter()
 
 This function will return the current object of converter methods that Dynamoose is using to parse objects in and out of DynamoDB. By default this will return an object with the methods (listed above) from `@aws-sdk/util-dynamodb`. If you set a custom object it will return that instead.
