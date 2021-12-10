@@ -7,7 +7,7 @@ export interface InstanceSettings {
 	ddb?: DynamoDB.DynamoDB;
 }
 
-interface PrimaryTableInterface extends PrimaryTable {
+export interface PrimaryTableInterface extends PrimaryTable {
 	new (name: string, models: Model[], options: TableOptionsOptional): PrimaryTable;
 }
 
