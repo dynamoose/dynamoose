@@ -293,10 +293,10 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		super();
 
 		if (!object || typeof object !== "object" || Array.isArray(object)) {
-			throw new CustomError.InvalidParameterType("Schema initalization parameter must be an object.");
+			throw new CustomError.InvalidParameterType("Schema initialization parameter must be an object.");
 		}
 		if (Object.keys(object).length === 0) {
-			throw new CustomError.InvalidParameter("Schema initalization parameter must not be an empty object.");
+			throw new CustomError.InvalidParameter("Schema initialization parameter must not be an empty object.");
 		}
 
 		if (settings.timestamps === true) {
@@ -348,7 +348,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 					break;
 				}
 			});
-			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_arrray"})(parsedSettings, subSettings);
+			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_array"})(parsedSettings, subSettings);
 
 			utils.object.set(parsedObject, key, newValue);
 		});
@@ -401,7 +401,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		};
 		this.attributes().forEach((key) => checkMultipleArraySchemaElements(key));
 
-		const hashrangeKeys = this.attributes().reduce((val, key) => {
+		const hashRangeKeys = this.attributes().reduce((val, key) => {
 			const hashKey = this.getAttributeSettingValue("hashKey", key);
 			const rangeKey = this.getAttributeSettingValue("rangeKey", key);
 
@@ -422,15 +422,15 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		}, {"hashKeys": [], "rangeKeys": [], "hashAndRangeKeyAttributes": []});
 		const keyTypes = ["hashKey", "rangeKey"];
 		keyTypes.forEach((keyType) => {
-			if (hashrangeKeys[`${keyType}s`].length > 1) {
+			if (hashRangeKeys[`${keyType}s`].length > 1) {
 				throw new CustomError.InvalidParameter(`Only one ${keyType} allowed per schema.`);
 			}
-			if (hashrangeKeys[`${keyType}s`].find((key) => key.includes("."))) {
+			if (hashRangeKeys[`${keyType}s`].find((key) => key.includes("."))) {
 				throw new CustomError.InvalidParameter(`${keyType} must be at root object and not nested in object or array.`);
 			}
 		});
-		if (hashrangeKeys.hashAndRangeKeyAttributes.length > 0) {
-			throw new CustomError.InvalidParameter(`Attribute ${hashrangeKeys.hashAndRangeKeyAttributes[0]} must not be both hashKey and rangeKey`);
+		if (hashRangeKeys.hashAndRangeKeyAttributes.length > 0) {
+			throw new CustomError.InvalidParameter(`Attribute ${hashRangeKeys.hashAndRangeKeyAttributes[0]} must not be both hashKey and rangeKey`);
 		}
 
 		this.attributes().forEach((key) => {

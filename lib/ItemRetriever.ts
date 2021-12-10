@@ -1,7 +1,7 @@
 import ddb = require("./aws/ddb/internal");
 import CustomError = require("./Error");
 import utils = require("./utils");
-import {Condition, ConditionInitalizer, BasicOperators} from "./Condition";
+import {Condition, ConditionInitializer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Item} from "./Item";
 import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
@@ -128,7 +128,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 		}
 	}
 
-	constructor (model: Model<Item>, typeInformation: ItemRetrieverTypeInformation, object?: ConditionInitalizer) {
+	constructor (model: Model<Item>, typeInformation: ItemRetrieverTypeInformation, object?: ConditionInitializer) {
 		super();
 
 		let condition: Condition;
@@ -328,7 +328,7 @@ export class Scan<T> extends ItemRetriever {
 		return this;
 	}
 
-	constructor (model: Model<Item>, object?: ConditionInitalizer) {
+	constructor (model: Model<Item>, object?: ConditionInitializer) {
 		super(model, {"type": ItemRetrieverTypes.scan, "pastTense": "scanned"}, object);
 	}
 }
@@ -348,7 +348,7 @@ export class Query<T> extends ItemRetriever {
 		return this;
 	}
 
-	constructor (model: Model<Item>, object?: ConditionInitalizer) {
+	constructor (model: Model<Item>, object?: ConditionInitializer) {
 		super(model, {"type": ItemRetrieverTypes.query, "pastTense": "queried"}, object);
 	}
 }
