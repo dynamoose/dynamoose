@@ -39,6 +39,7 @@ The `config` parameter is an object used to customize settings for the table.
 | expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
 | tags | An object containing key value pairs that should be added to the table as tags. | Object | {} |
 | tableClass | A string representing the table class to use. | "standard" \| "infrequentAccess" | "standard" |
+| initialize | If Dynamoose should run it's initialization flow (creating the table, updating the throughput, etc) automatically. | Boolean | true |
 
 The default object is listed below.
 
@@ -61,7 +62,8 @@ The default object is listed below.
 	"update": false,
 	"expires": null,
 	"tags": {},
-	"tableClass": "standard"
+	"tableClass": "standard",
+	"initialize": true
 }
 ```
 
@@ -192,7 +194,29 @@ DynamoTable.create({"return": "request"}, (error, request) => {
 });
 ```
 
+## table.initialize([callback])
 
+This method will run Dynamoose's initialization flow. The actions run will be based on your tables options at initialization.
+
+- `create`
+- `waitForActive`
+- `update`
+
+```js
+const DynamoTable = new dynamoose.Table("Table", [Model], {"initialize": false});
+await DynamoTable.initialize();
+```
+
+```js
+const DynamoTable = new dynamoose.Table("Table", [Model], {"initialize": false});
+DynamoTable.initialize((error) => {
+	if (error) {
+		console.error(error);
+	} else {
+		console.log("Successfully initialized table");
+	}
+});
+```
 
 
 ## TODO: remove below
