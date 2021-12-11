@@ -299,23 +299,23 @@ describe("Schema", () => {
 		});
 	});
 
-	describe("getHashKey", () => {
+	describe("hashKey", () => {
 		it("Should return first attribute if no hash key defined", () => {
-			expect(new dynamoose.Schema({"id": String, "age": Number}).getHashKey()).toEqual("id");
+			expect(new dynamoose.Schema({"id": String, "age": Number}).hashKey).toEqual("id");
 		});
 
 		it("Should return hash key if set to true", () => {
-			expect(new dynamoose.Schema({"id": String, "age": {"type": Number, "hashKey": true}}).getHashKey()).toEqual("age");
+			expect(new dynamoose.Schema({"id": String, "age": {"type": Number, "hashKey": true}}).hashKey).toEqual("age");
 		});
 	});
 
-	describe("getRangeKey", () => {
+	describe("rangeKey", () => {
 		it("Should return undefined if no range key defined", () => {
-			expect(new dynamoose.Schema({"id": String, "age": Number}).getRangeKey()).toEqual(undefined);
+			expect(new dynamoose.Schema({"id": String, "age": Number}).rangeKey).toEqual(undefined);
 		});
 
 		it("Should return range key if set to true", () => {
-			expect(new dynamoose.Schema({"id": String, "age": {"type": Number, "rangeKey": true}}).getRangeKey()).toEqual("age");
+			expect(new dynamoose.Schema({"id": String, "age": {"type": Number, "rangeKey": true}}).rangeKey).toEqual("age");
 		});
 	});
 

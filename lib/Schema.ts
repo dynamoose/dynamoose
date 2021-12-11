@@ -451,11 +451,9 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		});
 	}
 
-	settings: SchemaSettings;
-	schemaObject: SchemaDefinition;
 	attributes: (object?: ObjectType) => string[];
 	async getCreateTableAttributeParams (model: Model<Item>): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
-		const hashKey = this.getHashKey();
+		const hashKey = this.hashKey;
 		const AttributeDefinitions = [
 			{
 				"AttributeName": hashKey,
@@ -470,7 +468,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			}
 		];
 
-		const rangeKey = this.getRangeKey();
+		const rangeKey = this.rangeKey;
 		if (rangeKey) {
 			AttributeDefinitions.push({
 				"AttributeName": rangeKey,
@@ -536,8 +534,14 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		"findTypeForValue": (...args): DynamoDBTypeResult | DynamoDBSetTypeResult => attributeTypes.find((checkType) => (checkType.isOfType as any)(...args))
 	};
 
-	getHashKey: () => string;
-	getRangeKey: () => string | void;
+	// TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
+	get hashKey (): string {
+		return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.getInternalProperties(internalProperties).schemaObject)[0];
+	}
+	get rangeKey (): string | undefined {
+		return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).rangeKey);
+	}
+
 	// This function will take in an attribute and value, and returns the default value if it should be applied.
 	async defaultCheck (key: string, value: ValueType, settings: any): Promise<ValueType | void> {
 		const isValueUndefined = typeof value === "undefined" || value === null;
@@ -649,14 +653,6 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	getIndexRangeKeyAttributes: () => Promise<{ attribute: string }[]>;
 }
 
-// TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
-Schema.prototype.getHashKey = function (this: Schema): string {
-	return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.getInternalProperties(internalProperties).schemaObject)[0];
-};
-Schema.prototype.getRangeKey = function (this: Schema): string | void {
-	return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).rangeKey);
-};
-
 // This function will take in an attribute and value, and throw an error if the property is required and the value is undefined or null.
 Schema.prototype.requiredCheck = async function (this: Schema, key: string, value: ValueType): Promise<void> {
 	const isRequired = await this.getAttributeSettingValue("required", key);
@@ -725,7 +721,7 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 				dynamoIndexObject.ProvisionedThroughput = (throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput;
 			}
 		} else {
-			dynamoIndexObject.KeySchema.push({"AttributeName": this.getHashKey(), "KeyType": "HASH"});
+			dynamoIndexObject.KeySchema.push({"AttributeName": this.hashKey, "KeyType": "HASH"});
 			dynamoIndexObject.KeySchema.push({"AttributeName": attributeValue, "KeyType": "RANGE"});
 		}
 		const accumulatorKey = isGlobalIndex ? "GlobalSecondaryIndexes" : "LocalSecondaryIndexes";
@@ -737,9 +733,9 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 		return accumulator;
 	}, {});
 
-	indexes.TableIndex = {"KeySchema": [{"AttributeName": this.getHashKey(), "KeyType": "HASH"}]};
+	indexes.TableIndex = {"KeySchema": [{"AttributeName": this.hashKey, "KeyType": "HASH"}]};
 
-	const rangeKey = this.getRangeKey();
+	const rangeKey = this.rangeKey;
 	if (rangeKey) {
 		indexes.TableIndex.KeySchema.push({"AttributeName": rangeKey, "KeyType": "RANGE"});
 	}
@@ -854,8 +850,8 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 					const obj = {
 						"getInternalProperties": () => ({
 							"schemas": [this],
-							"getHashKey": this.getHashKey.bind(this),
-							"getRangeKey": this.getRangeKey.bind(this)
+							"getHashKey": () => this.hashKey,
+							"getRangeKey": () => this.rangeKey
 						})
 					};
 

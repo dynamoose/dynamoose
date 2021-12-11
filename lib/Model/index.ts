@@ -167,10 +167,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return this.getInternalProperties(internalProperties).schemas[0].getCreateTableAttributeParams(this);
 			},
 			"getHashKey": (): string => {
-				return this.getInternalProperties(internalProperties).schemas[0].getHashKey();
+				return this.getInternalProperties(internalProperties).schemas[0].hashKey;
 			},
 			"getRangeKey": (): string | void => {
-				return this.getInternalProperties(internalProperties).schemas[0].getRangeKey();
+				return this.getInternalProperties(internalProperties).schemas[0].rangeKey;
 			},
 			"table": (): Table => {
 				const table = this.getInternalProperties(internalProperties)._table;
@@ -195,10 +195,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		} else {
 			realSchemas = [schema];
 		}
-		if (!utils.all_elements_match(realSchemas.map((schema) => schema.getHashKey()))) {
+		if (!utils.all_elements_match(realSchemas.map((schema) => schema.hashKey))) {
 			throw new CustomError.InvalidParameter("hashKey's for all schema's must match.");
 		}
-		if (!utils.all_elements_match(realSchemas.map((schema) => schema.getRangeKey()).filter((key) => Boolean(key)))) {
+		if (!utils.all_elements_match(realSchemas.map((schema) => schema.rangeKey).filter((key) => Boolean(key)))) {
 			throw new CustomError.InvalidParameter("rangeKey's for all schema's must match.");
 		}
 
