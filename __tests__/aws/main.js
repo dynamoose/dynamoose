@@ -1,18 +1,17 @@
-const {expect} = require("chai");
 const dynamoose = require("../../dist");
 
 describe("AWS", () => {
 	it("Should return an object", () => {
-		expect(dynamoose.aws).to.be.an("object");
+		expect(dynamoose.aws).toBeInstanceOf(Object);
 	});
 
 	describe("DDB", () => {
 		it("Should be a function", () => {
-			expect(dynamoose.aws.ddb).to.be.a("function");
+			expect(dynamoose.aws.ddb).toBeInstanceOf(Function);
 		});
 
 		it("Should return an object", () => {
-			expect(dynamoose.aws.ddb()).to.be.an("object");
+			expect(dynamoose.aws.ddb()).toBeInstanceOf(Object);
 		});
 
 		describe("Set", () => {
@@ -21,13 +20,13 @@ describe("AWS", () => {
 			});
 
 			it("Should be a function", () => {
-				expect(dynamoose.aws.ddb.set).to.be.a("function");
+				expect(dynamoose.aws.ddb.set).toBeInstanceOf(Function);
 			});
 
 			it("Should return custom item after setting", () => {
 				const item = Symbol();
 				dynamoose.aws.ddb.set(item);
-				expect(dynamoose.aws.ddb()).to.eql(item);
+				expect(dynamoose.aws.ddb()).toEqual(item);
 			});
 		});
 
@@ -41,14 +40,14 @@ describe("AWS", () => {
 			});
 
 			it("Should be a function", () => {
-				expect(dynamoose.aws.ddb.revert).to.be.a("function");
+				expect(dynamoose.aws.ddb.revert).toBeInstanceOf(Function);
 			});
 
 			it("Should return original object after reverting", () => {
 				const first = dynamoose.aws.ddb();
 				dynamoose.aws.ddb.revert();
 				const second = dynamoose.aws.ddb();
-				expect(second).to.not.eql(first);
+				expect(second).not.toEqual(first);
 			});
 		});
 
@@ -58,12 +57,12 @@ describe("AWS", () => {
 			});
 
 			it("Should be a function", () => {
-				expect(dynamoose.aws.ddb.local).to.be.a("function");
+				expect(dynamoose.aws.ddb.local).toBeInstanceOf(Function);
 			});
 
 			it("Should set correct default endpoint if nothing passed in", async () => {
 				dynamoose.aws.ddb.local();
-				expect(await dynamoose.aws.ddb().config.endpoint()).to.eql({
+				expect(await dynamoose.aws.ddb().config.endpoint()).toEqual({
 					"hostname": "localhost",
 					"port": 8000,
 					"protocol": "http:",
@@ -74,7 +73,7 @@ describe("AWS", () => {
 
 			it("Should set correct custom endpoint if custom string passed in", async () => {
 				dynamoose.aws.ddb.local("http://localhost:9000");
-				expect(await dynamoose.aws.ddb().config.endpoint()).to.eql({
+				expect(await dynamoose.aws.ddb().config.endpoint()).toEqual({
 					"hostname": "localhost",
 					"port": 9000,
 					"protocol": "http:",
@@ -87,11 +86,11 @@ describe("AWS", () => {
 
 	describe("Converter", () => {
 		it("Should be a function", () => {
-			expect(dynamoose.aws.converter).to.be.a("function");
+			expect(dynamoose.aws.converter).toBeInstanceOf(Function);
 		});
 
 		it("Should return an object", () => {
-			expect(dynamoose.aws.converter()).to.be.an("object");
+			expect(dynamoose.aws.converter()).toBeInstanceOf(Object);
 		});
 
 		describe("Set", () => {
@@ -100,13 +99,13 @@ describe("AWS", () => {
 			});
 
 			it("Should be a function", () => {
-				expect(dynamoose.aws.converter.set).to.be.a("function");
+				expect(dynamoose.aws.converter.set).toBeInstanceOf(Function);
 			});
 
 			it("Should return custom item after setting", () => {
 				const item = Symbol();
 				dynamoose.aws.converter.set(item);
-				expect(dynamoose.aws.converter()).to.eql(item);
+				expect(dynamoose.aws.converter()).toEqual(item);
 			});
 		});
 
@@ -120,14 +119,14 @@ describe("AWS", () => {
 			});
 
 			it("Should be a function", () => {
-				expect(dynamoose.aws.converter.revert).to.be.a("function");
+				expect(dynamoose.aws.converter.revert).toBeInstanceOf(Function);
 			});
 
 			it("Should return original object after reverting", () => {
 				const first = dynamoose.aws.converter();
 				dynamoose.aws.converter.revert();
 				const second = dynamoose.aws.converter();
-				expect(second).to.not.eql(first);
+				expect(second).not.toEqual(first);
 			});
 		});
 	});

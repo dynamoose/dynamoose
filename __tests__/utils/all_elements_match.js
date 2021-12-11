@@ -1,9 +1,8 @@
-const {expect} = require("chai");
 const utils = require("../../dist/utils");
 
 describe("utils.all_elements_match", () => {
 	it("Should be a function", () => {
-		expect(utils.all_elements_match).to.be.a("function");
+		expect(utils.all_elements_match).toBeInstanceOf(Function);
 	});
 
 	const tests = [
@@ -27,7 +26,7 @@ describe("utils.all_elements_match", () => {
 
 	tests.forEach((test) => {
 		it(`Should return ${test.output} for ${test.input}`, () => {
-			expect(utils.all_elements_match(test.input)).to.eql(test.output);
+			expect(utils.all_elements_match(test.input)).toEqual(test.output);
 		});
 	});
 });

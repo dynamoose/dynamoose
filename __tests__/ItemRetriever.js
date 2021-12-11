@@ -1,16 +1,15 @@
-const {expect} = require("chai");
 const ItemRetriever = require("../dist/ItemRetriever");
 
 describe("ItemRetriever", () => {
 	it("Should return an object", () => {
-		expect(ItemRetriever).to.be.an("object");
+		expect(typeof ItemRetriever).toEqual("object");
 	});
 
 	it("Should return an object with Scan property", () => {
-		expect(ItemRetriever.Scan).to.exist;
+		expect(ItemRetriever.Scan).toBeDefined();
 	});
 
 	it("Should return an object with Query property", () => {
-		expect(ItemRetriever.Query).to.exist;
+		expect(ItemRetriever.Query).toBeDefined();
 	});
 });

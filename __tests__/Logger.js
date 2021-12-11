@@ -1,4 +1,3 @@
-const {"expect": expectChai} = require("chai");
 const dynamoose = require("../dist");
 const CustomError = require("../dist/Error");
 const utils = require("../dist/utils");
@@ -17,7 +16,7 @@ describe("Logger", () => {
 	});
 
 	it("Should be an function", () => {
-		expectChai(dynamoose.logger).to.be.an("function");
+		expect(dynamoose.logger).toBeInstanceOf(Function);
 	});
 
 	it("Should throw error if package is not installed", async () => {
@@ -28,115 +27,115 @@ describe("Logger", () => {
 		} catch (e) {
 			error = e;
 		}
-		expectChai(result).to.not.exist;
-		expectChai(error.message).to.eql("dynamoose-logger has not been installed. Install it using `npm i --save-dev dynamoose-logger`.");
+		expect(result).not.toBeDefined();
+		expect(error.message).toEqual("dynamoose-logger has not been installed. Install it using `npm i --save-dev dynamoose-logger`.");
 	});
 
 	describe("Status", () => {
 		describe("dynamoose.logger().status", () => {
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).status).to.be.a("function");
+				expect((await dynamoose.logger()).status).toBeInstanceOf(Function);
 			});
 
 			it("Should return paused if status is paused", async () => {
 				(await dynamoose.logger()).pause();
-				expectChai((await dynamoose.logger()).status()).to.eql("paused");
+				expect((await dynamoose.logger()).status()).toEqual("paused");
 			});
 
 			it("Should return active if status is paused", async () => {
 				(await dynamoose.logger()).resume();
-				expectChai((await dynamoose.logger()).status()).to.eql("active");
+				expect((await dynamoose.logger()).status()).toEqual("active");
 			});
 		});
 
 		describe("dynamoose.logger().pause", () => {
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).pause).to.be.a("function");
+				expect((await dynamoose.logger()).pause).toBeInstanceOf(Function);
 			});
 
 			it("Should set status to paused", async () => {
 				(await dynamoose.logger()).pause();
-				expectChai((await dynamoose.logger()).status()).to.eql("paused");
+				expect((await dynamoose.logger()).status()).toEqual("paused");
 			});
 		});
 
 		describe("dynamoose.logger().resume", () => {
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).resume).to.be.a("function");
+				expect((await dynamoose.logger()).resume).toBeInstanceOf(Function);
 			});
 
 			it("Should set status to active", async () => {
 				(await dynamoose.logger()).resume();
-				expectChai((await dynamoose.logger()).status()).to.eql("active");
+				expect((await dynamoose.logger()).status()).toEqual("active");
 			});
 		});
 	});
 
 	describe("dynamoose.logger().providers", () => {
 		it("Should be an object", async () => {
-			expectChai((await dynamoose.logger()).providers).to.be.an("object");
+			expect((await dynamoose.logger()).providers).toBeInstanceOf(Object);
 		});
 
 		describe("dynamoose.logger().providers.list", () => {
 			beforeEach(async () => {
 				const obj = [{"id": "test"}];
 				(await dynamoose.logger()).providers.set(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(obj);
+				expect((await dynamoose.logger()).providers.list()).toEqual(obj);
 			});
 
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).providers.list).to.be.a("function");
+				expect((await dynamoose.logger()).providers.list).toBeInstanceOf(Function);
 			});
 
 			it("Should return list of providers", async () => {
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}]);
+				expect((await dynamoose.logger()).providers.list()).toEqual([{"id": "test"}]);
 			});
 		});
 
 		describe("dynamoose.logger().providers.set", () => {
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).providers.set).to.be.a("function");
+				expect((await dynamoose.logger()).providers.set).toBeInstanceOf(Function);
 			});
 
 			it("Should set correctly for object", async () => {
 				const obj = {"id": "test"};
 				(await dynamoose.logger()).providers.set(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([obj]);
+				expect((await dynamoose.logger()).providers.list()).toEqual([obj]);
 			});
 
 			it("Should set correctly for array", async () => {
 				const obj = [{"id": "test"}];
 				(await dynamoose.logger()).providers.set(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(obj);
+				expect((await dynamoose.logger()).providers.list()).toEqual(obj);
 			});
 
 			it("Should set correctly for empty array", async () => {
 				const originalProviders = (await dynamoose.logger()).providers.list();
 				const obj = [];
 				(await dynamoose.logger()).providers.set(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
+				expect((await dynamoose.logger()).providers.list()).toEqual(obj);
+				expect((await dynamoose.logger()).providers.list()).toEqual(originalProviders);
 			});
 
 			it("Should set correctly for nothing passed in", async () => {
 				const originalProviders = (await dynamoose.logger()).providers.list();
 				(await dynamoose.logger()).providers.set();
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([]);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
+				expect((await dynamoose.logger()).providers.list()).toEqual([]);
+				expect((await dynamoose.logger()).providers.list()).toEqual(originalProviders);
 			});
 
 			it("Should set correctly for undefined passed in", async () => {
 				const originalProviders = (await dynamoose.logger()).providers.list();
 				(await dynamoose.logger()).providers.set(undefined);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([]);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
+				expect((await dynamoose.logger()).providers.list()).toEqual([]);
+				expect((await dynamoose.logger()).providers.list()).toEqual(originalProviders);
 			});
 
 			it("Should set correctly for null passed in", async () => {
 				const originalProviders = (await dynamoose.logger()).providers.list();
 				(await dynamoose.logger()).providers.set(null);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([]);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(originalProviders);
+				expect((await dynamoose.logger()).providers.list()).toEqual([]);
+				expect((await dynamoose.logger()).providers.list()).toEqual(originalProviders);
 			});
 		});
 
@@ -144,16 +143,16 @@ describe("Logger", () => {
 			beforeEach(async () => {
 				const obj = [{"id": "test"}];
 				(await dynamoose.logger()).providers.set(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(obj);
+				expect((await dynamoose.logger()).providers.list()).toEqual(obj);
 			});
 
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).providers.clear).to.be.a("function");
+				expect((await dynamoose.logger()).providers.clear).toBeInstanceOf(Function);
 			});
 
 			it("Should set providers to empty array", async () => {
 				(await dynamoose.logger()).providers.clear();
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([]);
+				expect((await dynamoose.logger()).providers.list()).toEqual([]);
 			});
 		});
 
@@ -161,21 +160,21 @@ describe("Logger", () => {
 			beforeEach(async () => {
 				const obj = [{"id": "test"}];
 				(await dynamoose.logger()).providers.set(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(obj);
+				expect((await dynamoose.logger()).providers.list()).toEqual(obj);
 			});
 
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).providers.add).to.be.a("function");
+				expect((await dynamoose.logger()).providers.add).toBeInstanceOf(Function);
 			});
 
 			it("Should add object provider to providers", async () => {
 				(await dynamoose.logger()).providers.add({"id": "test2"});
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}, {"id": "test2"}]);
+				expect((await dynamoose.logger()).providers.list()).toEqual([{"id": "test"}, {"id": "test2"}]);
 			});
 
 			it("Should add array of providers to providers", async () => {
 				(await dynamoose.logger()).providers.add([{"id": "test2"}, {"id": "test3"}]);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}, {"id": "test2"}, {"id": "test3"}]);
+				expect((await dynamoose.logger()).providers.list()).toEqual([{"id": "test"}, {"id": "test2"}, {"id": "test3"}]);
 			});
 		});
 
@@ -183,21 +182,21 @@ describe("Logger", () => {
 			beforeEach(async () => {
 				const obj = [{"id": "test"}, {"id": "test2"}, {"id": "test3"}];
 				(await dynamoose.logger()).providers.set(obj);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql(obj);
+				expect((await dynamoose.logger()).providers.list()).toEqual(obj);
 			});
 
 			it("Should be a function", async () => {
-				expectChai((await dynamoose.logger()).providers.delete).to.be.a("function");
+				expect((await dynamoose.logger()).providers.delete).toBeInstanceOf(Function);
 			});
 
 			it("Should delete provider", async () => {
 				(await dynamoose.logger()).providers.delete("test2");
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}, {"id": "test3"}]);
+				expect((await dynamoose.logger()).providers.list()).toEqual([{"id": "test"}, {"id": "test3"}]);
 			});
 
 			it("Should delete multiple providers if array passed into delete", async () => {
 				(await dynamoose.logger()).providers.delete(["test2", "test3"]);
-				expectChai((await dynamoose.logger()).providers.list()).to.eql([{"id": "test"}]);
+				expect((await dynamoose.logger()).providers.list()).toEqual([{"id": "test"}]);
 			});
 		});
 	});
@@ -226,17 +225,17 @@ describe("Logger", () => {
 
 		it("Should log event", async () => {
 			await emitter({"level": "info", "message": "Hello World", "category": "test"});
-			expectChai(events).to.be.an("array");
-			expectChai(events.length).to.eql(1);
-			expectChai(events[0]).to.be.an("object");
-			expectChai(Object.keys(events[0]).sort()).to.eql(["id", "timestamp", "level", "message", "category", "metadata"].sort());
-			expectChai(events[0].id).to.be.a("string");
-			expectChai(events[0].id).to.not.eql("");
-			expectChai(events[0].timestamp).to.be.within(new Date(Date.now() - 2000), new Date(Date.now() + 2000));
-			expectChai(events[0].level).to.eql("info");
-			expectChai(events[0].message).to.eql("Hello World");
-			expectChai(events[0].category).to.eql("test");
-			expectChai(events[0].metadata).to.eql({});
+			expect(events).toBeInstanceOf(Array);
+			expect(events.length).toEqual(1);
+			expect(events[0]).toBeInstanceOf(Object);
+			expect(Object.keys(events[0]).sort()).toEqual(["id", "timestamp", "level", "message", "category", "metadata"].sort());
+			expect(typeof events[0].id).toEqual("string");
+			expect(events[0].id).not.toEqual("");
+			expect(events[0].timestamp).toBeWithinRange(new Date(Date.now() - 2000), new Date(Date.now() + 2000));
+			expect(events[0].level).toEqual("info");
+			expect(events[0].message).toEqual("Hello World");
+			expect(events[0].category).toEqual("test");
+			expect(events[0].metadata).toEqual({});
 		});
 
 		it("Should handle no logger gracefully", async () => {
@@ -247,18 +246,18 @@ describe("Logger", () => {
 		it("Should log event with string type", async () => {
 			(await dynamoose.logger()).providers.set(new CustomProviderMessage());
 			await emitter({"level": "info", "message": "Hello World", "category": "test"});
-			expectChai(events).to.eql(["Hello World"]);
+			expect(events).toEqual(["Hello World"]);
 		});
 
 		it("Should allow for no category", async () => {
 			await emitter({"level": "info", "message": "Hello World"});
-			expectChai(events[0].category).to.eql("");
+			expect(events[0].category).toEqual("");
 		});
 
 		it("Should not log event if paused", async () => {
 			(await dynamoose.logger()).pause();
 			await emitter({"level": "info", "message": "Hello World", "category": "test"});
-			expectChai(events.length).to.eql(0);
+			expect(events.length).toEqual(0);
 		});
 
 		const tests = [
@@ -296,7 +295,7 @@ describe("Logger", () => {
 							}
 						});
 						await emitter({"level": test.level, "message": "Hello World"});
-						expectChai(events.length).to.eql(test.outcome ? 0 : 1);
+						expect(events.length).toEqual(test.outcome ? 0 : 1);
 					});
 				});
 			});
@@ -329,7 +328,7 @@ describe("Logger", () => {
 							}
 						});
 						await emitter({"level": "error", "category": test.category, "message": "Hello World"});
-						expectChai(events.length).to.eql(test.outcome ? 0 : 1);
+						expect(events.length).toEqual(test.outcome ? 0 : 1);
 					});
 				});
 			});
@@ -357,37 +356,37 @@ describe("Logger", () => {
 
 		it("Should print message & category", async () => {
 			await emitter({"level": "fatal", "message": "Hello World", "category": "test"});
-			expectChai(logs).to.eql([{"message": "test - Hello World", "type": "error"}]);
+			expect(logs).toEqual([{"message": "test - Hello World", "type": "error"}]);
 		});
 
 		it("Should print message to console.error for fatal", async () => {
 			await emitter({"level": "fatal", "message": "Hello World"});
-			expectChai(logs).to.eql([{"message": "Hello World", "type": "error"}]);
+			expect(logs).toEqual([{"message": "Hello World", "type": "error"}]);
 		});
 
 		it("Should print message to console.error for error", async () => {
 			await emitter({"level": "error", "message": "Hello World"});
-			expectChai(logs).to.eql([{"message": "Hello World", "type": "error"}]);
+			expect(logs).toEqual([{"message": "Hello World", "type": "error"}]);
 		});
 
 		it("Should print message to console.warn for warn", async () => {
 			await emitter({"level": "warn", "message": "Hello World"});
-			expectChai(logs).to.eql([{"message": "Hello World", "type": "warn"}]);
+			expect(logs).toEqual([{"message": "Hello World", "type": "warn"}]);
 		});
 
 		it("Should print message to console.info for info", async () => {
 			await emitter({"level": "info", "message": "Hello World"});
-			expectChai(logs).to.eql([{"message": "Hello World", "type": "info"}]);
+			expect(logs).toEqual([{"message": "Hello World", "type": "info"}]);
 		});
 
 		it("Should print message to console.log for debug", async () => {
 			await emitter({"level": "debug", "message": "Hello World"});
-			expectChai(logs).to.eql([{"message": "Hello World", "type": "log"}]);
+			expect(logs).toEqual([{"message": "Hello World", "type": "log"}]);
 		});
 
 		it("Should print message to console.log for trace", async () => {
 			await emitter({"level": "trace", "message": "Hello World"});
-			expectChai(logs).to.eql([{"message": "Hello World", "type": "log"}]);
+			expect(logs).toEqual([{"message": "Hello World", "type": "log"}]);
 		});
 	});
 });

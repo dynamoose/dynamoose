@@ -1,9 +1,8 @@
-const {expect} = require("chai");
 const utils = require("../../dist/utils");
 
 describe("utils.combine_objects", () => {
 	it("Should be a function", () => {
-		expect(utils.combine_objects).to.be.a("function");
+		expect(utils.combine_objects).toBeInstanceOf(Function);
 	});
 
 	const tests = [
@@ -68,11 +67,11 @@ describe("utils.combine_objects", () => {
 	tests.forEach((test) => {
 		if (test.error) {
 			it(`Should throw error for ${JSON.stringify(test.input)}`, () => {
-				expect(() => utils.combine_objects(...test.input)).to.throw(test.error);
+				expect(() => utils.combine_objects(...test.input)).toThrow(test.error);
 			});
 		} else {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-				expect(utils.combine_objects(...test.input)).to.eql(test.output);
+				expect(utils.combine_objects(...test.input)).toEqual(test.output);
 			});
 		}
 	});

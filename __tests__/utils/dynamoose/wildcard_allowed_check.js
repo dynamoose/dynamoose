@@ -1,9 +1,8 @@
-const {expect} = require("chai");
 const utils = require("../../../dist/utils");
 
 describe("utils.dynamoose.wildcard_allowed_check", () => {
 	it("Should be a function", () => {
-		expect(utils.dynamoose.wildcard_allowed_check).to.be.a("function");
+		expect(utils.dynamoose.wildcard_allowed_check).toBeInstanceOf(Function);
 	});
 
 	const tests = [
@@ -92,7 +91,7 @@ describe("utils.dynamoose.wildcard_allowed_check", () => {
 
 	tests.forEach((test) => {
 		it(`Should return ${test.output} for ${test.input}`, () => {
-			expect(utils.dynamoose.wildcard_allowed_check(...test.input)).to.eql(test.output);
+			expect(utils.dynamoose.wildcard_allowed_check(...test.input)).toEqual(test.output);
 		});
 	});
 });
