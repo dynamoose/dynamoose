@@ -15,7 +15,7 @@ export class InternalPropertiesClass<T> {
 
 	setInternalProperties (key: symbol, value: T): void {
 		if (key !== internalProperties) {
-			throw new CustomError.InvalidParameter("You can not access internal properties without a valid key.");
+			throw new CustomError.InvalidParameter("You can not set internal properties without a valid key.");
 		} else {
 			this.#internalProperties = value;
 		}

@@ -21,6 +21,7 @@ interface TableInternalProperties {
 	instance: Instance;
 	ready: boolean;
 	alreadyCreated: boolean;
+	setupFlowRunning: boolean;
 	pendingTasks: any[];
 	pendingTaskPromise: () => Promise<void>;
 	models: any[];
@@ -32,6 +33,7 @@ interface TableInternalProperties {
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
 	getHashKey: () => string;
 	getRangeKey: () => string;
+	runSetupFlow: () => Promise<void>;
 }
 
 // This class represents a single DynamoDB table
@@ -40,7 +42,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	static defaults: TableOptions;
 	name: string;
 
-	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional = {}) {
+	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional) {
 		super();
 
 		// Check name argument
@@ -69,6 +71,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			"ready": false,
 			// Represents if the table in DynamoDB was created prior to initialization. This will only be updated if `create` is true.
 			"alreadyCreated": false,
+			"setupFlowRunning": false,
 			// Represents an array of promise resolver functions to be called when Model.ready gets set to true (at the end of the setup flow)
 			"pendingTasks": [],
 			// Returns a promise that will be resolved after the Model is ready. This is used in all Model operations (Model.get, Item.save) to `await` at the beginning before running the AWS SDK method to ensure the Model is setup before running actions on it.
@@ -120,6 +123,46 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			},
 			"getRangeKey": (): string => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
+			},
+			"runSetupFlow": async (): Promise<void> => {
+				if (this.getInternalProperties(internalProperties).setupFlowRunning) {
+					throw new CustomError.OtherError("Setup flow is already running.");
+				}
+
+				// Setup flow
+				const setupFlow = []; // An array of setup actions to be run in order
+				// Create table
+				if (this.getInternalProperties(internalProperties).options.create) {
+					setupFlow.push(() => createTable(this));
+				}
+				// Wait for Active
+				if (this.getInternalProperties(internalProperties).options.waitForActive === true || (this.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings).enabled) {
+					setupFlow.push(() => waitForActive(this, false));
+				}
+				// Update Time To Live
+				if ((this.getInternalProperties(internalProperties).options.create || (Array.isArray(this.getInternalProperties(internalProperties).options.update) ? (this.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.ttl) : this.getInternalProperties(internalProperties).options.update)) && options.expires) {
+					setupFlow.push(() => updateTimeToLive(this));
+				}
+				// Update
+				if (this.getInternalProperties(internalProperties).options.update && !this.getInternalProperties(internalProperties).alreadyCreated) {
+					setupFlow.push(() => updateTable(this));
+				}
+
+				// Run setup flow
+				this.getInternalProperties(internalProperties).setupFlowRunning = true;
+				const setupFlowPromise = setupFlow.reduce((existingFlow, flow) => {
+					return existingFlow.then(() => flow()).then((flow) => {
+						return typeof flow === "function" ? flow() : flow;
+					});
+				}, Promise.resolve());
+
+				await setupFlowPromise;
+
+				this.getInternalProperties(internalProperties).ready = true;
+				this.getInternalProperties(internalProperties).setupFlowRunning = false;
+
+				this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task());
+				this.getInternalProperties(internalProperties).pendingTasks = [];
 			}
 		});
 
@@ -156,35 +199,9 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			});
 		}
 
-		// Setup flow
-		const setupFlow = []; // An array of setup actions to be run in order
-		// Create table
-		if (this.getInternalProperties(internalProperties).options.create) {
-			setupFlow.push(() => createTable(this));
+		if (options.initialize === undefined || options.initialize === true) {
+			this.getInternalProperties(internalProperties).runSetupFlow();
 		}
-		// Wait for Active
-		if (this.getInternalProperties(internalProperties).options.waitForActive === true || typeof this.getInternalProperties(internalProperties).options.waitForActive === "object" && (this.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings)?.enabled) {
-			setupFlow.push(() => waitForActive(this, false));
-		}
-		// Update Time To Live
-		if ((this.getInternalProperties(internalProperties).options.create || (Array.isArray(this.getInternalProperties(internalProperties).options.update) ? (this.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.ttl) : this.getInternalProperties(internalProperties).options.update)) && options.expires) {
-			setupFlow.push(() => updateTimeToLive(this));
-		}
-		// Update
-		if (this.getInternalProperties(internalProperties).options.update && !this.getInternalProperties(internalProperties).alreadyCreated) {
-			setupFlow.push(() => updateTable(this));
-		}
-
-		// Run setup flow
-		const setupFlowPromise = setupFlow.reduce((existingFlow, flow) => {
-			return existingFlow.then(() => flow()).then((flow) => {
-				return typeof flow === "function" ? flow() : flow;
-			});
-		}, Promise.resolve());
-		setupFlowPromise.then(() => this.getInternalProperties(internalProperties).ready = true).then(() => {
-			this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task());
-			this.getInternalProperties(internalProperties).pendingTasks = [];
-		});
 
 		// this.transaction = [
 		// 	// `function` Default: `this[key]`
@@ -254,6 +271,16 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			return promise;
 		}
 	}
+
+	initialize (): Promise<void>;
+	initialize (callback: CallbackType<any, void>): void;
+	async initialize (callback?: CallbackType<any, void>): Promise<void> {
+		if (callback) {
+			this.getInternalProperties(internalProperties).runSetupFlow().then(() => callback(null)).catch((error) => callback(error));
+		} else {
+			return this.getInternalProperties(internalProperties).runSetupFlow();
+		}
+	}
 }
 Table.defaults = originalDefaults;
 
@@ -291,5 +318,6 @@ export interface TableOptions {
 	expires: number | TableExpiresSettings;
 	tags: {[key: string]: string};
 	tableClass: TableClass;
+	initialize: boolean;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;

@@ -255,7 +255,7 @@ interface ConditionRequestObjectSettings {
 }
 Condition.prototype.requestObject = async function (this: Condition, model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> {
 	const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
-		const newValue = model ? (await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false}))[key] : value;
+		const newValue = (await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false}))[key];
 		return Item.objectToDynamo(newValue, {"type": "value"});
 	};
 
