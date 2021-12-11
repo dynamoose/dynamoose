@@ -188,6 +188,14 @@ describe("Table", () => {
 						instance = null;
 					});
 
+					it("Should not call createTable if initialize is set to false", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"initialize": false});
+						await utils.set_immediate_promise();
+						expect(createTableParams).toBeNull();
+					});
+
 					it("Should call createTable with correct parameters", async () => {
 						const tableName = "Cat";
 						const model = dynamoose.model(tableName, {"id": String});
@@ -554,6 +562,19 @@ describe("Table", () => {
 				dynamoose.aws.ddb.revert();
 			});
 
+			it("Should not call describeTable if initialize is set to false", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE"
+					}
+				});
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"initialize": false});
+				await utils.set_immediate_promise();
+				expectChai(describeTableParams).to.eql([]);
+			});
+
 			it("Should call describeTable with correct parameters", async () => {
 				const tableName = "Cat";
 				describeTableFunction = () => Promise.resolve({
@@ -586,8 +607,7 @@ describe("Table", () => {
 				}]);
 			});
 
-			// TODO: this fails in Jest since it mocks the `process` object. We should change this anyways to throw errors when making the request (ie. get, scan, etc).
-			it.skip("Should timeout according to waitForActive timeout rules", async () => {
+			it("Should timeout according to waitForActive timeout rules", async () => {
 				const tableName = "Cat";
 				describeTableFunction = () => Promise.resolve({
 					"Table": {
@@ -595,27 +615,18 @@ describe("Table", () => {
 					}
 				});
 				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model]);
-				const errorHandler = utils.empty_function;
-				process.on("unhandledRejection", errorHandler);
-				await utils.timeout(15);
-				expectChai(describeTableParams.length).to.be.above(5);
-				process.removeListener("unhandledRejection", errorHandler);
+				const table = new dynamoose.Table(tableName, [model], {"initialize": false});
+				await expect(table.initialize()).rejects.toThrow("Wait for active timed out after ");
+				expectChai(describeTableParams.length).to.be.greaterThanOrEqual(1);
 			});
 
-			// TODO: this fails in Jest since it mocks the `process` object. We should change this anyways to throw errors when making the request (ie. get, scan, etc).
-			it.skip("Should throw error if AWS throws error", async () => {
+			it("Should throw error if AWS throws error", async () => {
 				const tableName = "Cat";
-				describeTableFunction = () => Promise.reject({"error": "ERROR"});
+				describeTableFunction = () => Promise.reject(new Error("AWS ERROR"));
 
-				let error;
 				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model]);
-				const errorHandler = (err) => error = err;
-				process.on("unhandledRejection", errorHandler);
-				await utils.timeout(15);
-				expectChai(error).to.eql({"error": "ERROR"});
-				process.removeListener("unhandledRejection", errorHandler);
+				const table = new dynamoose.Table(tableName, [model], {"initialize": false});
+				await expect(table.initialize()).rejects.toThrow("AWS ERROR");
 			});
 
 			it("Should not call describeTable if table already created and already attempted to createTable again", async () => {
@@ -738,6 +749,23 @@ describe("Table", () => {
 							expectChai(updateTableParams).to.eql([]);
 						});
 
+						it("Should not call updateTable if throughput doesn't match and initialize is set to false", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 2,
+										"WriteCapacityUnits": 2
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": updateOption, "initialize": false});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
+
 						it("Should call updateTable with correct parameters if throughput doesn't match", async () => {
 							const tableName = "Cat";
 							describeTableFunction = () => Promise.resolve({
@@ -800,6 +828,37 @@ describe("Table", () => {
 								"TableName": tableName
 							}]);
 						});
+
+						it("Should not call updateTable if switching from provisioned to on demand and initialize is set to false", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 2,
+										"WriteCapacityUnits": 2
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"throughput": "ON_DEMAND", "update": updateOption, "initialize": false});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
+
+						it("Should not call updateTable if switching from on demand to provisioned and initialize is set to false", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"BillingMode": "PAY_PER_REQUEST",
+									"TableStatus": "ACTIVE"
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"throughput": 5, "update": updateOption, "initialize": false});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
 					});
 				});
 			});
@@ -811,6 +870,23 @@ describe("Table", () => {
 				];
 				updateOptions.forEach((updateOption) => {
 					describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
+						it("Should not call updateTable to add index when initialize is set to false", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}});
+							new dynamoose.Table(tableName, [model], {"update": updateOption, "initialize": false});
+							await utils.set_immediate_promise();
+							expectChai(updateTableParams).to.eql([]);
+						});
+
 						it("Should call updateTable to add index", async () => {
 							const tableName = "Cat";
 							describeTableFunction = () => Promise.resolve({
@@ -1175,6 +1251,26 @@ describe("Table", () => {
 					expect(didCall).toEqual(false);
 				});
 
+				it("Should not call listTagsOfResource if initialize is set to false", async () => {
+					const tableName = "Cat";
+					let didCall = false;
+					listTagsOfResourceFunction = () => {
+						didCall = true;
+						return Promise.resolve({
+							"Tags": [
+								{
+									"Key": "hello",
+									"Value": "world"
+								}
+							]
+						});
+					};
+					const model = dynamoose.model(tableName, {"id": String});
+					new dynamoose.Table(tableName, [model], {"update": true, "initialize": false});
+					await utils.set_immediate_promise();
+					expect(didCall).toEqual(false);
+				});
+
 				const updateOptions = [
 					true,
 					["tags"]
@@ -1495,6 +1591,30 @@ describe("Table", () => {
 								"TableClass": "STANDARD"
 							}]);
 						});
+
+						it("Should not call describeTable if initialize is false", async () => {
+							const tableName = "Cat";
+							let didCall = false;
+							describeTableFunction = () => {
+								didCall = true;
+								return Promise.resolve({
+									"Table": {
+										"ProvisionedThroughput": {
+											"ReadCapacityUnits": 1,
+											"WriteCapacityUnits": 1
+										},
+										"TableStatus": "ACTIVE",
+										"TableClassSummary": {
+											"TableClass": "STANDARD_INFREQUENT_ACCESS"
+										}
+									}
+								});
+							};
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"tableClass": "standard", "initialize": false});
+							await utils.set_immediate_promise();
+							expect(didCall).toEqual(false);
+						});
 					});
 				});
 			});
@@ -1614,6 +1734,41 @@ describe("Table", () => {
 				dynamoose.model(tableName, {"id": String});
 				await utils.set_immediate_promise();
 				expectChai(updateTTLParams).to.eql([]);
+			});
+		});
+	});
+
+	describe("table.initialize", () => {
+		const functionCallTypes = [
+			{"name": "Promise", "func": (table) => table.initialize},
+			{"name": "Callback", "func": (table) => util.promisify(table.initialize)}
+		];
+
+		functionCallTypes.forEach((functionCallType) => {
+			describe(functionCallType.name, () => {
+				beforeEach(() => {
+				});
+				afterEach(() => {
+					dynamoose.aws.ddb.revert();
+				});
+				it("Should throw error if already running", async () => {
+					let resolveFuncs = [];
+					dynamoose.aws.ddb.set({
+						"createTable": () => {
+							return {"promise": new Promise((resolve) => {
+								resolveFuncs.push(resolve);
+							})};
+						},
+						"describeTable": () => ({"promise": () => Promise.resolve()})
+					});
+
+					const User = dynamoose.model("User", {"id": String});
+					const table = new dynamoose.Table("User", [User], {"create": true, "update": false, "waitForActive": false, "initialize": false});
+					const firstInitialize = functionCallType.func(table).bind(table)();
+					await expect(functionCallType.func(table).bind(table)()).rejects.toThrow("Setup flow is already running.");
+					resolveFuncs.forEach((func) => func());
+					await firstInitialize;
+				});
 			});
 		});
 	});
