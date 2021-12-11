@@ -1,10 +1,10 @@
 The Model object represents an entity for your application. It takes in both a name and a schema(s) and has methods to interact with items in your database.
 
-## dynamoose.model[&lt;Item&gt;](name, [schema][, config])
+## dynamoose.model[&lt;Item&gt;](name, [schema])
 
 This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Item initializer that you can use to create instances of the given model.
 
-The `name` parameter is a string representing the table name that will be used to store items created by this model.  Prefixes and suffixes may be added to this name using the `config` options.
+The `name` parameter is a string representing the table name that will be used to store items created by this model.
 
 The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 
@@ -12,10 +12,10 @@ The `schema` parameter can either be an object OR a [Schema](Schema.md) instance
 const dynamoose = require("dynamoose");
 
 const Cat = dynamoose.model("Cat", {"name": String});
-const Cat = dynamoose.model("Cat", {"name": String}, {"create": false});
+const Cat = dynamoose.model("Cat", {"name": String});
 
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
-const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
+const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 ```
 
 An optional TypeScript class which extends `Item` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
@@ -55,53 +55,6 @@ If you don't pass the `schema` parameter it is required that you have an existin
 
 ```js
 const Cat = dynamoose.model("Cat"); // Will reference existing model, or if no model exists already with name `Cat` it will throw an error.
-```
-
-The `config` parameter is an object used to customize settings for the model.
-
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| create | If Dynamoose should attempt to create the table on DynamoDB. This function will run a `describeTable` call first to ensure the table doesn't already exist. For production environments we recommend setting this value to `false`. | Boolean | true |
-| throughput | An object with settings for what the throughput for the table should be on creation, or a number which will use the same throughput for both read and write. If this is set to `ON_DEMAND` the table will use the `PAY_PER_REQUEST` billing mode. If the table is not created by Dynamoose, this object has no effect. | Object \| Number \| String |  |
-| throughput.read | What the read throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
-| throughput.write | What the write throughput should be set to. Only valid if `throughput` is an object. | Number | 1 |
-| prefix | A string that should be pre-pended to every model name. | String | "" |
-| suffix | A string that should be appended to every model name. | String | "" |
-| waitForActive | Settings for how DynamoDB should handle waiting for the table to be active before enabling actions to be run on the table. This property can also be set to `false` to easily disable the behavior of waiting for the table to be active. For production environments we recommend setting this value to `false`. | Object \| Boolean |  |
-| waitForActive.enabled | If Dynamoose should wait for the table to be active before running actions on it. | Boolean | true |
-| waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
-| waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
-| waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
-| update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array can include the following settings to update, `ttl`, `indexes`, `throughput`. | Boolean \| [String] | false |
-| populate | If Dynamoose should automatically run [`Item.populate`](Item#itempopulatesettings-callback) on retrieved items. | Boolean | false |
-| expires | The setting to describe the time to live for items created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
-| expires.ttl | The default amount of time the item should stay alive from creation time in milliseconds. | Number | undefined |
-| expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` (if `expires` is set to a number) |
-| expires.items | The options for items with ttl. | Object |  |
-| expires.items.returnExpired | If Dynamoose should include expired items when returning retrieved items. | Boolean | true |
-
-The default object is listed below.
-
-```js
-{
-	"create": true,
-	"throughput": {
-		"read": 1,
-		"write": 1
-	},
-	"prefix": "",
-	"suffix": "",
-	"waitForActive": {
-		"enabled": true,
-		"check": {
-			"timeout": 180000,
-			"frequency": 1000
-		}
-	},
-	"update": false,
-	"populate": false,
-	"expires": undefined
-}
 ```
 
 ## model.name
