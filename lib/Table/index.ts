@@ -199,7 +199,9 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			});
 		}
 
-		this.getInternalProperties(internalProperties).runSetupFlow();
+		if (options.initialize === undefined || options.initialize === true) {
+			this.getInternalProperties(internalProperties).runSetupFlow();
+		}
 
 		// this.transaction = [
 		// 	// `function` Default: `this[key]`
@@ -306,5 +308,6 @@ export interface TableOptions {
 	expires: number | TableExpiresSettings;
 	tags: {[key: string]: string};
 	tableClass: TableClass;
+	initialize: boolean;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;
