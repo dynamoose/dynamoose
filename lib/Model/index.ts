@@ -110,7 +110,7 @@ interface ModelInternalProperties {
 
 // Model represents a single entity (ex. User, Movie, Video, Order)
 export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesClass<ModelInternalProperties> {
-	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[]) {
+	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], ModelStore: (model: Model) => void) {
 		super();
 
 		Object.defineProperty(this, "name", {
@@ -260,7 +260,6 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			return accumulator;
 		}, {});
 
-		const ModelStore = require("../ModelStore");
 		ModelStore(this);
 	}
 
