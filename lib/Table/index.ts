@@ -42,7 +42,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	static defaults: TableOptions;
 	name: string;
 
-	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional = {}) {
+	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional) {
 		super();
 
 		// Check name argument
@@ -136,7 +136,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 					setupFlow.push(() => createTable(this));
 				}
 				// Wait for Active
-				if (this.getInternalProperties(internalProperties).options.waitForActive === true || typeof this.getInternalProperties(internalProperties).options.waitForActive === "object" && (this.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings)?.enabled) {
+				if (this.getInternalProperties(internalProperties).options.waitForActive === true || (this.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings).enabled) {
 					setupFlow.push(() => waitForActive(this, false));
 				}
 				// Update Time To Live
