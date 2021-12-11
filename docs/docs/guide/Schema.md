@@ -76,6 +76,29 @@ const schema = new dynamoose.Schema({
 });
 ```
 
+## schema.hashKey
+
+This property returns the property name of your schema's hash key.
+
+```js
+const schema = new dynamoose.Schema({"id": String});
+console.log(schema.hashKey); // "id"
+```
+
+## schema.rangeKey
+
+This property returns the property name of your schema's range key. It will return undefined if a range key does not exist for your schema.
+
+```js
+const schema = new dynamoose.Schema({"id": String, "type": {"type": String, "rangeKey": true}});
+console.log(schema.rangeKey); // "type"
+```
+
+```js
+const schema = new dynamoose.Schema({"id": String});
+console.log(schema.rangeKey); // undefined
+```
+
 ## Attribute Types
 
 | Type | Set Allowed | DynamoDB Type | Custom Dynamoose Type | Nested Type | Settings | Notes |

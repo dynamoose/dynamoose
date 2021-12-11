@@ -66,6 +66,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 - Added `model.name` property to be able to access model name.
 - Added `dynamoose.type.CONSTANT` helper function to create a constant type.
 - Added `dynamoose.type.COMBINE` helper function to create a combine type.
+- Added `schema.hashKey` & `schema.rangeKey` properties to allow you to access the hash and range keys of your schemas.
 
 ### Bug Fixes
 
