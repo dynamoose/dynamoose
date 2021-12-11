@@ -20,7 +20,8 @@ export const original: TableOptions = {
 	"populate": false,
 	"expires": undefined,
 	"tags": {},
-	"tableClass": TableClass.standard
+	"tableClass": TableClass.standard,
+	"initialize": true
 	// "streamOptions": {
 	// 	"enabled": false,
 	// 	"type": undefined

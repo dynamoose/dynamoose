@@ -60,6 +60,18 @@ describe("Model", () => {
 			expectChai(() => dynamoose.model("User", [{"id": String, "rangeKey": {"type": String, "rangeKey": true}}, {"id": String, "rangeKey2": {"type": String, "rangeKey": true}}])).to.throw("rangeKey's for all schema's must match.");
 		});
 
+		it("Should throw error if trying to access internal properties without key", () => {
+			const schema = {"name": String};
+			const Cat = dynamoose.model("Cat", schema);
+			expect(Cat.Model.getInternalProperties).toThrow("You can not access internal properties without a valid key.");
+		});
+
+		it("Should throw error if trying to set internal properties without key", () => {
+			const schema = {"name": String};
+			const Cat = dynamoose.model("Cat", schema);
+			expect(Cat.Model.setInternalProperties).toThrow("You can not set internal properties without a valid key.");
+		});
+
 		it("Should create a schema if not passing in schema instance", () => {
 			const schema = {"name": String};
 			const Cat = dynamoose.model("Cat", schema);
@@ -348,6 +360,19 @@ describe("Model", () => {
 						"Key": {"id": {"N": "1"}},
 						"TableName": "User"
 					});
+				});
+
+				it("Should throw error if return request setting is set and set function throws error", async () => {
+					const Item = dynamoose.model("Item", {"id": {
+						"type": Number,
+						"set": () => {
+							throw new Error("Error");
+						}
+					}, "name": String});
+					new dynamoose.Table("Item", [Item]);
+
+					await expect(callType.func(Item).bind(Item)(1, {"return": "request"})).rejects.toThrow("Error");
+					expectChai(getItemParams).to.not.exist;
 				});
 
 				it("Should return undefined for expired object", async () => {
@@ -1028,6 +1053,19 @@ describe("Model", () => {
 							}
 						}
 					});
+				});
+
+				it("Should throw error if setting option return to request and set function throws error", async () => {
+					const Item = dynamoose.model("Item", {"id": {
+						"type": Number,
+						"set": () => {
+							throw new Error("Error");
+						}
+					}, "name": String});
+					new dynamoose.Table("Item", [Item]);
+
+					await expect(callType.func(Item).bind(Item)([1], {"return": "request"})).rejects.toThrow("Error");
+					expectChai(params).to.not.exist;
 				});
 
 				it("Should send correct params to batchGetItem for multiple items", async () => {
@@ -3737,6 +3775,19 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should throw error if return request setting is set and set function throws error", async () => {
+					const Item = dynamoose.model("Item", {"id": {
+						"type": Number,
+						"set": () => {
+							throw new Error("Error");
+						}
+					}, "name": String});
+					new dynamoose.Table("Item", [Item]);
+
+					await expect(callType.func(Item).bind(Item)(1, {"return": "request"})).rejects.toThrow("Error");
+					expectChai(deleteItemParams).to.not.exist;
+				});
+
 				it("Should throw error if error is returned from DynamoDB", () => {
 					deleteItemFunction = () => Promise.reject({"error": "ERROR"});
 
@@ -3903,6 +3954,19 @@ describe("Model", () => {
 							]
 						}
 					});
+				});
+
+				it("Should throw error if return request setting is set and set function throws error", async () => {
+					const Item = dynamoose.model("Item", {"id": {
+						"type": Number,
+						"set": () => {
+							throw new Error("Error");
+						}
+					}, "name": String});
+					new dynamoose.Table("Item", [Item]);
+
+					await expect(callType.func(Item).bind(Item)([1, 2], {"return": "request"})).rejects.toThrow("Error");
+					expectChai(params).to.not.exist;
 				});
 
 				it("Should throw error if error is returned from DynamoDB", () => {
