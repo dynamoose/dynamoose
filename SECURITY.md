@@ -10,9 +10,9 @@ While reading this document, please remember that the [LICENSE](https://github.c
 
 The following versions will get security updates if necessary. Security updates will be included in either patch or minor versions.
 
-In the event a security vulnerability is patched in a major version, it will also be backported to all supported version lines (in the event the vulnerability exists on previous version line).
+In the event a security vulnerability is patched in a major version, it will also be back-ported to all supported version lines (in the event the vulnerability exists on previous version line).
 
-Security vulnerabilities will only be backported to previous minor versions in the extremely unlikely event a minor version causes a breaking change and someone requests the patch to be backwards applied, and demonstrates the breaking change. If this occurs please [contact me](https://charlie.fish/contact) with your request.
+Security vulnerabilities will only be back-ported to previous minor versions in the extremely unlikely event a minor version causes a breaking change and someone requests the patch to be backwards applied, and demonstrates the breaking change. If this occurs please [contact me](https://charlie.fish/contact) with your request.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -27,8 +27,8 @@ For security purposes, please follow the following guidelines:
 
 1. Ensure all sites you access while reporting a vulnerability are accessed using SSL/HTTPS.
 2. Encrypt all vulnerability information using my [Keybase](https://keybase.io/fishcharlie) (Keybase link can also be found on my contact page) encryption keys.
-3. For ease of use, please include a method to contact you unencrypted in your message. In the event decryption of your message fails, I need a way to contact you to notify you of the decryption failure.
+3. For ease of use, please include a method to contact you un-encrypted in your message. In the event decryption of your message fails, I need a way to contact you to notify you of the decryption failure.
 
-You can expect to receive an initial receipt of your report within 48 business hours of submission (exception to this is holiday periods). In the event you don't receive an initial receipt of your report within that timeframe please contact me again (I suggest using unencrypted communication for this second communication, but the choice is yours).
+You can expect to receive an initial receipt of your report within 48 business hours of submission (exception to this is holiday periods). In the event you don't receive an initial receipt of your report within that time frame please contact me again (I suggest using un-encrypted communication for this second communication, but the choice is yours).
 
 During the vulnerability process, I will keep you informed and may ask follow up questions regarding your report, so please ensure you remain available until a fix is deployed.
