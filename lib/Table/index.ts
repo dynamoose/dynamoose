@@ -271,6 +271,16 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			return promise;
 		}
 	}
+
+	initialize (): Promise<void>;
+	initialize (callback: CallbackType<any, void>): void;
+	async initialize (callback?: CallbackType<any, void>): Promise<void> {
+		if (callback) {
+			this.getInternalProperties(internalProperties).runSetupFlow().then(() => callback(null)).catch((error) => callback(error));
+		} else {
+			return this.getInternalProperties(internalProperties).runSetupFlow();
+		}
+	}
 }
 Table.defaults = originalDefaults;
 
