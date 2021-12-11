@@ -1,10 +1,9 @@
-const {expect} = require("chai");
 const utils = require("../../../dist/utils");
 const dynamoose = require("../../../dist");
 
 describe("utils.dynamoose.index_changes", () => {
 	it("Should be a function", () => {
-		expect(utils.dynamoose.index_changes).to.be.a("function");
+		expect(utils.dynamoose.index_changes).toBeInstanceOf(Function);
 	});
 
 	const tests = [
@@ -196,7 +195,7 @@ describe("utils.dynamoose.index_changes", () => {
 		it(`Should return ${JSON.stringify(test.output)} for ${test.input}`, async () => {
 			const Model = dynamoose.model("Model", test.schema);
 			const table = new dynamoose.Table("Table", [Model], {"create": false, "waitForActive": false, "update": false});
-			expect(await utils.dynamoose.index_changes(table, test.input)).to.eql(test.output);
+			expect(await utils.dynamoose.index_changes(table, test.input)).toEqual(test.output);
 		});
 	});
 });

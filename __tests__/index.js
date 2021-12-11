@@ -1,9 +1,8 @@
-const {"expect": expectChai} = require("chai");
 const dynamoose = require("../dist");
 
 describe("dynamoose", () => {
 	it("Should return an object", () => {
-		expectChai(dynamoose).to.be.an("object");
+		expect(dynamoose).toBeInstanceOf(Object);
 	});
 
 	describe("dynamoose.type", () => {

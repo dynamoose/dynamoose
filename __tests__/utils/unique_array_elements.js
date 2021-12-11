@@ -1,10 +1,8 @@
-const chai = require("chai");
-const {expect} = chai;
 const utils = require("../../dist/utils");
 
 describe("unique_array_elements", () => {
 	it("Should be a function", () => {
-		expect(utils.unique_array_elements).to.be.a("function");
+		expect(utils.unique_array_elements).toBeInstanceOf(Function);
 	});
 
 	const tests = [
@@ -19,7 +17,7 @@ describe("unique_array_elements", () => {
 	];
 	tests.forEach((test) => {
 		it(`Should return ${test.output} for ${test.input}`, () => {
-			expect(utils.unique_array_elements(test.input)).to.eql(test.output);
+			expect(utils.unique_array_elements(test.input)).toEqual(test.output);
 		});
 	});
 });

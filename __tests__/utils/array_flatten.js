@@ -1,9 +1,8 @@
-const {expect} = require("chai");
 const utils = require("../../dist/utils");
 
 describe("utils.array_flatten", () => {
 	it("Should be a function", () => {
-		expect(utils.array_flatten).to.be.a("function");
+		expect(utils.array_flatten).toBeInstanceOf(Function);
 	});
 
 	const tests = [
@@ -39,7 +38,7 @@ describe("utils.array_flatten", () => {
 
 	tests.forEach((test) => {
 		it(`Should return ${test.output} for ${test.input}`, () => {
-			expect(utils.array_flatten(test.input)).to.eql(test.output);
+			expect(utils.array_flatten(test.input)).toEqual(test.output);
 		});
 	});
 });

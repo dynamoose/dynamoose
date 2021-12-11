@@ -1,4 +1,3 @@
-const {"expect": expectChai} = require("chai");
 const dynamoose = require("../dist");
 const util = require("util");
 const ModelStore = require("../dist/ModelStore");
@@ -6,7 +5,7 @@ const CustomError = require("../dist/Error");
 
 describe("Transaction", () => {
 	it("Should be a function", () => {
-		expectChai(dynamoose.transaction).to.be.a("function");
+		expect(dynamoose.transaction).toBeInstanceOf(Function);
 	});
 
 	const functionCallTypes = [
@@ -167,7 +166,7 @@ describe("Transaction", () => {
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
 				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}], {"type": "write"});
-				expectChai(transactParams).to.be.an("object");
+				expect(transactParams).toBeInstanceOf(Object);
 			});
 
 			it("Should send correct parameters to AWS for custom type of get", async () => {
@@ -183,7 +182,7 @@ describe("Transaction", () => {
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
 				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}], {"type": "get"});
-				expectChai(transactParams).to.be.an("object");
+				expect(transactParams).toBeInstanceOf(Object);
 			});
 		});
 	});

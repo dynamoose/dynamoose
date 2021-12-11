@@ -1,16 +1,14 @@
-const chai = require("chai");
-const {"expect": expectChai} = chai;
 const dynamoose = require("../dist");
 const {Instance} = require("../dist/Instance");
 const {Condition} = dynamoose;
 
 describe("Condition", () => {
 	it("Should be a function", () => {
-		expectChai(Condition).to.be.a("function");
+		expect(Condition).toBeInstanceOf(Function);
 	});
 
 	it("Should return an object", () => {
-		expectChai(new Condition()).to.be.an("object");
+		expect(new Condition()).toBeInstanceOf(Object);
 	});
 
 	it("Should display warning when passing undefined into condition", () => {
@@ -21,12 +19,12 @@ describe("Condition", () => {
 		};
 		new Condition("id").eq(undefined);
 		console.warn = originalFunction;
-		expectChai(result).to.eql("Dynamoose Warning: Passing `undefined` into a condition eq is not supported and can lead to behavior where DynamoDB returns an error related to your conditional. In a future version of Dynamoose this behavior will throw an error. If you believe your conditional is valid and you received this message in error, please submit an issue at https://github.com/dynamoose/dynamoose/issues/new/choose.");
+		expect(result).toEqual("Dynamoose Warning: Passing `undefined` into a condition eq is not supported and can lead to behavior where DynamoDB returns an error related to your conditional. In a future version of Dynamoose this behavior will throw an error. If you believe your conditional is valid and you received this message in error, please submit an issue at https://github.com/dynamoose/dynamoose/issues/new/choose.");
 	});
 
 	describe("requestObject", () => {
 		it("Should be a function", () => {
-			expectChai(new Condition().requestObject).to.be.a("function");
+			expect(new Condition().requestObject).toBeInstanceOf(Function);
 		});
 
 		const tests = [
@@ -257,9 +255,9 @@ describe("Condition", () => {
 					})
 				};
 				if (test.error) {
-					return expectChai(() => test.input().requestObject(model, test.settings)).to.throw(test.error);
+					return expect(() => test.input().requestObject(model, test.settings)).toThrow(test.error);
 				} else {
-					return expectChai(await test.input().requestObject(model, test.settings)).to.eql(test.output);
+					return expect(await test.input().requestObject(model, test.settings)).toEqual(test.output);
 				}
 			});
 		});

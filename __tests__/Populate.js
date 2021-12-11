@@ -1,4 +1,3 @@
-const {"expect": expectChai} = require("chai");
 const Populate = require("../dist/Populate");
 const dynamoose = require("../dist");
 const awsPkg = require("../dist/aws").AWS;
@@ -8,7 +7,7 @@ const utils = require("../dist/utils");
 
 describe("Populate", () => {
 	it("Should be an object", () => {
-		expectChai(Populate).to.be.an("object");
+		expect(typeof Populate).toEqual("object");
 	});
 
 	let User;
@@ -66,7 +65,7 @@ describe("Populate", () => {
 					});
 
 					it("Should be a function", () => {
-						expectChai(populateType.func).to.be.a("function");
+						expect(populateType.func).toBeInstanceOf(Function);
 					});
 
 					populateType.tests.forEach((test) => {
@@ -80,7 +79,7 @@ describe("Populate", () => {
 
 							const input = Array.isArray(test.input) ? Object.assign(test.input.map((item) => new User(item)), {"populate": Populate.PopulateItems, "toJSON": utils.dynamoose.itemToJSON}) : new User(test.input);
 							const res = await responseType.func(input).bind(input)(test.settings || {});
-							expectChai(res.toJSON()).to.eql(test.output);
+							expect(res.toJSON()).toEqual(test.output);
 						});
 					});
 

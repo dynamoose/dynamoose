@@ -1,4 +1,3 @@
-const expectChai = require("chai").expect;
 const dynamoose = require("../dist");
 const Internal = require("../dist/Internal");
 const utils = require("../dist/utils");
@@ -16,65 +15,65 @@ describe("Table", () => {
 	});
 
 	it("Should be a function", () => {
-		expectChai(dynamoose.Table).to.be.a("function");
+		expect(dynamoose.Table).toBeInstanceOf(Function);
 	});
 
 	describe("Initialization", () => {
 		it("Should throw an error if not using `new` keyword", () => {
-			expectChai(() => dynamoose.Table()).to.throw("Class constructor Table cannot be invoked without 'new'");
+			expect(() => dynamoose.Table()).toThrow("Class constructor Table cannot be invoked without 'new'");
 		});
 
 		it("Should throw an error if nothing passed in", () => {
-			expectChai(() => new dynamoose.Table()).to.throw("Name must be passed into table constructor.");
+			expect(() => new dynamoose.Table()).toThrow("Name must be passed into table constructor.");
 		});
 
 		it("Should throw an error if number passed in as first argument", () => {
-			expectChai(() => new dynamoose.Table(1)).to.throw("Name passed into table constructor should be of type string.");
+			expect(() => new dynamoose.Table(1)).toThrow("Name passed into table constructor should be of type string.");
 		});
 
 		it("Should throw an error if nothing passed into second argument", () => {
-			expectChai(() => new dynamoose.Table("Table")).to.throw("Models must be passed into table constructor.");
+			expect(() => new dynamoose.Table("Table")).toThrow("Models must be passed into table constructor.");
 		});
 
 		it("Should throw an error if number passed into second argument", () => {
-			expectChai(() => new dynamoose.Table("Table", 1)).to.throw("Models passed into table constructor should be an array of models.");
+			expect(() => new dynamoose.Table("Table", 1)).toThrow("Models passed into table constructor should be an array of models.");
 		});
 
 		it("Should throw an error if array of strings passed into second argument", () => {
-			expectChai(() => new dynamoose.Table("Table", ["hello", "world"])).to.throw("Models passed into table constructor should be an array of models.");
+			expect(() => new dynamoose.Table("Table", ["hello", "world"])).toThrow("Models passed into table constructor should be an array of models.");
 		});
 
 		it("Should throw an error if empty array passed into second argument", () => {
-			expectChai(() => new dynamoose.Table("Table", [])).to.throw("Models passed into table constructor should be an array of models.");
+			expect(() => new dynamoose.Table("Table", [])).toThrow("Models passed into table constructor should be an array of models.");
 		});
 
 		it("Should throw an error if model passed in is already assigned to table", () => {
 			const model = dynamoose.model("User", {"id": String});
 			new dynamoose.Table("Table", [model]);
-			expectChai(() => new dynamoose.Table("Table", [model])).to.throw("Model User has already been assigned to a table.");
+			expect(() => new dynamoose.Table("Table", [model])).toThrow("Model User has already been assigned to a table.");
 		});
 
 		it("Should throw an error if models passed in with different hashKey's", () => {
 			const model = dynamoose.model("User", {"id": String});
 			const model2 = dynamoose.model("Movie", {"_id": String});
-			expectChai(() => new dynamoose.Table("Table", [model, model2])).to.throw("hashKey's for all models must match.");
+			expect(() => new dynamoose.Table("Table", [model, model2])).toThrow("hashKey's for all models must match.");
 		});
 
 		it("Should throw an error if models passed in with different rangeKey's", () => {
 			const model = dynamoose.model("User", {"id": String, "name": {"type": String, "rangeKey": true}});
 			const model2 = dynamoose.model("Movie", {"id": String, "date": {"type": Date, "rangeKey": true}});
-			expectChai(() => new dynamoose.Table("Table", [model, model2])).to.throw("rangeKey's for all models must match.");
+			expect(() => new dynamoose.Table("Table", [model, model2])).toThrow("rangeKey's for all models must match.");
 		});
 
 		it("Should succeed if constructing table correctly", () => {
 			new dynamoose.Table("Table", [dynamoose.model("User", {"id": String})], {"create": false, "waitForActive": false});
-			expectChai(() => new dynamoose.Table("Table", [dynamoose.model("User", {"id": String})], {"create": false, "waitForActive": false})).to.not.throw();
+			expect(() => new dynamoose.Table("Table", [dynamoose.model("User", {"id": String})], {"create": false, "waitForActive": false})).not.toThrow();
 		});
 
 		describe("Prefixes and Suffixes", () => {
 			const optionsB = [
-				{"name": "Prefix", "value": "prefix", "check": (val, result) => expectChai(result).to.match(new RegExp(`^${val}`))},
-				{"name": "Suffix", "value": "suffix", "check": (val, result) => expectChai(result).to.match(new RegExp(`${val}$`))}
+				{"name": "Prefix", "value": "prefix", "check": (val, result) => expect(result).toMatch(new RegExp(`^${val}`))},
+				{"name": "Suffix", "value": "suffix", "check": (val, result) => expect(result).toMatch(new RegExp(`${val}$`))}
 			];
 			const optionsC = [
 				{"name": "Defaults", "func": (type, value, ...args) => {
@@ -92,8 +91,8 @@ describe("Table", () => {
 								const extension = "MyApp";
 								const tableName = "Users";
 								const table = optionC.func(optionB.value, extension, tableName, {"id": String});
-								expectChai(table.name).to.include(extension);
-								expectChai(table.name).to.not.eql(tableName);
+								expect(table.name).toMatch(extension);
+								expect(table.name).not.toEqual(tableName);
 							});
 						});
 					});
@@ -105,14 +104,14 @@ describe("Table", () => {
 			it("Should not be ready to start", () => {
 				const Model = dynamoose.model("Cat", {"id": String});
 				const Table = new dynamoose.Table("Cat", [Model], {"create": false});
-				expectChai(Table.getInternalProperties(internalProperties).ready).to.be.false;
+				expect(Table.getInternalProperties(internalProperties).ready).toEqual(false);
 			});
 
 			it("Should set ready after setup flow", async () => {
 				const Model = dynamoose.model("Cat", {"id": String});
 				const Table = new dynamoose.Table("Cat", [Model], {"create": false, "waitForActive": false});
 				await utils.set_immediate_promise();
-				expectChai(Table.getInternalProperties(internalProperties).ready).to.be.true;
+				expect(Table.getInternalProperties(internalProperties).ready).toEqual(true);
 			});
 
 			it("Should resolve pendingTaskPromises after model is ready", async () => {
@@ -131,15 +130,15 @@ describe("Table", () => {
 				Table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => pendingTaskPromiseResolved = true);
 
 				await utils.set_immediate_promise();
-				expectChai(pendingTaskPromiseResolved).to.be.false;
+				expect(pendingTaskPromiseResolved).toEqual(false);
 
 				describeTableResponse = {
 					"Table": {"TableStatus": "ACTIVE"}
 				};
 				await Table.getInternalProperties(internalProperties).pendingTaskPromise();
 				await utils.set_immediate_promise();
-				expectChai(pendingTaskPromiseResolved).to.be.true;
-				expectChai(Table.getInternalProperties(internalProperties).pendingTasks).to.eql([]);
+				expect(pendingTaskPromiseResolved).toEqual(true);
+				expect(Table.getInternalProperties(internalProperties).pendingTasks).toEqual([]);
 			});
 
 			it("Should immediately resolve pendingTaskPromises promise if table is already ready", async () => {
@@ -152,7 +151,7 @@ describe("Table", () => {
 
 				await utils.set_immediate_promise();
 
-				expectChai(pendingTaskPromiseResolved).to.be.true;
+				expect(pendingTaskPromiseResolved).toEqual(true);
 			});
 		});
 
@@ -201,7 +200,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model]);
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -227,7 +226,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {"throughput": 1});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -253,7 +252,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {"throughput": {"read": 2, "write": 3}});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -279,7 +278,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {"throughput": "ON_DEMAND"});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -302,7 +301,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {"tags": {"hello": "world"}});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -334,7 +333,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {"tags": {"hello": "world", "foo": "bar"}});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -370,7 +369,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -396,7 +395,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {"tableClass": "standard"});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -422,7 +421,7 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model], {"tableClass": "infrequentAccess"});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql({
+						expect(createTableParams).toEqual({
 							"AttributeDefinitions": [
 								{
 									"AttributeName": "id",
@@ -457,14 +456,14 @@ describe("Table", () => {
 						const model = dynamoose.model(tableName, {"id": String});
 						new instance.Table(tableName, [model]);
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql(null);
+						expect(createTableParams).toEqual(null);
 					});
 
 					it("Should not call createTable if create option set to false", async () => {
 						const model = dynamoose.model("Cat", {"id": String});
 						new instance.Table("Cat", [model], {"create": false});
 						await utils.set_immediate_promise();
-						expectChai(createTableParams).to.eql(null);
+						expect(createTableParams).toEqual(null);
 					});
 
 					it("Should bind request to function being called", async () => {
@@ -481,8 +480,8 @@ describe("Table", () => {
 						const model = dynamoose.model("Cat", {"id": String});
 						new instance.Table("Cat", [model]);
 						await utils.set_immediate_promise();
-						expectChai(self).to.be.an("object");
-						expectChai(Object.keys(self)).to.eql(["createTable", "describeTable"]);
+						expect(self).toBeInstanceOf(Object);
+						expect(Object.keys(self)).toEqual(["createTable", "describeTable"]);
 					});
 
 					if (testType.name === "Instance") {
@@ -502,7 +501,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new instance.Table(tableName, [model]);
 							await utils.set_immediate_promise();
-							expectChai(createTableParams).to.eql({
+							expect(createTableParams).toEqual({
 								"AttributeDefinitions": [
 									{
 										"AttributeName": "id",
@@ -572,7 +571,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"initialize": false});
 				await utils.set_immediate_promise();
-				expectChai(describeTableParams).to.eql([]);
+				expect(describeTableParams).toEqual([]);
 			});
 
 			it("Should call describeTable with correct parameters", async () => {
@@ -585,7 +584,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model]);
 				await utils.set_immediate_promise();
-				expectChai(describeTableParams).to.eql([{
+				expect(describeTableParams).toEqual([{
 					"TableName": tableName
 				}]);
 			});
@@ -600,7 +599,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model]);
 				await utils.timeout(5);
-				expectChai(describeTableParams).to.eql([{
+				expect(describeTableParams).toEqual([{
 					"TableName": tableName
 				}, {
 					"TableName": tableName
@@ -617,7 +616,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				const table = new dynamoose.Table(tableName, [model], {"initialize": false});
 				await expect(table.initialize()).rejects.toThrow("Wait for active timed out after ");
-				expectChai(describeTableParams.length).to.be.greaterThanOrEqual(1);
+				expect(describeTableParams.length).toBeGreaterThanOrEqual(1);
 			});
 
 			it("Should throw error if AWS throws error", async () => {
@@ -638,7 +637,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"create": true});
 				await utils.timeout(5);
-				expectChai(describeTableParams).to.eql([{
+				expect(describeTableParams).toEqual([{
 					"TableName": tableName
 				}]);
 			});
@@ -657,7 +656,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": false});
 				await utils.set_immediate_promise();
-				expectChai(updateTableParams).to.eql([{
+				expect(updateTableParams).toEqual([{
 					"ProvisionedThroughput": {
 						"ReadCapacityUnits": 1,
 						"WriteCapacityUnits": 2
@@ -680,7 +679,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": true});
 				await utils.set_immediate_promise();
-				expectChai(updateTableParams).to.eql([]);
+				expect(updateTableParams).toEqual([]);
 			});
 		});
 
@@ -746,7 +745,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": updateOption});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should not call updateTable if throughput doesn't match and initialize is set to false", async () => {
@@ -763,7 +762,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": updateOption, "initialize": false});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should call updateTable with correct parameters if throughput doesn't match", async () => {
@@ -780,7 +779,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": updateOption});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([{
+							expect(updateTableParams).toEqual([{
 								"ProvisionedThroughput": {
 									"ReadCapacityUnits": 1,
 									"WriteCapacityUnits": 2
@@ -803,7 +802,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"throughput": "ON_DEMAND", "update": updateOption});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([{
+							expect(updateTableParams).toEqual([{
 								"BillingMode": "PAY_PER_REQUEST",
 								"TableName": tableName
 							}]);
@@ -820,7 +819,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"throughput": 5, "update": updateOption});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([{
+							expect(updateTableParams).toEqual([{
 								"ProvisionedThroughput": {
 									"ReadCapacityUnits": 5,
 									"WriteCapacityUnits": 5
@@ -843,7 +842,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"throughput": "ON_DEMAND", "update": updateOption, "initialize": false});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should not call updateTable if switching from on demand to provisioned and initialize is set to false", async () => {
@@ -857,7 +856,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"throughput": 5, "update": updateOption, "initialize": false});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 					});
 				});
@@ -884,7 +883,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String, "name": {"type": String, "index": {"type": "global"}}});
 							new dynamoose.Table(tableName, [model], {"update": updateOption, "initialize": false});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should call updateTable to add index", async () => {
@@ -902,7 +901,7 @@ describe("Table", () => {
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
 							await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([
+							expect(updateTableParams).toEqual([
 								{
 									"AttributeDefinitions": [
 										{
@@ -983,7 +982,7 @@ describe("Table", () => {
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
 							await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([
+							expect(updateTableParams).toEqual([
 								{
 									"GlobalSecondaryIndexUpdates": [
 										{
@@ -1173,8 +1172,8 @@ describe("Table", () => {
 							new dynamoose.Table(tableName, [model], {"update": updateOption});
 							await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
 							await utils.set_immediate_promise();
-							expectChai(describeTableFunctionCalledTimes).to.eql(5);
-							expectChai(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([{
+							expect(describeTableFunctionCalledTimes).toEqual(5);
+							expect(utils.array_flatten(testUpdateTableParams["0"].map((a) => a.GlobalSecondaryIndexUpdates))).toEqual([{
 								"Create": {
 									"IndexName": "nameGlobalIndex",
 									"KeySchema": [
@@ -1192,7 +1191,7 @@ describe("Table", () => {
 									}
 								}
 							}]);
-							expectChai(utils.array_flatten(testUpdateTableParams["1"].map((a) => a.GlobalSecondaryIndexUpdates))).to.eql([
+							expect(utils.array_flatten(testUpdateTableParams["1"].map((a) => a.GlobalSecondaryIndexUpdates))).toEqual([
 								...testUpdateTableParams["0"][0].GlobalSecondaryIndexUpdates,
 								{
 									"Create": {
@@ -1466,7 +1465,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should not call updateTable if table class is standard and standard in table initialization", async () => {
@@ -1486,7 +1485,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should not call updateTable if table class is infrequent access and infrequent access in table initialization", async () => {
@@ -1506,7 +1505,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should not call updateTable if table class is undefined and standard in table initialization", async () => {
@@ -1523,7 +1522,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([]);
+							expect(updateTableParams).toEqual([]);
 						});
 
 						it("Should call updateTable if table class is undefined and infrequent access in table initialization", async () => {
@@ -1540,7 +1539,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([{
+							expect(updateTableParams).toEqual([{
 								"TableName": tableName,
 								"TableClass": "STANDARD_INFREQUENT_ACCESS"
 							}]);
@@ -1563,7 +1562,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"tableClass": "infrequentAccess"});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([{
+							expect(updateTableParams).toEqual([{
 								"TableName": tableName,
 								"TableClass": "STANDARD_INFREQUENT_ACCESS"
 							}]);
@@ -1586,7 +1585,7 @@ describe("Table", () => {
 							const model = dynamoose.model(tableName, {"id": String});
 							new dynamoose.Table(tableName, [model], {"tableClass": "standard"});
 							await utils.set_immediate_promise();
-							expectChai(updateTableParams).to.eql([{
+							expect(updateTableParams).toEqual([{
 								"TableName": tableName,
 								"TableClass": "STANDARD"
 							}]);
@@ -1667,7 +1666,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"expires": 1000});
 				await utils.set_immediate_promise();
-				expectChai(updateTTLParams).to.eql([{
+				expect(updateTTLParams).toEqual([{
 					"TableName": tableName,
 					"TimeToLiveSpecification": {
 						"Enabled": true,
@@ -1681,7 +1680,7 @@ describe("Table", () => {
 				const tableName = "Cat";
 				dynamoose.model(tableName, {"id": String}, {"expires": 1000});
 				await utils.set_immediate_promise();
-				expectChai(updateTTLParams).to.eql([]);
+				expect(updateTTLParams).toEqual([]);
 			});
 
 			it("Should not call updateTimeToLive with correct parameters if TTL is enabling", async () => {
@@ -1689,7 +1688,7 @@ describe("Table", () => {
 				const tableName = "Cat";
 				dynamoose.model(tableName, {"id": String}, {"expires": 1000});
 				await utils.set_immediate_promise();
-				expectChai(updateTTLParams).to.eql([]);
+				expect(updateTTLParams).toEqual([]);
 			});
 
 			it("Should call updateTimeToLive with correct parameters for custom attribute if TTL is disabling", async () => {
@@ -1703,15 +1702,15 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"expires": {"ttl": 1000, "attribute": "expires"}});
 				await model.Model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise();
-				expectChai(updateTTLParams).to.eql([{
+				expect(updateTTLParams).toEqual([{
 					"TableName": tableName,
 					"TimeToLiveSpecification": {
 						"Enabled": true,
 						"AttributeName": "expires"
 					}
 				}]);
-				expectChai(timesCalledDescribeTTL).to.eql(2);
-				expectChai(Date.now() - startTime).to.be.at.least(1000);
+				expect(timesCalledDescribeTTL).toEqual(2);
+				expect(Date.now() - startTime).toBeGreaterThan(1000);
 			});
 
 			it("Should call updateTimeToLive with correct parameters for custom attribute if TTL is disabled", async () => {
@@ -1720,7 +1719,7 @@ describe("Table", () => {
 				const model = dynamoose.model(tableName, {"id": String});
 				new dynamoose.Table(tableName, [model], {"expires": {"ttl": 1000, "attribute": "expires"}});
 				await utils.set_immediate_promise();
-				expectChai(updateTTLParams).to.eql([{
+				expect(updateTTLParams).toEqual([{
 					"TableName": tableName,
 					"TimeToLiveSpecification": {
 						"Enabled": true,
@@ -1733,7 +1732,7 @@ describe("Table", () => {
 				const tableName = "Cat";
 				dynamoose.model(tableName, {"id": String});
 				await utils.set_immediate_promise();
-				expectChai(updateTTLParams).to.eql([]);
+				expect(updateTTLParams).toEqual([]);
 			});
 		});
 	});
@@ -1784,7 +1783,7 @@ describe("Table", () => {
 			describe(test.name, () => {
 				it("Should return correct value", () => {
 					const table = new dynamoose.Table(test.input, [dynamoose.model("Cat", {"id": String})], test.options);
-					expectChai(table.name).to.eql(test.output);
+					expect(table.name).toEqual(test.output);
 				});
 			});
 		});
@@ -1792,7 +1791,7 @@ describe("Table", () => {
 		it("Should not be able to set", () => {
 			const table = new dynamoose.Table("Table", [dynamoose.model("Cat", {"id": String})]);
 			table.name = "RandomString";
-			expectChai(table.name).to.eql("Table");
+			expect(table.name).toEqual("Table");
 		});
 	});
 
@@ -1800,7 +1799,7 @@ describe("Table", () => {
 		it("Should return correct value", () => {
 			const model = dynamoose.model("User", {"id": String});
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.hashKey).to.eql("id");
+			expect(table.hashKey).toEqual("id");
 		});
 	});
 
@@ -1808,13 +1807,13 @@ describe("Table", () => {
 		it("Should return undefined if doesn't exist", () => {
 			const model = dynamoose.model("User", {"id": String});
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.rangeKey).to.be.undefined;
+			expect(table.rangeKey).toEqual(undefined);
 		});
 
 		it("Should return correct value", () => {
 			const model = dynamoose.model("User", {"id": String, "data": {"type": String, "rangeKey": true}});
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.rangeKey).to.eql("data");
+			expect(table.rangeKey).toEqual("data");
 		});
 	});
 
@@ -1822,7 +1821,7 @@ describe("Table", () => {
 		it("Should be a function", () => {
 			const model = dynamoose.model("User", {"id": String});
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.create).to.be.a("function");
+			expect(table.create).toBeInstanceOf(Function);
 		});
 
 		const functionCallTypes = [
@@ -1834,7 +1833,7 @@ describe("Table", () => {
 				it("Should return correct result", async () => {
 					const model = dynamoose.model("User", {"id": String});
 					const table = new dynamoose.Table("User", [model]);
-					expectChai(await callType.func(table).bind(table)({"return": "request"})).to.eql({
+					expect(await callType.func(table).bind(table)({"return": "request"})).toEqual({
 						"TableName": "User",
 						"ProvisionedThroughput": {
 							"ReadCapacityUnits": 1,
@@ -1867,7 +1866,7 @@ describe("Table", () => {
 						}
 					});
 					await callType.func(table).bind(table)();
-					expectChai(createTableParams).to.eql({
+					expect(createTableParams).toEqual({
 						"TableName": "User",
 						"ProvisionedThroughput": {
 							"ReadCapacityUnits": 1,
@@ -1913,8 +1912,8 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data": String});
 			const table = new dynamoose.Table("Table", [model, model2]);
 
-			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).to.eql(model);
-			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).to.eql(model2);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).toEqual(model);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).toEqual(model2);
 		});
 
 		it("Should return correct model for sub-schemas", async () => {
@@ -1922,9 +1921,9 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data": String});
 			const table = new dynamoose.Table("Table", [model, model2]);
 
-			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).to.eql(model);
-			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).to.eql(model);
-			expectChai(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John", "item": "Smith"})).to.eql(model);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).toEqual(model);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).toEqual(model);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John", "item": "Smith"})).toEqual(model);
 		});
 	});
 
@@ -1934,7 +1933,7 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data": {"type": String, "index": {"type": "global"}}});
 			const table = new dynamoose.Table("User", [model, model2]);
 
-			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql({
+			expect(await table.getInternalProperties(internalProperties).getIndexes()).toEqual({
 				"GlobalSecondaryIndexes": [
 					{
 						"IndexName": "dataGlobalIndex",
@@ -1962,8 +1961,8 @@ describe("Table", () => {
 					]
 				}
 			});
-			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model.Model.getInternalProperties(internalProperties).getIndexes());
-			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql(await model2.Model.getInternalProperties(internalProperties).getIndexes());
+			expect(await table.getInternalProperties(internalProperties).getIndexes()).toEqual(await model.Model.getInternalProperties(internalProperties).getIndexes());
+			expect(await table.getInternalProperties(internalProperties).getIndexes()).toEqual(await model2.Model.getInternalProperties(internalProperties).getIndexes());
 		});
 
 		it("Should return all indexes from all models", async () => {
@@ -1971,7 +1970,7 @@ describe("Table", () => {
 			const model2 = dynamoose.model("User2", {"id": String, "data2": {"type": String, "index": {"type": "global"}}});
 			const table = new dynamoose.Table("User", [model, model2]);
 
-			expectChai(await table.getInternalProperties(internalProperties).getIndexes()).to.eql({
+			expect(await table.getInternalProperties(internalProperties).getIndexes()).toEqual({
 				"GlobalSecondaryIndexes": [
 					{
 						"IndexName": "dataGlobalIndex",
@@ -2022,13 +2021,13 @@ describe("Table", () => {
 		it("Should return first attribute if no hash key defined", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": Number}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.getInternalProperties(internalProperties).getHashKey()).to.eql("id");
+			expect(table.getInternalProperties(internalProperties).getHashKey()).toEqual("id");
 		});
 
 		it("Should return hash key if set to true", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": {"type": Number, "hashKey": true}}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.getInternalProperties(internalProperties).getHashKey()).to.eql("age");
+			expect(table.getInternalProperties(internalProperties).getHashKey()).toEqual("age");
 		});
 	});
 
@@ -2036,13 +2035,13 @@ describe("Table", () => {
 		it("Should return undefined if no range key defined", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": Number}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.getInternalProperties(internalProperties).getRangeKey()).to.eql(undefined);
+			expect(table.getInternalProperties(internalProperties).getRangeKey()).toEqual(undefined);
 		});
 
 		it("Should return range key if set to true", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": {"type": Number, "rangeKey": true}}));
 			const table = new dynamoose.Table("User", [model]);
-			expectChai(table.getInternalProperties(internalProperties).getRangeKey()).to.eql("age");
+			expect(table.getInternalProperties(internalProperties).getRangeKey()).toEqual("age");
 		});
 	});
 });

@@ -1,9 +1,8 @@
-const {expect} = require("chai");
 const utils = require("../../dist/utils");
 
 describe("utils.merge_objects", () => {
 	it("Should be a function", () => {
-		expect(utils.merge_objects).to.be.a("function");
+		expect(utils.merge_objects).toBeInstanceOf(Function);
 	});
 
 	const tests = [
@@ -65,11 +64,11 @@ describe("utils.merge_objects", () => {
 		const func = test.main ? utils.merge_objects.main(test.main) : utils.merge_objects;
 		if (test.error) {
 			it(`Should throw error for ${JSON.stringify(test.input)}`, () => {
-				expect(() => func(...test.input)).to.throw(test.error);
+				expect(() => func(...test.input)).toThrow(test.error);
 			});
 		} else {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
-				expect(func(...test.input)).to.eql(test.output);
+				expect(func(...test.input)).toEqual(test.output);
 			});
 		}
 	});
