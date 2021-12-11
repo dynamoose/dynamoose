@@ -16,7 +16,7 @@ There are two different ways you can help to fund Dynamoose. Both are listed bel
 
 You can sponsor me (Charlie Fish) directly. I'm the primary maintainer/contributor of Dynamoose, and the majority of the time I spend on open source projects goes towards working on Dynamoose. Therefore any contributions I receive directly helps support my work on my open source projects (Dynamoose being the largest and the one I spend most time on).
 
-This is benefical since GitHub Sponsors charges very little in terms of fees (at the time of writing I've been charged no fees). Which means more of your funds are going directly to support me and the project. Plus you get some extra perks such as a sponsor badge.
+This is beneficial since GitHub Sponsors charges very little in terms of fees (at the time of writing I've been charged no fees). Which means more of your funds are going directly to support me and the project. Plus you get some extra perks such as a sponsor badge.
 
 **This is the recommended option.**
 
@@ -26,7 +26,7 @@ This is benefical since GitHub Sponsors charges very little in terms of fees (at
 
 You can also sponsor the project through Open Collective.
 
-This is benefical to track the project funding, and has full transparancy into how the funds are being used. At the time of writing this, it also has the benefit of more specific funding amounts (since GitHub Sponsors doesn't let you enter a custom amount). You can also do one time donations through Open Collective (which as of writing this you can not due on GitHub Sponsors).
+This is beneficial to track the project funding, and has full transparency into how the funds are being used. At the time of writing this, it also has the benefit of more specific funding amounts (since GitHub Sponsors doesn't let you enter a custom amount). You can also do one time donations through Open Collective (which as of writing this you can not due on GitHub Sponsors).
 
 However, Open Collective has much higher fees (compared to GitHub Sponsors), which means less of the funds get to us. After opening the Open Collective account a $5 donation had $0.95 worth of fees attached to it (which is quite a bit).
 
