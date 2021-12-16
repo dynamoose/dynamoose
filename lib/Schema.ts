@@ -561,7 +561,6 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		"findTypeForValue": (...args): DynamoDBTypeResult | DynamoDBSetTypeResult => attributeTypes.find((checkType) => (checkType.isOfType as any)(...args))
 	};
 
-	// TODO: in the two functions below I don't think we should be using as. We should try to clean that up.
 	get hashKey (): string {
 		return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.getInternalProperties(internalProperties).schemaObject)[0];
 	}
