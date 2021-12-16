@@ -1,4 +1,4 @@
-const utils = require("../../dist/utils");
+const utils = require("../../dist/utils").default;
 
 describe("utils.empty_function", () => {
 	it("Should be a function", () => {

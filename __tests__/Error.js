@@ -1,4 +1,4 @@
-const Error = require("../dist/Error");
+const Error = require("../dist/Error").default;
 
 describe("Error", () => {
 	it("Should be an object", () => {

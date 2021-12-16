@@ -1,7 +1,7 @@
 const dynamoose = require("../dist");
 const util = require("util");
-const ModelStore = require("../dist/ModelStore");
-const CustomError = require("../dist/Error");
+const ModelStore = require("../dist/ModelStore").default;
+const CustomError = require("../dist/Error").default;
 
 describe("Transaction", () => {
 	it("Should be a function", () => {

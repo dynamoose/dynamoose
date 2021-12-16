@@ -1,6 +1,6 @@
-import obj = require("js-object-utilities");
+import * as obj from "js-object-utilities";
 import {IndexItem} from "../../Schema";
-import Internal = require("../../Internal");
+import Internal from "../../Internal";
 import {Table} from "../../Table";
 const {internalProperties} = Internal.General;
 

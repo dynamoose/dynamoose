@@ -1,7 +1,7 @@
 import {ObjectType, ModelType} from "./General";
 import {Item} from "./Item";
-import CustomError = require("./Error");
-import utils = require("./utils");
+import CustomError from "./Error";
+import utils from "./utils";
 
 export interface SerializerOptions {
 	include?: string[];

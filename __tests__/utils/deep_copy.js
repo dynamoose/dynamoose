@@ -1,4 +1,4 @@
-const utils = require("../../dist/utils");
+const utils = require("../../dist/utils").default;
 const dynamoose = require("../../dist");
 
 describe("utils.deep_copy", () => {

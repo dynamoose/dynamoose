@@ -1,7 +1,7 @@
 const dynamoose = require("../dist");
-const Internal = require("../dist/Internal");
-const utils = require("../dist/utils");
-const CustomError = require("../dist/Error");
+const Internal = require("../dist/Internal").default;
+const utils = require("../dist/utils").default;
+const CustomError = require("../dist/Error").default;
 const {internalProperties} = Internal.General;
 const util = require("util");
 

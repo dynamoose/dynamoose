@@ -1,4 +1,4 @@
-const utils = require("../../dist/utils");
+const utils = require("../../dist/utils").default;
 
 describe("utils.array_flatten", () => {
 	it("Should be a function", () => {

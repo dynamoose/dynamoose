@@ -1,6 +1,6 @@
 const dynamoose = require("../dist");
-const CustomError = require("../dist/Error");
-const utils = require("../dist/utils");
+const CustomError = require("../dist/Error").default;
+const utils = require("../dist/utils").default;
 const emitter = utils.log;
 const importPackage = require("../dist/utils/importPackage");
 

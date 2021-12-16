@@ -1,4 +1,4 @@
-const utils = require("../../../dist/utils");
+const utils = require("../../../dist/utils").default;
 
 describe("utils.dynamoose.wildcard_allowed_check", () => {
 	it("Should be a function", () => {

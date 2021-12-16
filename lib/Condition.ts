@@ -1,11 +1,11 @@
 import {Item} from "./Item";
-import CustomError = require("./Error");
-import utils = require("./utils");
+import CustomError from "./Error";
+import utils from "./utils";
 const OR = Symbol("OR");
-import DynamoDB = require("@aws-sdk/client-dynamodb");
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {ObjectType} from "./General";
 import {ExpressionAttributeNameMap, ExpressionAttributeValueMap} from "./Types";
-import Internal = require("./Internal");
+import Internal from "./Internal";
 import {Model} from "./Model";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;

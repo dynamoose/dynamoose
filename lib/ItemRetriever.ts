@@ -1,12 +1,12 @@
-import ddb = require("./aws/ddb/internal");
-import CustomError = require("./Error");
-import utils = require("./utils");
+import ddb from "./aws/ddb/internal";
+import CustomError from "./Error";
+import utils from "./utils";
 import {Condition, ConditionInitializer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Item} from "./Item";
 import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
-import Internal = require("./Internal");
+import Internal from "./Internal";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;
 

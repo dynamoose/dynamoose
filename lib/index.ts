@@ -2,14 +2,15 @@ import {Model} from "./Model";
 import {Schema, SchemaDefinition} from "./Schema";
 import {Condition} from "./Condition";
 import transaction from "./Transaction";
-import utils = require("./utils");
+import utils from "./utils";
 import {Item, AnyItem} from "./Item";
-import ModelStore = require("./ModelStore");
+import ModelStore from "./ModelStore";
 import {ModelType} from "./General";
 import {CustomError} from "dynamoose-utils";
 import {Table} from "./Table/index";
 import type from "./type";
 import {Instance} from "./Instance";
+import {custom as TableDefaults} from "./Table/defaults";
 
 const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[]): ModelType<T> => {
 	let model: Model<T>;
@@ -65,7 +66,7 @@ const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaD
 	return returnObject as any;
 };
 Table.defaults = {
-	...require("./Table/defaults").custom
+	...TableDefaults as any
 };
 
 export = {

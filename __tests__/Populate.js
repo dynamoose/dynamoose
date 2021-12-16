@@ -3,7 +3,7 @@ const dynamoose = require("../dist");
 const awsPkg = require("../dist/aws").AWS;
 const aws = new awsPkg();
 const util = require("util");
-const utils = require("../dist/utils");
+const utils = require("../dist/utils").default;
 
 describe("Populate", () => {
 	it("Should be an object", () => {

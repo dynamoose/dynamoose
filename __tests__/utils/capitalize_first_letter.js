@@ -1,4 +1,4 @@
-const utils = require("../../dist/utils");
+const utils = require("../../dist/utils").default;
 
 describe("utils.capitalize_first_letter", () => {
 	it("Should be a function", () => {

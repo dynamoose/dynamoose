@@ -1,5 +1,5 @@
 import {CustomError} from "dynamoose-utils";
-import Internal = require("./Internal");
+import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 
 export class InternalPropertiesClass<T> {

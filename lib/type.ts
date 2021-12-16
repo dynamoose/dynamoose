@@ -1,4 +1,4 @@
-import Internal = require("./Internal");
+import Internal from "./Internal";
 
 export default {
 	/**

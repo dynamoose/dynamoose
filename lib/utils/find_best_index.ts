@@ -1,4 +1,4 @@
-import array_flatten = require("./array_flatten");
+import array_flatten from "./array_flatten";
 import {ConditionStorageTypeNested} from "../Condition";
 import {ModelIndexes} from "../Model";
 

@@ -1,4 +1,5 @@
-const {find_best_index} = require("../../dist/utils");
+const utils = require("../../dist/utils").default;
+const {find_best_index} = utils;
 
 describe("utils.find_best_index", () => {
 	it("Should find the best index with one GSI", () => {

@@ -1,8 +1,8 @@
 import {Item} from "./Item";
 import {ItemArray, CallbackType} from "./General";
-import utils = require("./utils");
+import utils from "./utils";
 import {DynamoDBTypeResult, DynamoDBSetTypeResult, Schema} from "./Schema";
-import Internal = require("./Internal");
+import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 
 export interface PopulateSettings {

@@ -1,5 +1,5 @@
 import DDB from "./ddb";
-import * as Converter from "./converter";
+import Converter from "./converter";
 import {DDBInterface} from "./ddb";
 
 export class AWS {

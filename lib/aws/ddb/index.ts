@@ -1,4 +1,4 @@
-import DynamoDB = require("@aws-sdk/client-dynamodb");
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
 
 export interface DDBInterface {
 	(): DynamoDB.DynamoDB;

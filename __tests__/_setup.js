@@ -1,4 +1,4 @@
-const ModelStore = require("../dist/ModelStore");
+const ModelStore = require("../dist/ModelStore").default;
 
 beforeEach(() => {
 	ModelStore.clear();

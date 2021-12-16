@@ -1,6 +1,6 @@
 const dynamoose = require("../dist");
 const Error = require("../dist/Error");
-const Internal = require("../dist/Internal");
+const Internal = require("../dist/Internal").default;
 const {internalProperties} = Internal.General;
 
 describe("Schema", () => {

@@ -2,9 +2,9 @@ const dynamoose = require("../dist");
 const {Schema, aws} = dynamoose;
 const {Item} = require("../dist/Item");
 const util = require("util");
-const CustomError = require("../dist/Error");
-const utils = require("../dist/utils");
-const Internal = require("../dist/Internal");
+const CustomError = require("../dist/Error").default;
+const utils = require("../dist/utils").default;
+const Internal = require("../dist/Internal").default;
 const {internalProperties} = Internal.General;
 
 describe("Item", () => {
