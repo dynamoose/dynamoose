@@ -39,7 +39,7 @@ export interface DynamoDBTypeResult {
 interface DynamoDBTypeCreationObject {
 	name: string;
 	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
-	dynamodbType?: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
+	dynamodbType?: DynamoDBAttributeType | DynamoDBAttributeType[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
 	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
 	jsType?: any;
 	nestedType?: boolean;
@@ -54,7 +54,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
 	jsType?: any;
 	nestedType?: boolean;
-	customType?: {functions: (typeSettings?: AttributeDefinitionTypeSettings) => {toDynamo: (val: ValueType) => ValueType; fromDynamo: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
+	customType?: {functions: (typeSettings: AttributeDefinitionTypeSettings) => {toDynamo?: (val: ValueType) => ValueType; fromDynamo?: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
 
 	constructor (obj: DynamoDBTypeCreationObject) {
 		Object.keys(obj).forEach((key) => {
