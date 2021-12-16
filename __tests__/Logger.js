@@ -342,13 +342,13 @@ describe("Logger", () => {
 		beforeEach(async () => {
 			(await dynamoose.logger()).providers.set(console);
 			consoleTypes.forEach((type) => {
-				originalConsole[type] = console[type];
-				console[type] = (str) => logs.push({"message": str, type});
+				originalConsole[type] = console[type]; // eslint-disable-line no-console
+				console[type] = (str) => logs.push({"message": str, type}); // eslint-disable-line no-console
 			});
 		});
 		afterEach(() => {
 			consoleTypes.forEach((type) => {
-				console[type] = originalConsole[type];
+				console[type] = originalConsole[type]; // eslint-disable-line no-console
 			});
 			originalConsole = {};
 			logs = [];

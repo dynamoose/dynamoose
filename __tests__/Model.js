@@ -4011,10 +4011,10 @@ describe("Model", () => {
 
 			it("Should print warning if passing callback", () => {
 				let result;
-				const oldWarn = console.warn;
-				console.warn = (warning) => result = warning;
+				const oldWarn = console.warn; // eslint-disable-line no-console
+				console.warn = (warning) => result = warning; // eslint-disable-line no-console
 				User.transaction.get(1, utils.empty_function);
-				console.warn = oldWarn;
+				console.warn = oldWarn; // eslint-disable-line no-console
 
 				expect(result).toEqual("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -4066,10 +4066,10 @@ describe("Model", () => {
 
 			it("Should print warning if passing callback", () => {
 				let result;
-				const oldWarn = console.warn;
-				console.warn = (warning) => result = warning;
+				const oldWarn = console.warn; // eslint-disable-line no-console
+				console.warn = (warning) => result = warning; // eslint-disable-line no-console
 				User.transaction.create({"id": 1}, {"overwrite": false}, utils.empty_function);
-				console.warn = oldWarn;
+				console.warn = oldWarn; // eslint-disable-line no-console
 
 				expect(result).toEqual("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -4095,10 +4095,10 @@ describe("Model", () => {
 
 			it("Should print warning if passing callback", () => {
 				let result;
-				const oldWarn = console.warn;
-				console.warn = (warning) => result = warning;
+				const oldWarn = console.warn; // eslint-disable-line no-console
+				console.warn = (warning) => result = warning; // eslint-disable-line no-console
 				User.transaction.delete(1, utils.empty_function);
-				console.warn = oldWarn;
+				console.warn = oldWarn; // eslint-disable-line no-console
 
 				expect(result).toEqual("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -4158,10 +4158,10 @@ describe("Model", () => {
 
 			it("Should print warning if passing callback", () => {
 				let result;
-				const oldWarn = console.warn;
-				console.warn = (warning) => result = warning;
+				const oldWarn = console.warn; // eslint-disable-line no-console
+				console.warn = (warning) => result = warning; // eslint-disable-line no-console
 				User.transaction.update({"id": 1, "name": "Bob"}, utils.empty_function);
-				console.warn = oldWarn;
+				console.warn = oldWarn; // eslint-disable-line no-console
 
 				expect(result).toEqual("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});
@@ -4220,10 +4220,10 @@ describe("Model", () => {
 
 			it("Should print warning if passing callback", () => {
 				let result;
-				const oldWarn = console.warn;
-				console.warn = (warning) => result = warning;
+				const oldWarn = console.warn; // eslint-disable-line no-console
+				console.warn = (warning) => result = warning; // eslint-disable-line no-console
 				User.transaction.condition(1, utils.empty_function);
-				console.warn = oldWarn;
+				console.warn = oldWarn; // eslint-disable-line no-console
 
 				expect(result).toEqual("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
 			});

@@ -67,6 +67,7 @@ module.exports = {
 		"array-element-newline": ["error", "consistent"],
 		"array-bracket-spacing": "error",
 		"array-bracket-newline": ["error", "consistent"],
-		"eol-last": "error"
+		"eol-last": "error",
+		"no-console": "error"
 	}
 };
