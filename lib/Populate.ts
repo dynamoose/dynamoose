@@ -41,8 +41,7 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 			const typeDetails = schema.getAttributeTypeDetails(prop);
 			const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
 			const {typeSettings} = typeDetail;
-			// TODO: `subModel` is currently any, we should fix that
-			const subModel = typeof typeSettings.model === "object" ? model.Item as any : typeSettings.model;
+			const subModel: any = typeof typeSettings.model === "object" ? model.Item : typeSettings.model;
 
 			prop = prop.endsWith(".0") ? prop.substring(0, prop.length - 2) : prop;
 
