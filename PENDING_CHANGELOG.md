@@ -74,6 +74,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### Documentation
 
+- JSDoc documentation (Beta)! In certain editors such as VSCode, this allows you to hover over Dynamoose functions and attributes to see their documentation.
 - Dynamoose's website now respects your OS color theme preference instead of always defaulting to light mode.
 - Migrated documentation from Vercel to [Cloudflare Pages](https://pages.cloudflare.com/) for PR & branch builds.
 

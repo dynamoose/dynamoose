@@ -150,11 +150,10 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 		});
 	}
 }
-Object.entries(Condition.prototype).forEach((prototype) => {
-	const [key, func] = prototype;
-	if (key !== "requestObject") {
+Object.getOwnPropertyNames(Condition.prototype).forEach((key: string) => {
+	if (!["requestObject", "constructor"].includes(key)) {
 		ItemRetriever.prototype[key] = function (this: ItemRetriever, ...args): ItemRetriever {
-			func.bind(this.getInternalProperties(internalProperties).settings.condition)(...args);
+			Condition.prototype[key].bind(this.getInternalProperties(internalProperties).settings.condition)(...args);
 			return this;
 		};
 	}

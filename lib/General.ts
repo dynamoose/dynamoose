@@ -15,6 +15,20 @@ export type KeyObject = {[attribute: string]: string | number};
 export type InputKey = string | number | KeyObject;
 
 interface ModelItemConstructor<T extends Item> {
+	/**
+	 * In order to create a new item you just pass in your object into an instance of your model.
+	 *
+	 * ```js
+	 * const User = dynamoose.model("User", {"id": Number, "name": String});
+	 * const myUser = new User({
+	 * 	"id": 1,
+	 * 	"name": "Tim"
+	 * });
+	 * console.log(myUser.id); // 1
+	 *
+	 * // myUser is now a item instance of the User model
+	 * ```
+	 */
 	new (object: {[key: string]: any}): T;
 	Model: Model<T>;
 }
@@ -27,6 +41,12 @@ export interface ItemArray<T> extends Array<T> {
 }
 
 export enum SortOrder {
+	/**
+	 * Sort in ascending order. For example: 1, 2, 3.
+	 */
 	ascending = "ascending",
+	/**
+	 * Sort in descending order. For example: 3, 2, 1.
+	 */
 	descending = "descending"
 }

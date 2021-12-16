@@ -40,6 +40,22 @@ interface TableInternalProperties {
 export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	// transaction: any;
 	static defaults: TableOptions;
+	/**
+	 * This property is a string that represents the table name. The result will include all prefixes and suffixes.
+	 *
+	 * This property is unable to be set.
+	 *
+	 * ```js
+	 * const DynamoTable = new dynamoose.Table("Table", [Model]);
+	 * console.log(DynamoTable.name); // Table
+	 * ```
+	 * --
+	 * ```js
+	 * const DynamoTable = new dynamoose.Table("Table", [Model], {"prefix": "MyApp_"});
+	 * console.log(DynamoTable.name); // MyApp_Table
+	 * ```
+	 * @readonly
+	 */
 	name: string;
 
 	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional) {
@@ -245,19 +261,39 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 		// }, {});
 	}
 
+	/**
+	 * This property is a string that represents the table's hashKey.
+	 *
+	 * This property is unable to be set.
+	 *
+	 * ```js
+	 * const DynamoTable = new dynamoose.Table("Table", [Model]);
+	 * console.log(DynamoTable.hashKey); // id
+	 * ```
+	 */
 	get hashKey (): string {
 		return this.getInternalProperties(internalProperties).getHashKey();
 	}
+	/**
+	 * This property is a string that represents the table's rangeKey. It is possible this value will be `undefined` if your table doesn't have a range key.
+	 *
+	 * This property is unable to be set.
+	 *
+	 * ```js
+	 * const DynamoTable = new dynamoose.Table("Table", [Model]);
+	 * console.log(DynamoTable.rangeKey); // data
+	 * ```
+	 */
 	get rangeKey (): string | undefined {
 		return this.getInternalProperties(internalProperties).getRangeKey();
 	}
 
-	create (): Promise<void>
-	create (callback: CallbackType<void, any>): void
-	create (settings: TableCreateOptions): Promise<void>
-	create (settings: TableCreateOptions, callback: CallbackType<void, any>): void
-	create (settings: TableCreateOptions & {return: "request"}): Promise<DynamoDB.CreateTableInput>
-	create (settings: TableCreateOptions & {return: "request"}, callback: CallbackType<DynamoDB.CreateTableInput, any>): void
+	create (): Promise<void>;
+	create (callback: CallbackType<void, any>): void;
+	create (settings: TableCreateOptions): Promise<void>;
+	create (settings: TableCreateOptions, callback: CallbackType<void, any>): void;
+	create (settings: TableCreateOptions & {return: "request"}): Promise<DynamoDB.CreateTableInput>;
+	create (settings: TableCreateOptions & {return: "request"}, callback: CallbackType<DynamoDB.CreateTableInput, any>): void;
 	create (settings?: TableCreateOptions | CallbackType<void, any>, callback?: CallbackType<DynamoDB.CreateTableInput, any> | CallbackType<void, any>): void | Promise<DynamoDB.CreateTableInput | void> {
 		if (typeof settings === "function") {
 			callback = settings;
@@ -272,7 +308,39 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 		}
 	}
 
+	/**
+	 * This method will run Dynamoose's initialization flow. The actions run will be based on your tables options at initialization.
+	 *
+	 * - `create`
+	 * - `waitForActive`
+	 * - `update`
+	 *
+	 * ```js
+	 * const DynamoTable = new dynamoose.Table("Table", [Model], {"initialize": false});
+	 * await DynamoTable.initialize();
+	 * ```
+	 * @returns Promise\<void\>
+	 */
 	initialize (): Promise<void>;
+	/**
+	 * This method will run Dynamoose's initialization flow. The actions run will be based on your tables options at initialization.
+	 *
+	 * - `create`
+	 * - `waitForActive`
+	 * - `update`
+	 *
+	 * ```js
+	 * const DynamoTable = new dynamoose.Table("Table", [Model], {"initialize": false});
+	 * DynamoTable.initialize((error) => {
+	 * 	if (error) {
+	 * 		console.error(error);
+	 * 	} else {
+	 * 		console.log("Successfully initialized table");
+	 * 	}
+	 * });
+	 * ```
+	 * @param callback Function - `(error: any, response: void): void`
+	 */
 	initialize (callback: CallbackType<any, void>): void;
 	async initialize (callback?: CallbackType<any, void>): Promise<void> {
 		if (callback) {

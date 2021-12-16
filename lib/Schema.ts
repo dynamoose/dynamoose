@@ -243,14 +243,39 @@ interface SchemaSettings {
 	saveUnknown?: boolean | string[];
 }
 export enum IndexType {
+	/**
+	 * A global secondary index (GSI) is a secondary index in a DynamoDB table that is not local to a single partition key value.
+	 */
 	global = "global",
+	/**
+	 * A local secondary index (LSI) is a secondary index in a DynamoDB table that is local to a single partition key value.
+	 */
 	local = "local"
 }
 interface IndexDefinition {
+	/**
+	 * The name of the index.
+	 * @default `${attribute}${type == "global" ? "GlobalIndex" : "LocalIndex"}`
+	 */
 	name?: string;
+	/**
+	 * If the index should be a global index or local index. Attribute will be the hashKey for the index.
+	 * @default "global"
+	 */
 	type?: IndexType;
+	/**
+	 * The range key attribute name for a global secondary index.
+	 */
 	rangeKey?: string;
+	/**
+	 * Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed.
+	 * @default true
+	 */
 	project?: boolean | string[];
+	/**
+	 * Sets the throughput for the global secondary index.
+	 * @default undefined
+	 */
 	throughput?: "ON_DEMAND" | number | {read: number; write: number};
 }
 interface AttributeDefinitionTypeSettings {
