@@ -13,7 +13,7 @@ import {AttributeMap} from "../Types";
 import DynamoDB = require("@aws-sdk/client-dynamodb");
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
 import {Table} from "../Table";
-import type = require("../type");
+import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 const {internalProperties} = Internal.General;
 
@@ -105,6 +105,9 @@ interface ModelInternalProperties {
 	table: () => Table;
 
 	schemas: Schema[];
+	/**
+	 * This should never be called directly. Use `table()` instead.
+	 */
 	_table?: Table;
 }
 
