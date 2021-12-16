@@ -243,7 +243,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			accumulator[key] = async (...args): Promise<DynamoDB.TransactWriteItem> => {
 				if (typeof args[args.length - 1] === "function") {
-					console.warn("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments.");
+					console.warn("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments."); // eslint-disable-line no-console
 					args.pop();
 				}
 
