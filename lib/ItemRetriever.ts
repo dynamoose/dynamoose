@@ -116,7 +116,6 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 			}
 		});
 
-		// TODO: we do something similar to do this below in other functions as well (ex. get, save), where we allow a callback or a promise, we should figure out a way to make this code more DRY and have a standard way of doing this throughout Dynamoose
 		if (callback) {
 			promise.then((result) => prepareForReturn(result)).then((result) => callback(null, result)).catch((error) => callback(error));
 		} else {

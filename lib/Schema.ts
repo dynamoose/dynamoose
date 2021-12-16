@@ -283,7 +283,7 @@ interface AttributeDefinitionTypeSettings {
 	value?: string | boolean | number;
 }
 interface AttributeDefinition {
-	type: AttributeType | AttributeType[] | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType | AttributeType[]}; // TODO add support for this being an object
+	type: AttributeType | AttributeType[] | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType | AttributeType[]};
 	schema?: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[] | SchemaDefinition | SchemaDefinition[];
 	default?: ValueType | (() => ValueType);
 	forceDefault?: boolean;
@@ -739,9 +739,8 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 				dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
 			}
 			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.throughput === "ON_DEMAND" ? {} : model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options);
-			// TODO: fix up the two lines below. Using too many `as` statements.
-			if ((throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput) {
-				dynamoIndexObject.ProvisionedThroughput = (throughputObject as {"ProvisionedThroughput": {"ReadCapacityUnits": number; "WriteCapacityUnits": number}}).ProvisionedThroughput;
+			if ("ProvisionedThroughput" in throughputObject) {
+				dynamoIndexObject.ProvisionedThroughput = throughputObject.ProvisionedThroughput;
 			}
 		} else {
 			dynamoIndexObject.KeySchema.push({"AttributeName": this.hashKey, "KeyType": "HASH"});
