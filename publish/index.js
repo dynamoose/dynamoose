@@ -40,6 +40,7 @@ let package = require("../package.json");
 	]);
 	await git.checkout(results.branch);
 	package = require("../package.json");
+	const gitCoreEditor = await exec("git config --get core.editor");
 	results = { // eslint-disable-line require-atomic-updates
 		...results,
 		...await inquirer.prompt([
@@ -60,7 +61,7 @@ let package = require("../package.json");
 				"name": "textEditor",
 				"type": "input",
 				"message": "What is the command line bin to launch your favorite text editor? (ex. `code`, `atom`, `nano`, etc.)",
-				"default": "code" // TODO: use default from Git preference, or take it from a user configuration file
+				"default": gitCoreEditor.stdout
 				// "validate": // TODO: ensure the command line thing exists and is valid (maybe by using `which` and checking to see if the output of that exists and is not `_____ not found`)
 			},
 			{
