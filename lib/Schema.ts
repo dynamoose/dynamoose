@@ -21,7 +21,6 @@ export interface DynamoDBSetTypeResult {
 	typeSettings?: AttributeDefinitionTypeSettings;
 
 	toDynamo: (val: GeneralValueType[]) => SetValueType;
-	fromDynamo: (val: SetValueType) => Set<ValueType>;
 }
 export interface DynamoDBTypeResult {
 	name: string;
@@ -112,7 +111,6 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 					}
 				},
 				"toDynamo": (val: GeneralValueType[]): SetValueType => Array.isArray(val) ? new Set(val as any) : val as any,
-				"fromDynamo": (val: SetValueType): Set<ValueType> => val as any,
 				typeSettings
 			};
 			if (this.dynamicName) {
