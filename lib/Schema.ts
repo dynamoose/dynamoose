@@ -8,11 +8,13 @@ import {ModelType, ObjectType} from "./General";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;
 
+type DynamoDBAttributeType = keyof DynamoDB.AttributeValue;
+
 // TODO: the interfaces below are so similar, we should consider combining them into one. We also do a lot of `DynamoDBTypeResult | DynamoDBSetTypeResult` in the code base.
 export interface DynamoDBSetTypeResult {
 	name: string;
 	dynamicName?: (() => string);
-	dynamodbType: string; // TODO: This should probably be an enum
+	dynamodbType: DynamoDBAttributeType;
 	isOfType: (value: ValueType, type?: "toDynamo" | "fromDynamo", settings?: Partial<ItemObjectFromSchemaSettings>) => boolean;
 	isSet: true;
 	customType?: any;
@@ -24,7 +26,7 @@ export interface DynamoDBSetTypeResult {
 export interface DynamoDBTypeResult {
 	name: string;
 	dynamicName?: (() => string);
-	dynamodbType: string | string[]; // TODO: This should probably be an enum
+	dynamodbType: DynamoDBAttributeType | DynamoDBAttributeType[];
 	isOfType: (value: ValueType) => {value: ValueType; type: string};
 	isSet: false;
 	customType?: any;
@@ -48,7 +50,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 	// TODO: since the code below will always be the exact same as DynamoDBTypeCreationObject we should see if there is a way to make it more DRY and not repeat it
 	name: string;
 	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
-	dynamodbType?: string | string[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
+	dynamodbType?: DynamoDBAttributeType | DynamoDBAttributeType[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => DynamoDBAttributeType | DynamoDBAttributeType[]);
 	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
 	jsType?: any;
 	nestedType?: boolean;
@@ -65,9 +67,9 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 		// https://github.com/microsoft/TypeScript/issues/37855
 		// const isSubType = this.dynamodbType instanceof DynamoDBType; // Represents underlying DynamoDB type for custom types
 		const type = this.dynamodbType instanceof DynamoDBType ? this.dynamodbType : this;
-		const dynamodbType: string | string[] = ((): string | string[] => {
+		const dynamodbType: DynamoDBAttributeType | DynamoDBAttributeType[] = ((): DynamoDBAttributeType | DynamoDBAttributeType[] => {
 			if (this.dynamodbType instanceof DynamoDBType) {
-				return this.dynamodbType.dynamodbType as string;
+				return this.dynamodbType.dynamodbType as DynamoDBAttributeType;
 			} else if (typeof this.dynamodbType === "function") {
 				return this.dynamodbType(typeSettings);
 			} else {
@@ -101,7 +103,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 			result.set = {
 				"name": `${this.name} Set`,
 				"isSet": true,
-				"dynamodbType": `${dynamodbType}S`,
+				"dynamodbType": `${dynamodbType}S` as DynamoDBAttributeType | DynamoDBAttributeType,
 				"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo", settings: Partial<ItemObjectFromSchemaSettings> = {}): boolean => {
 					if (type === "toDynamo") {
 						return !settings.saveUnknown && Array.isArray(val) && val.every((subValue) => result.isOfType(subValue)) || val instanceof Set && [...val].every((subValue) => result.isOfType(subValue));
