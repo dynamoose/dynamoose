@@ -12,9 +12,7 @@ The `schema` parameter can either be an object OR a [Schema](Schema.md) instance
 const dynamoose = require("dynamoose");
 
 const Cat = dynamoose.model("Cat", {"name": String});
-const Cat = dynamoose.model("Cat", {"name": String});
 
-const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 ```
 
