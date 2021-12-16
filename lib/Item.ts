@@ -722,8 +722,11 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 				if (validator) {
 					let result;
 					if (validator instanceof RegExp) {
-						// TODO: fix the line below to not use `as`. This will cause a weird issue even in vanilla JS, where if your validator is a Regular Expression but the type isn't a string, it will throw a super random error.
-						result = validator.test(value as string);
+						if (typeof value === "string") {
+							result = validator.test(value);
+						} else {
+							throw new Error.ValidationError(`Trying to pass in ${typeof value} to a RegExp validator for key: ${key}.`);
+						}
 					} else {
 						result = typeof validator === "function" ? await validator(value) : validator === value;
 					}
