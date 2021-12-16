@@ -2368,6 +2368,26 @@ describe("Item", () => {
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
 			},
 			{
+				"input": [{"id": true}, {"validate": true, "typeCheck": false}],
+				"error": new CustomError.ValidationError("Trying to pass in boolean to a RegExp validator for key: id."),
+				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
+			},
+			{
+				"input": [{"id": 1}, {"validate": true, "typeCheck": false}],
+				"error": new CustomError.ValidationError("Trying to pass in number to a RegExp validator for key: id."),
+				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
+			},
+			{
+				"input": [{"id": () => {}}, {"validate": true, "typeCheck": false}],
+				"error": new CustomError.ValidationError("Trying to pass in function to a RegExp validator for key: id."),
+				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
+			},
+			{
+				"input": [{"id": {}}, {"validate": true, "typeCheck": false}],
+				"error": new CustomError.ValidationError("Trying to pass in object to a RegExp validator for key: id."),
+				"schema": {"id": {"type": String, "validate": /ID_.+/gu}}
+			},
+			{
 				"input": [{"id": "ID_test"}, {"validate": true}],
 				"output": {"id": "ID_test"},
 				"schema": {"id": {"type": String, "validate": "ID_test"}}
