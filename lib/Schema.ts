@@ -20,7 +20,7 @@ export interface DynamoDBSetTypeResult {
 	customType?: any;
 	typeSettings?: AttributeDefinitionTypeSettings;
 
-	toDynamo: (val: GeneralValueType[]) => SetValueType;
+	toDynamo: (val: GeneralValueType[] | Set<GeneralValueType>) => Set<GeneralValueType>;
 }
 export interface DynamoDBTypeResult {
 	name: string;
@@ -110,7 +110,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 						return val instanceof Set;
 					}
 				},
-				"toDynamo": (val: GeneralValueType[]): SetValueType => Array.isArray(val) ? new Set(val as any) : val as any,
+				"toDynamo": (val: GeneralValueType[] | Set<GeneralValueType>): Set<GeneralValueType> => Array.isArray(val) ? new Set(val) : val,
 				typeSettings
 			};
 			if (this.dynamicName) {
@@ -120,7 +120,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 				result.set.customType = {
 					"functions": {
 						"toDynamo": (val: GeneralValueType[]): ValueType[] => val.map(result.customType.functions.toDynamo),
-						"fromDynamo": (val: SetValueType): {values: ValueType} => new Set([...val as any].map(result.customType.functions.fromDynamo)) as any,
+						"fromDynamo": (val: Iterator<GeneralValueType>): Set<GeneralValueType> => new Set([...val as any].map(result.customType.functions.fromDynamo)),
 						"isOfType": (val: ValueType, type: "toDynamo" | "fromDynamo"): boolean => {
 							if (type === "toDynamo") {
 								return (val instanceof Set || Array.isArray(val) && new Set(val as any).size === val.length) && [...val].every((item) => result.customType.functions.isOfType(item, type));
@@ -227,9 +227,8 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 })();
 const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.array_flatten(attributeTypesMain.filter((checkType) => !checkType.customType).map((checkType) => checkType.result()).map((a) => [a, a.set])).filter((a) => Boolean(a));
 
-type SetValueType = {wrapperName: "Set"; values: ValueType[]; type: string /* TODO: should probably make this an enum */};
 type GeneralValueType = string | boolean | number | Buffer | Date;
-export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[] | SetValueType;
+export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[];
 type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
 
 export interface TimestampObject {
