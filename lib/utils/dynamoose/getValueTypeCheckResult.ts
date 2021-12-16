@@ -7,7 +7,7 @@ import {ObjectType} from "../../General";
 // 	return {typeDetails, isValidType};
 // };
 
-export = (schema: Schema, value: any, key: string, settings: { "type": "toDynamo" | "fromDynamo" }, options: { standardKey?: boolean; typeIndexOptionMap?: ObjectType }): {typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]; matchedTypeDetailsIndex: number; matchedTypeDetailsIndexes: number[]; matchedTypeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult; typeDetailsArray: (DynamoDBTypeResult | DynamoDBSetTypeResult)[]; isValidType: boolean} => {
+export default (schema: Schema, value: any, key: string, settings: { "type": "toDynamo" | "fromDynamo" }, options: { standardKey?: boolean; typeIndexOptionMap?: ObjectType }): {typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]; matchedTypeDetailsIndex: number; matchedTypeDetailsIndexes: number[]; matchedTypeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult; typeDetailsArray: (DynamoDBTypeResult | DynamoDBSetTypeResult)[]; isValidType: boolean} => {
 	const typeDetails = schema.getAttributeTypeDetails(key, options);
 	const typeDetailsArray = Array.isArray(typeDetails) ? typeDetails : [typeDetails];
 	const matchedTypeDetailsIndexes = typeDetailsArray.map((details, index) => {

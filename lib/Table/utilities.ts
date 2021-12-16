@@ -1,9 +1,9 @@
 import {Table, TableExpiresSettings, TableUpdateOptions, TableWaitForActiveSettings} from ".";
-import Internal = require("../Internal");
+import Internal from "../Internal";
 const {internalProperties} = Internal.General;
-import DynamoDB = require("@aws-sdk/client-dynamodb");
-import ddb = require("../aws/ddb/internal");
-import utils = require("../utils");
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
+import ddb from "../aws/ddb/internal";
+import utils from "../utils";
 import {CustomError} from "dynamoose-utils";
 import {TableIndexChangeType} from "../utils/dynamoose/index_changes";
 import {TableClass} from "./types";

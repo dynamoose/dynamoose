@@ -1,8 +1,8 @@
-import awsConverter = require("./aws/converter");
-import ddb = require("./aws/ddb/internal");
-import utils = require("./utils");
-import Error = require("./Error");
-import Internal = require("./Internal");
+import awsConverter from "./aws/converter";
+import ddb from "./aws/ddb/internal";
+import utils from "./utils";
+import Error from "./Error";
+import Internal from "./Internal";
 import {Model} from "./Model";
 import {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult, TimestampObject} from "./Schema";
 const {internalProperties} = Internal.General;
@@ -10,7 +10,7 @@ const dynamooseUndefined = Internal.Public.undefined;
 const dynamooseAny = Internal.Public.any;
 
 import {AttributeMap} from "./Types";
-import DynamoDB = require("@aws-sdk/client-dynamodb");
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {ValueType} from "./Schema";
 import {CallbackType, ObjectType} from "./General";
 import {SerializerOptions} from "./Serializer";

@@ -1,9 +1,9 @@
 const dynamoose = require("../dist");
-const CustomError = require("../dist/Error");
-const Internal = require("../dist/Internal");
-const utils = require("../dist/utils");
+const CustomError = require("../dist/Error").default;
+const Internal = require("../dist/Internal").default;
+const utils = require("../dist/utils").default;
 const util = require("util");
-const ModelStore = require("../dist/ModelStore");
+const ModelStore = require("../dist/ModelStore").default;
 const {internalProperties} = Internal.General;
 
 describe("Model", () => {

@@ -1,5 +1,5 @@
-import DynamoDB = require("@aws-sdk/client-dynamodb");
-import utils = require("../../utils");
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
+import utils from "../../utils";
 import {Instance} from "../../Instance";
 
 // NOTE: If you add new functions below remember to add to FAQ page for what IAM roles are required
@@ -37,4 +37,4 @@ async function main (instance: Instance, method: string, params: any): Promise<a
 	return result;
 }
 
-export = main;
+export default main;

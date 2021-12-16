@@ -1,11 +1,11 @@
 import {CustomError} from "dynamoose-utils";
 import {CallbackType, DeepPartial, ObjectType} from "../General";
-import Internal = require("../Internal");
+import Internal from "../Internal";
 const {internalProperties} = Internal.General;
 import {Model} from "../Model";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
-import utils = require("../utils");
-import DynamoDB = require("@aws-sdk/client-dynamodb");
+import utils from "../utils";
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";

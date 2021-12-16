@@ -1,9 +1,9 @@
-import CustomError = require("./Error");
-import utils = require("./utils");
-import Internal = require("./Internal");
+import CustomError from "./Error";
+import utils from "./utils";
+import Internal from "./Internal";
 import {Item, ItemObjectFromSchemaSettings} from "./Item";
 import {Model, ModelIndexes} from "./Model";
-import DynamoDB = require("@aws-sdk/client-dynamodb");
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {ModelType, ObjectType} from "./General";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
 const {internalProperties} = Internal.General;

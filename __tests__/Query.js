@@ -1,8 +1,8 @@
 const dynamoose = require("../dist");
 const util = require("util");
 const {Query} = require("../dist/ItemRetriever");
-const {internalProperties} = require("../dist/Internal").General;
-const CustomError = require("../dist/Error");
+const {internalProperties} = require("../dist/Internal").default.General;
+const CustomError = require("../dist/Error").default;
 
 describe("Query", () => {
 	beforeEach(() => {

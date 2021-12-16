@@ -1,4 +1,4 @@
-export = {
+export default {
 	"General": {
 		"internalProperties": Symbol("internalProperties")
 	},

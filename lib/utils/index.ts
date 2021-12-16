@@ -1,13 +1,13 @@
 import * as combine_objects from "./combine_objects";
 import * as merge_objects from "./merge_objects";
-import timeout = require("./timeout");
-import capitalize_first_letter = require("./capitalize_first_letter");
-import set_immediate_promise = require("./set_immediate_promise");
-import unique_array_elements = require("./unique_array_elements");
-import array_flatten = require("./array_flatten");
-import empty_function = require("./empty_function");
-import object = require("js-object-utilities");
-import dynamoose = require("./dynamoose");
+import timeout from "./timeout";
+import capitalize_first_letter from "./capitalize_first_letter";
+import set_immediate_promise from "./set_immediate_promise";
+import unique_array_elements from "./unique_array_elements";
+import array_flatten from "./array_flatten";
+import empty_function from "./empty_function";
+import * as object from "js-object-utilities";
+import dynamoose from "./dynamoose";
 import all_elements_match from "./all_elements_match";
 import type_name from "./type_name";
 import importPackage from "./importPackage";
@@ -18,7 +18,7 @@ import childKey from "./childKey";
 import parentKey from "./parentKey";
 import async_reduce from "./async_reduce";
 
-export = {
+export default {
 	combine_objects,
 	merge_objects,
 	timeout,

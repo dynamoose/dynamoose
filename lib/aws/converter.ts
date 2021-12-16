@@ -1,5 +1,4 @@
-// import * as AWS from "./sdk";
-import DynamoDBUtil = require("@aws-sdk/util-dynamodb");
+import * as DynamoDBUtil from "@aws-sdk/util-dynamodb";
 
 type ConverterType = {
 	marshall: typeof DynamoDBUtil.marshall;
@@ -25,4 +24,4 @@ main.revert = (): void => {
 	customConverter = undefined;
 };
 
-export = main;
+export default main;

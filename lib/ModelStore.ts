@@ -1,4 +1,4 @@
-import CustomError = require("./Error");
+import CustomError from "./Error";
 import {Model} from "./Model";
 import {Item} from "./Item";
 
@@ -18,4 +18,4 @@ returnObject.clear = (): void => {
 	models = {};
 };
 
-export = returnObject;
+export default returnObject;

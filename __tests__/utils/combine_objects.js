@@ -1,4 +1,4 @@
-const utils = require("../../dist/utils");
+const utils = require("../../dist/utils").default;
 
 describe("utils.combine_objects", () => {
 	it("Should be a function", () => {

@@ -1,4 +1,4 @@
-const ModelStore = require("../dist/ModelStore");
+const ModelStore = require("../dist/ModelStore").default;
 
 describe("ModelStore", () => {
 	it("Should be a function", () => {

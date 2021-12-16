@@ -1,12 +1,12 @@
-import ddb = require("./aws/ddb/internal");
-import DynamoDB = require("@aws-sdk/client-dynamodb");
-import utils = require("./utils");
-import Error = require("./Error");
+import ddb from "./aws/ddb/internal";
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
+import utils from "./utils";
+import Error from "./Error";
 import {Model} from "./Model";
-import * as ModelStore from "./ModelStore";
+import ModelStore from "./ModelStore";
 import {CallbackType} from "./General";
 import {Item} from "./Item";
-import Internal = require("./Internal");
+import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 
 export enum TransactionReturnOptions {

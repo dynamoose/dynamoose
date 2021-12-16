@@ -1,4 +1,4 @@
-const utils = require("../../dist/utils");
+const utils = require("../../dist/utils").default;
 
 describe("unique_array_elements", () => {
 	it("Should be a function", () => {
