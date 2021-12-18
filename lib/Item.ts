@@ -146,7 +146,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 	// Serializer
 	serialize (nameOrOptions?: SerializerOptions | string): ObjectType {
-		return this.getInternalProperties(internalProperties).model.serializer._serialize(this, nameOrOptions);
+		return this.getInternalProperties(internalProperties).model.serializer.getInternalProperties(internalProperties).serialize(this, nameOrOptions);
 	}
 
 	/**
