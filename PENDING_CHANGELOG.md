@@ -56,6 +56,8 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### General
 
+- Added `get` & `set` modifier options to Schema settings to allow for Item wide modification.
+- Added `validate` method option to Schema settings to allow for Item wide validation.
 - Added `tags` setting to Table, to be able to add tags to a table.
 - Added `dynamoose.type.ANY` type to allow for schema attributes to be any type. This also works for the `schema` setting on Schema properties.
 - Added `tableClass` option to Table settings to allow for setting a table to DynamoDB's new infrequent access class option.
