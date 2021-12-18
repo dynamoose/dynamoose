@@ -577,7 +577,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		return undefined;
 	}
 
-	const returnObject = {...object};
+	let returnObject = {...object};
 	const schema: Schema = settings.schema || await model.getInternalProperties(internalProperties).schemaForObject(returnObject);
 	const schemaAttributes = schema.attributes(returnObject);
 
@@ -701,7 +701,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 	if (settings.modifiers) {
 		await Promise.all(settings.modifiers.map(async (modifier) => {
-			return Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
+			await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
 				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true, typeIndexOptionMap});
 				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
@@ -711,6 +711,10 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 					utils.object.set(returnObject, key, await modifierFunction(value, oldValue));
 				}
 			}));
+			const schemaModifier = schema.getInternalProperties(internalProperties).settings[modifier];
+			if (schemaModifier) {
+				returnObject = await schemaModifier(returnObject);
+			}
 		}));
 	}
 	if (settings.validate) {
@@ -737,6 +741,13 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 				}
 			}
 		}));
+		const schemaValidator = schema.getInternalProperties(internalProperties).settings.validate;
+		if (schemaValidator) {
+			const result = await schemaValidator(returnObject);
+			if (!result) {
+				throw new Error.ValidationError(`${JSON.stringify(returnObject)} had a schema validation error when trying to save the item.`);
+			}
+		}
 	}
 	if (settings.required) {
 		let attributesToCheck = await Item.attributesWithSchema(returnObject, model);

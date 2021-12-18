@@ -87,7 +87,9 @@ Below is a list of how Dynamoose processes item actions.
 - DynamoDB Type Handler (ex. converting sets to correct value)
 - Combine
 - `get`/`set` modifiers
+- Schema level `get`/`set` modifiers
 - Validation check
+- Schema level validation check
 - Required check
 - Enum check
 

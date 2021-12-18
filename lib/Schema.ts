@@ -238,6 +238,9 @@ export interface TimestampObject {
 interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
 	saveUnknown?: boolean | string[];
+	set?: (value: ObjectType) => ObjectType;
+	get?: (value: ObjectType) => ObjectType;
+	validate?: (value: ObjectType) => boolean;
 }
 export enum IndexType {
 	/**
