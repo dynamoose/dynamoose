@@ -290,8 +290,8 @@ interface AttributeDefinition {
 	validate?: ValueType | RegExp | ((value: ValueType) => boolean);
 	required?: boolean;
 	enum?: ValueType[];
-	get?: ((value: ValueType) => ValueType);
-	set?: ((value: ValueType) => ValueType);
+	get?: (value: ValueType) => ValueType;
+	set?: (value: ValueType) => ValueType;
 	index?: boolean | IndexDefinition | IndexDefinition[];
 	hashKey?: boolean;
 	rangeKey?: boolean;
