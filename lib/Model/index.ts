@@ -236,7 +236,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": async (key: string, condition: Condition): Promise<DynamoDB.ConditionCheck> => ({
 				"Key": this.Item.objectToDynamo(this.getInternalProperties(internalProperties).convertObjectToKey(key)),
 				"TableName": this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name,
-				...condition ? await condition.requestObject(this) : {}
+				...condition ? await condition.getInternalProperties(internalProperties).requestObject(this) : {}
 			} as any)}
 		].reduce((accumulator: ObjectType, currentValue) => {
 			const {key, modifier} = currentValue;
@@ -740,7 +740,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(this.getInternalProperties(internalProperties).convertObjectToKey(keyObj), this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false})),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",
-			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.requestObject(this, {"index": {"start": index, "set": (i): void => {
+			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
 				index = i;
 			}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}, await getUpdateExpressionObject()),
 			"TableName": this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
@@ -816,7 +816,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			if (settings.condition) {
 				deleteItemParams = {
 					...deleteItemParams,
-					...await settings.condition.requestObject(this)
+					...await settings.condition.getInternalProperties(internalProperties).requestObject(this)
 				};
 			}
 

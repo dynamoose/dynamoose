@@ -104,8 +104,6 @@ export interface Condition extends BasicOperators {
 	exists: () => Condition;
 	in: (value: any) => Condition;
 	between: (...values: any[]) => Condition;
-
-	requestObject: (model: Model<Item>, settings?: ConditionRequestObjectSettings) => Promise<ConditionRequestObjectResult>;
 }
 
 type ConditionObject = {
@@ -116,6 +114,7 @@ type ConditionObject = {
 } | typeof OR;
 
 interface ConditionInternalProperties {
+	requestObject: (model: Model<Item>, settings?: ConditionRequestObjectSettings) => Promise<ConditionRequestObjectResult>;
 	settings?: {
 		conditions?: ConditionObject[];
 		pending?: {
@@ -132,12 +131,128 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 	constructor (object?: ConditionInitializer) {
 		super();
 
+		this.setInternalProperties(internalProperties, {
+			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
+				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
+					const newValue = (await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false}))[key];
+					return Item.objectToDynamo(newValue, {"type": "value"});
+				};
+
+				if (this.getInternalProperties(internalProperties).settings.raw && utils.object.equals(Object.keys(this.getInternalProperties(internalProperties).settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
+					return utils.async_reduce(Object.entries((this.getInternalProperties(internalProperties).settings.raw as ObjectType).ExpressionAttributeValues), async (obj, entry) => {
+						const [key, value] = entry;
+						// TODO: we should fix this so that we can do `isDynamoItem(value)`
+						if (!Item.isDynamoObject({"key": value})) {
+							obj.ExpressionAttributeValues[key] = await toDynamo(key, value);
+						}
+						return obj;
+					}, this.getInternalProperties(internalProperties).settings.raw as ObjectType);
+				} else if (this.getInternalProperties(internalProperties).settings.conditions.length === 0) {
+					return {};
+				}
+
+				let index = (settings.index || {}).start || 0;
+				const setIndex = (i: number): void => {
+					index = i; (settings.index || {"set": utils.empty_function}).set(i);
+				};
+				async function main (input: ConditionStorageSettingsConditions): Promise<ConditionRequestObjectResult> {
+					return utils.async_reduce(input, async (object: ConditionRequestObjectResult, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {
+						let expression = "";
+						if (Array.isArray(entry)) {
+							const result = await main(entry);
+							const newData = utils.merge_objects.main({"combineMethod": "object_combine"})({...result}, {...object});
+							const returnObject = utils.object.pick(newData, ["ExpressionAttributeNames", "ExpressionAttributeValues"]);
+
+							expression = settings.conditionStringType === "array" ? result[settings.conditionString] : `(${result[settings.conditionString]})`;
+							object = {...object, ...returnObject};
+						} else if (entry !== OR) {
+							const [key, condition] = Object.entries(entry)[0];
+							const {value} = condition;
+							const keys = {"name": `#a${index}`, "value": `:v${index}`};
+							setIndex(++index);
+
+							const keyParts = key.split(".");
+							if (keyParts.length === 1) {
+								object.ExpressionAttributeNames[keys.name] = key;
+							} else {
+								keys.name = keyParts.reduce((finalName, part, index) => {
+									const name = `${keys.name}_${index}`;
+									object.ExpressionAttributeNames[name] = part;
+									finalName.push(name);
+									return finalName;
+								}, []).join(".");
+							}
+							object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+
+							switch (condition.type) {
+							case "EQ":
+							case "NE":
+								expression = `${keys.name} ${condition.type === "EQ" ? "=" : "<>"} ${keys.value}`;
+								break;
+							case "IN":
+								delete object.ExpressionAttributeValues[keys.value];
+								expression = `${keys.name} IN (${value.map((_v: any, i: number) => `${keys.value}_${i + 1}`).join(", ")})`;
+								await Promise.all(value.map(async (valueItem: any, i: number) => {
+									object.ExpressionAttributeValues[`${keys.value}_${i + 1}`] = await toDynamo(key, valueItem);
+								}));
+								break;
+							case "GT":
+							case "GE":
+							case "LT":
+							case "LE":
+								expression = `${keys.name} ${condition.type.startsWith("G") ? ">" : "<"}${condition.type.endsWith("E") ? "=" : ""} ${keys.value}`;
+								break;
+							case "BETWEEN":
+								expression = `${keys.name} BETWEEN ${keys.value}_1 AND ${keys.value}_2`;
+								object.ExpressionAttributeValues[`${keys.value}_1`] = await toDynamo(key, value[0]);
+								object.ExpressionAttributeValues[`${keys.value}_2`] = await toDynamo(key, value[1]);
+								delete object.ExpressionAttributeValues[keys.value];
+								break;
+							case "CONTAINS":
+							case "NOT_CONTAINS":
+								expression = `${condition.type === "NOT_CONTAINS" ? "NOT " : ""}contains (${keys.name}, ${keys.value})`;
+								break;
+							case "EXISTS":
+							case "NOT_EXISTS":
+								expression = `attribute_${condition.type === "NOT_EXISTS" ? "not_" : ""}exists (${keys.name})`;
+								delete object.ExpressionAttributeValues[keys.value];
+								break;
+							case "BEGINS_WITH":
+								expression = `begins_with (${keys.name}, ${keys.value})`;
+								break;
+							}
+						} else {
+							return object;
+						}
+
+						const conditionStringNewItems: string[] = [expression];
+						if (object[settings.conditionString].length > 0) {
+							conditionStringNewItems.unshift(` ${arr[i - 1] === OR ? "OR" : "AND"} `);
+						}
+						conditionStringNewItems.forEach((item) => {
+							if (typeof object[settings.conditionString] === "string") {
+								object[settings.conditionString] = `${object[settings.conditionString]}${item}`;
+							} else {
+								object[settings.conditionString].push(Array.isArray(item) ? item : item.trim());
+							}
+						});
+
+						return object;
+					}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
+				}
+
+				return utils.object.clearEmpties(await main(this.getInternalProperties(internalProperties).settings.conditions));
+			}
+		});
+
 		if (object instanceof Condition) {
 			this.setInternalProperties(internalProperties, {
+				...this.getInternalProperties(internalProperties),
 				"settings": {...object.getInternalProperties(internalProperties).settings}
 			});
 		} else {
 			this.setInternalProperties(internalProperties, {
+				...this.getInternalProperties(internalProperties),
 				"settings": {
 					"conditions": [],
 					"pending": {} // represents the pending chain of filter data waiting to be attached to the `conditions` parameter. For example, storing the key before we know what the comparison operator is.
@@ -313,114 +428,3 @@ interface ConditionRequestObjectSettings {
 	};
 	conditionStringType: "array" | "string";
 }
-Condition.prototype.requestObject = async function (this: Condition, model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> {
-	const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
-		const newValue = (await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false}))[key];
-		return Item.objectToDynamo(newValue, {"type": "value"});
-	};
-
-	if (this.getInternalProperties(internalProperties).settings.raw && utils.object.equals(Object.keys(this.getInternalProperties(internalProperties).settings.raw).sort(), [settings.conditionString, "ExpressionAttributeValues", "ExpressionAttributeNames"].sort())) {
-		return utils.async_reduce(Object.entries((this.getInternalProperties(internalProperties).settings.raw as ObjectType).ExpressionAttributeValues), async (obj, entry) => {
-			const [key, value] = entry;
-			// TODO: we should fix this so that we can do `isDynamoItem(value)`
-			if (!Item.isDynamoObject({"key": value})) {
-				obj.ExpressionAttributeValues[key] = await toDynamo(key, value);
-			}
-			return obj;
-		}, this.getInternalProperties(internalProperties).settings.raw as ObjectType);
-	} else if (this.getInternalProperties(internalProperties).settings.conditions.length === 0) {
-		return {};
-	}
-
-	let index = (settings.index || {}).start || 0;
-	const setIndex = (i: number): void => {
-		index = i; (settings.index || {"set": utils.empty_function}).set(i);
-	};
-	async function main (input: ConditionStorageSettingsConditions): Promise<ConditionRequestObjectResult> {
-		return utils.async_reduce(input, async (object: ConditionRequestObjectResult, entry: ConditionStorageTypeNested, i: number, arr: any[]) => {
-			let expression = "";
-			if (Array.isArray(entry)) {
-				const result = await main(entry);
-				const newData = utils.merge_objects.main({"combineMethod": "object_combine"})({...result}, {...object});
-				const returnObject = utils.object.pick(newData, ["ExpressionAttributeNames", "ExpressionAttributeValues"]);
-
-				expression = settings.conditionStringType === "array" ? result[settings.conditionString] : `(${result[settings.conditionString]})`;
-				object = {...object, ...returnObject};
-			} else if (entry !== OR) {
-				const [key, condition] = Object.entries(entry)[0];
-				const {value} = condition;
-				const keys = {"name": `#a${index}`, "value": `:v${index}`};
-				setIndex(++index);
-
-				const keyParts = key.split(".");
-				if (keyParts.length === 1) {
-					object.ExpressionAttributeNames[keys.name] = key;
-				} else {
-					keys.name = keyParts.reduce((finalName, part, index) => {
-						const name = `${keys.name}_${index}`;
-						object.ExpressionAttributeNames[name] = part;
-						finalName.push(name);
-						return finalName;
-					}, []).join(".");
-				}
-				object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
-
-				switch (condition.type) {
-				case "EQ":
-				case "NE":
-					expression = `${keys.name} ${condition.type === "EQ" ? "=" : "<>"} ${keys.value}`;
-					break;
-				case "IN":
-					delete object.ExpressionAttributeValues[keys.value];
-					expression = `${keys.name} IN (${value.map((_v: any, i: number) => `${keys.value}_${i + 1}`).join(", ")})`;
-					await Promise.all(value.map(async (valueItem: any, i: number) => {
-						object.ExpressionAttributeValues[`${keys.value}_${i + 1}`] = await toDynamo(key, valueItem);
-					}));
-					break;
-				case "GT":
-				case "GE":
-				case "LT":
-				case "LE":
-					expression = `${keys.name} ${condition.type.startsWith("G") ? ">" : "<"}${condition.type.endsWith("E") ? "=" : ""} ${keys.value}`;
-					break;
-				case "BETWEEN":
-					expression = `${keys.name} BETWEEN ${keys.value}_1 AND ${keys.value}_2`;
-					object.ExpressionAttributeValues[`${keys.value}_1`] = await toDynamo(key, value[0]);
-					object.ExpressionAttributeValues[`${keys.value}_2`] = await toDynamo(key, value[1]);
-					delete object.ExpressionAttributeValues[keys.value];
-					break;
-				case "CONTAINS":
-				case "NOT_CONTAINS":
-					expression = `${condition.type === "NOT_CONTAINS" ? "NOT " : ""}contains (${keys.name}, ${keys.value})`;
-					break;
-				case "EXISTS":
-				case "NOT_EXISTS":
-					expression = `attribute_${condition.type === "NOT_EXISTS" ? "not_" : ""}exists (${keys.name})`;
-					delete object.ExpressionAttributeValues[keys.value];
-					break;
-				case "BEGINS_WITH":
-					expression = `begins_with (${keys.name}, ${keys.value})`;
-					break;
-				}
-			} else {
-				return object;
-			}
-
-			const conditionStringNewItems: string[] = [expression];
-			if (object[settings.conditionString].length > 0) {
-				conditionStringNewItems.unshift(` ${arr[i - 1] === OR ? "OR" : "AND"} `);
-			}
-			conditionStringNewItems.forEach((item) => {
-				if (typeof object[settings.conditionString] === "string") {
-					object[settings.conditionString] = `${object[settings.conditionString]}${item}`;
-				} else {
-					object[settings.conditionString].push(Array.isArray(item) ? item : item.trim());
-				}
-			});
-
-			return object;
-		}, {[settings.conditionString]: settings.conditionStringType === "array" ? [] : "", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
-	}
-
-	return utils.object.clearEmpties(await main(this.getInternalProperties(internalProperties).settings.conditions));
-};
