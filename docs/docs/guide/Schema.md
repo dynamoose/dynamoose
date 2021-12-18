@@ -509,7 +509,7 @@ You can use a set function on an attribute to be run whenever saving a item to D
 }
 ```
 
-Unlike `get` this method will additionally pass in the original value as the second parameter (if available). Internally Dynamoose uses the [`item.original()`](Item#itemoriginal) method to access the original value. This means that using [`Model.batchPut`](Model#modelbatchputitems-settings-callback), [`Model.update`](Model#modelupdatekey-updateobj-settings-callback) or any other item save method that does not have access to [`item.original()`](Item#itemoriginal) this second parameter will be `undefined`.
+Unlike `get`, this method will additionally pass in the original value as the second parameter (if available). Internally Dynamoose uses the [`item.original()`](Item#itemoriginal) method to access the original value. This means that using [`Model.batchPut`](Model#modelbatchputitems-settings-callback), [`Model.update`](Model#modelupdatekey-updateobj-settings-callback) or any other item save method that does not have access to [`item.original()`](Item#itemoriginal) this second parameter will be `undefined`.
 
 ```js
 {
