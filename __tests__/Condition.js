@@ -1,6 +1,8 @@
 const dynamoose = require("../dist");
 const {Instance} = require("../dist/Instance");
 const {Condition} = dynamoose;
+const Internal = require("../dist/Internal").default;
+const {internalProperties} = Internal.General;
 
 describe("Condition", () => {
 	it("Should be a function", () => {
@@ -24,7 +26,7 @@ describe("Condition", () => {
 
 	describe("requestObject", () => {
 		it("Should be a function", () => {
-			expect(new Condition().requestObject).toBeInstanceOf(Function);
+			expect(new Condition().getInternalProperties(internalProperties).requestObject).toBeInstanceOf(Function);
 		});
 
 		const tests = [
@@ -257,7 +259,7 @@ describe("Condition", () => {
 				if (test.error) {
 					return expect(() => test.input().requestObject(model, test.settings)).toThrow(test.error);
 				} else {
-					return expect(await test.input().requestObject(model, test.settings)).toEqual(test.output);
+					return expect(await test.input().getInternalProperties(internalProperties).requestObject(model, test.settings)).toEqual(test.output);
 				}
 			});
 		});

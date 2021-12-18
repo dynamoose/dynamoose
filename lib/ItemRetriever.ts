@@ -163,7 +163,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 	const table = model.getInternalProperties(internalProperties).table();
 
 	const object: any = {
-		...await this.getInternalProperties(internalProperties).settings.condition.requestObject(model, {"conditionString": "FilterExpression", "conditionStringType": "array"}),
+		...await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).requestObject(model, {"conditionString": "FilterExpression", "conditionStringType": "array"}),
 		"TableName": table.getInternalProperties(internalProperties).name
 	};
 
