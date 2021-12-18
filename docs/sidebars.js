@@ -8,7 +8,8 @@ module.exports = {
 				"getting_started/Install",
 				"getting_started/Import",
 				"getting_started/Configure",
-				"getting_started/TypeScript"
+				"getting_started/TypeScript",
+				"getting_started/JSDoc"
 			]
 		},
 		{
