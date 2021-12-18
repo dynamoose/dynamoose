@@ -772,7 +772,7 @@ Schema.prototype.getSettingValue = function (this: Schema, setting: string): any
 	return this.getInternalProperties(internalProperties).settings[setting];
 };
 
-function attributesAction (this: Schema, object?: ObjectType): string[] {
+Schema.prototype.attributes = function (this: Schema, object?: ObjectType): string[] {
 	const typePaths = object && this.getTypePaths(object);
 	const main = (object: SchemaDefinition, existingKey = ""): string[] => {
 		return Object.keys(object).reduce((accumulator: string[], key) => {
@@ -807,9 +807,6 @@ function attributesAction (this: Schema, object?: ObjectType): string[] {
 	};
 
 	return main(this.getInternalProperties(internalProperties).schemaObject);
-}
-Schema.prototype.attributes = function (this: Schema, object?: ObjectType): string[] {
-	return attributesAction.call(this, object);
 };
 
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
