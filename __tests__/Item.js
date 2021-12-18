@@ -3010,6 +3010,57 @@ describe("Item", () => {
 				"output": {"id": 1, "model": ["hello", "world"]}
 			}
 		];
+		const schemaValidationTests = [
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "validate": true}],
+				"schema": new Schema({"id": Number}, {"validate": () => true}),
+				"output": {"id": 1}
+			},
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "validate": true}],
+				"schema": new Schema({"id": Number}, {"validate": () => false}),
+				"error": new CustomError.ValidationError("{\"id\":1} had a schema validation error when trying to save the item.")
+			},
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "validate": true}],
+				"schema": new Schema({"id": Number}, {"validate": () => {
+					throw new Error("Custom Error.");
+				}}),
+				"error": new Error("Custom Error.")
+			},
+			{
+				"input": [{"id": 0}, {"type": "fromDynamo", "validate": true}],
+				"schema": new Schema({"id": Number}, {"validate": (obj) => obj.id > 0}),
+				"error": new CustomError.ValidationError("{\"id\":0} had a schema validation error when trying to save the item.")
+			},
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "validate": true}],
+				"schema": new Schema({"id": Number}, {"validate": (obj) => obj.id > 0}),
+				"output": {"id": 1}
+			}
+		];
+		const schemaModifiersTests = [
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "modifiers": ["get"]}],
+				"schema": new Schema({"id": Number}, {"get": (obj) => ({"id": `${obj.id}`})}),
+				"output": {"id": "1"}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "modifiers": ["set"]}],
+				"schema": new Schema({"id": Number}, {"set": (obj) => ({"id": `${obj.id}`})}),
+				"output": {"id": "1"}
+			},
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "modifiers": ["get"]}],
+				"schema": new Schema({"id": Number}, {"set": (obj) => ({"id": `${obj.id}`})}),
+				"output": {"id": 1}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "modifiers": ["set"]}],
+				"schema": new Schema({"id": Number}, {"get": (obj) => ({"id": `${obj.id}`})}),
+				"output": {"id": 1}
+			}
+		];
 		const tests = [
 			...basicTests,
 			...defaultsTests,
@@ -3018,6 +3069,8 @@ describe("Item", () => {
 			...combineTypeTests,
 			...constantTypeTests,
 			...multipleTypesTests,
+			...schemaValidationTests,
+			...schemaModifiersTests
 		];
 
 		tests.forEach((test) => {
