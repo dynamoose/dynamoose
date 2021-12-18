@@ -2134,7 +2134,7 @@ describe("Item", () => {
 			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).objectFromSchema).toBeInstanceOf(Function);
 		});
 
-		const tests = [
+		const basicTests = [
 			{
 				"input": {"id": 1},
 				"output": {"id": 1},
@@ -2231,7 +2231,9 @@ describe("Item", () => {
 				"input": [{"someField": "hello"}, {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}],
 				"output": {"someField": "hello"},
 				"schema": {"someField": {"type": String, "required": true}, "someFieldAndMore": {"type": String, "required": true}}
-			},
+			}
+		];
+		const defaultsTests = [
 			// Defaults
 			{
 				"input": {},
@@ -2305,7 +2307,9 @@ describe("Item", () => {
 				"input": [{"id": "test"}, {"validate": true}],
 				"error": new CustomError.ValidationError("id with a value of test had a validation error when trying to save the item"),
 				"schema": {"id": {"type": String, "validate": (val) => val.length > 5}}
-			},
+			}
+		];
+		const validationsTests = [
 			// Validations
 			{
 				"input": [{"id": "test"}, {"validate": true}],
@@ -2606,8 +2610,9 @@ describe("Item", () => {
 				"schema": {"id": Number, "friends": {"type": Array}},
 				"input": [{"id": 1, "friends": ["a", "b", "c"]}, {"type": "toDynamo"}],
 				"output": {"id": 1, "friends": []}
-			},
-
+			}
+		];
+		const multipleSchemasTests = [
 			// Multiple Schemas
 			{
 				"schema": [new Schema({"id": Number, "name": String}), new Schema({"id": Number, "name": Number})],
@@ -2633,7 +2638,9 @@ describe("Item", () => {
 				"schema": [{"id": Number, "name": String}, {"id": Number, "data": String}],
 				"input": [{"id": 1, "data": "Test"}, {"type": "toDynamo"}],
 				"output": {"id": 1, "data": "Test"}
-			},
+			}
+		];
+		const combineTypeTests = [
 			// Combine Type
 			{
 				"schema": {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"], "separator": "-"}}}},
@@ -2714,7 +2721,9 @@ describe("Item", () => {
 				"schema": {"id": Number, "other": [{"type": "Combine"}, String]},
 				"input": [{"id": 1}, {"type": "toDynamo", "combine": true}],
 				"error": new CustomError.InvalidParameter("Combine type is not allowed to be used with multiple types.")
-			},
+			}
+		];
+		const constantTypeTests = [
 			// Constant Type
 			{
 				"input": [{"id": 1, "data": "Hello World"}, {"type": "fromDynamo"}],
@@ -2750,7 +2759,9 @@ describe("Item", () => {
 				"input": [{"id": 1, "data": false}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": {"type": {"value": "Constant", "settings": {"value": true}}}},
 				"error": new CustomError.InvalidParameter("Expected data to be of type constant boolean (true), instead found type boolean (false).")
-			},
+			}
+		];
+		const multipleTypesTests = [
 			// Multiple Types
 			{
 				"input": [{"id": 1, "data": 2}, {"type": "fromDynamo"}],
@@ -2998,6 +3009,15 @@ describe("Item", () => {
 				"schema": {"id": Number, "model": {"type": Array, "schema": [String]}},
 				"output": {"id": 1, "model": ["hello", "world"]}
 			}
+		];
+		const tests = [
+			...basicTests,
+			...defaultsTests,
+			...validationsTests,
+			...multipleSchemasTests,
+			...combineTypeTests,
+			...constantTypeTests,
+			...multipleTypesTests,
 		];
 
 		tests.forEach((test) => {
