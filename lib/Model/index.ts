@@ -914,7 +914,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 	// Serialize Many
 	serializeMany (itemsArray: ModelType<ItemCarrier>[] = [], nameOrOptions: SerializerOptions | string): any {
-		return this.serializer._serializeMany(itemsArray, nameOrOptions);
+		return this.serializer.getInternalProperties(internalProperties).serializeMany(itemsArray, nameOrOptions);
 	}
 }
 
