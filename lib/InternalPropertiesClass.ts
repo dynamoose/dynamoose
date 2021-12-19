@@ -1,4 +1,4 @@
-import {CustomError} from "dynamoose-utils";
+import {CustomError} from "./Error";
 import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 
