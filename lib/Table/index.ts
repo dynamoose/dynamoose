@@ -1,4 +1,4 @@
-import {CustomError} from "../Error";
+import CustomError from "../Error";
 import {CallbackType, DeepPartial, ObjectType} from "../General";
 import Internal from "../Internal";
 const {internalProperties} = Internal.General;
