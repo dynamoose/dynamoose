@@ -81,6 +81,7 @@ To:
 
 Below is a list of how Dynamoose processes item actions.
 
+- `map`/`alias`/`aliases` mapping (toDynamo only)
 - Type Checking
 - Defaults
 - Custom Types
@@ -92,6 +93,7 @@ Below is a list of how Dynamoose processes item actions.
 - Schema level validation check
 - Required check
 - Enum check
+- `map`/`alias`/`aliases` mapping (fromDynamo only)
 
 ## Is Dynamoose's goal to be compatible with Mongoose?
 
