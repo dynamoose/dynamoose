@@ -4,7 +4,7 @@ const {internalProperties} = Internal.General;
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import ddb from "../aws/ddb/internal";
 import utils from "../utils";
-import {CustomError} from "../Error";
+import CustomError from "../Error";
 import {TableIndexChangeType} from "../utils/dynamoose/index_changes";
 import {TableClass} from "./types";
 
