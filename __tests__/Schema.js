@@ -2,6 +2,7 @@ const dynamoose = require("../dist");
 const Error = require("../dist/Error");
 const Internal = require("../dist/Internal").default;
 const {internalProperties} = Internal.General;
+const utils = require("../dist/utils").default;
 
 describe("Schema", () => {
 	it("Should be a function", () => {
@@ -119,6 +120,77 @@ describe("Schema", () => {
 
 	it("Should not throw error if valid schema passed in", () => {
 		expect(() => new dynamoose.Schema({"id": Number, "friends": {"type": Set, "schema": [String]}})).not.toThrow();
+	});
+
+	const defaultMapSettingNames = [
+		"defaultMap",
+		"defaultAlias"
+	];
+	describe(`${defaultMapSettingNames.map(utils.capitalize_first_letter).join("/")} Settings`, () => {
+		defaultMapSettingNames.forEach((settingName) => {
+			it(`Should not throw error if only ${settingName} is passed in`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, "map": ["_id", "userID"], [settingName]: "userID"}})).not.toThrow();
+			});
+
+			it(`Should not throw error if ${settingName} passed in that matches attribute name`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, "map": ["_id", "userID"], [settingName]: "id"}})).not.toThrow();
+			});
+
+			it(`Should throw error if ${settingName} passed in that doesn't match map property`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, "map": ["_id", "userID"], [settingName]: "random"}})).toThrow(`${settingName} must exist in map, alias, or aliases property or be equal to attribute name.`);
+			});
+
+			it(`Should throw error if ${settingName} passed in that doesn't match map property within it's own attribute`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, "map": ["_id", "userID"], [settingName]: "random"}, "data": {"type": String, "map": ["hello", "random"]}})).toThrow(`${settingName} must exist in map, alias, or aliases property or be equal to attribute name.`);
+			});
+
+			it(`Should throw error if ${settingName} passed in matches other attribute name`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, "map": ["_id", "userID"], [settingName]: "data"}, "data": String})).toThrow(`${settingName} must exist in map, alias, or aliases property or be equal to attribute name.`);
+			});
+
+			it(`Should throw error if ${settingName} conflicts between types`, () => {
+				expect(() => new dynamoose.Schema({"id": [{"type": Number, "map": ["_id", "userID"], [settingName]: "userID"}, {"type": String, "map": ["_id", "userID"], [settingName]: "_id"}]})).toThrow("Only defaultMap or defaultAlias can be specified per attribute.");
+			});
+
+			const additionalDefaultMapSettingName = defaultMapSettingNames.find((name) => name !== settingName);
+			it(`Should throw error if ${settingName} & ${additionalDefaultMapSettingName} are passed in`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, "map": ["_id", "userID"], [settingName]: "_id", [additionalDefaultMapSettingName]: "userID"}})).toThrow("Only defaultMap or defaultAlias can be specified per attribute.");
+			});
+		});
+	});
+
+	const mapSettingNames = [
+		"map",
+		"alias",
+		"aliases"
+	];
+	describe(`${mapSettingNames.map(utils.capitalize_first_letter).join("/")} Settings`, () => {
+		mapSettingNames.forEach((settingName) => {
+			it(`Should not throw error if only ${settingName} is passed in`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, [settingName]: "_id"}})).not.toThrow();
+			});
+
+			it(`Should not throw error if only ${settingName} is passed in with multiple types`, () => {
+				expect(() => new dynamoose.Schema({"id": [{"type": Number, [settingName]: "_id"}, {"type": String, [settingName]: "_id"}]})).not.toThrow();
+			});
+
+			it(`Should not throw error if only ${settingName} is passed in to one type with multiple types`, () => {
+				expect(() => new dynamoose.Schema({"id": [{"type": Number, [settingName]: "_id"}, {"type": String}]})).not.toThrow();
+			});
+
+			const additionalMapSettingName = mapSettingNames.find((name) => name !== settingName);
+			it(`Should throw error if ${settingName} & ${additionalMapSettingName} are passed in`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, [settingName]: "_id", [additionalMapSettingName]: "userID"}})).toThrow("Only one of map, alias, or aliases can be specified per attribute.");
+			});
+
+			it(`Should throw error if two properties have identical ${settingName} string value is passed in`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, [settingName]: "random"}, "data": {"type": String, [settingName]: "random"}})).toThrow("Each properties map, alias, or aliases properties must be unique across the entire schema.");
+			});
+
+			it(`Should throw error if ${settingName} string value matches another attributes name is passed in`, () => {
+				expect(() => new dynamoose.Schema({"id": {"type": Number, [settingName]: "data"}, "data": String})).toThrow("Each properties map, alias, or aliases properties must be not be used as a property name in the schema.");
+			});
+		});
 	});
 
 	describe("Nested Schemas", () => {
@@ -893,6 +965,26 @@ describe("Schema", () => {
 		});
 	});
 
+	describe("getMapSettingObject", () => {
+		const tests = [
+			{
+				"input": {"id": {"type": String, "map": "_id"}},
+				"output": {"_id": "id"}
+			},
+			{
+				"input": {"id": {"type": String, "map": ["_id", "userID"]}},
+				"output": {"_id": "id", "userID": "id"}
+			}
+		];
+
+		tests.forEach((test) => {
+			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+				const schema = new dynamoose.Schema(test.input);
+				expect(schema.getInternalProperties(internalProperties).getMapSettingObject()).toEqual(test.output);
+			});
+		});
+	});
+
 	describe("attributes", () => {
 		const tests = [
 			{
@@ -945,6 +1037,47 @@ describe("Schema", () => {
 		tests.forEach((test) => {
 			it(test.name, () => {
 				expect(new dynamoose.Schema(test.input).attributes()).toEqual(test.output);
+			});
+		});
+
+		describe("Mapped Attributes", () => {
+			const tests = [
+				{
+					"name": "Should return correct result when passing in a mapped attribute as a string",
+					"input": {"id": {"type": Number, "map": "_id"}},
+					"output": ["id", "_id"]
+				},
+				{
+					"name": "Should return correct result when passing in a mapped attribute as an array of string",
+					"input": {"id": {"type": Number, "map": ["_id", "userID"]}},
+					"output": ["id", "_id", "userID"]
+				},
+				{
+					"name": "Should return correct result when passing in an alias attribute as a string",
+					"input": {"id": {"type": Number, "alias": "_id"}},
+					"output": ["id", "_id"]
+				},
+				{
+					"name": "Should return correct result when passing in an alias attribute as an array of string",
+					"input": {"id": {"type": Number, "alias": ["_id", "userID"]}},
+					"output": ["id", "_id", "userID"]
+				},
+				{
+					"name": "Should return correct result when passing in an aliases attribute as a string",
+					"input": {"id": {"type": Number, "aliases": "_id"}},
+					"output": ["id", "_id"]
+				},
+				{
+					"name": "Should return correct result when passing in an aliases attribute as an array of string",
+					"input": {"id": {"type": Number, "aliases": ["_id", "userID"]}},
+					"output": ["id", "_id", "userID"]
+				}
+			];
+
+			tests.forEach((test) => {
+				it(test.name, () => {
+					expect(new dynamoose.Schema(test.input).attributes(undefined, {"includeMaps": true})).toEqual(test.output);
+				});
 			});
 		});
 	});
@@ -1211,7 +1344,7 @@ describe("Schema", () => {
 	describe("getIndexAttributes", () => {
 		const tests = [
 			{
-				"name": "Should return an empty array if no indicies are defined",
+				"name": "Should return an empty array if no indices are defined",
 				"schema": {"id": String},
 				"output": []
 			},

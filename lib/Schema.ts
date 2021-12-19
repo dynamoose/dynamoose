@@ -298,6 +298,112 @@ interface AttributeDefinition {
 	index?: boolean | IndexDefinition | IndexDefinition[];
 	hashKey?: boolean;
 	rangeKey?: boolean;
+	/**
+	 * This property can be used to use a different attribute name in your internal application as opposed to DynamoDB. This is especially useful if you have a single table design with properties like (`pk` & `sk`) which don't have much human readable meaning. You can use this to map those attribute names to better human readable names that better represent the underlying data. You can also use it for aliases such as mapping `id` to `userID`.
+	 *
+	 * When retrieving data from DynamoDB, the attribute will be renamed to this property name, or the first element of the array if it is an array. If you want to change this behavior look at the `defaultMap` property.
+	 *
+	 * When saving to DynamoDB, the attribute name will always be used.
+	 *
+	 * ```js
+	 * "pk": {
+	 * 	"type": String,
+	 * 	"map": "userId"
+	 * }
+	 * "sk": {
+	 * 	"type": String,
+	 * 	"map": "orderId"
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * "id": {
+	 * 	"type": String,
+	 * 	"map": ["userID", "_id"]
+	 * }
+	 * ```
+	 */
+	map?: string | string[];
+	/**
+	 * This property can be used to use a different attribute name in your internal application as opposed to DynamoDB. This is especially useful if you have a single table design with properties like (`pk` & `sk`) which don't have much human readable meaning. You can use this to map those attribute names to better human readable names that better represent the underlying data. You can also use it for aliases such as mapping `id` to `userID`.
+	 *
+	 * When retrieving data from DynamoDB, the attribute will be renamed to this property name, or the first element of the array if it is an array. If you want to change this behavior look at the `defaultMap` property.
+	 *
+	 * When saving to DynamoDB, the attribute name will always be used.
+	 *
+	 * ```js
+	 * "pk": {
+	 * 	"type": String,
+	 * 	"alias": "userId"
+	 * }
+	 * "sk": {
+	 * 	"type": String,
+	 * 	"alias": "orderId"
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * "id": {
+	 * 	"type": String,
+	 * 	"alias": ["userID", "_id"]
+	 * }
+	 * ```
+	 */
+	alias?: string | string[];
+	/**
+	 * This property can be used to use a different attribute name in your internal application as opposed to DynamoDB. This is especially useful if you have a single table design with properties like (`pk` & `sk`) which don't have much human readable meaning. You can use this to map those attribute names to better human readable names that better represent the underlying data. You can also use it for aliases such as mapping `id` to `userID`.
+	 *
+	 * When retrieving data from DynamoDB, the attribute will be renamed to this property name, or the first element of the array if it is an array. If you want to change this behavior look at the `defaultMap` property.
+	 *
+	 * When saving to DynamoDB, the attribute name will always be used.
+	 *
+	 * ```js
+	 * "pk": {
+	 * 	"type": String,
+	 * 	"aliases": "userId"
+	 * }
+	 * "sk": {
+	 * 	"type": String,
+	 * 	"aliases": "orderId"
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * "id": {
+	 * 	"type": String,
+	 * 	"aliases": ["userID", "_id"]
+	 * }
+	 * ```
+	 */
+	aliases?: string | string[];
+	/**
+	 * This property can be set to change the default attribute to be renamed to when retrieving data from DynamoDB. This can either be an element from the `map` array or the attribute name.
+	 *
+	 * By default the attribute name will be used if no `map` property is set. If a `map` property is set, it will use that (or the first element of the array if it is an array).
+	 *
+	 * ```js
+	 * "id": {
+	 * 	"type": String,
+	 * 	"map": "userID",
+	 * 	"defaultMap": "id"
+	 * }
+	 * ```
+	 */
+	defaultMap?: string;
+	/**
+	 * This property can be set to change the default attribute to be renamed to when retrieving data from DynamoDB. This can either be an element from the `map` array or the attribute name.
+	 *
+	 * By default the attribute name will be used if no `map` property is set. If a `map` property is set, it will use that (or the first element of the array if it is an array).
+	 *
+	 * ```js
+	 * "id": {
+	 * 	"type": String,
+	 * 	"map": "userID",
+	 * 	"defaultAlias": "id"
+	 * }
+	 * ```
+	 */
+	defaultAlias?: string;
 }
 export interface SchemaDefinition {
 	[attribute: string]: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
@@ -313,6 +419,9 @@ interface SchemaGetAttributeSettingValue {
 interface SchemaInternalProperties {
 	schemaObject: SchemaDefinition;
 	settings: SchemaSettings;
+	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
+	getMapSettingObject: () => {[key: string]: string};
+	getDefaultMapAttribute: (attribute: string) => string;
 }
 
 export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
@@ -396,9 +505,45 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			}
 		});
 
+		const mapSettingNames = [
+			"map",
+			"alias",
+			"aliases"
+		];
+		const defaultMapSettingNames = [
+			"defaultMap",
+			"defaultAlias"
+		];
 		this.setInternalProperties(internalProperties, {
 			"schemaObject": parsedObject,
-			"settings": parsedSettings
+			"settings": parsedSettings,
+			"getMapSettingValuesForKey": (key: string, settingNames?: string[]): string[] => utils.array_flatten(mapSettingNames.filter((name) => !settingNames || settingNames.includes(name)).map((mapSettingName) => {
+				const result = this.getAttributeSettingValue(mapSettingName, key);
+				if (Array.isArray(result)) {
+					const filteredArray = result.filter((item) => Boolean(item));
+					return filteredArray.length === 0 ? undefined : [...new Set(filteredArray)];
+				}
+				return result;
+			}).filter((v) => Boolean(v))),
+			"getMapSettingObject": (): {[key: string]: string} => {
+				const attributes = this.attributes();
+				return attributes.reduce((obj, attribute) => {
+					const mapSettingValues: string[] = this.getInternalProperties(internalProperties).getMapSettingValuesForKey(attribute);
+					mapSettingValues.forEach((val) => {
+						obj[val] = attribute;
+					});
+
+					return obj;
+				}, {});
+			},
+			"getDefaultMapAttribute": (attribute: string): string => {
+				for (const name of defaultMapSettingNames) {
+					const result = this.getAttributeSettingValue(name, attribute);
+					if (result) {
+						return result;
+					}
+				}
+			}
 		});
 
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
@@ -476,9 +621,48 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 				}
 			}
 		});
+
+		this.attributes().forEach((key) => {
+			const mapSettingValues = mapSettingNames.map((name) => this.getInternalProperties(internalProperties).getMapSettingValuesForKey(key, [name])).filter((v) => Boolean(v) && (!Array.isArray(v) || v.length > 0));
+			if (mapSettingValues.length > 1) {
+				throw new CustomError.InvalidParameter("Only one of map, alias, or aliases can be specified per attribute.");
+			}
+		});
+
+		this.attributes().forEach((key) => {
+			const defaultMapSettingValues = utils.array_flatten(defaultMapSettingNames.map((mapSettingName) => {
+				const result = this.getAttributeSettingValue(mapSettingName, key);
+				if (Array.isArray(result)) {
+					const filteredArray = result.filter((item) => Boolean(item));
+					return filteredArray.length === 0 ? undefined : filteredArray;
+				}
+				return result;
+			}).filter((v) => Boolean(v)));
+			if (defaultMapSettingValues.length > 1) {
+				throw new CustomError.InvalidParameter("Only defaultMap or defaultAlias can be specified per attribute.");
+			}
+			const defaultMapSettingValue = defaultMapSettingValues[0];
+			const defaultMapAttribute = defaultMapSettingNames.find((mapSettingName) => this.getAttributeSettingValue(mapSettingName, key));
+			if (defaultMapSettingValue) {
+				if (!this.getInternalProperties(internalProperties).getMapSettingValuesForKey(key).includes(defaultMapSettingValue) && defaultMapSettingValue !== key) {
+					throw new CustomError.InvalidParameter(`${defaultMapAttribute} must exist in map, alias, or aliases property or be equal to attribute name.`);
+				}
+			}
+		});
+
+		const mapAttributes = this.attributes().map((key) => this.getInternalProperties(internalProperties).getMapSettingValuesForKey(key));
+		const mapAttributesFlattened = utils.array_flatten(mapAttributes);
+		const mapAttributesSet = new Set(mapAttributesFlattened);
+		if (mapAttributesSet.size !== mapAttributesFlattened.length) {
+			throw new CustomError.InvalidParameter("Each properties map, alias, or aliases properties must be unique across the entire schema.");
+		}
+
+		if ([...mapAttributesSet].some((key) => this.attributes().includes(key))) {
+			throw new CustomError.InvalidParameter("Each properties map, alias, or aliases properties must be not be used as a property name in the schema.");
+		}
 	}
 
-	attributes: (object?: ObjectType) => string[];
+	attributes: (object?: ObjectType, settings?: SchemaAttributesMethodSettings) => string[];
 	async getCreateTableAttributeParams (model: Model<Item>): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
 		const hashKey = this.hashKey;
 		const AttributeDefinitions = [
@@ -574,7 +758,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		if (settings.defaults && isValueUndefined || settings.forceDefault && await this.getAttributeSettingValue("forceDefault", key)) {
 			const defaultValueRaw = await this.getAttributeSettingValue("default", key);
 
-			let hasMultipleTypes;
+			let hasMultipleTypes: boolean;
 			try {
 				hasMultipleTypes = Array.isArray(this.getAttributeType(key));
 			} catch (e) {
@@ -772,12 +956,19 @@ Schema.prototype.getSettingValue = function (this: Schema, setting: string): any
 	return this.getInternalProperties(internalProperties).settings[setting];
 };
 
-Schema.prototype.attributes = function (this: Schema, object?: ObjectType): string[] {
+interface SchemaAttributesMethodSettings {
+	includeMaps: boolean;
+}
+Schema.prototype.attributes = function (this: Schema, object?: ObjectType, settings?: SchemaAttributesMethodSettings): string[] {
 	const typePaths = object && this.getTypePaths(object);
 	const main = (object: SchemaDefinition, existingKey = ""): string[] => {
 		return Object.keys(object).reduce((accumulator: string[], key) => {
 			const keyWithExisting = `${existingKey ? `${existingKey}.` : ""}${key}`;
 			accumulator.push(keyWithExisting);
+
+			if (settings?.includeMaps) {
+				accumulator.push(...this.getInternalProperties(internalProperties).getMapSettingValuesForKey(keyWithExisting));
+			}
 
 			let attributeType: string[];
 			try {

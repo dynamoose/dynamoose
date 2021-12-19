@@ -3061,6 +3061,91 @@ describe("Item", () => {
 				"output": {"id": 1}
 			}
 		];
+		const attributeMapTests = [
+			// toDynamo
+			{
+				"input": [{"id": 1}, {"type": "toDynamo"}],
+				"schema": new Schema({"_id": {"type": Number, "map": "id"}}),
+				"output": {}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": "id"}}),
+				"output": {"_id": 1}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"]}}),
+				"output": {"_id": 1}
+			},
+			{
+				"input": [{"userID": 1}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"]}}),
+				"output": {"_id": 1}
+			},
+			{
+				"input": [{"_id": 1, "myData": "test"}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": [new Schema({"_id": Number, "data": {"type": String, "map": "myData"}}), new Schema({"_id": Number, "myData": Number})],
+				"output": {"_id": 1, "data": "test"}
+			},
+			{
+				"input": [{"_id": 1, "id": 2}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"]}}),
+				"error": new CustomError.InvalidParameter("Cannot map attribute id to _id because both are defined")
+			},
+			{
+				"input": [{"_id": 1, "userID": 2}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"]}}),
+				"error": new CustomError.InvalidParameter("Cannot map attribute userID to _id because both are defined")
+			},
+
+			// fromDynamo
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo"}],
+				"schema": new Schema({"_id": {"type": Number, "map": "id"}}),
+				"output": {}
+			},
+			{
+				"input": [{"_id": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": "id"}}),
+				"output": {"id": 1}
+			},
+			{
+				"input": [{"_id": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": "id", "defaultMap": "_id"}}),
+				"output": {"_id": 1}
+			},
+			{
+				"input": [{"_id": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": "id", "defaultAlias": "_id"}}),
+				"output": {"_id": 1}
+			},
+			{
+				"input": [{"_id": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"]}}),
+				"output": {"id": 1}
+			},
+			{
+				"input": [{"_id": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"], "defaultMap": "userID"}}),
+				"output": {"userID": 1}
+			},
+			{
+				"input": [{"_id": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"], "defaultMap": "_id"}}),
+				"output": {"_id": 1}
+			},
+			{
+				"input": [{"id": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"]}}),
+				"output": {}
+			},
+			{
+				"input": [{"userID": 1}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": new Schema({"_id": {"type": Number, "map": ["id", "userID"]}}),
+				"output": {}
+			}
+		];
 		const tests = [
 			...basicTests,
 			...defaultsTests,
@@ -3070,7 +3155,8 @@ describe("Item", () => {
 			...constantTypeTests,
 			...multipleTypesTests,
 			...schemaValidationTests,
-			...schemaModifiersTests
+			...schemaModifiersTests,
+			...attributeMapTests
 		];
 
 		tests.forEach((test) => {
