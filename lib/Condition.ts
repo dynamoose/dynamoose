@@ -283,10 +283,11 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 				internalPropertiesObject.settings.pending.key = object;
 				this.setInternalProperties(internalProperties, internalPropertiesObject);
 			}
+
+			const internalPropertiesObject = this.getInternalProperties(internalProperties);
+			internalPropertiesObject.settings.raw = object;
+			this.setInternalProperties(internalProperties, internalPropertiesObject);
 		}
-		const internalPropertiesObject = this.getInternalProperties(internalProperties);
-		internalPropertiesObject.settings.raw = object;
-		this.setInternalProperties(internalProperties, internalPropertiesObject);
 
 		return this;
 	}
