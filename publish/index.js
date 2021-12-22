@@ -146,7 +146,7 @@ let package = require("../package.json");
 		changelogTemplate += `\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
 	}
 	await fs.writeFile(changelogFilePath, changelogTemplate);
-	await exec(`${results.textEditor} ${changelogFilePath}`);
+	await exec(`${results.textEditor.trim()} ${changelogFilePath.trim()}`);
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
