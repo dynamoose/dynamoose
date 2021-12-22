@@ -264,7 +264,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		}).sort().join(", ");
 	}
 
-	if (object.FilterExpression) {
+	if (object.FilterExpression && Array.isArray(object.FilterExpression)) {
 		object.FilterExpression = utils.dynamoose.convertConditionArrayRequestObjectToString(object.FilterExpression);
 	}
 	if (object.FilterExpression === "") {
