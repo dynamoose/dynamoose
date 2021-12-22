@@ -247,7 +247,7 @@ DocumentRetriever.prototype.getRequest = async function (this: DocumentRetriever
 		}).sort().join(", ");
 	}
 
-	if (object.FilterExpression) {
+	if (object.FilterExpression && Array.isArray(object.FilterExpression)) {
 		object.FilterExpression = utils.dynamoose.convertConditionArrayRequestObjectToString(object.FilterExpression);
 	}
 	if (object.FilterExpression === "") {
