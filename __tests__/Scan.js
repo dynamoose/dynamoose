@@ -94,7 +94,7 @@ describe("Scan", () => {
 							"#id": "id"
 						}
 					});
-					expect((await callType.func(Model.scan(condition).exec).bind(Model.scan(condition))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+					expect((await callType.func(Model.scan(condition).exec).bind(Model.scan(condition))()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie"}]);
 				});
 
 				it("Should return undefined for expired object", async () => {

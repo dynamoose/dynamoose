@@ -94,7 +94,7 @@ describe("Query", () => {
 							"#name": "name"
 						}
 					});
-					expect((await callType.func(Model.query(condition).using("name-global-index").exec).bind(Model.query(condition).using("name-global-index"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+					expect((await callType.func(Model.query(condition).using("name-global-index").exec).bind(Model.query(condition).using("name-global-index"))()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie"}]);
 				});
 
 				it("Should return undefined for expired object", async () => {
