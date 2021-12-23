@@ -84,6 +84,20 @@ describe("Scan", () => {
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
+				it("Should return correct result when passing in raw condition", async () => {
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					const condition = new dynamoose.Condition({
+						"FilterExpression": "id = :id",
+						"ExpressionAttributeValues": {
+							":id": {"N": "1"}
+						},
+						"ExpressionAttributeNames": {
+							"#id": "id"
+						}
+					});
+					expect((await callType.func(Model.scan(condition).exec).bind(Model.scan(condition))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
 				it("Should return undefined for expired object", async () => {
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "ttl": {"N": "1"}}]});
 					Model = dynamoose.model("Cat", {"id": Number}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});

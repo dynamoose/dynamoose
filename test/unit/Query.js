@@ -84,6 +84,20 @@ describe("Query", () => {
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
 				});
 
+				it("Should return correct result when passing in raw condition", async () => {
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					const condition = new dynamoose.Condition({
+						"FilterExpression": "name = :name",
+						"ExpressionAttributeValues": {
+							":name": {"S": "Charlie"}
+						},
+						"ExpressionAttributeNames": {
+							"#name": "name"
+						}
+					});
+					expect((await callType.func(Model.query(condition).using("name-global-index").exec).bind(Model.query(condition).using("name-global-index"))()).map((item) => ({...item}))).to.eql([{"id": 1, "name": "Charlie"}]);
+				});
+
 				it("Should return undefined for expired object", async () => {
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "ttl": {"N": "1"}}]});
 					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"global": true}}}, {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});

@@ -152,8 +152,9 @@ export class Condition {
 			} else if (object) {
 				this.settings.pending.key = object;
 			}
+
+			this.settings.raw = object;
 		}
-		this.settings.raw = object;
 
 		return this;
 	}
