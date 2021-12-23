@@ -171,7 +171,7 @@ let package = require("../package.json");
 		"repo": "dynamoose",
 		"title": versionFriendlyTitle,
 		"body": versionChangelog,
-		labels,
+		"labels": labels.join(","),
 		"head": branch,
 		"base": results.branch
 	})).data;
