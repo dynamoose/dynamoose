@@ -12,7 +12,7 @@ Dynamoose has JSDoc documentation for all exposed functions and properties. This
 
 JSDoc Beta Support means that documentation might be wrong or missing. In the event you notice this, please submit a pull request or issue.
 
-### Does TypeScript Support being in beta mean I shouldn't use it?
+### Does JSDoc Support being in beta mean I shouldn't use it?
 
 **NO**. We recommend using and testing JSDoc support despite it being in beta. It just means that you should be aware that documentation might be incorrect or incomplete. If you notice any problems please submit a pull request or issue.
 
