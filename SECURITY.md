@@ -16,6 +16,7 @@ Security vulnerabilities will only be back-ported to previous minor versions in 
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 3.x.x   | :white_check_mark: |
 | 2.x.x   | :white_check_mark: |
 | 1.x.x   | :x:                |
 
