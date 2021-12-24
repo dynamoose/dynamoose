@@ -63,7 +63,14 @@ let package = require("../package.json");
 				"message": "What is the command line bin to launch your favorite text editor? (ex. `code`, `atom`, `nano`, etc.)",
 				"default": gitCoreEditor.stdout
 				// "validate": // TODO: ensure the command line thing exists and is valid (maybe by using `which` and checking to see if the output of that exists and is not `_____ not found`)
-			},
+			}
+		])
+	};
+	process.stdin.resume();
+	console.log(retrieveInformation(results.version));
+	results = {
+		...results,
+		...await inquirer.prompt([
 			{
 				"name": "confirm",
 				"type": "confirm",
@@ -72,7 +79,6 @@ let package = require("../package.json");
 			}
 		])
 	};
-	process.stdin.resume();
 	if (!results.confirm) {
 		console.error("No action has been taken.");
 		console.error("Exiting.\n");
