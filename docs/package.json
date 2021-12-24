@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "start": "docusaurus start",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle"
+    "build": "npm run prebuild && docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "prebuild": "node process.js"
   },
   "dependencies": {
     "@docusaurus/core": "^2.0.0-beta.9",
