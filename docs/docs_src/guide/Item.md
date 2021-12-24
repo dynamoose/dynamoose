@@ -29,7 +29,7 @@ You can also pass a settings object in as the first parameter. The following opt
 |---|---|---|---|
 | overwrite | boolean | true | If an existing item with the same hash key should be overwritten in the database. You can set this to false to not overwrite an existing item with the same hash key. |
 | return | string | `item` | If the function should return the `item` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB. |
-| condition | [`dynamoose.Condition`](Condition) | `null` | This is an optional instance of a Condition for the save. |
+| condition | [`dynamoose.Condition`](/guide/Condition) | `null` | This is an optional instance of a Condition for the save. |
 
 Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 
@@ -142,33 +142,8 @@ myUser.serialize(); // {"id": 1, "name": "Bob"}
 
 ## item.original()
 
-This function returns the original item that was received from DynamoDB. This function will return a JSON object that represents the original item. In the event no item has been retrieved from DynamoDB `null` will be returned.
-
-```js
-const user = await User.get(1);
-console.log(user); // {"id": 1, "name": "Bob"}
-user.name = "Tim";
-
-console.log(user); // {"id": 1, "name": "Tim"}
-console.log(user.original()); // {"id": 1, "name": "Bob"}
-```
+dyno_jsdoc_dist/Item.js|item.original
 
 ## item.toJSON()
 
-This function returns a JSON object representation of the item. This is most commonly used when comparing a item to an object you receive elsewhere without worrying about prototypes.
-
-```js
-const user = new User({"id": 1, "name": "Tim"});
-
-console.log(user); // Item {"id": 1, "name": "Tim"}
-console.log(user.toJSON()); // {"id": 1, "name": "Tim"}
-```
-
-Due to the fact that a item instance is based on an object it is rare that you will have to use this function since you can access all the properties of the item directly. For example, both of the results will yield the same output.
-
-```js
-const user = new User({"id": 1, "name": "Tim"});
-
-console.log(user.id); // 1
-console.log(user.toJSON().id); // 1
-```
+dyno_jsdoc_dist/Item.js|item.toJSON
