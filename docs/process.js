@@ -1,6 +1,7 @@
 const fs = require("fs").promises;
 const path = require("path");
 const mkdirp = require("mkdirp");
+const jsdoc2md = require("jsdoc-to-markdown");
 
 (async () => {
 	const docsSrcPath = path.join(__dirname, "docs_src");
@@ -20,9 +21,36 @@ const mkdirp = require("mkdirp");
 				await mkdirp(filePath.replace("docs_src", "docs"));
 				await main(filePath);
 			} else {
-				// Copy file
 				const fileName = filePath.replace("docs_src", "docs");
-				await fs.copyFile(filePath, fileName);
+				let fileContents = await fs.readFile(filePath, "utf8");
+				const regex = /^dyno_jsdoc_([^|]*)\|(.+)$/gmu;
+
+				let match;
+
+				do {
+					match = regex.exec(fileContents);
+					if (match) {
+						const [full, name, contents] = match;
+						const md = await jsdoc2md.render({
+							"files": [path.join(__dirname, "..", name)]
+						});
+						const block = md.split("###").map((val) => `###${val}`).find((val) => {
+							const lines = val.split("\n");
+							return lines[0].includes(contents);
+						});
+						if (!block) {
+							throw new Error(`Could not find block for ${contents}`);
+						}
+						const ignorePrefixes = ["Kind", "Returns"].map((val) => `**${val}**:`);
+						const blockFormatted = block.split("\n").map((val) => val.trim()).filter((val, index) => {
+							return index !== 0 && !ignorePrefixes.some((prefix) => val.startsWith(prefix)) && !/<a name=".*"><\/a>/gmu.test(val);
+						}).join("\n").trim();
+
+						fileContents = fileContents.replace(full, blockFormatted);
+					}
+				} while (match);
+
+				await fs.writeFile(fileName, fileContents);
 			}
 		}
 	}
