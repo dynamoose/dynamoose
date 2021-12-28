@@ -128,6 +128,11 @@ interface ConditionInternalProperties {
 }
 
 export class Condition extends InternalPropertiesClass<ConditionInternalProperties> {
+	/**
+	 * TODO
+	 * @param object
+	 * @returns Condition
+	 */
 	constructor (object?: ConditionInitializer) {
 		super();
 
@@ -283,16 +288,21 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 				internalPropertiesObject.settings.pending.key = object;
 				this.setInternalProperties(internalProperties, internalPropertiesObject);
 			}
+
+			const internalPropertiesObject = this.getInternalProperties(internalProperties);
+			internalPropertiesObject.settings.raw = object;
+			this.setInternalProperties(internalProperties, internalPropertiesObject);
 		}
-		const internalPropertiesObject = this.getInternalProperties(internalProperties);
-		internalPropertiesObject.settings.raw = object;
-		this.setInternalProperties(internalProperties, internalPropertiesObject);
 
 		return this;
 	}
 
 	/**
 	 * This function specifies an `OR` join between two conditions, as opposed to the default `AND`. The condition will return `true` if either condition is met.
+	 *
+	 * ```js
+	 * new dynamoose.Condition().where("id").eq(1).or().where("name").eq("Bob"); // id = 1 OR name = Bob
+	 * ```
 	 * @returns Condition
 	 */
 	or (): Condition {
@@ -301,6 +311,12 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 	}
 	/**
 	 * This function has no behavior and is only used to increase readability of your conditional. This function can be omitted with no behavior change to your code.
+	 *
+	 * ```js
+	 * // The two condition objects below are identical
+	 * new dynamoose.Condition().where("id").eq(1).and().where("name").eq("Bob");
+	 * new dynamoose.Condition().where("id").eq(1).where("name").eq("Bob");
+	 * ```
 	 * @returns Condition
 	 */
 	and (): Condition {
@@ -347,12 +363,12 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 	 * ```
 	 *
 	 * `condition.group` is an alias to this method.
-	 * @param value A new Condition instance or a function. If a function is passed, it will be called with one argument which is a condition instance that you can return to specify the group.
+	 * @param condition A new Condition instance or a function. If a function is passed, it will be called with one argument which is a condition instance that you can return to specify the group.
 	 * @returns Condition
 	 */
-	parenthesis (value: Condition | ConditionFunction): Condition {
-		value = typeof value === "function" ? value(new Condition()) : value;
-		const conditions = value.getInternalProperties(internalProperties).settings.conditions;
+	parenthesis (condition: Condition | ConditionFunction): Condition {
+		condition = typeof condition === "function" ? condition(new Condition()) : condition;
+		const conditions = condition.getInternalProperties(internalProperties).settings.conditions;
 		this.getInternalProperties(internalProperties).settings.conditions.push(conditions as any);
 		return this;
 	}
@@ -366,11 +382,11 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 	 * ```
 	 *
 	 * `condition.parenthesis` is an alias to this method.
-	 * @param value A new Condition instance or a function. If a function is passed, it will be called with one argument which is a condition instance that you can return to specify the group.
+	 * @param condition A new Condition instance or a function. If a function is passed, it will be called with one argument which is a condition instance that you can return to specify the group.
 	 * @returns Condition
 	 */
-	group (value: Condition | ConditionFunction): Condition {
-		return this.parenthesis(value);
+	group (condition: Condition | ConditionFunction): Condition {
+		return this.parenthesis(condition);
 	}
 }
 

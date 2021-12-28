@@ -13,6 +13,10 @@ If you pass an object into `Model.query` the object for each key should contain 
 
 `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.
 
+:::note
+If you use a raw DynamoDB condition object you must specify the index name using [`query.using(index)`](#queryusingindex). This only applies if you pass in a raw condition object (not using the Dynamoose Condition helper methods).
+:::
+
 ## Conditionals
 
 On top of all of the methods listed below, every `Query` instance has all of the methods that a `Condition` instance has. This means you can use methods like `where`, `filter`, `eq`, `lt` and more.

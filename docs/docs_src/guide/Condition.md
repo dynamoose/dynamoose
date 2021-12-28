@@ -37,57 +37,20 @@ new dynamoose.Condition({
 
 ## condition.and()
 
-This function has no behavior and is only used to increase readability of your conditional. This function can be omitted with no behavior change to your code.
+dyno_jsdoc_dist/Condition.js|condition.and()
 
-```js
-// The two condition objects below are identical
-new dynamoose.Condition().where("id").eq(1).and().where("name").eq("Bob");
-new dynamoose.Condition().where("id").eq(1).where("name").eq("Bob");
-```
 
 ## condition.or()
 
-This function specifies an `OR` join between two conditions, as opposed to the default `AND`. The condition will return `true` if either condition is met.
-
-```js
-new dynamoose.Condition().where("id").eq(1).or().where("name").eq("Bob"); // id = 1 OR name = Bob
-```
+dyno_jsdoc_dist/Condition.js|condition.or()
 
 ## condition.not()
 
-This function sets the condition to use the opposite comparison type for the given condition. You can find the list opposite comparison types below.
-
-| Original | Opposite |
-|---|---|
-| equals (EQ) | not equals (NE) |
-| less than or equals (LE) | greater than (GT) |
-| less than (LT) | greater than or equals (GE) |
-| null (NULL) | not null (NOT_NULL) |
-| contains (CONTAINS) | not contains (NOT_CONTAINS) |
-| exists (EXISTS) | not exists (NOT_EXISTS) |
-
-The following comparisons do not have an opposite comparison type, and will throw an error if you try to use condition.not() with them.
-
-| Original |
-|---|
-| in (IN) |
-| between (BETWEEN) |
-| begins with (BEGINS_WITH) |
-
-```js
-new dynamoose.Condition().where("id").not().eq(1); // Retrieve all objects where id does NOT equal 1
-new dynamoose.Condition().where("id").not().between(1, 2); // Will throw error since between does not have an opposite comparison type
-```
+dyno_jsdoc_dist/Condition.js|condition.not()
 
 ## condition.parenthesis(condition)
 
-This function takes in a `Condition` instance as a parameter and uses that as a group. This lets you specify the priority of the conditional. You can also pass a function into the `condition` parameter and Dynamoose will call your function with one argument which is a condition instance that you can return to specify the group.
-
-```js
-// The two condition objects below are identical
-new dynamoose.Condition().where("id").eq(1).and().parenthesis(new dynamoose.Condition().where("name").eq("Bob")); // id = 1 AND (name = Bob)
-new dynamoose.Condition().where("id").eq(1).and().parenthesis((condition) => condition.where("name").eq("Bob")); // id = 1 AND (name = Bob)
-```
+dyno_jsdoc_dist/Condition.js|condition.parenthesis
 
 ## condition.group(condition)
 

@@ -2,7 +2,7 @@ const inquirer = require("inquirer");
 const fs = require("fs").promises;
 const git = require("simple-git/promise")();
 const openurl = require("openurl");
-const utils = require("../dist/utils");
+const utils = require("../dist/utils").default;
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const retrieveInformation = require("./information/retrieve");
@@ -63,7 +63,14 @@ let package = require("../package.json");
 				"message": "What is the command line bin to launch your favorite text editor? (ex. `code`, `atom`, `nano`, etc.)",
 				"default": gitCoreEditor.stdout
 				// "validate": // TODO: ensure the command line thing exists and is valid (maybe by using `which` and checking to see if the output of that exists and is not `_____ not found`)
-			},
+			}
+		])
+	};
+	process.stdin.resume();
+	console.log(retrieveInformation(results.version));
+	results = {
+		...results,
+		...await inquirer.prompt([
 			{
 				"name": "confirm",
 				"type": "confirm",
@@ -72,7 +79,6 @@ let package = require("../package.json");
 			}
 		])
 	};
-	process.stdin.resume();
 	if (!results.confirm) {
 		console.error("No action has been taken.");
 		console.error("Exiting.\n");
@@ -146,7 +152,7 @@ let package = require("../package.json");
 		changelogTemplate += `\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
 	}
 	await fs.writeFile(changelogFilePath, changelogTemplate);
-	await exec(`${results.textEditor} ${changelogFilePath}`);
+	await exec(`${results.textEditor.trim()} ${changelogFilePath.trim()}`);
 	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
 	await keypress();
 	pendingChangelogSpinner.succeed("Finished changelog");
@@ -171,7 +177,7 @@ let package = require("../package.json");
 		"repo": "dynamoose",
 		"title": versionFriendlyTitle,
 		"body": versionChangelog,
-		labels,
+		"labels": labels.join(","),
 		"head": branch,
 		"base": results.branch
 	})).data;

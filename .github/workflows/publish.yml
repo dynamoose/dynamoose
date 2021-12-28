@@ -58,6 +58,7 @@ jobs:
         with:
           node-version: lts/*
       - run: npm run site:install
+      - run: node docs/process.js
       - run: npm run site:build
       - uses: jakejarvis/s3-sync-action@v0.5.1
         with:
