@@ -38,6 +38,12 @@ interface ItemInternalProperties {
 
 // Item represents an item in a Model that is either pending (not saved) or saved
 export class Item extends InternalPropertiesClass<ItemInternalProperties> {
+	/**
+	 * Create a new item.
+	 * @param model Internal property. Not used publicly.
+	 * @param object The object for the item.
+	 * @param settings The settings for the item.
+	 */
 	constructor (model: Model<Item>, object?: AttributeMap | ObjectType, settings?: ItemSettings) {
 		super();
 
