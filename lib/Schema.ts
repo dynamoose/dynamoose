@@ -316,6 +316,11 @@ interface SchemaInternalProperties {
 }
 
 export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
+	/**
+	 * TODO
+	 * @param object
+	 * @param settings
+	 */
 	constructor (object: SchemaDefinition, settings: SchemaSettings = {}) {
 		super();
 
@@ -561,9 +566,29 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		"findTypeForValue": (...args): DynamoDBTypeResult | DynamoDBSetTypeResult => attributeTypes.find((checkType) => (checkType.isOfType as any)(...args))
 	};
 
+	/**
+	 * This property returns the property name of your schema's hash key.
+	 *
+	 * ```js
+	 * const schema = new dynamoose.Schema({"id": String});
+	 * console.log(schema.hashKey); // "id"
+	 * ```
+	 */
 	get hashKey (): string {
 		return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).hashKey) || Object.keys(this.getInternalProperties(internalProperties).schemaObject)[0];
 	}
+	/**
+	 * This property returns the property name of your schema's range key. It will return undefined if a range key does not exist for your schema.
+	 * ```js
+	 * const schema = new dynamoose.Schema({"id": String, "type": {"type": String, "rangeKey": true}});
+	 * console.log(schema.rangeKey); // "type"
+	 * ```
+	 *
+	 * ```js
+	 * const schema = new dynamoose.Schema({"id": String});
+	 * console.log(schema.rangeKey); // undefined
+	 * ```
+	 */
 	get rangeKey (): string | undefined {
 		return Object.keys(this.getInternalProperties(internalProperties).schemaObject).find((key) => (this.getInternalProperties(internalProperties).schemaObject[key] as AttributeDefinition).rangeKey);
 	}
