@@ -354,17 +354,7 @@ You can also pass in async functions or a function that returns a promise to the
 
 ### forceDefault: boolean
 
-You can set this property to always use the `default` value, even if a value is already set. This can be used for data that will be used as sort or secondary indexes. The default for this property is false.
-
-```js
-{
-	"age": {
-		"type": Number,
-		"default": 5,
-		"forceDefault": true
-	}
-}
-```
+dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.forceDefault
 
 ### validate: value | RegExp | function | async function
 
