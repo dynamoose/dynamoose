@@ -6,7 +6,7 @@
     "start": "docusaurus start",
     "build": "npm run prebuild && docusaurus build",
     "swizzle": "docusaurus swizzle",
-    "prebuild": "node process.js"
+    "prebuild": "cd .. && npm run build && cd docs && node process.js"
   },
   "dependencies": {
     "@docusaurus/core": "^2.0.0-beta.9",
