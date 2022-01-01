@@ -286,9 +286,59 @@ interface AttributeDefinitionTypeSettings {
 	value?: string | boolean | number;
 }
 interface AttributeDefinition {
+	/**
+	 * The type attribute can either be a type (ex. `Object`, `Number`, etc.) or an object that has additional information for the type. In the event you set it as an object you must pass in a `value` for the type, and can optionally pass in a `settings` object.
+	 *
+	 * ```js
+	 * {
+	 * 	"address": {
+	 * 		"type": Object
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"deletedAt": {
+	 * 		"type": {
+	 * 			"value": Date,
+	 * 			"settings": {
+	 * 				"storage": "seconds" // Default: milliseconds (as shown above)
+	 * 			}
+	 * 		}
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"data": {
+	 * 		"type": {
+	 * 			"value": "Constant",
+	 * 			"settings": {
+	 * 				"value": "Hello World" // Any `data` attribute must equal `Hello World` now.
+	 * 			}
+	 * 		}
+	 * 	}
+	 * }
+	 * ```
+	 */
 	type: AttributeType | AttributeType[] | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType | AttributeType[]};
 	schema?: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[] | SchemaDefinition | SchemaDefinition[];
 	default?: ValueType | (() => ValueType);
+	/**
+	 * You can set this property to always use the `default` value, even if a value is already set. This can be used for data that will be used as sort or secondary indexes. The default for this property is false.
+	 *
+	 * ```js
+	 * {
+	 * 	"age": {
+	 * 		"type": Number,
+	 * 		"default": 5,
+	 * 		"forceDefault": true
+	 * 	}
+	 * }
+	 * ```
+	 */
 	forceDefault?: boolean;
 	validate?: ValueType | RegExp | ((value: ValueType) => boolean);
 	required?: boolean;

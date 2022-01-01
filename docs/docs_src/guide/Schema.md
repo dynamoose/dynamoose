@@ -233,41 +233,7 @@ const populatedUser = await user.populate(); // {"id": 2, "name": "Bob", "parent
 
 ### type: type | object
 
-The type attribute can either be a type (ex. `Object`, `Number`, etc.) or an object that has additional information for the type. In the event you set it as an object you must pass in a `value` for the type, and can optionally pass in a `settings` object.
-
-```js
-{
-	"address": {
-		"type": Object
-	}
-}
-```
-
-```js
-{
-	"deletedAt": {
-		"type": {
-			"value": Date,
-			"settings": {
-				"storage": "seconds" // Default: milliseconds (as shown above)
-			}
-		}
-	}
-}
-```
-
-```js
-{
-	"data": {
-		"type": {
-			"value": "Constant",
-			"settings": {
-				"value": "Hello World" // Any `data` attribute must equal `Hello World` now.
-			}
-		}
-	}
-}
-```
+dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.type
 
 ### schema: object | array
 
@@ -388,17 +354,7 @@ You can also pass in async functions or a function that returns a promise to the
 
 ### forceDefault: boolean
 
-You can set this property to always use the `default` value, even if a value is already set. This can be used for data that will be used as sort or secondary indexes. The default for this property is false.
-
-```js
-{
-	"age": {
-		"type": Number,
-		"default": 5,
-		"forceDefault": true
-	}
-}
-```
+dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.forceDefault
 
 ### validate: value | RegExp | function | async function
 
