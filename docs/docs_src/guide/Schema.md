@@ -187,29 +187,7 @@ dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.rangeKey
 
 ### map: string | [string]
 
-This property can be used to use a different attribute name in your internal application as opposed to DynamoDB. This is especially useful if you have a single table design with properties like (`pk` & `sk`) which don't have much human readable meaning. You can use this to map those attribute names to better human readable names that better represent the underlying data. You can also use it for aliases such as mapping `id` to `userID`.
-
-When retrieving data from DynamoDB, the attribute will be renamed to this property name, or the first element of the array if it is an array. If you want to change this behavior look at the [`defaultMap`](#defaultMap) property.
-
-When saving to DynamoDB, the attribute name will always be used.
-
-```js
-"pk": {
-	"type": String,
-	"map": "userId"
-}
-"sk": {
-	"type": String,
-	"map": "orderId"
-}
-```
-
-```js
-"id": {
-	"type": String,
-	"map": ["userID", "_id"]
-}
-```
+dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.map
 
 ### alias: string | [string]
 
@@ -221,17 +199,7 @@ This property is the same as [`map`](#map-string--string) and used as an alias f
 
 ### defaultMap: string
 
-This property can be set to change the default attribute to be renamed to when retrieving data from DynamoDB. This can either be an element from the [`map`](#map-string--string) array or the attribute name.
-
-By default the attribute name will be used if no `map` property is set. If a `map` property is set, it will use that (or the first element of the array if it is an array).
-
-```js
-"id": {
-	"type": String,
-	"map": "userID",
-	"defaultMap": "id"
-}
-```
+dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.defaultMap
 
 ### defaultAlias: string
 
