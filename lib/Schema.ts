@@ -324,7 +324,122 @@ interface AttributeDefinition {
 	 * ```
 	 */
 	type: AttributeType | AttributeType[] | {value: DateConstructor; settings?: AttributeDefinitionTypeSettings} | {value: AttributeType | AttributeType[]};
+	/**
+	 * This property is only used for the `Object` or `Array` attribute types. It is used to define the schema for the underlying nested type. For `Array` attribute types, this value must be an `Array` with one element defining the schema. This element for `Array` attribute types can either be another raw Dynamoose type (ex. `String`), or an object defining a more detailed schema for the `Array` elements. For `Object` attribute types this value must be an object defining the schema. Some examples of this property in action can be found below.
+	 *
+	 * ```js
+	 * {
+	 * 	"address": {
+	 * 		"type": Object,
+	 * 		"schema": {
+	 * 			"zip": Number,
+	 * 			"country": {
+	 * 				"type": String,
+	 * 				"required": true
+	 * 			}
+	 * 		}
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"friends": {
+	 * 		"type": Array,
+	 * 		"schema": [String]
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"friends": {
+	 * 		"type": Array,
+	 * 		"schema": [{
+	 * 			"type": Object,
+	 * 			"schema": {
+	 * 				"zip": Number,
+	 * 				"country": {
+	 * 					"type": String,
+	 * 					"required": true
+	 * 				}
+	 * 			}
+	 * 		}]
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * You can also define an array attribute that accepts more than one data type. The following example will allow the `friends` attribute to be an array of strings, or an array of numbers, but the elements in the array must all be strings or must all be numbers.
+	 *
+	 * ```js
+	 * {
+	 * 	"friends": {
+	 * 		"type": Array,
+	 * 		"schema": [
+	 * 			{
+	 * 				"type": Array,
+	 * 				"schema": [String]
+	 * 			},
+	 * 			{
+	 * 				"type": Array,
+	 * 				"schema": [Number]
+	 * 			}
+	 * 		]
+	 * 	}
+	 * }
+	 * ```
+	 */
 	schema?: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[] | SchemaDefinition | SchemaDefinition[];
+	/**
+	 * You can set a default value for an attribute that will be applied upon save if the given attribute value is `null` or `undefined`. The value for the default property can either be a value or a function that will be executed when needed that should return the default value. By default there is no default value for attributes.
+	 *
+	 * Default values will only be applied if the parent object exists. This means for values where you apply a `default` value to a nested attribute, it will only be applied if the parent object exists. If you do not want this behavior, consider setting a `default` value for the parent object to an empty object (`{}`) or an empty array (`[]`).
+	 *
+	 * ```js
+	 * {
+	 * 	"age": {
+	 * 		"type": Number,
+	 * 		"default": 5
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"age": {
+	 * 		"type": Number,
+	 * 		"default": () => 5
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * You can also pass in async functions or a function that returns a promise to the default property and Dynamoose will take care of waiting for the promise to resolve before saving the object.
+	 *
+	 * ```js
+	 * {
+	 * 	"age": {
+	 * 		"type": Number,
+	 * 		"default": async () => {
+	 * 			const networkResponse = await axios("https://myurl.com/config.json").data;
+	 * 			return networkResponse.defaults.age;
+	 * 		}
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"age": {
+	 * 		"type": Number,
+	 * 		"default": () => {
+	 * 			return new Promise((resolve) => {
+	 * 				setTimeout(() => resolve(5), 1000);
+	 * 			});
+	 * 		}
+	 * 	}
+	 * }
+	 * ```
+	 */
 	default?: ValueType | (() => ValueType);
 	/**
 	 * You can set this property to always use the `default` value, even if a value is already set. This can be used for data that will be used as sort or secondary indexes. The default for this property is false.
@@ -340,13 +455,214 @@ interface AttributeDefinition {
 	 * ```
 	 */
 	forceDefault?: boolean;
+	/**
+	 * You can set a validation on an attribute to ensure the value passes a given validation before saving the item. In the event you set this to be a function or async function, Dynamoose will pass in the value for you to validate as the parameter to your function. Validation will only be run if the item exists in the item. If you'd like to force validation to be run every time (even if the attribute doesn't exist in the item) you can enable `required`.
+	 *
+	 * ```js
+	 * {
+	 * 	"age": {
+	 * 		"type": Number,
+	 * 		"validate": 5 // Any object that is saved must have the `age` property === to 5
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"id": {
+	 * 		"type": String,
+	 * 		"validate": /ID_.+/gu // Any object that is saved must have the `id` property start with `ID_` and have at least 1 character after it
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"age": {
+	 * 		"type": String,
+	 * 		"validate": (val) => val > 0 && val < 100 // Any object that is saved must have the `age` property be greater than 0 and less than 100
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"email": {
+	 * 		"type": String,
+	 * 		"validate": async (val) => {
+	 * 			const networkRequest = await axios(`https://emailvalidator.com/${val}`);
+	 * 			return networkRequest.data.isValid;
+	 * 		} // Any object that is saved will call this function and run the network request with `val` equal to the value set for the `email` property, and only allow the item to be saved if the `isValid` property in the response is true
+	 * 	}
+	 * }
+	 * ```
+	 */
 	validate?: ValueType | RegExp | ((value: ValueType) => boolean);
+	/**
+	 * You can set an attribute to be required when saving items to DynamoDB. By default this setting is `false`.
+	 *
+	 * In the event the parent object is undefined and `required` is set to `false` on that parent attribute, the required check will not be run on child attributes.
+	 *
+	 * ```js
+	 * {
+	 * 	"email": {
+	 * 		"type": String,
+	 * 		"required": true
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"data": {
+	 * 		"type": Object,
+	 * 		"schema": {
+	 * 			"name": {
+	 * 				"type": String,
+	 * 				"required": true // Required will only be checked if `data` exists and is not undefined
+	 * 			}
+	 * 		}
+	 * 		"required": false
+	 * 	}
+	 * }
+	 * ```
+	 */
 	required?: boolean;
+	/**
+	 * You can set an attribute to have an enum array, which means it must match one of the values specified in the enum array. By default this setting is undefined and not set to anything.
+	 *
+	 * This property is not a replacement for `required`. If the value is undefined or null, the enum will not be checked. If you want to require the property and also have an `enum` you must use both `enum` & `required`.
+	 *
+	 * ```js
+	 * {
+	 * 	"name": {
+	 * 		"type": String,
+	 * 		"enum": ["Tom", "Tim"] // `name` must always equal "Tom" or "Tim"
+	 * 	}
+	 * }
+	 * ```
+	 */
 	enum?: ValueType[];
+	/**
+	 * You can use a get function on an attribute to be run whenever retrieving a item from DynamoDB. This function will only be run if the item exists in the item. Dynamoose will pass the DynamoDB value into this function and you must return the new value that you want Dynamoose to return to the application.
+	 *
+	 * ```js
+	 * {
+	 * 	"id": {
+	 * 		"type": String,
+	 * 		"get": (value) => `applicationid-${value}` // This will prepend `applicationid-` to all values for this attribute when returning from the database
+	 * 	}
+	 * }
+	 * ```
+	 */
 	get?: (value: ValueType) => ValueType;
+	/**
+	 * You can use a set function on an attribute to be run whenever saving a item to DynamoDB. It will also be used when retrieving an item based on this attribute (ie. `get`, `query`, `update`, etc). This function will only be run if the attribute exists in the item. Dynamoose will pass the value you provide into this function and you must return the new value that you want Dynamoose to save to DynamoDB.
+	 *
+	 * ```js
+	 * {
+	 * 	"name": {
+	 * 		"type": String,
+	 * 		"set": (value) => `${value.charAt(0).toUpperCase()}${value.slice(1)}` // Capitalize first letter of name when saving to database
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * Unlike `get`, this method will additionally pass in the original value as the second parameter (if available). Internally Dynamoose uses the [`item.original()`](/guide/Item#itemoriginal) method to access the original value. This means that using [`Model.batchPut`](/guide/Model#modelbatchputitems-settings-callback), [`Model.update`](/guide/Model#modelupdatekey-updateobj-settings-callback) or any other item save method that does not have access to [`item.original()`](/guide/Item#itemoriginal) this second parameter will be `undefined`.
+	 *
+	 * ```js
+	 * {
+	 * 	"name": {
+	 * 		"type": String,
+	 * 		"set": (newValue, oldValue) => `${newValue.charAt(0).toUpperCase()}${newValue.slice(1)}-${oldValue.charAt(0).toUpperCase()}${oldValue.slice(1)}` // Prepend the newValue to the oldValue (split by a `-`) and capitalize first letter of each when saving to database
+	 * 	}
+	 * }
+	 * ```
+	 */
 	set?: (value: ValueType) => ValueType;
+	/**
+	 * Indexes on your DynamoDB tables must be defined in your Dynamoose schema. If you have the update option set to true on your model settings, and a Dynamoose schema index does not already exist on the DynamoDB table, it will be created on model initialization. Similarly, indexes on your DynamoDB table that do not exist in your Dynamoose schema will be deleted.
+	 *
+	 * If you pass in an array for the value of this setting it must be an array of index objects. By default no indexes are specified on the attribute.
+	 *
+	 * Your index object can contain the following properties:
+	 *
+	 * | Name | Type | Default | Notes |
+	 * |---|---|---|---|
+	 * | name | string | `${attribute}${type == "global" ? "GlobalIndex" : "LocalIndex"}` | The name of the index. |
+	 * | type | "global" \| "local" | "global" | If the index should be a global index or local index. Attribute will be the hashKey for the index. |
+	 * | rangeKey | string | undefined | The range key attribute name for a global secondary index. |
+	 * | project | boolean \| [string] | true | Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. |
+	 * | throughput | number \| {read: number, write: number} | undefined | Sets the throughput for the global secondary index. |
+	 *
+	 *
+	 * If you set `index` to `true`, it will create an index with all of the default settings.
+	 *
+	 * ```js
+	 * {
+	 * 	"id": {
+	 * 		"hashKey": true,
+	 * 		"type": String,
+	 * 	},
+	 * 	"email": {
+	 * 		"type": String,
+	 * 		"index": {
+	 * 			"name": "emailIndex",
+	 * 			"global": true
+	 * 		} // creates a global secondary index with the name `emailIndex` and hashKey `email`
+	 * 	}
+	 * }
+	 * ```
+	 *
+	 * ```js
+	 * {
+	 * 	"id": {
+	 * 		"hashKey": true,
+	 * 		"type": String,
+	 * 		"index": {
+	 * 			"name": "emailIndex",
+	 * 			"rangeKey": "email",
+	 * 			"throughput": {"read": 5, "write": 10}
+	 * 		} // creates a local secondary index with the name `emailIndex`, hashKey `id`, rangeKey `email`
+	 * 	},
+	 * 	"email": {
+	 * 		"type": String
+	 * 	}
+	 * }
+	 * ```
+	 */
 	index?: boolean | IndexDefinition | IndexDefinition[];
+	/**
+	 * You can set this to true to overwrite what the `hashKey` for the Model will be. By default the `hashKey` will be the first key in the Schema object.
+	 *
+	 * `hashKey` is commonly called a `partition key` in the AWS documentation.
+	 *
+	 * ```js
+	 * {
+	 * 	"id": String,
+	 * 	"key": {
+	 * 		"type": String,
+	 * 		"hashKey": true
+	 * 	}
+	 * }
+	 * ```
+	 */
 	hashKey?: boolean;
+	/**
+	 * You can set this to true to overwrite what the `rangeKey` for the Model will be. By default the `rangeKey` won't exist.
+	 *
+	 * `rangeKey` is commonly called a `sort key` in the AWS documentation.
+	 *
+	 * ```js
+	 * {
+	 * 	"id": String,
+	 * 	"email": {
+	 * 		"type": String,
+	 * 		"rangeKey": true
+	 * 	}
+	 * }
+	 * ```
+	 */
 	rangeKey?: boolean;
 }
 export interface SchemaDefinition {
@@ -367,9 +683,101 @@ interface SchemaInternalProperties {
 
 export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	/**
-	 * TODO
-	 * @param object
-	 * @param settings
+	 * You can use this method to create a schema. The `schema` parameter is an object defining your schema, each value should be a type or object defining the type with additional settings (listed below).
+	 *
+	 * The `options` parameter is an optional object with the following options:
+	 *
+	 * | Name | Type | Default | Information
+	 * |---|---|---|---|
+	 * | `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep (ex. `["person.*", "friend.**"]` will allow you store a property `person` with 1 level of unknown properties and `friend` with infinitely nested level unknown properties). If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
+	 * | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
+	 * | `get` | function \| async function | undefined | You can use a get function on the schema to be run whenever retrieving a item from DynamoDB. Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to return to the application. This function will be run after all property `get` functions are run.
+	 * | `set` | function \| async function | undefined | You can use a set function on the schema to be run whenever saving a item to DynamoDB. It will also be used when retrieving an item (ie. `get`, `query`, `update`, etc). Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to save to DynamoDB. This function will be run after all property `set` functions are run.
+	 * | `validate` | function \| async function | undefined | You can use a validate function on the schema to ensure the value passes a given validation before saving the item. Dynamoose will pass the entire item into this function and you must return a boolean (`true` if validation passes or `false` if validation fails) or throw an error. This function will be run after all property `validate` functions are run.
+	 *
+	 * ```js
+	 * const dynamoose = require("dynamoose");
+	 * const schema = new dynamoose.Schema({
+	 * 	"id": String,
+	 * 	"age": Number
+	 * }, {
+	 * 	"saveUnknown": true,
+	 * 	"timestamps": true
+	 * });
+	 * ```
+	 *
+	 * ```js
+	 * const dynamoose = require("dynamoose");
+	 *
+	 * const schema = new dynamoose.Schema({
+	 * 	"id": String,
+	 * 	"person": Object,
+	 * 	"friend": Object
+	 * }, {
+	 * 	"saveUnknown": [
+	 * 		"person.*", // store 1 level deep of nested properties in `person` property
+	 * 		"friend.**" // store infinite levels deep of nested properties in `friend` property
+	 * 	],
+	 * });
+	 * ```
+	 *
+	 * ```js
+	 * const dynamoose = require("dynamoose");
+	 *
+	 * const schema = new dynamoose.Schema({
+	 * 	"id": String,
+	 * 	"age": {
+	 * 		"type": Number,
+	 * 		"default": 5
+	 * 	}
+	 * });
+	 * ```
+	 *
+	 * ```js
+	 * const dynamoose = require("dynamoose");
+	 *
+	 * const schema = new dynamoose.Schema({
+	 * 	"id": String,
+	 * 	"name": String
+	 * }, {
+	 * 	"timestamps": {
+	 * 		"createdAt": "createDate",
+	 * 		"updatedAt": null // updatedAt will not be stored as part of the timestamp
+	 * 	}
+	 * });
+	 * ```
+	 *
+	 * ```js
+	 * const dynamoose = require("dynamoose");
+	 *
+	 * const schema = new dynamoose.Schema({
+	 * 	"id": String,
+	 * 	"name": String
+	 * }, {
+	 * 	"timestamps": {
+	 * 		"createdAt": ["createDate", "creation"],
+	 * 		"updatedAt": ["updateDate", "updated"]
+	 * 	}
+	 * });
+	 * ```
+	 *
+	 * ```js
+	 * const dynamoose = require("dynamoose");
+	 *
+	 * const schema = new dynamoose.Schema({
+	 * 	"id": String,
+	 * 	"name": String
+	 * }, {
+	 * 	"validate": (obj) => {
+	 * 		if (!obj.id.beginsWith(name[0])) {
+	 * 			throw new Error("id first letter of name.");
+	 * 		}
+	 * 		return true;
+	 * 	}
+	 * });
+	 * ```
+	 * @param object The schema object.
+	 * @param settings The settings to apply to the schema.
 	 */
 	constructor (object: SchemaDefinition, settings: SchemaSettings = {}) {
 		super();
