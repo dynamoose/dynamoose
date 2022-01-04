@@ -18,6 +18,7 @@ import {PopulateItem, PopulateSettings} from "./Populate";
 import {Condition} from "./Condition";
 import {TableExpiresSettings} from "./Table";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
+import CustomError from "./Error";
 
 export interface ItemSaveSettings {
 	overwrite?: boolean;
@@ -576,6 +577,7 @@ export interface ItemObjectFromSchemaSettings {
 	modifiers?: ("set" | "get")[];
 	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
 	typeCheck?: boolean;
+	mapAttributes?: boolean;
 }
 // This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a type mismatch.
 Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
@@ -586,6 +588,40 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	let returnObject = utils.deep_copy(object);
 	const schema: Schema = settings.schema || await model.getInternalProperties(internalProperties).schemaForObject(returnObject);
 	const schemaAttributes = schema.attributes(returnObject);
+
+	function mapAttributes (type: "toDynamo" | "fromDynamo") {
+		if (settings.mapAttributes && settings.type === type) {
+			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
+			const mappedAttributesObject = type === "toDynamo" ? schemaInternalProperties.getMapSettingObject() : schema.attributes().reduce((obj, attribute) => {
+				const mapValues = schemaInternalProperties.getMapSettingValuesForKey(attribute);
+				if (mapValues && mapValues.length > 0) {
+					const defaultMapAttribute = schema.getInternalProperties(internalProperties).getDefaultMapAttribute(attribute);
+					if (defaultMapAttribute) {
+						if (defaultMapAttribute !== attribute) {
+							obj[attribute] = defaultMapAttribute;
+						}
+					} else {
+						obj[attribute] = mapValues[0];
+					}
+				}
+				return obj;
+			}, {});
+
+			Object.entries(mappedAttributesObject).forEach(([oldKey, newKey]) => {
+				if (returnObject[oldKey] !== undefined && returnObject[newKey] !== undefined) {
+					throw new CustomError.InvalidParameter(`Cannot map attribute ${oldKey} to ${newKey} because both are defined`);
+				}
+
+				if (returnObject[oldKey] !== undefined) {
+					returnObject[newKey] = returnObject[oldKey];
+					delete returnObject[oldKey];
+				}
+			});
+		}
+	}
+
+	// Map Attributes toDynamo
+	mapAttributes("toDynamo");
 
 	// Type check
 	const typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
@@ -791,6 +827,9 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}));
 	}
+
+	// Map Attributes fromDynamo
+	mapAttributes("fromDynamo");
 
 	return {...returnObject};
 };

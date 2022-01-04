@@ -6,7 +6,7 @@ import utils from "./utils";
 import {Item, AnyItem} from "./Item";
 import ModelStore from "./ModelStore";
 import {ModelType} from "./General";
-import {CustomError} from "dynamoose-utils";
+import CustomError from "./Error";
 import {Table} from "./Table/index";
 import type from "./type";
 import {Instance} from "./Instance";
