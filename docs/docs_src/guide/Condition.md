@@ -39,7 +39,6 @@ new dynamoose.Condition({
 
 dyno_jsdoc_dist/Condition.js|condition.and()
 
-
 ## condition.or()
 
 dyno_jsdoc_dist/Condition.js|condition.or()
