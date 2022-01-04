@@ -2,10 +2,12 @@ const fs = require("fs").promises;
 const path = require("path");
 const mkdirp = require("mkdirp");
 const jsdoc2md = require("jsdoc-to-markdown");
+const git = require("simple-git");
 
 (async () => {
 	const docsSrcPath = path.join(__dirname, "docs_src");
-	await mkdirp(path.join(__dirname, "docs"));
+	const docsPath = path.join(__dirname, "docs");
+	await mkdirp(docsPath);
 
 	function regexNestedBraces (number, count = 1, previousString = "[^\\}\\{]*") {
 		if (count === number) {
@@ -101,6 +103,11 @@ const jsdoc2md = require("jsdoc-to-markdown");
 				await fs.writeFile(fileName, fileContents);
 			}
 		}
+
+		// Create version page
+		const version = require("../package.json").version;
+		const gitCommit = (await git(path.join(__dirname, "..")).raw(["rev-parse", "HEAD"])).trim();
+		await fs.writeFile(path.join(docsPath, "version.md"), `---\ncustom_edit_url: null\n---\n# Version\n\n**npm Version**: ${version}\n\n**Git Commit**: [${gitCommit}](https://github.com/dynamoose/dynamoose/commit/${gitCommit})`);
 	}
 
 	await main(docsSrcPath);
