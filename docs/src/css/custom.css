@@ -101,7 +101,7 @@ html[data-theme="dark"] .header-github-link:before {
   > nav
   > ul
   > li:nth-child(4)
-  > a {
+  > div {
   display: none;
 }
 
