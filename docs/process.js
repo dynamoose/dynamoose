@@ -2,10 +2,12 @@ const fs = require("fs").promises;
 const path = require("path");
 const mkdirp = require("mkdirp");
 const jsdoc2md = require("jsdoc-to-markdown");
+const git = require("simple-git");
 
 (async () => {
 	const docsSrcPath = path.join(__dirname, "docs_src");
-	await mkdirp(path.join(__dirname, "docs"));
+	const docsPath = path.join(__dirname, "docs");
+	await mkdirp(docsPath);
 
 	function regexNestedBraces (number, count = 1, previousString = "[^\\}\\{]*") {
 		if (count === number) {
@@ -45,7 +47,7 @@ const jsdoc2md = require("jsdoc-to-markdown");
 						if (shouldPreprocessSourceFile) {
 							const sourceFileContents = await fs.readFile(path.join(__dirname, "..", name), "utf8");
 							name = name.replace(".d.ts", "-docstmp.js");
-							const regexString = `interface (.+?) \\{(${regexNestedBraces(5)})\\}`;
+							const regexString = `(?:(?:interface )|(?:declare const ))(.+?):? \\{(${regexNestedBraces(5)})\\}`;
 							const regex = new RegExp(regexString, "gmu");
 							let match;
 
@@ -56,10 +58,12 @@ const jsdoc2md = require("jsdoc-to-markdown");
 									let [, name, contents] = match;
 
 									// Remove `[attribute: string]: AttributeType;` things
-									const regexString = `^(\\s*\\[[^\\*|[|\\n]+?\\])\\??: ${regexNestedBraces(2)}`;
+									const regexString = `^(\\s*\\[[^\\*|[|\\n]+?\\])\\??: ${regexNestedBraces(4)}`;
 									contents = contents.replace(new RegExp(regexString, "gmu"), "");
 
-									newSourceFileContents += `class ${name} {\n    /**\n    * ${name} Docs Generated\n    */\n    constructor(){}\n${contents.replaceAll(/^([^*|[|\n]+?)\??: (?:[^{|\n|(]|\||\{(?:[^}{]+|(?:\{(?:[^}{]+|\{[^}{]*\})*\})*\})|(?:\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)))+/gmu, "$1;")}};\n`;
+									newSourceFileContents += `class ${name} {\n    /**\n    * ${name} Docs Generated\n    */\n    constructor(){}\n${contents.replaceAll(/^([^*|[|\n]+?)\??: (?:[^{|\n|(]|\||\{(?:[^}{]+|(?:\{(?:[^}{]+|\{[^}{]*\})*\})*\})|(?:\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)))+/gmu, "$1;")
+									// Temporary fix until I can improve the regex above
+										.replaceAll(/\s\};/gmu, "")}};\n`;
 								}
 							} while (match);
 
@@ -76,9 +80,17 @@ const jsdoc2md = require("jsdoc-to-markdown");
 						if (!block) {
 							throw new Error(`Could not find block for ${contents}`);
 						}
-						const ignorePrefixes = ["Kind", "Returns"].map((val) => `**${val}**:`);
+						const ignorePrefixes = ["Kind", "Returns", "Read only"].map((val) => `**${val}**:`);
+						const paramArrayIndex = (() => {
+							const options = ["| Param | Description |", "| Param |"];
+
+							const option = options.find((val) => block.includes(val));
+							if (option) {
+								return block.split("\n").indexOf(option);
+							}
+						})();
 						const blockFormatted = block.split("\n").filter((val, index) => {
-							return index !== 0 && !ignorePrefixes.some((prefix) => val.startsWith(prefix)) && !/<a name=".*"><\/a>/gmu.test(val);
+							return index !== 0 && !ignorePrefixes.some((prefix) => val.startsWith(prefix)) && !/<a name=".*"><\/a>/gmu.test(val) && (!paramArrayIndex || index < paramArrayIndex);
 						}).join("\n").trim();
 
 						fileContents = fileContents.replace(full, blockFormatted.trim());
@@ -91,6 +103,11 @@ const jsdoc2md = require("jsdoc-to-markdown");
 				await fs.writeFile(fileName, fileContents);
 			}
 		}
+
+		// Create version page
+		const version = require("../package.json").version;
+		const gitCommit = (await git(path.join(__dirname, "..")).raw(["rev-parse", "HEAD"])).trim();
+		await fs.writeFile(path.join(docsPath, "version.md"), `---\ncustom_edit_url: null\n---\n# Version\n\n**npm Version**: ${version}\n\n**Git Commit**: [${gitCommit}](https://github.com/dynamoose/dynamoose/commit/${gitCommit})`);
 	}
 
 	await main(docsSrcPath);

@@ -32,7 +32,7 @@ module.exports = (version) => {
 			obj.websites3bucket = "alpha.dynamoosejs.com";
 		} else if (obj.npmtag === "beta") {
 			obj.websites3bucket = "beta.dynamoosejs.com";
-		} {
+		} else {
 			obj.websites3bucket = "";
 		}
 	}
