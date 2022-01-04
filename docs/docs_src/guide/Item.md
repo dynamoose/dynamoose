@@ -88,6 +88,10 @@ myUser.delete((error) => {
 
 ## item.populate([settings], [callback])
 
+:::caution
+This method will make multiple calls to DynamoDB, which increases latency for your application. DynamoDB was not designed for this type of SQL operation. Instead of using this method, consider changing your data model to query DynamoDB and retrieve the data you need all in a single request.
+:::
+
 This allows you to populate a item with item instances for the subitems you are referencing in your schema. This function will return a promise, or call the `callback` parameter function upon completion.
 
 The `settings` parameter is an object you can pass in with the following properties:

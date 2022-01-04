@@ -585,7 +585,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		return undefined;
 	}
 
-	let returnObject = {...object};
+	let returnObject = utils.deep_copy(object);
 	const schema: Schema = settings.schema || await model.getInternalProperties(internalProperties).schemaForObject(returnObject);
 	const schemaAttributes = schema.attributes(returnObject);
 
@@ -831,7 +831,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	// Map Attributes fromDynamo
 	mapAttributes("fromDynamo");
 
-	return returnObject;
+	return {...returnObject};
 };
 Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObjectFromSchemaSettings> = {}): Promise<any> {
 	const newSettings: ItemObjectFromSchemaSettings = {
