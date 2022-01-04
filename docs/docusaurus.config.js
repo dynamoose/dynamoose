@@ -47,6 +47,10 @@ module.exports = {
 						{
 							"label": "Stack Overflow",
 							"href": "https://stackoverflow.com/questions/tagged/dynamoose"
+						},
+						{
+							"label": "YouTube",
+							"href": "https://www.youtube.com/channel/UCw4K_PDdzsZPM1PSeqS997Q"
 						}
 					]
 				},
