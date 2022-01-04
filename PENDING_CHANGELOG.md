@@ -73,6 +73,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 ### Bug Fixes
 
 - Fixed bug where using `model` as an attribute name in your Schema would cause random TypeMismatch errors.
+- Fixed an issue where after doing certain Item related operations, the original object passed in could be mutated. This is no longer the case and original items will not be mutated when doing Item related operations.
 
 ### Documentation
 

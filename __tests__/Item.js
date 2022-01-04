@@ -2134,6 +2134,30 @@ describe("Item", () => {
 			expect(dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false}).objectFromSchema).toBeInstanceOf(Function);
 		});
 
+		const mutationTests = [
+			{
+				"schema": {"id": Number},
+				"input": JSON.stringify({"id": 1})
+			},
+			{
+				"schema": {"id": Number},
+				"input": JSON.stringify({"id": 1, "friends": ["Bob", "Tim"]})
+			},
+			{
+				"schema": {"id": Number},
+				"input": JSON.stringify({"id": 1, "data": {"hello": "world"}})
+			}
+		];
+		mutationTests.forEach((test) => {
+			it(`Should not mutate original object: ${test.input}`, async () => {
+				const model = dynamoose.model("User", {"id": Number}, {"create": false, "waitForActive": false});
+				new dynamoose.Table("User", [model]);
+				const object = JSON.parse(test.input);
+				await model.objectFromSchema(object, model.Model);
+				expect(object).toEqual(JSON.parse(test.input));
+			});
+		});
+
 		const basicTests = [
 			{
 				"input": {"id": 1},
