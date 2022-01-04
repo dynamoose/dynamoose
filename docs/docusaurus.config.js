@@ -15,7 +15,7 @@ module.exports = {
 				{
 					"href": "https://www.npmjs.com/package/dynamoose",
 					"className": "header-link header-npm-link",
-					"aria-label": "NPM",
+					"aria-label": "npm",
 					"position": "right"
 				},
 				{
