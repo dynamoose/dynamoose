@@ -162,7 +162,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. Nothing will be passed into the result for the promise.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = User.get("1");
 	 *
 	 * try {
@@ -181,7 +180,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * This method returns nothing. It accepts a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the callback.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = User.get("1");
 	 *
 	 * myUser.delete((error) => {
@@ -214,7 +212,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. Nothing will be passed into the result for the promise.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = new User({
 	 * 	"id": 1,
 	 * 	"name": "Tim"
@@ -238,7 +235,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = new User({
 	 * 	"id": 1,
 	 * 	"name": "Tim"
@@ -271,7 +267,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * The `settings` parameter is optional.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = new User({
 	 * 	"id": 1,
 	 * 	"name": "Tim"
@@ -307,7 +302,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = new User({
 	 * 	"id": 1,
 	 * 	"name": "Tim"
@@ -344,7 +338,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * The `settings` parameter is optional.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = new User({
 	 * 	"id": 1,
 	 * 	"name": "Tim"
@@ -380,7 +373,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 	 *
 	 * ```js
-	 * //...
 	 * const myUser = new User({
 	 * 	"id": 1,
 	 * 	"name": "Tim"
