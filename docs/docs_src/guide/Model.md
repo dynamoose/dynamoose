@@ -263,8 +263,6 @@ You can also pass a settings object in as the second parameter. The following op
 Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in your array of objects as the first parameter, and the second argument as the `callback` function. You are not required to pass in `settings` if you just want to pass in a `callback`.
 
 ```js
-//...
-
 try {
 	const result = await User.batchPut([
 		{"id": 1, "name": "Charlie"},
