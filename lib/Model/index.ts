@@ -257,7 +257,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				if (modifier) {
 					result = modifier(result);
 				}
-				return {[dynamoKey]: result};
+				return {[dynamoKey]: {...result, "ModelName": this.name}};
 			};
 
 			return accumulator;

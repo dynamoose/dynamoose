@@ -87,7 +87,7 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 			transactionType = transactionObjects.map((a) => Object.keys(a)[0]).every((key) => key === "Get") ? "transactGetItems" : "transactWriteItems";
 		}
 
-		const modelNames: string[] = transactionObjects.map((a) => (Object.values(a)[0] as any).TableName);
+		const modelNames: string[] = transactionObjects.map((a) => (Object.values(a)[0] as any).ModelName);
 		const uniqueModelNames = utils.unique_array_elements(modelNames);
 		const models: Model<Item>[] = uniqueModelNames.map((name) => ModelStore(name));
 		models.forEach((model, index) => {
