@@ -61,6 +61,13 @@ type TransactionType = {
 	condition: ConditionTransaction;
 };
 
+interface ExtendedTransactWriteItem extends DynamoDB.TransactWriteItem {
+	ConditionCheck?: DynamoDB.ConditionCheck & {"ModelName": string};
+	Put?: DynamoDB.Put & {"ModelName": string};
+	Delete?: DynamoDB.Delete & {"ModelName": string};
+	Update?: DynamoDB.Update & {"ModelName": string};
+}
+
 interface ModelGetSettings {
 	return?: "item" | "request";
 	attributes?: string[];
@@ -244,7 +251,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			const settingsIndex = currentValue.settingsIndex || 1;
 			const func = currentValue.function || this[key].bind(this);
 
-			accumulator[key] = async (...args): Promise<DynamoDB.TransactWriteItem> => {
+			accumulator[key] = async (...args): Promise<ExtendedTransactWriteItem> => {
 				if (typeof args[args.length - 1] === "function") {
 					console.warn("Dynamoose Warning: Passing callback function into transaction method not allowed. Removing callback function from list of arguments."); // eslint-disable-line no-console
 					args.pop();

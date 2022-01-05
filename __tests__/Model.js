@@ -4004,7 +4004,8 @@ describe("Model", () => {
 				expect(await User.transaction.get(1)).toEqual({
 					"Get": {
 						"Key": {"id": {"N": "1"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4037,7 +4038,8 @@ describe("Model", () => {
 							"#__hash_key": "id"
 						},
 						"Item": {"id": {"N": "1"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4046,7 +4048,8 @@ describe("Model", () => {
 				expect(await User.transaction.create({"id": 1}, {"overwrite": true})).toEqual({
 					"Put": {
 						"Item": {"id": {"N": "1"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4059,7 +4062,8 @@ describe("Model", () => {
 							"#__hash_key": "id"
 						},
 						"Item": {"id": {"N": "1"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4088,7 +4092,8 @@ describe("Model", () => {
 				expect(await User.transaction.delete(1)).toEqual({
 					"Delete": {
 						"Key": {"id": {"N": "1"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4109,7 +4114,8 @@ describe("Model", () => {
 				expect(await User.transaction.delete({"id": "foo", "order": 0})).toEqual({
 					"Delete": {
 						"Key": {"id": {"S": "foo"}, "order": {"N": "0"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4135,7 +4141,8 @@ describe("Model", () => {
 							":v0": {"S": "Bob"}
 						},
 						"UpdateExpression": "SET #a0 = :v0",
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4151,7 +4158,8 @@ describe("Model", () => {
 							":v0": {"S": "Bob"}
 						},
 						"UpdateExpression": "SET #a0 = :v0",
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName":"User"
 					}
 				});
 			});
@@ -4186,7 +4194,8 @@ describe("Model", () => {
 				expect(await User.transaction.condition(1)).toEqual({
 					"ConditionCheck": {
 						"Key": {"id": {"N": "1"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName": "User"
 					}
 				});
 			});
@@ -4197,7 +4206,8 @@ describe("Model", () => {
 				expect(await User.transaction.condition({"id": 1, "name": "Bob"})).toEqual({
 					"ConditionCheck": {
 						"Key": {"id": {"N": "1"}, "name": {"S": "Bob"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName": "User"
 					}
 				});
 			});
@@ -4213,7 +4223,8 @@ describe("Model", () => {
 							":v0": {"N": "13"}
 						},
 						"Key": {"id": {"N": "1"}},
-						"TableName": "User"
+						"TableName": "User",
+						"ModelName": "User"
 					}
 				});
 			});
