@@ -75,6 +75,25 @@ describe("Transaction", () => {
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "TableB"}}])).rejects.toEqual(new CustomError.InvalidParameter("You must use a single Dynamoose instance for all tables in a transaction."));
 			});
 
+			it("Should not throw error if using same custom instance for multiple tables", () => {
+				const ddb = {
+					"transactGetItems": () => {
+						return Promise.resolve({});
+					}
+				};
+
+				const Instance = new dynamoose.Instance();
+
+				Instance.aws.ddb.set(ddb);
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
+				new Instance.Table("Table", [User]);
+				new Instance.Table("TableB", [Credit]);
+
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "TableB"}}])).resolves.toEqual(null);
+			});
+
 			it("Should not throw error if using custom instance", () => {
 				const ddb = {
 					"transactGetItems": () => {
