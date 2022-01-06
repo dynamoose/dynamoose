@@ -63,6 +63,36 @@ describe("Transaction", () => {
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).rejects.toEqual(new CustomError.InvalidParameter("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model."));
 			});
 
+			it("Should throw error if using different instances for each table", () => {
+				const InstanceA = new dynamoose.Instance();
+				const InstanceB = new dynamoose.Instance();
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
+				new InstanceA.Table("Table", [User]);
+				new InstanceB.Table("TableB", [Credit]);
+
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "TableB"}}])).rejects.toEqual(new CustomError.InvalidParameter("You must use a single Dynamoose instance for all tables in a transaction."));
+			});
+
+			it("Should not throw error if using custom instance", () => {
+				const ddb = {
+					"transactGetItems": () => {
+						return Promise.resolve({});
+					}
+				};
+
+				const Instance = new dynamoose.Instance();
+
+				Instance.aws.ddb.set(ddb);
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
+				new Instance.Table("Table", [User, Credit]);
+
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}])).resolves.toEqual(null);
+			});
+
 			it("Should send correct parameters to AWS", async () => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
