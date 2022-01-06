@@ -54,8 +54,13 @@ describe("Transaction", () => {
 			});
 
 			it("Should throw error if model hasn't been created", () => {
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).rejects.toEqual(new CustomError.InvalidParameter("Table \"User\" not found. Please register the table with dynamoose before using it in transactions."));
+			});
+
+			it("Should throw error if table hasn't been created", () => {
 				dynamoose.model("User", {"id": Number, "name": String});
-				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).rejects.toEqual(new CustomError.InvalidParameter("Model \"Credit\" not found. Please register the model with dynamoose before using it in transactions."));
+				dynamoose.model("Credit", {"id": Number, "name": String});
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).rejects.toEqual(new CustomError.InvalidParameter("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model."));
 			});
 
 			it("Should send correct parameters to AWS", async () => {
@@ -70,7 +75,7 @@ describe("Transaction", () => {
 				const User = dynamoose.model("User", {"id": Number, "name": String});
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
-				await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}]);
+				await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}]);
 				expect(transactParams).toEqual({
 					"TransactItems": [
 						{
@@ -78,7 +83,7 @@ describe("Transaction", () => {
 								"Key": {
 									"id": {"N": "1"}
 								},
-								"TableName": "User"
+								"TableName": "Table"
 							}
 						},
 						{
@@ -86,7 +91,7 @@ describe("Transaction", () => {
 								"Key": {
 									"id": {"N": "2"}
 								},
-								"TableName": "Credit"
+								"TableName": "Table"
 							}
 						}
 					]
@@ -105,7 +110,7 @@ describe("Transaction", () => {
 				const User = dynamoose.model("User", {"id": Number, "name": String});
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
-				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}]);
+				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}]);
 				expect(transactParams).toEqual({
 					"TransactItems": [
 						{
@@ -113,7 +118,7 @@ describe("Transaction", () => {
 								"Key": {
 									"id": {"N": "1"}
 								},
-								"TableName": "User"
+								"TableName": "Table"
 							}
 						},
 						{
@@ -121,14 +126,14 @@ describe("Transaction", () => {
 								"Key": {
 									"id": {"N": "2"}
 								},
-								"TableName": "Credit"
+								"TableName": "Table"
 							}
 						}
 					]
 				});
 			});
 
-			it("Should use correct response from AWS", () => {
+			it("Should use correct response from AWS", async () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}, {"Item": {"id": {"N": "2"}, "name": {"S": "My Credit"}}}]})
 				});
@@ -136,7 +141,8 @@ describe("Transaction", () => {
 				const User = dynamoose.model("User", {"id": Number, "name": String});
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
-				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}]).then((res) => res.map((a) => ({...a})))).resolves.toEqual([
+				await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}]);
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}]).then((res) => res.map((a) => ({...a})))).resolves.toEqual([
 					{"id": 1, "name": "Bob"},
 					{"id": 2, "name": "My Credit"}
 				]);
@@ -150,7 +156,7 @@ describe("Transaction", () => {
 				const User = dynamoose.model("User", {"id": Number, "name": String});
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
-				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).resolves.toEqual(null);
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}])).resolves.toEqual(null);
 			});
 
 			it("Should send correct parameters to AWS for custom type of write", async () => {
@@ -165,7 +171,7 @@ describe("Transaction", () => {
 				const User = dynamoose.model("User", {"id": Number, "name": String});
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
-				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}], {"type": "write"});
+				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}], {"type": "write"});
 				expect(transactParams).toBeInstanceOf(Object);
 			});
 
@@ -181,7 +187,7 @@ describe("Transaction", () => {
 				const User = dynamoose.model("User", {"id": Number, "name": String});
 				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
 				new dynamoose.Table("Table", [User, Credit]);
-				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}], {"type": "get"});
+				await callType.func(dynamoose.transaction)([{"Put": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Put": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}], {"type": "get"});
 				expect(transactParams).toBeInstanceOf(Object);
 			});
 		});
