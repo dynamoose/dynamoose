@@ -147,6 +147,45 @@ describe("Transaction", () => {
 				});
 			});
 
+			it("Should use correct models when getting transaction for multiple models", async () => {
+				dynamoose.aws.ddb.set({
+					"transactGetItems": () => {
+						return Promise.resolve({
+							"Responses": [
+								{
+									"Item": {
+										"id": {"N": "1"},
+										"name": {"S": "John"}
+									}
+								},
+								{
+									"Item": {
+										"id": {"N": "2"},
+										"amount": {"N": "100"}
+									}
+								}
+							]
+						});
+					}
+				});
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				const Credit = dynamoose.model("Credit", {"id": Number, "amount": Number});
+				new dynamoose.Table("Table", [User, Credit]);
+				const items = await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}]);
+				expect(items.length).toEqual(2);
+				expect(items[0].constructor.name).toEqual("User");
+				expect(items[0].toJSON()).toEqual({
+					"id": 1,
+					"name": "John"
+				});
+				expect(items[1].constructor.name).toEqual("Credit");
+				expect(items[1].toJSON()).toEqual({
+					"id": 2,
+					"amount": 100
+				});
+			});
+
 			it("Should send correct parameters to AWS for put items", async () => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({

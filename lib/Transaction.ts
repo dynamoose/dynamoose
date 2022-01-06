@@ -120,7 +120,7 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 		return result.Responses ? await Promise.all(result.Responses.map(async (item: any, index: number) => {
 			const tableName: string = tableNames[index];
 			const table: Table = validTables.find((table) => table.name === tableName);
-			const model: Model<Item> = await table.getInternalProperties(internalProperties).modelForObject(item.Item);
+			const model: Model<Item> = await table.getInternalProperties(internalProperties).modelForObject(Item.fromDynamo(item.Item));
 			return new model.Item(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
 		})) : null;
 	})();
