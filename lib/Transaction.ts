@@ -9,6 +9,7 @@ import {Item} from "./Item";
 import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 import {Table} from "./Table";
+import {Instance} from "./Instance";
 
 export enum TransactionReturnOptions {
 	request = "request",
@@ -101,8 +102,18 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 		});
 		await Promise.all(tables.map((table) => table.getInternalProperties(internalProperties).pendingTaskPromise()));
 
-		// TODO: NEED to throw error here if all tables aren't of the same instance
-		const instance = tables[0].getInternalProperties(internalProperties).instance;
+		const instance: Instance = tables.reduce((instance: Instance, table: Table): Instance => {
+			const tableInstance = table.getInternalProperties(internalProperties).instance;
+			if (!instance) {
+				return tableInstance;
+			}
+
+			if (tableInstance !== instance) {
+				throw new Error.InvalidParameter("You must use a single Dynamoose instance for all tables in a transaction.");
+			}
+
+			return instance;
+		}, undefined);
 
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
 		const result: any = await ddb(instance, transactionType as any, transactionParams as any);
