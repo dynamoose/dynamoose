@@ -57,8 +57,8 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: lts/*
+      - run: npm install
       - run: npm run site:install
-      - run: node docs/process.js
       - run: npm run site:build
       - uses: jakejarvis/s3-sync-action@v0.5.1
         with:
