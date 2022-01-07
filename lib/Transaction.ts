@@ -8,6 +8,8 @@ import {CallbackType} from "./General";
 import {Item} from "./Item";
 import Internal from "./Internal";
 const {internalProperties} = Internal.General;
+import {Table} from "./Table";
+import {Instance} from "./Instance";
 
 export enum TransactionReturnOptions {
 	request = "request",
@@ -34,6 +36,8 @@ type Transaction =
 	DeleteTransactionInput |
 	UpdateTransactionInput |
 	ConditionTransactionInput;
+
+type TransactionValue = DynamoDB.GetItemInput | DynamoDB.PutItemInput | DynamoDB.DeleteItemInput | DynamoDB.UpdateItemInput | DynamoDB.ConditionCheck;
 
 type Transactions = (Transaction | Promise<Transaction>)[];
 type TransactionCallback = CallbackType<any, any>;
@@ -87,24 +91,36 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 			transactionType = transactionObjects.map((a) => Object.keys(a)[0]).every((key) => key === "Get") ? "transactGetItems" : "transactWriteItems";
 		}
 
-		const modelNames: string[] = transactionObjects.map((a) => (Object.values(a)[0] as any).TableName);
-		const uniqueModelNames = utils.unique_array_elements(modelNames);
-		const models: Model<Item>[] = uniqueModelNames.map((name) => ModelStore(name));
-		models.forEach((model, index) => {
-			if (!model) {
-				throw new Error.InvalidParameter(`Model "${uniqueModelNames[index]}" not found. Please register the model with dynamoose before using it in transactions.`);
+		const tableNames: string[] = transactionObjects.map((a) => (Object.values(a)[0] as TransactionValue).TableName);
+		const uniqueTableNames = utils.unique_array_elements(tableNames);
+		const tables: (Table | undefined)[] = uniqueTableNames.map((name) => ModelStore.forTableName(name)?.[0].getInternalProperties(internalProperties).table());
+		const validTables: Table[] = tables.filter((table) => table !== undefined);
+		tables.forEach((table, index) => {
+			if (!table) {
+				throw new Error.InvalidParameter(`Table "${uniqueTableNames[index]}" not found. Please register the table with dynamoose before using it in transactions.`);
 			}
 		});
-		await Promise.all(models.map((model) => model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise()));
+		await Promise.all(tables.map((table) => table.getInternalProperties(internalProperties).pendingTaskPromise()));
 
-		const instance = models[0].getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).instance;
+		const instance: Instance = tables.reduce((instance: Instance, table: Table): Instance => {
+			const tableInstance = table.getInternalProperties(internalProperties).instance;
+			if (!instance) {
+				return tableInstance;
+			}
+
+			if (tableInstance !== instance) {
+				throw new Error.InvalidParameter("You must use a single Dynamoose instance for all tables in a transaction.");
+			}
+
+			return instance;
+		}, undefined);
 
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-		// TODO: NEED to throw error here if all models aren't of the same instance
 		const result: any = await ddb(instance, transactionType as any, transactionParams as any);
-		return result.Responses ? await Promise.all(result.Responses.map((item, index: number) => {
-			const modelName: string = modelNames[index];
-			const model: Model<Item> = models.find((model) => model.name === modelName);
+		return result.Responses ? await Promise.all(result.Responses.map(async (item: any, index: number) => {
+			const tableName: string = tableNames[index];
+			const table: Table = validTables.find((table) => table.name === tableName);
+			const model: Model<Item> = await table.getInternalProperties(internalProperties).modelForObject(Item.fromDynamo(item.Item));
 			return new model.Item(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
 		})) : null;
 	})();
