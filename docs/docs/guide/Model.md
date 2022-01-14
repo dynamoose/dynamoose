@@ -18,14 +18,14 @@ const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}), {"create": false});
 ```
 
-An optional TypeScript class which extends `Document` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
+An optional TypeScript interface which extends `Document` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
 
 ```ts
 import * as dynamoose from "dynamoose";
 import {Document} from "dynamoose/dist/Document";
 
 // Strongly typed model
-class Cat extends Document {
+interface Cat extends Document {
 	id: number;
 	name: string;
 }
