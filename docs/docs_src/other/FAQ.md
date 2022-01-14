@@ -20,9 +20,9 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 | item.delete | `deleteItem` |  |
 | dynamoose.transaction | `transactGetItems`, `transactWriteItems` |  |
 
-## Why is it recommended to set `create` & `waitForActive` model options to false for production environments?
+## Why is it recommended to set `create`, `update` & `waitForActive` model options to false for production environments?
 
-Both the `create` & `waitForActive` model options add overhead to creating model instances. In your production environment it is assumed that you already have the tables setup prior to deploying your application, which makes the `create` & `waitForActive` options unnecessary.
+Both the `create`, `update` & `waitForActive` model options add overhead to creating model instances. In your production environment it is assumed that you already have the tables setup prior to deploying your application, which makes the `create`, `update` & `waitForActive` options unnecessary.
 
 ## Why are arrays or objects empty when using Dynamoose?
 
