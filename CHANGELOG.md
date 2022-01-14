@@ -2,6 +2,23 @@
 
 ---
 
+## Version 2.8.4
+
+This release includes a few bug fixes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixes a bug where using multiple schemas with an attribute with multiple types won't choose the right schema.
+- Fixes a bug where nested raw conditions wouldn't work.
+
+### Documentation
+
+- Fixing typos on contributuing page.
+
+---
+
 ## Version 2.8.3
 
 This release fixes a bug if you started `source-map-support` yourself where Dynamoose would try to do the same and would lead to conflicts.
