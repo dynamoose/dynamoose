@@ -209,7 +209,20 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return keyObject;
 			},
 			"schemaCorrectnessScores": (object: ObjectType): number[] => {
-				const schemaCorrectnessScores: number[] = this.getInternalProperties(internalProperties).schemas.map((schema) => schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true})).map((obj) => Object.values(obj).map((obj) => (obj as any)?.matchCorrectness || 0)).map((array) => Math.min(...array));
+				const schemaCorrectnessScores: number[] = this.getInternalProperties(internalProperties).schemas.map((schema) => {
+					const typePaths = schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true});
+					const multipleTypeKeys: string[] = Object.keys(typePaths).filter((key) => typeof typePaths[key] === "number");
+					multipleTypeKeys.forEach((key) => {
+						// TODO: Ideally at some point we'd move this code into the `schema.getTypePaths` method, but that breaks some other things, so holding off on that for now.
+						typePaths[key] = {
+							"index": typePaths[key],
+							"matchCorrectness": 1,
+							"entryCorrectness": [1]
+						};
+					});
+					return typePaths;
+				}).map((obj) => Object.values(obj).map((obj) => (obj as any)?.matchCorrectness || 0)).map((array) => Math.min(...array));
+
 				return schemaCorrectnessScores;
 			},
 			// This function returns the best matched schema for the given object input
