@@ -213,6 +213,26 @@ let package = require("../package.json");
 	gitDeleteNewBranch.succeed(`Deleted ${branch} branch`);
 	// Complete
 	process.exit(0);
+
+	async function isPRMerged (pr) {
+		let data;
+		do {
+			data = (await octokit.pulls.get({
+				"owner": "dynamoose",
+				"repo": "dynamoose",
+				"pull_number": pr
+			})).data;
+			await utils.timeout(5000);
+		} while (!data.merged);
+	}
+	async function isReleaseSubmitted (release) {
+		try {
+			await npmFetch(`/dynamoose/${release}`);
+		} catch (e) {
+			await utils.timeout(5000);
+			return isReleaseSubmitted(release);
+		}
+	}
 })();
 
 async function checkCleanWorkingDir () {
@@ -228,23 +248,4 @@ function keypress () {
 			process.stdin.pause();
 		});
 	});
-}
-async function isPRMerged (pr) {
-	let data;
-	do {
-		data = (await octokit.pulls.get({
-			"owner": "dynamoose",
-			"repo": "dynamoose",
-			"pull_number": pr
-		})).data;
-		await utils.timeout(5000);
-	} while (!data.merged);
-}
-async function isReleaseSubmitted (release) {
-	try {
-		await npmFetch(`/dynamoose/${release}`);
-	} catch (e) {
-		await utils.timeout(5000);
-		return isReleaseSubmitted(release);
-	}
 }
