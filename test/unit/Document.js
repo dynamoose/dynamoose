@@ -2761,6 +2761,21 @@ describe("Document", () => {
 				"input": [{"id": 1, "data": null}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": String},
 				"error": new Error.ValidationError("Expected data to be of type string, instead found type null.")
+			},
+			{
+				"input": [{"id": 1, "data": 2}, {"type": "toDynamo"}],
+				"schema": [{"id": Number, "data": [String, Number]}, {"id": Number, "item": String}],
+				"output": {"id": 1, "data": 2}
+			},
+			{
+				"input": [{"id": 1, "data": true, "item": "test"}, {"type": "toDynamo"}],
+				"schema": [{"id": Number, "data": [String, Number]}, {"id": Number, "item": String}],
+				"output": {"id": 1, "item": "test"}
+			},
+			{
+				"input": [{"id": 1, "data": true}, {"type": "toDynamo"}],
+				"schema": [{"id": Number, "data": [String, Number]}, {"id": Number, "data": String, "item": Boolean}],
+				"error": new Error.TypeMismatch("Expected data to be of type string, number, instead found type boolean.")
 			}
 		];
 
