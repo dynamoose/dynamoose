@@ -497,7 +497,7 @@ interface AttributeDefinition {
 	 * }
 	 * ```
 	 */
-	validate?: ValueType | RegExp | ((value: ValueType) => boolean);
+	validate?: ValueType | RegExp | ((value: ValueType) => boolean | Promise<boolean>);
 	/**
 	 * You can set an attribute to be required when saving items to DynamoDB. By default this setting is `false`.
 	 *
@@ -579,7 +579,7 @@ interface AttributeDefinition {
 	 * }
 	 * ```
 	 */
-	set?: (value: ValueType) => ValueType;
+	set?: ((value: ValueType, oldValue?: ValueType) => ValueType | Promise<ValueType>);
 	/**
 	 * Indexes on your DynamoDB tables must be defined in your Dynamoose schema. If you have the update option set to true on your model settings, and a Dynamoose schema index does not already exist on the DynamoDB table, it will be created on model initialization. Similarly, indexes on your DynamoDB table that do not exist in your Dynamoose schema will be deleted.
 	 *
