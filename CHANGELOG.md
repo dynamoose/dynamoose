@@ -2,6 +2,22 @@
 
 ---
 
+## Version 2.8.5
+
+This release is the corresponding v2 release for v3 move to beta. It also includes bug fixes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixes `validate` and `set` schema attribute settings TypeScript types.
+
+### Other
+
+- v3 has been promoted to beta.
+
+---
+
 ## Version 2.8.4
 
 This release includes a few bug fixes.
