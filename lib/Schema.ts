@@ -271,7 +271,7 @@ interface AttributeDefinition {
 	schema?: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[] | SchemaDefinition | SchemaDefinition[];
 	default?: ValueType | (() => ValueType);
 	forceDefault?: boolean;
-	validate?: ValueType | RegExp | ((value: ValueType) => boolean);
+	validate?: ValueType | RegExp | ((value: ValueType) => boolean|Promise<boolean>);
 	required?: boolean;
 	enum?: ValueType[];
 	get?: ((value: ValueType) => ValueType);
