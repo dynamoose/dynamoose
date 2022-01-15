@@ -109,3 +109,9 @@ const shouldSucceedWithSetMethodSecondArgSchema = new dynamoose.Schema({
 		"set": (value, oldValue) => oldValue
 	}
 });
+const shouldSucceedWithAsyncValidateMethodSchema = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"validate": (value) => Promise.resolve(true)
+	}
+});
