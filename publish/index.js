@@ -145,7 +145,7 @@ let package = require("../package.json");
 	await keypress();
 	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
 	await exec("npm i");
-	const utils = require("../dist/utils");
+	const utils = require("../dist/utils").default;
 	const versionFriendlyTitle = `Version ${[versionInfo.main, versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : "", versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
 	let changelogTemplate = `## ${versionFriendlyTitle}`;
