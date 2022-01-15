@@ -33,7 +33,8 @@ module.exports = {
 				"space-before-function-paren": "off",
 				"@typescript-eslint/space-before-function-paren": "error",
 				"@typescript-eslint/ban-types": "off",
-				"@typescript-eslint/explicit-module-boundary-types": "off"
+				"@typescript-eslint/explicit-module-boundary-types": "off",
+				"@typescript-eslint/space-infix-ops": "error"
 			}
 		}
 	],
