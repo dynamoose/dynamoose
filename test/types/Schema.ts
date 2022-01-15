@@ -97,3 +97,21 @@ const shouldSucceedWithArrayOfTypesInNestedSchema = new dynamoose.Schema({
 		]
 	}
 });
+const shouldSucceedWithAsyncSetMethodSchema = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"set": (value) => Promise.resolve(value)
+	}
+});
+const shouldSucceedWithSetMethodSecondArgSchema = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"set": (value, oldValue) => oldValue
+	}
+});
+const shouldSucceedWithAsyncValidateMethodSchema = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"validate": (value) => Promise.resolve(true)
+	}
+});
