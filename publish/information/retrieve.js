@@ -1,3 +1,10 @@
+const versionWebsiteBuckets = {
+	"2": "v2.dynamoosejs.com"
+};
+const versionNPMTags = {
+	"2": "v2"
+};
+
 module.exports = (version) => {
 	const regex = /^v?((?:\d\.?){1,3})(?:-(.*)\.(\d*))?$/gmu;
 	const [, main, tag, tagNumber] = regex.exec(version);
@@ -8,14 +15,26 @@ module.exports = (version) => {
 		tagNumber,
 		"isPrerelease": Boolean(tag)
 	};
+	const majorVersion = obj.main.split(".")[0];
 
-	switch (obj.npmtag) {
-	case "latest":
+	const versionNPMTag = versionNPMTags[majorVersion];
+	if (versionNPMTag) {
+		obj.npmtag = versionNPMTag;
+	}
+
+	if (obj.npmtag === "latest") {
 		obj.websites3bucket = "dynamoosejs.com";
-		break;
-	default:
-		obj.websites3bucket = "";
-		break;
+	} else {
+		const versionWebsiteBucket = versionWebsiteBuckets[majorVersion];
+		if (versionWebsiteBucket) {
+			obj.websites3bucket = versionWebsiteBucket;
+		} else if (obj.npmtag === "alpha") {
+			obj.websites3bucket = "alpha.dynamoosejs.com";
+		} else if (obj.npmtag === "beta") {
+			obj.websites3bucket = "beta.dynamoosejs.com";
+		} else {
+			obj.websites3bucket = "";
+		}
 	}
 
 	return obj;
