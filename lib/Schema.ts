@@ -275,7 +275,7 @@ interface AttributeDefinition {
 	required?: boolean;
 	enum?: ValueType[];
 	get?: ((value: ValueType) => ValueType);
-	set?: ((value: ValueType) => ValueType);
+	set?: ((value: ValueType, oldValue?: ValueType) => ValueType | Promise<ValueType>);
 	index?: boolean | IndexDefinition | IndexDefinition[];
 	hashKey?: boolean;
 	rangeKey?: boolean;
