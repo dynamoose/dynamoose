@@ -2058,6 +2058,19 @@ describe("Document", () => {
 				"output": {"someField": "hello"},
 				"schema": {"someField": {"type": String, "required": true}, "someFieldAndMore": {"type": String, "required": true}}
 			},
+			{
+				"input": [(() => {
+					let object = {
+						"id": 1
+					};
+					object.array = {"first": 1};
+					object.array2 = object;
+					return object;
+				})(), {"saveUnknown": true}],
+				"output": {"id": 1},
+				"schema": {"id": Number},
+				"inputJSONString": JSON.stringify({"id": 1, "array": {"first": 1}, "array2": "CIRCULAR"})
+			},
 			// Defaults
 			{
 				"input": {},
@@ -2797,12 +2810,13 @@ describe("Document", () => {
 			};
 
 			const testFunc = test.test || it;
+			const inputJSONString = test.inputJSONString || JSON.stringify(test.input);
 			if (test.error) {
-				testFunc(`Should throw error ${JSON.stringify(test.error)} for input of ${JSON.stringify(test.input)}`, () => {
+				testFunc(`Should throw error ${JSON.stringify(test.error)} for input of ${inputJSONString}`, () => {
 					return expect(func().model.objectFromSchema(...func().input)).to.be.rejectedWith(test.error.message);
 				});
 			} else {
-				testFunc(`Should return ${JSON.stringify(test.output)} for input of ${JSON.stringify(test.input)} with a schema of ${JSON.stringify(test.schema)}`, async () => {
+				testFunc(`Should return ${JSON.stringify(test.output)} for input of ${inputJSONString} with a schema of ${JSON.stringify(test.schema)}`, async () => {
 					expect(await func().model.objectFromSchema(...func().input)).to.eql(test.output);
 				});
 			}
