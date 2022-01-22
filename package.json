@@ -59,7 +59,7 @@
     "@aws-sdk/client-dynamodb": "^3.45.0",
     "@aws-sdk/util-dynamodb": "^3.45.0",
     "dynamoose-utils": "^3.0.0-alpha.2",
-    "js-object-utilities": "^2.0.0"
+    "js-object-utilities": "^2.1.0"
   },
   "license": "Unlicense",
   "keywords": [
