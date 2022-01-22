@@ -1,3 +1,5 @@
+import * as objectUtils from "js-object-utilities";
+
 export default function deep_copy<T> (obj: T): T {
 	let copy: any;
 
@@ -45,7 +47,7 @@ export default function deep_copy<T> (obj: T): T {
 			copy = {};
 		}
 		for (const attr in obj) {
-			if (Object.prototype.hasOwnProperty.call(obj, attr)) {
+			if (Object.prototype.hasOwnProperty.call(obj, attr) && !objectUtils.isCircular(obj as any, attr)) {
 				copy[attr] = deep_copy(obj[attr]);
 			}
 		}
