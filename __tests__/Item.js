@@ -2269,7 +2269,7 @@ describe("Item", () => {
 				"output": {"id": 1},
 				"schema": {"id": Number},
 				"inputJSONString": JSON.stringify({"id": 1, "array": {"first": 1}, "array2": "CIRCULAR"})
-			},
+			}
 		];
 		const defaultsTests = [
 			// Defaults
