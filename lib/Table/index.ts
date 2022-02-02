@@ -40,6 +40,7 @@ interface TableInternalProperties {
 export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	// transaction: any;
 	static defaults: TableOptions;
+
 	/**
 	 * This method is the basic entry point for creating a table in Dynamoose.
 	 *
@@ -55,7 +56,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * const Table = new dynamoose.Table("Table", [Order, Shipment]);
 	 * ```
 	 *
-	 * The `config` parameter is an object used to customize settings for the table.
+	 * The `options` parameter is an optional object used to customize settings for the table.
 	 *
 	 * | Name | Description | Type | Default |
 	 * |------|-------------|------|---------|
@@ -108,9 +109,9 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * @param instance INTERNAL PARAMETER
 	 * @param name The name of the table.
 	 * @param models An array of [Model](/guide/Model.md) instances.
-	 * @param options An object used to customize settings for the table.
+	 * @param options An optional object used to customize settings for the table.
 	 */
-	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional) {
+	constructor (instance: Instance, name: string, models: Model[], options?: TableOptionsOptional) {
 		super();
 
 		// Check name argument
