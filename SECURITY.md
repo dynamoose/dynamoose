@@ -8,17 +8,13 @@ While reading this document, please remember that the [LICENSE](https://github.c
 
 ## Supported Versions
 
-The following versions will get security updates if necessary. Security updates will be included in either patch or minor versions.
+You can find the list of supported versions that will receive security updates on the Dynamoose website under the [Maintained Versions page](https://dynamoosejs.com/other/Maintained%20Versions).
+
+Security updates will be included in either patch or minor versions.
 
 In the event a security vulnerability is patched in a major version, it will also be back-ported to all supported version lines (in the event the vulnerability exists on previous version line).
 
 Security vulnerabilities will only be back-ported to previous minor versions in the extremely unlikely event a minor version causes a breaking change and someone requests the patch to be backwards applied, and demonstrates the breaking change. If this occurs please [contact me](https://charlie.fish/contact) with your request.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 3.x.x   | :white_check_mark: |
-| 2.x.x   | :white_check_mark: |
-| 1.x.x   | :x:                |
 
 ## Reporting a Vulnerability
 
