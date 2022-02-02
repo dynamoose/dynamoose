@@ -1,6 +1,6 @@
 The Table object represents a single table in DynamoDB. It takes in both a name and array of models and has methods to retrieve, and save items in the database.
 
-## new dynamoose.Table(name, models[, config])
+## new dynamoose.Table(name, models[, options])
 
 dyno_jsdoc_dist/Table/index.js|new Table
 
