@@ -31,7 +31,11 @@ module.exports = {
 		{
 			"type": "category",
 			"label": "Other",
-			"items": ["other/FAQ"]
+			"items": [
+				"other/FAQ",
+				"other/Maintained Versions",
+				"other/Version Requirements"
+			]
 		},
 		{
 			"type": "category",
