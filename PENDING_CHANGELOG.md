@@ -81,6 +81,9 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 - JSDoc documentation (Beta)! In certain editors such as VSCode, this allows you to hover over Dynamoose functions and attributes to see their documentation.
 - Dynamoose's website now respects your OS color theme preference instead of always defaulting to light mode.
 - Migrated documentation from Vercel to [Cloudflare Pages](https://pages.cloudflare.com/) for PR & branch builds.
+- Adding new pages for documentation:
+	- Maintained Versions
+	- Version Requirements
 - Added [`/version` page](https://dynamoosejs.com/version) to documentation to easily view the Dynamoose npm version & Git commit SHA of the documentation you are viewing.
 - Added [robots.txt](https://dynamoosejs.com/robots.txt) file to documentation.
 - Added [YouTube channel link](https://www.youtube.com/channel/UCw4K_PDdzsZPM1PSeqS997Q) to documentation footer.
