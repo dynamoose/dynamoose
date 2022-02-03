@@ -114,6 +114,15 @@ describe("Table", () => {
 				expect(Table.getInternalProperties(internalProperties).ready).toEqual(true);
 			});
 
+			it("Should throw error for pendingTaskPromise if table is not initialized", () => {
+				const Model = dynamoose.model("Cat", {"id": String});
+				const Table = new dynamoose.Table("Cat", [Model], {
+					"initialize": false
+				});
+
+				return expect(Table.getInternalProperties(internalProperties).pendingTaskPromise()).rejects.toThrow("Table Cat has not been initialized.");
+			});
+
 			it("Should resolve pendingTaskPromises after model is ready", async () => {
 				let describeTableResponse = {
 					"Table": {"TableStatus": "CREATING"}

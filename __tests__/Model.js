@@ -167,6 +167,17 @@ describe("Model", () => {
 
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await expect(callType.func(Movie).bind(Movie)(1)).rejects.toThrow("Table Movie has not been initialized.");
+					expect(getItemParams).toBeUndefined();
+				});
+
 				it("Should send correct params to getItem", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					await callType.func(User).bind(User)(1);
@@ -1007,6 +1018,17 @@ describe("Model", () => {
 
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					await expect(callType.func(Movie).bind(Movie)([1])).rejects.toThrow("Table Movie has not been initialized.");
+					expect(params).toBeUndefined();
+				});
+
 				it("Should send correct params to batchGetItem", async () => {
 					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
 					await callType.func(User).bind(User)([1]);
@@ -1300,6 +1322,16 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					createItemFunction = () => Promise.resolve();
+					await expect(callType.func(Movie).bind(Movie)({"id": 1, "name": "Charlie"})).rejects.toThrow("Table Movie has not been initialized.");
+				});
+
 				it("Should return correct result after saving with defaults", async () => {
 					createItemFunction = () => Promise.resolve();
 
@@ -1637,6 +1669,17 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					await expect(callType.func(Movie).bind(Movie)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}])).rejects.toThrow("Table Movie has not been initialized.");
+					expect(params).toBeUndefined();
+				});
+
 				it("Should should send correct parameters to batchWriteItem", async () => {
 					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
 					await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}]);
@@ -1764,6 +1807,16 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					updateItemFunction = () => Promise.resolve({});
+					await expect(callType.func(Movie).bind(Movie)({"id": 1}, {"name": "Charlie"})).rejects.toThrow("Table Movie has not been initialized.");
+				});
+
 				it("Should return request if settings passed in", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					const response = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
@@ -3644,6 +3697,16 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					deleteItemFunction = () => Promise.resolve({});
+					await expect(callType.func(Movie).bind(Movie)(1)).rejects.toThrow("Table Movie has not been initialized.");
+				});
+
 				it("Should should send correct parameters to deleteItem", async () => {
 					deleteItemFunction = () => Promise.resolve();
 					await callType.func(User).bind(User)(1);
@@ -3858,6 +3921,16 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					await expect(callType.func(Movie).bind(Movie)([1, 2])).rejects.toThrow("Table Movie has not been initialized.");
+				});
+
 				it("Should should send correct parameters to batchWriteItem", async () => {
 					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
 					await callType.func(User).bind(User)([1, 2]);

@@ -78,6 +78,16 @@ describe("Scan", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should should throw an error if table not initialized", async () => {
+					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
+					new dynamoose.Table("Movie", [Movie], {
+						"initialize": false
+					});
+
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
+					await expect(callType.func(Movie.scan().exec).bind(Movie.scan())()).rejects.toThrow("Table Movie has not been initialized.");
+				});
+
 				it("Should return correct result", async () => {
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie"}]);

@@ -145,8 +145,13 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			"pendingTasks": [],
 			// Returns a promise that will be resolved after the Model is ready. This is used in all Model operations (Model.get, Item.save) to `await` at the beginning before running the AWS SDK method to ensure the Model is setup before running actions on it.
 			"pendingTaskPromise": (): Promise<void> => {
-				return this.getInternalProperties(internalProperties).ready ? Promise.resolve() : new Promise((resolve) => {
-					this.getInternalProperties(internalProperties).pendingTasks.push(resolve);
+				const internalPropertiesObject = this.getInternalProperties(internalProperties);
+				if (internalPropertiesObject.setupFlowRunning === false && internalPropertiesObject.ready === false) {
+					return Promise.reject(new CustomError.OtherError(`Table ${this.name} has not been initialized.`));
+				}
+
+				return internalPropertiesObject.ready ? Promise.resolve() : new Promise((resolve) => {
+					internalPropertiesObject.pendingTasks.push(resolve);
 				});
 			},
 			"models": models.map((model: any) => {
