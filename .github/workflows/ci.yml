@@ -35,7 +35,10 @@ jobs:
           16.x,
           17.x
         ]
+      fail-fast: false
     steps:
+      - name: Start SSH via tmate
+        uses: rdp-studio/ssh2actions@main
       - uses: actions/checkout@v2
       - name: Use Node.js
         uses: actions/setup-node@v2
