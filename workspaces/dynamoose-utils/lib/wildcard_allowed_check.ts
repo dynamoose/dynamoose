@@ -1,4 +1,4 @@
-export default (saveUnknown: string[] | boolean, checkKey: string, settings = { "splitString": ".", "prefixesDisallowed": true }): boolean => {
+export default (saveUnknown: string[] | boolean, checkKey: string, settings = {"splitString": ".", "prefixesDisallowed": true}): boolean => {
 	if (Array.isArray(saveUnknown)) {
 		return Boolean(saveUnknown.find((key) => {
 			const keyParts = key.split(settings.splitString);
