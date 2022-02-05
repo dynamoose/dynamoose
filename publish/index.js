@@ -40,6 +40,7 @@ let package = require("../package.json");
 	await git.checkout(results.branch);
 	package = require("../package.json");
 	const gitCoreEditor = await exec("git config --get core.editor");
+	const workspacePackages = require("./workspacePackages");
 	results = { // eslint-disable-line require-atomic-updates
 		...results,
 		...await inquirer.prompt([
@@ -55,6 +56,13 @@ let package = require("../package.json");
 				"type": "confirm",
 				"message": "Is this version a prerelease version?",
 				"default": (res) => retrieveInformation(res.version).isPrerelease
+			},
+			{
+				"name": "workspacePackagesToPublish",
+				"type": "checkbox",
+				"message": "Which sub-packages would you like to publish?",
+				"choices": workspacePackages,
+				"default": workspacePackages
 			},
 			{
 				"name": "textEditor",
@@ -109,6 +117,32 @@ let package = require("../package.json");
 	const gitCommitPackage = ora("Committing files to Git").start();
 	await git.commit(`Bumping version to ${results.version}`, packageFiles.map((file) => path.join(__dirname, "..", file)));
 	gitCommitPackage.succeed("Committed files to Git");
+
+	for (const workspacePackage of results.workspacePackagesToPublish) {
+		const packageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating versions in package.json & package-lock.json files`).start();
+		const subPackageFiles = packageFiles.map((file) => `workspaces/${workspacePackage}/${file}`);
+		await Promise.all(subPackageFiles.map(updateVersion));
+		packageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated versions in package.json & package-lock.json files`);
+
+		const primaryPackageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating package.json files to point to new version`).start();
+		const packageJSON = require(`../workspaces/${workspacePackage}/package.json`);
+		const packages = ["", ...results.workspacePackagesToPublish.filter((pkg) => pkg !== workspacePackage).map((pkg) => `workspaces/${pkg}`)];
+		for (const pkg of packages) {
+			const currentPath = path.join(__dirname, "..", pkg, "package.json");
+			let fileContents = await fs.readFile(currentPath);
+			const primaryFileContentsJSON = JSON.parse(fileContents);
+			if (primaryFileContentsJSON.packages[workspacePackage]) {
+				primaryFileContentsJSON.packages[workspacePackage] = packageJSON.version;
+				await fs.writeFile(currentPath, `${JSON.stringify(primaryFileContentsJSON, null, 2)}\n`);
+			}
+		}
+		primaryPackageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated package.json files to point to new version`);
+
+		// Add & Commit files to Git
+		const gitCommitPackageSub = ora("Committing files to Git").start();
+		await git.commit(`Bumping version to ${results.version} for ${workspacePackage} package`, subPackageFiles.map((file) => path.join(__dirname, "..", file)));
+		gitCommitPackageSub.succeed("Committed files to Git");
+	}
 
 	const versionInfo = retrieveInformation(results.version);
 	const versionParts = versionInfo.main.split(".");

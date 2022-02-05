@@ -1,0 +1,92 @@
+{
+  "name": "dynamoose-logger",
+  "version": "3.0.0-alpha.1",
+  "description": "Logging tool for Dynamoose",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepare": "npm run build:clean && npm run build",
+    "build": "tsc",
+    "build:sourcemap": "tsc --sourceMap",
+    "build:clean": "rimraf dist",
+    "build:watch": "npm run build -- -w",
+    "lint": "eslint . --ext .ts,.js --max-warnings 0",
+    "lint:fix": "npm run lint -- --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dynamoose/dynamoose-logger.git"
+  },
+  "author": {
+    "name": "Charlie Fish",
+    "email": "fishcharlie.code@gmail.com",
+    "url": "https://charlie.fish"
+  },
+  "contributors": [
+    {
+      "name": "Brandon Goode"
+    }
+  ],
+  "license": "Unlicense",
+  "keywords": [
+    "dynamodb",
+    "dynamo",
+    "mongoose",
+    "aws",
+    "amazon",
+    "document",
+    "model",
+    "schema",
+    "database",
+    "data",
+    "datastore",
+    "query",
+    "scan",
+    "nosql",
+    "db",
+    "nosql",
+    "store",
+    "document store",
+    "table",
+    "json",
+    "object",
+    "storage"
+  ],
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "funding": [
+    {
+      "type": "github-sponsors",
+      "url": "https://github.com/sponsors/fishcharlie"
+    },
+    {
+      "type": "opencollective",
+      "url": "https://opencollective.com/dynamoose"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/dynamoose/dynamoose-logger/issues"
+  },
+  "homepage": "https://dynamoosejs.com",
+  "peerDependencies": {
+    "dynamoose": "^3.0.0-alpha.1"
+  },
+  "dependencies": {
+    "dynamoose-utils": "^3.0.0-alpha.1",
+    "js-object-utilities": "^2.0.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.35",
+    "@typescript-eslint/eslint-plugin": "^4.18.0",
+    "@typescript-eslint/parser": "^4.18.0",
+    "eslint": "^7.22.0",
+    "nyc": "^15.1.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.2.3"
+  }
+}
