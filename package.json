@@ -10,16 +10,16 @@
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
-    "@types/node": "^17.0.7",
-    "@typescript-eslint/eslint-plugin": "^5.9.0",
-    "@typescript-eslint/parser": "^5.9.0",
+    "@types/node": "^17.0.15",
+    "@typescript-eslint/eslint-plugin": "^5.10.2",
+    "@typescript-eslint/parser": "^5.10.2",
     "dynamoose-logger": "^3.0.0-alpha.1",
-    "eslint": "^8.6.0",
+    "eslint": "^8.8.0",
     "eslint-plugin-no-only-tests": "^2.6.0",
-    "jest": "^27.4.5",
+    "jest": "^27.5.0",
     "rimraf": "^3.0.2",
     "source-map-support": "^0.5.21",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.5"
   },
   "scripts": {
     "prepare": "npm run build:clean && npm run build",
@@ -56,8 +56,8 @@
     "url": "https://github.com/dynamoose/dynamoose/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.45.0",
-    "@aws-sdk/util-dynamodb": "^3.45.0",
+    "@aws-sdk/client-dynamodb": "^3.49.0",
+    "@aws-sdk/util-dynamodb": "^3.49.0",
     "dynamoose-utils": "^3.0.0-alpha.2",
     "js-object-utilities": "^2.1.0"
   },
