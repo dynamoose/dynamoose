@@ -133,8 +133,16 @@ let package = require("../package.json");
 			const primaryFileContentsJSON = JSON.parse(fileContents);
 			if (primaryFileContentsJSON.packages[workspacePackage]) {
 				primaryFileContentsJSON.packages[workspacePackage] = packageJSON.version;
-				await fs.writeFile(currentPath, `${JSON.stringify(primaryFileContentsJSON, null, 2)}\n`);
 			}
+			if (primaryFileContentsJSON.peerDependencies) {
+				if (primaryFileContentsJSON.peerDependencies[workspacePackage]) {
+					primaryFileContentsJSON.peerDependencies[workspacePackage] = packageJSON.version;
+				}
+				if (primaryFileContentsJSON.peerDependencies["dynamoose"]) {
+					primaryFileContentsJSON.peerDependencies["dynamoose"] = packageJSON.version;
+				}
+			}
+			await fs.writeFile(currentPath, `${JSON.stringify(primaryFileContentsJSON, null, 2)}\n`);
 		}
 		primaryPackageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated package.json files to point to new version`);
 
