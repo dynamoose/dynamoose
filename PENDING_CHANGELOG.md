@@ -70,6 +70,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 - Added `dynamoose.type.CONSTANT` helper function to create a constant type.
 - Added `dynamoose.type.COMBINE` helper function to create a combine type.
 - Added `schema.hashKey` & `schema.rangeKey` properties to allow you to access the hash and range keys of your schemas.
+- Added `schema.indexAttributes` property that returns an array of strings with each string representing the attribute name of each index.
 
 ### Bug Fixes
 

@@ -10,6 +10,10 @@ dyno_jsdoc_dist/Schema.js|schema.hashKey
 
 dyno_jsdoc_dist/Schema.js|schema.rangeKey
 
+## schema.indexAttributes
+
+dyno_jsdoc_dist/Schema.js|schema.indexAttributes
+
 ## Attribute Types
 
 | Type | Set Allowed | DynamoDB Type | Custom Dynamoose Type | Nested Type | Settings | Notes |

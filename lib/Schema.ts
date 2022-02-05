@@ -788,6 +788,7 @@ interface SchemaInternalProperties {
 	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
 	getMapSettingObject: () => {[key: string]: string};
 	getDefaultMapAttribute: (attribute: string) => string;
+	getIndexAttributes: () => {index: IndexDefinition; attribute: string}[];
 }
 
 export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
@@ -1006,6 +1007,27 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 						return result;
 					}
 				}
+			},
+			"getIndexAttributes": (): {index: IndexDefinition; attribute: string}[] => {
+				return this.attributes()
+					.map((attribute: string) => ({
+						"index": this.getAttributeSettingValue("index", attribute) as IndexDefinition,
+						attribute
+					}))
+					.filter((obj) => Array.isArray(obj.index) ? obj.index.some((index) => Boolean(index)) : obj.index)
+					.reduce((accumulator, currentValue) => {
+						if (Array.isArray(currentValue.index)) {
+							currentValue.index.forEach((currentIndex) => {
+								accumulator.push({
+									...currentValue,
+									"index": currentIndex
+								});
+							});
+						} else {
+							accumulator.push(currentValue);
+						}
+						return accumulator;
+					}, []);
 			}
 		});
 
@@ -1125,6 +1147,24 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		}
 	}
 
+	/**
+	 * This property returns an array of strings with each string being the name of an attribute. Only attributes that are indexes are returned.
+	 *
+	 * ```js
+	 * const schema = new Schema({
+	 * 	"id": String,
+	 * 	"name": {
+	 * 		"type": String,
+	 * 		"index": true
+	 * 	}
+	 * });
+	 * console.log(schema.indexAttributes); // ["name"]
+	 * ```
+	 */
+	get indexAttributes (): string[] {
+		return this.getInternalProperties(internalProperties).getIndexAttributes().map((key) => key.attribute);
+	}
+
 	attributes: (object?: ObjectType, settings?: SchemaAttributesMethodSettings) => string[];
 	async getCreateTableAttributeParams (model: Model<Item>): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> {
 		const hashKey = this.hashKey;
@@ -1155,7 +1195,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			});
 		}
 
-		utils.array_flatten(await Promise.all([this.getIndexAttributes(), this.getIndexRangeKeyAttributes()])).map((obj) => obj.attribute).forEach((index) => {
+		utils.array_flatten(await Promise.all([this.getInternalProperties(internalProperties).getIndexAttributes(), this.getIndexRangeKeyAttributes()])).map((obj) => obj.attribute).forEach((index) => {
 			if (AttributeDefinitionsNames.includes(index)) {
 				return;
 			}
@@ -1338,7 +1378,6 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			return result;
 		}, {});
 	}
-	getIndexAttributes: () => Promise<{ index: IndexDefinition; attribute: string }[]>;
 	getSettingValue: (setting: string) => any;
 	getAttributeTypeDetails: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[];
 	getAttributeValue: (key: string, settings?: { standardKey?: boolean; typeIndexOptionMap?: {} }) => AttributeDefinition;
@@ -1354,30 +1393,8 @@ Schema.prototype.requiredCheck = async function (this: Schema, key: string, valu
 	}
 };
 
-Schema.prototype.getIndexAttributes = async function (this: Schema): Promise<{index: IndexDefinition; attribute: string}[]> {
-	return (await Promise.all(this.attributes()
-		.map(async (attribute: string) => ({
-			"index": this.getAttributeSettingValue("index", attribute) as IndexDefinition,
-			attribute
-		}))
-	))
-		.filter((obj) => Array.isArray(obj.index) ? obj.index.some((index) => Boolean(index)) : obj.index)
-		.reduce((accumulator, currentValue) => {
-			if (Array.isArray(currentValue.index)) {
-				currentValue.index.forEach((currentIndex) => {
-					accumulator.push({
-						...currentValue,
-						"index": currentIndex
-					});
-				});
-			} else {
-				accumulator.push(currentValue);
-			}
-			return accumulator;
-		}, []);
-};
 Schema.prototype.getIndexRangeKeyAttributes = async function (this: Schema): Promise<{attribute: string}[]> {
-	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getIndexAttributes();
+	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getInternalProperties(internalProperties).getIndexAttributes();
 	return indexes.map((index) => index.index.rangeKey).filter((a) => Boolean(a)).map((a) => ({"attribute": a}));
 };
 export interface TableIndex {
@@ -1390,7 +1407,7 @@ export interface IndexItem {
 	ProvisionedThroughput?: {"ReadCapacityUnits": number; "WriteCapacityUnits": number}; // TODO: this was copied from get_provisioned_throughput. We should change this to be an actual interface
 }
 Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>): Promise<ModelIndexes> {
-	const indexes: ModelIndexes = (await this.getIndexAttributes()).reduce((accumulator, currentValue) => {
+	const indexes: ModelIndexes = (await this.getInternalProperties(internalProperties).getIndexAttributes()).reduce((accumulator, currentValue) => {
 		const indexValue = currentValue.index;
 		const attributeValue = currentValue.attribute;
 		const isGlobalIndex = indexValue.type === "global" || !indexValue.type;

@@ -1383,7 +1383,55 @@ describe("Schema", () => {
 		tests.forEach((test) => {
 			it(test.name, async () => {
 				const schema = new dynamoose.Schema(test.schema);
-				const output = await schema.getIndexAttributes();
+				const output = await schema.getInternalProperties(internalProperties).getIndexAttributes();
+				expect(output).toEqual(test.output);
+			});
+		});
+	});
+
+	describe("indexAttributes", () => {
+		const tests = [
+			{
+				"name": "Should return an empty array if no indices are defined",
+				"schema": {"id": String},
+				"output": []
+			},
+			{
+				"name": "Should return an array containing definitions for an boolean defined index",
+				"schema": {"id": {"type": String, "index": true}},
+				"output": ["id"]
+			},
+			{
+				"name": "Should return an array containing definitions for an object defined index",
+				"schema": {"id": {"type": String, "index": {"type": "global", "name": "id-index"}}},
+				"output": ["id"]
+			},
+			{
+				"name": "Should return an array containing definitions for an array defined index",
+				"schema": {"id": {"type": String, "index": [{"type": "global", "name": "id-index"}]}},
+				"output": ["id"]
+			},
+			{
+				"name": "Should return an array containing multiple definitions for array defined indexes",
+				"schema": {"id": {"type": String, "index": [{"type": "global", "name": "id-index-1"}, {"type": "local", "name": "id-index-2"}]}},
+				"output": ["id", "id"]
+			},
+			{
+				"name": "Should aggregate an array containing multiple definitions for all defined indexes",
+				"schema": {"id": {"type": String, "index": [{"type": "global", "name": "id-index-1"}, {"type": "local", "name": "id-index-2"}]}, "uid": {"type": String, "index": {"type": "global", "name": "uid-index"}}, "uuid": {"type": String}},
+				"output": ["id", "id", "uid"]
+			},
+			{
+				"name": "Should work with multiple types for single attribute",
+				"schema": {"id": String, "data": [String, Number]},
+				"output": []
+			}
+		];
+
+		tests.forEach((test) => {
+			it(test.name, async () => {
+				const schema = new dynamoose.Schema(test.schema);
+				const output = schema.indexAttributes;
 				expect(output).toEqual(test.output);
 			});
 		});
