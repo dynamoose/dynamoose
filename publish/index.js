@@ -102,11 +102,12 @@ let package = require("../package.json");
 		await fs.writeFile(currentPath, `${fileContents}\n`);
 	};
 	const packageUpdateVersionsSpinner = ora("Updating versions in package.json & package-lock.json files").start();
-	await Promise.all(["package.json", "package-lock.json"].map(updateVersion));
+	const packageFiles = ["package.json", "package-lock.json"];
+	await Promise.all(packageFiles.map(updateVersion));
 	packageUpdateVersionsSpinner.succeed("Updated versions in package.json & package-lock.json files");
 	// Add & Commit files to Git
 	const gitCommitPackage = ora("Committing files to Git").start();
-	await git.commit(`Bumping version to ${results.version}`, ["package.json", "package-lock.json"].map((file) => path.join(__dirname, "..", file)));
+	await git.commit(`Bumping version to ${results.version}`, packageFiles.map((file) => path.join(__dirname, "..", file)));
 	gitCommitPackage.succeed("Committed files to Git");
 
 	const versionInfo = retrieveInformation(results.version);
