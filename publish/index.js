@@ -151,7 +151,7 @@ let package = require("../package.json");
 
 		// Add & Commit files to Git
 		const gitCommitPackageSub = ora("Committing files to Git").start();
-		await git.commit(`Bumping version to ${results.version} for ${workspacePackage} package`, subPackageFiles.map((file) => path.join(__dirname, "..", file)));
+		await git.commit(`Bumping version to ${results.version} for ${workspacePackage} package`, [...subPackageFiles, ...packageFiles].map((file) => path.join(__dirname, "..", file)));
 		gitCommitPackageSub.succeed("Committed files to Git");
 	}
 
