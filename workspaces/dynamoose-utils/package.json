@@ -1,6 +1,6 @@
 {
   "name": "dynamoose-utils",
-  "version": "3.0.0-alpha.2",
+  "version": "3.0.0-beta.2",
   "description": "Internal utilities for Dynamoose",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
