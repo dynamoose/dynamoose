@@ -217,6 +217,11 @@ let package = require("../package.json");
 		gitPush2.succeed("Pushed files to GitHub");
 	}
 	// Create PR
+	if (!await checkCleanWorkingDir()) {
+		console.error("INTERNAL ERROR: We should have a clean working directory before creating a PR.");
+		console.error("Exiting.\n");
+		process.exit(1);
+	}
 	const gitPR = ora("Creating PR on GitHub").start();
 	const labels = [versionInfo.isPrerelease ? "type:prerelease" : "type:version"];
 	const pr = (await octokit.pulls.create({
