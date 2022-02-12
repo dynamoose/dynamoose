@@ -131,9 +131,12 @@ let package = require("../package.json");
 			const currentPath = path.join(__dirname, "..", pkg, "package.json");
 			let fileContents = await fs.readFile(currentPath);
 			const primaryFileContentsJSON = JSON.parse(fileContents);
-			if (primaryFileContentsJSON.packages[workspacePackage]) {
-				primaryFileContentsJSON.packages[workspacePackage] = packageJSON.version;
-			}
+			const dependenciesArray = ["dependencies", "devDependencies"];
+			dependenciesArray.forEach((dependencyName) => {
+				if (primaryFileContentsJSON[dependencyName] && primaryFileContentsJSON[dependencyName][workspacePackage]) {
+					primaryFileContentsJSON[dependencyName][workspacePackage] = packageJSON.version;
+				}
+			});
 			if (primaryFileContentsJSON.peerDependencies) {
 				if (primaryFileContentsJSON.peerDependencies[workspacePackage]) {
 					primaryFileContentsJSON.peerDependencies[workspacePackage] = packageJSON.version;
