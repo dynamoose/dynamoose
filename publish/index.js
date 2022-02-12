@@ -109,20 +109,20 @@ let package = require("../package.json");
 		fileContents = JSON.stringify(fileContentsJSON, null, 2);
 		await fs.writeFile(currentPath, `${fileContents}\n`);
 	};
-	const packageUpdateVersionsSpinner = ora("Updating versions in package.json & package-lock.json files").start();
-	const packageFiles = ["package.json", "package-lock.json"];
+	const packageFiles = ["package.json"/*, "package-lock.json"*/];
+	const packageUpdateVersionsSpinner = ora(`Updating versions in ${packageFiles.join(" & ")} files`).start();
 	await Promise.all(packageFiles.map(updateVersion));
-	packageUpdateVersionsSpinner.succeed("Updated versions in package.json & package-lock.json files");
+	packageUpdateVersionsSpinner.succeed(`Updated versions in ${packageFiles.join(" & ")} files`);
 	// Add & Commit files to Git
 	const gitCommitPackage = ora("Committing files to Git").start();
 	await git.commit(`Bumping version to ${results.version}`, packageFiles.map((file) => path.join(__dirname, "..", file)));
 	gitCommitPackage.succeed("Committed files to Git");
 
 	for (const workspacePackage of results.workspacePackagesToPublish) {
-		const packageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating versions in package.json & package-lock.json files`).start();
+		const packageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating versions in ${packageFiles.join(" & ")} files`).start();
 		const subPackageFiles = packageFiles.map((file) => `workspaces/${workspacePackage}/${file}`);
 		await Promise.all(subPackageFiles.map(updateVersion));
-		packageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated versions in package.json & package-lock.json files`);
+		packageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated versions in ${packageFiles.join(" & ")} files`);
 
 		const primaryPackageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating package.json files to point to new version`).start();
 		const packageJSON = require(`../workspaces/${workspacePackage}/package.json`);
@@ -190,7 +190,7 @@ let package = require("../package.json");
 	console.log("Press any key to proceed.");
 	await keypress();
 	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
-	await exec("npm i");
+	// await exec("npm i");
 	const utils = require("../dist/utils").default;
 	const versionFriendlyTitle = `Version ${[versionInfo.main, versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : "", versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
