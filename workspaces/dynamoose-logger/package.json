@@ -1,6 +1,6 @@
 {
   "name": "dynamoose-logger",
-  "version": "3.0.0-beta.2",
+  "version": "3.0.0-beta.3",
   "description": "Logging tool for Dynamoose",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -73,10 +73,10 @@
   },
   "homepage": "https://dynamoosejs.com",
   "peerDependencies": {
-    "dynamoose": "3.0.0-beta.2"
+    "dynamoose": "3.0.0-beta.3"
   },
   "dependencies": {
-    "dynamoose-utils": "3.0.0-beta.2",
+    "dynamoose-utils": "3.0.0-beta.3",
     "js-object-utilities": "^2.1.0",
     "uuid": "^8.3.2"
   },
