@@ -58,7 +58,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.49.0",
     "@aws-sdk/util-dynamodb": "^3.49.0",
-    "dynamoose-utils": "^3.0.0-alpha.2",
+    "dynamoose-utils": "3.0.0-beta.3",
     "js-object-utilities": "^2.1.0"
   },
   "license": "Unlicense",
