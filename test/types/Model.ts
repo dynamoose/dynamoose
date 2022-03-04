@@ -91,3 +91,7 @@ export const UserModel = dynamoose.model(
 	"User",
 	userSchema
 );
+
+UserTypedModel.update({"id": "foo"}, {
+	"$ADD":{"age":1}
+});

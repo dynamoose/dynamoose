@@ -24,6 +24,13 @@ type DeleteTransactionResult = Promise<DeleteTransactionInput>;
 type UpdateTransactionResult = Promise<UpdateTransactionInput>;
 type ConditionTransactionResult = Promise<ConditionTransactionInput>;
 
+type UpdatePartial<T> =
+  | Partial<T>
+  | { $SET: Partial<T> }
+  | { $ADD: Partial<T> }
+  | { $REMOVE: Partial<T> }
+  | { $DELETE: Partial<T> };
+
 export interface GetTransaction {
 	(key: InputKey): GetTransactionResult;
 	(key: InputKey, settings?: ModelGetSettings): GetTransactionResult;
@@ -584,25 +591,25 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	}
 
 	// Update
-	update (obj: Partial<T>): Promise<T>;
-	update (obj: Partial<T>, callback: CallbackType<T, any>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>): Promise<T>;
-	update (keyObj: InputKey, updateObj: Partial<T>, callback: CallbackType<T, any>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, any>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings): Promise<T>;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
-	update (keyObj: InputKey, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, any>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>): Promise<T>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, callback: CallbackType<T, any>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, any>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings): Promise<T>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "item"}): Promise<T>;
-	update (keyObj: ObjectType, updateObj: Partial<T>, settings: ModelUpdateSettings & {"return": "item"}, callback: CallbackType<T, any>): void;
-	update (keyObj: InputKey | ObjectType, updateObj?: Partial<T> | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, settings?: ModelUpdateSettings | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
+	update (obj: UpdatePartial<T>): Promise<T>;
+	update (obj: UpdatePartial<T>, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>): Promise<T>;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, any>): void;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings): Promise<T>;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, any>): void;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>): Promise<T>;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, callback: CallbackType<T, any>): void;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, any>): void;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings): Promise<T>;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "item"}): Promise<T>;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "item"}, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey | ObjectType, updateObj?: UpdatePartial<T> | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, settings?: ModelUpdateSettings | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
 		if (typeof updateObj === "function") {
 			callback = updateObj as CallbackType<ItemCarrier | DynamoDB.UpdateItemInput, any>; // TODO: fix this, for some reason `updateObj` has a type of Function which is forcing us to type cast it
 			updateObj = null;
