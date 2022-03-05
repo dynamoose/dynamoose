@@ -38,7 +38,7 @@ module.exports = {
 				{
 					"type": "link",
 					"label": "",
-					"href": "https://dynobase.dev/?ref=dynamoose"
+					"href": "https://dynobase.com/?ref=dynamoose"
 				}
 			]
 		}
