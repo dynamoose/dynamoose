@@ -115,3 +115,9 @@ const shouldSucceedWithAsyncValidateMethodSchema = new dynamoose.Schema({
 		"validate": (value) => Promise.resolve(true)
 	}
 });
+const shouldSucceedWithAsyncDefaultMethodSchema = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"default": () => Promise.resolve("foo")
+	}
+});
