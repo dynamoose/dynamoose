@@ -18,6 +18,7 @@ const path = require("path");
 		console.log(`[${pkg}] npm publish --tag ${process.env.TAG}`);
 		await exec(`npm publish --tag ${process.env.TAG}`, {
 			"env": {
+				...process.env,
 				"NODE_AUTH_TOKEN": process.env.NODE_AUTH_TOKEN
 			},
 			"cwd": path.resolve(__dirname, "..", "workspaces", pkg)
