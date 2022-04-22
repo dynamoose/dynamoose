@@ -124,30 +124,30 @@ let package = require("../package.json");
 		await Promise.all(subPackageFiles.map(updateVersion));
 		packageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated versions in ${packageFiles.join(" & ")} files`);
 
-		const primaryPackageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating package.json files to point to new version`).start();
-		const packageJSON = require(`../workspaces/${workspacePackage}/package.json`);
-		const packages = ["", ...results.workspacePackagesToPublish.filter((pkg) => pkg !== workspacePackage).map((pkg) => `workspaces/${pkg}`)];
-		for (const pkg of packages) {
-			const currentPath = path.join(__dirname, "..", pkg, "package.json");
-			let fileContents = await fs.readFile(currentPath);
-			const primaryFileContentsJSON = JSON.parse(fileContents);
-			const dependenciesArray = ["dependencies", "devDependencies"];
-			dependenciesArray.forEach((dependencyName) => {
-				if (primaryFileContentsJSON[dependencyName] && primaryFileContentsJSON[dependencyName][workspacePackage]) {
-					primaryFileContentsJSON[dependencyName][workspacePackage] = packageJSON.version;
-				}
-			});
-			if (primaryFileContentsJSON.peerDependencies) {
-				if (primaryFileContentsJSON.peerDependencies[workspacePackage]) {
-					primaryFileContentsJSON.peerDependencies[workspacePackage] = packageJSON.version;
-				}
-				if (primaryFileContentsJSON.peerDependencies["dynamoose"]) {
-					primaryFileContentsJSON.peerDependencies["dynamoose"] = packageJSON.version;
-				}
-			}
-			await fs.writeFile(currentPath, `${JSON.stringify(primaryFileContentsJSON, null, 2)}\n`);
-		}
-		primaryPackageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated package.json files to point to new version`);
+		// const primaryPackageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating package.json files to point to new version`).start();
+		// const packageJSON = require(`../workspaces/${workspacePackage}/package.json`);
+		// const packages = ["", ...results.workspacePackagesToPublish.filter((pkg) => pkg !== workspacePackage).map((pkg) => `workspaces/${pkg}`)];
+		// for (const pkg of packages) {
+		// 	const currentPath = path.join(__dirname, "..", pkg, "package.json");
+		// 	let fileContents = await fs.readFile(currentPath);
+		// 	const primaryFileContentsJSON = JSON.parse(fileContents);
+		// 	const dependenciesArray = ["dependencies", "devDependencies"];
+		// 	dependenciesArray.forEach((dependencyName) => {
+		// 		if (primaryFileContentsJSON[dependencyName] && primaryFileContentsJSON[dependencyName][workspacePackage]) {
+		// 			primaryFileContentsJSON[dependencyName][workspacePackage] = packageJSON.version;
+		// 		}
+		// 	});
+		// 	if (primaryFileContentsJSON.peerDependencies) {
+		// 		if (primaryFileContentsJSON.peerDependencies[workspacePackage]) {
+		// 			primaryFileContentsJSON.peerDependencies[workspacePackage] = packageJSON.version;
+		// 		}
+		// 		if (primaryFileContentsJSON.peerDependencies["dynamoose"]) {
+		// 			primaryFileContentsJSON.peerDependencies["dynamoose"] = packageJSON.version;
+		// 		}
+		// 	}
+		// 	await fs.writeFile(currentPath, `${JSON.stringify(primaryFileContentsJSON, null, 2)}\n`);
+		// }
+		// primaryPackageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated package.json files to point to new version`);
 
 		// Add & Commit files to Git
 		const gitCommitPackageSub = ora("Committing files to Git").start();
