@@ -73,10 +73,10 @@
   },
   "homepage": "https://dynamoosejs.com",
   "peerDependencies": {
-    "dynamoose": "3.0.0-beta.2"
+    "dynamoose": "file:../.."
   },
   "dependencies": {
-    "dynamoose-utils": "3.0.0-beta.2",
+    "dynamoose-utils": "file:../dynamoose-utils",
     "js-object-utilities": "^2.1.0",
     "uuid": "^8.3.2"
   },
