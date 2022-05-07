@@ -45,7 +45,7 @@ const git = require("simple-git");
 						let [full, name, contents] = match;
 						const shouldPreprocessSourceFile = name.split(".").splice(1).join(".") === "d.ts";
 						if (shouldPreprocessSourceFile) {
-							const sourceFileContents = await fs.readFile(path.join(__dirname, "..", name), "utf8");
+							const sourceFileContents = await fs.readFile(path.join(__dirname, "..", "packages", "dynamoose", name), "utf8");
 							name = name.replace(".d.ts", "-docstmp.js");
 							const regexString = `(?:(?:interface )|(?:declare const ))(.+?):? \\{(${regexNestedBraces(5)})\\}`;
 							const regex = new RegExp(regexString, "gmu");
@@ -67,9 +67,9 @@ const git = require("simple-git");
 								}
 							} while (match);
 
-							await fs.writeFile(path.join(__dirname, "..", name), newSourceFileContents);
+							await fs.writeFile(path.join(__dirname, "..", "packages", "dynamoose", name), newSourceFileContents);
 						}
-						const sourceFilePath = path.join(__dirname, "..", name);
+						const sourceFilePath = path.join(__dirname, "..", "packages", "dynamoose", name);
 						const md = await jsdoc2md.render({
 							"files": [sourceFilePath]
 						});
