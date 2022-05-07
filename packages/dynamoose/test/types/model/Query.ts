@@ -1,4 +1,4 @@
-/* eslint @typescript-eslint/no-unused-vars: 0 */
+/* eslint @typescript-eslint/no-unused-vars: 0, no-console: 0 */
 
 import {UserTypedModel, UserModel, User} from "../Model";
 import {SortOrder} from "../../../dist/General";

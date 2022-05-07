@@ -1,0 +1,47 @@
+{
+  "name": "dynamoose",
+  "version": "3.0.0-beta.2",
+  "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
+  "homepage": "https://dynamoosejs.com",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dynamoose/dynamoose.git"
+  },
+  "author": {
+    "name": "Charlie Fish",
+    "email": "fishcharlie.code@gmail.com",
+    "url": "https://charlie.fish"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:sourcemap": "tsc --sourceMap",
+    "build:clean": "rimraf dist",
+    "build:watch": "npm run build -- -w",
+    "build:sourcemap:watch": "npm run build:sourcemap -- -w",
+    "test:nocoverage": "jest",
+    "test": "npm run test:nocoverage -- --coverage --transformIgnorePatterns=''",
+    "test:types": "tsc --project test/types/tsconfig.json"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.49.0",
+    "@aws-sdk/util-dynamodb": "^3.49.0",
+    "dynamoose-utils": "3.0.0-beta.2",
+    "js-object-utilities": "^2.1.0"
+  },
+  "devDependencies": {
+    "dynamoose-logger": "3.0.0-beta.2"
+  },
+  "license": "Unlicense",
+  "funding": [
+    {
+      "type": "github-sponsors",
+      "url": "https://github.com/sponsors/fishcharlie"
+    },
+    {
+      "type": "opencollective",
+      "url": "https://opencollective.com/dynamoose"
+    }
+  ]
+}
