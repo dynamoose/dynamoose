@@ -82,7 +82,8 @@ module.exports = {
 			]
 		},
 		"algolia": {
-			"apiKey": "ad8f45e217e480b02545037bf3c58887",
+			"appId": "KJLP8QLNW4",
+			"apiKey": "d726cf5c2a1f24d46ed682670c1f038c",
 			"indexName": "dynamoosejs"
 		},
 		"colorMode": {
