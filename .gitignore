@@ -6,4 +6,3 @@ coverage
 coverage.html
 dist
 docs/docs
-package-lock.json
