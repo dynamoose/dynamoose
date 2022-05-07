@@ -19,6 +19,7 @@
     "typescript": "^4.6.4"
   },
   "scripts": {
+    "prepare": "lerna bootstrap && npm run build",
     "build": "lerna run build",
     "build:sourcemap": "lerna run build:sourcemap",
     "build:clean": "lerna run build:clean",
