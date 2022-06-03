@@ -17,7 +17,7 @@ const fs = require("fs").promises;
 		console.log((await exec("node -v")).output);
 		console.log((await exec("npm -v")).output);
 
-		const pacakgeJSONPath = path.resolve(__dirname, "..", "workspaces", pkg, "package.json");
+		const pacakgeJSONPath = path.resolve(__dirname, "..", "packages", pkg, "package.json");
 		const packageJSON = await fs.readFile(pacakgeJSONPath);
 		const packageJSONObject = JSON.parse(packageJSON);
 		dependencies.forEach((depType) => {
@@ -31,14 +31,14 @@ const fs = require("fs").promises;
 
 		console.log(`[${pkg}] npm install`);
 		await exec("npm install", {
-			"cwd": path.resolve(__dirname, "..", "workspaces", pkg)
+			"cwd": path.resolve(__dirname, "..", "packages", pkg)
 		});
 		console.log(`[${pkg}] npm publish --tag ${process.env.TAG}`);
 		await exec(`npm publish --tag ${process.env.TAG}`, {
 			"env": {
 				"NODE_AUTH_TOKEN": process.env.NODE_AUTH_TOKEN
 			},
-			"cwd": path.resolve(__dirname, "..", "workspaces", pkg)
+			"cwd": path.resolve(__dirname, "..", "packages", pkg)
 		});
 		console.log(`[${pkg}] Finished publish`);
 	}
