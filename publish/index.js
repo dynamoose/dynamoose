@@ -103,8 +103,8 @@ let package = require("../packages/dynamoose/package.json");
 	packageUpdateVersionsSpinner.succeed("Updated versions");
 	// Add & Commit files to Git
 	const gitCommitPackage = ora("Committing files to Git").start();
-	await git.commit(`Bumping version to ${results.version}`);
 	await git.add("./*");
+	await git.commit(`Bumping version to ${results.version}`);
 	gitCommitPackage.succeed("Committed files to Git");
 
 	const versionInfo = retrieveInformation(results.version);
