@@ -9,5 +9,5 @@
 		"noImplicitThis": true,
 		"strict": false
 	},
-	"include": ["./lib/**/*"]
+	"exclude": ["../node_modules"]
 }
