@@ -1,36 +1,28 @@
 {
   "name": "dynamoose",
-  "version": "3.0.0-beta.2",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "homepage": "https://dynamoosejs.com",
   "directories": {
     "doc": "docs"
   },
   "devDependencies": {
-    "@types/jest": "^27.4.0",
-    "@types/node": "^17.0.15",
-    "@typescript-eslint/eslint-plugin": "^5.10.2",
-    "@typescript-eslint/parser": "^5.10.2",
-    "dynamoose-logger": "file:workspaces/dynamoose-logger",
+    "@types/node": "^17.0.31",
+    "@typescript-eslint/eslint-plugin": "^5.22.0",
     "eslint": "^8.8.0",
     "eslint-plugin-no-only-tests": "^2.6.0",
     "jest": "^27.5.0",
+    "lerna": "^4.0.0",
     "rimraf": "^3.0.2",
     "source-map-support": "^0.5.21",
-    "typescript": "^4.5.5"
+    "typescript": "^4.6.4"
   },
   "scripts": {
-    "prepare": "npm run build:clean && npm run build",
-    "build": "tsc",
-    "build:sourcemap": "tsc --sourceMap",
-    "build:clean": "rimraf dist",
-    "build:watch": "npm run build -- -w",
-    "build:sourcemap:watch": "npm run build:sourcemap -- -w",
-    "test:nocoverage": "jest",
-    "test": "npm run test:nocoverage -- --coverage --transformIgnorePatterns=''",
-    "test:types": "tsc --project test/types/tsconfig.json",
+    "prepare": "lerna bootstrap && npm run build",
+    "build": "lerna run build",
+    "build:sourcemap": "lerna run build:sourcemap",
+    "build:clean": "lerna run build:clean",
+    "test": "lerna run test",
+    "test:types": "lerna run test:types",
     "lint": "eslint . --ext .ts,.js --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
     "site:install": "cd docs && npm install",
@@ -58,7 +50,6 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.49.0",
     "@aws-sdk/util-dynamodb": "^3.49.0",
-    "dynamoose-utils": "file:workspaces/dynamoose-utils",
     "js-object-utilities": "^2.1.0"
   },
   "license": "Unlicense",
