@@ -17,24 +17,9 @@ jobs:
       - run: node publish/information/index.js
         id: data
 
-  publish-npm-subpackages:
-    needs: getinfo
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: lts/*
-          registry-url: https://registry.npmjs.org/
-      - run: node publish/publish-npm-subpackages.js
-        env:
-          TAG: ${{ needs.getinfo.outputs.npmtag }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
   publish-npm:
     needs:
       - getinfo
-      - publish-npm-subpackages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -43,10 +28,14 @@ jobs:
           node-version: lts/*
           registry-url: https://registry.npmjs.org/
       - run: npm install
-      - run: npm publish --tag $TAG
+      - run: lerna publish from-package --dist-tag $TAG --yes --no-git-tag-version --no-push
         env:
           TAG: ${{ needs.getinfo.outputs.npmtag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # - run: npm publish --tag $TAG
+      #   env:
+      #     TAG: ${{ needs.getinfo.outputs.npmtag }}
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # TODO: I'm pretty sure this is failing because the package.json name is not scoped (ex. `@dynamoose/dynamoose`). We should maybe add a step in here to scope it just for publishing this one package.
   # publish-gpr:

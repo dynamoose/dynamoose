@@ -1,5 +1,5 @@
 const core = require("@actions/core");
-const package = require("../../package.json");
+const package = require("../../packages/dynamoose/package.json");
 const version = package.version;
 const obj = require("./retrieve")(version);
 
