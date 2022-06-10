@@ -31,9 +31,7 @@
     "site:install": "cd docs && npm install",
     "site:start": "cd docs && npm start",
     "site:build": "cd docs && npm run build",
-    "site:swizzle": "cd docs && npm run swizzle",
-    "version": "npm run build && lerna version --exact --conventional-commits --no-push",
-    "publish": "node publish/index.js"
+    "site:swizzle": "cd docs && npm run swizzle"
   },
   "repository": {
     "type": "git",

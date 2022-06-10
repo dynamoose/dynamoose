@@ -7,15 +7,14 @@ const versionNPMTags = {
 
 module.exports = (version) => {
 	const regex = /^v?((?:\d\.?){1,3})(?:-(.*)\.(\d*))?$/gmu;
-	const res = regex.exec(version);
+	const [, main, tag, tagNumber] = regex.exec(version);
 	const obj = {
-		"main": res[1],
-		"tag": res[2],
-		"npmtag": res[2] || "latest",
-		"tagNumber": res[3],
-		"isPrerelease": Boolean(res[2])
+		main,
+		tag,
+		"npmtag": tag || "latest",
+		tagNumber,
+		"isPrerelease": Boolean(tag)
 	};
-	console.log(obj);
 	const majorVersion = obj.main.split(".")[0];
 
 	const versionNPMTag = versionNPMTags[majorVersion];
