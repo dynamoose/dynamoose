@@ -98,62 +98,13 @@ let package = require("../package.json");
 	await git.checkoutBranch(branch, results.branch);
 	branchSpinner.succeed(`Created branch ${branch}`);
 	// Update version in package.json
-	const updateVersion = async (file) => {
-		const currentPath = path.join(__dirname, "..", file);
-		let fileContents = await fs.readFile(currentPath);
-		const fileContentsJSON = JSON.parse(fileContents);
-		fileContentsJSON.version = results.version;
-		if (fileContentsJSON.packages && fileContentsJSON.packages[""]) {
-			fileContentsJSON.packages[""].version = results.version;
-		}
-		fileContents = JSON.stringify(fileContentsJSON, null, 2);
-		await fs.writeFile(currentPath, `${fileContents}\n`);
-	};
-	const packageFiles = ["package.json"/*, "package-lock.json"*/];
-	const packageUpdateVersionsSpinner = ora(`Updating versions in ${packageFiles.join(" & ")} files`).start();
-	await Promise.all(packageFiles.map(updateVersion));
-	packageUpdateVersionsSpinner.succeed(`Updated versions in ${packageFiles.join(" & ")} files`);
+	const packageUpdateVersionsSpinner = ora("Updating versions").start();
+	await exec(`lerna version ${results.version} --yes --no-git-tag-version --no-push`);
+	packageUpdateVersionsSpinner.succeed("Updated versions");
 	// Add & Commit files to Git
 	const gitCommitPackage = ora("Committing files to Git").start();
-	await git.commit(`Bumping version to ${results.version}`, packageFiles.map((file) => path.join(__dirname, "..", file)));
+	await git.commit(`Bumping version to ${results.version}`);
 	gitCommitPackage.succeed("Committed files to Git");
-
-	for (const workspacePackage of results.workspacePackagesToPublish) {
-		const packageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating versions in ${packageFiles.join(" & ")} files`).start();
-		const subPackageFiles = packageFiles.map((file) => `workspaces/${workspacePackage}/${file}`);
-		await Promise.all(subPackageFiles.map(updateVersion));
-		packageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated versions in ${packageFiles.join(" & ")} files`);
-
-		// const primaryPackageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating package.json files to point to new version`).start();
-		// const packageJSON = require(`../workspaces/${workspacePackage}/package.json`);
-		// const packages = ["", ...results.workspacePackagesToPublish.filter((pkg) => pkg !== workspacePackage).map((pkg) => `workspaces/${pkg}`)];
-		// for (const pkg of packages) {
-		// 	const currentPath = path.join(__dirname, "..", pkg, "package.json");
-		// 	let fileContents = await fs.readFile(currentPath);
-		// 	const primaryFileContentsJSON = JSON.parse(fileContents);
-		// 	const dependenciesArray = ["dependencies", "devDependencies"];
-		// 	dependenciesArray.forEach((dependencyName) => {
-		// 		if (primaryFileContentsJSON[dependencyName] && primaryFileContentsJSON[dependencyName][workspacePackage]) {
-		// 			primaryFileContentsJSON[dependencyName][workspacePackage] = packageJSON.version;
-		// 		}
-		// 	});
-		// 	if (primaryFileContentsJSON.peerDependencies) {
-		// 		if (primaryFileContentsJSON.peerDependencies[workspacePackage]) {
-		// 			primaryFileContentsJSON.peerDependencies[workspacePackage] = packageJSON.version;
-		// 		}
-		// 		if (primaryFileContentsJSON.peerDependencies["dynamoose"]) {
-		// 			primaryFileContentsJSON.peerDependencies["dynamoose"] = packageJSON.version;
-		// 		}
-		// 	}
-		// 	await fs.writeFile(currentPath, `${JSON.stringify(primaryFileContentsJSON, null, 2)}\n`);
-		// }
-		// primaryPackageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated package.json files to point to new version`);
-
-		// Add & Commit files to Git
-		const gitCommitPackageSub = ora("Committing files to Git").start();
-		await git.commit(`Bumping version to ${results.version} for ${workspacePackage} package`, [...subPackageFiles, ...packageFiles].map((file) => path.join(__dirname, "..", file)));
-		gitCommitPackageSub.succeed("Committed files to Git");
-	}
 
 	const versionInfo = retrieveInformation(results.version);
 	const versionParts = versionInfo.main.split(".");
