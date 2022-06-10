@@ -13,7 +13,7 @@ const path = require("path");
 const ora = require("ora");
 const os = require("os");
 const npmFetch = require("npm-registry-fetch");
-let package = require("../package.json");
+let package = require("../packages/dynamoose/package.json");
 
 (async function main () {
 	console.log("Welcome to the Dynamoose Publisher!\n\n\n");
@@ -38,7 +38,7 @@ let package = require("../package.json");
 		}
 	]);
 	await git.checkout(results.branch);
-	package = require("../package.json");
+	package = require("../packages/dynamoose/package.json");
 	const gitCoreEditor = await exec("git config --get core.editor");
 	const workspacePackages = require("./workspacePackages");
 	results = { // eslint-disable-line require-atomic-updates
@@ -142,7 +142,7 @@ let package = require("../package.json");
 	await keypress();
 	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
 	// await exec("npm i");
-	const utils = require("../dist/utils").default;
+	const utils = require("../packages/dynamoose/dist/utils").default;
 	const versionFriendlyTitle = `Version ${[versionInfo.main, versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : "", versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
 	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
 	let changelogTemplate = `## ${versionFriendlyTitle}`;
