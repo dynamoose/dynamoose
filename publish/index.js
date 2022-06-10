@@ -2,7 +2,8 @@ const inquirer = require("inquirer");
 const fs = require("fs").promises;
 const git = require("simple-git/promise")();
 const openurl = require("openurl");
-const {execSync} = require("child_process");
+const util = require("util");
+const exec = util.promisify(require("child_process").exec);
 const retrieveInformation = require("./information/retrieve");
 const {Octokit} = require("@octokit/rest");
 const octokit = new Octokit({
@@ -10,10 +11,9 @@ const octokit = new Octokit({
 });
 const path = require("path");
 const ora = require("ora");
+const os = require("os");
 const npmFetch = require("npm-registry-fetch");
 let package = require("../package.json");
-
-const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 (async function main () {
 	console.log("Welcome to the Dynamoose Publisher!\n\n\n");
@@ -39,6 +39,8 @@ const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 	]);
 	await git.checkout(results.branch);
 	package = require("../package.json");
+	const gitCoreEditor = await exec("git config --get core.editor");
+	const workspacePackages = require("./workspacePackages");
 	results = { // eslint-disable-line require-atomic-updates
 		...results,
 		...await inquirer.prompt([
@@ -54,6 +56,20 @@ const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 				"type": "confirm",
 				"message": "Is this version a prerelease version?",
 				"default": (res) => retrieveInformation(res.version).isPrerelease
+			},
+			{
+				"name": "workspacePackagesToPublish",
+				"type": "checkbox",
+				"message": "Which sub-packages would you like to publish?",
+				"choices": workspacePackages,
+				"default": workspacePackages
+			},
+			{
+				"name": "textEditor",
+				"type": "input",
+				"message": "What is the command line bin to launch your favorite text editor? (ex. `code`, `atom`, `nano`, etc.)",
+				"default": gitCoreEditor.stdout
+				// "validate": // TODO: ensure the command line thing exists and is valid (maybe by using `which` and checking to see if the output of that exists and is not `_____ not found`)
 			}
 		])
 	};
@@ -81,8 +97,63 @@ const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 	const branchSpinner = ora(`Creating branch ${branch}`).start();
 	await git.checkoutBranch(branch, results.branch);
 	branchSpinner.succeed(`Created branch ${branch}`);
+	// Update version in package.json
+	const updateVersion = async (file) => {
+		const currentPath = path.join(__dirname, "..", file);
+		let fileContents = await fs.readFile(currentPath);
+		const fileContentsJSON = JSON.parse(fileContents);
+		fileContentsJSON.version = results.version;
+		if (fileContentsJSON.packages && fileContentsJSON.packages[""]) {
+			fileContentsJSON.packages[""].version = results.version;
+		}
+		fileContents = JSON.stringify(fileContentsJSON, null, 2);
+		await fs.writeFile(currentPath, `${fileContents}\n`);
+	};
+	const packageFiles = ["package.json"/*, "package-lock.json"*/];
+	const packageUpdateVersionsSpinner = ora(`Updating versions in ${packageFiles.join(" & ")} files`).start();
+	await Promise.all(packageFiles.map(updateVersion));
+	packageUpdateVersionsSpinner.succeed(`Updated versions in ${packageFiles.join(" & ")} files`);
+	// Add & Commit files to Git
+	const gitCommitPackage = ora("Committing files to Git").start();
+	await git.commit(`Bumping version to ${results.version}`, packageFiles.map((file) => path.join(__dirname, "..", file)));
+	gitCommitPackage.succeed("Committed files to Git");
 
-	execSync(`npm run version ${results.version}`, {"stdio": "inherit"});
+	for (const workspacePackage of results.workspacePackagesToPublish) {
+		const packageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating versions in ${packageFiles.join(" & ")} files`).start();
+		const subPackageFiles = packageFiles.map((file) => `workspaces/${workspacePackage}/${file}`);
+		await Promise.all(subPackageFiles.map(updateVersion));
+		packageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated versions in ${packageFiles.join(" & ")} files`);
+
+		// const primaryPackageUpdateVersionsSpinnerSub = ora(`[${workspacePackage}] Updating package.json files to point to new version`).start();
+		// const packageJSON = require(`../workspaces/${workspacePackage}/package.json`);
+		// const packages = ["", ...results.workspacePackagesToPublish.filter((pkg) => pkg !== workspacePackage).map((pkg) => `workspaces/${pkg}`)];
+		// for (const pkg of packages) {
+		// 	const currentPath = path.join(__dirname, "..", pkg, "package.json");
+		// 	let fileContents = await fs.readFile(currentPath);
+		// 	const primaryFileContentsJSON = JSON.parse(fileContents);
+		// 	const dependenciesArray = ["dependencies", "devDependencies"];
+		// 	dependenciesArray.forEach((dependencyName) => {
+		// 		if (primaryFileContentsJSON[dependencyName] && primaryFileContentsJSON[dependencyName][workspacePackage]) {
+		// 			primaryFileContentsJSON[dependencyName][workspacePackage] = packageJSON.version;
+		// 		}
+		// 	});
+		// 	if (primaryFileContentsJSON.peerDependencies) {
+		// 		if (primaryFileContentsJSON.peerDependencies[workspacePackage]) {
+		// 			primaryFileContentsJSON.peerDependencies[workspacePackage] = packageJSON.version;
+		// 		}
+		// 		if (primaryFileContentsJSON.peerDependencies["dynamoose"]) {
+		// 			primaryFileContentsJSON.peerDependencies["dynamoose"] = packageJSON.version;
+		// 		}
+		// 	}
+		// 	await fs.writeFile(currentPath, `${JSON.stringify(primaryFileContentsJSON, null, 2)}\n`);
+		// }
+		// primaryPackageUpdateVersionsSpinnerSub.succeed(`[${workspacePackage}] Updated package.json files to point to new version`);
+
+		// Add & Commit files to Git
+		const gitCommitPackageSub = ora("Committing files to Git").start();
+		await git.commit(`Bumping version to ${results.version} for ${workspacePackage} package`, [...subPackageFiles, ...packageFiles].map((file) => path.join(__dirname, "..", file)));
+		gitCommitPackageSub.succeed("Committed files to Git");
+	}
 
 	const versionInfo = retrieveInformation(results.version);
 	const versionParts = versionInfo.main.split(".");
@@ -118,24 +189,46 @@ const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 	console.log("This tool will now open a web browser with a list of commits since the last version.\nPlease use this information to fill out a change log.\n");
 	console.log("Press any key to proceed.");
 	await keypress();
-	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${branch}`);
+	openurl.open(`https://github.com/dynamoose/dynamoose/compare/v${package.version}...${results.branch}`);
 	// await exec("npm i");
-	const versionFriendlyTitle = `Version ${results.version}`;
+	const utils = require("../dist/utils").default;
+	const versionFriendlyTitle = `Version ${[versionInfo.main, versionInfo.tag ? utils.capitalize_first_letter(versionInfo.tag) : "", versionInfo.tagNumber].filter((a) => Boolean(a)).join(" ")}`;
+	const changelogFilePath = path.join(os.tmpdir(), `${results.version}-changelog.md`);
+	let changelogTemplate = `## ${versionFriendlyTitle}`;
+	if (!versionInfo.isPrerelease) {
+		changelogTemplate += `\n\n${await fs.readFile(path.join(__dirname, "CHANGELOG_TEMPLATE.md"), "utf8")}`;
+	}
+	await fs.writeFile(changelogFilePath, changelogTemplate);
+	await exec(`${results.textEditor.trim()} ${changelogFilePath.trim()}`);
+	const pendingChangelogSpinner = ora("Waiting for user to finish changelog, press enter to continue.").start();
+	await keypress();
+	pendingChangelogSpinner.succeed("Finished changelog");
+	const versionChangelog = (await fs.readFile(changelogFilePath, "utf8")).trim();
+	if (!versionInfo.isPrerelease) {
+		const existingChangelog = await fs.readFile(path.join(__dirname, "..", "CHANGELOG.md"), "utf8");
+		const existingChangelogArray = existingChangelog.split("\n---\n");
+		existingChangelogArray.splice(1, 0, `\n${versionChangelog}\n`);
+		await fs.writeFile(path.join(__dirname, "..", "CHANGELOG.md"), existingChangelogArray.join("\n---\n"));
+		const gitCommit2 = ora("Committing files to Git").start();
+		await git.commit(`Adding changelog for ${results.version}`, [path.join(__dirname, "..", "CHANGELOG.md")]);
+		gitCommit2.succeed("Committed files to Git");
+		const gitPush2 = ora("Pushing files to GitHub").start();
+		await git.push("origin", branch);
+		gitPush2.succeed("Pushed files to GitHub");
+	}
 	// Create PR
 	if (!await checkCleanWorkingDir()) {
 		console.error("INTERNAL ERROR: We should have a clean working directory before creating a PR.");
 		console.error("Exiting.\n");
 		process.exit(1);
 	}
-	console.log("This tool will now open a Pull Request on GitHub.\n");
-	console.log("Press any key to proceed.");
-	await keypress();
 	const gitPR = ora("Creating PR on GitHub").start();
 	const labels = [versionInfo.isPrerelease ? "type:prerelease" : "type:version"];
 	const pr = (await octokit.pulls.create({
 		"owner": "dynamoose",
 		"repo": "dynamoose",
 		"title": versionFriendlyTitle,
+		"body": versionChangelog,
 		"labels": labels.join(","),
 		"head": branch,
 		"base": results.branch
@@ -154,6 +247,7 @@ const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 		"tag_name": `v${results.version}`,
 		"target_commitish": results.branch,
 		"name": `v${results.version}`,
+		"body": versionChangelog,
 		"prerelease": versionInfo.isPrerelease
 	});
 	gitRelease.succeed("GitHub release created");
@@ -181,14 +275,14 @@ const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 				"repo": "dynamoose",
 				"pull_number": pr
 			})).data;
-			await timeout(5000);
+			await utils.timeout(5000);
 		} while (!data.merged);
 	}
 	async function isReleaseSubmitted (release) {
 		try {
 			await npmFetch(`/dynamoose/${release}`);
 		} catch (e) {
-			await timeout(5000);
+			await utils.timeout(5000);
 			return isReleaseSubmitted(release);
 		}
 	}
