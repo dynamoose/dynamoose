@@ -104,6 +104,7 @@ let package = require("../packages/dynamoose/package.json");
 	// Add & Commit files to Git
 	const gitCommitPackage = ora("Committing files to Git").start();
 	await git.commit(`Bumping version to ${results.version}`);
+	await git.add("./*");
 	gitCommitPackage.succeed("Committed files to Git");
 
 	const versionInfo = retrieveInformation(results.version);
