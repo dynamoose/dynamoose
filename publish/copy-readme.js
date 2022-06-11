@@ -11,7 +11,7 @@ const path = require("path");
 	await Promise.all(packages.map(async (package) => {
 		// Check if the package has a README.md file
 		const readmePath = path.join(__dirname, "..", "packages", package, "README.md");
-		if (!(await fileExists(readmePath))) {
+		if (!await fileExists(readmePath)) {
 			// If not, copy the README.md file from the root of the project
 			await fs.copyFile(path.join(__dirname, "..", "README.md"), readmePath);
 		}
