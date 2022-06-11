@@ -40,7 +40,6 @@ let package = require("../packages/dynamoose/package.json");
 	await git.checkout(results.branch);
 	package = require("../packages/dynamoose/package.json");
 	const gitCoreEditor = await exec("git config --get core.editor");
-	const workspacePackages = require("./workspacePackages");
 	results = { // eslint-disable-line require-atomic-updates
 		...results,
 		...await inquirer.prompt([
@@ -56,13 +55,6 @@ let package = require("../packages/dynamoose/package.json");
 				"type": "confirm",
 				"message": "Is this version a prerelease version?",
 				"default": (res) => retrieveInformation(res.version).isPrerelease
-			},
-			{
-				"name": "workspacePackagesToPublish",
-				"type": "checkbox",
-				"message": "Which sub-packages would you like to publish?",
-				"choices": workspacePackages,
-				"default": workspacePackages
 			},
 			{
 				"name": "textEditor",
