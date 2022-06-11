@@ -55,6 +55,7 @@ jobs:
         continue-on-error: true
         with:
           base-path: packages/dynamoose
+          path-to-lcov: ./packages/dynamoose/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
   finalize:
