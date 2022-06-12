@@ -21,6 +21,7 @@
     "build": "lerna run build",
     "build:sourcemap": "lerna run build:sourcemap",
     "build:clean": "lerna run build:clean",
+    "build:watch": "lerna run build:watch",
     "test": "lerna run test",
     "test:types": "lerna run test:types",
     "lint": "eslint . --ext .ts,.js --max-warnings 0",
