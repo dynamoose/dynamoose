@@ -151,6 +151,31 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		return utils.dynamoose.itemToJSON.bind(this)();
 	}
 
+	/**
+	 * This method will return an object of the item that includes default values for any undefined values in the item.
+	 *
+	 * ```js
+	 * const schema = new Schema({
+	 * 	"id": String,
+	 * 	"data": {
+	 * 		"type": String,
+	 * 		"default": "Hello World"
+	 * 	}
+	 * });
+	 * const User = dynamoose.model("User", schema);
+	 * const user = new User({"id": 1});
+	 * console.log(user.withDefaults()); // {"id": 1, "data": "Hello World"}
+	 * ```
+	 * @returns Object
+	 */
+	async withDefaults (): Promise<ObjectType> {
+		return Item.objectFromSchema(utils.deep_copy(this.toJSON()), this.getInternalProperties(internalProperties).model, {
+			"typeCheck": false,
+			"defaults": true,
+			"type": "toDynamo"
+		});
+	}
+
 	// Serializer
 	serialize (nameOrOptions?: SerializerOptions | string): ObjectType {
 		return this.getInternalProperties(internalProperties).model.serializer.getInternalProperties(internalProperties).serialize(this, nameOrOptions);

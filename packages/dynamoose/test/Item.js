@@ -1887,6 +1887,41 @@ describe("Item", () => {
 		});
 	});
 
+	describe("item.withDefaults", () => {
+		let User, user;
+
+		beforeEach(() => {
+			User = dynamoose.model("User", {
+				"id": Number,
+				"data": {
+					"type": String,
+					"default": "Hello World"
+				}
+			});
+			new dynamoose.Table("User", [User]);
+			user = new User({"id": 1});
+		});
+
+		it("Should be a function", () => {
+			expect(user.withDefaults).toBeInstanceOf(Function);
+		});
+
+		it("Should return correct object", async () => {
+			return expect(await user.withDefaults()).toEqual({
+				"id": 1,
+				"data": "Hello World"
+			});
+		});
+
+		it("Should not mutate original object", async () => {
+			await user.withDefaults();
+
+			return expect(user.toJSON()).toEqual({
+				"id": 1
+			});
+		});
+	});
+
 	describe("conformToSchema", () => {
 		beforeEach(() => {
 			dynamoose.Table.defaults.set({
