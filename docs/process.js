@@ -105,7 +105,7 @@ const git = require("simple-git");
 		}
 
 		// Create version page
-		const version = require("../package.json").version;
+		const version = require("../packages/dynamoose/package.json").version;
 		const gitCommit = (await git(path.join(__dirname, "..")).raw(["rev-parse", "HEAD"])).trim();
 		await fs.writeFile(path.join(docsPath, "version.md"), `---\ncustom_edit_url: null\n---\n# Version\n\n**npm Version**: ${version}\n\n**Git Commit**: [${gitCommit}](https://github.com/dynamoose/dynamoose/commit/${gitCommit})`);
 	}
