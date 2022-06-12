@@ -62,55 +62,41 @@ html[data-theme="dark"] .header-github-link:before {
 
 /* Sponsor Banner CSS */
 
-#__docusaurus > div.main-wrapper.docs-wrapper.docs-doc-page > div > aside > div > nav > ul > li:nth-child(4) > a:after {
-  display: none;
-}
-
+/* External Link Icon */
 #__docusaurus
-  > div.main-wrapper.docs-wrapper.docs-doc-page
+  > div.main-wrapper.docs-wrapper.doc-page
   > div
-  > aside
   > div
-  > nav
-  > ul
-  > li:nth-child(4)
-  > span {
-  display: none;
-}
-
-#__docusaurus
-  > div.main-wrapper.docs-wrapper.docs-doc-page
   > div
-  > aside
   > div
-  > nav
   > ul
   > li:nth-child(4)
   > ul
   > li
-  > a
-  > span {
+  > a::after {
   display: none;
 }
 
+/* Sponsored By Header */
 #__docusaurus
-  > div.main-wrapper.docs-wrapper.docs-doc-page
+  > div.main-wrapper.docs-wrapper.doc-page
   > div
-  > aside
   > div
-  > nav
+  > div
+  > div
   > ul
   > li:nth-child(4)
-  > div {
+  > a {
   display: none;
 }
 
+/* Set background image */
 #__docusaurus
-  > div.main-wrapper.docs-wrapper.docs-doc-page
+  > div.main-wrapper.docs-wrapper.doc-page
   > div
-  > aside
   > div
-  > nav
+  > div
+  > div
   > ul
   > li:nth-child(4)
   > ul
