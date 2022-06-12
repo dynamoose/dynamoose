@@ -149,3 +149,7 @@ dyno_jsdoc_dist/Item.js|item.original
 ## item.toJSON()
 
 dyno_jsdoc_dist/Item.js|item.toJSON
+
+## item.withDefaults()
+
+dyno_jsdoc_dist/Item.js|item.withDefaults
