@@ -35,7 +35,7 @@ export interface DynamoDBTypeResult {
 	set?: DynamoDBSetTypeResult;
 }
 
-interface DynamoDBTypeCreationObject {
+export interface DynamoDBTypeCreationObject {
 	name: string;
 	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
 	dynamodbType?: DynamoDBAttributeType | DynamoDBAttributeType[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
@@ -45,7 +45,7 @@ interface DynamoDBTypeCreationObject {
 	customType?: {functions: (typeSettings: AttributeDefinitionTypeSettings) => {toDynamo?: (val: ValueType) => ValueType; fromDynamo?: (val: ValueType) => ValueType; isOfType: (val: ValueType, type: "toDynamo" | "fromDynamo") => boolean}};
 }
 
-class DynamoDBType implements DynamoDBTypeCreationObject {
+export class DynamoDBType implements DynamoDBTypeCreationObject {
 	// TODO: since the code below will always be the exact same as DynamoDBTypeCreationObject we should see if there is a way to make it more DRY and not repeat it
 	name: string;
 	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
@@ -227,15 +227,15 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 })();
 const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.array_flatten(attributeTypesMain.filter((checkType) => !checkType.customType).map((checkType) => checkType.result()).map((a) => [a, a.set])).filter((a) => Boolean(a));
 
-type GeneralValueType = string | boolean | number | Buffer | Date;
+export type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[];
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
+export type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
 
 export interface TimestampObject {
 	createdAt?: string | string[];
 	updatedAt?: string | string[];
 }
-interface SchemaSettings {
+export interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
 	saveUnknown?: boolean | string[];
 	set?: (value: ObjectType) => ObjectType;
@@ -252,7 +252,7 @@ export enum IndexType {
 	 */
 	local = "local"
 }
-interface IndexDefinition {
+export interface IndexDefinition {
 	/**
 	 * The name of the index.
 	 * @default `${attribute}${type == "global" ? "GlobalIndex" : "LocalIndex"}`
@@ -278,14 +278,14 @@ interface IndexDefinition {
 	 */
 	throughput?: "ON_DEMAND" | number | {read: number; write: number};
 }
-interface AttributeDefinitionTypeSettings {
+export interface AttributeDefinitionTypeSettings {
 	storage?: "milliseconds" | "seconds";
 	model?: ModelType<Item>;
 	attributes?: string[];
 	separator?: string;
 	value?: string | boolean | number;
 }
-interface AttributeDefinition {
+export interface AttributeDefinition {
 	/**
 	 * The type attribute can either be a type (ex. `Object`, `Number`, etc.) or an object that has additional information for the type. In the event you set it as an object you must pass in a `value` for the type, and can optionally pass in a `settings` object.
 	 *
@@ -774,15 +774,15 @@ interface AttributeDefinition {
 export interface SchemaDefinition {
 	[attribute: string]: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
 }
-interface SchemaGetAttributeTypeSettings {
+export interface SchemaGetAttributeTypeSettings {
 	unknownAttributeAllowed: boolean;
 }
-interface SchemaGetAttributeSettingValue {
+export interface SchemaGetAttributeSettingValue {
 	returnFunction: boolean;
 	typeIndexOptionMap?: any;
 }
 
-interface SchemaInternalProperties {
+export interface SchemaInternalProperties {
 	schemaObject: SchemaDefinition;
 	settings: SchemaSettings;
 	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
@@ -1456,7 +1456,7 @@ Schema.prototype.getSettingValue = function (this: Schema, setting: string): any
 	return this.getInternalProperties(internalProperties).settings[setting];
 };
 
-interface SchemaAttributesMethodSettings {
+export interface SchemaAttributesMethodSettings {
 	includeMaps: boolean;
 }
 Schema.prototype.attributes = function (this: Schema, object?: ObjectType, settings?: SchemaAttributesMethodSettings): string[] {
