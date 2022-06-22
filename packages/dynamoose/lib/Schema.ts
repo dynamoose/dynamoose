@@ -782,7 +782,7 @@ export interface SchemaGetAttributeSettingValue {
 	typeIndexOptionMap?: any;
 }
 
-export interface SchemaInternalProperties {
+interface SchemaInternalProperties {
 	schemaObject: SchemaDefinition;
 	settings: SchemaSettings;
 	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
