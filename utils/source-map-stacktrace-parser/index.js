@@ -12,8 +12,15 @@ const commentLines = comment.trim().split("\n");
 (async () => {
 	let outputtrace = [];
 
+	console.log(`Received comment: ${comment}`);
+
 	if (commentLines.shift() === "@dynamoose/bot stacktrace-parser") {
+		console.log("I have been summoned!");
+
 		const commitHash = commentLines.shift().replace("Commit Hash: ", "");
+
+		console.log(`Cloning repository and checking out commit hash: ${commitHash}`);
+
 		await simpleGit().clone("https://github.com/dynamoose/dynamoose.git");
 		await simpleGit(path.join(__dirname, "dynamoose", "packages", "dynamoose")).checkout(commitHash);
 		await exec(`cd ${path.join(__dirname, "dynamoose")} && npm install`);
@@ -21,6 +28,7 @@ const commentLines = comment.trim().split("\n");
 
 		for (let i = 0; i < commentLines.length; i++) {
 			const line = commentLines[i];
+			console.log(`Checking line: ${line}`);
 			if (line.includes("dynamoose/dist")) {
 				const regexResult = /(dynamoose\/dist)\/(.*?):(\d+):?(\d+)?/gu.exec(line);
 				if (regexResult) {
@@ -45,6 +53,8 @@ const commentLines = comment.trim().split("\n");
 				outputtrace.push(line);
 			}
 		}
+
+		console.log(`Final trace: ${outputtrace}`);
 		console.log(outputtrace.join("\n"));
 	}
 
