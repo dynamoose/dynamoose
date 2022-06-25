@@ -7,7 +7,7 @@ const exec = util.promisify(require("child_process").exec);
 const fs = require("fs/promises");
 
 const comment = process.env.comment;
-const commentLines = comment.trim().split("\n");
+const commentLines = comment.trim().split("\n").map((line) => line.trim());
 
 (async () => {
 	let outputtrace = [];
