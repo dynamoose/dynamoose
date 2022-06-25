@@ -20,8 +20,8 @@ const commentLines = comment.trim().split("\n");
 
 		await simpleGit().clone("https://github.com/dynamoose/dynamoose.git", repoPath);
 		await simpleGit(repoPath).checkout(commitHash);
-		await exec(`cd ${repoPath} && npm install`);
-		await exec(`cd ${packagePath} && npm run build:sourcemap`);
+		await exec("npm install", {"cwd": repoPath});
+		await exec("npm run build:sourcemap", {"cwd": packagePath});
 
 		for (let i = 0; i < commentLines.length; i++) {
 			const line = commentLines[i];
