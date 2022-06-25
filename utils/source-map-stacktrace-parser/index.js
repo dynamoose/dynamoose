@@ -7,13 +7,13 @@ const exec = util.promisify(require("child_process").exec);
 const fs = require("fs/promises");
 
 const comment = process.env.comment;
-const commentLines = comment.trim().split("\n").map((line) => line.trim());
+const commentLines = comment.trim().split("\n");
 
 (async () => {
 	let outputtrace = [];
 
-	if (commentLines.shift() === "@dynamoose/bot stacktrace-parser") {
-		const commitHash = commentLines.shift().replace("Commit Hash: ", "");
+	if (commentLines.shift().trim() === "@dynamoose/bot stacktrace-parser") {
+		const commitHash = commentLines.shift().replace("Commit Hash: ", "").trim();
 
 		const repoPath = path.join(__dirname, "dynamoose");
 		const packagePath = path.join(repoPath, "packages", "dynamoose");
