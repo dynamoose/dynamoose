@@ -6,7 +6,7 @@ const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const fs = require("fs/promises");
 
-const comment = core.getInput("comment");
+const comment = process.env.comment;
 const commentLines = comment.trim().split("\n");
 
 (async () => {
