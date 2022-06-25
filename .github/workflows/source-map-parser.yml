@@ -22,6 +22,6 @@ jobs:
         if: ${{ steps.parser.outputs.outputtrace != '' }}
         with:
           type: create
-          body: "@${{ github.event.comment.user.login }} Here is your parsed stack trace you requested:\n${{ steps.parser.outputs.outputtrace }}"
+          body: "@${{ github.event.comment.user.login }} Here is the parsed stack trace you requested:\n${{ steps.parser.outputs.outputtrace }}"
           issue_number: "${{ github.event.issue.number }}"
           token: ${{ secrets.GITHUB_TOKEN }}
