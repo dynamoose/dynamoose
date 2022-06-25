@@ -12,17 +12,8 @@ const commentLines = comment.trim().split("\n").map((line) => line.trim());
 (async () => {
 	let outputtrace = [];
 
-	console.log(`Received comment: ${comment}`);
-	console.log(`Comment lines: ${commentLines}`);
-	console.log(commentLines[0]);
-	console.log(commentLines[0] === "@dynamoose/bot stacktrace-parser");
-
 	if (commentLines.shift() === "@dynamoose/bot stacktrace-parser") {
-		console.log("I have been summoned!");
-
 		const commitHash = commentLines.shift().replace("Commit Hash: ", "");
-
-		console.log(`Cloning repository and checking out commit hash: ${commitHash}`);
 
 		const repoPath = path.join(__dirname, "dynamoose");
 		const packagePath = path.join(repoPath, "packages", "dynamoose");
@@ -34,7 +25,6 @@ const commentLines = comment.trim().split("\n").map((line) => line.trim());
 
 		for (let i = 0; i < commentLines.length; i++) {
 			const line = commentLines[i];
-			console.log(`Checking line: ${line}`);
 			if (line.includes("dynamoose/dist")) {
 				const regexResult = /(dynamoose\/dist)\/(.*?):(\d+):?(\d+)?/gu.exec(line);
 				if (regexResult) {
@@ -60,7 +50,6 @@ const commentLines = comment.trim().split("\n").map((line) => line.trim());
 			}
 		}
 
-		console.log(`Final trace: ${outputtrace}`);
 		console.log(outputtrace.join("\n"));
 	}
 
