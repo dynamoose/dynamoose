@@ -24,10 +24,13 @@ const commentLines = comment.trim().split("\n").map((line) => line.trim());
 
 		console.log(`Cloning repository and checking out commit hash: ${commitHash}`);
 
-		await simpleGit().clone("https://github.com/dynamoose/dynamoose.git");
-		await simpleGit(path.join(__dirname, "dynamoose")).checkout(commitHash);
-		await exec(`cd ${path.join(__dirname, "dynamoose")} && npm install`);
-		await exec(`cd ${path.join(__dirname, "dynamoose", "packages", "dynamoose")} && npm run build:sourcemap`);
+		const repoPath = path.join(__dirname, "dynamoose");
+		const packagePath = path.join(repoPath, "packages", "dynamoose");
+
+		await simpleGit().clone("https://github.com/dynamoose/dynamoose.git", repoPath);
+		await simpleGit(repoPath).checkout(commitHash);
+		await exec(`cd ${repoPath} && npm install`);
+		await exec(`cd ${packagePath} && npm run build:sourcemap`);
 
 		for (let i = 0; i < commentLines.length; i++) {
 			const line = commentLines[i];
@@ -39,7 +42,7 @@ const commentLines = comment.trim().split("\n").map((line) => line.trim());
 					const file = regexResult[2];
 					const lineNumber = parseInt(regexResult[3]);
 					const column = parseInt(regexResult[4]);
-					const sourceMap = await fs.readFile(path.join(__dirname, "dynamoose", "packages", "dynamoose", "dist", `${file}.map`), "utf8");
+					const sourceMap = await fs.readFile(path.join(packagePath, "dist", `${file}.map`), "utf8");
 					const consumer = await new Promise((resolve) => {
 						SourceMapConsumer.with(sourceMap, null, resolve);
 					});
