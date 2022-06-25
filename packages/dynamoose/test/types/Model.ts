@@ -22,6 +22,8 @@ const model = dynamoose.model("User", {"id": Number});
 const shouldPassTableCreateRequest = model.table.create.request();
 
 const shouldPassCreateWithNoReturnSetting = model.create({"id": 1}, {"overwrite": true});
+const shouldPassCreateWithReturnRequest = model.create({"id": 1}, {"return": "request"});
+const shouldPassCreateWithReturnItem = model.create({"id": 1}, {"return": "item"});
 const shouldPassGetWithNoReturnSetting = model.get({"id": 1}, {"attributes": ["something"]});
 const shouldPassDeleteWithNoReturnSetting = model.delete({"id": 1}, {"condition": new dynamoose.Condition("name").eq("Charlie")});
 const shouldPassUpdateWithNoReturnSetting = model.update({"id": 1}, {"name": "Charlie"}, {"condition": new dynamoose.Condition("name").eq("Bob")});
@@ -44,6 +46,9 @@ const shouldPassGetWithNumberAsKey = model.get(1);
 
 const shouldPassUpdateWithStringAsKey = model.update("id", {"value": "hello world"});
 const shouldPassUpdateWithNumberAsKey = model.update(1, {"value": "hello world"});
+
+// @ts-expect-error
+const shouldFailWithInvalidReturnType = model.create({"id": 1}, {"return": "invalid-return-type"});
 
 // @ts-expect-error
 const shouldFailWithInvalidTransaction = model.transaction.notValid();
