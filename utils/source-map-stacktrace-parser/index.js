@@ -13,6 +13,9 @@ const commentLines = comment.trim().split("\n");
 	let outputtrace = [];
 
 	console.log(`Received comment: ${comment}`);
+	console.log(`Comment lines: ${commentLines}`);
+	console.log(commentLines[0]);
+	console.log(commentLines[0] === "@dynamoose/bot stacktrace-parser");
 
 	if (commentLines.shift() === "@dynamoose/bot stacktrace-parser") {
 		console.log("I have been summoned!");
