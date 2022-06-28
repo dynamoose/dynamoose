@@ -5,18 +5,18 @@ import transaction from "./Transaction";
 import utils from "./utils";
 import {Item, AnyItem} from "./Item";
 import ModelStore from "./ModelStore";
-import {ModelType} from "./General";
+import {MethodsType, ModelType} from "./General";
 import CustomError from "./Error";
 import {Table} from "./Table/index";
 import type from "./type";
 import {Instance} from "./Instance";
 import {custom as TableDefaults} from "./Table/defaults";
 
-const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[]): ModelType<T> => {
-	let model: Model<T>;
-	let storedSchema: Model<T>;
+const model = <TItem extends Item = AnyItem, TMethods extends MethodsType ={}>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[]): ModelType<TItem, TMethods> => {
+	let model: Model<TItem>;
+	let storedSchema: Model<TItem>;
 	if (name) {
-		storedSchema = ModelStore<T>(name);
+		storedSchema = ModelStore<TItem>(name);
 	}
 	// TODO: this is something I'd like to do. But is a breaking change. Need to enable this and uncomment it in a breaking release. Also will need to fix the tests as well.
 	/* if (schema && storedSchema) {
