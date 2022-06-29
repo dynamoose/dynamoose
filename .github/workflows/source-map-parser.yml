@@ -7,24 +7,21 @@ jobs:
   parse:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: lts/*
       - run: cd utils/source-map-stacktrace-parser && npm install
       - run: node utils/source-map-stacktrace-parser/index.js
         id: parser
-        outputs:
-          outputtrace:
-            description: "The outputted stack trace"
-        with:
+        env:
           comment: ${{ github.event.comment.body }}
       - name: Comment Action
         uses: JungWinter/comment@v1.1.0
         if: ${{ steps.parser.outputs.outputtrace != '' }}
         with:
           type: create
-          body: "@${{ github.event.comment.user.login }} Here is your parsed stack trace you requested:\n${{ steps.parser.outputs.outputtrace }}"
+          body: "@${{ github.event.comment.user.login }} Here is the parsed stack trace you requested:\n${{ steps.parser.outputs.outputtrace }}"
           issue_number: "${{ github.event.issue.number }}"
           token: ${{ secrets.GITHUB_TOKEN }}
