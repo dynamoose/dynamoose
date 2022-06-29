@@ -4,7 +4,7 @@ export interface DDBInterface {
 	(): DynamoDB.DynamoDB;
 	set: (ddb: DynamoDB.DynamoDB) => void;
 	revert: () => void;
-	local: (endpoint: string) => void;
+	local: (endpoint?: string) => void;
 }
 
 export default function (): DDBInterface {
