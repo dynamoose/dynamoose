@@ -6,17 +6,22 @@ const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const fs = require("fs/promises");
 
-const comment = core.getInput("comment");
+const comment = process.env.comment;
 const commentLines = comment.trim().split("\n");
 
 (async () => {
 	let outputtrace = [];
 
-	if (commentLines.shift() === "@dynamoose/bot stacktrace-parser") {
-		const commitHash = commentLines.shift().replace("Commit Hash: ", "");
-		await simpleGit().clone("https://github.com/dynamoose/dynamoose.git");
-		await simpleGit(path.join(__dirname, "dynamoose")).checkout(commitHash);
-		await exec(`cd ${path.join(__dirname, "dynamoose")} && npm install && npm run build:sourcemap`);
+	if (commentLines.shift().trim() === "@dynamoose/bot stacktrace-parser") {
+		const commitHash = commentLines.shift().replace("Commit Hash: ", "").trim();
+
+		const repoPath = path.join(__dirname, "dynamoose");
+		const packagePath = path.join(repoPath, "packages", "dynamoose");
+
+		await simpleGit().clone("https://github.com/dynamoose/dynamoose.git", repoPath);
+		await simpleGit(repoPath).checkout(commitHash);
+		await exec("npm install", {"cwd": repoPath});
+		await exec("npm run build:sourcemap", {"cwd": packagePath});
 
 		for (let i = 0; i < commentLines.length; i++) {
 			const line = commentLines[i];
@@ -27,7 +32,7 @@ const commentLines = comment.trim().split("\n");
 					const file = regexResult[2];
 					const lineNumber = parseInt(regexResult[3]);
 					const column = parseInt(regexResult[4]);
-					const sourceMap = await fs.readFile(path.join(__dirname, "dynamoose", "dist", `${file}.map`), "utf8");
+					const sourceMap = await fs.readFile(path.join(packagePath, "dist", `${file}.map`), "utf8");
 					const consumer = await new Promise((resolve) => {
 						SourceMapConsumer.with(sourceMap, null, resolve);
 					});
@@ -44,6 +49,7 @@ const commentLines = comment.trim().split("\n");
 				outputtrace.push(line);
 			}
 		}
+
 		console.log(outputtrace.join("\n"));
 	}
 
