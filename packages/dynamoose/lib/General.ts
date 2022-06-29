@@ -15,7 +15,7 @@ export type KeyObject = {[attribute: string]: string | number};
 // An item representing a DynamoDB key
 export type InputKey = string | number | KeyObject;
 
-interface ModelItemConstructor<T extends Item> {
+interface ModelItemConstructor<TItem extends Item, TMethods extends MethodsType = MethodsType> {
 	/**
 	 * In order to create a new item you just pass in your object into an instance of your model.
 	 *
@@ -30,10 +30,10 @@ interface ModelItemConstructor<T extends Item> {
 	 * // myUser is now a item instance of the User model
 	 * ```
 	 */
-	new (object: {[key: string]: any}): T;
-	Model: Model<T>;
+	new (object: {[key: string]: any}): TItem;
+	Model: Model<TItem, TMethods>;
 }
-export type ModelType<TItem extends Item, TMethods extends MethodsType = {}> = TItem & TMethods & Model<TItem> & ModelItemConstructor<TItem>;
+export type ModelType<TItem extends Item, TMethods extends MethodsType = MethodsType> = TItem & TMethods & Model<TItem, TMethods> & ModelItemConstructor<TItem, TMethods>;
 
 // This represents a item array. This is used for the output of functions such as `scan`, `query`, and `batchGet`. These functions can extend this property to add additional properties or functions. However this represents the shared properties/functions for all item arrays.
 export interface ItemArray<T> extends Array<T> {
