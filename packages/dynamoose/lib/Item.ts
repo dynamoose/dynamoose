@@ -22,7 +22,7 @@ import CustomError from "./Error";
 
 export interface ItemSaveSettings {
 	overwrite?: boolean;
-	return?: "request" | "Item";
+	return?: "request" | "item";
 	condition?: Condition;
 }
 export interface ItemSettings {
