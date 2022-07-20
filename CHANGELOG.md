@@ -2,6 +2,22 @@
 
 ---
 
+## Version 2.8.6
+
+This release includes a few bug fixes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixing issue with recurrsive objects
+
+### Documentation
+
+- Fixing typo
+
+---
+
 ## Version 2.8.5
 
 This release is the corresponding v2 release for v3 move to beta. It also includes bug fixes.
