@@ -2,6 +2,26 @@
 
 ---
 
+## Version 2.8.6
+
+This release ________
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### 🚨 Breaking Changes 🚨
+
+### Major New Features
+
+### General
+
+### Bug Fixes
+
+### Documentation
+
+### Other
+
+---
+
 ## Version 2.8.5
 
 This release is the corresponding v2 release for v3 move to beta. It also includes bug fixes.
