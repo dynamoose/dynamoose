@@ -25,7 +25,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Nightly Merge
-      uses: robotology/gh-action-nightly-merge@v1.3.2
+      uses: robotology/gh-action-nightly-merge@v1.3.3
       with:
         stable_branch: 'v2'
         development_branch: 'main'
