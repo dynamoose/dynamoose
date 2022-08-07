@@ -2314,8 +2314,7 @@ describe("Item", () => {
 					return unmarshalled;
 				})(),
 				"output": {"id": "1", "data": Buffer.from("Hello World")},
-				"schema": {"id": String, "data": Buffer},
-				"test": it.only
+				"schema": {"id": String, "data": Buffer}
 			}
 		];
 		const defaultsTests = [
