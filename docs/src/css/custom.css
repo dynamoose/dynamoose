@@ -64,7 +64,7 @@ html[data-theme="dark"] .header-github-link:before {
 
 /* External Link Icon */
 #__docusaurus
-  > div.main-wrapper.mainWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-Layout-styles-module.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-styles-module
+  > div.main-wrapper
   > div
   > aside
   > div
@@ -80,7 +80,7 @@ html[data-theme="dark"] .header-github-link:before {
 
 /* Sponsored By Header */
 #__docusaurus
-  > div.main-wrapper.mainWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-Layout-styles-module.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-styles-module
+  > div.main-wrapper
   > div
   > aside
   > div
@@ -94,7 +94,7 @@ html[data-theme="dark"] .header-github-link:before {
 
 /* Set background image */
 #__docusaurus
-  > div.main-wrapper.mainWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-Layout-styles-module.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-styles-module
+  > div.main-wrapper
   > div
   > aside
   > div
