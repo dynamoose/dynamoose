@@ -154,7 +154,7 @@ describe("utils.deep_copy", () => {
 		expect(Array.from(copy.entries())).toStrictEqual([["a", 1], ["b", 2]]);
 	});
 
-	it.only("Should return a deep copy of the passed Uint8Array", () => {
+	it("Should return a deep copy of the passed Uint8Array", () => {
 		let original = Uint8Array.from([1, 2, 3]);
 		const copy = utils.deep_copy(original);
 		expect(copy.toString()).toEqual("1,2,3");
