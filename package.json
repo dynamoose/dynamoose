@@ -49,8 +49,6 @@
     "url": "https://github.com/dynamoose/dynamoose/issues"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.142.0",
-    "@aws-sdk/util-dynamodb": "^3.142.0",
     "js-object-utilities": "^2.1.0"
   },
   "license": "Unlicense",
