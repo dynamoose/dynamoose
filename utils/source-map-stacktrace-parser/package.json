@@ -1,7 +1,7 @@
 {
 	"dependencies": {
-		"@actions/core": "^1.2.6",
-		"simple-git": "^2.37.0",
-		"source-map": "^0.7.3"
+		"@actions/core": "^1.9.0",
+		"simple-git": "^3.11.0",
+		"source-map": "^0.7.4"
 	}
 }
