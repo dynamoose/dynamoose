@@ -4,12 +4,12 @@
   "license": "Unlicense",
   "private": true,
   "dependencies": {
-    "@actions/core": "^1.2.6",
-    "@octokit/rest": "^17.3.0",
-    "inquirer": "^7.1.0",
-    "npm-registry-fetch": "^8.1.1",
+    "@actions/core": "^1.9.0",
+    "@octokit/rest": "^19.0.3",
+    "inquirer": "^9.1.0",
+    "npm-registry-fetch": "^13.3.0",
     "openurl": "^1.1.1",
-    "ora": "^4.0.3",
-    "simple-git": "^1.132.0"
+    "ora": "^6.1.2",
+    "simple-git": "^3.11.0"
   }
 }
