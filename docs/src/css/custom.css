@@ -60,45 +60,47 @@ html[data-theme="dark"] .header-github-link:before {
     no-repeat;
 }
 
-/* Sponsor Banner CSS */
+/* Dynobase Sponsor Banner CSS */
 
 /* External Link Icon */
 #__docusaurus
-  > div.main-wrapper.docs-wrapper.doc-page
+  > div.main-wrapper.mainWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-Layout-styles-module.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-styles-module
   > div
+  > aside
   > div
-  > div
-  > div
+  > nav
   > ul
-  > li:nth-child(4)
+  > li:last-child
   > ul
   > li
-  > a::after {
+  > a
+  > svg {
   display: none;
 }
 
 /* Sponsored By Header */
 #__docusaurus
-  > div.main-wrapper.docs-wrapper.doc-page
+  > div.main-wrapper.mainWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-Layout-styles-module.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-styles-module
   > div
+  > aside
   > div
-  > div
-  > div
+  > nav
   > ul
-  > li:nth-child(4)
+  > li:last-child
+  > div
   > a {
   display: none;
 }
 
 /* Set background image */
 #__docusaurus
-  > div.main-wrapper.docs-wrapper.doc-page
+  > div.main-wrapper.mainWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-Layout-styles-module.docsWrapper_node_modules-\@docusaurus-theme-classic-lib-theme-DocPage-Layout-styles-module
   > div
+  > aside
   > div
-  > div
-  > div
+  > nav
   > ul
-  > li:nth-child(4)
+  > li:last-child
   > ul
   > li
   > a {
