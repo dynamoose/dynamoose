@@ -29,7 +29,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm install
       - run: node publish/copy-readme.js
-      - run: lerna publish from-package --dist-tag $TAG --yes --no-git-tag-version --no-push --no-verify-access
+      - run: lerna publish from-package --dist-tag $TAG --yes --no-git-tag-version --no-push --no-verify-access --no-git-reset
         env:
           TAG: ${{ needs.getinfo.outputs.npmtag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
