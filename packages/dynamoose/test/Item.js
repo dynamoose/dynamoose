@@ -1535,6 +1535,18 @@ describe("Item", () => {
 					}]);
 				});
 
+				it("Should map properties correctly", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"pk": {"N": "1"}},
+						"TableName": "User"
+					}]);
+				})
+
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
