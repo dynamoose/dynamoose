@@ -1545,7 +1545,7 @@ describe("Item", () => {
 						"Item": {"pk": {"N": "1"}},
 						"TableName": "User"
 					}]);
-				})
+				});
 
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
