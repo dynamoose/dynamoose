@@ -942,6 +942,16 @@ describe("Model", () => {
 					expect(user.combine).toEqual("random");
 				});
 
+				it("Should map properties correctly", async () => {
+					User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}});
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"pk": {"N": "1"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(Object.keys(user)).toEqual(["id"]);
+					expect(user.id).toEqual(1);
+				});
+
 				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", () => {
 					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
 					new dynamoose.Table("User", [User]);
