@@ -66,7 +66,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 					[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"})))).filter((a) => Boolean(a));
+			const array: any = (await Promise.all(result.Items.map(async (item) => await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})))).filter((a) => Boolean(a));
 			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => model.Item.fromDynamo(key)) : model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
 			array[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`];
