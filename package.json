@@ -20,6 +20,7 @@
     "prepare": "lerna bootstrap && npm run build",
     "build": "lerna run build",
     "build:sourcemap": "lerna run build:sourcemap",
+    "build:sourcemap:watch": "lerna run build:sourcemap:watch",
     "build:clean": "lerna run build:clean",
     "build:watch": "lerna run build:watch",
     "test": "lerna run test",
