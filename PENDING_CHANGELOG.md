@@ -15,17 +15,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 			- `input` has changed to `convertToAttr`.
 			- `output` has changed to `convertToNative`.
 			- For more information please refer to the AWS-SDK v3 changelogs.
-- Added `dynamoose.Table` class. `dynamoose.model` now represents an entity or type of data (ex. User, Movie, Order), and `dynamoose.Table` represents a single DynamoDB table. The example below show how to convert your code to this new syntax.
-```
-// If you have the following code in v2:
-
-const User = dynamoose.model("User", {"id": String});
-
-// It will be converted to this in v3:
-
-const User = dynamoose.model("User", {"id": String});
-const DBTable = new dynamoose.Table("DBTable", [User]);
-```
+- DynamoDB table initialization/updates will no longer be done upon creating a model. Instead they will be done when you initialize a `dynamoose.Table` instance, or whenever you make a DynamoDB request for a given model (ex. `get`, `create`, `update`).
 - Renamed `Document` to `Item`.
 	- The largest user facing API change is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`.
 - `set` Schema attribute settings are now used when retrieving items (ie. `get`, `query`, `update`, etc).
@@ -56,6 +46,17 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### General
 
+- Added `dynamoose.Table` class. `dynamoose.model` now represents an entity or type of data (ex. User, Movie, Order), and `dynamoose.Table` represents a single DynamoDB table. By default, whenever you first use a model, a `dynamoose.Table` instance will be created for you, to ensure backwards compatibility with v2. If you want to create the table manually, you can change your code like so:
+```
+// If you have the following code in v2:
+
+const User = dynamoose.model("User", {"id": String});
+
+// It will be converted to this in v3:
+
+const User = dynamoose.model("User", {"id": String});
+const DBTable = new dynamoose.Table("DBTable", [User]);
+```
 - Added `get` & `set` modifier options to Schema settings to allow for Item wide modification.
 - Added `validate` method option to Schema settings to allow for Item wide validation.
 - Added `tags` setting to Table, to be able to add tags to a table.
