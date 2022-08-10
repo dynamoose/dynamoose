@@ -81,7 +81,7 @@ export function createTable (table: Table): Promise<void | (() => Promise<void>)
 export function createTable (table: Table, force: true): Promise<void>;
 export function createTable (table: Table, force: false): Promise<void | (() => Promise<void>)>;
 export async function createTable (table: Table, force = false): Promise<void | (() => Promise<void>)> {
-	const tableStatus = ((await getTableDetails(table, {"allowError": true}) || {}).Table || {}).TableStatus;
+	const tableStatus = (await getTableDetails(table, {"allowError": true}))?.Table?.TableStatus;
 	if (!force && tableStatus === "ACTIVE") {
 		table.getInternalProperties(internalProperties).alreadyCreated = true;
 		return (): Promise<void> => Promise.resolve.bind(Promise)();
