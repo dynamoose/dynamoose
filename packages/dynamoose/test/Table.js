@@ -701,6 +701,16 @@ describe("Table", () => {
 				status = "ACTIVE";
 				await utils.timeout(50);
 			});
+
+			it("Should resolve correctly if `waitForActive` is set to true", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => {
+					return Promise.resolve({"Table": {"TableStatus": "ACTIVE"}});
+				};
+				const model = dynamoose.model(tableName, {"id": String});
+				const table = new dynamoose.Table(tableName, [model], {"initialize": false, "waitForActive": true});
+				await expect(table.initialize()).resolves.toEqual();
+			});
 		});
 
 		describe("Update", () => {
