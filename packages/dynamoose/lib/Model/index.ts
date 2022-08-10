@@ -12,9 +12,11 @@ import {PopulateItems} from "../Populate";
 import {AttributeMap} from "../Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
-import {Table} from "../Table";
+import {Table, TableOptionsOptional} from "../Table";
 import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
+import {Instance} from "../Instance";
+import returnModel from "../utils/dynamoose/returnModel";
 const {internalProperties} = Internal.General;
 
 // Transactions
@@ -96,6 +98,7 @@ export interface ModelIndexes {
 
 interface ModelInternalProperties {
 	name: string;
+	options: TableOptionsOptional;
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
 	convertObjectToKey: (key: InputKey) => KeyObject;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
@@ -120,6 +123,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 * The `name` parameter is a string representing the model name.
 	 *
 	 * The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
+	 *
+	 * The `options` parameter is the same as the options that are passed to the [Table](Table.md) constructor.
 	 *
 	 * ```js
 	 * const dynamoose = require("dynamoose");
@@ -167,16 +172,20 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 * ```js
 	 * const Cat = dynamoose.model("Cat"); // Will reference existing model, or if no model exists already with name `Cat` it will throw an error.
 	 * ```
+	 *
+	 * If you choose to pass the model into a [`Table`](Table.md) constructor, you must ensure that you don't use the model for any DynamoDB requests before initializing the table.
 	 * @param name The name of the model.
 	 * @param schema The schema for the model.
+	 * @param options The options for the model. This is the same type as `Table` options.
 	 * @param ModelStore INTERNAL PARAMETER
 	 */
-	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], ModelStore: (model: Model) => void) {
+	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: TableOptionsOptional, ModelStore: (model: Model) => void) {
 		super();
 
 		// Methods
 		this.setInternalProperties(internalProperties, {
 			name,
+			options,
 			"getIndexes": async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
 				return (await Promise.all(this.getInternalProperties(internalProperties).schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
 					Object.entries(indexes).forEach(([key, value]) => {
@@ -245,7 +254,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			"table": (): Table => {
 				const table = this.getInternalProperties(internalProperties)._table;
 				if (!table) {
-					throw new CustomError.OtherError(`No table has been registered for ${this.name} model. Use \`new dynamoose.Table\` to register a table for this model.`);
+					const modelObject = returnModel(this);
+					const createdTable = new Table(Instance.default, this.getInternalProperties(internalProperties).name, [modelObject], this.getInternalProperties(internalProperties).options);
+					this.getInternalProperties(internalProperties)._table = createdTable;
+					return createdTable;
 				}
 
 				return table;
