@@ -676,19 +676,30 @@ describe("Table", () => {
 
 			it("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
 				const tableName = "Cat";
+				let readReturnCapacityUnits = 2;
+				let status = "CREATING";
 				describeTableFunction = () => Promise.resolve({
 					"Table": {
 						"ProvisionedThroughput": {
-							"ReadCapacityUnits": 2,
+							"ReadCapacityUnits": readReturnCapacityUnits,
 							"WriteCapacityUnits": 2
 						},
-						"TableStatus": "CREATING"
+						"TableStatus": status
 					}
 				});
 				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": true});
-				await utils.set_immediate_promise();
+				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": ["throughput"], "waitForActive": {
+					"enabled": true,
+					"check": {
+						"frequency": 10,
+						"timeout": 10000000
+					}
+				}});
+				await utils.timeout(50);
 				expect(updateTableParams).toEqual([]);
+				readReturnCapacityUnits = 1;
+				status = "ACTIVE";
+				await utils.timeout(50);
 			});
 		});
 
