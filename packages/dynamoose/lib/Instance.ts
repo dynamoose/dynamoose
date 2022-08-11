@@ -1,6 +1,7 @@
 import {AWS} from "./aws";
 import {Model} from "./Model";
 import {Table as PrimaryTable, TableOptionsOptional} from "./Table";
+import {TableOptionsAccessor} from "./Table/defaults";
 
 export interface PrimaryTableInterface extends PrimaryTable {
 	new (name: string, models: Model[], options?: TableOptionsOptional): PrimaryTable;
@@ -10,7 +11,7 @@ export class Instance {
 	static default: Instance = new Instance();
 
 	aws: AWS;
-	Table: PrimaryTableInterface;
+	Table: PrimaryTableInterface & {"defaults": TableOptionsAccessor};
 
 	/**
 	 * This class allows you to create a new instance of Dynamoose, allowing for easy multi-region AWS requests.
