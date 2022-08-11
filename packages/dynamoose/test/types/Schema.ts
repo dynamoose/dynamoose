@@ -1,6 +1,7 @@
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 
 import * as dynamoose from "../../dist";
+import {IndexType} from "../../dist/Schema";
 
 // @ts-expect-error
 const shouldFailWithNothingPassedIn = new dynamoose.Schema();
@@ -113,5 +114,38 @@ const shouldSucceedWithAsyncValidateMethodSchema = new dynamoose.Schema({
 	"id": {
 		"type": String,
 		"validate": (value) => Promise.resolve(true)
+	}
+});
+
+const shouldSucceedWithIndexTypeValueAsGlobalString = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"index": {
+			"type": "global"
+		}
+	}
+});
+const shouldSucceedWithIndexTypeValueAsLocalString = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"index": {
+			"type": "local"
+		}
+	}
+});
+const shouldSucceedWithIndexTypeValueAsGlobalEnumValue = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"index": {
+			"type": IndexType.global
+		}
+	}
+});
+const shouldSucceedWithIndexTypeValueAsLocalEnumValue = new dynamoose.Schema({
+	"id": {
+		"type": String,
+		"index": {
+			"type": IndexType.local
+		}
 	}
 });
