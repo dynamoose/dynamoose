@@ -9,3 +9,9 @@ const shouldSucceedWithTagsSetToEmptyObject = new dynamoose.Table("Table", [], {
 
 const shouldAllowForAccessingHashKey = new dynamoose.Table("Table", []).hashKey;
 const shouldAllowForAccessingRangeKey = new dynamoose.Table("Table", []).rangeKey;
+
+const shouldAllowForAccessingTableDefaults = dynamoose.Table.defaults;
+const shouldAllowForGettingTableDefaults = dynamoose.Table.defaults.get();
+const shouldAllowForSettingTableDefaults = dynamoose.Table.defaults.set({
+	"prefix": "MyApp_"
+});
