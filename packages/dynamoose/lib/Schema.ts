@@ -262,7 +262,7 @@ interface IndexDefinition {
 	 * If the index should be a global index or local index. Attribute will be the hashKey for the index.
 	 * @default "global"
 	 */
-	type?: IndexType;
+	type?: IndexType | keyof typeof IndexType;
 	/**
 	 * The range key attribute name for a global secondary index.
 	 */
