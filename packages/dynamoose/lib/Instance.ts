@@ -29,7 +29,7 @@ export class Instance {
 
 function getInstanceTable (instance: Instance) {
 	class Table extends PrimaryTable {
-		constructor (name: string, models: Model[], options: TableOptionsOptional = {}) {
+		constructor (name: string, models: Model[], options: TableOptionsOptional) {
 			super(instance, name, models, options);
 		}
 	}

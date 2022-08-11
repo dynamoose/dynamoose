@@ -57,10 +57,17 @@ describe("Transaction", () => {
 				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).rejects.toEqual(new CustomError.InvalidParameter("Table \"User\" not found. Please register the table with dynamoose before using it in transactions."));
 			});
 
-			it("Should throw error if table hasn't been created", () => {
+			it("Should not throw error if table hasn't been created", () => {
+				const ddb = {
+					"transactGetItems": () => {
+						return Promise.resolve({});
+					}
+				};
+				dynamoose.aws.ddb.set(ddb);
+
 				dynamoose.model("User", {"id": Number, "name": String});
 				dynamoose.model("Credit", {"id": Number, "name": String});
-				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).rejects.toEqual(new CustomError.InvalidParameter("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model."));
+				return expect(callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "User"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Credit"}}])).resolves.toEqual(null);
 			});
 
 			it("Should throw error if using different instances for each table", () => {
