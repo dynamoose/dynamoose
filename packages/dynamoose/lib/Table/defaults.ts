@@ -30,7 +30,11 @@ export const original: TableOptions = {
 	// "defaultReturnValues": "ALL_NEW",
 };
 let customValue: TableOptionsOptional = {};
-const customObject = {
+export interface TableOptionsAccessor {
+	"set": (val: TableOptionsOptional) => void;
+	"get": () => TableOptionsOptional;
+}
+const customObject: TableOptionsAccessor = {
 	"set": (val: TableOptionsOptional): void => {
 		customValue = val;
 	},
