@@ -1298,7 +1298,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	requiredCheck: (key: string, value: ValueType) => Promise<void>;
 	getAttributeSettingValue (setting: string, key: string, settings: SchemaGetAttributeSettingValue = {"returnFunction": false}) {
 		function func (attributeValue): any {
-			const defaultPropertyValue = (attributeValue || {})[setting];
+			const defaultPropertyValue = attributeValue?.[setting];
 			return typeof defaultPropertyValue === "function" && !settings.returnFunction ? defaultPropertyValue() : defaultPropertyValue;
 		}
 		const attributeValue = this.getAttributeValue(key, {"typeIndexOptionMap": settings.typeIndexOptionMap});

@@ -156,7 +156,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 					return {};
 				}
 
-				let index = (settings.index || {}).start || 0;
+				let index = settings.index?.start || 0;
 				const setIndex = (i: number): void => {
 					index = i; (settings.index || {"set": utils.empty_function}).set(i);
 				};

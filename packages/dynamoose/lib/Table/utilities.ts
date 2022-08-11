@@ -161,7 +161,7 @@ export async function updateTable (table: Table): Promise<void> {
 	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.throughput)) {
 		const currentThroughput = (await getTableDetails(table)).Table;
 		const expectedThroughput: any = utils.dynamoose.get_provisioned_throughput(table.getInternalProperties(internalProperties).options);
-		const isThroughputUpToDate = expectedThroughput.BillingMode === (currentThroughput.BillingModeSummary || {}).BillingMode && expectedThroughput.BillingMode || (currentThroughput.ProvisionedThroughput || {}).ReadCapacityUnits === (expectedThroughput.ProvisionedThroughput || {}).ReadCapacityUnits && currentThroughput.ProvisionedThroughput.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput.WriteCapacityUnits;
+		const isThroughputUpToDate = expectedThroughput.BillingMode === currentThroughput?.BillingModeSummary?.BillingMode && expectedThroughput.BillingMode || currentThroughput?.ProvisionedThroughput?.ReadCapacityUnits === expectedThroughput.ProvisionedThroughput?.ReadCapacityUnits && currentThroughput?.ProvisionedThroughput?.WriteCapacityUnits === expectedThroughput.ProvisionedThroughput?.WriteCapacityUnits;
 
 		if (!isThroughputUpToDate) {
 			const object: DynamoDB.UpdateTableInput = {
