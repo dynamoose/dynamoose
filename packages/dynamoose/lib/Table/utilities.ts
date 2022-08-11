@@ -7,6 +7,7 @@ import utils from "../utils";
 import CustomError from "../Error";
 import {TableIndexChangeType} from "../utils/dynamoose/index_changes";
 import {TableClass} from "./types";
+import * as defaults from "./defaults";
 
 // Utility functions
 export async function getTableDetails (table: Table, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
@@ -80,7 +81,8 @@ export function createTable (table: Table): Promise<void | (() => Promise<void>)
 export function createTable (table: Table, force: true): Promise<void>;
 export function createTable (table: Table, force: false): Promise<void | (() => Promise<void>)>;
 export async function createTable (table: Table, force = false): Promise<void | (() => Promise<void>)> {
-	if (!force && ((await getTableDetails(table, {"allowError": true}) || {}).Table || {}).TableStatus === "ACTIVE") {
+	const tableStatus = (await getTableDetails(table, {"allowError": true}))?.Table?.TableStatus;
+	if (!force && tableStatus === "ACTIVE") {
 		table.getInternalProperties(internalProperties).alreadyCreated = true;
 		return (): Promise<void> => Promise.resolve.bind(Promise)();
 	}
@@ -126,7 +128,9 @@ export function waitForActive (table: Table, forceRefreshOnFirstAttempt = true) 
 	return (): Promise<void> => new Promise((resolve, reject) => {
 		const start = Date.now();
 		async function check (count: number): Promise<void> {
-			if (typeof table.getInternalProperties(internalProperties).options.waitForActive !== "boolean") {
+			const waitForActiveSettingValue = table.getInternalProperties(internalProperties).options.waitForActive;
+			if (typeof waitForActiveSettingValue !== "boolean" || waitForActiveSettingValue === true) {
+				const waitForActiveSetting: TableWaitForActiveSettings = typeof waitForActiveSettingValue === "boolean" ? (defaults.original.waitForActive as TableWaitForActiveSettings) : waitForActiveSettingValue;
 				try {
 					// Normally we'd want to do `dynamodb.waitFor` here, but since it doesn't work with tables that are being updated we can't use it in this case
 					const tableDetails = (await getTableDetails(table, {"forceRefresh": forceRefreshOnFirstAttempt === true ? forceRefreshOnFirstAttempt : count > 0})).Table;
@@ -138,9 +142,9 @@ export function waitForActive (table: Table, forceRefreshOnFirstAttempt = true) 
 				}
 
 				if (count > 0) {
-					(table.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings).check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout((table.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings).check.frequency);
+					waitForActiveSetting.check.frequency === 0 ? await utils.set_immediate_promise() : await utils.timeout(waitForActiveSetting.check.frequency);
 				}
-				if (Date.now() - start >= (table.getInternalProperties(internalProperties).options.waitForActive as TableWaitForActiveSettings).check.timeout) {
+				if (Date.now() - start >= waitForActiveSetting.check.timeout) {
 					return reject(new CustomError.WaitForActiveTimeout(`Wait for active timed out after ${Date.now() - start} milliseconds.`));
 				} else {
 					check(++count);

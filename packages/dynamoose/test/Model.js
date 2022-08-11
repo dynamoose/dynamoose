@@ -116,9 +116,9 @@ describe("Model", () => {
 			process.removeListener("unhandledRejection", errorHandler);
 		});
 
-		it("Should throw an error if trying to access table with no table", () => {
+		it("Should not throw an error if trying to access table with no table", () => {
 			const model = dynamoose.model("User", {"id": String});
-			expect(model.Model.getInternalProperties(internalProperties).table).toThrow("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
+			expect(model.Model.getInternalProperties(internalProperties).table).not.toThrow("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
 		});
 	});
 
