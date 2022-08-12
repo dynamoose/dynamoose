@@ -18,8 +18,6 @@ const shouldNotFailWithConfigurationParameter = dynamoose.model("User", {"id": S
 
 const model = dynamoose.model("User", {"id": Number});
 
-const shouldPassTableCreateRequest = model.table.create.request();
-
 const shouldPassCreateWithNoReturnSetting = model.create({"id": 1}, {"overwrite": true});
 const shouldPassCreateWithReturnRequest = model.create({"id": 1}, {"return": "request"});
 const shouldPassCreateWithReturnItem = model.create({"id": 1}, {"return": "item"});
