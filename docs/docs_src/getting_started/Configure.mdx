@@ -1,4 +1,4 @@
-Dynamoose interacts directly with the [AWS-SDK](https://www.npmjs.com/package/aws-sdk), therefore, it is required that you authenticate and provide valid credentials so Dynamoose can successfully make requests to DynamoDB.
+Dynamoose interacts directly with the [`@aws-sdk/client-dynamodb`](https://www.npmjs.com/package/@aws-sdk/client-dynamodb) package, therefore, it is required that you authenticate and provide valid credentials so Dynamoose can successfully make requests to DynamoDB.
 
 It is recommended that you do this as early in the application life cycle as possible to prevent issues where Dynamoose will try to make requests to DynamoDB that are unauthenticated.
 
@@ -16,25 +16,13 @@ export AWS_REGION = "us-east-1"
 
 ## Programmatically
 
-### Global
-
-The following code will change the AWS-SDK global settings to use the configuration options.
-
-```js
-dynamoose.aws.sdk.config.update({
-	"accessKeyId": "AKID",
-	"secretAccessKey": "SECRET",
-	"region": "us-east-1"
-});
-```
-
 ### Dynamoose Specific
 
 The following code will create a new DynamoDB instance with the specific configuration options and use that in Dynamoose.
 
 ```js
 // Create new DynamoDB instance
-const ddb = new dynamoose.aws.sdk.DynamoDB({
+const ddb = new dynamoose.aws.ddb.DynamoDB({
 	"accessKeyId": "AKID",
 	"secretAccessKey": "SECRET",
 	"region": "us-east-1"
