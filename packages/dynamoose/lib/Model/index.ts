@@ -361,6 +361,24 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		return this.getInternalProperties(internalProperties).name;
 	}
 
+	/**
+	 * This property will return the [`Table`](Table.md) instance for the model.
+	 *
+	 * If a Table instance hasn't been created yet for this model, it will be created when accessing this property.
+	 *
+	 * This property is unable to be set.
+	 *
+	 * ```js
+	 * const User = dynamoose.model("User", {"id": String});
+	 *
+	 * console.log(User.table.hashKey); // id
+	 * ```
+	 * @readonly
+	 */
+	get table (): Table {
+		return this.getInternalProperties(internalProperties).table();
+	}
+
 	// originalName: string; // Name without prefixes
 	// options: ModelOptions;
 	// schemas: Schema[];
