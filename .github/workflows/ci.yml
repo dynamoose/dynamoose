@@ -10,18 +10,31 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: lts/*
-      - run: npm install
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/dynamoose/package-lock.json
+            packages/dynamoose-logger/package-lock.json
+            packages/dynamoose-utils/package-lock.json
+      - run: npm ci
       - run: npm run lint
   test-types:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v2
-      - run: npm install
+        uses: actions/setup-node@v3
+        with:
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/dynamoose/package-lock.json
+            packages/dynamoose-logger/package-lock.json
+            packages/dynamoose-utils/package-lock.json
+      - run: npm ci
       - run: npm run test:types
   test:
     runs-on: ubuntu-latest
@@ -40,10 +53,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm install
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/dynamoose/package-lock.json
+            packages/dynamoose-logger/package-lock.json
+            packages/dynamoose-utils/package-lock.json
+      - run: npm ci
       - run: npm run build:sourcemap
       - name: Setup DynamoDB Local
         uses: rrainn/dynamodb-action@v2.0.0
