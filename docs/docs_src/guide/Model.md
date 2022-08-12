@@ -8,7 +8,7 @@ dyno_jsdoc_dist/Model/index.js|new Model
 
 dyno_jsdoc_dist/Model/index.js|model.name
 
-## model.table
+## model.table()
 
 dyno_jsdoc_dist/Model/index.js|model.table
 
