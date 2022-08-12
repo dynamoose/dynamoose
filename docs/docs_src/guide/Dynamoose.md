@@ -14,6 +14,16 @@ This function will return the current `@aws-sdk/client-dynamodb` `DynamoDB` inst
 const ddb = dynamoose.aws.ddb(); // custom instance set, or `new AWS.DynamoDB()`
 ```
 
+## dynamoose.aws.ddb.DynamoDB
+
+This is the default `@aws-sdk/client-dynamodb` `DynamoDB` constructor that you can use to create a new DynamoDB client instance. You can pass this into the [`dynamoose.aws.ddb.set`](#dynamooseawsddbsetddb) function to set a custom `@aws-sdk/client-dynamodb` `DynamoDB` instance.
+
+```js
+const ddb = new dynamoose.aws.ddb.DynamoDB({
+	"region": "us-east-1",
+});
+```
+
 ## dynamoose.aws.ddb.set(ddb)
 
 This function is used to set a custom `@aws-sdk/client-dynamodb` `DynamoDB` instance. This is useful for mocking the instance for situations like automated tests where you want to be able to mock certain interactions with DynamoDB.
