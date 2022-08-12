@@ -36,6 +36,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 	- `dynamoose.NULL` is now `dynamoose.type.NULL`.
 - Stricter validation of Schema types. If you pass in an invalid schema attribute type, it will now throw an error upon initialization.
 	- For example, `new dynamoose.Schema({"id": "random"})` will now throw an error.
+- `Model.table.create.request()` has been replaced by `Model.table().create({"return": "request"})`.
 - Node.js >=v12 now required.
 - New IAM roles (`listTagsOfResource`, `tagResource`, `untagResource`) required if `update` is set to true.
 - `index.global` property has been removed within Schema Attribute Settings. It has been replaced with `index.type`, which accepts `"global"` or `"local"` as values. This setting remains optional (however, the default value has changed).

@@ -135,6 +135,32 @@ describe("Model", () => {
 		});
 	});
 
+	describe("model.table()", () => {
+		it("Should return correct value", async () => {
+			const model = dynamoose.model("Cat", {"id": String});
+			expect(model.table().name).toEqual("Cat");
+			expect(await model.table().create({"return": "request"})).toEqual({
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				],
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
+				},
+				"TableName": "Cat"
+			});
+		});
+	});
+
 	describe("model.get()", () => {
 		let User, getItemParams, getItemFunction;
 		beforeEach(() => {
