@@ -15,6 +15,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 			- `input` has changed to `convertToAttr`.
 			- `output` has changed to `convertToNative`.
 			- For more information please refer to the AWS-SDK v3 changelogs.
+- `dynamoose.model.defaults` has been renamed to `dynamoose.Table.defaults`.
 - DynamoDB table initialization/updates will no longer be done upon creating a model. Instead they will be done when you initialize a `dynamoose.Table` instance, or whenever you make a DynamoDB request for a given model (ex. `get`, `create`, `update`).
 - Renamed `Document` to `Item`.
 	- The largest user facing API change is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`.
