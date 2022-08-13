@@ -14,6 +14,12 @@ describe("AWS", () => {
 			expect(dynamoose.aws.ddb()).toBeInstanceOf(Object);
 		});
 
+		describe("DynamoDB", () => {
+			it("Should be a function", () => {
+				expect(dynamoose.aws.ddb.DynamoDB).toBeInstanceOf(Function);
+			});
+		});
+
 		describe("Set", () => {
 			afterEach(() => {
 				dynamoose.aws.ddb.revert();
