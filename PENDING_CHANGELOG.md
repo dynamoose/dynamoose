@@ -15,6 +15,7 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 			- `input` has changed to `convertToAttr`.
 			- `output` has changed to `convertToNative`.
 			- For more information please refer to the AWS-SDK v3 changelogs.
+		- You can use `dynamoose.aws.ddb.DynamoDB` to create a new `@aws-sdk/client-dynamodb` `DynamoDB` instance.
 - `dynamoose.model.defaults` has been renamed to `dynamoose.Table.defaults`.
 - DynamoDB table initialization/updates will no longer be done upon creating a model. Instead they will be done when you initialize a `dynamoose.Table` instance, or whenever you make a DynamoDB request for a given model (ex. `get`, `create`, `update`).
 - Renamed `Document` to `Item`.
