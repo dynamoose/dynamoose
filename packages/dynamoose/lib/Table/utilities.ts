@@ -194,30 +194,38 @@ export async function updateTable (table: Table): Promise<void> {
 	}
 	// Tags
 	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.tags)) {
-		const currentTags = (await getTagDetails(table)).Tags;
-		const expectedTags: {[key: string]: string} = table.getInternalProperties(internalProperties).options.tags;
+		try {
+			const currentTags = (await getTagDetails(table)).Tags;
+			const expectedTags: {[key: string]: string} = table.getInternalProperties(internalProperties).options.tags;
 
-		let tableDetails: DynamoDB.DescribeTableOutput;
+			let tableDetails: DynamoDB.DescribeTableOutput;
 
-		const tagsToDelete = currentTags.filter((tag) => expectedTags[tag.Key] !== tag.Value).map((tag) => tag.Key);
-		if (tagsToDelete.length > 0) {
-			tableDetails = await getTableDetails(table);
-			await ddb(instance, "untagResource", {
-				"ResourceArn": tableDetails.Table.TableArn,
-				"TagKeys": tagsToDelete
-			});
-		}
+			const tagsToDelete = currentTags.filter((tag) => expectedTags[tag.Key] !== tag.Value).map((tag) => tag.Key);
+			if (tagsToDelete.length > 0) {
+				tableDetails = await getTableDetails(table);
+				await ddb(instance, "untagResource", {
+					"ResourceArn": tableDetails.Table.TableArn,
+					"TagKeys": tagsToDelete
+				});
+			}
 
-		const tagsToAdd = Object.keys(expectedTags).filter((key) => tagsToDelete.includes(key) || !currentTags.some((tag) => tag.Key === key));
-		if (tagsToAdd.length > 0) {
-			tableDetails = tableDetails || await getTableDetails(table);
-			await ddb(instance, "tagResource", {
-				"ResourceArn": tableDetails.Table.TableArn,
-				"Tags": tagsToAdd.map((key) => ({
-					"Key": key,
-					"Value": expectedTags[key]
-				}))
-			});
+			const tagsToAdd = Object.keys(expectedTags).filter((key) => tagsToDelete.includes(key) || !currentTags.some((tag) => tag.Key === key));
+			if (tagsToAdd.length > 0) {
+				tableDetails = tableDetails || await getTableDetails(table);
+				await ddb(instance, "tagResource", {
+					"ResourceArn": tableDetails.Table.TableArn,
+					"Tags": tagsToAdd.map((key) => ({
+						"Key": key,
+						"Value": expectedTags[key]
+					}))
+				});
+			}
+		} catch (error) {
+			if (error.name === "UnknownOperationException" && error.message === "Tagging is not currently supported in DynamoDB Local.") {
+				console.warn(`Tagging is not currently supported in DynamoDB Local. Skipping tag update for table: ${table.name}`);
+			} else {
+				throw error;
+			}
 		}
 	}
 	// Table Class

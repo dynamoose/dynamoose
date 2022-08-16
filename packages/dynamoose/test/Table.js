@@ -1467,6 +1467,62 @@ describe("Table", () => {
 							]);
 							expect(untagResourceParams).toEqual([]);
 						});
+
+						it("Should throw error upon AWS error", async () => {
+							const tableName = "Cat";
+							const error = {
+								"message": "Custom error"
+							};
+							listTagsOfResourceFunction = () => Promise.reject(error);
+							const model = dynamoose.model(tableName, {"id": String});
+							const table = new dynamoose.Table(tableName, [model], {"update": updateOption, "tags": {"hello": "universe"}, "initialize": false});
+							let resolvedError;
+							try {
+								await table.initialize();
+							} catch (e) {
+								resolvedError = e;
+							}
+							expect(resolvedError).toEqual(error);
+						});
+
+						describe("Logs", () => {
+							const consoleTypes = ["error", "warn", "info", "log"];
+							let logs = [];
+							let originalConsole = {};
+							beforeEach(async () => {
+								consoleTypes.forEach((type) => {
+									originalConsole[type] = console[type]; // eslint-disable-line no-console
+									console[type] = (str) => logs.push({"message": str, type}); // eslint-disable-line no-console
+								});
+							});
+							afterEach(() => {
+								consoleTypes.forEach((type) => {
+									console[type] = originalConsole[type]; // eslint-disable-line no-console
+								});
+								originalConsole = {};
+								logs = [];
+							});
+
+							it("Should only log message if using DynamoDB Local", async () => {
+								const tableName = "Cat";
+								const error = {
+									"name": "UnknownOperationException",
+									"message": "Tagging is not currently supported in DynamoDB Local."
+								};
+								listTagsOfResourceFunction = () => Promise.reject(error);
+								const model = dynamoose.model(tableName, {"id": String});
+								const table = new dynamoose.Table(tableName, [model], {"update": updateOption, "tags": {"hello": "universe"}, "initialize": false});
+								let resolvedError;
+
+								try {
+									await table.initialize();
+								} catch (e) {
+									resolvedError = e;
+								}
+								expect(resolvedError).toEqual(undefined);
+								expect(logs).toEqual([{"message": "Tagging is not currently supported in DynamoDB Local. Skipping tag update for table: Cat", "type": "warn"}]);
+							});
+						});
 					});
 				});
 			});
