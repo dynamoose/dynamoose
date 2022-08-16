@@ -222,7 +222,7 @@ export async function updateTable (table: Table): Promise<void> {
 			}
 		} catch (error) {
 			if (error.name === "UnknownOperationException" && error.message === "Tagging is not currently supported in DynamoDB Local.") {
-				console.warn(`Tagging is not currently supported in DynamoDB Local. Skipping tag update for table: ${table.name}`);
+				console.warn(`Tagging is not currently supported in DynamoDB Local. Skipping tag update for table: ${table.name}`); // eslint-disable-line no-console
 			} else {
 				throw error;
 			}
