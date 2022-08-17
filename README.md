@@ -66,8 +66,7 @@ Below you will find the current branch strategy for the project. Work taking pla
 
 | Branch | Version | NPM Tag | Links |
 | --- | --- | --- | --- |
-| [`main`](https://github.com/dynamoose/dynamoose/tree/main) | 3.x.x | beta | - [Documentation](https://dynamoose.pages.dev/)<br>- [Pending Changelog](https://github.com/dynamoose/dynamoose/blob/main/PENDING_CHANGELOG.md) |
-| [`v2`](https://github.com/dynamoose/dynamoose/tree/v2) | 2.8.x |   | - [Documentation](https://v2.dynamoose.pages.dev/) |
-| [`v2.8.7` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.8.7) | 2.8.7 | latest | - [Documentation](https://dynamoosejs.com)
-
-
+| [`main`](https://github.com/dynamoose/dynamoose/tree/main) | 3.x.x |   | - [Documentation](https://dynamoose.pages.dev) |
+| [`v3.0.0` (tag)](https://github.com/dynamoose/dynamoose/tree/v3.0.0) | 3.0.0 | latest | - [Documentation](https://dynamoosejs.com) |
+| [`v2`](https://github.com/dynamoose/dynamoose/tree/v2) | 2.8.x |   | - [Documentation](https://v2.dynamoose.pages.dev) |
+| [`v2.8.7` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.8.7) | 2.8.7 | latest-2 | - [Documentation](https://v2.dynamoosejs.com)
