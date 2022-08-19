@@ -1,9 +1,12 @@
 import utils from "..";
-import {ModelType} from "../../General";
+import {MethodsType, ModelType} from "../../General";
 import {AnyItem, Item} from "../../Item";
 import {Model} from "../../Model";
 
-export default <T extends Item = AnyItem>(model: Model<T>): ModelType<T> => {
+export default <
+	TItem extends Item = AnyItem,
+	TMethods extends MethodsType = MethodsType
+	>(model: Model<TItem, TMethods>): ModelType<TItem, TMethods> => {
 	const returnObject: any = model.Item;
 	const keys = utils.array_flatten([
 		Object.keys(model),

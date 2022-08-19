@@ -2,16 +2,18 @@ import CustomError from "./Error";
 import {Model} from "./Model";
 import {Item} from "./Item";
 import Internal from "./Internal";
+import {MethodsType} from "./General";
 const {internalProperties} = Internal.General;
+
 
 let models: {[name: string]: Model<Item>} = {};
 
-const returnObject = <T extends Item>(input: Model<T> | string): Model<T> | never => {
+const returnObject = <TItem extends Item, TMethods extends MethodsType>(input: Model<TItem, TMethods> | string): Model<TItem, TMethods> | never => {
 	if (input instanceof Model) {
 		models[input.name] = input;
 		return input;
 	} else if (typeof input === "string") {
-		return models[input] as Model<T>;
+		return models[input] as Model<TItem, TMethods>;
 	} else {
 		throw new CustomError.InvalidParameter("You must pass in a Model or model name as a string.");
 	}
@@ -24,6 +26,8 @@ returnObject.clear = (): void => {
  * @param tableName The name of the table to get the models for.
  * @returns Array of Models.
  */
+
+// TODO: find a away to infer item and method types for model
 returnObject.forTableName = (tableName: string): Model<Item>[] | undefined => {
 	const modelsInTable = Object.values(models).filter((model) => model.getInternalProperties(internalProperties).table().name === tableName);
 
