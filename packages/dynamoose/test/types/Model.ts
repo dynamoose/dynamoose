@@ -14,12 +14,9 @@ const shouldSucceedWithOnlyPassingInName = dynamoose.model("User");
 const shouldSucceedWithOnlyNameAndSchemaObject = dynamoose.model("User", {"id": String});
 const shouldSucceedWithNameAndSchemaInstance = dynamoose.model("User", new dynamoose.Schema({"id": String}));
 
-// @ts-expect-error
-const shouldFailWithConfigurationParameter = dynamoose.model("User", {"id": String}, {});
+const shouldNotFailWithConfigurationParameter = dynamoose.model("User", {"id": String}, {});
 
 const model = dynamoose.model("User", {"id": Number});
-
-const shouldPassTableCreateRequest = model.table.create.request();
 
 const shouldPassCreateWithNoReturnSetting = model.create({"id": 1}, {"overwrite": true});
 const shouldPassCreateWithReturnRequest = model.create({"id": 1}, {"return": "request"});

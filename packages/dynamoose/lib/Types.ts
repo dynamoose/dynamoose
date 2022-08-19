@@ -20,3 +20,9 @@ declare global {
 	interface File {}
 	/* eslint-enable @typescript-eslint/no-empty-interface */
 }
+
+///// --- https://github.com/aws/aws-sdk-js-v3/issues/3807 ---
+declare global {
+	// eslint-disable-next-line @typescript-eslint/no-empty-interface
+	interface ReadableStream {}
+}

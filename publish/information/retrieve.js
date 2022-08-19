@@ -2,7 +2,7 @@ const versionWebsiteBuckets = {
 	"2": "v2.dynamoosejs.com"
 };
 const versionNPMTags = {
-	// "2": "dynamoose-v2"
+	"2": "latest-2"
 };
 
 module.exports = (version) => {

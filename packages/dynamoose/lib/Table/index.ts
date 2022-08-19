@@ -111,7 +111,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * @param models An array of [Model](/guide/Model.md) instances.
 	 * @param options An optional object used to customize settings for the table.
 	 */
-	constructor (instance: Instance, name: string, models: Model[], options?: TableOptionsOptional) {
+	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional = {}) {
 		super();
 
 		// Check name argument

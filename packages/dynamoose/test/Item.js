@@ -1535,6 +1535,18 @@ describe("Item", () => {
 					}]);
 				});
 
+				it("Should map properties correctly", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"pk": {"N": "1"}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should throw error if DynamoDB API returns an error", async () => {
 					putItemFunction = () => Promise.reject({"error": "Error"});
 					let result, error;
@@ -2304,6 +2316,17 @@ describe("Item", () => {
 				"output": {"id": 1},
 				"schema": {"id": Number},
 				"inputJSONString": JSON.stringify({"id": 1, "array": {"first": 1}, "array2": "CIRCULAR"})
+			},
+			{
+				// https://github.com/dynamoose/dynamoose/issues/1405
+				"input": (() => {
+					const obj = {"id": "1", "data": Uint8Array.from(Array.from("Hello World").map((letter) => letter.charCodeAt(0)))};
+					const marshalled = dynamoose.aws.converter().marshall(obj);
+					const unmarshalled = Item.fromDynamo(marshalled);
+					return unmarshalled;
+				})(),
+				"output": {"id": "1", "data": Buffer.from("Hello World")},
+				"schema": {"id": String, "data": Buffer}
 			}
 		];
 		const defaultsTests = [

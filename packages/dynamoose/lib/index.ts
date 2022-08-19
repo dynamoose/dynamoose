@@ -7,16 +7,20 @@ import {Item, AnyItem} from "./Item";
 import ModelStore from "./ModelStore";
 import {MethodsType, ModelType} from "./General";
 import CustomError from "./Error";
-import {Table} from "./Table/index";
+import {Table, TableOptionsOptional} from "./Table/index";
 import type from "./type";
 import {Instance} from "./Instance";
 import {custom as TableDefaults} from "./Table/defaults";
+import returnModel from "./utils/dynamoose/returnModel";
 
-const model = <TItem extends Item = AnyItem, TMethods extends MethodsType ={}>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[]): ModelType<TItem, TMethods> => {
-	let model: Model<TItem>;
-	let storedSchema: Model<TItem>;
+const model = <TItem extends Item = AnyItem, TMethods extends MethodsType ={}>(
+	name: string,
+	schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[],
+	options?: TableOptionsOptional): ModelType<TItem, TMethods> => {
+	let model: Model<TItem, TMethods>;
+	let storedSchema: Model<TItem, TMethods>;
 	if (name) {
-		storedSchema = ModelStore<TItem>(name);
+		storedSchema = ModelStore<TItem, TMethods>(name);
 	}
 	// TODO: this is something I'd like to do. But is a breaking change. Need to enable this and uncomment it in a breaking release. Also will need to fix the tests as well.
 	/* if (schema && storedSchema) {
@@ -25,45 +29,10 @@ const model = <TItem extends Item = AnyItem, TMethods extends MethodsType ={}>(n
 	if (!schema && storedSchema) {
 		model = storedSchema;
 	} else {
-		model = new Model(name, schema, ModelStore);
+		model = new Model(name, schema, options, ModelStore);
 	}
-	const returnObject: any = model.Item;
-	const keys = utils.array_flatten([
-		Object.keys(model),
-		Object.keys(Object.getPrototypeOf(model)),
-		Object.getOwnPropertyNames(Object.getPrototypeOf(model))
-	]).filter((key) => !["constructor", "name"].includes(key));
-	keys.forEach((key) => {
-		if (typeof model[key] === "object") {
-			const main = (key: string): void => {
-				utils.object.set(returnObject, key, {});
-				const value = utils.object.get(model as any, key);
-				if (value === null || value.constructor !== Object && value.constructor !== Array) {
-					utils.object.set(returnObject, key, value);
-				} else {
-					Object.keys(value).forEach((subKey): void => {
-						const newKey = `${key}.${subKey}`;
-						const subValue: any = utils.object.get(model as any, newKey);
-						if (typeof subValue === "object") {
-							main(newKey);
-						} else {
-							utils.object.set(returnObject, newKey, subValue.bind(model));
-						}
-					});
-				}
-			};
-			main(key);
-		} else {
-			returnObject[key] = model[key].bind(model);
-		}
-	});
 
-	Object.defineProperty(returnObject, "name", {
-		"configurable": false,
-		"value": returnObject.Model.name
-	});
-
-	return returnObject as any;
+	return returnModel(model);
 };
 Table.defaults = {
 	...TableDefaults as any

@@ -12,9 +12,11 @@ import {PopulateItems} from "../Populate";
 import {AttributeMap} from "../Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
-import {Table} from "../Table";
+import {Table, TableOptionsOptional} from "../Table";
 import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
+import {Instance} from "../Instance";
+import returnModel from "../utils/dynamoose/returnModel";
 const {internalProperties} = Internal.General;
 
 // Transactions
@@ -96,6 +98,7 @@ export interface ModelIndexes {
 
 interface ModelInternalProperties {
 	name: string;
+	options: TableOptionsOptional;
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
 	convertObjectToKey: (key: InputKey) => KeyObject;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
@@ -120,6 +123,8 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 	 * The `name` parameter is a string representing the model name.
 	 *
 	 * The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
+	 *
+	 * The `options` parameter is the same as the options that are passed to the [Table](Table.md) constructor.
 	 *
 	 * ```js
 	 * const dynamoose = require("dynamoose");
@@ -167,16 +172,20 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 	 * ```js
 	 * const Cat = dynamoose.model("Cat"); // Will reference existing model, or if no model exists already with name `Cat` it will throw an error.
 	 * ```
+	 *
+	 * If you choose to pass the model into a [`Table`](Table.md) constructor, you must ensure that you don't use the model for any DynamoDB requests before initializing the table.
 	 * @param name The name of the model.
 	 * @param schema The schema for the model.
+	 * @param options The options for the model. This is the same type as `Table` options.
 	 * @param ModelStore INTERNAL PARAMETER
 	 */
-	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], ModelStore: (model: Model) => void) {
+	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: TableOptionsOptional, ModelStore: (model: Model) => void) {
 		super();
 
 		// Methods
 		this.setInternalProperties(internalProperties, {
 			name,
+			options,
 			"getIndexes": async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
 				return (await Promise.all(this.getInternalProperties(internalProperties).schemas.map((schema) => schema.getIndexes(this)))).reduce((result, indexes) => {
 					Object.entries(indexes).forEach(([key, value]) => {
@@ -245,7 +254,10 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 			"table": (): Table => {
 				const table = this.getInternalProperties(internalProperties)._table;
 				if (!table) {
-					throw new CustomError.OtherError(`No table has been registered for ${this.name} model. Use \`new dynamoose.Table\` to register a table for this model.`);
+					const modelObject = returnModel(this);
+					const createdTable = new Table(Instance.default, this.getInternalProperties(internalProperties).name, [modelObject], this.getInternalProperties(internalProperties).options);
+					this.getInternalProperties(internalProperties)._table = createdTable;
+					return createdTable;
 				}
 
 				return table;
@@ -349,6 +361,21 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 		return this.getInternalProperties(internalProperties).name;
 	}
 
+	/**
+	 * This function will return the [`Table`](Table.md) instance for the model.
+	 *
+	 * If a Table instance hasn't been created yet for this model, it will be created when calling this function.
+	 *
+	 * ```js
+	 * const User = dynamoose.model("User", {"id": String});
+	 *
+	 * console.log(User.table().hashKey); // id
+	 * ```
+	 */
+	table (): Table {
+		return this.getInternalProperties(internalProperties).table();
+	}
+
 	// originalName: string; // Name without prefixes
 	// options: ModelOptions;
 	// schemas: Schema[];
@@ -416,7 +443,7 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 			const params: DynamoDB.BatchGetItemInput = {
 				"RequestItems": {
 					[table.getInternalProperties(internalProperties).name]: {
-						"Keys": await Promise.all(keyObjects.map(async (key) => this.Item.objectToDynamo(await this.Item.objectFromSchema(key, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false}))))
+						"Keys": await Promise.all(keyObjects.map(async (key) => this.Item.objectToDynamo(await this.Item.objectFromSchema(key, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true}))))
 					}
 				}
 			};
@@ -488,7 +515,7 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 			"RequestItems": {
 				[table.getInternalProperties(internalProperties).name]: await Promise.all(items.map(async (item) => ({
 					"PutRequest": {
-						"Item": await new this.Item(item as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]})
+						"Item": await new this.Item(item as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true})
 					}
 				})))
 			}
@@ -553,7 +580,7 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 			"RequestItems": {
 				[table.getInternalProperties(internalProperties).name]: await Promise.all(keyObjects.map(async (key) => ({
 					"DeleteRequest": {
-						"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(key, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false}))
+						"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(key, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true}))
 					}
 				})))
 			}
@@ -667,7 +694,7 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
-						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
+						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
 					}
 
 					if (subValue === dynamooseUndefined || subValue === undefined) {
@@ -719,7 +746,7 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 					}, {})
 				};
 
-				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo"};
+				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
 				const defaultObjectFromSchema = await this.Item.objectFromSchema(await this.Item.prepareForObjectFromSchema({}, this, itemFunctionSettings), this, itemFunctionSettings);
 				Object.keys(defaultObjectFromSchema).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
@@ -820,7 +847,7 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
 		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
-			"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(this.getInternalProperties(internalProperties).convertObjectToKey(keyObj), this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false})),
+			"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(this.getInternalProperties(internalProperties).convertObjectToKey(keyObj), this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true})),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",
 			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
 				index = i;
@@ -891,7 +918,7 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 
 		const getDeleteItemParams = async (settings: ModelDeleteSettings): Promise<DynamoDB.DeleteItemInput> => {
 			let deleteItemParams: DynamoDB.DeleteItemInput = {
-				"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(this.getInternalProperties(internalProperties).convertObjectToKey(key), this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false})),
+				"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(this.getInternalProperties(internalProperties).convertObjectToKey(key), this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true})),
 				"TableName": table.getInternalProperties(internalProperties).name
 			};
 
@@ -946,13 +973,13 @@ export class Model<TItem extends ItemCarrier = AnyItem, TMethods extends Methods
 			settings = {"return": "item"};
 		}
 
-		const conformToSchemaSettings: ItemObjectFromSchemaSettings = {"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"};
+		const conformToSchemaSettings: ItemObjectFromSchemaSettings = {"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true};
 		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema(conformToSchemaSettings);
 		const table = this.getInternalProperties(internalProperties).table();
 
 		const getItemParamsMethod = async (settings: ModelGetSettings): Promise<DynamoDB.GetItemInput> => {
 			const getItemParams: DynamoDB.GetItemInput = {
-				"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(this.getInternalProperties(internalProperties).convertObjectToKey(key), this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false})),
+				"Key": this.Item.objectToDynamo(await this.Item.objectFromSchema(this.getInternalProperties(internalProperties).convertObjectToKey(key), this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true})),
 				"TableName": table.getInternalProperties(internalProperties).name
 			};
 

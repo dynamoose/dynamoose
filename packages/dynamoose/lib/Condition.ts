@@ -139,7 +139,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 		this.setInternalProperties(internalProperties, {
 			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
-					const newValue = (await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false}))[key];
+					const newValue = (await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true}))[key];
 					return Item.objectToDynamo(newValue, {"type": "value"});
 				};
 

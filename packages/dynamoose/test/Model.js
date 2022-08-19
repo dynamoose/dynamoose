@@ -116,9 +116,9 @@ describe("Model", () => {
 			process.removeListener("unhandledRejection", errorHandler);
 		});
 
-		it("Should throw an error if trying to access table with no table", () => {
+		it("Should not throw an error if trying to access table with no table", () => {
 			const model = dynamoose.model("User", {"id": String});
-			expect(model.Model.getInternalProperties(internalProperties).table).toThrow("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
+			expect(model.Model.getInternalProperties(internalProperties).table).not.toThrow("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
 		});
 	});
 
@@ -132,6 +132,32 @@ describe("Model", () => {
 			const model = dynamoose.model("Cat", {"id": String});
 			model.name = "Dog";
 			expect(model.name).toEqual("Cat");
+		});
+	});
+
+	describe("model.table()", () => {
+		it("Should return correct value", async () => {
+			const model = dynamoose.model("Cat", {"id": String});
+			expect(model.table().name).toEqual("Cat");
+			expect(await model.table().create({"return": "request"})).toEqual({
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				],
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
+				},
+				"TableName": "Cat"
+			});
 		});
 	});
 
@@ -940,6 +966,16 @@ describe("Model", () => {
 					expect(user.data1).toEqual("hello");
 					expect(user.data2).toEqual("world");
 					expect(user.combine).toEqual("random");
+				});
+
+				it("Should map properties correctly", async () => {
+					User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}});
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"pk": {"N": "1"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(Object.keys(user)).toEqual(["id"]);
+					expect(user.id).toEqual(1);
 				});
 
 				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", () => {

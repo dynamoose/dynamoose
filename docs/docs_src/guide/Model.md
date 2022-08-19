@@ -1,12 +1,16 @@
 The Model object represents an entity for your application. It takes in both a name and a schema(s) and has methods to interact with items in your database.
 
-## dynamoose.model[&lt;Item&gt;](name, [schema])
+## dynamoose.model[&lt;Item&gt;](name, [[schema], options])
 
 dyno_jsdoc_dist/Model/index.js|new Model
 
 ## model.name
 
 dyno_jsdoc_dist/Model/index.js|model.name
+
+## model.table()
+
+dyno_jsdoc_dist/Model/index.js|model.table
 
 ## model.get(key[, settings][, callback])
 

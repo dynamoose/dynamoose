@@ -676,19 +676,40 @@ describe("Table", () => {
 
 			it("Should not call updateTable when table is still being created when waitForActive is set to true", async () => {
 				const tableName = "Cat";
+				let readReturnCapacityUnits = 2;
+				let status = "CREATING";
 				describeTableFunction = () => Promise.resolve({
 					"Table": {
 						"ProvisionedThroughput": {
-							"ReadCapacityUnits": 2,
+							"ReadCapacityUnits": readReturnCapacityUnits,
 							"WriteCapacityUnits": 2
 						},
-						"TableStatus": "CREATING"
+						"TableStatus": status
 					}
 				});
 				const model = dynamoose.model(tableName, {"id": String});
-				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": true, "waitForActive": true});
-				await utils.set_immediate_promise();
+				new dynamoose.Table(tableName, [model], {"throughput": {"read": 1, "write": 2}, "update": ["throughput"], "waitForActive": {
+					"enabled": true,
+					"check": {
+						"frequency": 10,
+						"timeout": 10000000
+					}
+				}});
+				await utils.timeout(50);
 				expect(updateTableParams).toEqual([]);
+				readReturnCapacityUnits = 1;
+				status = "ACTIVE";
+				await utils.timeout(50);
+			});
+
+			it("Should resolve correctly if `waitForActive` is set to true", async () => {
+				const tableName = "Cat";
+				describeTableFunction = () => {
+					return Promise.resolve({"Table": {"TableStatus": "ACTIVE"}});
+				};
+				const model = dynamoose.model(tableName, {"id": String});
+				const table = new dynamoose.Table(tableName, [model], {"initialize": false, "waitForActive": true});
+				await expect(table.initialize()).resolves.toEqual();
 			});
 		});
 
@@ -1445,6 +1466,62 @@ describe("Table", () => {
 								}
 							]);
 							expect(untagResourceParams).toEqual([]);
+						});
+
+						it("Should throw error upon AWS error", async () => {
+							const tableName = "Cat";
+							const error = {
+								"message": "Custom error"
+							};
+							listTagsOfResourceFunction = () => Promise.reject(error);
+							const model = dynamoose.model(tableName, {"id": String});
+							const table = new dynamoose.Table(tableName, [model], {"update": updateOption, "tags": {"hello": "universe"}, "initialize": false});
+							let resolvedError;
+							try {
+								await table.initialize();
+							} catch (e) {
+								resolvedError = e;
+							}
+							expect(resolvedError).toEqual(error);
+						});
+
+						describe("Logs", () => {
+							const consoleTypes = ["error", "warn", "info", "log"];
+							let logs = [];
+							let originalConsole = {};
+							beforeEach(async () => {
+								consoleTypes.forEach((type) => {
+									originalConsole[type] = console[type]; // eslint-disable-line no-console
+									console[type] = (str) => logs.push({"message": str, type}); // eslint-disable-line no-console
+								});
+							});
+							afterEach(() => {
+								consoleTypes.forEach((type) => {
+									console[type] = originalConsole[type]; // eslint-disable-line no-console
+								});
+								originalConsole = {};
+								logs = [];
+							});
+
+							it("Should only log message if using DynamoDB Local", async () => {
+								const tableName = "Cat";
+								const error = {
+									"name": "UnknownOperationException",
+									"message": "Tagging is not currently supported in DynamoDB Local."
+								};
+								listTagsOfResourceFunction = () => Promise.reject(error);
+								const model = dynamoose.model(tableName, {"id": String});
+								const table = new dynamoose.Table(tableName, [model], {"update": updateOption, "tags": {"hello": "universe"}, "initialize": false});
+								let resolvedError;
+
+								try {
+									await table.initialize();
+								} catch (e) {
+									resolvedError = e;
+								}
+								expect(resolvedError).toEqual(undefined);
+								expect(logs).toEqual([{"message": "Tagging is not currently supported in DynamoDB Local. Skipping tag update for table: Cat", "type": "warn"}]);
+							});
 						});
 					});
 				});

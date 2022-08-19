@@ -15,17 +15,9 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 			- `input` has changed to `convertToAttr`.
 			- `output` has changed to `convertToNative`.
 			- For more information please refer to the AWS-SDK v3 changelogs.
-- Added `dynamoose.Table` class. `dynamoose.model` now represents an entity or type of data (ex. User, Movie, Order), and `dynamoose.Table` represents a single DynamoDB table. The example below show how to convert your code to this new syntax.
-```
-// If you have the following code in v2:
-
-const User = dynamoose.model("User", {"id": String});
-
-// It will be converted to this in v3:
-
-const User = dynamoose.model("User", {"id": String});
-const DBTable = new dynamoose.Table("DBTable", [User]);
-```
+		- You can use `dynamoose.aws.ddb.DynamoDB` to create a new `@aws-sdk/client-dynamodb` `DynamoDB` instance.
+- `dynamoose.model.defaults` has been renamed to `dynamoose.Table.defaults`.
+- DynamoDB table initialization/updates will no longer be done upon creating a model. Instead they will be done when you initialize a `dynamoose.Table` instance, or whenever you make a DynamoDB request for a given model (ex. `get`, `create`, `update`).
 - Renamed `Document` to `Item`.
 	- The largest user facing API change is changing `{"return": "document"}` to `{"return": "item"}` and `{"return": "documents"}` to `{"return": "items"}`.
 - `set` Schema attribute settings are now used when retrieving items (ie. `get`, `query`, `update`, etc).
@@ -45,6 +37,7 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 	- `dynamoose.NULL` is now `dynamoose.type.NULL`.
 - Stricter validation of Schema types. If you pass in an invalid schema attribute type, it will now throw an error upon initialization.
 	- For example, `new dynamoose.Schema({"id": "random"})` will now throw an error.
+- `Model.table.create.request()` has been replaced by `Model.table().create({"return": "request"})`.
 - Node.js >=v12 now required.
 - New IAM roles (`listTagsOfResource`, `tagResource`, `untagResource`) required if `update` is set to true.
 - `index.global` property has been removed within Schema Attribute Settings. It has been replaced with `index.type`, which accepts `"global"` or `"local"` as values. This setting remains optional (however, the default value has changed).
@@ -56,11 +49,22 @@ const DBTable = new dynamoose.Table("DBTable", [User]);
 
 ### General
 
+- Added `dynamoose.Table` class. `dynamoose.model` now represents an entity or type of data (ex. User, Movie, Order), and `dynamoose.Table` represents a single DynamoDB table. By default, whenever you first use a model, a `dynamoose.Table` instance will be created for you, to ensure backwards compatibility with v2. If you want to create the table manually, you can change your code like so:
+```
+// If you have the following code in v2:
+
+const User = dynamoose.model("User", {"id": String});
+
+// It will be converted to this in v3:
+
+const User = dynamoose.model("User", {"id": String});
+const DBTable = new dynamoose.Table("DBTable", [User]);
+```
 - Added `get` & `set` modifier options to Schema settings to allow for Item wide modification.
 - Added `validate` method option to Schema settings to allow for Item wide validation.
 - Added `tags` setting to Table, to be able to add tags to a table.
 - Added `map` setting to Schema type settings to allow for easily converting DynamoDB attribute names to more human readable names (ex. `pk` to `userId` and `sk` to `orderId`). This can also be used for aliases. This also includes a `defaultMap` property that can be used to overwrite what property name Dynamoose should use when retrieving an item from DynamoDB.
-- Added `dynamoose.type.ANY` type to allow for schema attributes to be any type. This also works for the `schema` setting on Schema properties.
+- Added `dynamoose.type.ANY` type to allow for schema attributes to be any type. You can also set this on the `schema` setting of a property to allow the object/array to have any children properties.
 - Added `tableClass` option to Table settings to allow for setting a table to DynamoDB's new infrequent access class option.
 - Added `table.create()` method to create a table manually.
 - Added `table.name` property to be able to access table name.

@@ -2,6 +2,7 @@ import * as obj from "js-object-utilities";
 import {IndexItem} from "../../Schema";
 import Internal from "../../Internal";
 import {Table} from "../../Table";
+import deep_copy from "../deep_copy";
 const {internalProperties} = Internal.General;
 
 export enum TableIndexChangeType {
@@ -24,7 +25,16 @@ const index_changes = async (table: Table, existingIndexes = []): Promise<(Model
 
 	// Indexes to delete
 	const identicalProperties: string[] = ["IndexName", "KeySchema", "Projection", "ProvisionedThroughput"]; // This array represents the properties in the indexes that should match between existingIndexes (from DynamoDB) and expectedIndexes. This array will not include things like `IndexArn`, `ItemCount`, etc, since those properties do not exist in expectedIndexes
-	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(obj.pick(index, identicalProperties), obj.pick(searchIndex as any, identicalProperties)))).map((index) => ({"name": index.IndexName as string, "type": TableIndexChangeType.delete}));
+	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => {
+		const cleanedIndex = deep_copy(index);
+		obj.entries(cleanedIndex).forEach(([key, value]) => {
+			if (value === undefined) {
+				obj.delete(cleanedIndex, key);
+			}
+		});
+
+		return !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(obj.pick(cleanedIndex, identicalProperties), obj.pick(searchIndex as any, identicalProperties)));
+	}).map((index) => ({"name": index.IndexName as string, "type": TableIndexChangeType.delete}));
 	output.push(...deleteIndexes);
 
 	// Indexes to create

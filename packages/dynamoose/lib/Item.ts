@@ -47,7 +47,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	constructor (model: Model<Item>, object?: AttributeMap | ObjectType, settings?: ItemSettings) {
 		super();
 
-		const itemObject = Item.isDynamoObject(object) ? awsConverter().unmarshall(object) : object;
+		const itemObject = Item.isDynamoObject(object) ? Item.fromDynamo(object) : object;
 		Object.keys(itemObject).forEach((key) => this[key] = itemObject[key]);
 
 		this.setInternalProperties(internalProperties, {
@@ -71,7 +71,13 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		return (settings.type === "value" ? awsConverter().convertToAttr : awsConverter().marshall)(object, options as any);
 	}
 	static fromDynamo (object: AttributeMap): ObjectType {
-		return awsConverter().unmarshall(object);
+		const result = awsConverter().unmarshall(object);
+		utils.object.entries(result).forEach(([key, value]) => {
+			if (value instanceof Uint8Array) {
+				utils.object.set(result, key, Buffer.from(value));
+			}
+		});
+		return result;
 	}
 	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
 	static isDynamoObject (object: ObjectType, recursive?: boolean): boolean | null {
@@ -81,7 +87,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			}
 			const keys = Object.keys(value);
 			const key = keys[0];
-			const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
+			const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) && !(value[key] instanceof Uint8Array) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
 			const {Schema} = require("./Schema");
 			const attributeType = Schema.attributeTypes.findDynamoDBType(key);
 			return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
@@ -432,7 +438,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		let savedItem;
 
 		const localSettings: ItemSaveSettings = settings;
-		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}).then(async (item) => {
+		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true}).then(async (item) => {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
@@ -865,19 +871,34 @@ Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjec
 	if (settings.type === "fromDynamo") {
 		item = await this.prepareForResponse();
 	}
-	await Item.prepareForObjectFromSchema(item, item.getInternalProperties(internalProperties).model, settings);
-	const expectedObject = await Item.objectFromSchema(item, item.getInternalProperties(internalProperties).model, settings);
+	const model = item.getInternalProperties(internalProperties).model;
+	await Item.prepareForObjectFromSchema(item, model, settings);
+	const expectedObject = await Item.objectFromSchema(item, model, settings);
 	if (!expectedObject) {
 		return expectedObject;
 	}
 	const expectedKeys = Object.keys(expectedObject);
-	Object.keys(item).forEach((key) => {
+
+	if (settings.mapAttributes) {
+		const schema = await model.getInternalProperties(internalProperties).schemaForObject(expectedObject);
+		const schemaInternalProperties = schema.getInternalProperties(internalProperties);
+		const mapSettingObject = schemaInternalProperties.getMapSettingObject();
+
+		for (const key in mapSettingObject) {
+			const expectedObjectValue = utils.object.get(expectedObject, key);
+			if (expectedObjectValue) {
+				utils.object.set(this as any, key, expectedObjectValue);
+			}
+		}
+	}
+
+	for (const key in item) {
 		if (!expectedKeys.includes(key)) {
 			delete this[key];
 		} else if (this[key] !== expectedObject[key]) {
 			this[key] = expectedObject[key];
 		}
-	});
+	}
 
 	return this;
 };
