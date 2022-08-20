@@ -188,6 +188,40 @@ describe("Query", () => {
 					});
 				});
 
+				it.skip("Should send correct request on query.exec if querying main key with aliased name", async () => {
+					const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.query("email").eq("john@john.com").exec).bind(User.query("email").eq("john@john.com"))();
+					expect(queryParams).toEqual({
+						"TableName": "User",
+						"ExpressionAttributeNames": {
+							"#qha": "pk"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "john@john.com"}
+						},
+						"KeyConditionExpression": "#qha = :qhv"
+					});
+				});
+
+				it.skip("Should send correct request on query.exec if querying main key with range key using aliased names", async () => {
+					const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}, "sk": {"type": String, "alias": "name", "rangeKey": true}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.query("email").eq("john@john.com").where("name").eq("John").exec).bind(User.query("email").eq("john@john.com").where("name").eq("John"))();
+					expect(queryParams).toEqual({
+						"TableName": "User",
+						"ExpressionAttributeNames": {
+							"#qha": "pk",
+							"#qra": "sk"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "john@john.com"},
+							":qrv": {"S": "John"}
+						},
+						"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+					});
+				});
+
 				it("Should send correct request on query.exec if querying main key with range key", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "rangeKey": true}, "age": Number});
