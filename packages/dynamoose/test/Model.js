@@ -369,6 +369,23 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to getItem if we use a mapped/aliased attribute as the key", async () => {
+					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({"Item": {"pk": {"S": "john@john.com"}}});
+					await callType.func(User).bind(User)({"email": "john@john.com"});
+					expect(getItemParams).toBeInstanceOf(Object);
+					expect(getItemParams).toEqual({
+						"Key": {
+							"pk": {
+								"S": "john@john.com"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it.skip("Should throw an error when passing in incorrect type in key", () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "2"}, "name": {"S": "Charlie"}}});
 					return expect(callType.func(User).bind(User)({"id": "Hello"})).rejects.toEqual(new CustomError.TypeMismatch("Expected id to be of type number, instead found type string."));
@@ -1154,6 +1171,25 @@ describe("Model", () => {
 								"Keys": [
 									{"id": {"N": "2"}},
 									{"id": {"N": "3"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should send correct params to batchGetItem if we use a mapped/aliased attribute as the key", async () => {
+					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+					new dynamoose.Table("User", [User]);
+
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"pk": {"S": "john@john.com"}}, {"pk": {"S": "bob@bob.com"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([{"email": "john@john.com"}, {"email": "bob@bob.com"}]);
+					expect(params).toBeInstanceOf(Object);
+					expect(params).toEqual({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"pk": {"S": "john@john.com"}},
+									{"pk": {"S": "bob@bob.com"}}
 								]
 							}
 						}
@@ -3840,6 +3876,23 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to deleteItem if we use a mapped/aliased attribute as the key", async () => {
+					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+					new dynamoose.Table("User", [User]);
+
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"email": "john@john.com"});
+					expect(deleteItemParams).toBeInstanceOf(Object);
+					expect(deleteItemParams).toEqual({
+						"Key": {
+							"pk": {
+								"S": "john@john.com"
+							}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it.skip("Should throw an error when passing in incorrect type in key", () => {
 					deleteItemFunction = () => Promise.resolve();
 					return expect(callType.func(User).bind(User)({"id": "random"})).rejects.toEqual(new CustomError.TypeMismatch("Expected id to be of type number, instead found type string."));
@@ -4007,6 +4060,31 @@ describe("Model", () => {
 								{
 									"DeleteRequest": {
 										"Key": {"id": {"N": "3"}}
+									}
+								}
+							]
+						}
+					});
+				});
+
+				it("Should send correct params to batchWriteItem if we use a mapped/aliased attribute as the key", async () => {
+					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+					new dynamoose.Table("User", [User]);
+
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					await callType.func(User).bind(User)([{"email": "john@john.com"}, {"email": "bob@bob.com"}]);
+					expect(params).toBeInstanceOf(Object);
+					expect(params).toEqual({
+						"RequestItems": {
+							"User": [
+								{
+									"DeleteRequest": {
+										"Key": {"pk": {"S": "john@john.com"}}
+									}
+								},
+								{
+									"DeleteRequest": {
+										"Key": {"pk": {"S": "bob@bob.com"}}
 									}
 								}
 							]
