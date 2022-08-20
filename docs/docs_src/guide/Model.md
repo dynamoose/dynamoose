@@ -107,6 +107,18 @@ User.get({"id": 1}, (error, myUser) => {
 });
 ```
 
+If you are using [`map`](Schema#map-string--string) or [`alias`](Schema#alias-string--string) attribute settings on the key, then you can also use those properties in your call
+```js
+const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+
+try {
+	const myUser = await User.get({"email": "joe@example.com"});
+	console.log(myUser);
+} catch (error) {
+	console.error(error);
+}
+```
+
 ## model.batchGet(keys[, settings][, callback])
 
 You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
@@ -483,6 +495,18 @@ User.delete({"id": 1}, (error) => {
 		console.log("Successfully deleted item");
 	}
 });
+```
+
+If you are using [`map`](Schema#map-string--string) or [`alias`](Schema#alias-string--string) attribute settings on the key, then you can also use those properties in your call
+```js
+const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+
+try {
+	await User.delete({"email": "joe@example.com"});
+	console.log("Successfully deleted item");
+} catch (error) {
+	console.error(error);
+}
 ```
 
 ## model.batchDelete(keys[, settings][, callback])
