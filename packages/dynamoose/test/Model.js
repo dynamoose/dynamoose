@@ -369,7 +369,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to getItem if we use a mapped/aliased attribute as the key", async () => {
+				it("Should send correct params to getItem if we use an aliased attribute as the key", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
 					new dynamoose.Table("User", [User]);
 
@@ -1177,7 +1177,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to batchGetItem if we use a mapped/aliased attribute as the key", async () => {
+				it("Should send correct params to batchGetItem if we use an aliased attribute as the key", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
 					new dynamoose.Table("User", [User]);
 
@@ -3001,6 +3001,60 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem if we use an aliased attribute for the key with a separate update object", async () => {
+					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}, "name": String});
+					new dynamoose.Table("User", [User]);
+
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"email": "john@john.com"}, {"name": "John"});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "John"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"S": "john@john.com"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem if we use an aliased attribute for the key in a single update object", async () => {
+					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}, "name": String});
+					new dynamoose.Table("User", [User]);
+
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"email": "john@john.com", "name": "John"});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "John"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"pk": {
+								"S": "john@john.com"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it.skip("Should throw an error when passing in incorrect type in key", () => {
 					updateItemFunction = () => Promise.resolve({});
 					return expect(callType.func(User).bind(User)("random", {"name": "Charlie"})).rejects.toEqual(new CustomError.TypeMismatch("Expected id to be of type number, instead found type string."));
@@ -3876,7 +3930,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to deleteItem if we use a mapped/aliased attribute as the key", async () => {
+				it("Should send correct params to deleteItem if we use an aliased attribute as the key", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
 					new dynamoose.Table("User", [User]);
 
@@ -4067,7 +4121,7 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send correct params to batchWriteItem if we use a mapped/aliased attribute as the key", async () => {
+				it("Should send correct params to batchWriteItem if we use an aliased attribute as the key", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
 					new dynamoose.Table("User", [User]);
 
