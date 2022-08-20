@@ -1,25 +1,22 @@
-import * as DynamoDB from "@aws-sdk/client-dynamodb";
-
-import {AnyItem, Item as ItemCarrier, ItemObjectFromSchemaSettings, ItemSaveSettings, ItemSettings} from "../Item";
-import {CallbackType, FunctionType, InputKey, ItemArray, KeyObject, ModelType, ObjectType} from "../General";
-import {Condition, ConditionInitializer} from "../Condition";
-import {ConditionTransactionInput, CreateTransactionInput, DeleteTransactionInput, GetTransactionInput, UpdateTransactionInput} from "../Transaction";
-import {DynamoDBSetTypeResult, IndexItem, Schema, SchemaDefinition, TableIndex, ValueType} from "../Schema";
-import {Query, Scan} from "../ItemRetriever";
-import {Serializer, SerializerOptions} from "../Serializer";
-import {Table, TableOptionsOptional} from "../Table";
-
-import {AttributeMap} from "../Types";
 import CustomError from "../Error";
-import {Instance} from "../Instance";
-import Internal from "../Internal";
-import {InternalPropertiesClass} from "../InternalPropertiesClass";
-import {PopulateItems} from "../Populate";
-import ddb from "../aws/ddb/internal";
-import returnModel from "../utils/dynamoose/returnModel";
-import type from "../type";
+import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
+import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
 import utils from "../utils";
-
+import ddb from "../aws/ddb/internal";
+import Internal from "../Internal";
+import {Serializer, SerializerOptions} from "../Serializer";
+import {Condition, ConditionInitializer} from "../Condition";
+import {Scan, Query} from "../ItemRetriever";
+import {CallbackType, ObjectType, FunctionType, ItemArray, ModelType, KeyObject, InputKey} from "../General";
+import {PopulateItems} from "../Populate";
+import {AttributeMap} from "../Types";
+import * as DynamoDB from "@aws-sdk/client-dynamodb";
+import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
+import {Table, TableOptionsOptional} from "../Table";
+import type from "../type";
+import {InternalPropertiesClass} from "../InternalPropertiesClass";
+import {Instance} from "../Instance";
+import returnModel from "../utils/dynamoose/returnModel";
 const {internalProperties} = Internal.General;
 
 // Transactions
