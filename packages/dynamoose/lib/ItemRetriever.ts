@@ -8,7 +8,6 @@ import {CallbackType, ItemArray, ObjectType, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
 import Internal from "./Internal";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
-
 const {internalProperties} = Internal.General;
 
 enum ItemRetrieverTypes {
