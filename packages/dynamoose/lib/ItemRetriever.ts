@@ -1,13 +1,13 @@
 import ddb from "./aws/ddb/internal";
 import CustomError from "./Error";
 import utils from "./utils";
+import {BasicOperators, Condition, ConditionInitializer} from "./Condition";
 import {Model} from "./Model";
 import {Item} from "./Item";
 import {CallbackType, ItemArray, ObjectType, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
 import Internal from "./Internal";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
-import {BasicOperators, Condition, ConditionInitializer} from "./Condition";
 
 const {internalProperties} = Internal.General;
 
