@@ -1,13 +1,15 @@
-import ddb from "./aws/ddb/internal";
+import {BasicOperators, Condition, ConditionInitializer} from "./Condition";
+import {CallbackType, ItemArray, ObjectType, SortOrder} from "./General";
+
 import CustomError from "./Error";
-import utils from "./utils";
-import {Condition, ConditionInitializer, BasicOperators} from "./Condition";
-import {Model} from "./Model";
-import {Item} from "./Item";
-import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
-import {PopulateItems} from "./Populate";
 import Internal from "./Internal";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
+import {Item} from "./Item";
+import {Model} from "./Model";
+import {PopulateItems} from "./Populate";
+import ddb from "./aws/ddb/internal";
+import utils from "./utils";
+
 const {internalProperties} = Internal.General;
 
 enum ItemRetrieverTypes {
@@ -129,10 +131,10 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 
 	constructor (model: Model<Item>, typeInformation: ItemRetrieverTypeInformation, object?: ConditionInitializer) {
 		super();
-
+		const mappedObj = mapFilter(model, object);
 		let condition: Condition;
 		try {
-			condition = new Condition(object);
+			condition = new Condition(mappedObj);
 		} catch (e) {
 			e.message = `${e.message.replace(" is invalid.", "")} is invalid for the ${typeInformation.type} operation.`;
 			throw e;
@@ -273,6 +275,39 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 
 	return object;
 };
+
+const mapFilter = (model: Model<Item>, object: ConditionInitializer): ConditionInitializer => {
+	// Map the ConditionInitializer into a pseudo-object to help find its schema and thus mapped attributes
+	const pseudoObject = {};
+	if (typeof object === "object" && !(object instanceof Condition)) {
+		Object.keys(object).forEach((key) => pseudoObject[key] = null);
+	} else if (typeof object === "string") {
+		pseudoObject[object] = null;
+	}
+	const schema = model.getInternalProperties(internalProperties).schemaForObject(pseudoObject);
+	const aliasMap = schema.getInternalProperties(internalProperties).getMapSettingObject();
+	let mappedObj: ConditionInitializer;
+	if (typeof object === "object" && !(object instanceof Condition)) {
+		mappedObj = {};
+		Object.keys(object).forEach((key) => {
+			if (key in aliasMap) {
+				mappedObj[aliasMap[key]] = object[key];
+			} else {
+				mappedObj[key] = object[key];
+			}
+		});
+	} else if (typeof object === "string") {
+		if (object in aliasMap) {
+			mappedObj = aliasMap[object];
+		} else {
+			mappedObj = object;
+		}
+	} else {
+		mappedObj = object;
+	}
+	return mappedObj;
+};
+
 interface ItemRetrieverResponse<T> extends ItemArray<T> {
 	lastKey?: ObjectType;
 	count: number;
@@ -345,6 +380,20 @@ export class Query<T> extends ItemRetriever {
 		this.getInternalProperties(internalProperties).settings.sort = order;
 		return this;
 	}
+	filter (key: string): Query<T> {
+		const mappedKey = mapFilter(this.getInternalProperties(internalProperties).internalSettings.model, key);
+		const newCondition = this.getInternalProperties(internalProperties).settings.condition.where(mappedKey as string);
+		this.setInternalProperties(internalProperties, {
+			"internalSettings": this.getInternalProperties(internalProperties).internalSettings,
+			"settings": {
+				"condition": newCondition
+			}
+		});
+		return this;
+	}
+
+	where = this.filter;
+	attribute = this.filter;
 
 	constructor (model: Model<Item>, object?: ConditionInitializer) {
 		super(model, {"type": ItemRetrieverTypes.query, "pastTense": "queried"}, object);

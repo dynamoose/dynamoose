@@ -1,22 +1,24 @@
-import CustomError from "../Error";
-import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
-import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
-import utils from "../utils";
-import ddb from "../aws/ddb/internal";
-import Internal from "../Internal";
-import {Serializer, SerializerOptions} from "../Serializer";
-import {Condition, ConditionInitializer} from "../Condition";
-import {Scan, Query} from "../ItemRetriever";
-import {CallbackType, ObjectType, FunctionType, ItemArray, ModelType, KeyObject, InputKey} from "../General";
-import {PopulateItems} from "../Populate";
-import {AttributeMap} from "../Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
-import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
+
+import {AnyItem, Item as ItemCarrier, ItemObjectFromSchemaSettings, ItemSaveSettings, ItemSettings} from "../Item";
+import {CallbackType, FunctionType, InputKey, ItemArray, KeyObject, ModelType, ObjectType} from "../General";
+import {Condition, ConditionInitializer} from "../Condition";
+import {ConditionTransactionInput, CreateTransactionInput, DeleteTransactionInput, GetTransactionInput, UpdateTransactionInput} from "../Transaction";
+import {DynamoDBSetTypeResult, IndexItem, Schema, SchemaDefinition, TableIndex, ValueType} from "../Schema";
+import {Query, Scan} from "../ItemRetriever";
+import {Serializer, SerializerOptions} from "../Serializer";
 import {Table, TableOptionsOptional} from "../Table";
-import type from "../type";
-import {InternalPropertiesClass} from "../InternalPropertiesClass";
+
+import {AttributeMap} from "../Types";
+import CustomError from "../Error";
 import {Instance} from "../Instance";
+import Internal from "../Internal";
+import {InternalPropertiesClass} from "../InternalPropertiesClass";
+import {PopulateItems} from "../Populate";
+import ddb from "../aws/ddb/internal";
 import returnModel from "../utils/dynamoose/returnModel";
+import type from "../type";
+import utils from "../utils";
 const {internalProperties} = Internal.General;
 
 // Transactions
@@ -102,7 +104,7 @@ interface ModelInternalProperties {
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
 	convertKeyToObject: (key: InputKey) => Promise<KeyObject>;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
-	schemaForObject: (object: ObjectType) => Promise<Schema>;
+	schemaForObject: (object: ObjectType) => Schema;
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
 	getHashKey: () => string;
 	getRangeKey: () => string | void;
@@ -237,7 +239,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return schemaCorrectnessScores;
 			},
 			// This function returns the best matched schema for the given object input
-			"schemaForObject": async (object: ObjectType): Promise<Schema> => {
+			"schemaForObject": (object: ObjectType): Schema => {
 				const schemaCorrectnessScores = this.getInternalProperties(internalProperties).schemaCorrectnessScores(object);
 				const highestSchemaCorrectnessScoreIndex: number = schemaCorrectnessScores.indexOf(Math.max(...schemaCorrectnessScores));
 
