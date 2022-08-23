@@ -129,6 +129,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 
 	constructor (model: Model<Item>, typeInformation: ItemRetrieverTypeInformation, object?: ConditionInitializer) {
 		super();
+
 		let condition: Condition;
 		try {
 			condition = new Condition(object);
