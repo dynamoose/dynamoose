@@ -258,7 +258,8 @@ describe("Condition", () => {
 								"instance": Instance.default
 							})
 						}),
-						"schemaForObject": () => new dynamoose.Schema({"id": String})
+						"schemaForObject": () => new dynamoose.Schema({"id": String}),
+						"dynamoPropertyForAttribute": (key) => key
 					})
 				};
 				if (test.error) {

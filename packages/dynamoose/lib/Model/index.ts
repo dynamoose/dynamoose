@@ -1,18 +1,17 @@
 import CustomError from "../Error";
-import {DynamoDBSetTypeResult, IndexItem, Schema, SchemaDefinition, TableIndex, ValueType} from "../Schema";
-import {AnyItem, Item as ItemCarrier, ItemObjectFromSchemaSettings, ItemSaveSettings, ItemSettings} from "../Item";
+import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
+import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
 import utils from "../utils";
 import ddb from "../aws/ddb/internal";
 import Internal from "../Internal";
 import {Serializer, SerializerOptions} from "../Serializer";
 import {Condition, ConditionInitializer} from "../Condition";
-import {Query, Scan} from "../ItemRetriever";
-import {CallbackType, FunctionType, InputKey, ItemArray, KeyObject, ModelType, ObjectType} from "../General";
+import {Scan, Query} from "../ItemRetriever";
+import {CallbackType, ObjectType, FunctionType, ItemArray, ModelType, KeyObject, InputKey} from "../General";
 import {PopulateItems} from "../Populate";
 import {AttributeMap} from "../Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
-import {ConditionTransactionInput, CreateTransactionInput, DeleteTransactionInput, GetTransactionInput, UpdateTransactionInput} from "../Transaction";
-import {Table, TableOptionsOptional} from "../Table";
+import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";import {Table, TableOptionsOptional} from "../Table";
 import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
@@ -103,6 +102,7 @@ interface ModelInternalProperties {
 	convertKeyToObject: (key: InputKey) => Promise<KeyObject>;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
 	schemaForObject: (object: ObjectType) => Schema;
+	dynamoPropertyForAttribute: (attribute: string) => Promise<string>;
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
 	getHashKey: () => string;
 	getRangeKey: () => string | void;
@@ -202,9 +202,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			"convertKeyToObject": async (key: InputKey): Promise<KeyObject> => {
 				let keyObject: KeyObject;
 				const hashKey = this.getInternalProperties(internalProperties).getHashKey();
+				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true};
 				if (typeof key === "object") {
 					// If we passed aliased attribute names, we need to get them back to the key names
-					const mappedKey = await this.Item.objectFromSchema(key, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+					const mappedKey = await this.Item.objectFromSchema(key, this, objectFromSchemaSettings);
 					const rangeKey = this.getInternalProperties(internalProperties).getRangeKey();
 					keyObject = {
 						[hashKey]: mappedKey[hashKey]
@@ -215,7 +216,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				} else {
 					keyObject = await this.Item.objectFromSchema({
 						[hashKey]: key
-					}, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+					}, this, objectFromSchemaSettings);
 				}
 				return keyObject;
 			},
@@ -242,6 +243,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const highestSchemaCorrectnessScoreIndex: number = schemaCorrectnessScores.indexOf(Math.max(...schemaCorrectnessScores));
 
 				return this.getInternalProperties(internalProperties).schemas[highestSchemaCorrectnessScoreIndex];
+			},
+			// This function returns the DynamoDB property name for a given attribute (alias or property name). For example if you have a `pk` with an alias of `userID` and pass in `userID` it will return `pk`. If you pass in `pk` it will return `pk`.
+			"dynamoPropertyForAttribute": async (attribute: string): Promise<string> => {
+				const obj = await Item.objectFromSchema({[attribute]: true}, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+				return Object.keys(obj)[0];
 			},
 			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
 				// TODO: implement this
