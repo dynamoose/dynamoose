@@ -268,7 +268,6 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 
 	return object;
 };
-
 interface ItemRetrieverResponse<T> extends ItemArray<T> {
 	lastKey?: ObjectType;
 	count: number;
