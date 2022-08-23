@@ -863,7 +863,6 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return updateItemParamsPromise;
 			}
 		}
-
 		const promise = updateItemParamsPromise.then((params) => ddb(instance, "updateItem", params));
 
 		if (callback) {
