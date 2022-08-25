@@ -1,7 +1,7 @@
 import {Item} from "./Item";
 import {ItemArray, CallbackType} from "./General";
 import utils from "./utils";
-import {DynamoDBTypeResult, DynamoDBSetTypeResult, Schema} from "./Schema";
+import {DynamoDBTypeResult, DynamoDBSetTypeResult} from "./Schema";
 import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 
@@ -29,48 +29,42 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 
 	const {model} = this.getInternalProperties(internalProperties);
 	const localSettings = settings;
-	const promise = model.getInternalProperties(internalProperties).schemaForObject(this).then((schema) => {
-		// TODO: uncomment out `/* || detail.name === "Model Set"*/` part and add relevant tests
-		const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model"/* || detail.name === "Model Set"*/) : obj.details.name === "Model" || obj.details.name === "Model Set").map((obj) => obj.prop);
+	const schema = model.getInternalProperties(internalProperties).schemaForObject(this);
+	// TODO: uncomment out `/* || detail.name === "Model Set"*/` part and add relevant tests
+	const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model"/* || detail.name === "Model Set"*/) : obj.details.name === "Model" || obj.details.name === "Model Set").map((obj) => obj.prop);
+	const promise = Promise.all(modelAttributes.map(async (prop) => {
+		const typeDetails = schema.getAttributeTypeDetails(prop);
+		const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
+		const {typeSettings} = typeDetail;
+		const subModel: any = typeof typeSettings.model === "object" ? model.Item : typeSettings.model;
 
-		return {schema, modelAttributes};
-	}).then((obj: {schema: Schema; modelAttributes: any[]}) => {
-		const {schema, modelAttributes} = obj;
+		prop = prop.endsWith(".0") ? prop.substring(0, prop.length - 2) : prop;
 
-		return Promise.all(modelAttributes.map(async (prop) => {
-			const typeDetails = schema.getAttributeTypeDetails(prop);
-			const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
-			const {typeSettings} = typeDetail;
-			const subModel: any = typeof typeSettings.model === "object" ? model.Item : typeSettings.model;
+		const itemPropValue = utils.object.get(this as any, prop);
+		const doesPopulatePropertyExist = !(typeof itemPropValue === "undefined" || itemPropValue === null);
+		if (!doesPopulatePropertyExist || itemPropValue instanceof subModel) {
+			return;
+		}
+		const key: string = [internalSettings.parentKey, prop].filter((a) => Boolean(a)).join(".");
+		const populatePropertiesExists: boolean = typeof localSettings?.properties !== "undefined" && localSettings.properties !== null;
+		const populateProperties: boolean | string[] = Array.isArray(localSettings?.properties) || typeof localSettings?.properties === "boolean" ? localSettings.properties : [localSettings?.properties];
+		const isPopulatePropertyInSettingProperties: boolean = populatePropertiesExists ? utils.dynamoose.wildcard_allowed_check(populateProperties, key) : true;
+		if (!isPopulatePropertyInSettingProperties) {
+			return;
+		}
 
-			prop = prop.endsWith(".0") ? prop.substring(0, prop.length - 2) : prop;
-
-			const itemPropValue = utils.object.get(this as any, prop);
-			const doesPopulatePropertyExist = !(typeof itemPropValue === "undefined" || itemPropValue === null);
-			if (!doesPopulatePropertyExist || itemPropValue instanceof subModel) {
-				return;
-			}
-			const key: string = [internalSettings.parentKey, prop].filter((a) => Boolean(a)).join(".");
-			const populatePropertiesExists: boolean = typeof localSettings?.properties !== "undefined" && localSettings.properties !== null;
-			const populateProperties: boolean | string[] = Array.isArray(localSettings?.properties) || typeof localSettings?.properties === "boolean" ? localSettings.properties : [localSettings?.properties];
-			const isPopulatePropertyInSettingProperties: boolean = populatePropertiesExists ? utils.dynamoose.wildcard_allowed_check(populateProperties, key) : true;
-			if (!isPopulatePropertyInSettingProperties) {
-				return;
-			}
-
-			const isArray = Array.isArray(itemPropValue);
-			const isSet = itemPropValue instanceof Set;
-			if (isArray || isSet) {
-				const subItems = await Promise.all([...itemPropValue as any].map((val) => subModel.get(val)));
-				const saveItems = await Promise.all(subItems.map((doc) => PopulateItem.bind(doc)(localSettings, null, {"parentKey": key})));
-				utils.object.set(this as any, prop, saveItems);
-			} else {
-				const subItem = await subModel.get(itemPropValue);
-				const saveItem: Item = await PopulateItem.bind(subItem)(localSettings, null, {"parentKey": key});
-				utils.object.set(this as any, prop, saveItem);
-			}
-		}));
-	});
+		const isArray = Array.isArray(itemPropValue);
+		const isSet = itemPropValue instanceof Set;
+		if (isArray || isSet) {
+			const subItems = await Promise.all([...itemPropValue as any].map((val) => subModel.get(val)));
+			const saveItems = await Promise.all(subItems.map((doc) => PopulateItem.bind(doc)(localSettings, null, {"parentKey": key})));
+			utils.object.set(this as any, prop, saveItems);
+		} else {
+			const subItem = await subModel.get(itemPropValue);
+			const saveItem: Item = await PopulateItem.bind(subItem)(localSettings, null, {"parentKey": key});
+			utils.object.set(this as any, prop, saveItem);
+		}
+	}));
 
 	if (callback) {
 		promise.then(() => callback(null, this)).catch((err) => callback(err));
