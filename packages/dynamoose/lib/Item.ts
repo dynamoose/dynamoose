@@ -517,7 +517,7 @@ export class AnyItem extends Item {
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Item.objectFromSchema (setting timestamps, etc.)
 Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesClass<any>>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
-		const schema: Schema = await model.getInternalProperties(internalProperties).schemaForObject(object);
+		const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(object);
 		if (schema.getInternalProperties(internalProperties).settings.timestamps && settings.type === "toDynamo") {
 			const date = Date.now();
 
@@ -540,7 +540,7 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 // This function will return a list of attributes combining both the schema attributes with the item attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in item), adding the indexes for each item in the item set.
 // https://stackoverflow.com/a/59928314/894067
 Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Promise<string[]> {
-	const schema: Schema = await model.getInternalProperties(internalProperties).schemaForObject(item);
+	const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(item);
 	const attributes = schema.attributes();
 	// build a tree out of schema attributes
 	const root = {};
@@ -609,7 +609,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 
 	let returnObject = utils.deep_copy(object);
-	const schema: Schema = settings.schema || await model.getInternalProperties(internalProperties).schemaForObject(returnObject);
+	const schema: Schema = settings.schema || model.getInternalProperties(internalProperties).schemaForObject(returnObject);
 	const schemaAttributes = schema.attributes(returnObject);
 
 	function mapAttributes (type: "toDynamo" | "fromDynamo") {
@@ -880,7 +880,7 @@ Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjec
 	const expectedKeys = Object.keys(expectedObject);
 
 	if (settings.mapAttributes) {
-		const schema = await model.getInternalProperties(internalProperties).schemaForObject(expectedObject);
+		const schema = model.getInternalProperties(internalProperties).schemaForObject(expectedObject);
 		const schemaInternalProperties = schema.getInternalProperties(internalProperties);
 		const mapSettingObject = schemaInternalProperties.getMapSettingObject();
 

@@ -161,6 +161,78 @@ describe("Scan", () => {
 					expect(scanParams).toEqual({"TableName": "Cat"});
 				});
 
+				it("Should send correct request on scan.exec using string if scanning main key with aliased name", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.scan("email").eq("john@john.com").exec).bind(User.scan("email").eq("john@john.com"))();
+					expect(scanParams).toEqual({
+						"TableName": "User",
+						"ExpressionAttributeNames": {
+							"#a0": "pk"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "john@john.com"}
+						},
+						"FilterExpression": "#a0 = :v0"
+					});
+				});
+
+				it("Should send correct request on scan.exec using object if scanning main key with aliased name", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.scan({"email": {"eq": "john@john.com"}}).exec).bind(User.scan({"email": {"eq": "john@john.com"}}))();
+					expect(scanParams).toEqual({
+						"TableName": "User",
+						"ExpressionAttributeNames": {
+							"#a0": "pk"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "john@john.com"}
+						},
+						"FilterExpression": "#a0 = :v0"
+					});
+				});
+
+				it("Should send correct request on scan.exec using string if scanning main key with range key using aliased names", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}, "sk": {"type": String, "alias": "name", "rangeKey": true}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.scan("email").eq("john@john.com").where("name").eq("John").exec).bind(User.scan("email").eq("john@john.com").where("name").eq("John"))();
+					expect(scanParams).toEqual({
+						"TableName": "User",
+						"ExpressionAttributeNames": {
+							"#a0": "pk",
+							"#a1": "sk"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "john@john.com"},
+							":v1": {"S": "John"}
+						},
+						"FilterExpression": "#a0 = :v0 AND #a1 = :v1"
+					});
+				});
+
+				it("Should send correct request on scan.exec using object if scanning main key with range key using aliased names", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}, "sk": {"type": String, "alias": "name", "rangeKey": true}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.scan({"email": {"eq": "john@john.com"}, "name": {"eq": "John"}}).exec).bind(User.scan({"email": {"eq": "john@john.com"}, "name": {"eq": "John"}}))();
+					expect(scanParams).toEqual({
+						"TableName": "User",
+						"ExpressionAttributeNames": {
+							"#a0": "pk",
+							"#a1": "sk"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "john@john.com"},
+							":v1": {"S": "John"}
+						},
+						"FilterExpression": "#a0 = :v0 AND #a1 = :v1"
+					});
+				});
+
 				it("Should send correct request on scan.exec for one object passed in", async () => {
 					scanPromiseResolver = () => ({"Items": []});
 					await callType.func(Model.scan({"name": "Charlie"}).exec).bind(Model.scan({"name": "Charlie"}))();

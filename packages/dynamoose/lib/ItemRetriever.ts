@@ -177,11 +177,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 	if (this.getInternalProperties(internalProperties).settings.index) {
 		object.IndexName = this.getInternalProperties(internalProperties).settings.index;
 	} else if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
-		const comparisonChart = this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions.reduce((res, item) => {
-			const myItem = Object.entries(item)[0];
-			res[myItem[0]] = {"type": (myItem[1] as any).type};
-			return res;
-		}, {});
+		const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(model);
 
 		const indexSpec = utils.find_best_index(indexes, comparisonChart);
 		if (!indexSpec.tableIndex) {

@@ -124,7 +124,8 @@ interface ConditionInternalProperties {
 			value?: any;
 		}; // represents the pending chain of filter data waiting to be attached to the `conditions` parameter. For example, storing the key before we know what the comparison operator is.
 		raw?: ConditionInitializer;
-	}
+	},
+	comparisonChart: (model: Model<Item>) => Promise<any>;
 }
 
 export class Condition extends InternalPropertiesClass<ConditionInternalProperties> {
@@ -139,7 +140,16 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 		this.setInternalProperties(internalProperties, {
 			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
-					const newValue = (await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true}))[key];
+					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+					const newObjKeys = Object.keys(newObj);
+					// TODO: not quite sure how to unit test the error below. Need to figure this out. Maybe by mocking `Item.objectFromSchema`??? We don't currently have a system in place to do that easily tho.
+					/* istanbul ignore next */
+					if (newObjKeys.length > 1) {
+						/* istanbul ignore next */
+						throw new CustomError.OtherError("Error retrieving `requestObject` from Condition. Please submit an issue on the Dynamoose GitHub repository.");
+					}
+
+					const newValue = newObj[newObjKeys[0]];
 					return Item.objectToDynamo(newValue, {"type": "value"});
 				};
 
@@ -171,7 +181,9 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 							expression = settings.conditionStringType === "array" ? result[settings.conditionString] : `(${result[settings.conditionString]})`;
 							object = {...object, ...returnObject};
 						} else if (entry !== OR) {
-							const [key, condition] = Object.entries(entry)[0];
+							const keyConditionObj = Object.entries(entry)[0];
+							const key = await model.getInternalProperties(internalProperties).dynamoPropertyForAttribute(keyConditionObj[0]);
+							const condition = keyConditionObj[1];
 							const {value} = condition;
 							const keys = {"name": `#a${index}`, "value": `:v${index}`};
 							setIndex(++index);
@@ -247,6 +259,16 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 				}
 
 				return utils.object.clearEmpties(await main(this.getInternalProperties(internalProperties).settings.conditions));
+			},
+			"comparisonChart": (model: Model<Item>): Promise<any> => {
+				const comparisonChart = this.getInternalProperties(internalProperties).settings.conditions.reduce((res, item) => {
+					const myItem = Object.entries(item)[0];
+					const key = myItem[0];
+					res[key] = {"type": (myItem[1] as any).type};
+					return res;
+				}, {});
+
+				return Item.objectFromSchema(comparisonChart, model, {"type": "toDynamo", "typeCheck": false, "mapAttributes": true});
 			}
 		});
 
