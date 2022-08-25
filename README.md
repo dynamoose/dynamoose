@@ -30,6 +30,9 @@
 	<a href="https://twitter.com/DynamooseJS">
 		<img src="https://img.shields.io/twitter/follow/dynamoosejs?style=social" alt="Twitter">
 	</a>
+	<a href="https://crowdin.com/project/dynamoosejscom">
+		<img src="https://badges.crowdin.net/dynamoosejscom/localized.svg" alt="Crowdin Translation Status">
+	</a>
 </p>
 
 ---
@@ -70,4 +73,3 @@ Below you will find the current branch strategy for the project. Work taking pla
 | [`v3.0.1` (tag)](https://github.com/dynamoose/dynamoose/tree/v3.0.1) | 3.0.1 | latest | - [Documentation](https://dynamoosejs.com) |
 | [`v2`](https://github.com/dynamoose/dynamoose/tree/v2) | 2.8.x |   | - [Documentation](https://v2.dynamoose.pages.dev) |
 | [`v2.8.7` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.8.7) | 2.8.7 | latest-2 | - [Documentation](https://v2.dynamoosejs.com)
-

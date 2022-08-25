@@ -24,6 +24,10 @@ module.exports = {
 					"className": "header-link header-github-link",
 					"aria-label": "GitHub",
 					"position": "right"
+				},
+				{
+					"type": "localeDropdown",
+					"position": "left"
 				}
 			]
 		},
@@ -61,6 +65,10 @@ module.exports = {
 						{
 							"label": "Sponsor Dynamoose",
 							"href": "https://github.com/dynamoose/dynamoose/blob/main/SPONSOR.md"
+						},
+						{
+							"label": "Translate Dynamoose",
+							"href": "https://crowdin.com/project/dynamoosejscom"
 						},
 						{
 							"label": "Contributing Guidelines",
@@ -108,5 +116,13 @@ module.exports = {
 				}
 			}
 		]
-	]
+	],
+	"i18n": {
+		"defaultLocale": "en",
+		"locales": [
+			"en",
+			"fr",
+			"es"
+		]
+	}
 };

@@ -45,6 +45,9 @@ jobs:
           node-version: lts/*
       - run: npm install
       - run: npm run site:install
+      - run: npm run crowdin:sync
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
       - run: npm run site:build
       - uses: jakejarvis/s3-sync-action@v0.5.1
         with:
