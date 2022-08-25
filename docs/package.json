@@ -3,12 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "docusaurus start",
+    "crowdin:sync": "npm run prebuild && docusaurus write-translations && crowdin upload && crowdin download",
+    "start": "npm run prebuild && docusaurus start",
     "build": "npm run prebuild && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "prebuild": "cd .. && npm run build && cd docs && node process.js"
   },
   "dependencies": {
+    "@crowdin/cli": "^3.7.10",
     "@docusaurus/core": "^2.0.1",
     "@docusaurus/preset-classic": "^2.0.1",
     "classnames": "^2.3.1",

@@ -1,0 +1,18 @@
+name: Crowdin Sync
+
+on:
+  workflow_dispatch:
+
+jobs:
+  crowdinsync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: lts/*
+      - run: npm install
+      - run: npm run site:install
+      - run: npm run crowdin:sync
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
