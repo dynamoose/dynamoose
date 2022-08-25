@@ -2,6 +2,18 @@
 
 ---
 
+## Version 3.0.1
+
+This release fixes a bug where the `map` attribute property wouldn't work properly when passing it in as a key.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixes `map` property when passing it in as a key.
+
+---
+
 ## Version 3.0.0
 
 Dynamoose v3 is here!!! This release is a significant upgrade to Dynamoose that includes many great features. The upgrade process for v2 to v3 is also significantly easier compared to the v1 to v2 upgrade process. We encourage everyone to upgrade to v3 as soon as possible. Although v2 will continue to receive bug fixes and security updates as needed for time being, v2 will not be maintained forever, so upgrading to v3 is highly recommended.
