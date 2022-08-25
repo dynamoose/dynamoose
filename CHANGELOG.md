@@ -2,6 +2,18 @@
 
 ---
 
+## Version 3.0.2
+
+This release fixes a bug for the website where certain links and refreshing would fail sometimes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Documentation
+
+- Fixing website links.
+
+---
+
 ## Version 3.0.1
 
 This release fixes a bug where the `map` attribute property wouldn't work properly when passing it in as a key.

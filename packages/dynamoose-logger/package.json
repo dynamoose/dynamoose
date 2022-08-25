@@ -1,6 +1,6 @@
 {
   "name": "dynamoose-logger",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "homepage": "https://dynamoosejs.com",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "dynamoose-utils": "^3.0.1",
+    "dynamoose-utils": "^3.0.2",
     "js-object-utilities": "^2.1.0",
     "uuid": "^8.3.2"
   },
