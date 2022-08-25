@@ -107,6 +107,10 @@ Definitely not. Anything that is undocumented in Dynamoose can change at anytime
 
 [Here](../getting_started/TypeScript).
 
+## Where can I find documentation for v2?
+
+[Here](https://v2.dynamoosejs.com).
+
 ## Where can I find documentation for v1?
 
 [Here](https://v1.dynamoosejs.com).
