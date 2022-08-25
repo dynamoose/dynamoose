@@ -14,6 +14,39 @@ module.exports = {
 			},
 			"items": [
 				{
+					"type": "dropdown",
+					"label": "Version",
+					"position": "right",
+					"items": [
+						{
+							"label": "Latest",
+							"href": "https://dynamoosejs.com"
+						},
+						{
+							"label": "v2.x.x",
+							"href": "https://v2.dynamoosejs.com"
+						},
+						{
+							"label": "v1.x.x",
+							"href": "https://v1.dynamoosejs.com"
+						}
+					]
+				},
+				{
+					"type": "localeDropdown",
+					"position": "right",
+					"dropdownItemsAfter": [
+						{
+							"type": "html",
+							"value": "<hr style=\"margin: 0.3rem 0;\">",
+						},
+						{
+							"href": "https://crowdin.com/project/dynamoosejscom",
+							"label": "Help Us Translate"
+						}
+					]
+				},
+				{
 					"href": "https://www.npmjs.com/package/dynamoose",
 					"className": "header-link header-npm-link",
 					"aria-label": "npm",
@@ -24,10 +57,6 @@ module.exports = {
 					"className": "header-link header-github-link",
 					"aria-label": "GitHub",
 					"position": "right"
-				},
-				{
-					"type": "localeDropdown",
-					"position": "left"
 				}
 			]
 		},
