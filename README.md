@@ -21,6 +21,9 @@
 	<a href="https://coveralls.io/github/dynamoose/dynamoose?branch=main">
 		<img src="https://coveralls.io/repos/github/dynamoose/dynamoose/badge.svg?branch=main" alt="Coverage Status">
 	</a>
+	<a href="https://crowdin.com/project/dynamoosejscom">
+		<img src="https://badges.crowdin.net/dynamoosejscom/localized.svg" alt="Crowdin Translation Status">
+	</a>
 	<a href="https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY">
 		<img src="https://img.shields.io/badge/chat-on%20slack-informational.svg" alt="Slack Chat">
 	</a>
@@ -29,9 +32,6 @@
 	</a>
 	<a href="https://twitter.com/DynamooseJS">
 		<img src="https://img.shields.io/twitter/follow/dynamoosejs?style=social" alt="Twitter">
-	</a>
-	<a href="https://crowdin.com/project/dynamoosejscom">
-		<img src="https://badges.crowdin.net/dynamoosejscom/localized.svg" alt="Crowdin Translation Status">
 	</a>
 </p>
 
