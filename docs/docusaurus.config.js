@@ -38,7 +38,7 @@ module.exports = {
 					"dropdownItemsAfter": [
 						{
 							"type": "html",
-							"value": "<hr style=\"margin: 0.3rem 0;\">",
+							"value": "<hr style=\"margin: 0.3rem 0;\">"
 						},
 						{
 							"href": "https://crowdin.com/project/dynamoosejscom",
