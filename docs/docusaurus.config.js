@@ -3,7 +3,7 @@ module.exports = {
 	"tagline": "Dynamoose is a modeling tool for Amazon's DynamoDB",
 	"url": "https://dynamoosejs.com",
 	"baseUrl": "/",
-	"trailingSlash": false,
+	"trailingSlash": undefined,
 	"favicon": "img/favicon.ico",
 	"themeConfig": {
 		"navbar": {
