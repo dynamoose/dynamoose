@@ -73,6 +73,10 @@ It is highly recommended (although not required) to follow the pattern below bef
 
 Dynamoose does not currently have a release schedule that we conform to. We attempt to batch work into a release every so often. If you have a need that requires us releasing a version sooner, please notify us, and we will attempt to cut a new release earlier (however this is not guaranteed, and you are still welcome to point to a branch in NPM if we are unable to release on your timeline).
 
+### Translate Dynamoose
+
+You can help Dynamoose support more languages by translating our content into other languages. You can contribute by viewing our [Crowdin project page](https://crowdin.com/project/dynamoosejscom) and start translating today!
+
 ## How do I become a project maintainer?
 
 At this time we are pretty strict in terms of who gets write/merge access to Dynamoose. The following are general guidelines we look for before granting those permissions, but other factors may apply depending on the situation.
