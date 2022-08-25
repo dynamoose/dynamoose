@@ -13,6 +13,6 @@ jobs:
           node-version: lts/*
       - run: npm install
       - run: npm run site:install
-      - run: npm run crowdin:sync
+      - run: npm run site:crowdin:sync
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
