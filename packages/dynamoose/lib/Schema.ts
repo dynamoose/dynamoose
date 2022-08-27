@@ -147,7 +147,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 		new DynamoDBType({"name": "Buffer", "dynamodbType": "B", "set": true, "jsType": Buffer}),
 		booleanType,
 		new DynamoDBType({"name": "Array", "dynamodbType": "L", "jsType": {"func": Array.isArray}, "nestedType": true}),
-		new DynamoDBType({"name": "Object", "dynamodbType": "M", "jsType": {"func": (val): boolean => Boolean(val) && val.constructor === Object}, "nestedType": true}),
+		new DynamoDBType({"name": "Object", "dynamodbType": "M", "jsType": {"func": (val): boolean => Boolean(val) && (val.constructor === undefined || val.constructor === Object)}, "nestedType": true}),
 		numberType,
 		stringType,
 		new DynamoDBType({"name": "Date", "dynamodbType": numberType, "customType": {
