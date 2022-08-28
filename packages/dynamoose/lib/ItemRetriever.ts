@@ -45,13 +45,13 @@ interface ItemRetrieverInternalProperties {
 // type ItemRetriever = BasicOperators;
 abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverInternalProperties> {
 	getRequest: (this: ItemRetriever) => Promise<any>;
-	all: (this: ItemRetriever, delay?: number, max?: number) => ItemRetriever;
-	limit: (this: ItemRetriever, value: number) => ItemRetriever;
-	startAt: (this: ItemRetriever, value: ObjectType) => ItemRetriever;
-	attributes: (this: ItemRetriever, value: string[]) => ItemRetriever;
-	count: (this: ItemRetriever) => ItemRetriever;
-	consistent: (this: ItemRetriever) => ItemRetriever;
-	using: (this: ItemRetriever, value: string) => ItemRetriever;
+	all: (this: ItemRetriever, delay?: number, max?: number) => this;
+	limit: (this: ItemRetriever, value: number) => this;
+	startAt: (this: ItemRetriever, value: ObjectType) => this;
+	attributes: (this: ItemRetriever, value: string[]) => this;
+	count: (this: ItemRetriever) => this;
+	consistent: (this: ItemRetriever) => this;
+	using: (this: ItemRetriever, value: string) => this ;
 	exec (this: ItemRetriever, callback?: any): any {
 		let timesRequested = 0;
 		const {model} = this.getInternalProperties(internalProperties).internalSettings;

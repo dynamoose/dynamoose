@@ -6,7 +6,12 @@ export default (value: any, typeDetailsArray: (DynamoDBTypeResult | DynamoDBSetT
 	if (value === null) {
 		str += "null";
 	} else {
-		str += typeof value;
+		// When it's a instance Class
+		if (Object.prototype.toString.call(value) === "[object Object]" && value.constructor !== undefined && value.constructor !== Object) {
+			str += value.constructor.name;
+		} else {
+			str += typeof value;
+		}
 	}
 
 	// Add constant value to type name

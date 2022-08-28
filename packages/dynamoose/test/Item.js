@@ -513,6 +513,32 @@ describe("Item", () => {
 					}]);
 				});
 
+				it("Should save correct object with [Object null prototype] nested objects", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"data": {"type": Object, "schema": {"country": String}}, "name": String}}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "address": {"data": Object.assign(Object.create(null), {"country": "world"}), "name": "Home"}});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw type mismatch error if passing in instance class type with object type in schema", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"data": {"type": Object, "schema": {"country": String}}, "name": String}}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					class Address {
+						constructor (country) {
+							this.country = country;
+						}
+					}
+					user = new User({"id": 1, "address": {"data": new Address("world"), "name": "Home"}});
+
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected address.data to be of type object, instead found type Address."));
+				});
+
 				it("Should save correct object with object property and saveUnknown set to true", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", new Schema({"id": Number, "address": Object}, {"saveUnknown": true}), {"create": false, "waitForActive": false});
