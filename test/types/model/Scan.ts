@@ -3,7 +3,7 @@
 import {UserTypedModel, User, UserModel} from "../Model";
 import {Condition} from "../../../dist";
 import {AnyDocument} from "../../../dist/Document";
-import {ScanResponse} from "../../../dist/DocumentRetriever";
+import {ScanResponse, Scan} from "../../../dist/DocumentRetriever";
 
 // scan.exec([callback])
 async function scanExec (): Promise<User[]> {
@@ -18,20 +18,22 @@ const scanExecTyped: Promise<ScanResponse<User>> = UserTypedModel.scan("name").e
 
 UserTypedModel.scan().exec();
 
+let isAssignableToScan : Scan<User>;
+
 // scan.limit(count)
-UserTypedModel.scan().limit(5);
+isAssignableToScan = UserTypedModel.scan().limit(5);
 
 // scan.startAt(key)
-async function scanStartAt (): Promise<void> {
+async function scanStartAt (): Promise<Scan<User>> {
 	const response = await UserTypedModel.scan().exec();
-	const moreDocuments = UserTypedModel.scan().startAt(response.lastKey);
+	return UserTypedModel.scan().startAt(response.lastKey);
 }
 
 // scan.attributes(attributes)
-UserTypedModel.scan().attributes(["id", "name"]);
+isAssignableToScan = UserTypedModel.scan().attributes(["id", "name"]);
 
 // scan.parallel(parallelScans)
-UserTypedModel.scan().parallel(4);
+isAssignableToScan = UserTypedModel.scan().parallel(4);
 
 // scan.count()
 async function scanCount (): Promise<void> {
@@ -40,74 +42,74 @@ async function scanCount (): Promise<void> {
 }
 
 // scan.consistent()
-UserTypedModel.scan().consistent();
+isAssignableToScan = UserTypedModel.scan().consistent();
 
 // scan.using(index)
-UserTypedModel.scan().using("name-index");
+isAssignableToScan = UserTypedModel.scan().using("name-index");
 
 // scan.all([delay[, max]])
-UserTypedModel.scan().all();
-UserTypedModel.scan().all(100);
-UserTypedModel.scan().all(0, 5);
+isAssignableToScan = UserTypedModel.scan().all();
+isAssignableToScan = UserTypedModel.scan().all(100);
+isAssignableToScan = UserTypedModel.scan().all(0, 5);
 
 // scan.and()
-UserTypedModel.scan("id").eq(1).and().where("name").eq("Bob");
-UserTypedModel.scan("id").eq(1).where("name").eq("Bob");
+isAssignableToScan = UserTypedModel.scan("id").eq(1).and().where("name").eq("Bob");
+isAssignableToScan = UserTypedModel.scan("id").eq(1).where("name").eq("Bob");
 
 // scan.or()
-UserTypedModel.scan("id").eq(1).or().where("name").eq("Bob");
+isAssignableToScan = UserTypedModel.scan("id").eq(1).or().where("name").eq("Bob");
 
 // scan.not()
-UserTypedModel.scan("id").not().eq(1);
-UserTypedModel.scan("id").not().between(1, 2);
+isAssignableToScan = UserTypedModel.scan("id").not().eq(1);
+isAssignableToScan = UserTypedModel.scan("id").not().between(1, 2);
 
 // scan.parenthesis(condition)
-UserTypedModel.scan("id").eq(1).and().parenthesis(new Condition().where("name").eq("Bob"));
-UserTypedModel.scan("id").eq(1).and().parenthesis((condition) => condition.where("name").eq("Bob"));
+isAssignableToScan = UserTypedModel.scan("id").eq(1).and().parenthesis(new Condition().where("name").eq("Bob"));
+isAssignableToScan = UserTypedModel.scan("id").eq(1).and().parenthesis((condition) => condition.where("name").eq("Bob"));
 
 // scan.group(condition)
-UserTypedModel.scan("id").eq(1).and().group(new Condition().where("name").eq("Bob"));
-UserTypedModel.scan("id").eq(1).and().group((condition) => condition.where("name").eq("Bob"));
+isAssignableToScan = UserTypedModel.scan("id").eq(1).and().group(new Condition().where("name").eq("Bob"));
+isAssignableToScan = UserTypedModel.scan("id").eq(1).and().group((condition) => condition.where("name").eq("Bob"));
 
 // scan.filter(key)
-UserTypedModel.scan().filter("id");
-UserTypedModel.scan().filter("id").eq(1);
+isAssignableToScan = UserTypedModel.scan().filter("id");
+isAssignableToScan = UserTypedModel.scan().filter("id").eq(1);
 
 // scan.where(key)
-UserTypedModel.scan().where("id");
-UserTypedModel.scan().where("id").eq(1);
+isAssignableToScan = UserTypedModel.scan().where("id");
+isAssignableToScan = UserTypedModel.scan().where("id").eq(1);
 
 // scan.attribute(key)
-UserTypedModel.scan().attribute("id");
-UserTypedModel.scan().attribute("id").eq(1);
+isAssignableToScan = UserTypedModel.scan().attribute("id");
+isAssignableToScan = UserTypedModel.scan().attribute("id").eq(1);
 
 // scan.eq(value)
-UserTypedModel.scan().filter("name").eq("Tom");
+isAssignableToScan = UserTypedModel.scan().filter("name").eq("Tom");
 
 // scan.exists()
-UserTypedModel.scan().filter("phoneNumber").exists();
-UserTypedModel.scan().filter("phoneNumber").not().exists();
+isAssignableToScan = UserTypedModel.scan().filter("phoneNumber").exists();
+isAssignableToScan = UserTypedModel.scan().filter("phoneNumber").not().exists();
 
 // scan.lt(value)
-UserTypedModel.scan().filter("age").lt(5);
+isAssignableToScan = UserTypedModel.scan().filter("age").lt(5);
 
 // scan.le(value)
-UserTypedModel.scan().filter("age").le(5);
+isAssignableToScan = UserTypedModel.scan().filter("age").le(5);
 
 // scan.gt(value)
-UserTypedModel.scan().filter("age").gt(5);
+isAssignableToScan = UserTypedModel.scan().filter("age").gt(5);
 
 // scan.ge(value)
-UserTypedModel.scan().filter("age").ge(5);
+isAssignableToScan = UserTypedModel.scan().filter("age").ge(5);
 
 // scan.beginsWith(value)
-UserTypedModel.scan().filter("name").beginsWith("T");
+isAssignableToScan = UserTypedModel.scan().filter("name").beginsWith("T");
 
 // scan.contains(value)
-UserTypedModel.scan().filter("name").contains("om");
+isAssignableToScan = UserTypedModel.scan().filter("name").contains("om");
 
 // scan.in(values)
-UserTypedModel.scan("name").in(["Charlie", "Bob"]);
+isAssignableToScan = UserTypedModel.scan("name").in(["Charlie", "Bob"]);
 
 // scan.between(a, b)
-UserTypedModel.scan().filter("age").between(5, 9);
+isAssignableToScan = UserTypedModel.scan().filter("age").between(5, 9);
