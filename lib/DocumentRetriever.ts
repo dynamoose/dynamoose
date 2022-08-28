@@ -37,13 +37,13 @@ abstract class DocumentRetriever {
 		sort?: SortOrder | `${SortOrder}`;
 	};
 	getRequest: (this: DocumentRetriever) => Promise<any>;
-	all: (this: DocumentRetriever, delay?: number, max?: number) => DocumentRetriever;
-	limit: (this: DocumentRetriever, value: number) => DocumentRetriever;
-	startAt: (this: DocumentRetriever, value: ObjectType) => DocumentRetriever;
-	attributes: (this: DocumentRetriever, value: string[]) => DocumentRetriever;
-	count: (this: DocumentRetriever) => DocumentRetriever;
-	consistent: (this: DocumentRetriever) => DocumentRetriever;
-	using: (this: DocumentRetriever, value: string) => DocumentRetriever;
+	all: (this: DocumentRetriever, delay?: number, max?: number) => this;
+	limit: (this: DocumentRetriever, value: number) => this;
+	startAt: (this: DocumentRetriever, value: ObjectType) => this;
+	attributes: (this: DocumentRetriever, value: string[]) => this;
+	count: (this: DocumentRetriever) => this;
+	consistent: (this: DocumentRetriever) => this;
+	using: (this: DocumentRetriever, value: string) => this;
 	exec (this: DocumentRetriever, callback?: any): any {
 		let timesRequested = 0;
 		const prepareForReturn = async (result): Promise<any> => {
