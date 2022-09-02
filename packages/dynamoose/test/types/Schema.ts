@@ -165,3 +165,30 @@ const shouldSucceedWhenUsingSaveUnknownSetToArrayOfStrings = new dynamoose.Schem
 }, {
 	"saveUnknown": ["data"]
 });
+
+const shouldSucceedWhenUsingTimestampsSetToTrue = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": true
+});
+const shouldSucceedWhenUsingTimestampsSetToFalse = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": false
+});
+const shouldSucceedWhenUsingTimestampsSetToObject = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": {
+		"createdAt": "created",
+		"updatedAt": "updated"
+	}
+});
+const shouldSucceedWhenUsingTimestampsSetToObjectWithArrays = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": {
+		"createdAt": ["created", "created_at"],
+		"updatedAt": ["updated", "updated_at"]
+	}
+});
