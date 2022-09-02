@@ -19,6 +19,19 @@ Please comment or [contact me](https://charlie.fish/contact) if you have any que
 
 ---
 
+## Version 2.8.8
+
+This release includes a few bug fixes that were back-ported from v3.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fix TypeScript return types to allow for chainable methods for `Query` & `Scan`
+- Add support for `null` prototype objects on attribute type Object
+
+---
+
 ## Version 3.0.2
 
 This release fixes a bug for the website where certain links and refreshing would fail sometimes.
