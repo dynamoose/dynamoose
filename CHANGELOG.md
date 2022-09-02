@@ -2,6 +2,19 @@
 
 ---
 
+## Version 2.8.8
+
+This release includes a few bug fixes that were back-ported from v3.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fix TypeScript return types to allow for chainable methods for `Query` & `Scan`
+- Add support for `null` prototype objects on attribute type Object
+
+---
+
 ## Version 2.8.7
 
 Version 3.0.0 of Dynamoose has been released. This is the corresponding v2 release. v2 will continue to receive bug fixes and security updates as needed for time being. However, we recommend that you upgrade to v3 as soon as possible, as v2 will not be maintained forever.
