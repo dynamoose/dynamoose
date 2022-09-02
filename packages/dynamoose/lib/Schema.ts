@@ -38,7 +38,7 @@ export interface DynamoDBTypeResult {
 interface DynamoDBTypeCreationObject {
 	name: string;
 	dynamicName?: ((typeSettings?: AttributeDefinitionTypeSettings) => string);
-	dynamodbType?: DynamoDBAttributeType | DynamoDBAttributeType[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]);
+	dynamodbType?: DynamoDBAttributeType | DynamoDBAttributeType[] | DynamoDBType | ((typeSettings: AttributeDefinitionTypeSettings) => string | string[]) | ((typeSettings: AttributeDefinitionTypeSettings) => DynamoDBType);
 	set?: boolean | ((typeSettings?: AttributeDefinitionTypeSettings) => boolean);
 	jsType?: any;
 	nestedType?: boolean;
@@ -65,12 +65,38 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 		// Can't use variable below to check type, see TypeScript issue link below for more information
 		// https://github.com/microsoft/TypeScript/issues/37855
 		// const isSubType = this.dynamodbType instanceof DynamoDBType; // Represents underlying DynamoDB type for custom types
-		const type = this.dynamodbType instanceof DynamoDBType ? this.dynamodbType : this;
+		const type: DynamoDBType = (() => {
+			if (this.dynamodbType instanceof DynamoDBType) {
+				return this.dynamodbType;
+			} else if (typeof this.dynamodbType === "function") {
+				const result = this.dynamodbType(typeSettings);
+				if (result instanceof DynamoDBType) {
+					return result;
+				}
+			}
+
+			return this;
+		})();
+		const underlyingDynamoDBType: DynamoDBType | undefined = (() => {
+			if (this.dynamodbType instanceof DynamoDBType) {
+				return this.dynamodbType;
+			} else if (typeof this.dynamodbType === "function") {
+				const returnedType = this.dynamodbType(typeSettings);
+				if (returnedType instanceof DynamoDBType) {
+					return returnedType;
+				}
+			}
+		})();
 		const dynamodbType: DynamoDBAttributeType | DynamoDBAttributeType[] = ((): DynamoDBAttributeType | DynamoDBAttributeType[] => {
 			if (this.dynamodbType instanceof DynamoDBType) {
 				return this.dynamodbType.dynamodbType as DynamoDBAttributeType;
 			} else if (typeof this.dynamodbType === "function") {
-				return this.dynamodbType(typeSettings);
+				const returnedType = this.dynamodbType(typeSettings);
+				if (returnedType instanceof DynamoDBType) {
+					return returnedType.dynamodbType as DynamoDBAttributeType;
+				} else {
+					return returnedType;
+				}
 			} else {
 				return this.dynamodbType;
 			}
@@ -80,7 +106,7 @@ class DynamoDBType implements DynamoDBTypeCreationObject {
 			dynamodbType,
 			"nestedType": this.nestedType,
 			"isOfType": this.jsType.func ? (val) => this.jsType.func(val, typeSettings) : (val): {value: ValueType; type: string} => {
-				return [{"value": this.jsType, "type": "main"}, {"value": this.dynamodbType instanceof DynamoDBType ? type.jsType : null, "type": "underlying"}].filter((a) => Boolean(a.value)).find((jsType) => typeof jsType.value === "string" ? typeof val === jsType.value : val instanceof jsType.value);
+				return [{"value": this.jsType, "type": "main"}, {"value": underlyingDynamoDBType ? type.jsType : null, "type": "underlying"}].filter((a) => Boolean(a.value)).find((jsType) => typeof jsType.value === "string" ? typeof val === jsType.value : val instanceof jsType.value);
 			},
 			"isSet": false,
 			typeSettings
@@ -150,24 +176,42 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 		new DynamoDBType({"name": "Object", "dynamodbType": "M", "jsType": {"func": (val): boolean => Boolean(val) && (val.constructor === undefined || val.constructor === Object)}, "nestedType": true}),
 		numberType,
 		stringType,
-		new DynamoDBType({"name": "Date", "dynamodbType": numberType, "customType": {
-			"functions": (typeSettings: AttributeDefinitionTypeSettings): {toDynamo: (val: Date) => number; fromDynamo: (val: number) => Date; isOfType: (val: Date, type: "toDynamo" | "fromDynamo") => boolean} => ({
-				"toDynamo": (val: Date): number => {
+		new DynamoDBType({"name": "Date", "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): DynamoDBType => {
+			if (typeSettings?.storage === "iso") {
+				return stringType;
+			} else {
+				return numberType;
+			}
+		}, "customType": {
+			"functions": (typeSettings: AttributeDefinitionTypeSettings): {toDynamo: (val: Date) => number | string; fromDynamo: (val: number | string) => Date; isOfType: (val: Date, type: "toDynamo" | "fromDynamo") => boolean} => ({
+				"toDynamo": (val: Date): number | string => {
 					if (typeSettings.storage === "seconds") {
 						return Math.round(val.getTime() / 1000);
+					} else if (typeSettings.storage === "iso") {
+						return val.toISOString();
 					} else {
 						return val.getTime();
 					}
 				},
-				"fromDynamo": (val: number): Date => {
+				"fromDynamo": (val: number | string): Date => {
 					if (typeSettings.storage === "seconds") {
-						return new Date(val * 1000);
+						return new Date((val as number) * 1000);
+					} else if (typeSettings.storage === "iso") {
+						return new Date(val);
 					} else {
 						return new Date(val);
 					}
 				},
 				"isOfType": (val: Date, type: "toDynamo" | "fromDynamo"): boolean => {
-					return type === "toDynamo" ? val instanceof Date : typeof val === "number";
+					if (type === "toDynamo") {
+						return val instanceof Date;
+					} else {
+						if (typeSettings.storage === "iso") {
+							return typeof val === "string";
+						} else {
+							return typeof val === "number";
+						}
+					}
 				}
 			})
 		}, "jsType": Date}),
@@ -279,7 +323,7 @@ interface IndexDefinition {
 	throughput?: "ON_DEMAND" | number | {read: number; write: number};
 }
 interface AttributeDefinitionTypeSettings {
-	storage?: "milliseconds" | "seconds";
+	storage?: "milliseconds" | "seconds" | "iso";
 	model?: ModelType<Item>;
 	attributes?: string[];
 	separator?: string;
