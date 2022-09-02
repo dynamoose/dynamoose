@@ -149,3 +149,19 @@ const shouldSucceedWithIndexTypeValueAsLocalEnumValue = new dynamoose.Schema({
 		}
 	}
 });
+
+const shouldSucceedWhenUsingSaveUnknownSetToTrue = new dynamoose.Schema({
+	"id": String
+}, {
+	"saveUnknown": true
+});
+const shouldSucceedWhenUsingSaveUnknownSetToFalse = new dynamoose.Schema({
+	"id": String
+}, {
+	"saveUnknown": false
+});
+const shouldSucceedWhenUsingSaveUnknownSetToArrayOfStrings = new dynamoose.Schema({
+	"id": String
+}, {
+	"saveUnknown": ["data"]
+});
