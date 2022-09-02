@@ -177,7 +177,7 @@ const attributeTypesMain: DynamoDBType[] = ((): DynamoDBType[] => {
 		numberType,
 		stringType,
 		new DynamoDBType({"name": "Date", "dynamodbType": (typeSettings?: AttributeDefinitionTypeSettings): DynamoDBType => {
-			if (typeSettings?.storage === "iso") {
+			if (typeSettings && typeSettings.storage === "iso") {
 				return stringType;
 			} else {
 				return numberType;
