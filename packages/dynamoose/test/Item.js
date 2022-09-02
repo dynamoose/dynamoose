@@ -389,6 +389,51 @@ describe("Item", () => {
 					}]);
 				});
 
+				it("Should save with correct object with Date type as ISO", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": {
+						"type": {
+							"value": Date,
+							"settings": {
+								"storage": "iso"
+							}
+						}
+					}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					const birthday = new Date();
+					user = new User({"id": 1, "name": "Charlie", "birthday": birthday});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": `${birthday.toISOString()}`}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should throw error if trying to save number as ISO Date", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": {
+						"type": {
+							"value": Date,
+							"settings": {
+								"storage": "iso"
+							}
+						}
+					}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					const birthday = new Date();
+					user = new User({"id": 1, "name": "Charlie", "birthday": birthday.getTime()});
+					return expect(callType.func(user).bind(user)).rejects.toEqual(new CustomError.TypeMismatch("Expected birthday to be of type date, instead found type number."));
+				});
+
+				it("Should throw error if trying to save ISO string as Date", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": Date}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					const birthday = new Date();
+					user = new User({"id": 1, "name": "Charlie", "birthday": birthday.toISOString()});
+					return expect(callType.func(user).bind(user)).rejects.toEqual(new CustomError.TypeMismatch("Expected birthday to be of type date, instead found type string."));
+				});
+
 				it("Should save with correct object with custom type passed in as underlying type mixed with custom type in array", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": {"type": Array, "schema": [Date]}}, {"create": false, "waitForActive": false});
