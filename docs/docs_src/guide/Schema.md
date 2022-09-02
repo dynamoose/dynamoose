@@ -22,7 +22,7 @@ dyno_jsdoc_dist/Schema.js|schema.indexAttributes
 | Boolean | False | BOOL | False | False |   |   |
 | Number | True | N | False | False |   |   |
 | Buffer | True | B | False | False |   |   |
-| Date | True | N | True | False | **storage** - milliseconds \| seconds (default: milliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
+| Date | True | N |\ S (if `storage` is set to `iso`) | True | False | **storage** - milliseconds \| seconds \| iso (default: milliseconds) | Will be stored in DynamoDB as milliseconds since Jan 1 1970, and converted to/from a Date instance. |
 | Object | False | M | False | True |   |   |
 | Array | False | L | False | True |   |   |
 | [`dynamoose.type.NULL`](Dynamoose#dynamoosetypenull) | False | NULL | False | False |   |   |
