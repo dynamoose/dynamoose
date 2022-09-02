@@ -2,6 +2,23 @@
 
 ---
 
+## Version 3.0.3
+
+This release fixes a few bugs, and adds the foundation for additional language support on [our website](https://dynamoosejs.com).
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fix TypeScript return types to allow for chainable methods for `Query` & `Scan`
+- Add support for `null` prototype objects on attribute type Object
+
+### Documentation
+
+- Add [Crowdin](https://crowdin.com/project/dynamoosejscom) integration to allow for translating the [Dynamoose website](https://dynamoosejs.com)
+
+---
+
 ## Version 3.0.2
 
 This release fixes a bug for the website where certain links and refreshing would fail sometimes.
