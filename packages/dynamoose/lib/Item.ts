@@ -519,18 +519,31 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 	if (settings.updateTimestamps) {
 		const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(object);
 		if (schema.getInternalProperties(internalProperties).settings.timestamps && settings.type === "toDynamo") {
-			const date = Date.now();
+			const date = new Date();
+			const timeResult = (prop) => {
+				const typeDetails = schema.getAttributeTypeDetails(prop.name);
+				if (Array.isArray(typeDetails)) {
+					throw new CustomError.InvalidType(`Not allowed to use an array of types for the timestamps attribute "${prop.name}".`);
+				}
+				switch (typeDetails.typeSettings.storage) {
+				case "iso": return date.toISOString();
+				case "seconds": return Math.floor(date.getTime() / 1000);
+				default: return date.getTime();
+				}
+			};
 
-			const createdAtProperties: string[] = ((Array.isArray((schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).createdAt) ? (schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).createdAt : [(schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).createdAt]) as any).filter((a) => Boolean(a));
-			const updatedAtProperties: string[] = ((Array.isArray((schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).updatedAt) ? (schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).updatedAt : [(schema.getInternalProperties(internalProperties).settings.timestamps as TimestampObject).updatedAt]) as any).filter((a) => Boolean(a));
+			const timestampProperties = schema.getInternalProperties(internalProperties).getTimestampAttributes();
+
+			const createdAtProperties = timestampProperties.filter((val) => val.type === "createdAt");
+			const updatedAtProperties = timestampProperties.filter((val) => val.type === "updatedAt");
 			if (object.getInternalProperties && object.getInternalProperties(internalProperties) && !object.getInternalProperties(internalProperties).storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
 				createdAtProperties.forEach((prop) => {
-					utils.object.set(object as any, prop, date);
+					utils.object.set(object as any, prop.name, timeResult(prop));
 				});
 			}
 			if (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt) {
 				updatedAtProperties.forEach((prop) => {
-					utils.object.set(object as any, prop, date);
+					utils.object.set(object as any, prop.name, timeResult(prop));
 				});
 			}
 		}
