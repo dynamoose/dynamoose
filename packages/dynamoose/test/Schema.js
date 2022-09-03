@@ -57,6 +57,7 @@ describe("Schema", () => {
 		expect(() => new dynamoose.Schema({"id": String, "createdAt": Date, "updatedAt": Date}, {"timestamps": true}).getInternalProperties(internalProperties).settings).toThrow("Timestamp attributes must not be defined in schema.");
 		expect(() => new dynamoose.Schema({"id": String, "created": Date, "updated": Date}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}).getInternalProperties(internalProperties).settings).toThrow("Timestamp attributes must not be defined in schema.");
 		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": ["created", "a1"], "updatedAt": ["updated", "b1"]}}).getInternalProperties(internalProperties).settings).toThrow("Timestamp attributes must not be defined in schema.");
+		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": {"a1": Date}, "updatedAt": {"b1": Date}}}).getInternalProperties(internalProperties).settings).toThrow("Timestamp attributes must not be defined in schema.");
 	});
 
 	it("Should throw error if passing multiple schema elements into array", () => {
@@ -1460,6 +1461,22 @@ describe("Schema", () => {
 		tests.forEach((test) => {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with schema as ${JSON.stringify(test.schema)}`, () => {
 				expect(new dynamoose.Schema(test.schema).getTypePaths(test.input, test.settings)).toEqual(test.output);
+			});
+		});
+	});
+
+	describe("getTimestampAttributes", () => {
+		it("Should be a function", () => {
+			expect(new dynamoose.Schema({"id": String}).getInternalProperties(internalProperties).getTimestampAttributes).toBeInstanceOf(Function);
+		});
+
+		const tests = [
+			{"input": undefined, "output": []}
+		];
+
+		tests.forEach((test) => {
+			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+				expect(new dynamoose.Schema({"id": String}).getInternalProperties(internalProperties).getTimestampAttributes(test.input)).toEqual(test.output);
 			});
 		});
 	});
