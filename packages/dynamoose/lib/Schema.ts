@@ -276,8 +276,8 @@ export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueTyp
 type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
 
 export interface TimestampObject {
-	createdAt?: string | string[];
-	updatedAt?: string | string[];
+	createdAt?: string | string[] | SchemaDefinition;
+	updatedAt?: string | string[] | SchemaDefinition;
 }
 interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
@@ -833,6 +833,46 @@ interface SchemaInternalProperties {
 	getMapSettingObject: () => {[key: string]: string};
 	getDefaultMapAttribute: (attribute: string) => string;
 	getIndexAttributes: () => {index: IndexDefinition; attribute: string}[];
+	getTimestampAttributes: () => GetTimestampAttributesType;
+}
+
+type GetTimestampAttributesType = ({
+	"name": string;
+	"value": AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
+	"type": "createdAt" | "updatedAt";
+})[];
+function getTimestampAttributes (timestamps?: TimestampObject): GetTimestampAttributesType {
+	if (!timestamps) {
+		return [];
+	}
+
+	const createdAtArray = Array.isArray(timestamps.createdAt) ? timestamps.createdAt : [timestamps.createdAt];
+	const updatedAtArray = Array.isArray(timestamps.updatedAt) ? timestamps.updatedAt : [timestamps.updatedAt];
+
+	const combinedArray: GetTimestampAttributesType = [];
+	function forEachFunc (type: "createdAt" | "updatedAt", inputArray: GetTimestampAttributesType) {
+		return (val: string | SchemaDefinition) => {
+			if (typeof val === "string") {
+				inputArray.push({
+					"name": val,
+					"value": Date,
+					type
+				});
+			} else if (val) {
+				Object.entries(val).forEach(([key, value]) => {
+					inputArray.push({
+						"name": key,
+						"value": value,
+						type
+					});
+				});
+			}
+		};
+	}
+	createdAtArray.forEach(forEachFunc("createdAt", combinedArray));
+	updatedAtArray.forEach(forEachFunc("updatedAt", combinedArray));
+
+	return combinedArray;
 }
 
 export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
@@ -844,7 +884,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	 * | Name | Type | Default | Information
 	 * |---|---|---|---|
 	 * | `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep (ex. `["person.*", "friend.**"]` will allow you store a property `person` with 1 level of unknown properties and `friend` with infinitely nested level unknown properties). If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
-	 * | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
+	 * | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. You can also set each of the `createdAt` & `updatedAt` properties equal to a Schema object. The keys of this Schema object represent the name of the attributes, with the value allowing for customization such as changing the storage type of the date. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
 	 * | `get` | function \| async function | undefined | You can use a get function on the schema to be run whenever retrieving a item from DynamoDB. Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to return to the application. This function will be run after all property `get` functions are run.
 	 * | `set` | function \| async function | undefined | You can use a set function on the schema to be run whenever saving a item to DynamoDB. It will also be used when retrieving an item (ie. `get`, `query`, `update`, etc). Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to save to DynamoDB. This function will be run after all property `set` functions are run.
 	 * | `validate` | function \| async function | undefined | You can use a validate function on the schema to ensure the value passes a given validation before saving the item. Dynamoose will pass the entire item into this function and you must return a boolean (`true` if validation passes or `false` if validation fails) or throw an error. This function will be run after all property `validate` functions are run.
@@ -922,6 +962,38 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	 * 	"id": String,
 	 * 	"name": String
 	 * }, {
+	 * 	"timestamps": {
+	 * 		"createdAt": {
+	 * 			"created_at": {
+	 * 				"type": {
+	 * 					"value": Date,
+	 * 					"settings": {
+	 * 						"storage": "iso"
+	 * 					}
+	 * 				}
+	 * 			}
+	 * 		},
+	 * 		"updatedAt": {
+	 * 			"updated": {
+	 * 				"type": {
+	 * 					"value": Date,
+	 * 					"settings": {
+	 * 						"storage": "seconds"
+	 * 					}
+	 * 				}
+	 * 			}
+	 * 		}
+	 * 	}
+	 * });
+	 * ```
+	 *
+	 * ```js
+	 * const dynamoose = require("dynamoose");
+	 *
+	 * const schema = new dynamoose.Schema({
+	 * 	"id": String,
+	 * 	"name": String
+	 * }, {
 	 * 	"validate": (obj) => {
 	 * 		if (!obj.id.beginsWith(name[0])) {
 	 * 			throw new Error("id first letter of name.");
@@ -950,15 +1022,13 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			};
 		}
 		if (settings.timestamps) {
-			const createdAtArray = Array.isArray(settings.timestamps.createdAt) ? settings.timestamps.createdAt : [settings.timestamps.createdAt];
-			const updatedAtArray = Array.isArray(settings.timestamps.updatedAt) ? settings.timestamps.updatedAt : [settings.timestamps.updatedAt];
-
-			[...createdAtArray, ...updatedAtArray].forEach((prop) => {
-				if (object[prop]) {
+			const combinedArray = getTimestampAttributes(settings.timestamps);
+			combinedArray.forEach((prop) => {
+				if (object[prop.name]) {
 					throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
 				}
 
-				object[prop] = Date;
+				object[prop.name] = prop.value;
 			});
 		}
 
@@ -1072,7 +1142,8 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 						}
 						return accumulator;
 					}, []);
-			}
+			},
+			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps as TimestampObject)
 		});
 
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {

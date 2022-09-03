@@ -192,3 +192,19 @@ const shouldSucceedWhenUsingTimestampsSetToObjectWithArrays = new dynamoose.Sche
 		"updatedAt": ["updated", "updated_at"]
 	}
 });
+const shouldSucceedWhenUsingTimestampsSetToObjectWithTypes = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": {
+		"createdAt": {
+			"created_at": {
+				"type": {
+					"value": Date,
+					"settings": {
+						"storage": "iso"
+					}
+				}
+			}
+		}
+	}
+});
