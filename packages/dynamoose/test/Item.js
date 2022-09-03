@@ -839,6 +839,86 @@ describe("Item", () => {
 					expect(parseInt(putParams[1].Item.updated.N)).toBeGreaterThan(parseInt(putParams[0].Item.updated.N));
 				});
 
+				it("Should throw error when trying to add timestamp property with multiple types", () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": {"createdAt": {"type": [{"value": Date, "settings": {"storage": "seconds"}}, Object]}}}}), {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "name": "Charlie"});
+					return expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.InvalidType("Not allowed to use an array of types for the timestamps attribute \"createdAt\"."));
+				});
+
+				it("Should save with correct object with custom timestamp as seconds Date", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": {"createdAt": {"type": {"value": Date, "settings": {"storage": "seconds"}}}}, "updatedAt": {"updatedAt": {"type": {"value": Date, "settings": {"storage": "seconds"}}}}}}), {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).toEqual("User");
+					expect(putParams[0].Item).toBeInstanceOf(Object);
+					expect(putParams[0].Item.id).toEqual({"N": "1"});
+					expect(putParams[0].Item.name).toEqual({"S": "Charlie"});
+					expect(putParams[0].Item.createdAt).toBeInstanceOf(Object);
+					expect(putParams[0].Item.updatedAt).toBeInstanceOf(Object);
+					expect(putParams[0].Item.updatedAt.N).toEqual(putParams[0].Item.createdAt.N);
+
+					await utils.timeout(5);
+
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).toEqual("User");
+					expect(putParams[1].Item).toBeInstanceOf(Object);
+					expect(putParams[1].Item.id).toEqual({"N": "1"});
+					expect(putParams[1].Item.name).toEqual({"S": "Bob"});
+					expect(putParams[1].Item.createdAt).toBeInstanceOf(Object);
+					expect(putParams[1].Item.updatedAt).toBeInstanceOf(Object);
+
+					expect(putParams[1].Item.createdAt.N).toEqual(putParams[0].Item.createdAt.N);
+					expect(parseInt(putParams[1].Item.updatedAt.N) + 1).toBeGreaterThan(parseInt(putParams[0].Item.updatedAt.N));
+				});
+
+				it("Should save with correct object with custom timestamp as ISO Date", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": {"createdAt": {"type": {"value": Date, "settings": {"storage": "iso"}}}}, "updatedAt": {"updatedAt": {"type": {"value": Date, "settings": {"storage": "iso"}}}}}}), {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).toEqual("User");
+					expect(putParams[0].Item).toBeInstanceOf(Object);
+					expect(putParams[0].Item.id).toEqual({"N": "1"});
+					expect(putParams[0].Item.name).toEqual({"S": "Charlie"});
+					expect(putParams[0].Item.createdAt).toBeInstanceOf(Object);
+					expect(putParams[0].Item.updatedAt).toBeInstanceOf(Object);
+					expect(putParams[0].Item.createdAt).not.toHaveProperty("N");
+					expect(putParams[0].Item.updatedAt).not.toHaveProperty("N");
+					expect(putParams[0].Item.createdAt).toHaveProperty("S");
+					expect(putParams[0].Item.updatedAt).toHaveProperty("S");
+					expect(putParams[0].Item.updatedAt.S).toEqual(putParams[0].Item.createdAt.S);
+					expect(typeof putParams[0].Item.createdAt.S).toEqual("string");
+					expect(typeof putParams[0].Item.updatedAt.S).toEqual("string");
+
+					await utils.timeout(5);
+
+					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					await callType.func(user).bind(user)();
+
+					expect(putParams[1].TableName).toEqual("User");
+					expect(putParams[1].Item).toBeInstanceOf(Object);
+					expect(putParams[1].Item.id).toEqual({"N": "1"});
+					expect(putParams[1].Item.name).toEqual({"S": "Bob"});
+					expect(putParams[1].Item.createdAt).toBeInstanceOf(Object);
+					expect(putParams[1].Item.updatedAt).toBeInstanceOf(Object);
+					expect(putParams[1].Item.createdAt).not.toHaveProperty("N");
+					expect(putParams[1].Item.updatedAt).not.toHaveProperty("N");
+					expect(putParams[1].Item.createdAt).toHaveProperty("S");
+					expect(putParams[1].Item.updatedAt).toHaveProperty("S");
+					expect(typeof putParams[1].Item.createdAt.S).toEqual("string");
+					expect(typeof putParams[1].Item.updatedAt.S).toEqual("string");
+
+					expect(putParams[1].Item.createdAt.S).toEqual(putParams[0].Item.createdAt.S);
+					expect(new Date(putParams[1].Item.updatedAt.S).getTime()).toBeGreaterThan(new Date(putParams[0].Item.updatedAt.S).getTime());
+				});
+
 				it("Should save with correct object with custom timestamps with multiple attribute names", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", new Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": ["a1", "a2"], "updatedAt": ["b1", "b2"]}}), {"create": false, "waitForActive": false});
