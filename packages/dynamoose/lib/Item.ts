@@ -4,7 +4,7 @@ import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
 import {Model} from "./Model";
-import {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult, TimestampObject} from "./Schema";
+import {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 const dynamooseAny = Internal.Public.any;
