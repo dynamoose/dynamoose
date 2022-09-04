@@ -15,7 +15,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `items`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `items` |
-| type | If Dynamoose should use `transactGetItems` or `transactWriteItems` to make the transaction call. | String | By default, if all `transactions` objects are `Get`, `transactGetItems` will be run, otherwise `transactWriteItems` will be used. |
+| type | If Dynamoose should use `get` (`transactGetItems`) or `write` (`transactWriteItems`) to make the transaction call. | String (`get` \| `write`) | By default, if all `transactions` objects are `Get`, `get` will be run, otherwise `write` will be used. |
 
 ```js
 await dynamoose.transaction([
