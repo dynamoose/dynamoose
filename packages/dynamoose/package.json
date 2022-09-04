@@ -1,6 +1,6 @@
 {
   "name": "dynamoose",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "homepage": "https://dynamoosejs.com",
   "main": "dist/index.js",
@@ -27,11 +27,11 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.142.0",
     "@aws-sdk/util-dynamodb": "^3.142.0",
-    "dynamoose-utils": "^3.0.3",
+    "dynamoose-utils": "^3.1.0",
     "js-object-utilities": "^2.1.0"
   },
   "devDependencies": {
-    "dynamoose-logger": "^3.0.3"
+    "dynamoose-logger": "^3.1.0"
   },
   "license": "Unlicense",
   "funding": [
