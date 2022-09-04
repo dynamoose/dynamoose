@@ -149,3 +149,62 @@ const shouldSucceedWithIndexTypeValueAsLocalEnumValue = new dynamoose.Schema({
 		}
 	}
 });
+
+const shouldSucceedWhenUsingSaveUnknownSetToTrue = new dynamoose.Schema({
+	"id": String
+}, {
+	"saveUnknown": true
+});
+const shouldSucceedWhenUsingSaveUnknownSetToFalse = new dynamoose.Schema({
+	"id": String
+}, {
+	"saveUnknown": false
+});
+const shouldSucceedWhenUsingSaveUnknownSetToArrayOfStrings = new dynamoose.Schema({
+	"id": String
+}, {
+	"saveUnknown": ["data"]
+});
+
+const shouldSucceedWhenUsingTimestampsSetToTrue = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": true
+});
+const shouldSucceedWhenUsingTimestampsSetToFalse = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": false
+});
+const shouldSucceedWhenUsingTimestampsSetToObject = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": {
+		"createdAt": "created",
+		"updatedAt": "updated"
+	}
+});
+const shouldSucceedWhenUsingTimestampsSetToObjectWithArrays = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": {
+		"createdAt": ["created", "created_at"],
+		"updatedAt": ["updated", "updated_at"]
+	}
+});
+const shouldSucceedWhenUsingTimestampsSetToObjectWithTypes = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": {
+		"createdAt": {
+			"created_at": {
+				"type": {
+					"value": Date,
+					"settings": {
+						"storage": "iso"
+					}
+				}
+			}
+		}
+	}
+});

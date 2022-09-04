@@ -571,6 +571,49 @@ describe("Model", () => {
 					expect(user.birthday).not.toBeDefined();
 				});
 
+				it("Should return object with correct values if using ISO Date", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": {
+						"type": {
+							"value": Date,
+							"settings": {
+								"storage": "iso"
+							}
+						}
+					}});
+					new dynamoose.Table("User", [User]);
+					const date = new Date();
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": date.toISOString()}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(Object.keys(user)).toEqual(["id", "name", "birthday"]);
+					expect(user.id).toEqual(1);
+					expect(user.name).toEqual("Charlie");
+					expect(user.birthday).toEqual(date);
+				});
+
+				it("Should throw error if returning Number for ISO Date", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": {
+						"type": {
+							"value": Date,
+							"settings": {
+								"storage": "iso"
+							}
+						}
+					}});
+					new dynamoose.Table("User", [User]);
+					const date = new Date();
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": date.getTime()}}});
+					return expect(callType.func(User).bind(User)(1)).rejects.toEqual(new CustomError.TypeMismatch("Expected birthday to be of type date, instead found type number."));
+				});
+
+				it("Should throw error if returning ISO Date for String", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					new dynamoose.Table("User", [User]);
+					const date = new Date();
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": date.toISOString()}}});
+					return expect(callType.func(User).bind(User)(1)).rejects.toEqual(new CustomError.TypeMismatch("Expected birthday to be of type date, instead found type string."));
+				});
+
 				it("Should throw type mismatch error if passing in wrong type with custom type", () => {
 					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
 					new dynamoose.Table("User", [User]);
