@@ -2,6 +2,28 @@
 
 ---
 
+## Version 3.1.0
+
+This release adds support for ISO-8601 date formats! This was one of the most upvoted feature requests on the [GitHub issues page](https://github.com/dynamoose/dynamoose/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc). Really exciting to finally delivery this feature.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Major New Features
+
+- ISO-8601 Date Format Option.
+- Support for specifying custom type options for `timestamp` properties.
+
+### Documentation
+
+- Making Transaction documentation more clear about options you can pass in.
+- Fixing edit links on documentation pages.
+
+### Other
+
+- Adding CLA process to new contributors pull requests.
+
+---
+
 ## Version 3.0.3
 
 This release fixes a few bugs, and adds the foundation for additional language support on [our website](https://dynamoosejs.com).
