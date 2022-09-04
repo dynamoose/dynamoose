@@ -135,7 +135,7 @@ module.exports = {
 				"docs": {
 					"routeBasePath": "/",
 					"sidebarPath": require.resolve("./sidebars.js"),
-					"editUrl": "https://github.com/dynamoose/dynamoose/edit/main/docs",
+					"editUrl": "https://github.com/dynamoose/dynamoose/edit/main/docs/docs_src",
 					"remarkPlugins": [
 						require("./src/plugins/remark-npm2yarn")
 					]
