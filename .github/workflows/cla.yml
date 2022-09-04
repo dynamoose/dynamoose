@@ -1,0 +1,25 @@
+name: "CLA Assistant"
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened,closed,synchronize]
+
+jobs:
+  CLAssistant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CLA Assistant"
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I dedicate any and all copyright interest in this software to the public domain. I make this dedication for the benefit of the public at large and to the detriment of my heirs and successors. I intend this dedication to be an overt act of relinquishment in perpetuity of all present and future rights to this software under copyright law.') || github.event_name == 'pull_request_target'
+        # Beta Release
+        uses: contributor-assistant/github-action@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # the below token should have repo scope and must be manually added by you in the repository's secret
+          PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        with:
+          path-to-signatures: 'signatures/version1/cla.json'
+          path-to-document: 'https://github.com/dynamoose/dynamoose/blob/main/CLA.md'
+          # branch should not be protected
+          branch: 'main'
+          custom-pr-sign-comment: 'I dedicate any and all copyright interest in this software to the public domain. I make this dedication for the benefit of the public at large and to the detriment of my heirs and successors. I intend this dedication to be an overt act of relinquishment in perpetuity of all present and future rights to this software under copyright law.'
