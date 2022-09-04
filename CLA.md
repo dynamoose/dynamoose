@@ -10,4 +10,4 @@ dedication to be an overt act of relinquishment in perpetuity of all
 present and future rights to this software under copyright law.
 ```
 
-On your first pull request you will be required to comment the test above to agree to the waiver.
+On your first pull request you will be required to comment the text above to agree to the waiver.
