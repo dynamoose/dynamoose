@@ -121,9 +121,9 @@ describe("Item", () => {
 					return putItemFunction();
 				}
 			});
-			User = dynamoose.model("User", {"id": Number, "name": String});
+			User = dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
 			new dynamoose.Table("User", [User]);
-			user = new User({"id": 1, "name": "Charlie"});
+			user = new User({"id": 1, "name": "Charlie", "birthday": new Date(10000)});
 		});
 		afterEach(() => {
 			dynamoose.Table.defaults.set({});
@@ -148,7 +148,7 @@ describe("Item", () => {
 					putItemFunction = () => Promise.resolve();
 					await callType.func(user).bind(user)();
 					expect(putParams).toEqual([{
-						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${new Date(10000).getTime()}`}},
 						"TableName": "User"
 					}]);
 				});
@@ -165,7 +165,7 @@ describe("Item", () => {
 					expect(resultA).toEqual(user);
 					expect(resultB).toEqual(robot);
 					expect(putParams).toEqual([{
-						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${new Date(10000).getTime()}`}},
 						"TableName": "User"
 					}, {
 						"Item": {"id": {"N": "2"}, "built": {"N": `${date}`}},
@@ -209,7 +209,8 @@ describe("Item", () => {
 					expect(result).toEqual({
 						"Item": {
 							"id": {"N": "1"},
-							"name": {"S": "Charlie"}
+							"name": {"S": "Charlie"},
+							"birthday": {"N": `${new Date(10000).getTime()}`}
 						},
 						"TableName": "User"
 					});
@@ -1707,7 +1708,7 @@ describe("Item", () => {
 						error = e;
 					}
 					expect(putParams).toEqual([{
-						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}},
+						"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": `${new Date(10000).getTime()}`}},
 						"TableName": "User"
 					}]);
 					expect(result).not.toBeDefined();
