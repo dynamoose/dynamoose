@@ -7,6 +7,14 @@
       "created_at": "2022-09-04T15:49:20Z",
       "repoId": 16962535,
       "pullRequestNo": 1503
+    },
+    {
+      "name": "jung-jin-lee",
+      "id": 47263683,
+      "comment_id": 1244733454,
+      "created_at": "2022-09-13T00:14:04Z",
+      "repoId": 16962535,
+      "pullRequestNo": 1506
     }
   ]
 }
