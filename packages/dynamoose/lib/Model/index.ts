@@ -129,7 +129,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 *
 	 * The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 	 *
-	 * The `options` parameter is the same as the options that are passed to the [Table](Table.md) constructor.
+	 * The `options` parameter is the same as the options that are passed to the [Table](Table.md) constructor except it takes additional argument `tableName`:
+	 *
+	 * | Name | Description | Type | Default |
+	 * |------|-------------|------|---------|
+	 * | tableName | Optional table name to overwrite the default one that is equals to a model name. It respects both `prefix` and `suffix` provided locally or globally. The main goal of this option is to store multiple models within single table to conform the DynamoDB's single table design approach. | String | undefined |
 	 *
 	 * ```js
 	 * const dynamoose = require("dynamoose");
