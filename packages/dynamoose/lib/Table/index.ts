@@ -189,13 +189,22 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 				return models[bestModelIndex];
 			},
 			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
-				// TODO: implement this
-				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getCreateTableAttributeParams(this);
+				const models = this.getInternalProperties(internalProperties).models as { Model: Model }[];
+				const createTableAttributeParams = await Promise.all(
+					models.map((model) => model.Model.getInternalProperties(internalProperties).getCreateTableAttributeParams())
+				);
+
+				return utils.merge_objects.main({
+					"combineMethod": utils.merge_objects.MergeObjectsCombineMethod.ArrayMerge,
+					"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger
+				})(...createTableAttributeParams);
 			},
 			"getHashKey": (): string => {
+				// TODO: implement this
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getHashKey();
 			},
 			"getRangeKey": (): string => {
+				// TODO: implement this
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
 			},
 			"runSetupFlow": async (): Promise<void> => {
