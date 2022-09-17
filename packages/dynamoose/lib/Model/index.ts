@@ -248,10 +248,16 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			},
 			// This function returns the best matched schema for the given object input
 			"schemaForObject": (object: ObjectType): Schema => {
+				const schemas = this.getInternalProperties(internalProperties).schemas;
+
+				if (schemas.length === 1) {
+					return schemas[0];
+				}
+
 				const schemaCorrectnessScores = this.getInternalProperties(internalProperties).schemaCorrectnessScores(object);
 				const highestSchemaCorrectnessScoreIndex: number = schemaCorrectnessScores.indexOf(Math.max(...schemaCorrectnessScores));
 
-				return this.getInternalProperties(internalProperties).schemas[highestSchemaCorrectnessScoreIndex];
+				return schemas[highestSchemaCorrectnessScoreIndex];
 			},
 			// This function returns the DynamoDB property name for a given attribute (alias or property name). For example if you have a `pk` with an alias of `userID` and pass in `userID` it will return `pk`. If you pass in `pk` it will return `pk`.
 			"dynamoPropertyForAttribute": async (attribute: string): Promise<string> => {
