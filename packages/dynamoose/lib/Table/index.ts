@@ -200,11 +200,9 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 				})(...createTableAttributeParams);
 			},
 			"getHashKey": (): string => {
-				// TODO: implement this
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getHashKey();
 			},
 			"getRangeKey": (): string => {
-				// TODO: implement this
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
 			},
 			"runSetupFlow": async (): Promise<void> => {
