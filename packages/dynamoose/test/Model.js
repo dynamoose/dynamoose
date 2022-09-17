@@ -162,6 +162,7 @@ describe("Model", () => {
 
 		it("Should create table with a custom name if provided", async () => {
 			const customTableName = "custom-table-name";
+
 			const model = dynamoose.model("Cat", {"id": String}, {"tableName": customTableName});
 			expect(model.table().name).toEqual(customTableName);
 			expect(await model.table().create({"return": "request"})).toEqual({
