@@ -96,6 +96,10 @@ export interface ModelIndexes {
 	LocalSecondaryIndexes?: IndexItem[];
 }
 
+export interface ModelTableOptions extends TableOptionsOptional {
+	tableName?: string;
+}
+
 interface ModelInternalProperties {
 	name: string;
 	options: TableOptionsOptional;
@@ -180,7 +184,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 * @param options The options for the model. This is the same type as `Table` options.
 	 * @param ModelStore INTERNAL PARAMETER
 	 */
-	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: TableOptionsOptional, ModelStore: (model: Model) => void) {
+	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelTableOptions, ModelStore: (model: Model) => void) {
 		super();
 
 		// Methods
@@ -264,7 +268,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const table = this.getInternalProperties(internalProperties)._table;
 				if (!table) {
 					const modelObject = returnModel(this);
-					const createdTable = new Table(Instance.default, this.getInternalProperties(internalProperties).name, [modelObject], this.getInternalProperties(internalProperties).options);
+					const createdTable = new Table(Instance.default, options?.tableName || this.getInternalProperties(internalProperties).name, [modelObject], this.getInternalProperties(internalProperties).options);
 					this.getInternalProperties(internalProperties)._table = createdTable;
 					return createdTable;
 				}
