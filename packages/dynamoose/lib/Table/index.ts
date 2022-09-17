@@ -182,6 +182,11 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			// This function returns the best matched model for the given object input
 			"modelForObject": async (object: ObjectType): Promise<Model<ItemCarrier>> => {
 				const models = this.getInternalProperties(internalProperties).models;
+
+				if (models.length === 1) {
+					return models[0];
+				}
+
 				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model.getInternalProperties(internalProperties).schemaCorrectnessScores(object)));
 				const highestModelSchemaCorrectnessScore = Math.max(...modelSchemaCorrectnessScores);
 				const bestModelIndex = modelSchemaCorrectnessScores.indexOf(highestModelSchemaCorrectnessScore);
