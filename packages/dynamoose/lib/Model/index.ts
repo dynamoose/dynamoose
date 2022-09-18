@@ -96,6 +96,10 @@ export interface ModelIndexes {
 	LocalSecondaryIndexes?: IndexItem[];
 }
 
+export interface ModelTableOptions extends TableOptionsOptional {
+	tableName?: string;
+}
+
 interface ModelInternalProperties {
 	name: string;
 	options: TableOptionsOptional;
@@ -125,7 +129,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 *
 	 * The `schema` parameter can either be an object OR a [Schema](Schema.md) instance. If you pass in an object for the `schema` parameter it will create a Schema instance for you automatically.
 	 *
-	 * The `options` parameter is the same as the options that are passed to the [Table](Table.md) constructor.
+	 * The `options` parameter is the same as the options that are passed to the [Table](Table.md) constructor except it takes additional argument `tableName`:
+	 *
+	 * | Name | Description | Type | Default |
+	 * |------|-------------|------|---------|
+	 * | tableName | Optional table name to overwrite the default one that is equals to a model name. It respects both `prefix` and `suffix` provided locally or globally. The main goal of this option is to store multiple models within single table to conform the DynamoDB's single table design approach. | String | undefined |
 	 *
 	 * ```js
 	 * const dynamoose = require("dynamoose");
@@ -180,7 +188,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 * @param options The options for the model. This is the same type as `Table` options.
 	 * @param ModelStore INTERNAL PARAMETER
 	 */
-	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: TableOptionsOptional, ModelStore: (model: Model) => void) {
+	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelTableOptions, ModelStore: (model: Model) => void) {
 		super();
 
 		// Methods
@@ -270,7 +278,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const table = this.getInternalProperties(internalProperties)._table;
 				if (!table) {
 					const modelObject = returnModel(this);
-					const createdTable = new Table(Instance.default, this.getInternalProperties(internalProperties).name, [modelObject], this.getInternalProperties(internalProperties).options);
+					const createdTable = new Table(Instance.default, options?.tableName || this.getInternalProperties(internalProperties).name, [modelObject], this.getInternalProperties(internalProperties).options);
 					this.getInternalProperties(internalProperties)._table = createdTable;
 					return createdTable;
 				}
