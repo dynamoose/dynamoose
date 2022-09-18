@@ -1988,6 +1988,76 @@ describe("Table", () => {
 
 					return expect(callType.func(table).bind(table)({"return": "request"})).rejects.toEqual(new CustomError.InvalidParameter("You can not have multiple types for attribute definition: rangeKey."));
 				});
+
+				it("Should be created with all the indexes from all the models if multiple models passed in", async () => {
+					const pk = {"type": String, "hashKey": true};
+					const catModel = dynamoose.model("Cat", {"pk": pk, "pk1": {"type": String, "index": {"name": "gsi1"}}});
+					const dogModel = dynamoose.model("Cat", {"pk": pk, "pk2": {"type": String, "index": {"name": "gsi2"}}});
+
+					const table = new dynamoose.Table("Pets", [catModel, dogModel]);
+					// eslint-disable-next-line no-console
+					expect(await callType.func(table).bind(table)({"return": "request"})).toEqual({
+						"TableName": "Pets",
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						},
+						"AttributeDefinitions": [
+							{
+								"AttributeName": "pk",
+								"AttributeType": "S"
+							},
+							{
+								"AttributeName": "pk1",
+								"AttributeType": "S"
+							},
+							{
+								"AttributeName": "pk2",
+								"AttributeType": "S"
+							}
+						],
+						"KeySchema": [
+							{
+								"AttributeName": "pk",
+								"KeyType": "HASH"
+							}
+						],
+						"GlobalSecondaryIndexes": [
+							{
+								"IndexName": "gsi1",
+								"KeySchema": [
+									{
+										"AttributeName": "pk1",
+										"KeyType": "HASH"
+									}
+								],
+								"Projection": {
+									"ProjectionType": "ALL"
+								},
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 1
+								}
+							},
+							{
+								"IndexName": "gsi2",
+								"KeySchema": [
+									{
+										"AttributeName": "pk2",
+										"KeyType": "HASH"
+									}
+								],
+								"Projection": {
+									"ProjectionType": "ALL"
+								},
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 1
+								}
+							}
+						]
+					});
+				});
 			});
 		});
 	});
