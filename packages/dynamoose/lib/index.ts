@@ -1,4 +1,4 @@
-import {Model} from "./Model";
+import {Model, ModelTableOptions} from "./Model";
 import {Schema, SchemaDefinition} from "./Schema";
 import {Condition} from "./Condition";
 import transaction from "./Transaction";
@@ -7,13 +7,13 @@ import {Item, AnyItem} from "./Item";
 import ModelStore from "./ModelStore";
 import {ModelType} from "./General";
 import CustomError from "./Error";
-import {Table, TableOptionsOptional} from "./Table/index";
+import {Table} from "./Table";
 import type from "./type";
 import {Instance} from "./Instance";
 import {custom as TableDefaults} from "./Table/defaults";
 import returnModel from "./utils/dynamoose/returnModel";
 
-const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: TableOptionsOptional): ModelType<T> => {
+const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: ModelTableOptions): ModelType<T> => {
 	let model: Model<T>;
 	let storedSchema: Model<T>;
 	if (name) {

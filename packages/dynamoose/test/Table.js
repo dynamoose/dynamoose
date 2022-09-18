@@ -2011,6 +2011,13 @@ describe("Table", () => {
 			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).toEqual(model);
 			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John", "item": "Smith"})).toEqual(model);
 		});
+
+		it("Should return the first model if it is the only one", async () => {
+			const model = dynamoose.model("User", {"id": String, "name": String});
+			const table = new dynamoose.Table("Table", [model]);
+
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).toEqual(model);
+		});
 	});
 
 	describe("getIndexes", () => {
