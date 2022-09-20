@@ -2137,4 +2137,16 @@ describe("Table", () => {
 			expect(table.getInternalProperties(internalProperties).getRangeKey()).toEqual("age");
 		});
 	});
+
+	describe("models", () => {
+		it("Should append new models with same table name provided", async () => {
+			const tableName = "pets";
+			const Cat = dynamoose.model("Cat", {"id": String, "name": String});
+			const table = new dynamoose.Table(tableName, [Cat]);
+			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat]);
+
+			const Dog = dynamoose.model("Dog", {"id": String, "name": String}, {"tableName": tableName});
+			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
+		});
+	});
 });
