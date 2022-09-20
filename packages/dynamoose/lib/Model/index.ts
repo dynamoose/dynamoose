@@ -1,4 +1,5 @@
 import CustomError from "../Error";
+import ModelStore from "../ModelStore";
 import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
 import utils from "../utils";
@@ -112,6 +113,7 @@ interface ModelInternalProperties {
 	getHashKey: () => string;
 	getRangeKey: () => string | void;
 	table: () => Table;
+	tableName: string;
 
 	schemas: Schema[];
 	/**
@@ -186,9 +188,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 * @param name The name of the model.
 	 * @param schema The schema for the model.
 	 * @param options The options for the model. This is the same type as `Table` options.
-	 * @param ModelStore INTERNAL PARAMETER
+	 * @param _ModelStore INTERNAL PARAMETER
 	 */
-	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelTableOptions, ModelStore: (model: Model) => void) {
+	constructor (name: string, schema: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options: ModelTableOptions, _ModelStore: typeof ModelStore) {
 		super();
 
 		// Methods
@@ -278,13 +280,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const table = this.getInternalProperties(internalProperties)._table;
 				if (!table) {
 					const modelObject = returnModel(this);
-					const createdTable = new Table(Instance.default, options?.tableName || this.getInternalProperties(internalProperties).name, [modelObject], this.getInternalProperties(internalProperties).options);
+					const createdTable = new Table(Instance.default, this.getInternalProperties(internalProperties).tableName, [modelObject], this.getInternalProperties(internalProperties).options);
 					this.getInternalProperties(internalProperties)._table = createdTable;
 					return createdTable;
 				}
 
 				return table;
 			},
+			"tableName": options?.tableName || name,
 			"schemas": []
 		});
 
@@ -365,7 +368,21 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			return accumulator;
 		}, {});
 
-		ModelStore(this);
+		_ModelStore(this);
+
+		// This code attaches `this` model to an existing table instance created by other model with the same tableName.
+		const modelsOfTable = ModelStore.forTableName(this.getInternalProperties(internalProperties).tableName);
+		const otherModelWithTable = modelsOfTable.find((model) => model !== this && model.table());
+		const table = otherModelWithTable?.table();
+
+		if (table) {
+			table.setInternalProperties(internalProperties, {
+				...table.getInternalProperties(internalProperties),
+				"models": modelsOfTable.map(returnModel)
+			});
+
+			this.getInternalProperties(internalProperties)._table = table;
+		}
 	}
 
 	/**
