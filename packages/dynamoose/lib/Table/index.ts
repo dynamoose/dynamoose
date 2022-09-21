@@ -161,7 +161,8 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 
 				model.Model.setInternalProperties(internalProperties, {
 					...model.Model.getInternalProperties(internalProperties),
-					"_table": this
+					"_table": this,
+					"tableName": name
 				});
 				return model;
 			}),

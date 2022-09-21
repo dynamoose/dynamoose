@@ -318,6 +318,24 @@ describe("Model", () => {
 		});
 	});
 
+	it("Should create only one table instance for two or more models with same table name", async () => {
+		const customTableName = "custom-table-name";
+		const Cat = dynamoose.model("Cat", {"id": String, "type": {"type": String, "default": "cat"}}, {"tableName": customTableName});
+		const Dog = dynamoose.model("Dog", {"id": String, "type": {"type": String, "default": "dog"}}, {"tableName": customTableName});
+		expect(Cat.table()).toStrictEqual(Dog.table());
+		expect(Cat.table().getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
+	});
+
+	it("Should attach subsequent models with same table name to existing table instance", async () => {
+		const customTableName = "custom-table-name";
+		const Cat = dynamoose.model("Cat", {"id": String, "type": {"type": String, "default": "cat"}}, {"tableName": customTableName});
+		const catTable = Cat.table();
+		expect(catTable.getInternalProperties(internalProperties).models).toEqual([Cat]);
+
+		const Dog = dynamoose.model("Dog", {"id": String, "type": {"type": String, "default": "dog"}}, {"tableName": customTableName});
+		expect(catTable.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
+	});
+
 	describe("model.get()", () => {
 		let User, getItemParams, getItemFunction;
 		beforeEach(() => {
