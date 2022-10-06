@@ -193,10 +193,6 @@ dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.rangeKey
 
 dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.map
 
-### alias: string | [string]
-
-This property is the same as [`map`](#map-string--string) and used as an alias for that property.
-
 ### aliases: string | [string]
 
 This property is the same as [`map`](#map-string--string) and used as an alias for that property.
