@@ -197,10 +197,6 @@ dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.map
 
 This property is the same as [`map`](#map-string--string) and used as an alias for that property.
 
-### aliases: string | [string]
-
-This property is the same as [`map`](#map-string--string) and used as an alias for that property.
-
 ### defaultMap: string
 
 dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.defaultMap
