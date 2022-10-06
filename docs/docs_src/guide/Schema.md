@@ -197,6 +197,12 @@ dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.map
 
 This property is the same as [`map`](#map-string--string) and used as an alias for that property.
 
+<!--- I dedicate any and all copyright interest in this software to the
+# public domain. I make this dedication for the benefit of the public at
+# large and to the detriment of my heirs and successors. I intend this
+# dedication to be an overt act of relinquishment in perpetuity of all
+# present and future rights to this software under copyright law. -->
+
 ### defaultMap: string
 
 dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.defaultMap
