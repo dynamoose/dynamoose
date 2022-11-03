@@ -72,4 +72,15 @@ describe("utils.merge_objects", () => {
 			});
 		}
 	});
+
+	it("Should correctly merge schema attributes using the schemaAttributesMerger", () => {
+		expect(
+			utils.merge_objects.main({"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger})(
+				{"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk1", "AttributeType":"S"}]},
+				{"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk2", "AttributeType":"S"}]}
+			)
+		).toEqual(
+			{"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk1", "AttributeType":"S"}, {"AttributeName":"pk2", "AttributeType":"S"}]}
+		);
+	});
 });
