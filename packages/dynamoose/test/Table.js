@@ -2082,6 +2082,15 @@ describe("Table", () => {
 			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John", "item": "Smith"})).toEqual(model);
 		});
 
+		it("Should return correct model using model attributes' defaults", async () => {
+			const catModel = dynamoose.model("Cat", {"id": String, "name": String, "type": {"type": String, "default": "cat"}});
+			const dogModel = dynamoose.model("Dog", {"id": String, "name": String, "type": {"type": String, "default": "dog"}});
+			const table = new dynamoose.Table("Pets", [catModel, dogModel]);
+
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "type": "cat"})).toEqual(catModel);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "type": "dog"}, {"considerDefaults": true})).toEqual(dogModel);
+		});
+
 		it("Should return the first model if it is the only one", async () => {
 			const model = dynamoose.model("User", {"id": String, "name": String});
 			const table = new dynamoose.Table("Table", [model]);

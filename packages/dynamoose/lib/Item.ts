@@ -448,7 +448,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			if (localSettings.condition) {
 				putItemObj = {
 					...putItemObj,
-					...await localSettings.condition.getInternalProperties(internalProperties).requestObject(this.getInternalProperties(internalProperties).model)
+					...await localSettings.condition.getInternalProperties(internalProperties).requestObject([this.getInternalProperties(internalProperties).model])
 				};
 			}
 

@@ -64,6 +64,10 @@ type TransactionType = {
 	condition: ConditionTransaction;
 };
 
+export interface schemaCorrectnessScoresSettings {
+	considerDefaults?: boolean
+}
+
 interface ModelGetSettings {
 	return?: "item" | "request";
 	attributes?: string[];
@@ -106,7 +110,7 @@ interface ModelInternalProperties {
 	options: TableOptionsOptional;
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
 	convertKeyToObject: (key: InputKey) => Promise<KeyObject>;
-	schemaCorrectnessScores: (object: ObjectType) => number[];
+	schemaCorrectnessScores: (object: ObjectType, settings?: any) => number[];
 	schemaForObject: (object: ObjectType) => Schema;
 	dynamoPropertyForAttribute: (attribute: string) => Promise<string>;
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
@@ -231,9 +235,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 				return keyObject;
 			},
-			"schemaCorrectnessScores": (object: ObjectType): number[] => {
-				const schemaCorrectnessScores: number[] = this.getInternalProperties(internalProperties).schemas.map((schema) => {
-					const typePaths = schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true});
+			"schemaCorrectnessScores": (object: ObjectType, settings: schemaCorrectnessScoresSettings = {}): number[] => {
+				const schemas = this.getInternalProperties(internalProperties).schemas;
+				const schemasTypePaths = schemas.map((schema) => {
+					const typePaths = schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true, ...settings});
 					const multipleTypeKeys: string[] = Object.keys(typePaths).filter((key) => typeof typePaths[key] === "number");
 					multipleTypeKeys.forEach((key) => {
 						// TODO: Ideally at some point we'd move this code into the `schema.getTypePaths` method, but that breaks some other things, so holding off on that for now.
@@ -244,7 +249,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						};
 					});
 					return typePaths;
-				}).map((obj) => Object.values(obj).map((obj) => (obj as any)?.matchCorrectness || 0)).map((array) => Math.min(...array));
+				});
+				const schemaCorrectnessScores: number[] = schemasTypePaths
+					.map((obj) => Object.values(obj).map((obj) => (obj as any)?.matchCorrectness || 0))
+					.map((schemaScores) => schemaScores.reduce((total, score) => total + score, 0));
 
 				return schemaCorrectnessScores;
 			},
@@ -354,7 +362,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			{"key": "condition", "settingsIndex": -1, "dynamoKey": "ConditionCheck", "function": async (key: string, condition: Condition): Promise<DynamoDB.ConditionCheck> => ({
 				"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(key)),
 				"TableName": this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name,
-				...condition ? await condition.getInternalProperties(internalProperties).requestObject(this) : {}
+				...condition ? await condition.getInternalProperties(internalProperties).requestObject([this]) : {}
 			} as any)}
 		].reduce((accumulator: ObjectType, currentValue) => {
 			const {key, modifier} = currentValue;
@@ -894,7 +902,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",
-			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
+			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject([this], {"index": {"start": index, "set": (i): void => {
 				index = i;
 			}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}, await getUpdateExpressionObject()),
 			"TableName": this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
@@ -970,7 +978,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			if (settings.condition) {
 				deleteItemParams = {
 					...deleteItemParams,
-					...await settings.condition.getInternalProperties(internalProperties).requestObject(this)
+					...await settings.condition.getInternalProperties(internalProperties).requestObject([this])
 				};
 			}
 
@@ -1077,7 +1085,7 @@ Model.prototype.scan = function (object?: ConditionInitializer): Scan<ItemCarrie
 	return new Scan(this, object);
 };
 Model.prototype.query = function (object?: ConditionInitializer): Query<ItemCarrier> {
-	return new Query(this, object);
+	return new Query([this], object);
 };
 
 // Methods

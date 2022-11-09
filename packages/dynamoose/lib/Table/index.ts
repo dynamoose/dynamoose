@@ -1,13 +1,15 @@
+import {ConditionInitializer} from "../Condition";
 import CustomError from "../Error";
-import {CallbackType, DeepPartial, ObjectType} from "../General";
+import {CallbackType, DeepPartial, ModelType, ObjectType} from "../General";
 import Internal from "../Internal";
+import {Query} from "../ItemRetriever";
 const {internalProperties} = Internal.General;
-import {Model} from "../Model";
+import { Model, schemaCorrectnessScoresSettings } from '../Model'
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import utils from "../utils";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {IndexItem, TableIndex} from "../Schema";
-import {Item as ItemCarrier} from "../Item";
+import {Item, Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
 import {TableClass} from "./types";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
@@ -24,15 +26,15 @@ interface TableInternalProperties {
 	setupFlowRunning: boolean;
 	pendingTasks: any[];
 	pendingTaskPromise: () => Promise<void>;
-	models: any[];
+	models: ModelType<Item>[];
 	// Stores the latest result from `describeTable` for the given table
 	latestTableDetails?: DynamoDB.DescribeTableOutput;
 
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
-	modelForObject: (object: ObjectType) => Promise<Model<ItemCarrier>>;
+	modelForObject: (object: ObjectType, settings?: any) => Promise<ModelType<ItemCarrier>>;
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
 	getHashKey: () => string;
-	getRangeKey: () => string;
+	getRangeKey: () => string | void;
 	runSetupFlow: () => Promise<void>;
 }
 
@@ -40,6 +42,8 @@ interface TableInternalProperties {
 export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	// transaction: any;
 	static defaults: TableOptions;
+
+	query: (object?: ConditionInitializer) => Query<any>;
 
 	/**
 	 * This method is the basic entry point for creating a table in Dynamoose.
@@ -168,7 +172,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			}),
 
 			"getIndexes": async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
-				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model.getInternalProperties(internalProperties).getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
+				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model.getInternalProperties(internalProperties).getIndexes()))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
 					Object.entries(indexes).forEach(([key, value]) => {
 						if (key === "TableIndex") {
 							result[key] = value as TableIndex;
@@ -181,14 +185,14 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 				}, {});
 			},
 			// This function returns the best matched model for the given object input
-			"modelForObject": async (object: ObjectType): Promise<Model<ItemCarrier>> => {
+			"modelForObject": async (object: ObjectType, settings?: schemaCorrectnessScoresSettings): Promise<ModelType<ItemCarrier>> => {
 				const models = this.getInternalProperties(internalProperties).models;
 
 				if (models.length === 1) {
 					return models[0];
 				}
 
-				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model.getInternalProperties(internalProperties).schemaCorrectnessScores(object)));
+				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model.getInternalProperties(internalProperties).schemaCorrectnessScores(object, settings)));
 				const highestModelSchemaCorrectnessScore = Math.max(...modelSchemaCorrectnessScores);
 				const bestModelIndex = modelSchemaCorrectnessScores.indexOf(highestModelSchemaCorrectnessScore);
 
@@ -205,10 +209,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 					"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger
 				})(...createTableAttributeParams);
 			},
-			"getHashKey": (): string => {
+			"getHashKey": () => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getHashKey();
 			},
-			"getRangeKey": (): string => {
+			"getRangeKey": () => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
 			},
 			"runSetupFlow": async (): Promise<void> => {
@@ -354,7 +358,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * ```
 	 * @readonly
 	 */
-	get rangeKey (): string | undefined {
+	get rangeKey () {
 		return this.getInternalProperties(internalProperties).getRangeKey();
 	}
 	/**
@@ -520,6 +524,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	}
 }
 Table.defaults = originalDefaults;
+
+Table.prototype.query = function (object?: ConditionInitializer): Query<ItemCarrier> {
+	return new Query(this.getInternalProperties(internalProperties).models.map((model) => model.Model), object);
+};
 
 
 interface TableCreateOptions {
