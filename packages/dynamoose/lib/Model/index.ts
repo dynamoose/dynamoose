@@ -271,17 +271,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const createTableAttributeParams = await Promise.all(
 					schemas.map((schema) => schema.getCreateTableAttributeParams(this))
 				);
-				// eslint-disable-next-line no-console
-				console.log("createTableAttributeParams", JSON.stringify(createTableAttributeParams));
 
-				const merged = utils.merge_objects.main({
+				return utils.merge_objects.main({
 					"combineMethod": utils.merge_objects.MergeObjectsCombineMethod.ArrayMerge,
 					"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger
 				})(...createTableAttributeParams);
-				// eslint-disable-next-line no-console
-				console.log("merged", JSON.stringify(merged));
-
-				return merged;
 			},
 			"getHashKey": (): string => {
 				return this.getInternalProperties(internalProperties).schemas[0].hashKey;
