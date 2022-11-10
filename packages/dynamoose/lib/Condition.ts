@@ -141,7 +141,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 			"requestObject": async (models: Model<Item>[], settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
 					const object = {[key]: value};
-					const modelForObject = await models[0].table().getInternalProperties(internalProperties).modelForObject(object);
+					const modelForObject = await models[0].getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).modelForObject(object);
 					const newObj = await Item.objectFromSchema(object, modelForObject.Model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
 					const newObjKeys = Object.keys(newObj);
 					// TODO: not quite sure how to unit test the error below. Need to figure this out. Maybe by mocking `Item.objectFromSchema`??? We don't currently have a system in place to do that easily tho.
