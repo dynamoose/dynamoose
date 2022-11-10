@@ -4,7 +4,7 @@ import utils from "./utils";
 import {Condition, ConditionInitializer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Item} from "./Item";
-import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
+import { CallbackType, ObjectType, ItemArray, SortOrder, ModelType } from './General'
 import {PopulateItems} from "./Populate";
 import Internal from "./Internal";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
@@ -67,9 +67,16 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 					[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => {
-				const model = await table.getInternalProperties(internalProperties).modelForObject(item, {"considerDefaults": true});
-				return await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true});
+
+			const buildItemFromModel = (model: ModelType<Item>, item: Model<Item>) => (
+				new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})
+			);
+
+			const array: any = (await Promise.all(result.Items.map(async (item: Model<Item>) => {
+				const suitableModelForBuildItem = await table.getInternalProperties(internalProperties).modelForObject(item);
+				const builtItem = await buildItemFromModel(suitableModelForBuildItem, item);
+				const correctModelOfItem = await table.getInternalProperties(internalProperties).modelForObject(builtItem, {"considerDefaults": true});
+				return await buildItemFromModel(correctModelOfItem, item);
 			}))).filter(Boolean);
 			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => models[0].Item.fromDynamo(key)) : models[0].Item.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
