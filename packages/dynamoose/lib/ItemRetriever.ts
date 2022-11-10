@@ -171,7 +171,7 @@ Object.getOwnPropertyNames(Condition.prototype).forEach((key: string) => {
 
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
 	const {models} = this.getInternalProperties(internalProperties).internalSettings;
-	// TODO: Same.
+	// TODO: Check that all the models shares the same table
 	const table = models[0].getInternalProperties(internalProperties).table();
 
 	const object: any = {
