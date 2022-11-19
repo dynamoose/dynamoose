@@ -2011,6 +2011,13 @@ describe("Table", () => {
 			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John"})).toEqual(model);
 			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "data": "John", "item": "Smith"})).toEqual(model);
 		});
+
+		it("Should return the first model if it is the only one", async () => {
+			const model = dynamoose.model("User", {"id": String, "name": String});
+			const table = new dynamoose.Table("Table", [model]);
+
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "name": "John"})).toEqual(model);
+		});
 	});
 
 	describe("getIndexes", () => {
@@ -2128,6 +2135,18 @@ describe("Table", () => {
 			const model = dynamoose.model("User", new dynamoose.Schema({"id": String, "age": {"type": Number, "rangeKey": true}}));
 			const table = new dynamoose.Table("User", [model]);
 			expect(table.getInternalProperties(internalProperties).getRangeKey()).toEqual("age");
+		});
+	});
+
+	describe("models", () => {
+		it("Should append new models with same table name provided", async () => {
+			const tableName = "pets";
+			const Cat = dynamoose.model("Cat", {"id": String, "name": String});
+			const table = new dynamoose.Table(tableName, [Cat]);
+			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat]);
+
+			const Dog = dynamoose.model("Dog", {"id": String, "name": String}, {"tableName": tableName});
+			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
 		});
 	});
 });

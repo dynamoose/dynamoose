@@ -23,8 +23,10 @@ The following code will create a new DynamoDB instance with the specific configu
 ```js
 // Create new DynamoDB instance
 const ddb = new dynamoose.aws.ddb.DynamoDB({
-	"accessKeyId": "AKID",
-	"secretAccessKey": "SECRET",
+	"credentials": {
+		"accessKeyId": "AKID",
+		"secretAccessKey": "SECRET"
+	},
 	"region": "us-east-1"
 });
 
