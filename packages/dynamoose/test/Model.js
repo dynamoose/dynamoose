@@ -159,6 +159,78 @@ describe("Model", () => {
 				"TableName": "Cat"
 			});
 		});
+
+		it("Should create table with a custom name if provided", async () => {
+			const customTableName = "custom-table-name";
+
+			const model = dynamoose.model("Cat", {"id": String}, {"tableName": customTableName});
+			expect(model.table().name).toEqual(customTableName);
+			expect(await model.table().create({"return": "request"})).toEqual({
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				],
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
+				},
+				"TableName": customTableName
+			});
+		});
+
+		it("Should create table with a custom name and prefix if provided", async () => {
+			const prefix = "prefix-";
+			const customTableName = "custom-table-name";
+			const expectedTableName = `${prefix}${customTableName}`;
+
+			const model = dynamoose.model("Cat", {"id": String}, {"tableName": customTableName, "prefix": prefix});
+			expect(model.table().name).toEqual(expectedTableName);
+			expect(await model.table().create({"return": "request"})).toEqual({
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				],
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
+				},
+				"TableName": expectedTableName
+			});
+		});
+	});
+
+	it("Should create only one table instance for two or more models with same table name", async () => {
+		const customTableName = "custom-table-name";
+		const Cat = dynamoose.model("Cat", {"id": String, "type": {"type": String, "default": "cat"}}, {"tableName": customTableName});
+		const Dog = dynamoose.model("Dog", {"id": String, "type": {"type": String, "default": "dog"}}, {"tableName": customTableName});
+		expect(Cat.table()).toStrictEqual(Dog.table());
+		expect(Cat.table().getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
+	});
+
+	it("Should attach subsequent models with same table name to existing table instance", async () => {
+		const customTableName = "custom-table-name";
+		const Cat = dynamoose.model("Cat", {"id": String, "type": {"type": String, "default": "cat"}}, {"tableName": customTableName});
+		const catTable = Cat.table();
+		expect(catTable.getInternalProperties(internalProperties).models).toEqual([Cat]);
+
+		const Dog = dynamoose.model("Dog", {"id": String, "type": {"type": String, "default": "dog"}}, {"tableName": customTableName});
+		expect(catTable.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
 	});
 
 	describe("model.get()", () => {
