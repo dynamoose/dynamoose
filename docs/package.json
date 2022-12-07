@@ -19,7 +19,7 @@
     "npm-to-yarn": "^1.0.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "simple-git": "^3.11.0"
+    "simple-git": "^3.15.0"
   },
   "browserslist": {
     "production": [
