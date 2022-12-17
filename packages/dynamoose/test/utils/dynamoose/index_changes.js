@@ -225,4 +225,38 @@ describe("utils.dynamoose.index_changes", () => {
 			expect(await utils.dynamoose.index_changes(table, test.input)).toEqual(test.output);
 		});
 	});
+
+	it("Should not recreate indexes when Table throughput is set `ON_DEMAND`", async () => {
+		const test = {
+			"input": [
+				{
+					"IndexArn": "arn:aws:dynamodb:ddblocal:000000000000:table/User/index/data-index-2",
+					"IndexName": "data-index-2",
+					"IndexSizeBytes": 0,
+					"IndexStatus": "ACTIVE",
+					"ItemCount": 0,
+					"KeySchema": [
+						{
+							"AttributeName": "data",
+							"KeyType": "HASH"
+						}
+					],
+					"Projection": {
+						"ProjectionType": "ALL"
+					},
+					"ProvisionedThroughput": {
+						"NumberOfDecreasesToday": 0,
+						"ReadCapacityUnits": 0,
+						"WriteCapacityUnits": 0
+					}
+				}
+			],
+			"schema": {"id": String, "data": {"type": String, "index": {"name": "data-index-2", "type": "global", "project": true}}},
+			"output": []
+		};
+
+		const Model = dynamoose.model("Model", test.schema);
+		const table = new dynamoose.Table("Table", [Model], {"create": false, "waitForActive": false, "update": false, "throughput": "ON_DEMAND"});
+		expect(await utils.dynamoose.index_changes(table, test.input)).toEqual(test.output);
+	});
 });
