@@ -37,7 +37,7 @@ Table.defaults = {
 
 export = {
 	/**
-	 * This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Item initializer that you can use to create instances of the given model.
+	 * This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns an item initializer that you can use to create instances of the given model.
 	 *
 	 * The `name` parameter is a string representing the table name that will be used to store items created by this model.
 	 *

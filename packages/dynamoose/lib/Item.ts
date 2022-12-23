@@ -134,7 +134,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	}
 
 	/**
-	 * This function returns a JSON object representation of the item. This is most commonly used when comparing a item to an object you receive elsewhere without worrying about prototypes.
+	 * This function returns a JSON object representation of the item. This is most commonly used when comparing an item to an object you receive elsewhere without worrying about prototypes.
 	 *
 	 * ```js
 	 * const user = new User({"id": 1, "name": "Tim"});
@@ -143,7 +143,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * console.log(user.toJSON()); // {"id": 1, "name": "Tim"}
 	 * ```
 	 *
-	 * Due to the fact that a item instance is based on an object it is rare that you will have to use this function since you can access all the properties of the item directly. For example, both of the results will yield the same output.
+	 * Due to the fact that an item instance is based on an object it is rare that you will have to use this function since you can access all the properties of the item directly. For example, both of the results will yield the same output.
 	 *
 	 * ```js
 	 * const user = new User({"id": 1, "name": "Tim"});
@@ -238,7 +238,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	}
 
 	/**
-	 * This saves a item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
 	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. Nothing will be passed into the result for the promise.
 	 *
@@ -259,7 +259,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 */
 	save (): Promise<Item>;
 	/**
-	 * This saves a item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
 	 * This method returns nothing. It accepts a function into the `callback` parameter. Nothing will be passed into the result for the callback.
 	 *
@@ -283,7 +283,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 */
 	save (callback: CallbackType<Item, any>): void;
 	/**
-	 * This saves a item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
 	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. Nothing will be passed into the result for the promise.
 	 *
@@ -318,7 +318,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 */
 	save (settings: ItemSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
 	/**
-	 * This saves a item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
 	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
 	 *
@@ -354,7 +354,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 */
 	save (settings: ItemSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, any>): void;
 	/**
-	 * This saves a item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
 	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
 	 *
@@ -389,7 +389,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 */
 	save (settings: ItemSaveSettings & {return: "item"}): Promise<Item>;
 	/**
-	 * This saves a item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
 	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
 	 *
