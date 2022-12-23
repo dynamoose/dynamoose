@@ -1,6 +1,6 @@
 The Dynamoose item represents an item for a given model in DynamoDB. This item can created locally (meaning it's not yet saved in DynamoDB), or created from an item already stored in DynamoDB (ex. `Model.get`).
 
-A item is similar to a row in a relational database or a document in MongoDB.
+An item is similar to a row in a relational database or a document in MongoDB.
 
 ## new Model(object)
 
@@ -14,12 +14,12 @@ const myUser = new User({
 });
 console.log(myUser.id); // 1
 
-// myUser is now a item instance of the User model
+// myUser is now an item instance of the User model
 ```
 
 ## item.save([settings,] [callback])
 
-This saves a item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
 
@@ -90,7 +90,7 @@ myUser.delete((error) => {
 This method will make multiple calls to DynamoDB, which increases latency for your application. DynamoDB was not designed for this type of SQL operation. Instead of using this method, consider changing your data model to query DynamoDB and retrieve the data you need all in a single request.
 :::
 
-This allows you to populate a item with item instances for the subitems you are referencing in your schema. This function will return a promise, or call the `callback` parameter function upon completion.
+This allows you to populate an item with item instances for the subitems you are referencing in your schema. This function will return a promise, or call the `callback` parameter function upon completion.
 
 The `settings` parameter is an object you can pass in with the following properties:
 
