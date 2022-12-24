@@ -44,7 +44,7 @@ Set's are different from Array's since they require each item in the Set be uniq
 
 When using `saveUnknown` with a set, the type recognized by Dynamoose will be the underlying JavaScript Set constructor. If you have a set type defined in your schema the underlying type will be an Array.
 
-Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve a item with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
+Custom Dynamoose Types are not supported with the `saveUnknown` property. For example, if you wish you retrieve an item with a Date type, Dynamoose will return it as a number if that property does not exist in the schema and `saveUnknown` is enabled for that given property.
 
 For types that are `Nested Types`, you must define a [`schema` setting](#schema-object--array) that includes the nested schema for that given attribute.
 
@@ -98,7 +98,7 @@ const gameSchema = new dynamoose.Schema({
 });
 ```
 
-You can then set items to be a Item instance of that Model, a value of the `hashKey` (if you don't have a `rangeKey`), or an object representing the `hashKey` & `rangeKey` (if you have a `rangeKey`).
+You can then set items to be an Item instance of that Model, a value of the `hashKey` (if you don't have a `rangeKey`), or an object representing the `hashKey` & `rangeKey` (if you have a `rangeKey`).
 
 ```js
 const dad = new User({

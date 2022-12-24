@@ -14,9 +14,9 @@ dyno_jsdoc_dist/Model/index.js|model.table
 
 ## model.get(key[, settings][, callback])
 
-You can use Model.get to retrieve a item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
+You can use Model.get to retrieve an item from DynamoDB. This method uses the `getItem` DynamoDB API call to retrieve the object.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. A Item instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An Item instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
@@ -391,7 +391,7 @@ The `validate` Schema attribute property will only be run on `$SET` values. This
 
 ## model.delete(key[, settings][, callback])
 
-You can use Model.delete to delete a item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
+You can use Model.delete to delete an item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
 
 `key` can be a string representing the hashKey or an object containing the hashKey & rangeKey.
 
