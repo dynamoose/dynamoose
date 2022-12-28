@@ -37,7 +37,7 @@ export type ModelType<T extends Item> = T & Model<T> & ModelItemConstructor<T>;
 // This represents an item array. This is used for the output of functions such as `scan`, `query`, and `batchGet`. These functions can extend this property to add additional properties or functions. However this represents the shared properties/functions for all item arrays.
 export interface ItemArray<T> extends Array<T> {
 	populate: () => Promise<ItemArray<T>>;
-	toJSON: () => ObjectType;
+	toJSON: () => ObjectType[];
 }
 
 export enum SortOrder {

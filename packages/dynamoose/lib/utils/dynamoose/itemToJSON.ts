@@ -5,3 +5,7 @@ import {Item} from "../../Item";
 export function itemToJSON (this: Item | ItemArray<Item>): ObjectType {
 	return JSON.parse(JSON.stringify(Array.isArray(this) ? [...this] : {...this}));
 }
+
+export function itemArrayToJSON (this: ItemArray<Item>): ObjectType[] {
+  return JSON.parse(JSON.stringify([...this]));
+}
