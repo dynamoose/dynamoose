@@ -87,6 +87,7 @@ interface ModelBatchGetItemsResponse<T> extends ItemArray<T> {
 interface ModelBatchGetSettings {
 	return?: "items" | "request";
 	attributes?: string[];
+	consistent?: boolean;
 }
 interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
@@ -488,6 +489,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			};
 
+			if (settings.consistent !== undefined && settings.consistent !== null) {
+				getItemParams.ConsistentRead = settings.consistent;
+			}
 			if (settings.attributes) {
 				params.RequestItems[table.getInternalProperties(internalProperties).name].AttributesToGet = settings.attributes;
 			}
