@@ -1245,7 +1245,7 @@ describe("Model", () => {
 				});
 
 				it("Should send consistent (false) to batchGetItem", async () => {
-					getItemFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
 					await callType.func(User).bind(User)([1], {"consistent": false});
 					expect(params).toBeInstanceOf(Object);
 					expect(params).toEqual({
@@ -1261,7 +1261,7 @@ describe("Model", () => {
 				});
 
 				it("Should send consistent (true) to batchGetItem", async () => {
-					getItemFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
 					await callType.func(User).bind(User)([1], {"consistent": true});
 					expect(params).toBeInstanceOf(Object);
 					expect(params).toEqual({
