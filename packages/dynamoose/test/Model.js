@@ -1250,8 +1250,8 @@ describe("Model", () => {
 					expect(params).toBeInstanceOf(Object);
 					expect(params).toEqual({
 						"RequestItems": {
-							"ConsistentRead": false,
 							"User": {
+								"ConsistentRead": false,
 								"Keys": [
 									{"id": {"N": "1"}}
 								]
@@ -1266,8 +1266,8 @@ describe("Model", () => {
 					expect(params).toBeInstanceOf(Object);
 					expect(params).toEqual({
 						"RequestItems": {
-							"ConsistentRead": true,
 							"User": {
+								"ConsistentRead": true,
 								"Keys": [
 									{"id": {"N": "1"}}
 								]

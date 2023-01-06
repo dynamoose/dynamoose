@@ -490,7 +490,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			};
 
 			if (settings.consistent !== undefined && settings.consistent !== null) {
-				getItemParams.ConsistentRead = settings.consistent;
+				params.RequestItems[table.getInternalProperties(internalProperties).name].ConsistentRead = settings.consistent;
 			}
 			if (settings.attributes) {
 				params.RequestItems[table.getInternalProperties(internalProperties).name].AttributesToGet = settings.attributes;
