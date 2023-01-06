@@ -1244,6 +1244,68 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send consistent (false) to batchGetItem", async () => {
+					getItemFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([1], {"consistent": false});
+					expect(params).toBeInstanceOf(Object);
+					expect(params).toEqual({
+						"RequestItems": {
+							"ConsistentRead": false,
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should send consistent (true) to batchGetItem", async () => {
+					getItemFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([1], {"consistent": true});
+					expect(params).toBeInstanceOf(Object);
+					expect(params).toEqual({
+						"RequestItems": {
+							"ConsistentRead": true,
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should get consistent (false) back in request", async () => {
+					const result = await callType.func(User).bind(User)([1], {"return": "request", "consistent": false});
+					expect(params).not.toBeDefined();
+					expect(result).toEqual({
+						"RequestItems": {
+							"User": {
+								"ConsistentRead": false,
+								"Keys": [
+									{"id": {"N": "1"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should get consistent (true) back in request", async () => {
+					const result = await callType.func(User).bind(User)([1], {"return": "request", "consistent": true});
+					expect(params).not.toBeDefined();
+					expect(result).toEqual({
+						"RequestItems": {
+							"User": {
+								"ConsistentRead": true,
+								"Keys": [
+									{"id": {"N": "1"}}
+								]
+							}
+						}
+					});
+				});
+
 				it("Should throw error if setting option return to request and set function throws error", async () => {
 					const Item = dynamoose.model("Item", {"id": {
 						"type": Number,
