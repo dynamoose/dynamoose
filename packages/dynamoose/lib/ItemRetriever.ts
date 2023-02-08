@@ -38,6 +38,7 @@ interface ItemRetrieverInternalProperties {
 		index?: string;
 		startAt?: ObjectType;
 		limit?: number;
+		skipConformToSchema?: boolean
 	}
 }
 
@@ -46,6 +47,7 @@ interface ItemRetrieverInternalProperties {
 abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverInternalProperties> {
 	getRequest: (this: ItemRetriever) => Promise<any>;
 	all: (this: ItemRetriever, delay?: number, max?: number) => this;
+	skipConformToSchema: (this: ItemRetriever) => this;
 	limit: (this: ItemRetriever, value: number) => this;
 	startAt: (this: ItemRetriever, value: ObjectType) => this;
 	attributes: (this: ItemRetriever, value: string[]) => this;
@@ -66,7 +68,11 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 					[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})))).filter((a) => Boolean(a));
+			const array: any = (await Promise.all(result.Items.map(async (item) => 
+				this.getInternalProperties(internalProperties).settings.skipConformToSchema  
+					? new model.Item(item, { "type": "fromDynamo" })
+					: await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})))
+			).filter((a) => Boolean(a));
 			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => model.Item.fromDynamo(key)) : model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
 			array[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`];
@@ -305,6 +311,10 @@ settings.forEach((item) => {
 ItemRetriever.prototype.all = function (this: ItemRetriever, delay = 0, max = 0): ItemRetriever {
 	this.getInternalProperties(internalProperties).settings.all = {delay, max};
 	return this;
+};
+ItemRetriever.prototype.skipConformToSchema = function (this: ItemRetriever) {
+    this.getInternalProperties(internalProperties).settings.skipConformToSchema = true
+    return this;
 };
 
 export interface Scan<T> extends ItemRetriever, BasicOperators<Scan<T>> {
