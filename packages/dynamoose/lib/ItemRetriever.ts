@@ -35,7 +35,7 @@ interface ItemRetrieverInternalProperties {
 		attributes?: string[];
 		count?: number;
 		consistent?: boolean;
-		index?: string;
+		index?: string | { auto: boolean };
 		startAt?: ObjectType;
 		limit?: number;
 	}
@@ -51,7 +51,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 	attributes: (this: ItemRetriever, value: string[]) => this;
 	count: (this: ItemRetriever) => this;
 	consistent: (this: ItemRetriever) => this;
-	using: (this: ItemRetriever, value: string) => this ;
+	using: (this: ItemRetriever, value: string | { auto: boolean }) => this;
 	exec (this: ItemRetriever, callback?: any): any {
 		let timesRequested = 0;
 		const {model} = this.getInternalProperties(internalProperties).internalSettings;
@@ -174,18 +174,19 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		object.ExclusiveStartKey = Item.isDynamoObject(this.getInternalProperties(internalProperties).settings.startAt) ? this.getInternalProperties(internalProperties).settings.startAt : model.Item.objectToDynamo(this.getInternalProperties(internalProperties).settings.startAt);
 	}
 	const indexes = await model.getInternalProperties(internalProperties).getIndexes();
-	if (this.getInternalProperties(internalProperties).settings.index) {
+	const useIndex: string | { auto: boolean } | undefined = this.getInternalProperties(internalProperties).settings.index;
+	if (typeof useIndex === "string") {
 		object.IndexName = this.getInternalProperties(internalProperties).settings.index;
 	} else if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
-		const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(model);
-
-		const indexSpec = utils.find_best_index(indexes, comparisonChart);
-		if (!indexSpec.tableIndex) {
-			if (!indexSpec.indexName) {
-				throw new CustomError.InvalidParameter("Index can't be found for query.");
+		if (useIndex === undefined || (typeof useIndex === "object" && useIndex.auto === true)) {
+			const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(model);
+			const indexSpec = utils.find_best_index(indexes, comparisonChart);
+			if (!indexSpec.tableIndex) {
+				if (!indexSpec.indexName) {
+					throw new CustomError.InvalidParameter("Index can't be found for query.");
+				}
+				object.IndexName = indexSpec.indexName;
 			}
-
-			object.IndexName = indexSpec.indexName;
 		}
 	}
 	function moveParameterNames (val, prefix): void {
