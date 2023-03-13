@@ -5,6 +5,9 @@
   "homepage": "https://dynamoosejs.com",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dynamoose/dynamoose.git"
