@@ -599,6 +599,7 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 };
 export interface ItemObjectFromSchemaSettings {
 	type: "toDynamo" | "fromDynamo";
+	readStrict?: boolean;
 	schema?: Schema;
 	checkExpiredItem?: boolean;
 	saveUnknown?: boolean;
@@ -880,6 +881,10 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 };
 // This function will modify the item to conform to the Schema
 Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Item> {
+	if (settings.readStrict === false && settings.type === "fromDynamo") {
+		return this;
+	}
+
 	let item = this;
 	if (settings.type === "fromDynamo") {
 		item = await this.prepareForResponse();

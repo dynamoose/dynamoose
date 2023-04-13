@@ -549,5 +549,6 @@ export interface TableOptions {
 	tags: {[key: string]: string};
 	tableClass: TableClass;
 	initialize: boolean;
+	readStrict: boolean;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;
