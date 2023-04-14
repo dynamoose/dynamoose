@@ -29,8 +29,8 @@
     "js-object-utilities": "^2.1.0"
   },
   "peerDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.142.0",
-    "@aws-sdk/util-dynamodb": "^3.142.0"
+    "@aws-sdk/client-dynamodb": "3.x",
+    "@aws-sdk/util-dynamodb": "3.x"
   },
   "devDependencies": {
     "dynamoose-logger": "^3.1.0"
