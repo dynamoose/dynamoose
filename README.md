@@ -30,6 +30,9 @@
 	<a href="https://charlie.fish/contact">
 		<img src="https://img.shields.io/badge/contact-me-blue" alt="Contact">
 	</a>
+	<a rel="me" href="https://mastodon.social/@dynamoose">
+		<img alt="Mastodon Follow" src="https://img.shields.io/mastodon/follow/110203918766866705?style=social">
+	</a>
 	<a href="https://twitter.com/DynamooseJS">
 		<img src="https://img.shields.io/twitter/follow/dynamoosejs?style=social" alt="Twitter">
 	</a>
@@ -61,6 +64,7 @@ Take a look at our [website](https://dynamoosejs.com) for information about how 
 #### Social
 
 - [Slack](https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY)
+- <a rel="me" href="https://mastodon.social/@dynamoose">Mastodon</a>
 - [Twitter](https://twitter.com/DynamooseJS)
 
 ### Branch Strategy
@@ -73,4 +77,3 @@ Below you will find the current branch strategy for the project. Work taking pla
 | [`v3.1.0` (tag)](https://github.com/dynamoose/dynamoose/tree/v3.1.0) | 3.1.0 | latest | - [Documentation](https://dynamoosejs.com) |
 | [`v2`](https://github.com/dynamoose/dynamoose/tree/v2) | 2.8.x |   | - [Documentation](https://v2.dynamoose.pages.dev) |
 | [`v2.8.8` (tag)](https://github.com/dynamoose/dynamoose/tree/v2.8.8) | 2.8.8 | latest-2 | - [Documentation](https://v2.dynamoosejs.com)
-
