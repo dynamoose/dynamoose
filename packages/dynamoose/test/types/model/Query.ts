@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-unused-vars: 0, no-console: 0 */
 
 import {UserTypedModel, UserModel, User} from "../Model";
-import {SortOrder} from "../../../dist/General";
+import {ObjectType, SortOrder} from "../../../dist/General";
 import {Condition} from "../../../dist";
 import {AnyItem} from "../../../dist/Item";
 import {QueryResponse, Query} from "../../../dist/ItemRetriever";
@@ -115,3 +115,6 @@ isAssignableToQuery = UserTypedModel.query("name").in(["Charlie", "Bob"]);
 
 // query.between(a, b)
 isAssignableToQuery = UserTypedModel.query().filter("age").between(5, 9);
+
+// query.exec().toJSON()
+const json: ObjectType[] = (await UserTypedModel.query().filter("age").between(5, 9).exec()).toJSON();

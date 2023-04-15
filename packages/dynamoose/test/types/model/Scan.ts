@@ -4,6 +4,7 @@ import {UserTypedModel, User, UserModel} from "../Model";
 import {Condition} from "../../../dist";
 import {AnyItem} from "../../../dist/Item";
 import {ScanResponse, Scan} from "../../../dist/ItemRetriever";
+import {ObjectType} from "../../../dist/General";
 
 // scan.exec([callback])
 async function scanExec (): Promise<User[]> {
@@ -113,3 +114,6 @@ isAssignableToScan = UserTypedModel.scan("name").in(["Charlie", "Bob"]);
 
 // scan.between(a, b)
 isAssignableToScan = UserTypedModel.scan().filter("age").between(5, 9);
+
+// scan.exec().toJSON()
+const json: ObjectType[] = (await UserTypedModel.scan().filter("age").between(5, 9).exec()).toJSON();
