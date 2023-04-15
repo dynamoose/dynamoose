@@ -62,7 +62,10 @@ const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCom
 };
 
 const schemaAttributesMerger: ArrayItemsMerger = (target, source) => {
-	if (!target.length && !source.length) return [];
+	if (!target.length && !source.length) {
+		return [];
+	}
+
 	const firstElement = target[0] || source[0];
 
 	const keyByIteratee = "AttributeName" in firstElement ? "AttributeName" : "IndexName";
