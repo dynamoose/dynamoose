@@ -73,3 +73,30 @@ describe("utils.merge_objects", () => {
 		}
 	});
 });
+
+describe("utils.merge_objects.schemaAttributesMerger", () => {
+	it("Should be a function", () => {
+		expect(utils.merge_objects.schemaAttributesMerger).toBeInstanceOf(Function);
+	});
+
+	const tests = [
+		{
+			"input": [{"AttributeDefinitions":[]}, {"AttributeDefinitions":[]}],
+			"output": {"AttributeDefinitions":[]}
+		},
+		{
+			"input": [{"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk1", "AttributeType":"S"}]}, {"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk2", "AttributeType":"S"}]}],
+			"output": {"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk1", "AttributeType":"S"}, {"AttributeName":"pk2", "AttributeType":"S"}]}
+		},
+		{
+			"input": [{"AttributeDefinitions":[]}, {"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk2", "AttributeType":"S"}]}],
+			"output": {"AttributeDefinitions":[{"AttributeName":"pk", "AttributeType":"S"}, {"AttributeName":"pk2", "AttributeType":"S"}]}
+		}
+	];
+
+	tests.forEach((test) => {
+		it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
+			expect(utils.merge_objects.main({"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger})(...test.input)).toEqual(test.output);
+		});
+	});
+});

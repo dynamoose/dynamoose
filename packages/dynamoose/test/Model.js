@@ -120,6 +120,109 @@ describe("Model", () => {
 			const model = dynamoose.model("User", {"id": String});
 			expect(model.Model.getInternalProperties(internalProperties).table).not.toThrow("No table has been registered for User model. Use `new dynamoose.Table` to register a table for this model.");
 		});
+
+		it("Should create table with all the indexes from all the schemas if multiple schemas passed in", async () => {
+			const pk = {
+				"type": String,
+				"hashKey": true,
+				"index": {"name": "primary"}
+			};
+			const schema1 = new dynamoose.Schema({
+				"pk": pk,
+				"pk1": {
+					"type": String,
+					"index": {"name": "gsi1"}
+				},
+				"foo": String
+			});
+			const schema2 = new dynamoose.Schema({
+				"pk": pk,
+				"pk2": {
+					"type": String,
+					"index": {"name": "gsi2"}
+				},
+				"bar": Number
+			});
+			const model = dynamoose.model("User", [schema1, schema2]);
+
+			expect(await model.table().create({"return": "request"})).toEqual({
+				"TableName": "User",
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
+				},
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "pk",
+						"AttributeType": "S"
+					},
+					{
+						"AttributeName": "pk1",
+						"AttributeType": "S"
+					},
+					{
+						"AttributeName": "pk2",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "pk",
+						"KeyType": "HASH"
+					}
+				],
+				"GlobalSecondaryIndexes": [
+					{
+						"IndexName": "primary",
+						"KeySchema": [
+							{
+								"AttributeName": "pk",
+								"KeyType": "HASH"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					},
+					{
+						"IndexName": "gsi1",
+						"KeySchema": [
+							{
+								"AttributeName": "pk1",
+								"KeyType": "HASH"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					},
+					{
+						"IndexName": "gsi2",
+						"KeySchema": [
+							{
+								"AttributeName": "pk2",
+								"KeyType": "HASH"
+							}
+						],
+						"Projection": {
+							"ProjectionType": "ALL"
+						},
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					}
+				]
+			});
+		});
 	});
 
 	describe("model.name", () => {
