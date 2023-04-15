@@ -26,6 +26,8 @@ const shouldPassGetWithNoReturnSetting = model.get({"id": 1}, {"attributes": ["s
 const shouldPassDeleteWithNoReturnSetting = model.delete({"id": 1}, {"condition": new dynamoose.Condition("name").eq("Charlie")});
 const shouldPassUpdateWithNoReturnSetting = model.update({"id": 1}, {"name": "Charlie"}, {"condition": new dynamoose.Condition("name").eq("Bob")});
 const shouldPassBatchGetWithNoReturnSetting = model.batchGet([{"id": 1}, {"id": 2}], {});
+const shouldPassBatchGetWithConsistentTrue = model.batchGet([{"id": 1}, {"id": 2}], {"consistent": true});
+const shouldPassBatchGetWithConsistentFalse = model.batchGet([{"id": 1}, {"id": 2}], {"consistent": false});
 const shouldPassBatchPutWithNoReturnSetting = model.batchPut([{"id": 1}, {"id": 2}], {});
 const shouldPassBatchDeleteWithNoReturnSetting = model.batchDelete([{"id": 1}, {"id": 2}], {});
 const shouldPassCreateWithNoReturnSettingCallback = model.create({"id": 1}, {"overwrite": true}, () => {});
@@ -33,6 +35,8 @@ const shouldPassGetWithNoReturnSettingCallback = model.get({"id": 1}, {"attribut
 const shouldPassDeleteWithNoReturnSettingCallback = model.delete({"id": 1}, {"condition": new dynamoose.Condition("name").eq("Charlie")}, () => {});
 const shouldPassUpdateWithNoReturnSettingCallback = model.update({"id": 1}, {"name": "Charlie"}, {"condition": new dynamoose.Condition("name").eq("Bob")}, () => {});
 const shouldPassBatchGetWithNoReturnSettingCallback = model.batchGet([{"id": 1}, {"id": 2}], {}, () => {});
+const shouldPassBatchGetWithNoReturnSettingCallbackConsistentTrue = model.batchGet([{"id": 1}, {"id": 2}], {"consistent": true}, () => {});
+const shouldPassBatchGetWithNoReturnSettingCallbackConsistentFalse = model.batchGet([{"id": 1}, {"id": 2}], {"consistent": false}, () => {});
 const shouldPassBatchPutWithNoReturnSettingCallback = model.batchPut([{"id": 1}, {"id": 2}], {}, () => {});
 const shouldPassBatchDeleteWithNoReturnSettingCallback = model.batchDelete([{"id": 1}, {"id": 2}], {}, () => {});
 
