@@ -1,3 +1,4 @@
+import {GeneralObject} from "js-object-utilities";
 import {AnySimpleObject, AnySimpleValue} from "../Types";
 
 /**
@@ -13,7 +14,7 @@ import {AnySimpleObject, AnySimpleValue} from "../Types";
  * @returns An object created from the array where each key is the value of the key in the object in the array, and the value is the object in the array.
  * @private
  */
-export default <T = AnySimpleObject | AnySimpleValue>(array: T[], key: string): AnySimpleObject => {
+export default <T = AnySimpleObject | AnySimpleValue>(array: T[], key: string): GeneralObject<T> => {
 	if (!array) {
 		return {};
 	}
