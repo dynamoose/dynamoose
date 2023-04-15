@@ -2,8 +2,8 @@ import {ItemArray, ObjectType} from "../../General";
 import {Item} from "../../Item";
 
 // TODO optimize this in the future after we add performance tests. Doing `JSON.parse(JSON.stringify()) can be kinda slow.
-export function itemToJSON (this: Item): ObjectType
-export function itemToJSON (this: ItemArray<Item>): ObjectType[]
+export function itemToJSON (this: Item): ObjectType;
+export function itemToJSON (this: ItemArray<Item>): ObjectType[];
 export function itemToJSON (this: Item | ItemArray<Item>): ObjectType | ObjectType[] {
 	return JSON.parse(JSON.stringify(Array.isArray(this) ? [...this] : {...this}));
 }
