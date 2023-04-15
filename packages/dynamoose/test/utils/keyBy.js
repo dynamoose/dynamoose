@@ -7,8 +7,16 @@ describe("keyBy", () => {
 
 	const tests = [
 		{
+			"input": [null, "id"],
+			"output": {}
+		},
+		{
 			"input": [[{"id": "1", "name": "One"}, {"id": "2", "name": "Two"}], "id"],
 			"output": {"1": {"id": "1", "name": "One"}, "2": {"id": "2", "name": "Two"}}
+		},
+		{
+			"input": [["1", "2"]],
+			"output": {"1": "1", "2": "2"}
 		},
 		{
 			"input": [Object.values({"data": {"id": "1", "name": "One"}}), "id"],
