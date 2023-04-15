@@ -75,7 +75,8 @@ module.exports = {
 							"href": "https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY"
 						},
 						{
-							"html": "<a rel=\"me\" href=\"https://mastodon.social/@dynamoose\">Mastodon</a>"
+							"label": "Mastodon",
+							"href": "https://mastodon.social/@dynamoose"
 						},
 						{
 							"label": "Twitter",
