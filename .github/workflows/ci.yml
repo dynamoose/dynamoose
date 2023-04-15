@@ -47,7 +47,8 @@ jobs:
           # 15.x,
           16.x,
           17.x,
-          18.x
+          18.x,
+          19.x
         ]
       fail-fast: false
     steps:
