@@ -267,8 +267,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return Object.keys(obj)[0];
 			},
 			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
-				// TODO: implement this
-				return this.getInternalProperties(internalProperties).schemas[0].getCreateTableAttributeParams(this);
+				const schemas = this.getInternalProperties(internalProperties).schemas as Schema[];
+				const createTableAttributeParams = await Promise.all(schemas.map((schema) => schema.getCreateTableAttributeParams(this)));
+
+				return utils.merge_objects.main({
+					"combineMethod": utils.merge_objects.MergeObjectsCombineMethod.ArrayMerge,
+					"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger
+				})(...createTableAttributeParams);
 			},
 			"getHashKey": (): string => {
 				return this.getInternalProperties(internalProperties).schemas[0].hashKey;

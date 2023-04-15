@@ -1,6 +1,8 @@
 // This function is used to merge objects for combining multiple responses.
 
 import {GeneralObject} from "js-object-utilities";
+import {ArrayItemsMerger} from "../Types";
+import keyBy from "./keyBy";
 
 enum MergeObjectsCombineMethod {
 	ObjectCombine = "object_combine",
@@ -10,6 +12,7 @@ enum MergeObjectsCombineMethod {
 
 interface MergeObjectsSettings {
 	combineMethod: MergeObjectsCombineMethod;
+	arrayItemsMerger?: ArrayItemsMerger;
 }
 
 const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCombineMethod.ArrayMerge}) => <T>(...args: GeneralObject<T>[]): GeneralObject<T> => {
@@ -37,7 +40,7 @@ const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCom
 						returnObject[key] = [returnObject[key], arg[key]];
 					}
 				} else if (Array.isArray(returnObject[key]) && Array.isArray(arg[key])) {
-					returnObject[key] = [...returnObject[key], ...(arg[key] as any)];
+					returnObject[key] = settings.arrayItemsMerger ? settings.arrayItemsMerger(returnObject[key], arg[key] as any) : [...returnObject[key], ...(arg[key] as any)];
 				} else if (Array.isArray(returnObject[key])) {
 					returnObject[key] = [...returnObject[key], arg[key]];
 				} else if (returnObject[key]) {
@@ -58,7 +61,25 @@ const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCom
 	return returnObject;
 };
 
+const schemaAttributesMerger: ArrayItemsMerger = (target, source) => {
+	if (!target.length && !source.length) {
+		return [];
+	}
+
+	const firstElement = target[0] || source[0];
+
+	const keyByIteratee = "AttributeName" in firstElement ? "AttributeName" : "IndexName";
+
+	const targetKeyBy = keyBy(target, keyByIteratee);
+	const sourceKeyBy = keyBy(source, keyByIteratee);
+	const merged = main({"combineMethod": MergeObjectsCombineMethod.ObjectCombine})<(typeof target)[0]>({}, targetKeyBy, sourceKeyBy);
+
+	return Object.values(merged);
+};
+
 const returnObject: any = main();
 returnObject.main = main;
+returnObject.MergeObjectsCombineMethod = MergeObjectsCombineMethod;
+returnObject.schemaAttributesMerger = schemaAttributesMerger;
 
 export = returnObject;

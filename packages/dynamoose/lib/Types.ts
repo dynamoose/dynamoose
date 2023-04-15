@@ -26,3 +26,8 @@ declare global {
 	// eslint-disable-next-line @typescript-eslint/no-empty-interface
 	interface ReadableStream {}
 }
+
+export type AnySimpleValue = string | number | symbol;
+export type AnySimpleObject = Record<string, AnySimpleValue>;
+
+export type ArrayItemsMerger = <T extends AnySimpleObject = AnySimpleObject>(target: T[], source: T[]) => T[];
