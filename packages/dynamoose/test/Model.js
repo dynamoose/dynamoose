@@ -1244,65 +1244,98 @@ describe("Model", () => {
 					});
 				});
 
-				it("Should send consistent (false) to batchGetItem", async () => {
-					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
-					await callType.func(User).bind(User)([1], {"consistent": false});
-					expect(params).toBeInstanceOf(Object);
-					expect(params).toEqual({
-						"RequestItems": {
-							"User": {
-								"ConsistentRead": false,
-								"Keys": [
-									{"id": {"N": "1"}}
-								]
+				describe("Consistent Read", () => {
+					it("Should not send consistent to batchGetItem if undefined", async () => {
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						await callType.func(User).bind(User)([1], {});
+						expect(params).toBeInstanceOf(Object);
+						expect(params).toEqual({
+							"RequestItems": {
+								"User": {
+									"Keys": [
+										{"id": {"N": "1"}}
+									]
+								}
 							}
-						}
+						});
 					});
-				});
 
-				it("Should send consistent (true) to batchGetItem", async () => {
-					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
-					await callType.func(User).bind(User)([1], {"consistent": true});
-					expect(params).toBeInstanceOf(Object);
-					expect(params).toEqual({
-						"RequestItems": {
-							"User": {
-								"ConsistentRead": true,
-								"Keys": [
-									{"id": {"N": "1"}}
-								]
+					it("Should not send consistent (false) to batchGetItem", async () => {
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						await callType.func(User).bind(User)([1], {"consistent": false});
+						expect(params).toBeInstanceOf(Object);
+						expect(params).toEqual({
+							"RequestItems": {
+								"User": {
+									"ConsistentRead": false,
+									"Keys": [
+										{"id": {"N": "1"}}
+									]
+								}
 							}
-						}
+						});
 					});
-				});
 
-				it("Should get consistent (false) back in request", async () => {
-					const result = await callType.func(User).bind(User)([1], {"return": "request", "consistent": false});
-					expect(params).not.toBeDefined();
-					expect(result).toEqual({
-						"RequestItems": {
-							"User": {
-								"ConsistentRead": false,
-								"Keys": [
-									{"id": {"N": "1"}}
-								]
+					it("Should send consistent (true) to batchGetItem", async () => {
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						await callType.func(User).bind(User)([1], {"consistent": true});
+						expect(params).toBeInstanceOf(Object);
+						expect(params).toEqual({
+							"RequestItems": {
+								"User": {
+									"ConsistentRead": true,
+									"Keys": [
+										{"id": {"N": "1"}}
+									]
+								}
 							}
-						}
+						});
 					});
-				});
 
-				it("Should get consistent (true) back in request", async () => {
-					const result = await callType.func(User).bind(User)([1], {"return": "request", "consistent": true});
-					expect(params).not.toBeDefined();
-					expect(result).toEqual({
-						"RequestItems": {
-							"User": {
-								"ConsistentRead": true,
-								"Keys": [
-									{"id": {"N": "1"}}
-								]
-							}
-						}
+					describe("Request Response", () => {
+						it("Should not get consistent back in request if undefined", async () => {
+							const result = await callType.func(User).bind(User)([1], {"return": "request"});
+							expect(params).not.toBeDefined();
+							expect(result).toEqual({
+								"RequestItems": {
+									"User": {
+										"Keys": [
+											{"id": {"N": "1"}}
+										]
+									}
+								}
+							});
+						});
+
+						it("Should not get consistent (false) back in request", async () => {
+							const result = await callType.func(User).bind(User)([1], {"return": "request", "consistent": false});
+							expect(params).not.toBeDefined();
+							expect(result).toEqual({
+								"RequestItems": {
+									"User": {
+										"ConsistentRead": false,
+										"Keys": [
+											{"id": {"N": "1"}}
+										]
+									}
+								}
+							});
+						});
+
+						it("Should get consistent (true) back in request", async () => {
+							const result = await callType.func(User).bind(User)([1], {"return": "request", "consistent": true});
+							expect(params).not.toBeDefined();
+							expect(result).toEqual({
+								"RequestItems": {
+									"User": {
+										"ConsistentRead": true,
+										"Keys": [
+											{"id": {"N": "1"}}
+										]
+									}
+								}
+							});
+						});
 					});
 				});
 
