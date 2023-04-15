@@ -462,7 +462,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			const startArray: ModelBatchGetItemsResponse<ItemCarrier> = Object.assign([], {
 				"unprocessedKeys": [],
 				"populate": PopulateItems,
-				"toJSON": utils.dynamoose.itemArrayToJSON
+				"toJSON": utils.dynamoose.itemToJSON
 			});
 			return (await Promise.all(keyObjects)).reduce((result, key) => {
 				const keyProperties = Object.keys(key);
