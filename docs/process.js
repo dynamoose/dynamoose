@@ -1,6 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
-const mkdirp = require("mkdirp");
+const {mkdirp} = require("mkdirp");
 const jsdoc2md = require("jsdoc-to-markdown");
 const git = require("simple-git");
 
