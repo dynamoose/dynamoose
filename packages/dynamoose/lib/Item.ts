@@ -19,6 +19,7 @@ import {Condition} from "./Condition";
 import {TableExpiresSettings} from "./Table";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
 import CustomError from "./Error";
+import {GeneralObject} from "js-object-utilities";
 
 export interface ItemSaveSettings {
 	overwrite?: boolean;
@@ -628,7 +629,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	function mapAttributes (type: "toDynamo" | "fromDynamo") {
 		if (settings.mapAttributes && settings.type === type) {
 			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
-			const mappedAttributesObject = type === "toDynamo" ? schemaInternalProperties.getMapSettingObject() : schema.attributes().reduce((obj, attribute) => {
+			const mappedAttributesObject: GeneralObject<string> = type === "toDynamo" ? schemaInternalProperties.getMapSettingObject() : schema.attributes().reduce((obj, attribute) => {
 				const mapValues = schemaInternalProperties.getMapSettingValuesForKey(attribute);
 				if (mapValues && mapValues.length > 0) {
 					const defaultMapAttribute = schema.getInternalProperties(internalProperties).getDefaultMapAttribute(attribute);
