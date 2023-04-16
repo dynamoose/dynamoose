@@ -5,6 +5,15 @@ module.exports = {
 	"baseUrl": "/",
 	"trailingSlash": undefined,
 	"favicon": "img/favicon.ico",
+	"headTags": [
+		{
+			"tagName": "a",
+			"attributes": {
+				"rel": "me",
+				"href": "https://mastodon.social/@dynamoose"
+			}
+		}
+	],
 	"themeConfig": {
 		"navbar": {
 			"title": "Dynamoose",
