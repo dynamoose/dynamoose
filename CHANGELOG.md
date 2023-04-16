@@ -2,6 +2,41 @@
 
 ---
 
+## Version 3.2.0
+
+This release fixes a lot of bugs and adds some nice to have features to make your Dynamoose experience even better.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Adds new `tableName` option to Model initialization settings.
+- Adds new `consistent` option to `batchGet`.
+- Improving performance for models and tables with single schema.
+
+### Bug Fixes
+
+- Using all indexes from all schemas in table.
+- Fixed an issue where indexes would get recreated when table throughput is set to ON_DEMAND.
+- Now using correct TypeScript array type for `query` and `scan` operations when using `toJSON()`.
+
+### Documentation
+
+- Fixes Configuration documentation for `accessKeyId` & `secretAccessKey` in AWS SDK v3.
+- Typo fixes in documentation.
+- Fixed an issue where ESModules import statement documentation for non-TypeScript users was incorrect.
+- Added Dynamoose [Mastodon link](https://mastodon.social/@dynamoose) to website.
+
+### Other
+
+- Now requiring CLA to be signed for all pull request authors.
+- Only including `dist` folder in npm package.
+- Updating dependencies.
+- Removing support for Dynamoose v2 bug fixes.
+- Added Node.js v19.x to CI test suite.
+
+---
+
 ## Version 3.1.0
 
 This release adds support for ISO-8601 date formats! This was one of the most upvoted feature requests on the [GitHub issues page](https://github.com/dynamoose/dynamoose/issues?q=is%3Aissue+is%3Aopen+sort%3Areactions-%2B1-desc). Really exciting to finally delivery this feature.
