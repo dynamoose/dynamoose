@@ -4,6 +4,7 @@ In order to use Dynamoose you must import it or require it in your project. This
 	defaultValue="commonjs"
 	values={[
 		{"label": "CommonJS", value: "commonjs"},
+		{"label": "TypeScript", value: "typescript"},
 		{"label": "ES Modules", value: "esmodules"}
 	]
 }>
@@ -14,10 +15,17 @@ const dynamoose = require("dynamoose");
 ```
 
 </TabItem>
-<TabItem value="esmodules">
+<TabItem value="typescript">
 
 ```js
 import * as dynamoose from "dynamoose";
+```
+
+</TabItem>
+<TabItem value="esmodules">
+
+```js
+import dynamoose from "dynamoose";
 ```
 
 </TabItem>
