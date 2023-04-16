@@ -6,7 +6,7 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "@types/node": "^18.6.4",
+    "@types/node": "^18.15.11",
     "@typescript-eslint/eslint-plugin": "^5.32.0",
     "eslint": "^8.21.0",
     "eslint-plugin-no-only-tests": "^3.0.0",
