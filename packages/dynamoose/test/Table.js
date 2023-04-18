@@ -1995,7 +1995,6 @@ describe("Table", () => {
 					const dogModel = dynamoose.model("Cat", {"pk": pk, "pk2": {"type": String, "index": {"name": "gsi2"}}});
 
 					const table = new dynamoose.Table("Pets", [catModel, dogModel]);
-					// eslint-disable-next-line no-console
 					expect(await callType.func(table).bind(table)({"return": "request"})).toEqual({
 						"TableName": "Pets",
 						"ProvisionedThroughput": {

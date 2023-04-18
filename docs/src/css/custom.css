@@ -64,46 +64,73 @@ html[data-theme="dark"] .header-github-link:before {
 
 /* External Link Icon */
 #__docusaurus
-  > div.main-wrapper
-  > div
-  > aside
-  > div
-  > nav
-  > ul
-  > li:last-child
-  > ul
-  > li
-  > a
-  > svg {
+  div.main-wrapper
+  div
+  aside
+  div
+  nav
+  ul
+  li:last-child
+  ul
+  li
+  a
+  svg,
+#__docusaurus
+  nav
+  div.navbar-sidebar
+  div.navbar-sidebar__items.navbar-sidebar__items--show-secondary
+  ul
+  li:last-child
+  ul
+  li
+  a
+  svg {
   display: none;
 }
 
 /* Sponsored By Header */
 #__docusaurus
-  > div.main-wrapper
-  > div
-  > aside
-  > div
-  > nav
-  > ul
-  > li:last-child
-  > div
-  > a {
+  div.main-wrapper
+  div
+  aside
+  div
+  nav
+  ul
+  li:last-child
+  div
+  a,
+#__docusaurus
+  nav
+  div.navbar-sidebar
+  div.navbar-sidebar__items.navbar-sidebar__items--show-secondary
+  ul
+  li:last-child
+  div
+  a {
   display: none;
 }
 
 /* Set background image */
 #__docusaurus
-  > div.main-wrapper
-  > div
-  > aside
-  > div
-  > nav
-  > ul
-  > li:last-child
-  > ul
-  > li
-  > a {
+  div.main-wrapper
+  div
+  aside
+  div
+  nav
+  ul
+  li:last-child
+  ul
+  li
+  a,
+#__docusaurus
+  nav
+  div.navbar-sidebar
+  div.navbar-sidebar__items.navbar-sidebar__items--show-secondary
+  ul
+  li:last-child
+  ul
+  li
+  a {
   background-image: url("/img/dynobase-banner.png");
   height: 162px;
   width: 244px;

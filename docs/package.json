@@ -10,16 +10,16 @@
     "prebuild": "cd .. && npm run build && cd docs && node process.js"
   },
   "dependencies": {
-    "@crowdin/cli": "^3.7.10",
-    "@docusaurus/core": "^2.0.1",
-    "@docusaurus/preset-classic": "^2.0.1",
-    "classnames": "^2.3.1",
-    "jsdoc-to-markdown": "^7.1.1",
-    "mkdirp": "^1.0.4",
-    "npm-to-yarn": "^1.0.1",
+    "@crowdin/cli": "^3.10.1",
+    "@docusaurus/core": "2.4.0",
+    "@docusaurus/preset-classic": "2.4.0",
+    "classnames": "^2.3.2",
+    "jsdoc-to-markdown": "^8.0.0",
+    "mkdirp": "^3.0.0",
+    "npm-to-yarn": "^2.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "simple-git": "^3.11.0"
+    "simple-git": "^3.17.0"
   },
   "browserslist": {
     "production": [

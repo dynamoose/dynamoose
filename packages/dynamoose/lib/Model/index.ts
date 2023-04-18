@@ -91,6 +91,7 @@ interface ModelBatchGetItemsResponse<T> extends ItemArray<T> {
 interface ModelBatchGetSettings {
 	return?: "items" | "request";
 	attributes?: string[];
+	consistent?: boolean;
 }
 interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
@@ -129,7 +130,7 @@ interface ModelInternalProperties {
 // Model represents a single entity (ex. User, Movie, Video, Order)
 export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesClass<ModelInternalProperties> {
 	/**
-	 * This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns a Item initializer that you can use to create instances of the given model.
+	 * This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns an item initializer that you can use to create instances of the given model.
 	 *
 	 * The `name` parameter is a string representing the model name.
 	 *
@@ -276,9 +277,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			},
 			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
 				const schemas = this.getInternalProperties(internalProperties).schemas as Schema[];
-				const createTableAttributeParams = await Promise.all(
-					schemas.map((schema) => schema.getCreateTableAttributeParams(this))
-				);
+				const createTableAttributeParams = await Promise.all(schemas.map((schema) => schema.getCreateTableAttributeParams(this)));
 
 				return utils.merge_objects.main({
 					"combineMethod": utils.merge_objects.MergeObjectsCombineMethod.ArrayMerge,
@@ -503,6 +502,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			};
 
+			if (settings.consistent !== undefined && settings.consistent !== null) {
+				params.RequestItems[table.getInternalProperties(internalProperties).name].ConsistentRead = settings.consistent;
+			}
 			if (settings.attributes) {
 				params.RequestItems[table.getInternalProperties(internalProperties).name].AttributesToGet = settings.attributes;
 			}

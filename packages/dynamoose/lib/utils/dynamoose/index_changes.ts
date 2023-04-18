@@ -22,9 +22,18 @@ export interface ModelIndexDeleteChange {
 const index_changes = async (table: Table, existingIndexes = []): Promise<(ModelIndexAddChange | ModelIndexDeleteChange)[]> => {
 	const output: (ModelIndexAddChange | ModelIndexDeleteChange)[] = [];
 	const expectedIndexes = await table.getInternalProperties(internalProperties).getIndexes();
+	const tableThroughput = table.getInternalProperties(internalProperties).options.throughput;
 
 	// Indexes to delete
 	const identicalProperties: string[] = ["IndexName", "KeySchema", "Projection", "ProvisionedThroughput"]; // This array represents the properties in the indexes that should match between existingIndexes (from DynamoDB) and expectedIndexes. This array will not include things like `IndexArn`, `ItemCount`, etc, since those properties do not exist in expectedIndexes
+
+	if (tableThroughput === "ON_DEMAND") {
+		// remove `ProvisionedThroughput` property from properties to compare against
+		// because `ProvisionedThroughput` is not set on index schema in case of `ON_DEMAND` throughput
+		// meaning `ProvisionedThroughput` is implicitly inherited from the table
+		identicalProperties.pop();
+	}
+
 	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => {
 		const cleanedIndex = deep_copy(index);
 		obj.entries(cleanedIndex).forEach(([key, value]) => {

@@ -5,6 +5,15 @@ module.exports = {
 	"baseUrl": "/",
 	"trailingSlash": undefined,
 	"favicon": "img/favicon.ico",
+	"headTags": [
+		{
+			"tagName": "a",
+			"attributes": {
+				"rel": "me",
+				"href": "https://mastodon.social/@dynamoose"
+			}
+		}
+	],
 	"themeConfig": {
 		"navbar": {
 			"title": "Dynamoose",
@@ -73,6 +82,10 @@ module.exports = {
 						{
 							"label": "Slack",
 							"href": "https://join.slack.com/t/dynamoose/shared_invite/enQtODM4OTI0MTc1NDc3LWI3MmNhMThmNmJmZDk5MmUxOTZmMGEwNGQzNTRkMjhjZGJlNGM5M2JmZjMzMzlkODRhMGY3MTQ5YjQ2Nzg3YTY"
+						},
+						{
+							"label": "Mastodon",
+							"href": "https://mastodon.social/@dynamoose"
 						},
 						{
 							"label": "Twitter",
