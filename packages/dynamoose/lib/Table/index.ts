@@ -4,7 +4,7 @@ import {CallbackType, DeepPartial, ModelType, ObjectType} from "../General";
 import Internal from "../Internal";
 import {Query} from "../ItemRetriever";
 const {internalProperties} = Internal.General;
-import { Model, schemaCorrectnessScoresSettings } from '../Model'
+import {Model, schemaCorrectnessScoresSettings} from "../Model";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import utils from "../utils";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";

@@ -4,7 +4,7 @@ import utils from "./utils";
 import {Condition, ConditionInitializer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Item} from "./Item";
-import { CallbackType, ObjectType, ItemArray, SortOrder, ModelType } from './General'
+import {CallbackType, ObjectType, ItemArray, SortOrder, ModelType} from "./General";
 import {PopulateItems} from "./Populate";
 import Internal from "./Internal";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
@@ -68,9 +68,9 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 				};
 			}
 
-			const buildItemFromModel = (model: ModelType<Item>, item: Model<Item>) => (
+			const buildItemFromModel = (model: ModelType<Item>, item: Model<Item>) =>
 				new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})
-			);
+			;
 
 			const array: any = (await Promise.all(result.Items.map(async (item: Model<Item>) => {
 				const suitableModelForBuildItem = await table.getInternalProperties(internalProperties).modelForObject(item);
