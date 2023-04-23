@@ -55,7 +55,6 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 	exec (this: ItemRetriever, callback?: any): any {
 		let timesRequested = 0;
 		const {models} = this.getInternalProperties(internalProperties).internalSettings;
-		// TODO: Check that all the models shares the same table
 		const table = models[0].getInternalProperties(internalProperties).table();
 		const prepareForReturn = async (result): Promise<any> => {
 			if (Array.isArray(result)) {
@@ -171,7 +170,6 @@ Object.getOwnPropertyNames(Condition.prototype).forEach((key: string) => {
 
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
 	const {models} = this.getInternalProperties(internalProperties).internalSettings;
-	// TODO: Check that all the models shares the same table
 	const table = models[0].getInternalProperties(internalProperties).table();
 
 	const object: any = {
@@ -185,14 +183,20 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 	if (this.getInternalProperties(internalProperties).settings.startAt) {
 		object.ExclusiveStartKey = Item.isDynamoObject(this.getInternalProperties(internalProperties).settings.startAt) ? this.getInternalProperties(internalProperties).settings.startAt : models[0].Item.objectToDynamo(this.getInternalProperties(internalProperties).settings.startAt);
 	}
-	// TODO: Merge indexes from all models
-	const indexes = await models[0].getInternalProperties(internalProperties).getIndexes();
+
+	const allIndexes = await Promise.all(models.map((model) => model.getInternalProperties(internalProperties).getIndexes()));
+
+	const mergedIndexes = utils.merge_objects.main({
+		"combineMethod": utils.merge_objects.MergeObjectsCombineMethod.ArrayMergeNewArray,
+		"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger
+	})(...allIndexes);
+
 	if (this.getInternalProperties(internalProperties).settings.index) {
 		object.IndexName = this.getInternalProperties(internalProperties).settings.index;
 	} else if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
 		const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(models[0]);
 
-		const indexSpec = utils.find_best_index(indexes, comparisonChart);
+		const indexSpec = utils.find_best_index(mergedIndexes, comparisonChart);
 		if (!indexSpec.tableIndex) {
 			if (!indexSpec.indexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
@@ -231,7 +235,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		}
 	}
 	if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
-		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
+		const index = utils.array_flatten(Object.values(mergedIndexes)).find((index) => index.IndexName === object.IndexName) || mergedIndexes.TableIndex;
 		const {hash, range} = index.KeySchema.reduce((res, item) => {
 			res[item.KeyType.toLowerCase()] = item.AttributeName;
 			return res;
