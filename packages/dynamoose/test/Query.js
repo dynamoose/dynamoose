@@ -5,6 +5,11 @@ const {internalProperties} = require("../dist/Internal").default.General;
 const CustomError = require("../dist/Error").default;
 
 describe("Query", () => {
+	// beforeAll(async () => {
+	// 	const logger = await dynamoose.logger();
+	// 	logger.providers.set(console);
+	// });
+
 	beforeEach(() => {
 		dynamoose.Table.defaults.set({"create": false, "waitForActive": false});
 	});
@@ -14,14 +19,17 @@ describe("Query", () => {
 
 	let queryPromiseResolver, queryParams;
 	beforeEach(() => {
+		// console.log("fired beforeEach");
 		dynamoose.aws.ddb.set({
 			"query": (request) => {
 				queryParams = request;
+				// console.log("queryPromiseResolver", queryPromiseResolver);
 				return queryPromiseResolver();
 			}
 		});
 	});
 	afterEach(() => {
+		// console.log("fired afterEach");
 		dynamoose.aws.ddb.revert();
 		queryPromiseResolver = null;
 		queryParams = null;
@@ -67,9 +75,11 @@ describe("Query", () => {
 			expect(Model.query().exec).toBeInstanceOf(Function);
 		});
 
-		it("Should return a promise", () => {
+		it("Should return a promise", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			expect(Model.query("name").eq("Charlie").exec()).toBeInstanceOf(Promise);
+			const promise = Model.query("name").eq("Charlie").exec();
+			expect(promise).toBeInstanceOf(Promise);
+			await promise;
 		});
 
 		const functionCallTypes = [
