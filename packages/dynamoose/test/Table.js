@@ -1991,12 +1991,12 @@ describe("Table", () => {
 
 				it("Should be created with all the indexes from all the models if multiple models passed in", async () => {
 					const pk = {"type": String, "hashKey": true};
-					const catModel = dynamoose.model("Cat", {"pk": pk, "pk1": {"type": String, "index": {"name": "gsi1"}}});
-					const dogModel = dynamoose.model("Cat", {"pk": pk, "pk2": {"type": String, "index": {"name": "gsi2"}}});
+					const Cat = dynamoose.model("Cat", {"pk": pk, "pk1": {"type": String, "index": {"name": "gsi1"}}});
+					const Dog = dynamoose.model("Cat", {"pk": pk, "pk2": {"type": String, "index": {"name": "gsi2"}}});
 
-					const table = new dynamoose.Table("Pets", [catModel, dogModel]);
+					const table = new dynamoose.Table("pets", [Cat, Dog]);
 					expect(await callType.func(table).bind(table)({"return": "request"})).toEqual({
-						"TableName": "Pets",
+						"TableName": "pets",
 						"ProvisionedThroughput": {
 							"ReadCapacityUnits": 1,
 							"WriteCapacityUnits": 1
@@ -2082,12 +2082,12 @@ describe("Table", () => {
 		});
 
 		it("Should return correct model using model attributes' defaults", async () => {
-			const catModel = dynamoose.model("Cat", {"id": String, "name": String, "type": {"type": String, "default": "cat"}});
-			const dogModel = dynamoose.model("Dog", {"id": String, "name": String, "type": {"type": String, "default": "dog"}});
-			const table = new dynamoose.Table("Pets", [catModel, dogModel]);
+			const Cat = dynamoose.model("Cat", {"id": String, "name": String, "type": {"type": String, "default": "cat"}});
+			const Dog = dynamoose.model("Dog", {"id": String, "name": String, "type": {"type": String, "default": "dog"}});
+			const table = new dynamoose.Table("Pets", [Cat, Dog]);
 
-			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "type": "cat"})).toEqual(catModel);
-			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "type": "dog"}, {"considerDefaults": true})).toEqual(dogModel);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "type": "cat"})).toEqual(Cat);
+			expect(await table.getInternalProperties(internalProperties).modelForObject({"id": "1", "type": "dog"}, {"considerDefaults": true})).toEqual(Dog);
 		});
 
 		it("Should return the first model if it is the only one", async () => {
@@ -2225,6 +2225,80 @@ describe("Table", () => {
 
 			const Dog = dynamoose.model("Dog", {"id": String, "name": String}, {"tableName": tableName});
 			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
+		});
+	});
+
+	describe("query", () => {
+		it("Should return items of correct models", async () => {
+			const Team = dynamoose.model("Team", {
+				"pk": {
+					"type": String,
+					"index": {
+						"hashKey": true,
+						"index": {
+							"name": "primary",
+							"type": "global"
+						}
+					}
+				},
+				"sk": {
+					"type": String,
+					"rangeKey": true
+				},
+				"name": String,
+				"type": {"type": String, "default": "team"}
+			});
+			const TeamMember = dynamoose.model("TeamMember", {
+				"pk": {
+					"type": String,
+					"index": {
+						"hashKey": true,
+						"index": {
+							"name": "primary",
+							"type": "global"
+						}
+					}
+				},
+				"sk": {
+					"type": String,
+					"rangeKey": true
+				},
+				"name": String,
+				"type": {"type": String, "default": "member"}
+			});
+			const table = new dynamoose.Table("teams", [Team, TeamMember]);
+
+			new Team({"pk": "team_1", "sk": "", "name": "Team 1"});
+			new TeamMember({"pk": "team_1", "sk": "member_1", "name": "Team member 1"});
+
+			dynamoose.aws.ddb.set({
+				"query": () => ({
+					"Items": [
+						{"pk": {"S": "team_1"}, "sk": {"S": ""}, "name": {"S": "Team 1"}, "type": {"S": "team"}},
+						{"pk": {"S": "team_1"}, "sk": {"S": "member_1"}, "name": {"S": "Team member 1"}, "type": {"S": "member"}}
+					]
+				})
+			});
+
+			const result = await table.query({"pk": "team_1"}).exec();
+
+			for (const item of result) {
+				const model = item.getInternalProperties(internalProperties).model;
+				switch (item.type) {
+				case "team":
+					expect(model.name).toBe("Team");
+					break;
+				case "member":
+					expect(model.name).toBe("TeamMember");
+					break;
+				}
+				if (item.type === "team") {
+					expect(item.getInternalProperties(internalProperties).model.name).toBe("Team");
+				}
+				if (item.type === "member") {
+					expect(item.getInternalProperties(internalProperties).model.name).toBe("TeamMember");
+				}
+			}
 		});
 	});
 });
