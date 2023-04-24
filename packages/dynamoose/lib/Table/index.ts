@@ -43,8 +43,6 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	// transaction: any;
 	static defaults: TableOptions;
 
-	query: (object?: ConditionInitializer) => Query<any>;
-
 	/**
 	 * This method is the basic entry point for creating a table in Dynamoose.
 	 *
@@ -522,13 +520,86 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			return this.getInternalProperties(internalProperties).runSetupFlow();
 		}
 	}
+
+	/**
+	 * You can query the table to get all the relevant items.
+	 *
+	 * Useful for utilising the single-table approach when you store items of multiple models within same single table,
+	 * and you want to get all the items, for example, with common primary key:
+	 *
+	 * ```js
+	 * const Team = dynamoose.model("Team", {
+	 *   "pk": {
+	 *     "type": String,
+	 *     "index": {
+	 *       "hashKey": true,
+	 *       "index": {
+	 *         "name": "primary",
+	 *         "type": "global"
+	 *       }
+	 *     },
+	 *     "map": "id"
+	 *   },
+	 *   "sk": {
+	 *     "type": String,
+	 *     "rangeKey": true
+	 *   },
+	 *   "name": String,
+	 *   "type": {"type": String, "default": "team"}
+	 * });
+	 * const TeamMember = dynamoose.model("TeamMember", {
+	 *   "pk": {
+	 *     "type": String,
+	 *     "index": {
+	 *       "hashKey": true,
+	 *       "index": {
+	 *         "name": "primary",
+	 *         "type": "global"
+	 *       }
+	 *     },
+	 *     "map": "teamId"
+	 *   },
+	 *   "sk": {
+	 *     "type": String,
+	 *     "rangeKey": true,
+	 *     "map": "id"
+	 *   },
+	 *   "name": String,
+	 *   "type": {"type": String, "default": "member"}
+	 * });
+	 * const table = new dynamoose.Table("teams", [Team, TeamMember]);
+	 *
+	 * const team1 = new Team({"id": "team_1", "name": "Team 1"});
+	 * const member1 = new TeamMember({"teamId": "team_1", "id": "member_1", "name": "Team member 1"});
+	 *
+	 * await table.query({"pk": "team_1"}).exec()
+	 * // will return the following:
+	 * [
+	 *   Team {
+	 *     id: 'team_1',
+	 *     sk: '',
+	 *     name: 'Team 1',
+	 *     type: 'team'
+	 *   },
+	 *   TeamMember {
+	 *     teamId: 'team_1',
+	 *     id: 'member_1',
+	 *     name: 'Team member 1',
+	 *     type: 'member'
+	 *   },
+	 * ]
+	 * ```
+	 *
+	 * Query execution result is all the relevant items with its correct models (Team and TeamMember)
+	 *
+	 * @param conditionInitializer ConditionInitializer
+	 * @returns Query<ItemCarrier>
+	 */
+	query (conditionInitializer?: ConditionInitializer): Query<ItemCarrier> {
+		return new Query(this.getInternalProperties(internalProperties).models.map((model) => model.Model), conditionInitializer);
+	}
 }
 Table.defaults = originalDefaults;
-
-Table.prototype.query = function (object?: ConditionInitializer): Query<ItemCarrier> {
-	return new Query(this.getInternalProperties(internalProperties).models.map((model) => model.Model), object);
-};
-
 
 interface TableCreateOptions {
 	return: "request" | undefined;
