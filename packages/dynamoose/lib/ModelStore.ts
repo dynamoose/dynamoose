@@ -25,7 +25,7 @@ returnObject.clear = (): void => {
  * @returns Array of Models.
  */
 returnObject.forTableName = (tableName: string): Model<Item>[] | undefined => {
-	const modelsInTable = Object.values(models).filter((model) => model.getInternalProperties(internalProperties).tableName === tableName);
+	const modelsInTable = Object.values(models).filter((model) => model.tableName === tableName);
 
 	return modelsInTable.length === 0 ? undefined : modelsInTable;
 };

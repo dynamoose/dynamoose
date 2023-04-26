@@ -130,9 +130,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 		}
 
 		const storedOptions = utils.combine_objects(options, customDefaults.get(), originalDefaults) as TableOptions;
+		const fullName = `${storedOptions.prefix}${name}${storedOptions.suffix}`;
 		this.setInternalProperties(internalProperties, {
 			"options": storedOptions,
-			"name": `${storedOptions.prefix}${name}${storedOptions.suffix}`,
+			"name": fullName,
 			"originalName": name, // This represents the name before prefix and suffix were added
 
 			instance,
@@ -162,7 +163,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 				model.Model.setInternalProperties(internalProperties, {
 					...model.Model.getInternalProperties(internalProperties),
 					"_table": this,
-					"tableName": name
+					"tableName": fullName
 				});
 				return model;
 			}),
