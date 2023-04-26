@@ -9,7 +9,7 @@ export default <T extends Item = AnyItem>(model: Model<T>): ModelType<T> => {
 		Object.keys(model),
 		Object.keys(Object.getPrototypeOf(model)),
 		Object.getOwnPropertyNames(Object.getPrototypeOf(model))
-	]).filter((key) => !["constructor", "name"].includes(key));
+	]).filter((key) => !["constructor", "name", "tableName"].includes(key));
 	keys.forEach((key) => {
 		if (typeof model[key] === "object") {
 			const main = (key: string): void => {

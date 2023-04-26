@@ -14,11 +14,11 @@ import {AttributeMap} from "../Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
 import {Table, TableOptionsOptional} from "../Table";
+import {custom as customDefaults, original as originalDefaults} from "../Table/defaults";
 import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
-import formatTableNameFromModel from "../utils/dynamoose/formatTableNameFromModel";
 const {internalProperties} = Internal.General;
 
 // Transactions
@@ -105,7 +105,7 @@ export interface ModelTableOptions extends TableOptionsOptional {
 
 interface ModelInternalProperties {
 	name: string;
-	options: TableOptionsOptional;
+	options: ModelTableOptions;
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
 	convertKeyToObject: (key: InputKey) => Promise<KeyObject>;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
@@ -115,7 +115,6 @@ interface ModelInternalProperties {
 	getHashKey: () => string;
 	getRangeKey: () => string | void;
 	table: () => Table;
-	tableName: string;
 
 	schemas: Schema[];
 	/**
@@ -287,14 +286,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const table = this.getInternalProperties(internalProperties)._table;
 				if (!table) {
 					const modelObject = returnModel(this);
-					const createdTable = new Table(Instance.default, this.getInternalProperties(internalProperties).tableName, [modelObject], this.getInternalProperties(internalProperties).options);
+					const createdTable = new Table(Instance.default, options?.tableName || name, [modelObject], options);
 					this.getInternalProperties(internalProperties)._table = createdTable;
 					return createdTable;
 				}
 
 				return table;
 			},
-			"tableName": options?.tableName || name,
 			"schemas": []
 		});
 
@@ -378,7 +376,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		_ModelStore(this);
 
 		// This code attaches `this` model to an existing table instance created by other model with the same tableName.
-		const modelsOfTable = _ModelStore.forTableName(formatTableNameFromModel(this));
+		const modelsOfTable = _ModelStore.forTableName(this.tableName);
 		const otherModelWithTable = modelsOfTable.find((model) => model !== this && model.table());
 		const table = otherModelWithTable?.table();
 
@@ -406,6 +404,12 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 */
 	get name (): string {
 		return this.getInternalProperties(internalProperties).name;
+	}
+
+	get tableName (): string {
+		const options = this.getInternalProperties(internalProperties).options || {};
+		const storedOptions = utils.combine_objects<ModelTableOptions>(options, customDefaults.get(), originalDefaults);
+		return this.getInternalProperties(internalProperties)._table?.name || `${storedOptions.prefix}${storedOptions.tableName || this.name}${storedOptions.suffix}`;
 	}
 
 	/**
