@@ -1,8 +1,7 @@
 import CustomError from "./Error";
 import {Model} from "./Model";
 import {Item} from "./Item";
-import Internal from "./Internal";
-const {internalProperties} = Internal.General;
+import formatTableNameFromModel from "./utils/dynamoose/formatTableNameFromModel";
 
 let models: {[name: string]: Model<Item>} = {};
 
@@ -25,7 +24,7 @@ returnObject.clear = (): void => {
  * @returns Array of Models.
  */
 returnObject.forTableName = (tableName: string): Model<Item>[] | undefined => {
-	const modelsInTable = Object.values(models).filter((model) => model.getInternalProperties(internalProperties).tableName === tableName);
+	const modelsInTable = Object.values(models).filter((model) => formatTableNameFromModel(model) === tableName);
 
 	return modelsInTable.length === 0 ? undefined : modelsInTable;
 };
