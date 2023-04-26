@@ -18,6 +18,7 @@ import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
+import formatTableNameFromModel from "../utils/dynamoose/formatTableNameFromModel";
 const {internalProperties} = Internal.General;
 
 // Transactions
@@ -377,12 +378,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		_ModelStore(this);
 
 		// This code attaches `this` model to an existing table instance created by other model with the same tableName.
-		const {tableName, options: internalTableOptions} = this.getInternalProperties(internalProperties)
-		const {suffix = "", prefix = ""} = internalTableOptions || {}
-		
-		const formattedTableName = `${prefix}${tableName}${suffix}`
-		        
-		const modelsOfTable = _ModelStore.forTableName(formattedTableName);
+		const modelsOfTable = _ModelStore.forTableName(formatTableNameFromModel(this));
 		const otherModelWithTable = modelsOfTable.find((model) => model !== this && model.table());
 		const table = otherModelWithTable?.table();
 
