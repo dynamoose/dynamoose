@@ -377,7 +377,12 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		_ModelStore(this);
 
 		// This code attaches `this` model to an existing table instance created by other model with the same tableName.
-		const modelsOfTable = _ModelStore.forTableName(this.getInternalProperties(internalProperties).tableName);
+		const {tableName, options: internalTableOptions} = this.getInternalProperties(internalProperties)
+		const {suffix = "", prefix = ""} = internalTableOptions || {}
+		
+		const formattedTableName = `${prefix}${tableName}${suffix}`
+		        
+		const modelsOfTable = _ModelStore.forTableName(formattedTableName);
 		const otherModelWithTable = modelsOfTable.find((model) => model !== this && model.table());
 		const table = otherModelWithTable?.table();
 
