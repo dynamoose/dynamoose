@@ -252,9 +252,6 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 					this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task.resolve());
 					this.getInternalProperties(internalProperties).pendingTasks = [];
 				} catch (error) {
-					this.getInternalProperties(internalProperties).ready = false;
-					this.getInternalProperties(internalProperties).setupFlowRunning = false;
-
 					this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task.reject(error));
 					this.getInternalProperties(internalProperties).pendingTasks = [];
 
