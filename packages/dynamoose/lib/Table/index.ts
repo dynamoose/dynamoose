@@ -207,10 +207,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 					"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger
 				})(...createTableAttributeParams);
 			},
-			"getHashKey": () => {
+			"getHashKey": (): string => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getHashKey();
 			},
-			"getRangeKey": () => {
+			"getRangeKey": (): string | void => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
 			},
 			"runSetupFlow": async (): Promise<void> => {
@@ -356,7 +356,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * ```
 	 * @readonly
 	 */
-	get rangeKey () {
+	get rangeKey (): string | void {
 		return this.getInternalProperties(internalProperties).getRangeKey();
 	}
 	/**
