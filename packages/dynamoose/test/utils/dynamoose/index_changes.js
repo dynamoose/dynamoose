@@ -215,7 +215,88 @@ describe("utils.dynamoose.index_changes", () => {
 			],
 			"schema": {"id": String, "data": {"type": String, "index": {"name": "data-index-1", "type": "global", "project": true}}},
 			"output": []
-		}
+		},
+		{
+			"input": [], 
+			"schema": {"id": String, "data1": {"type": String, "index": {"type": "global", "project": ["data2"]}}, "data2": String, "data3": String}, 
+			"output": [{
+				"spec": {
+					"IndexName": "data1GlobalIndex",
+					"KeySchema": [
+						{
+							"AttributeName": "data1",
+							"KeyType": "HASH"
+						}
+					],
+					"Projection": {
+						"NonKeyAttributes": [ "data2" ],
+						"ProjectionType": "INCLUDE",
+					},
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					}
+				},
+				"type": "add"
+			}]
+		},
+		{
+			"input": [
+				{
+					"IndexName": "data-index-1",
+					"KeySchema": [
+						{
+							"AttributeName": "data1",
+							"KeyType": "HASH"
+						}
+					],
+					"Projection": {
+						"NonKeyAttributes": [ "data2", "data3" ], // order not same as schema definition
+						"ProjectionType": "INCLUDE",
+					},
+					"IndexStatus": "ACTIVE",
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"IndexSizeBytes": 0,
+					"ItemCount": 0,
+					"IndexArn": "arn:aws:dynamodb:ddblocal:000000000000:table/User/index/data-index-1"
+				}
+			],
+			"schema": {"id": String, "data1": {"type": String, "index": {"name": "data-index-1", "type": "global", "project": ["data3", "data2"]}}, "data2": String, "data3": String},
+			"output": []
+		},
+		{
+			"input": [
+				{
+					"IndexName": "data-index-1",
+					"KeySchema": [
+						{
+							"AttributeName": "data1",
+							"KeyType": "HASH"
+						}
+					],
+					"Projection": {
+						"NonKeyAttributes": [ "data2" ],
+						"ProjectionType": "INCLUDE",
+					},
+					"IndexStatus": "ACTIVE",
+					"ProvisionedThroughput": {
+						"ReadCapacityUnits": 1,
+						"WriteCapacityUnits": 1
+					},
+					"IndexSizeBytes": 0,
+					"ItemCount": 0,
+					"IndexArn": "arn:aws:dynamodb:ddblocal:000000000000:table/User/index/data-index-1"
+				}
+			],
+			"schema": {"id": String, "data1": {"type": String, "index": {"name": "data-index-1", "type": "global", "project": ["data3", "data2"]}}, "data2": String, "data3": String},
+			"output": [{
+				"name": "data-index-1",
+				"type": "delete"
+			}]
+		},
 	];
 
 	tests.forEach((test) => {
