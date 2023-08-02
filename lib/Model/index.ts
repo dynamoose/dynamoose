@@ -747,6 +747,11 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 			].reverse();
 			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
 				const accumulator = await accumulatorPromise;
+
+				if (accumulator.DefaultKeys.has(key)) {
+					return accumulator;
+				}
+
 				let value = updateObj[key];
 
 				if (!(typeof value === "object" && updateTypes.map((a) => a.name).includes(key))) {
@@ -813,14 +818,15 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 				}
 
 				return accumulator;
-			}, Promise.resolve((async (): Promise<{ExpressionAttributeNames: ObjectType; ExpressionAttributeValues: ObjectType; UpdateExpression: ObjectType}> => {
+			}, Promise.resolve((async (): Promise<{ExpressionAttributeNames: ObjectType; ExpressionAttributeValues: ObjectType; UpdateExpression: ObjectType; DefaultKeys: Set<String>;}> => {
 				const obj = {
 					"ExpressionAttributeNames": {},
 					"ExpressionAttributeValues": {},
 					"UpdateExpression": updateTypes.map((a) => a.name).reduce((accumulator, key) => {
 						accumulator[key.slice(1)] = [];
 						return accumulator;
-					}, {})
+					}, {}),
+					"DefaultKeys": new Set<String>()
 				};
 
 				const documentFunctionSettings: DocumentObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo"};
@@ -832,12 +838,15 @@ export class Model<T extends DocumentCarrier = AnyDocument> {
 					obj.ExpressionAttributeNames[`#a${index}`] = key;
 					obj.ExpressionAttributeValues[`:v${index}`] = value;
 					obj.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
+					obj.DefaultKeys.add(key);
 
 					index++;
 				});
 
 				return obj;
 			})()));
+
+			delete returnObject["DefaultKeys"];
 
 			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
 				return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
