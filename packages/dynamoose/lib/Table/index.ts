@@ -276,7 +276,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 							"storage": "seconds"
 						}
 					},
-					"default": (): Date => new Date(Date.now() + (options.expires as TableExpiresSettings).ttl)
+					"default": (): Date | undefined => {
+						const ttl: number | undefined = (options.expires as TableExpiresSettings).ttl;
+						return typeof ttl === "number" ? new Date(Date.now() + ttl) : undefined;
+					}
 				};
 			});
 		}

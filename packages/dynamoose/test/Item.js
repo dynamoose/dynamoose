@@ -779,6 +779,20 @@ describe("Item", () => {
 					expect(parseInt(putParams[0].Item.ttl.N)).toBeWithinRange(expectedTTL - 1000, expectedTTL + 1000);
 				});
 
+				it("Should save with correct object with expires set to object with no ttl", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "name": String}));
+					new dynamoose.Table("User", [User], {"create": false, "waitForActive": false, "expires": {"attribute": "ttl"}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					expect(putParams[0].TableName).toEqual("User");
+					expect(putParams[0].Item).toBeInstanceOf(Object);
+					expect(putParams[0].Item.id).toEqual({"N": "1"});
+					expect(putParams[0].Item.name).toEqual({"S": "Charlie"});
+					const expectedTTL = undefined;
+					expect(putParams[0].Item.ttl).toEqual(expectedTTL);
+				});
+
 				it("Should save with correct object with timestamps set to true", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", new Schema({"id": Number, "name": String}, {"timestamps": true}), {"create": false, "waitForActive": false});
