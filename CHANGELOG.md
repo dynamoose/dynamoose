@@ -2,6 +2,24 @@
 
 ---
 
+## Version 3.2.1
+
+This release includes some minor bug fixes.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixes inputs types for Mode.update(), allowing $SET, $ADD, $DELETE and $REMOVE
+- Fixes save bug with expires set to object with no ttl
+
+### Documentation
+
+- Grammar fixes
+- Fixing Mastodon verification link
+
+---
+
 ## Version 3.2.0
 
 This release fixes a lot of bugs and adds some nice to have features to make your Dynamoose experience even better.
