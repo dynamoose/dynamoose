@@ -154,6 +154,41 @@ describe("Transaction", () => {
 				});
 			});
 
+			it("Should send correct parameters to AWS by using the Model.transaction methods", async () => {
+				let transactParams = {};
+				dynamoose.aws.ddb.set({
+					"transactGetItems": (params) => {
+						transactParams = params;
+						return Promise.resolve({});
+					}
+				});
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
+				new dynamoose.Table("Table", [User, Credit], {"prefix": "MyApp_"});
+				await callType.func(dynamoose.transaction)([User.transaction.get(1), Credit.transaction.get(2)]);
+				expect(transactParams).toEqual({
+					"TransactItems": [
+						{
+							"Get": {
+								"Key": {
+									"id": {"N": "1"}
+								},
+								"TableName": "MyApp_Table"
+							}
+						},
+						{
+							"Get": {
+								"Key": {
+									"id": {"N": "2"}
+								},
+								"TableName": "MyApp_Table"
+							}
+						}
+					]
+				});
+			});
+
 			it("Should use correct models when getting transaction for multiple models", async () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => {
@@ -222,6 +257,49 @@ describe("Transaction", () => {
 									"id": {"N": "2"}
 								},
 								"TableName": "Table"
+							}
+						}
+					]
+				});
+			});
+
+			it("Should send correct parameters to AWS for put items by using the Model.transaction methods", async () => {
+				let transactParams = {};
+				dynamoose.aws.ddb.set({
+					"transactWriteItems": (params) => {
+						transactParams = params;
+						return Promise.resolve({});
+					}
+				});
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
+				new dynamoose.Table("Table", [User, Credit], {"suffix": "_Table"});
+				await callType.func(dynamoose.transaction)([User.transaction.create({"id": 1}), Credit.transaction.create({"id": 2})]);
+				expect(transactParams).toEqual({
+					"TransactItems": [
+						{
+							"Put": {
+								"ConditionExpression": "attribute_not_exists(#__hash_key)",
+								"ExpressionAttributeNames": {
+									"#__hash_key": "id"
+								},
+								"Item": {
+									"id": {"N": "1"}
+								},
+								"TableName": "Table_Table"
+							}
+						},
+						{
+							"Put": {
+								"ConditionExpression": "attribute_not_exists(#__hash_key)",
+								"ExpressionAttributeNames": {
+									"#__hash_key": "id"
+								},
+								"Item": {
+									"id": {"N": "2"}
+								},
+								"TableName": "Table_Table"
 							}
 						}
 					]
