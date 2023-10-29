@@ -154,7 +154,42 @@ describe("Transaction", () => {
 				});
 			});
 
-			it("Should send correct parameters to AWS by using the Model.transaction methods", async () => {
+			it("Should send correct parameters to AWS with Prefix and Suffix", async () => {
+				let transactParams = {};
+				dynamoose.aws.ddb.set({
+					"transactGetItems": (params) => {
+						transactParams = params;
+						return Promise.resolve({});
+					}
+				});
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				const Credit = dynamoose.model("Credit", {"id": Number, "name": String});
+				new dynamoose.Table("Table", [User, Credit], {"prefix": "MyApp_", "suffix": "_Table"});
+				await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "MyApp_Table_Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "MyApp_Table_Table"}}]);
+				expect(transactParams).toEqual({
+					"TransactItems": [
+						{
+							"Get": {
+								"Key": {
+									"id": {"N": "1"}
+								},
+								"TableName": "MyApp_Table_Table"
+							}
+						},
+						{
+							"Get": {
+								"Key": {
+									"id": {"N": "2"}
+								},
+								"TableName": "MyApp_Table_Table"
+							}
+						}
+					]
+				});
+			});
+
+			it("Should send correct parameters to AWS by using the Model.transaction methods with Prefix", async () => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
 					"transactGetItems": (params) => {
@@ -263,7 +298,7 @@ describe("Transaction", () => {
 				});
 			});
 
-			it("Should send correct parameters to AWS for put items by using the Model.transaction methods", async () => {
+			it("Should send correct parameters to AWS for put items by using the Model.transaction methods with Suffix", async () => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
 					"transactWriteItems": (params) => {
