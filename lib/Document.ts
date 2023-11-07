@@ -353,8 +353,18 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 	utils.object.entries(returnObject).filter((item) => item[1] !== undefined && item[1] !== dynamooseUndefined).map(checkTypeFunction);
 	keysToDelete.reverse().forEach((key) => utils.object.delete(returnObject, key));
 
+	let attributesWithSchema: string[] = [];
+	if (settings.defaults || settings.forceDefault
+		|| settings.customTypesDynamo
+		|| settings.modifiers
+		|| settings.validate
+		|| settings.required
+		|| settings.enum) {
+		attributesWithSchema = await Document.attributesWithSchema(returnObject, model);
+	}
+
 	if (settings.defaults || settings.forceDefault) {
-		await Promise.all((await Document.attributesWithSchema(returnObject, model)).map(async (key) => {
+		await Promise.all(attributesWithSchema.map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			if (value === dynamooseUndefined) {
 				utils.object.set(returnObject, key, undefined);
@@ -374,7 +384,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 	}
 	// Custom Types
 	if (settings.customTypesDynamo) {
-		(await Document.attributesWithSchema(returnObject, model)).map((key) => {
+		attributesWithSchema.map((key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
@@ -431,7 +441,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 	}
 	if (settings.modifiers) {
 		await Promise.all(settings.modifiers.map(async (modifier) => {
-			return Promise.all((await Document.attributesWithSchema(returnObject, model)).map(async (key) => {
+			return Promise.all(attributesWithSchema.map(async (key) => {
 				const value = utils.object.get(returnObject, key);
 				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true, typeIndexOptionMap});
 				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
@@ -444,7 +454,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 		}));
 	}
 	if (settings.validate) {
-		await Promise.all((await Document.attributesWithSchema(returnObject, model)).map(async (key) => {
+		await Promise.all(attributesWithSchema.map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
@@ -466,7 +476,7 @@ Document.objectFromSchema = async function (object: any, model: Model<Document>,
 		}));
 	}
 	if (settings.required) {
-		let attributesToCheck = await Document.attributesWithSchema(returnObject, model);
+		let attributesToCheck = attributesWithSchema;
 		if (settings.required === "nested") {
 			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute === key || attribute.startsWith(key + ".")));
 		}
