@@ -217,8 +217,8 @@ describe("utils.dynamoose.index_changes", () => {
 			"output": []
 		},
 		{
-			"input": [], 
-			"schema": {"id": String, "data1": {"type": String, "index": {"type": "global", "project": ["data2"]}}, "data2": String, "data3": String}, 
+			"input": [],
+			"schema": {"id": String, "data1": {"type": String, "index": {"type": "global", "project": ["data2"]}}, "data2": String, "data3": String},
 			"output": [{
 				"spec": {
 					"IndexName": "data1GlobalIndex",
@@ -229,8 +229,8 @@ describe("utils.dynamoose.index_changes", () => {
 						}
 					],
 					"Projection": {
-						"NonKeyAttributes": [ "data2" ],
-						"ProjectionType": "INCLUDE",
+						"NonKeyAttributes": ["data2"],
+						"ProjectionType": "INCLUDE"
 					},
 					"ProvisionedThroughput": {
 						"ReadCapacityUnits": 1,
@@ -251,8 +251,8 @@ describe("utils.dynamoose.index_changes", () => {
 						}
 					],
 					"Projection": {
-						"NonKeyAttributes": [ "data2", "data3" ], // order not same as schema definition
-						"ProjectionType": "INCLUDE",
+						"NonKeyAttributes": ["data2", "data3"], // order not same as schema definition
+						"ProjectionType": "INCLUDE"
 					},
 					"IndexStatus": "ACTIVE",
 					"ProvisionedThroughput": {
@@ -278,8 +278,8 @@ describe("utils.dynamoose.index_changes", () => {
 						}
 					],
 					"Projection": {
-						"NonKeyAttributes": [ "data2" ],
-						"ProjectionType": "INCLUDE",
+						"NonKeyAttributes": ["data2"],
+						"ProjectionType": "INCLUDE"
 					},
 					"IndexStatus": "ACTIVE",
 					"ProvisionedThroughput": {
@@ -296,7 +296,7 @@ describe("utils.dynamoose.index_changes", () => {
 				"name": "data-index-1",
 				"type": "delete"
 			}]
-		},
+		}
 	];
 
 	tests.forEach((test) => {
