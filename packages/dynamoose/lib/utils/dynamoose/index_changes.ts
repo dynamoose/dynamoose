@@ -50,8 +50,8 @@ const index_changes = async (table: Table, existingIndexes = []): Promise<(Model
 		});
 
 		return !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(
-			sanitizeIndex(obj.pick(cleanedIndex, identicalProperties) as unknown as IndexItem), 
-			sanitizeIndex(obj.pick(searchIndex as any, identicalProperties) as unknown as IndexItem)
+			sanitizeIndex(obj.pick(cleanedIndex, identicalProperties) as IndexItem), 
+			sanitizeIndex(obj.pick(searchIndex as any, identicalProperties) as IndexItem)
 		));
 	}).map((index) => ({"name": index.IndexName as string, "type": TableIndexChangeType.delete}));
 	output.push(...deleteIndexes);
