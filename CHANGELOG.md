@@ -2,6 +2,25 @@
 
 ---
 
+## Version 3.3.0
+
+This release is the final release of the v3.x.x line of Dynamoose. This release includes a few bug fixes.
+
+It is highly recommended to upgrade to v4.x.x as soon as possible. The v4.x.x only has a single breaking change, so the migration process is very easy.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixing issue where index is deleted when projection is set to list of attributes instead of `ALL`
+- Fixing issue where `Model.transaction` would fail when using `prefix` and/or `suffix`
+
+### Documentation
+
+- Fixing issue where `Features` tab wasn't showing on sidebar
+
+---
+
 ## Version 3.2.1
 
 This release includes some minor bug fixes.
