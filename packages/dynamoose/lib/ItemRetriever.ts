@@ -312,7 +312,7 @@ export interface Scan<T> extends ItemRetriever, BasicOperators<Scan<T>> {
 	exec(callback: CallbackType<ScanResponse<T>, any>): void;
 }
 
-export class Scan<T> extends ItemRetriever {
+export class Scan<T> extends ItemRetriever { // eslint-disable-line @typescript-eslint/no-unsafe-declaration-merging
 	exec (callback?: CallbackType<ScanResponse<T>, any>): Promise<ScanResponse<T>> | void {
 		return super.exec(callback);
 	}
@@ -332,7 +332,7 @@ export interface Query<T> extends ItemRetriever, BasicOperators<Query<T>> {
 	exec(callback: CallbackType<QueryResponse<T>, any>): void;
 }
 
-export class Query<T> extends ItemRetriever {
+export class Query<T> extends ItemRetriever { // eslint-disable-line @typescript-eslint/no-unsafe-declaration-merging
 	exec (callback?: CallbackType<QueryResponse<T>, any>): Promise<QueryResponse<T>> | void {
 		return super.exec(callback);
 	}

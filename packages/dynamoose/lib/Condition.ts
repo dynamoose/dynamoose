@@ -90,7 +90,7 @@ export interface BasicOperators<T = Condition> {
 	between: (...values: any[]) => T;
 }
 
-export interface Condition extends BasicOperators {
+export interface Condition extends BasicOperators { // eslint-disable-line @typescript-eslint/no-unsafe-declaration-merging
 	where: (key: string) => Condition;
 	filter: (key: string) => Condition;
 	attribute: (key: string) => Condition;
@@ -128,7 +128,7 @@ interface ConditionInternalProperties {
 	comparisonChart: (model: Model<Item>) => Promise<any>;
 }
 
-export class Condition extends InternalPropertiesClass<ConditionInternalProperties> {
+export class Condition extends InternalPropertiesClass<ConditionInternalProperties> { // eslint-disable-line @typescript-eslint/no-unsafe-declaration-merging
 	/**
 	 * TODO
 	 * @param object
