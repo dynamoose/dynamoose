@@ -18,7 +18,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "js-object-utilities": "^2.1.0"
+    "js-object-utilities": "^2.2.0"
   },
   "license": "Unlicense",
   "funding": [
