@@ -34,6 +34,13 @@ const index_changes = async (table: Table, existingIndexes = []): Promise<(Model
 		identicalProperties.pop();
 	}
 
+	const sanitizeIndex = (index: IndexItem) => {
+		if (Array.isArray(index.Projection.NonKeyAttributes)) {
+			index.Projection.NonKeyAttributes.sort();
+		}
+		return index;
+	};
+
 	const deleteIndexes: ModelIndexDeleteChange[] = existingIndexes.filter((index) => {
 		const cleanedIndex = deep_copy(index);
 		obj.entries(cleanedIndex).forEach(([key, value]) => {
@@ -42,7 +49,10 @@ const index_changes = async (table: Table, existingIndexes = []): Promise<(Model
 			}
 		});
 
-		return !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(obj.pick(cleanedIndex, identicalProperties), obj.pick(searchIndex as any, identicalProperties)));
+		return !(expectedIndexes.GlobalSecondaryIndexes || []).find((searchIndex) => obj.equals(
+			sanitizeIndex(obj.pick(cleanedIndex, identicalProperties) as any),
+			sanitizeIndex(obj.pick(searchIndex as any, identicalProperties) as any)
+		));
 	}).map((index) => ({"name": index.IndexName as string, "type": TableIndexChangeType.delete}));
 	output.push(...deleteIndexes);
 
