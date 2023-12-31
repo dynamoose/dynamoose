@@ -2,6 +2,22 @@
 
 ---
 
+## Version 4.0.0
+
+This release bumps the minimum required version of Node.js to v16.x.x. It also updates the dependencies to the latest versions.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### 🚨 Breaking Changes 🚨
+
+- Dynamoose now requires Node.js v16.x.x or higher
+
+### Other
+
+- Dependency updates
+
+---
+
 ## Version 3.3.0
 
 This release is the final release of the v3.x.x line of Dynamoose. This release includes a few bug fixes.
