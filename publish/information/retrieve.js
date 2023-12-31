@@ -1,8 +1,10 @@
 const versionWebsiteBuckets = {
-	"2": "v2.dynamoosejs.com"
+	"2": "v2.dynamoosejs.com",
+	"3": "v3.dynamoosejs.com"
 };
 const versionNPMTags = {
-	"2": "latest-2"
+	"2": "latest-2",
+	"3": "latest-3"
 };
 
 module.exports = (version) => {
