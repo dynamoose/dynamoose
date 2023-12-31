@@ -68,8 +68,8 @@ html[data-theme="dark"] .header-github-link:before {
   div
   aside
   div
-  nav
-  ul
+  nav.menu
+  ul.theme-doc-sidebar-menu.menu__list >
   li:last-child
   ul
   li
@@ -79,7 +79,7 @@ html[data-theme="dark"] .header-github-link:before {
   nav
   div.navbar-sidebar
   div.navbar-sidebar__items.navbar-sidebar__items--show-secondary
-  ul
+  ul.theme-doc-sidebar-menu.menu__list >
   li:last-child
   ul
   li
@@ -94,18 +94,18 @@ html[data-theme="dark"] .header-github-link:before {
   div
   aside
   div
-  nav
-  ul
+  nav.menu
+  ul.theme-doc-sidebar-menu.menu__list >
   li:last-child
-  div
+  div.menu__list-item-collapsible
   a,
 #__docusaurus
   nav
   div.navbar-sidebar
   div.navbar-sidebar__items.navbar-sidebar__items--show-secondary
-  ul
+  ul.theme-doc-sidebar-menu.menu__list >
   li:last-child
-  div
+  div.menu__list-item-collapsible
   a {
   display: none;
 }
@@ -116,8 +116,8 @@ html[data-theme="dark"] .header-github-link:before {
   div
   aside
   div
-  nav
-  ul
+  nav.menu
+  ul.theme-doc-sidebar-menu.menu__list >
   li:last-child
   ul
   li
@@ -126,7 +126,7 @@ html[data-theme="dark"] .header-github-link:before {
   nav
   div.navbar-sidebar
   div.navbar-sidebar__items.navbar-sidebar__items--show-secondary
-  ul
+  ul.theme-doc-sidebar-menu.menu__list >
   li:last-child
   ul
   li
