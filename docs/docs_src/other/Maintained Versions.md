@@ -6,6 +6,7 @@ More details about our security policy can be found [here](https://github.com/dy
 
 | Version | Bug Fix Updates    | Security Updates   |
 | ------- | ------------------ | ------------------ |
-| 3.x.x   | :white_check_mark: | :white_check_mark: |
-| 2.x.x   | :x:                | :white_check_mark: |
+| 4.x.x   | :white_check_mark: | :white_check_mark: |
+| 3.x.x   | :x:                | :x:                |
+| 2.x.x   | :x:                | :x:                |
 | 1.x.x   | :x:                | :x:                |

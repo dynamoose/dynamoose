@@ -4,5 +4,6 @@ Although extremely rare, it is possible minor or patch versions of Dynamoose wil
 
 | Version | Requirements         |
 | ------- | -------------------- |
+| 4.x.x   | - Node.js >= v16.x.x |
 | 3.x.x   | - Node.js >= v12.x.x |
 | 2.x.x   | - Node.js >= v8.x.x  |
