@@ -10,13 +10,81 @@ Dynamoose [TypeScript](https://typescriptlang.org) Support is in **beta**.
 
 Dynamoose is built entirely in [TypeScript](https://typescriptlang.org) and ships with TypeScript Typings. This means that when using Dynamoose in TypeScript you will have access to all of the autocomplete and type safety features that TypeScript offers.
 
-## Getting Started
+## Install Dependency
+```bash
+# npm
+npm install dynamoose-decorator
 
-In order to get started using Dynamoose in your TypeScript project, simply [install](Install) and [import (using ESModules)](Import) Dynamoose as described in the previous pages.
+# Yarn
+yarn add dynamoose-decorator
+```
 
-There is no need to install any additional `@types` package in order to use Dynamoose with TypeScript since the typings are included with the Dynamoose package.
+Your `tsconfig.json` needs the following flags:
+```json
+"target": "es6", // or a more recent ecmascript version
+"experimentalDecorators": true,
+"emitDecoratorMetadata": true
+```
 
-After that, so long as you have TypeScript already setup on your project and text editor you should be ready to start using Dynamoose with TypeScript.
+## Usage
+This defines the schema of dynamoose using classes and decorators. The usage is similar to dynamoose, but let me provide an example!
+```typescript
+import {
+	HashKey,
+	Attribute,
+	Required,
+	Index,
+	CreatedAt,
+	UpdatedAt,
+	Model,
+	Storage,
+} from 'dynamoose-decorator';
+import { Item } from 'dynamoose/dist/Item';
+
+@Model({ throughput: 'ON_DEMAND', waitForActive: false })
+class User extends Item {
+	@HashKey()
+	@Attribute()
+	id: string;
+
+	@Index({ name: 'emailIndex' })
+	@Required()
+	@Attribute()
+	email: string;
+
+	@Index({ name: 'nameIndex' })
+	@Required()
+	@Attribute()
+	name: string;
+
+	@Index({ name: 'companyAndScoreIndex', rangeKey: 'score' })
+	@Attribute()
+	company: string;
+
+	@Attribute()
+	score: number;
+
+	@Storage('milliseconds')
+	@CreatedAt()
+	@Attribute()
+	createdAt: Date;
+
+	@Storage('milliseconds')
+	@UpdatedAt()
+	@Attribute()
+	updatedAt: Date;
+}
+
+const UserModel = getModel(User)
+
+const user = new UserModel();
+user.id = 'bf02318d-4029-4474-a7a0-e957eb176d75';
+user.email = 'test@dynamoose.com';
+user.name = 'DYNAMOOSE';
+user.company = 'Amazon';
+user.score = 3;
+await user.save();
+```
 
 ## FAQ
 
@@ -38,12 +106,11 @@ No. There is no differences between using Dynamoose with TypeScript and JavaScri
 
 ### What does TypeScript support mean? What typings are included?
 
-TypeScript support includes support for all functions/methods, and properties of Dynamoose. It does **not** have typings or contracts between your Schema and Items you create. All type checks between your Schema and Items is handled at runtime as part of Dynamoose, and not part of the TypeScript typings.
-
-At some point we hope to explore the potential of adding typings to ensure your Items conform to your Schemas. However this raises a lot of questions regarding if it's even possible to have such dynamic typings in TypeScript, as well as edge cases that have not been considered yet.
+TypeScript support includes support for all functions/methods, and properties of Dynamoose. Additionally, it manages schemas using classes and decorators, providing more readable handling of type checks and index specifications for items. Type checking occurs during TypeScript compile time.
 
 ### What should I do if I have additional questions?
 
+- [dynamoose-decorator](https://github.com/p1ayground/dynamoose-decorator/issues)
 - [Contact me](https://charlie.fish/contact)
 - Join our Slack
 - Create an issue on the [Dynamoose repository](https://github.com/dynamoose/dynamoose)
