@@ -37,12 +37,14 @@ import {
   CreatedAt,
   UpdatedAt,
   Model,
+  Schema,
   Storage,
   getModel,
 } from 'dynamoose-decorator';
 import { Item } from 'dynamoose/dist/Item';
 
 @Model({ throughput: 'ON_DEMAND', waitForActive: false })
+@Schema({ saveUnknown: true })
 class User extends Item {
   @HashKey()
   @Attribute()
