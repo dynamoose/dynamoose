@@ -1,13 +1,13 @@
 /* eslint @typescript-eslint/no-unused-vars: 0, no-console: 0 */
 
-import {UserTypedModel, UserModel, User} from "../Model";
+import {UserTypedModel, UserModel, User, UserMethods} from "../Model";
 import {ObjectType, SortOrder} from "../../../dist/General";
 import {Condition} from "../../../dist";
 import {AnyItem} from "../../../dist/Item";
 import {QueryResponse, Query} from "../../../dist/ItemRetriever";
 
 // query.exec([callback])
-async function queryExec (): Promise<User[]> {
+async function queryExec (): Promise<Array<User & UserMethods>> {
 	return await UserTypedModel.query().exec();
 }
 async function queryExecUnTyped (): Promise<AnyItem[]> {
@@ -15,9 +15,9 @@ async function queryExecUnTyped (): Promise<AnyItem[]> {
 }
 
 const queryExecUnTypedQueryResponse: Promise<QueryResponse<AnyItem>> = UserModel.query().exec();
-const queryExecTyped: Promise<QueryResponse<User>> = UserTypedModel.query("name").eq("Will").exec();
+const queryExecTyped: Promise<QueryResponse<User & UserMethods>> = UserTypedModel.query("name").eq("Will").exec();
 
-let isAssignableToQuery : Query<User>;
+let isAssignableToQuery : Query<User & UserMethods>;
 
 // query.limit(count)
 isAssignableToQuery = UserTypedModel.query("name").eq("Will").limit(5);

@@ -1,7 +1,7 @@
 import CustomError from "../Error";
 import ModelStore from "../ModelStore";
 import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
-import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
+import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem, ItemMethods, AnyItemMethods} from "../Item";
 import utils from "../utils";
 import ddb from "../aws/ddb/internal";
 import Internal from "../Internal";
@@ -131,7 +131,7 @@ interface ModelInternalProperties {
 }
 
 // Model represents a single entity (ex. User, Movie, Video, Order)
-export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesClass<ModelInternalProperties> {
+export class Model<T extends ItemCarrier = AnyItem, U extends ItemMethods = AnyItemMethods> extends InternalPropertiesClass<ModelInternalProperties> {
 	/**
 	 * This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns an item initializer that you can use to create instances of the given model.
 	 *
@@ -153,14 +153,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 * const Cat = dynamoose.model("Cat", new dynamoose.Schema({"name": String}));
 	 * ```
 	 *
-	 * An optional TypeScript class which extends `Item` can be provided right before the function bracket. This provides type checking when using operations like `Model.create()`.
+	 * An optional TypeScript type which extends `Item` can be provided as a generic to `dynamoose.model`. This provides type checking when using operations like `Model.create()`.
 	 *
 	 * ```ts
 	 * import * as dynamoose from "dynamoose";
 	 * import {Item} from "dynamoose/dist/Item";
 	 *
 	 * // Strongly typed model
-	 * class Cat extends Item {
+	 * interface Cat extends Item {
 	 * 	id: number;
 	 * 	name: string;
 	 * }
@@ -439,21 +439,21 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	// latestTableDetails: DynamoDB.DescribeTableOutput;
 	// pendingTaskPromise: () => Promise<void>;
 	Item: typeof ItemCarrier;
-	scan: (object?: ConditionInitializer) => Scan<T>;
-	query: (object?: ConditionInitializer) => Query<T>;
+	scan: (object?: ConditionInitializer) => Scan<T & U>;
+	query: (object?: ConditionInitializer) => Query<T & U>;
 	methods: { item: { set: (name: string, fn: FunctionType) => void; delete: (name: string) => void }; set: (name: string, fn: FunctionType) => void; delete: (name: string) => void };
 	transaction: TransactionType;
 
 	// Batch Get
-	batchGet (keys: InputKey[]): Promise<ModelBatchGetItemsResponse<T>>;
-	batchGet (keys: InputKey[], callback: CallbackType<ModelBatchGetItemsResponse<T>, any>): void;
+	batchGet (keys: InputKey[]): Promise<ModelBatchGetItemsResponse<T & U>>;
+	batchGet (keys: InputKey[], callback: CallbackType<ModelBatchGetItemsResponse<T & U>, any>): void;
 	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "request"}): Promise<DynamoDB.BatchGetItemInput>;
 	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "request"}, callback: CallbackType<DynamoDB.BatchGetItemInput, any>): void;
-	batchGet (keys: InputKey[], settings: ModelBatchGetSettings): Promise<ModelBatchGetItemsResponse<T>>;
-	batchGet (keys: InputKey[], settings: ModelBatchGetSettings, callback: CallbackType<ModelBatchGetItemsResponse<T>, any>): void;
-	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "items"}): Promise<ModelBatchGetItemsResponse<T>>;
-	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "items"}, callback: CallbackType<ModelBatchGetItemsResponse<T>, any>): void;
-	batchGet (keys: InputKey[], settings?: ModelBatchGetSettings | CallbackType<ModelBatchGetItemsResponse<T>, any> | CallbackType<DynamoDB.BatchGetItemInput, any>, callback?: CallbackType<ModelBatchGetItemsResponse<T>, any> | CallbackType<DynamoDB.BatchGetItemInput, any>): void | Promise<DynamoDB.BatchGetItemInput> | Promise<ModelBatchGetItemsResponse<T>> {
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings): Promise<ModelBatchGetItemsResponse<T & U>>;
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings, callback: CallbackType<ModelBatchGetItemsResponse<T & U>, any>): void;
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "items"}): Promise<ModelBatchGetItemsResponse<T & U>>;
+	batchGet (keys: InputKey[], settings: ModelBatchGetSettings & {"return": "items"}, callback: CallbackType<ModelBatchGetItemsResponse<T & U>, any>): void;
+	batchGet (keys: InputKey[], settings?: ModelBatchGetSettings | CallbackType<ModelBatchGetItemsResponse<T & U>, any> | CallbackType<DynamoDB.BatchGetItemInput, any>, callback?: CallbackType<ModelBatchGetItemsResponse<T & U>, any> | CallbackType<DynamoDB.BatchGetItemInput, any>): void | Promise<DynamoDB.BatchGetItemInput> | Promise<ModelBatchGetItemsResponse<T & U>> {
 		if (typeof settings === "function") {
 			callback = settings;
 			settings = {"return": "items"};
@@ -528,9 +528,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			const localCallback: CallbackType<ItemCarrier[], any> = callback as CallbackType<ItemCarrier[], any>;
 			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => localCallback(error));
 		} else {
-			return (async (): Promise<ModelBatchGetItemsResponse<T>> => {
+			return (async (): Promise<ModelBatchGetItemsResponse<T & U>> => {
 				const response = await promise;
-				return prepareResponse(response) as Promise<ModelBatchGetItemsResponse<T>>;
+				return prepareResponse(response) as Promise<ModelBatchGetItemsResponse<T & U>>;
 			})();
 		}
 	}
@@ -667,25 +667,25 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	}
 
 	// Update
-	update (obj: UpdatePartial<T>): Promise<T>;
-	update (obj: UpdatePartial<T>, callback: CallbackType<T, any>): void;
-	update (keyObj: InputKey, updateObj: UpdatePartial<T>): Promise<T>;
-	update (keyObj: InputKey, updateObj: UpdatePartial<T>, callback: CallbackType<T, any>): void;
+	update (obj: UpdatePartial<T>): Promise<T & U>;
+	update (obj: UpdatePartial<T>, callback: CallbackType<T & U, any>): void;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>): Promise<T & U>;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, callback: CallbackType<T & U, any>): void;
 	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
 	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, any>): void;
-	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings): Promise<T>;
-	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
-	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T>;
-	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T, any>): void;
-	update (keyObj: ObjectType, updateObj: UpdatePartial<T>): Promise<T>;
-	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, callback: CallbackType<T, any>): void;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings): Promise<T & U>;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings, callback: CallbackType<T & U, any>): void;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "document"}): Promise<T & U>;
+	update (keyObj: InputKey, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "document"}, callback: CallbackType<T & U, any>): void;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>): Promise<T & U>;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, callback: CallbackType<T & U, any>): void;
 	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}): Promise<DynamoDB.UpdateItemInput>;
 	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "request"}, callback: CallbackType<DynamoDB.UpdateItemInput, any>): void;
-	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings): Promise<T>;
-	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings, callback: CallbackType<T, any>): void;
-	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "item"}): Promise<T>;
-	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "item"}, callback: CallbackType<T, any>): void;
-	update (keyObj: InputKey | ObjectType, updateObj?: UpdatePartial<T> | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, settings?: ModelUpdateSettings | CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.UpdateItemInput, any>): void | Promise<T> | Promise<DynamoDB.UpdateItemInput> {
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings): Promise<T & U>;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings, callback: CallbackType<T & U, any>): void;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "item"}): Promise<T & U>;
+	update (keyObj: ObjectType, updateObj: UpdatePartial<T>, settings: ModelUpdateSettings & {"return": "item"}, callback: CallbackType<T & U, any>): void;
+	update (keyObj: InputKey | ObjectType, updateObj?: UpdatePartial<T> | CallbackType<T & U, any> | CallbackType<DynamoDB.UpdateItemInput, any>, settings?: ModelUpdateSettings | CallbackType<T & U, any> | CallbackType<DynamoDB.UpdateItemInput, any>, callback?: CallbackType<T & U, any> | CallbackType<DynamoDB.UpdateItemInput, any>): void | Promise<T & U> | Promise<DynamoDB.UpdateItemInput> {
 		if (typeof updateObj === "function") {
 			callback = updateObj as CallbackType<ItemCarrier | DynamoDB.UpdateItemInput, any>; // TODO: fix this, for some reason `updateObj` has a type of Function which is forcing us to type cast it
 			updateObj = null;
@@ -924,15 +924,15 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	}
 
 	// Create
-	create (item: Partial<T>): Promise<T>;
-	create (item: Partial<T>, callback: CallbackType<T, any>): void;
+	create (item: Partial<T>): Promise<T & U>;
+	create (item: Partial<T>, callback: CallbackType<T & U, any>): void;
 	create (item: Partial<T>, settings: ItemSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
 	create (item: Partial<T>, settings: ItemSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, any>): void;
-	create (item: Partial<T>, settings: ItemSaveSettings): Promise<T>;
-	create (item: Partial<T>, settings: ItemSaveSettings, callback: CallbackType<T, any>): void;
-	create (item: Partial<T>, settings: ItemSaveSettings & {return: "item"}): Promise<T>;
-	create (item: Partial<T>, settings: ItemSaveSettings & {return: "item"}, callback: CallbackType<T, any>): void;
-	create (item: Partial<T>, settings?: ItemSaveSettings | CallbackType<T, any> | CallbackType<DynamoDB.PutItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.PutItemInput, any>): void | Promise<T> | Promise<DynamoDB.PutItemInput> {
+	create (item: Partial<T>, settings: ItemSaveSettings): Promise<T & U>;
+	create (item: Partial<T>, settings: ItemSaveSettings, callback: CallbackType<T & U, any>): void;
+	create (item: Partial<T>, settings: ItemSaveSettings & {return: "item"}): Promise<T & U>;
+	create (item: Partial<T>, settings: ItemSaveSettings & {return: "item"}, callback: CallbackType<T & U, any>): void;
+	create (item: Partial<T>, settings?: ItemSaveSettings | CallbackType<T & U, any> | CallbackType<DynamoDB.PutItemInput, any>, callback?: CallbackType<T & U, any> | CallbackType<DynamoDB.PutItemInput, any>): void | Promise<T & U> | Promise<DynamoDB.PutItemInput> {
 		if (typeof settings === "function" && !callback) {
 			callback = settings;
 			settings = {};
@@ -1004,15 +1004,15 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	}
 
 	// Get
-	get (key: InputKey): Promise<T>;
-	get (key: InputKey, callback: CallbackType<T, any>): void;
+	get (key: InputKey): Promise<T & U>;
+	get (key: InputKey, callback: CallbackType<T & U, any>): void;
 	get (key: InputKey, settings: ModelGetSettings & {return: "request"}): Promise<DynamoDB.GetItemInput>;
 	get (key: InputKey, settings: ModelGetSettings & {return: "request"}, callback: CallbackType<DynamoDB.GetItemInput, any>): void;
-	get (key: InputKey, settings: ModelGetSettings): Promise<T>;
-	get (key: InputKey, settings: ModelGetSettings, callback: CallbackType<T, any>): void;
-	get (key: InputKey, settings: ModelGetSettings & {return: "item"}): Promise<T>;
-	get (key: InputKey, settings: ModelGetSettings & {return: "item"}, callback: CallbackType<T, any>): void;
-	get (key: InputKey, settings?: ModelGetSettings | CallbackType<T, any> | CallbackType<DynamoDB.GetItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.GetItemInput, any>): void | Promise<DynamoDB.GetItemInput> | Promise<T> {
+	get (key: InputKey, settings: ModelGetSettings): Promise<T & U>;
+	get (key: InputKey, settings: ModelGetSettings, callback: CallbackType<T & U, any>): void;
+	get (key: InputKey, settings: ModelGetSettings & {return: "item"}): Promise<T & U>;
+	get (key: InputKey, settings: ModelGetSettings & {return: "item"}, callback: CallbackType<T & U, any>): void;
+	get (key: InputKey, settings?: ModelGetSettings | CallbackType<T & U, any> | CallbackType<DynamoDB.GetItemInput, any>, callback?: CallbackType<T & U, any> | CallbackType<DynamoDB.GetItemInput, any>): void | Promise<DynamoDB.GetItemInput> | Promise<T & U> {
 		if (typeof settings === "function") {
 			callback = settings;
 			settings = {"return": "item"};
@@ -1070,7 +1070,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	}
 
 	// Serialize Many
-	serializeMany (itemsArray: ModelType<ItemCarrier>[] = [], nameOrOptions: SerializerOptions | string): any {
+	serializeMany (itemsArray: ModelType<ItemCarrier, U>[] = [], nameOrOptions: SerializerOptions | string): any {
 		return this.serializer.getInternalProperties(internalProperties).serializeMany(itemsArray, nameOrOptions);
 	}
 }

@@ -1,17 +1,17 @@
 import CustomError from "./Error";
 import {Model} from "./Model";
-import {Item} from "./Item";
+import {Item, ItemMethods} from "./Item";
 import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 
 let models: {[name: string]: Model<Item>} = {};
 
-const returnObject = <T extends Item>(input: Model<T> | string): Model<T> | never => {
+const returnObject = <T extends Item, U extends ItemMethods>(input: Model<T, U> | string): Model<T, U> | never => {
 	if (input instanceof Model) {
 		models[input.name] = input;
 		return input;
 	} else if (typeof input === "string") {
-		return models[input] as Model<T>;
+		return models[input] as Model<T, U>;
 	} else {
 		throw new CustomError.InvalidParameter("You must pass in a Model or model name as a string.");
 	}

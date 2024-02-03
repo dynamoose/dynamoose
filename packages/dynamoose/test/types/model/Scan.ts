@@ -1,13 +1,13 @@
 /* eslint @typescript-eslint/no-unused-vars: 0, no-console: 0 */
 
-import {UserTypedModel, User, UserModel} from "../Model";
+import {UserTypedModel, User, UserModel, UserMethods} from "../Model";
 import {Condition} from "../../../dist";
 import {AnyItem} from "../../../dist/Item";
 import {ScanResponse, Scan} from "../../../dist/ItemRetriever";
 import {ObjectType} from "../../../dist/General";
 
 // scan.exec([callback])
-async function scanExec (): Promise<User[]> {
+async function scanExec (): Promise<Array<User & UserMethods>> {
 	return await UserTypedModel.scan().exec();
 }
 async function scanExecUnTyped (): Promise<AnyItem[]> {
@@ -15,11 +15,11 @@ async function scanExecUnTyped (): Promise<AnyItem[]> {
 }
 
 const scanExecUnTypedWithScanResponse: Promise<ScanResponse<AnyItem>> = UserModel.scan().exec();
-const scanExecTyped: Promise<ScanResponse<User>> = UserTypedModel.scan("name").eq("Will").exec();
+const scanExecTyped: Promise<ScanResponse<User & UserMethods>> = UserTypedModel.scan("name").eq("Will").exec();
 
 UserTypedModel.scan().exec();
 
-let isAssignableToScan : Scan<User>;
+let isAssignableToScan : Scan<User & UserMethods>;
 
 // scan.limit(count)
 isAssignableToScan = UserTypedModel.scan().limit(5);

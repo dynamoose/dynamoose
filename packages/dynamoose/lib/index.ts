@@ -3,7 +3,7 @@ import {Schema, SchemaDefinition} from "./Schema";
 import {Condition} from "./Condition";
 import transaction from "./Transaction";
 import utils from "./utils";
-import {Item, AnyItem} from "./Item";
+import {Item, AnyItem, ItemMethods, AnyItemMethods} from "./Item";
 import ModelStore from "./ModelStore";
 import {ModelType} from "./General";
 import CustomError from "./Error";
@@ -13,11 +13,11 @@ import {Instance} from "./Instance";
 import {custom as TableDefaults} from "./Table/defaults";
 import returnModel from "./utils/dynamoose/returnModel";
 
-const model = <T extends Item = AnyItem>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: ModelTableOptions): ModelType<T> => {
-	let model: Model<T>;
-	let storedSchema: Model<T>;
+const model = <T extends Item = AnyItem, U extends ItemMethods = AnyItemMethods>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: ModelTableOptions): ModelType<T, U> => {
+	let model: Model<T, U>;
+	let storedSchema: Model<T, U>;
 	if (name) {
-		storedSchema = ModelStore<T>(name);
+		storedSchema = ModelStore<T, U>(name);
 	}
 	// TODO: this is something I'd like to do. But is a breaking change. Need to enable this and uncomment it in a breaking release. Also will need to fix the tests as well.
 	/* if (schema && storedSchema) {

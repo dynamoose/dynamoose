@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 
 import * as dynamoose from "../../dist";
-import {Item} from "../../dist/Item";
+import {Item, ItemMethods} from "../../dist/Item";
 import {IndexType} from "../../dist/Schema";
 
 // @ts-expect-error
@@ -73,11 +73,17 @@ const shouldFailWithInvalidUpdateTransaction = model.transaction.update(0);
 const shouldFailWithInvalidConditionTransaction = model.transaction.condition(0, []);
 
 // Typed Models
-export class User extends Item {
+
+export interface UserMethods extends ItemMethods {
+	resetPassword: () => Promise<void>;
+}
+
+export interface User extends Item {
 	id: string;
 	name: string;
 	age: number;
 }
+
 const userSchema = new dynamoose.Schema({
 	"id": String,
 	"name": {
@@ -89,7 +95,7 @@ const userSchema = new dynamoose.Schema({
 	"age": Number
 });
 
-export const UserTypedModel = dynamoose.model<User>(
+export const UserTypedModel = dynamoose.model<User, UserMethods>(
 	"User",
 	userSchema
 );
@@ -110,3 +116,6 @@ UserTypedModel.update({"id": "foo"}, {
 UserTypedModel.update({"id": "foo"}, {
 	"$REMOVE":{"age":null}
 });
+
+// @ts-expect-error
+const shouldFailItemCustomMethodAccess = UserTypedModel.resetPassword();

@@ -1,6 +1,6 @@
-import {User, UserTypedModel} from "./Model";
+import {UserTypedModel} from "./Model";
 
-const user = new User(UserTypedModel, {"id": "1", "name": "Jane", "age": 30});
+const user = new UserTypedModel({"id": "1", "name": "Jane", "age": 30});
 
 const shouldPassSave = user.save();
 const shouldPassSaveWithReturnRequest = user.save({"return": "request"});
@@ -11,3 +11,5 @@ const shouldPassSaveWithReturnItemCallback = user.save({"return": "item"}, () =>
 
 // @ts-expect-error
 const shouldFailWithInvalidReturnType = user.save({"return": "invalid-return-type"});
+
+const shouldPassCustomMethodAccess = user.resetPassword();

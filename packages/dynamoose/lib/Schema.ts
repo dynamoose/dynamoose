@@ -1,7 +1,7 @@
 import CustomError from "./Error";
 import utils from "./utils";
 import Internal from "./Internal";
-import {Item, ItemObjectFromSchemaSettings} from "./Item";
+import {AnyItemMethods, Item, ItemObjectFromSchemaSettings} from "./Item";
 import {Model, ModelIndexes} from "./Model";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {ModelType, ObjectType} from "./General";
@@ -273,7 +273,7 @@ const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.arr
 
 type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[];
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
+type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item, AnyItemMethods>;
 
 export interface TimestampObject {
 	createdAt?: string | string[] | SchemaDefinition;
@@ -324,7 +324,7 @@ interface IndexDefinition {
 }
 interface AttributeDefinitionTypeSettings {
 	storage?: "milliseconds" | "seconds" | "iso";
-	model?: ModelType<Item>;
+	model?: ModelType<Item, AnyItemMethods>;
 	attributes?: string[];
 	separator?: string;
 	value?: string | boolean | number;
