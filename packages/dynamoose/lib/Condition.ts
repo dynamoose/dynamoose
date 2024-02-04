@@ -114,7 +114,7 @@ type ConditionObject = {
 } | typeof OR;
 
 interface ConditionInternalProperties {
-	requestObject: (model: Model<Item>, settings?: ConditionRequestObjectSettings) => Promise<ConditionRequestObjectResult>;
+	requestObject: (models: Model<Item>[], settings?: ConditionRequestObjectSettings) => Promise<ConditionRequestObjectResult>;
 	settings?: {
 		conditions?: ConditionObject[];
 		pending?: {
@@ -138,9 +138,11 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 		super();
 
 		this.setInternalProperties(internalProperties, {
-			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
+			"requestObject": async (models: Model<Item>[], settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
-					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+					const object = {[key]: value};
+					const modelForObject = await models[0].getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).modelForObject(object);
+					const newObj = await Item.objectFromSchema(object, modelForObject.Model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
 					const newObjKeys = Object.keys(newObj);
 					// TODO: not quite sure how to unit test the error below. Need to figure this out. Maybe by mocking `Item.objectFromSchema`??? We don't currently have a system in place to do that easily tho.
 					/* istanbul ignore next */
@@ -182,7 +184,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 							object = {...object, ...returnObject};
 						} else if (entry !== OR) {
 							const keyConditionObj = Object.entries(entry)[0];
-							const key = await model.getInternalProperties(internalProperties).dynamoPropertyForAttribute(keyConditionObj[0]);
+							const key = await models[0].getInternalProperties(internalProperties).dynamoPropertyForAttribute(keyConditionObj[0]);
 							const condition = keyConditionObj[1];
 							const {value} = condition;
 							const keys = {"name": `#a${index}`, "value": `:v${index}`};
