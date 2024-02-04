@@ -45,6 +45,11 @@ module.exports = {
 			]
 		},
 		{
+			"type": "doc",
+			"id": "Community",
+			"label": "Community"
+		},
+		{
 			"type": "category",
 			"label": "Sponsored By",
 			"collapsed": false,
