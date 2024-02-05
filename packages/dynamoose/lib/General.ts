@@ -1,5 +1,6 @@
 import {Item, ItemMethods} from "./Item";
 import {Model} from "./Model";
+import {Flatten} from "./Types";
 
 // - General
 export type CallbackType<R, E> = (error?: E | null, response?: R) => void;
@@ -13,8 +14,6 @@ export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
 export type KeyObject = {[attribute: string]: string | number};
 // An item representing a DynamoDB key
 export type InputKey = string | number | KeyObject;
-
-type Expand<T> = {[KeyType in keyof T]: T[KeyType]} & {};
 
 interface ModelItemConstructor<T extends Item, U extends ItemMethods> {
 	/**
@@ -31,7 +30,7 @@ interface ModelItemConstructor<T extends Item, U extends ItemMethods> {
 	 * // myUser is now an item instance of the User model
 	 * ```
 	 */
-	new (object: Expand<Omit<T, keyof Item>>): T & U;
+	new (object: Flatten<Omit<T, keyof Item>>): T & U;
 	Model: Model<T, U>;
 }
 export type ModelType<T extends Item, U extends ItemMethods> = T & Model<T, U> & ModelItemConstructor<T, U>;
