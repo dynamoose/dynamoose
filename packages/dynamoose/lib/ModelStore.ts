@@ -6,7 +6,7 @@ const {internalProperties} = Internal.General;
 
 let models: {[name: string]: Model<Item>} = {};
 
-const returnObject = <T extends Item, U extends ItemMethods>(input: Model<T, U> | string): Model<T, U> | never => {
+const returnObject = <T extends Item, U extends ItemMethods<U>>(input: Model<T, U> | string): Model<T, U> | never => {
 	if (input instanceof Model) {
 		models[input.name] = input;
 		return input;

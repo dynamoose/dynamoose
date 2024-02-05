@@ -131,7 +131,7 @@ interface ModelInternalProperties {
 }
 
 // Model represents a single entity (ex. User, Movie, Video, Order)
-export class Model<T extends ItemCarrier = AnyItem, U extends ItemMethods = ItemMethods> extends InternalPropertiesClass<ModelInternalProperties> {
+export class Model<T extends ItemCarrier = AnyItem, U extends ItemMethods<U> = {}> extends InternalPropertiesClass<ModelInternalProperties> {
 	/**
 	 * This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns an item initializer that you can use to create instances of the given model.
 	 *

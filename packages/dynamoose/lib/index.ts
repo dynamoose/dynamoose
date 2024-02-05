@@ -13,7 +13,7 @@ import {Instance} from "./Instance";
 import {custom as TableDefaults} from "./Table/defaults";
 import returnModel from "./utils/dynamoose/returnModel";
 
-const model = <T extends Item = AnyItem, U extends ItemMethods = ItemMethods>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: ModelTableOptions): ModelType<T, U> => {
+const model = <T extends Item = AnyItem, U extends ItemMethods<U> = {}>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: ModelTableOptions): ModelType<T, U> => {
 	let model: Model<T, U>;
 	let storedSchema: Model<T, U>;
 	if (name) {

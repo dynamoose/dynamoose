@@ -273,7 +273,7 @@ const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.arr
 
 type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[];
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item, ItemMethods>;
+type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item, {}>;
 
 export interface TimestampObject {
 	createdAt?: string | string[] | SchemaDefinition;
@@ -324,7 +324,7 @@ interface IndexDefinition {
 }
 interface AttributeDefinitionTypeSettings {
 	storage?: "milliseconds" | "seconds" | "iso";
-	model?: ModelType<Item, ItemMethods>;
+	model?: ModelType<Item, ItemMethods<{}>>;
 	attributes?: string[];
 	separator?: string;
 	value?: string | boolean | number;

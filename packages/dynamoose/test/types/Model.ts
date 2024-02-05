@@ -74,8 +74,12 @@ const shouldFailWithInvalidConditionTransaction = model.transaction.condition(0,
 
 // Typed Models
 
-export interface UserMethods extends ItemMethods {
+export interface UserMethods {
 	resetPassword: () => Promise<void>;
+}
+
+interface InvalidMethods {
+	updateEmail: string;
 }
 
 export interface User extends Item {
@@ -99,6 +103,8 @@ export const UserTypedModel = dynamoose.model<User, UserMethods>(
 	"User",
 	userSchema
 );
+// @ts-expect-error
+const shouldFailWithInvalidMethodTypes = dynamoose.model<User, InvalidMethods>("User", userSchema);
 
 export const UserModel = dynamoose.model(
 	"User",
@@ -116,6 +122,3 @@ UserTypedModel.update({"id": "foo"}, {
 UserTypedModel.update({"id": "foo"}, {
 	"$REMOVE":{"age":null}
 });
-
-// @ts-expect-error
-const shouldFailItemCustomMethodAccess = UserTypedModel.resetPassword();

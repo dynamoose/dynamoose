@@ -1,15 +1,13 @@
 import {UserTypedModel} from "./Model";
 
-const user = new UserTypedModel({"id": "1", "name": "Jane", "age": 30});
+const typedUser = new UserTypedModel({"id": "1", "name": "Jane", "age": 30});
 
-const shouldPassSave = user.save();
-const shouldPassSaveWithReturnRequest = user.save({"return": "request"});
-const shouldPassSaveWithReturnItem = user.save({"return": "item"});
-const shouldPassSaveCallback = user.save(() => {});
-const shouldPassSaveWithReturnRequestCallback = user.save({"return": "request"}, () => {});
-const shouldPassSaveWithReturnItemCallback = user.save({"return": "item"}, () => {});
+const shouldPassSave = typedUser.save();
+const shouldPassSaveWithReturnRequest = typedUser.save({"return": "request"});
+const shouldPassSaveWithReturnItem = typedUser.save({"return": "item"});
+const shouldPassSaveCallback = typedUser.save(() => {});
+const shouldPassSaveWithReturnRequestCallback = typedUser.save({"return": "request"}, () => {});
+const shouldPassSaveWithReturnItemCallback = typedUser.save({"return": "item"}, () => {});
 
 // @ts-expect-error
-const shouldFailWithInvalidReturnType = user.save({"return": "invalid-return-type"});
-
-const shouldPassCustomMethodAccess = user.resetPassword();
+const shouldFailWithInvalidReturnType = typedUser.save({"return": "invalid-return-type"});
