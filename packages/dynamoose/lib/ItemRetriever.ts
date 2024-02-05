@@ -204,7 +204,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 
 		const valueKey = key.replace("#a", ":v");
 
-		Object.keys(object.ExpressionAttributeValues).filter((key) => key.startsWith(valueKey)).forEach((key) => {
+		Object.keys(object.ExpressionAttributeValues).filter((key) => key === valueKey || key.startsWith(`${valueKey}_`)).forEach((key) => {
 			object.ExpressionAttributeValues[key.replace(new RegExp(":v\\d+"), `:${prefix}v`)] = object.ExpressionAttributeValues[key];
 			delete object.ExpressionAttributeValues[key];
 		});

@@ -400,6 +400,59 @@ describe("Query", () => {
 					});
 				});
 
+				it("Should send correct request with 10+ arguments", async () => {
+					queryPromiseResolver = () => ({"Items": []});
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"type": "global", "rangeKey": "color"}}, "color": String});
+					new dynamoose.Table("Cat", [Model]);
+					const functionToTest = Model.query().where("name").eq("Charlie")
+						.where("color").eq("I")
+						.where("color").eq("am")
+						.where("color").eq("a")
+						.where("color").eq("test")
+						.where("color").eq("with")
+						.where("color").eq("more")
+						.where("color").eq("than")
+						.where("color").eq("ten")
+						.where("color").eq("arguments")
+						.where("color").eq("in")
+						.where("color").eq("query");
+					await callType.func(functionToTest.exec).bind(functionToTest)();
+					expect(queryParams).toEqual({
+						"TableName": "Cat",
+						"IndexName": "nameGlobalIndex",
+						"ExpressionAttributeNames": {
+							"#qha": "name",
+							"#qra": "color",
+							"#a2": "color",
+							"#a3": "color",
+							"#a4": "color",
+							"#a5": "color",
+							"#a6": "color",
+							"#a7": "color",
+							"#a8": "color",
+							"#a9": "color",
+							"#a10": "color",
+							"#a11": "color"
+						},
+						"ExpressionAttributeValues": {
+							":qhv": {"S": "Charlie"},
+							":qrv": {"S": "I"},
+							":v2": {"S": "am"},
+							":v3": {"S": "a"},
+							":v4": {"S": "test"},
+							":v5": {"S": "with"},
+							":v6": {"S": "more"},
+							":v7": {"S": "than"},
+							":v8": {"S": "ten"},
+							":v9": {"S": "arguments"},
+							":v10": {"S": "in"},
+							":v11": {"S": "query"}
+						},
+						"FilterExpression": "#a2 = :v2 AND #a3 = :v3 AND #a4 = :v4 AND #a5 = :v5 AND #a6 = :v6 AND #a7 = :v7 AND #a8 = :v8 AND #a9 = :v9 AND #a10 = :v10 AND #a11 = :v11",
+						"KeyConditionExpression": "#qha = :qhv AND #qra = :qrv"
+					});
+				});
+
 				it("Should send correct request on query.exec using array of indexes", async () => {
 					queryPromiseResolver = () => ({"Items": []});
 					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": [{"type": "global", "rangeKey": "age", "name": "NameAgeIndex"}, {"type": "global", "rangeKey": "breed", "name": "NameBreedIndex"}]}, "age": Number, "breed": String});
