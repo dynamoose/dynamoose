@@ -34,10 +34,6 @@ export interface ItemMethods {
 	[key: string]: Function;
 }
 
-export interface AnyItemMethods {
-	[key: string]: any;
-}
-
 interface ItemInternalProperties {
 	originalObject: any;
 	originalSettings: ItemSettings;

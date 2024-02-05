@@ -3,7 +3,7 @@ import {Schema, SchemaDefinition} from "./Schema";
 import {Condition} from "./Condition";
 import transaction from "./Transaction";
 import utils from "./utils";
-import {Item, AnyItem, ItemMethods, AnyItemMethods} from "./Item";
+import {Item, AnyItem, ItemMethods} from "./Item";
 import ModelStore from "./ModelStore";
 import {ModelType} from "./General";
 import CustomError from "./Error";
@@ -13,7 +13,7 @@ import {Instance} from "./Instance";
 import {custom as TableDefaults} from "./Table/defaults";
 import returnModel from "./utils/dynamoose/returnModel";
 
-const model = <T extends Item = AnyItem, U extends ItemMethods = AnyItemMethods>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: ModelTableOptions): ModelType<T, U> => {
+const model = <T extends Item = AnyItem, U extends ItemMethods = ItemMethods>(name: string, schema?: Schema | SchemaDefinition | (Schema | SchemaDefinition)[], options?: ModelTableOptions): ModelType<T, U> => {
 	let model: Model<T, U>;
 	let storedSchema: Model<T, U>;
 	if (name) {

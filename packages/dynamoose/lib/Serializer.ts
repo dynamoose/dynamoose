@@ -1,5 +1,5 @@
 import {ObjectType, ModelType} from "./General";
-import {AnyItemMethods, Item} from "./Item";
+import {ItemMethods, Item} from "./Item";
 import CustomError from "./Error";
 import utils from "./utils";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
@@ -16,7 +16,7 @@ interface SerializerInternalProperties {
 	serializers: {[key: string]: SerializerOptions};
 	defaultSerializer?: string;
 
-	serializeMany: (itemsArray: ModelType<Item, AnyItemMethods>[], nameOrOptions: SerializerOptions | string) => ObjectType[];
+	serializeMany: (itemsArray: ModelType<Item, ItemMethods>[], nameOrOptions: SerializerOptions | string) => ObjectType[];
 	serialize: (item: ObjectType, nameOrOptions: SerializerOptions | string) => ObjectType;
 }
 
@@ -32,7 +32,7 @@ export class Serializer extends InternalPropertiesClass<SerializerInternalProper
 					"modify": (serialized: ObjectType, original: ObjectType): ObjectType => ({...original})
 				}
 			},
-			"serializeMany": (itemsArray: ModelType<Item, AnyItemMethods>[], nameOrOptions: SerializerOptions | string): ObjectType[] => {
+			"serializeMany": (itemsArray: ModelType<Item, ItemMethods>[], nameOrOptions: SerializerOptions | string): ObjectType[] => {
 				if (!itemsArray || !Array.isArray(itemsArray)) {
 					throw new CustomError.InvalidParameter("itemsArray must be an array of item objects");
 				}

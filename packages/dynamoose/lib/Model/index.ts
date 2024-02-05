@@ -1,7 +1,7 @@
 import CustomError from "../Error";
 import ModelStore from "../ModelStore";
 import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
-import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem, ItemMethods, AnyItemMethods} from "../Item";
+import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem, ItemMethods} from "../Item";
 import utils from "../utils";
 import ddb from "../aws/ddb/internal";
 import Internal from "../Internal";
@@ -131,7 +131,7 @@ interface ModelInternalProperties {
 }
 
 // Model represents a single entity (ex. User, Movie, Video, Order)
-export class Model<T extends ItemCarrier = AnyItem, U extends ItemMethods = AnyItemMethods> extends InternalPropertiesClass<ModelInternalProperties> {
+export class Model<T extends ItemCarrier = AnyItem, U extends ItemMethods = ItemMethods> extends InternalPropertiesClass<ModelInternalProperties> {
 	/**
 	 * This method is the basic entry point for creating a model in Dynamoose. When you call this method a new model is created, and it returns an item initializer that you can use to create instances of the given model.
 	 *
