@@ -31,3 +31,18 @@ export type AnySimpleValue = string | number | symbol;
 export type AnySimpleObject = Record<string, AnySimpleValue>;
 
 export type ArrayItemsMerger = <T extends AnySimpleObject = AnySimpleObject>(target: T[], source: T[]) => T[];
+
+/**
+ * Utility type for non-recursively flattening a type into a single type.
+ * Useful for increasing readability for public types, especially
+ * types that are derived from utility types like `Omit` or `Pick`.
+ *
+ * @example
+ * ```ts
+ * type Intersection = {a: string;} & {b: string;} & {c: string;}
+ * type Flattened = Flatten<Intersection> // {a: string; b: string; c: string;}
+ * ```
+ */
+export type Flatten<T> = {
+	[Key in keyof T]: T[Key]
+} & {}; // Trailing `& {}` is what prompts TS to flatten the type. Without it, TS would display `Flatten<InputType>` instead.

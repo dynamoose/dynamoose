@@ -30,6 +30,10 @@ export interface ItemSettings {
 	type?: "fromDynamo" | "toDynamo";
 }
 
+export type ItemMethods<T> = {
+	[K in keyof T]: Function
+};
+
 interface ItemInternalProperties {
 	originalObject: any;
 	originalSettings: ItemSettings;
