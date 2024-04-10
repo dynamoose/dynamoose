@@ -10,7 +10,7 @@
     "prebuild": "cd .. && npm run build && cd docs && node process.js"
   },
   "dependencies": {
-    "@crowdin/cli": "^3.10.1",
+    "@crowdin/cli": "^3.19.2",
     "@docusaurus/core": "2.4.0",
     "@docusaurus/preset-classic": "2.4.0",
     "classnames": "^2.3.2",
