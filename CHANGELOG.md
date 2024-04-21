@@ -2,6 +2,22 @@
 
 ---
 
+## Version 4.0.1
+
+This release fixes a bug related to >= 10 conditions when querying or scanning.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Fixes issue where >= 10 conditions when querying or scanning would lead to an error
+
+### Documentation
+
+- Adding community page to website
+
+---
+
 ## Version 4.0.0
 
 This release bumps the minimum required version of Node.js to v16.x.x. It also updates the dependencies to the latest versions.
