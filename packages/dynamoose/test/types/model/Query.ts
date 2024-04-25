@@ -23,9 +23,12 @@ let isAssignableToQuery : Query<User>;
 isAssignableToQuery = UserTypedModel.query("name").eq("Will").limit(5);
 
 // query.startAt(key)
-async function queryStartAt (): Promise<Query<User>> {
+async function queryStartAt (): Promise<Query<User> | undefined> {
 	const response = await UserTypedModel.query("name").eq("Will").exec();
-	return UserTypedModel.query("name").eq("Will").startAt(response.lastKey);
+
+	if (response.lastKey) {
+		return UserTypedModel.query("name").eq("Will").startAt(response.lastKey);
+	}
 }
 
 // query.attributes(attributes)

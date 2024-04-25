@@ -6,6 +6,6 @@
 		"target": "es2017",
 		"noEmit": true,
 		"strict": true
-	},
+},
 	"include": ["./**/*"]
 }
