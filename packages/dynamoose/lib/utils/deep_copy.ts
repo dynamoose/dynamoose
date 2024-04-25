@@ -66,7 +66,7 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 					refs.add(value);
 				}
 
-				copy[attr] = deep_copy(obj[attr], refs);
+				copy[attr] = deep_copy(value, refs);
 			}
 		}
 		return copy;

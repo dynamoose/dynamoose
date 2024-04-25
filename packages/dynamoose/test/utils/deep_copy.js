@@ -69,6 +69,14 @@ describe("utils.deep_copy", () => {
 		expect(copy).toStrictEqual({"a": 1, "b": "test", "c": {"d": 100, "e": 200}});
 	});
 
+	it("Should return a deep copy of the passed object ignoring circular references", () => {
+		const original = {"a": 1, "b": "test", "c": {"d": 100, "e": 200, "f": {"g": 300}}};
+		original.self = original;
+		original.c.f.c = original.c;
+		const copy = utils.deep_copy(original);
+		expect(copy).toStrictEqual({"a": 1, "b": "test", "c": {"d": 100, "e": 200, "f": {"g": 300}}});
+	});
+
 	it("Should return a deep copy of the passed class instances", () => {
 		class PersonWrapper {
 			constructor (name, age) {
