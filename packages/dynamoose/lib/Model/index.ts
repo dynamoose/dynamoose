@@ -1004,15 +1004,15 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	}
 
 	// Get
-	get (key: InputKey): Promise<T>;
-	get (key: InputKey, callback: CallbackType<T, any>): void;
+	get (key: InputKey): Promise<T | undefined>;
+	get (key: InputKey, callback: CallbackType<T | undefined, any>): void;
 	get (key: InputKey, settings: ModelGetSettings & {return: "request"}): Promise<DynamoDB.GetItemInput>;
 	get (key: InputKey, settings: ModelGetSettings & {return: "request"}, callback: CallbackType<DynamoDB.GetItemInput, any>): void;
-	get (key: InputKey, settings: ModelGetSettings): Promise<T>;
-	get (key: InputKey, settings: ModelGetSettings, callback: CallbackType<T, any>): void;
-	get (key: InputKey, settings: ModelGetSettings & {return: "item"}): Promise<T>;
-	get (key: InputKey, settings: ModelGetSettings & {return: "item"}, callback: CallbackType<T, any>): void;
-	get (key: InputKey, settings?: ModelGetSettings | CallbackType<T, any> | CallbackType<DynamoDB.GetItemInput, any>, callback?: CallbackType<T, any> | CallbackType<DynamoDB.GetItemInput, any>): void | Promise<DynamoDB.GetItemInput> | Promise<T> {
+	get (key: InputKey, settings: ModelGetSettings): Promise<T | undefined>;
+	get (key: InputKey, settings: ModelGetSettings, callback: CallbackType<T | undefined, any>): void;
+	get (key: InputKey, settings: ModelGetSettings & {return: "item"}): Promise<T | undefined>;
+	get (key: InputKey, settings: ModelGetSettings & {return: "item"}, callback: CallbackType<T | undefined, any>): void;
+	get (key: InputKey, settings?: ModelGetSettings | CallbackType<T | undefined, any> | CallbackType<DynamoDB.GetItemInput, any>, callback?: CallbackType<T | undefined, any> | CallbackType<DynamoDB.GetItemInput, any>): void | Promise<DynamoDB.GetItemInput> | Promise<T | undefined> {
 		if (typeof settings === "function") {
 			callback = settings;
 			settings = {"return": "item"};

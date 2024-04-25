@@ -72,6 +72,8 @@ const shouldFailWithInvalidUpdateTransaction = model.transaction.update(0);
 // @ts-expect-error
 const shouldFailWithInvalidConditionTransaction = model.transaction.condition(0, []);
 
+
+
 // Typed Models
 export class User extends Item {
 	id: string;
