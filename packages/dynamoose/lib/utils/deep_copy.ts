@@ -1,6 +1,4 @@
-import * as objectUtils from "js-object-utilities";
-
-export default function deep_copy<T> (obj: T): T {
+export default function deep_copy<T> (obj: T, refs = new Set()): T {
 	let copy: any;
 
 	// Handle Date
@@ -12,7 +10,7 @@ export default function deep_copy<T> (obj: T): T {
 
 	// Handle Array
 	if (obj instanceof Array) {
-		copy = obj.map((i) => deep_copy(i));
+		copy = obj.map((i) => deep_copy(i, refs));
 		return copy;
 	}
 
@@ -47,14 +45,28 @@ export default function deep_copy<T> (obj: T): T {
 
 	// Handle Object
 	if (obj instanceof Object) {
+		refs.add(obj);
+
 		if (obj.constructor !== Object) {
 			copy = Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 		} else {
 			copy = {};
 		}
+
 		for (const attr in obj) {
-			if (Object.prototype.hasOwnProperty.call(obj, attr) && !objectUtils.isCircular(obj as any, attr)) {
-				copy[attr] = deep_copy(obj[attr]);
+			if (Object.prototype.hasOwnProperty.call(obj, attr)) {
+				const value = obj[attr];
+				const isObjValue = typeof value === "object" && !Array.isArray(value) && value !== null;
+
+				if (isObjValue) {
+					const isCircular = refs.has(value);
+					// Omit circular property from copy
+					if (isCircular) continue;
+
+					refs.add(value);
+				}
+
+				copy[attr] = deep_copy(value, refs);
 			}
 		}
 		return copy;
