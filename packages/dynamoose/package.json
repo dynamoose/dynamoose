@@ -46,5 +46,9 @@
       "type": "opencollective",
       "url": "https://opencollective.com/dynamoose"
     }
-  ]
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }
