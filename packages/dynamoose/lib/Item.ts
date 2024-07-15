@@ -440,7 +440,12 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 		const localSettings: ItemSaveSettings = settings;
 		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true}).then(async (item) => {
-			savedItem = item;
+			const conformToSchemaSettings : ItemObjectFromSchemaSettings = {"combine": true, "customTypesDynamo": true, "saveUnknown": true, "type": "fromDynamo", "modifiers": ["get"], "mapAttributes": true};
+			savedItem = await new (this.getInternalProperties(internalProperties).model).Item(item as any).conformToSchema(conformToSchemaSettings);
+			Object.keys(savedItem).forEach((key) => this[key] = savedItem[key]);
+			savedItem.getInternalProperties(internalProperties).storedInDynamo = true;
+			this.getInternalProperties(internalProperties).storedInDynamo = true;
+
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
 				"TableName": table.getInternalProperties(internalProperties).name
@@ -478,26 +483,12 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			return ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
 		});
 
+
 		if (callback) {
 			const localCallback: CallbackType<Item, any> = callback as CallbackType<Item, any>;
-			promise.then(() => {
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				localCallback(null, returnItem);
-			}).catch((error) => callback(error));
+			promise.then(() => localCallback(null, savedItem), (error) => callback(error));
 		} else {
-			return (async (): Promise<Item> => {
-				await promise;
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				return returnItem;
-			})();
+			return promise.then(() => savedItem);
 		}
 	}
 

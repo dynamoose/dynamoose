@@ -34,36 +34,3 @@ jobs:
           TAG: ${{ needs.getinfo.outputs.npmtag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  publishsite:
-    needs: getinfo
-    runs-on: ubuntu-latest
-    if: needs.getinfo.outputs.websites3bucket != ''
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: lts/*
-      - run: npm install
-      - run: npm run site:install
-      - run: npm run site:crowdin:sync
-        env:
-          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
-      - run: npm run site:build
-      - uses: jakejarvis/s3-sync-action@v0.5.1
-        with:
-          args: --follow-symlinks --delete --cache-control 's-maxage=604800, max-age=0'
-        env:
-          AWS_S3_BUCKET: ${{ needs.getinfo.outputs.websites3bucket }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: 'us-west-2'
-          SOURCE_DIR: 'docs/build'
-      - name: Purge Cloudflare Cache
-        run: |
-          curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/purge_cache" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            --data '{"purge_everything":true}'
-        env:
-          TOKEN: ${{ secrets.CLOUDFLARE_TOKEN }}
-          ZONE: ${{ secrets.CLOUDFLARE_ZONE }}

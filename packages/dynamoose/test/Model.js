@@ -1998,9 +1998,9 @@ describe("Model", () => {
 					// Check original timestamps
 					expect(result.id).toEqual(1);
 					expect(result.name).toEqual("Charlie");
-					expect(typeof result.createdAt).toEqual("number");
+					expect(result.createdAt.constructor).toEqual(Date);
 					expect(result.createdAt).toBeWithinRange(date1 - 10, date1 + 10);
-					expect(typeof result.updatedAt).toEqual("number");
+					expect(result.updatedAt.constructor).toEqual(Date);
 					expect(result.updatedAt).toBeWithinRange(date1 - 10, date1 + 10);
 
 					await new Promise((resolve) => setTimeout(resolve, 20));
@@ -2010,15 +2010,16 @@ describe("Model", () => {
 					// Mutate document and re-save
 					result.name = "Charlie 2";
 					const result2 = await result.save();
+					const date3 = Date.now();
 
 					expect(result.toJSON()).toEqual(result2.toJSON());
 					[result, result2].forEach((r) => {
 						expect(r.id).toEqual(1);
 						expect(r.name).toEqual("Charlie 2");
-						expect(typeof r.createdAt).toEqual("number");
-						expect(r.createdAt).toBeWithinRange(date1 - 10, date1 + 10);
-						expect(typeof r.updatedAt).toEqual("number");
-						expect(r.updatedAt).toBeWithinRange(date2 - 10, date2 + 10);
+						expect(r.createdAt.constructor).toEqual(Date);
+						expect(r.createdAt.getTime()).toBeWithinRange(date1, date3);
+						expect(r.updatedAt.constructor).toEqual(Date);
+						expect(r.updatedAt.getTime()).toBeWithinRange(date2, date3);
 					});
 				});
 			});
