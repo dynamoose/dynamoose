@@ -3,23 +3,23 @@ import ddb from "./aws/ddb/internal";
 import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
-import {Model} from "./Model";
-import {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult} from "./Schema";
-const {internalProperties} = Internal.General;
+import { Model } from "./Model";
+import { DynamoDBTypeResult, Schema, DynamoDBSetTypeResult } from "./Schema";
+const { internalProperties } = Internal.General;
 const dynamooseUndefined = Internal.Public.undefined;
 const dynamooseAny = Internal.Public.any;
 
-import {AttributeMap} from "./Types";
+import { AttributeMap } from "./Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
-import {ValueType} from "./Schema";
-import {CallbackType, ObjectType} from "./General";
-import {SerializerOptions} from "./Serializer";
-import {PopulateItem, PopulateSettings} from "./Populate";
-import {Condition} from "./Condition";
-import {TableExpiresSettings} from "./Table";
-import {InternalPropertiesClass} from "./InternalPropertiesClass";
+import { ValueType } from "./Schema";
+import { CallbackType, ObjectType } from "./General";
+import { SerializerOptions } from "./Serializer";
+import { PopulateItem, PopulateSettings } from "./Populate";
+import { Condition } from "./Condition";
+import { TableExpiresSettings } from "./Table";
+import { InternalPropertiesClass } from "./InternalPropertiesClass";
 import CustomError from "./Error";
-import {GeneralObject} from "js-object-utilities";
+import { GeneralObject } from "js-object-utilities";
 
 export interface ItemSaveSettings {
 	overwrite?: boolean;
@@ -45,7 +45,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * @param object The object for the item.
 	 * @param settings The settings for the item.
 	 */
-	constructor (model: Model<Item>, object?: AttributeMap | ObjectType, settings?: ItemSettings) {
+	constructor(model: Model<Item>, object?: AttributeMap | ObjectType, settings?: ItemSettings) {
 		super();
 
 		const itemObject = Item.isDynamoObject(object) ? Item.fromDynamo(object) : object;
@@ -53,25 +53,25 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 		this.setInternalProperties(internalProperties, {
 			"originalObject": utils.deep_copy(itemObject),
-			"originalSettings": {...settings},
+			"originalSettings": { ...settings },
 			model,
 			"storedInDynamo": settings.type === "fromDynamo"
 		});
 	}
 
 	// Internal
-	static objectToDynamo (object: ObjectType): AttributeMap;
-	static objectToDynamo (object: any, settings: {type: "value"}): DynamoDB.AttributeValue;
-	static objectToDynamo (object: ObjectType, settings: {type: "object"}): AttributeMap;
-	static objectToDynamo (object: any, settings: {type: "object" | "value"} = {"type": "object"}): DynamoDB.AttributeValue | AttributeMap {
+	static objectToDynamo(object: ObjectType): AttributeMap;
+	static objectToDynamo(object: any, settings: { type: "value"; }): DynamoDB.AttributeValue;
+	static objectToDynamo(object: ObjectType, settings: { type: "object"; }): AttributeMap;
+	static objectToDynamo(object: any, settings: { type: "object" | "value"; } = { "type": "object" }): DynamoDB.AttributeValue | AttributeMap {
 		if (object === undefined) {
 			return undefined;
 		}
 
-		const options = settings.type === "value" ? undefined : {"removeUndefinedValues": true};
+		const options = settings.type === "value" ? undefined : { "removeUndefinedValues": true };
 		return (settings.type === "value" ? awsConverter().convertToAttr : awsConverter().marshall)(object, options as any);
 	}
-	static fromDynamo (object: AttributeMap): ObjectType {
+	static fromDynamo(object: AttributeMap): ObjectType {
 		const result = awsConverter().unmarshall(object);
 		utils.object.entries(result).forEach(([key, value]) => {
 			if (value instanceof Uint8Array) {
@@ -81,15 +81,15 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		return result;
 	}
 	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
-	static isDynamoObject (object: ObjectType, recursive?: boolean): boolean | null {
-		function isValid (value): boolean {
+	static isDynamoObject(object: ObjectType, recursive?: boolean): boolean | null {
+		function isValid(value): boolean {
 			if (typeof value === "undefined" || value === null) {
 				return false;
 			}
 			const keys = Object.keys(value);
 			const key = keys[0];
 			const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) && !(value[key] instanceof Uint8Array) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
-			const {Schema} = require("./Schema");
+			const { Schema } = require("./Schema");
 			const attributeType = Schema.attributeTypes.findDynamoDBType(key);
 			return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
 		}
@@ -110,9 +110,9 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	toDynamo: (this: Item, settings?: Partial<ItemObjectFromSchemaSettings>) => Promise<any>;
 
 	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
-	async prepareForResponse (): Promise<Item> {
+	async prepareForResponse(): Promise<Item> {
 		if (this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate) {
-			return this.populate({"properties": this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate});
+			return this.populate({ "properties": this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.populate });
 		}
 		return this;
 	}
@@ -130,7 +130,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * ```
 	 * @returns Object | null
 	 */
-	original (): ObjectType | null {
+	original(): ObjectType | null {
 		return this.getInternalProperties(internalProperties).originalSettings.type === "fromDynamo" ? this.getInternalProperties(internalProperties).originalObject : null;
 	}
 
@@ -154,7 +154,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * ```
 	 * @returns Object
 	 */
-	toJSON (): ObjectType {
+	toJSON(): ObjectType {
 		return utils.dynamoose.itemToJSON.bind(this)();
 	}
 
@@ -175,7 +175,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * ```
 	 * @returns Promise<Object>
 	 */
-	async withDefaults (): Promise<ObjectType> {
+	async withDefaults(): Promise<ObjectType> {
 		return Item.objectFromSchema(utils.deep_copy(this.toJSON()), this.getInternalProperties(internalProperties).model, {
 			"typeCheck": false,
 			"defaults": true,
@@ -184,7 +184,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	}
 
 	// Serializer
-	serialize (nameOrOptions?: SerializerOptions | string): ObjectType {
+	serialize(nameOrOptions?: SerializerOptions | string): ObjectType {
 		return this.getInternalProperties(internalProperties).model.serializer.getInternalProperties(internalProperties).serialize(this, nameOrOptions);
 	}
 
@@ -205,7 +205,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * ```
 	 * @returns Promise\<void\>
 	 */
-	delete (): Promise<void>;
+	delete(): Promise<void>;
 	/**
 	 * This deletes the given item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete your object in the given table associated with the model.
 	 *
@@ -225,12 +225,12 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * @param callback Function - `(): void`
 	 * @returns void
 	 */
-	delete (callback: CallbackType<void, any>): void;
-	delete (callback?: CallbackType<void, any>): Promise<void> | void {
+	delete(callback: CallbackType<void, any>): void;
+	delete(callback?: CallbackType<void, any>): Promise<void> | void {
 		const hashKey = this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).getHashKey();
 		const rangeKey = this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).getRangeKey();
 
-		const key = {[hashKey]: this[hashKey]};
+		const key = { [hashKey]: this[hashKey] };
 		if (rangeKey) {
 			key[rangeKey] = this[rangeKey];
 		}
@@ -258,7 +258,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * ```
 	 * @returns Promise\<Item\>
 	 */
-	save (): Promise<Item>;
+	save(): Promise<Item>;
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
@@ -282,7 +282,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * ```
 	 * @param callback Function - `(error: any, item: Item): void`
 	 */
-	save (callback: CallbackType<Item, any>): void;
+	save(callback: CallbackType<Item, any>): void;
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
@@ -317,7 +317,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * @param settings Object - `{"overwrite": boolean, "return": "request", "condition": Condition}`
 	 * @returns Promise\<DynamoDB.PutItemInput\>
 	 */
-	save (settings: ItemSaveSettings & {return: "request"}): Promise<DynamoDB.PutItemInput>;
+	save(settings: ItemSaveSettings & { return: "request"; }): Promise<DynamoDB.PutItemInput>;
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
@@ -353,7 +353,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * @param settings Object - `{"overwrite": boolean, "return": "request", "condition": Condition}`
 	 * @param callback Function - `(error: any, request: DynamoDB.PutItemInput): void`
 	 */
-	save (settings: ItemSaveSettings & {return: "request"}, callback: CallbackType<DynamoDB.PutItemInput, any>): void;
+	save(settings: ItemSaveSettings & { return: "request"; }, callback: CallbackType<DynamoDB.PutItemInput, any>): void;
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
@@ -388,7 +388,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * @param settings Object - `{"overwrite": boolean, "return": "item", "condition": Condition}`
 	 * @returns Promise\<Item\>
 	 */
-	save (settings: ItemSaveSettings & {return: "item"}): Promise<Item>;
+	save(settings: ItemSaveSettings & { return: "item"; }): Promise<Item>;
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
@@ -424,8 +424,8 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	 * @param settings Object - `{"overwrite": boolean, "return": "item", "condition": Condition}`
 	 * @param callback Function - `(error: any, request: Item): void`
 	 */
-	save (settings: ItemSaveSettings & {return: "item"}, callback: CallbackType<Item, any>): void;
-	save (settings?: ItemSaveSettings | CallbackType<Item, any> | CallbackType<DynamoDB.PutItemInput, any>, callback?: CallbackType<Item, any> | CallbackType<DynamoDB.PutItemInput, any>): void | Promise<Item | DynamoDB.PutItemInput> {
+	save(settings: ItemSaveSettings & { return: "item"; }, callback: CallbackType<Item, any>): void;
+	save(settings?: ItemSaveSettings | CallbackType<Item, any> | CallbackType<DynamoDB.PutItemInput, any>, callback?: CallbackType<Item, any> | CallbackType<DynamoDB.PutItemInput, any>): void | Promise<Item | DynamoDB.PutItemInput> {
 		if (typeof settings !== "object" && typeof settings !== "undefined") {
 			callback = settings;
 			settings = {};
@@ -439,7 +439,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		let savedItem;
 
 		const localSettings: ItemSaveSettings = settings;
-		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true}).then(async (item) => {
+		const paramsPromise = this.toDynamo({ "defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true }).then(async (item) => {
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
@@ -502,11 +502,11 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	}
 
 	// Populate
-	populate (): Promise<Item>;
-	populate (callback: CallbackType<Item, any>): void;
-	populate (settings: PopulateSettings): Promise<Item>;
-	populate (settings: PopulateSettings, callback: CallbackType<Item, any>): void;
-	populate (...args): Promise<Item> | void {
+	populate(): Promise<Item>;
+	populate(callback: CallbackType<Item, any>): void;
+	populate(settings: PopulateSettings): Promise<Item>;
+	populate(settings: PopulateSettings, callback: CallbackType<Item, any>): void;
+	populate(...args): Promise<Item> | void {
 		return PopulateItem.bind(this)(...args);
 	}
 }
@@ -516,7 +516,7 @@ export class AnyItem extends Item {
 }
 
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Item.objectFromSchema (setting timestamps, etc.)
-Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesClass<any>>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
+Item.prepareForObjectFromSchema = async function <T extends InternalPropertiesClass<any>>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
 		const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(object);
 		if (schema.getInternalProperties(internalProperties).settings.timestamps && settings.type === "toDynamo") {
@@ -527,9 +527,9 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 					throw new CustomError.InvalidType(`Not allowed to use an array of types for the timestamps attribute "${prop.name}".`);
 				}
 				switch (typeDetails.typeSettings.storage) {
-				case "iso": return date.toISOString();
-				case "seconds": return Math.floor(date.getTime() / 1000);
-				default: return date.getTime();
+					case "iso": return date.toISOString();
+					case "seconds": return Math.floor(date.getTime() / 1000);
+					default: return date.getTime();
 				}
 			};
 
@@ -566,7 +566,7 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 		});
 	});
 	// explore the tree
-	function traverse (node, treeNode, outPath, callback): void {
+	function traverse(node, treeNode, outPath, callback): void {
 		callback(outPath);
 		if (Object.keys(treeNode).length === 0) { // a leaf
 			return;
@@ -574,8 +574,10 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 
 		Object.keys(treeNode).forEach((attr) => {
 			if (attr === "0") {
-				// We check for empty objects here (added `typeof node === "object" && Object.keys(node).length == 0`, see PR https://github.com/dynamoose/dynamoose/pull/1034) to handle the use case of 2d arrays, or arrays within arrays. `node` in that case will be an empty object.
-				if (!node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
+				// Some times the node type is String or Boolean
+				// This is to atempt to fix node.forEach is not a funciton #issues/1600
+				// If its not an Array, fake it.
+				if (!Array.isArray(node)) {
 					node = [{}]; // fake the path for arrays
 				}
 				node.forEach((a, index) => {
@@ -612,12 +614,12 @@ export interface ItemObjectFromSchemaSettings {
 	populate?: boolean;
 	combine?: boolean;
 	modifiers?: ("set" | "get")[];
-	updateTimestamps?: boolean | {updatedAt?: boolean; createdAt?: boolean};
+	updateTimestamps?: boolean | { updatedAt?: boolean; createdAt?: boolean; };
 	typeCheck?: boolean;
 	mapAttributes?: boolean;
 }
 // This function will return an object that conforms to the schema (removing any properties that don't exist, using default values, etc.) & throws an error if there is a type mismatch.
-Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = {"type": "toDynamo"}): Promise<ObjectType> {
+Item.objectFromSchema = async function (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings = { "type": "toDynamo" }): Promise<ObjectType> {
 	if (settings.checkExpiredItem && model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires && ((model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).items || {}).returnExpired === false && object[(model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] && object[(model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.expires as TableExpiresSettings).attribute] * 1000 < Date.now()) {
 		return undefined;
 	}
@@ -626,7 +628,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	const schema: Schema = settings.schema || model.getInternalProperties(internalProperties).schemaForObject(returnObject);
 	const schemaAttributes = schema.attributes(returnObject);
 
-	function mapAttributes (type: "toDynamo" | "fromDynamo") {
+	function mapAttributes(type: "toDynamo" | "fromDynamo") {
 		if (settings.mapAttributes && settings.type === type) {
 			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
 			const mappedAttributesObject: GeneralObject<string> = type === "toDynamo" ? schemaInternalProperties.getMapSettingObject() : schema.attributes().reduce((obj, attribute) => {
@@ -673,11 +675,11 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const genericKey = key.replace(/\.\d+/gu, ".0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
 			const existsInSchema = schemaAttributes.includes(genericKey);
 			if (existsInSchema) {
-				const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
+				const { isValidType, matchedTypeDetails, typeDetailsArray } = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, { "standardKey": true, typeIndexOptionMap });
 				if (!isValidType) {
 					throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
 				} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny) {
-					validParents.push({key, "infinite": true});
+					validParents.push({ key, "infinite": true });
 				} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
 					// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
 					value.forEach((subValue, index: number, array: any[]) => {
@@ -687,7 +689,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 							keysToDelete.push(`${key}.${index}`);
 						}
 					});
-					validParents.push({key});
+					validParents.push({ key });
 				}
 			} else {
 				// Check saveUnknown
@@ -711,7 +713,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 				const parentKey = utils.parentKey(key);
 				const parentValue = parentKey.length === 0 ? returnObject : utils.object.get(returnObject, parentKey);
 				if (!isDefaultValueUndefined) {
-					const {isValidType, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, defaultValue, key, settings, {typeIndexOptionMap});
+					const { isValidType, typeDetailsArray } = utils.dynamoose.getValueTypeCheckResult(schema, defaultValue, key, settings, { typeIndexOptionMap });
 					if (!isValidType) {
 						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof defaultValue}.`);
 					} else if (typeof parentValue !== "undefined" && parentValue !== null) {
@@ -727,9 +729,9 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails as DynamoDBTypeResult;
-				const {customType} = typeDetails;
-				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
+				const typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, { typeIndexOptionMap }).matchedTypeDetails as DynamoDBTypeResult;
+				const { customType } = typeDetails;
+				const { "type": typeInfo } = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
 				if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
 					const customValue = customType.functions[settings.type](value);
@@ -743,9 +745,9 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		const [key, value] = item;
 		let typeDetails;
 		try {
-			typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails;
+			typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, { typeIndexOptionMap }).matchedTypeDetails;
 		} catch (e) {
-			const {Schema} = require("./Schema");
+			const { Schema } = require("./Schema");
 			typeDetails = Schema.attributeTypes.findTypeForValue(value, settings.type, settings);
 		}
 
@@ -765,14 +767,14 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			} catch (e) {} // eslint-disable-line no-empty
 		}).filter((item: any) => {
 			return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
-		}).map((obj: {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]} | undefined): {"key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult} => {
+		}).map((obj: { "key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]; } | undefined): { "key": string; "type": DynamoDBTypeResult | DynamoDBSetTypeResult; } => {
 			if (obj && Array.isArray(obj.type)) {
 				throw new Error.InvalidParameter("Combine type is not allowed to be used with multiple types.");
 			}
 
 			return obj as any;
 		}).forEach((item) => {
-			const {key, type} = item;
+			const { key, type } = item;
 
 			const value = type.typeSettings.attributes.map((attribute) => utils.object.get(returnObject, attribute)).filter((value) => typeof value !== "undefined" && value !== null).join(type.typeSettings.separator);
 			utils.object.set(returnObject, key, value);
@@ -782,7 +784,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		await Promise.all(settings.modifiers.map(async (modifier) => {
 			await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
-				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true, typeIndexOptionMap});
+				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, { "returnFunction": true, typeIndexOptionMap });
 				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
 				const isValueUndefined = typeof value === "undefined" || value === null;
 				if (modifierFunctionExists && !isValueUndefined) {
@@ -801,7 +803,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const validator = await schema.getAttributeSettingValue("validate", key, {"returnFunction": true, typeIndexOptionMap});
+				const validator = await schema.getAttributeSettingValue("validate", key, { "returnFunction": true, typeIndexOptionMap });
 				if (validator) {
 					let result;
 					if (validator instanceof RegExp) {
@@ -857,7 +859,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
-				const enumArray = await schema.getAttributeSettingValue("enum", key, {"returnFunction": false, typeIndexOptionMap});
+				const enumArray = await schema.getAttributeSettingValue("enum", key, { "returnFunction": false, typeIndexOptionMap });
 				if (enumArray && !enumArray.includes(value)) {
 					throw new Error.ValidationError(`${key} must equal ${JSON.stringify(enumArray)}, but is set to ${value}`);
 				}
@@ -868,7 +870,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	// Map Attributes fromDynamo
 	mapAttributes("fromDynamo");
 
-	return {...returnObject};
+	return { ...returnObject };
 };
 Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObjectFromSchemaSettings> = {}): Promise<any> {
 	const newSettings: ItemObjectFromSchemaSettings = {
@@ -880,7 +882,7 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 	return Item.objectToDynamo(object);
 };
 // This function will modify the item to conform to the Schema
-Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Item> {
+Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjectFromSchemaSettings = { "type": "fromDynamo" }): Promise<Item> {
 	let item = this;
 	if (settings.type === "fromDynamo") {
 		item = await this.prepareForResponse();
