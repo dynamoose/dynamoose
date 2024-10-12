@@ -2,6 +2,24 @@
 
 ---
 
+## Version 4.0.2
+
+This release includes performance improvements and improvements to single table design for queries.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Major performance improvements
+- Improves query behavior for single table design
+- `Table.query` function now available
+
+### Other
+
+- Not marking Dynamoose PRs as stale anymore
+
+---
+
 ## Version 4.0.1
 
 This release fixes a bug related to >= 10 conditions when querying or scanning.
