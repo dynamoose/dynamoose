@@ -30,11 +30,11 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.484.0",
     "@aws-sdk/util-dynamodb": "^3.484.0",
-    "dynamoose-utils": "^4.0.2",
+    "dynamoose-utils": "^4.0.1",
     "js-object-utilities": "^2.2.0"
   },
   "devDependencies": {
-    "dynamoose-logger": "^4.0.2"
+    "dynamoose-logger": "^4.0.1"
   },
   "license": "Unlicense",
   "funding": [
