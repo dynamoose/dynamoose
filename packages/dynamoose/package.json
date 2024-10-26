@@ -28,7 +28,7 @@
     "test:types": "tsc --project test/types/tsconfig.json"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.484.0",
+    "@aws-sdk/client-dynamodb": "^3.666.0",
     "@aws-sdk/util-dynamodb": "^3.484.0",
     "dynamoose-utils": "^4.0.2",
     "js-object-utilities": "^2.2.0"
