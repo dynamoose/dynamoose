@@ -25,9 +25,11 @@ let isAssignableToScan : Scan<User>;
 isAssignableToScan = UserTypedModel.scan().limit(5);
 
 // scan.startAt(key)
-async function scanStartAt (): Promise<Scan<User>> {
+async function scanStartAt (): Promise<Scan<User> | undefined> {
 	const response = await UserTypedModel.scan().exec();
-	return UserTypedModel.scan().startAt(response.lastKey);
+	if (response.lastKey) {
+		return UserTypedModel.scan().startAt(response.lastKey);
+	}
 }
 
 // scan.attributes(attributes)
