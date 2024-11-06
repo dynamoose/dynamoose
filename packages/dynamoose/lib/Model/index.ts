@@ -20,12 +20,12 @@ import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
 const {internalProperties} = Internal.General;
 
-type UpdatePartial<T> =
-  | Partial<T>
-  | { $SET: Partial<T> }
-  | { $ADD: Partial<T> }
-  | { $REMOVE: Partial<T> }
-  | { $DELETE: Partial<T> };
+export type UpdatePartial<T> = Partial<T> & {
+	$SET?: Partial<T>;
+	$ADD?: Partial<T>;
+	$REMOVE?: Partial<T> | string[];
+	$DELETE?: Partial<T>;
+};
 
 // Transactions
 type GetTransactionResult = Promise<GetTransactionInput>;
