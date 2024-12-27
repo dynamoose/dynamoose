@@ -24,4 +24,4 @@ dynamoose.aws.ddb.set(new DynamoDB.DynamoDB({
 
 ## new instance.Table(name, [models][, config])
 
-Once again, this has the same interface as [`dynamoose.Table()`](Table#new-dynamoosetablename-models). The only difference is that all table commands will be run through this instances `instance.aws.ddb` object.
+Once again, this has the same interface as [`dynamoose.Table()`](Table#new-dynamoosetablename-models-options). The only difference is that all table commands will be run through this instances `instance.aws.ddb` object.

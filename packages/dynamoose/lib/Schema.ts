@@ -637,7 +637,7 @@ interface AttributeDefinition {
 	 * | type | "global" \| "local" | "global" | If the index should be a global index or local index. Attribute will be the hashKey for the index. |
 	 * | rangeKey | string | undefined | The range key attribute name for a global secondary index. |
 	 * | project | boolean \| [string] | true | Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. |
-	 * | throughput | number \| {read: number, write: number} | undefined | Sets the throughput for the global secondary index. |
+	 * | throughput | number \| `{read: number, write: number}` | undefined | Sets the throughput for the global secondary index. |
 	 *
 	 *
 	 * If you set `index` to `true`, it will create an index with all of the default settings.
