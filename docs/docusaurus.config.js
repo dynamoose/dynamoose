@@ -150,7 +150,7 @@ module.exports = {
 					"sidebarPath": require.resolve("./sidebars.js"),
 					"editUrl": ({docPath}) => `https://github.com/dynamoose/dynamoose/edit/main/docs/docs_src/${docPath}`,
 					"remarkPlugins": [
-						require("./src/plugins/remark-npm2yarn")
+						[require("@docusaurus/remark-plugin-npm2yarn"), {"sync": true}]
 					]
 				},
 				"theme": {
