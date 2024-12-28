@@ -34,8 +34,8 @@ const path = require("path");
 		const importFile = path.join(translationPath, "docusaurus-plugin-content-docs", "current", "getting_started", "Import.mdx");
 		const importContent = fs.readFileSync(importFile, "utf8");
 		let importFixed = importContent
-			.replace("<Tabs defaultValue=\"commonjs\" values={[\n        {\"label\": \"CommonJS\", value: \"commonjs\"}, \"TypeScript\", \"typescript\"}, \"ES Modules\", \"esmodules\"} ] } mark =crwd-mark>", "\n\n<Tabs\n	defaultValue=\"commonjs\"\n	values={[\n		{\"label\": \"CommonJS\", value: \"commonjs\"},\n		{\"label\": \"TypeScript\", value: \"typescript\"},\n		{\"label\": \"ES Modules\", value: \"esmodules\"}\n	]\n}>")
-		importFixed = `${["import Tabs from \"@theme/Tabs\";", "import TabItem from \"@theme/TabItem\";"].join("\n")}\n\n${importFixed}`
+			.replace("<Tabs defaultValue=\"commonjs\" values={[\n        {\"label\": \"CommonJS\", value: \"commonjs\"}, \"TypeScript\", \"typescript\"}, \"ES Modules\", \"esmodules\"} ] } mark =crwd-mark>", "\n\n<Tabs\n	defaultValue=\"commonjs\"\n	values={[\n		{\"label\": \"CommonJS\", value: \"commonjs\"},\n		{\"label\": \"TypeScript\", value: \"typescript\"},\n		{\"label\": \"ES Modules\", value: \"esmodules\"}\n	]\n}>");
+		importFixed = `${["import Tabs from \"@theme/Tabs\";", "import TabItem from \"@theme/TabItem\";"].join("\n")}\n\n${importFixed}`;
 		fs.writeFileSync(importFile, importFixed);
 	}
 })();
