@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "crowdin:sync": "npm run prebuild && docusaurus write-translations && crowdin upload && crowdin download",
+    "crowdin:sync": "npm run prebuild && docusaurus write-translations && crowdin upload && crowdin download && node fixcrowdin.js",
     "start": "npm run prebuild && docusaurus start",
     "build": "npm run prebuild && docusaurus build",
     "swizzle": "docusaurus swizzle",
