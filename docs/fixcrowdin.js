@@ -37,5 +37,11 @@ const path = require("path");
 			.replace("<Tabs defaultValue=\"commonjs\" values={[\n        {\"label\": \"CommonJS\", value: \"commonjs\"}, \"TypeScript\", \"typescript\"}, \"ES Modules\", \"esmodules\"} ] } mark =crwd-mark>", "\n\n<Tabs\n	defaultValue=\"commonjs\"\n	values={[\n		{\"label\": \"CommonJS\", value: \"commonjs\"},\n		{\"label\": \"TypeScript\", value: \"typescript\"},\n		{\"label\": \"ES Modules\", value: \"esmodules\"}\n	]\n}>");
 		importFixed = `${["import Tabs from \"@theme/Tabs\";", "import TabItem from \"@theme/TabItem\";"].join("\n")}\n\n${importFixed}`;
 		fs.writeFileSync(importFile, importFixed);
+
+		// eslint-disable-next-line no-console
+		console.log(`Fixed Crowdin for ${language}`);
 	}
 })();
+
+// eslint-disable-next-line no-console
+console.log("Finished fixing Crowdin");
