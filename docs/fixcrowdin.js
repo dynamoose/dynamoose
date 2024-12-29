@@ -22,7 +22,6 @@ const path = require("path");
 		const introductionFixed = introduction.replace(/hide_title: .*/, hideTitleLine[0]);
 		fs.writeFileSync(introductionFile, introductionFixed);
 
-
 		// Fix adding ` around the "{read: number, write: number}" string in `guide/Schema.md`
 		// We want to add ` around the "{read: number, write: number}" string in the translation
 		const schemaFile = path.join(translationPath, "docusaurus-plugin-content-docs", "current", "guide", "Schema.md");
@@ -36,6 +35,27 @@ const path = require("path");
 		const importFixed = importContent
 			.replace("<Tabs defaultValue=\"commonjs\" values={[\n        {\"label\": \"CommonJS\", value: \"commonjs\"}, \"TypeScript\", \"typescript\"}, \"ES Modules\", \"esmodules\"} ] } mark =crwd-mark>", "\n\n<Tabs\n	defaultValue=\"commonjs\"\n	values={[\n		{\"label\": \"CommonJS\", value: \"commonjs\"},\n		{\"label\": \"TypeScript\", value: \"typescript\"},\n		{\"label\": \"ES Modules\", value: \"esmodules\"}\n	]\n}>");
 		fs.writeFileSync(importFile, importFixed);
+
+		// For each file in every subdirectory of the `docusaurus-plugin-content-docs/current` directory
+		const currentDirectory = path.join(translationPath, "docusaurus-plugin-content-docs", "current");
+		// eslint-disable-next-line no-inner-declarations
+		function runFolder (folder) {
+			const files = fs.readdirSync(folder);
+
+			for (const file of files) {
+				const filePath = path.join(folder, file);
+				const stat = fs.statSync(filePath);
+				if (stat.isDirectory()) {
+					runFolder(filePath);
+				} else {
+					// Replace all ` :::` instances with `\n:::`
+					const fileContent = fs.readFileSync(filePath, "utf8");
+					const fileFixed = fileContent.replace(/ :::/g, "\n:::");
+					fs.writeFileSync(filePath, fileFixed);
+				}
+			}
+		}
+		runFolder(currentDirectory);
 
 		// eslint-disable-next-line no-console
 		console.log(`Fixed Crowdin for ${language}`);
