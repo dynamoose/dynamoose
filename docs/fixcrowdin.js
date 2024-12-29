@@ -50,7 +50,15 @@ const path = require("path");
 				} else {
 					// Replace all ` :::` instances with `\n:::`
 					const fileContent = fs.readFileSync(filePath, "utf8");
-					const fileFixed = fileContent.replace(/ :::/g, "\n:::");
+					let fileFixed = fileContent.replace(/ :::/g, "\n:::");
+
+					const sectionTypes = ["note", "caution"];
+					// Replace all `:::note` instances with `:::note\n`
+					// Replace all `:::caution` instances with `:::caution\n`
+					for (const sectionType of sectionTypes) {
+						fileFixed = fileFixed.replace(new RegExp(`:::${sectionType}`, "g"), `:::${sectionType}\n`);
+					}
+
 					fs.writeFileSync(filePath, fileFixed);
 				}
 			}
