@@ -2,6 +2,23 @@
 
 ---
 
+## Version 4.0.3
+
+This release reverts the previous `table.query` feature due to bugs with it. It also adds a Spanish version of the Dynamoose website (more languages coming soon).
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Removed `table.query` feature due to bugs with it.
+
+### Documentation
+
+- Added Spanish version of the Dynamoose website.
+	- Help us translate the website into more languages at [Crowdin](https://crowdin.com/project/dynamoosejscom).
+
+---
+
 ## Version 4.0.2
 
 This release includes performance improvements and improvements to single table design for queries.
