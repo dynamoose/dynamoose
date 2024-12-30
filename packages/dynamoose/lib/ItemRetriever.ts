@@ -4,7 +4,7 @@ import utils from "./utils";
 import {Condition, ConditionInitializer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
 import {Item} from "./Item";
-import {CallbackType, ObjectType, ItemArray, SortOrder, ModelType} from "./General";
+import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
 import Internal from "./Internal";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
@@ -21,7 +21,7 @@ interface ItemRetrieverTypeInformation {
 
 interface ItemRetrieverInternalProperties {
 	internalSettings: {
-		models: Model<Item>[];
+		model: Model<Item>;
 		typeInformation: ItemRetrieverTypeInformation;
 	};
 	settings: {
@@ -54,8 +54,8 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 	using: (this: ItemRetriever, value: string) => this ;
 	exec (this: ItemRetriever, callback?: any): any {
 		let timesRequested = 0;
-		const {models} = this.getInternalProperties(internalProperties).internalSettings;
-		const table = models[0].getInternalProperties(internalProperties).table();
+		const {model} = this.getInternalProperties(internalProperties).internalSettings;
+		const table = model.getInternalProperties(internalProperties).table();
 		const prepareForReturn = async (result): Promise<any> => {
 			if (Array.isArray(result)) {
 				result = utils.merge_objects(...result);
@@ -66,18 +66,8 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 					[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-
-			const buildItemFromModel = (model: ModelType<Item>, item: Model<Item>) =>
-				new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})
-			;
-
-			const array: any = (await Promise.all(result.Items.map(async (item: Model<Item>) => {
-				const suitableModelForBuildItem = await table.getInternalProperties(internalProperties).modelForObject(item);
-				const builtItem = await buildItemFromModel(suitableModelForBuildItem, item);
-				const correctModelOfItem = await table.getInternalProperties(internalProperties).modelForObject(builtItem, {"considerDefaults": true});
-				return await buildItemFromModel(correctModelOfItem, item);
-			}))).filter(Boolean);
-			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => models[0].Item.fromDynamo(key)) : models[0].Item.fromDynamo(result.LastEvaluatedKey) : undefined;
+			const array: any = (await Promise.all(result.Items.map(async (item) => await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})))).filter((a) => Boolean(a));
+			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => model.Item.fromDynamo(key)) : model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
 			array[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`];
 			array[`times${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}`] = timesRequested;
@@ -137,7 +127,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 		}
 	}
 
-	constructor (models: Model<Item>[], typeInformation: ItemRetrieverTypeInformation, object?: ConditionInitializer) {
+	constructor (model: Model<Item>, typeInformation: ItemRetrieverTypeInformation, object?: ConditionInitializer) {
 		super();
 
 		let condition: Condition;
@@ -150,7 +140,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 
 		this.setInternalProperties(internalProperties, {
 			"internalSettings": {
-				models,
+				model,
 				typeInformation
 			},
 			"settings": {
@@ -169,11 +159,11 @@ Object.getOwnPropertyNames(Condition.prototype).forEach((key: string) => {
 });
 
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
-	const {models} = this.getInternalProperties(internalProperties).internalSettings;
-	const table = models[0].getInternalProperties(internalProperties).table();
+	const {model} = this.getInternalProperties(internalProperties).internalSettings;
+	const table = model.getInternalProperties(internalProperties).table();
 
 	const object: any = {
-		...await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).requestObject(models, {"conditionString": "FilterExpression", "conditionStringType": "array"}),
+		...await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).requestObject(model, {"conditionString": "FilterExpression", "conditionStringType": "array"}),
 		"TableName": table.getInternalProperties(internalProperties).name
 	};
 
@@ -181,22 +171,15 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		object.Limit = this.getInternalProperties(internalProperties).settings.limit;
 	}
 	if (this.getInternalProperties(internalProperties).settings.startAt) {
-		object.ExclusiveStartKey = Item.isDynamoObject(this.getInternalProperties(internalProperties).settings.startAt) ? this.getInternalProperties(internalProperties).settings.startAt : models[0].Item.objectToDynamo(this.getInternalProperties(internalProperties).settings.startAt);
+		object.ExclusiveStartKey = Item.isDynamoObject(this.getInternalProperties(internalProperties).settings.startAt) ? this.getInternalProperties(internalProperties).settings.startAt : model.Item.objectToDynamo(this.getInternalProperties(internalProperties).settings.startAt);
 	}
-
-	const allIndexes = await Promise.all(models.map((model) => model.getInternalProperties(internalProperties).getIndexes()));
-
-	const mergedIndexes = utils.merge_objects.main({
-		"combineMethod": utils.merge_objects.MergeObjectsCombineMethod.ArrayMergeNewArray,
-		"arrayItemsMerger": utils.merge_objects.schemaAttributesMerger
-	})(...allIndexes);
-
+	const indexes = await model.getInternalProperties(internalProperties).getIndexes();
 	if (this.getInternalProperties(internalProperties).settings.index) {
 		object.IndexName = this.getInternalProperties(internalProperties).settings.index;
 	} else if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
-		const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(models[0]);
+		const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(model);
 
-		const indexSpec = utils.find_best_index(mergedIndexes, comparisonChart);
+		const indexSpec = utils.find_best_index(indexes, comparisonChart);
 		if (!indexSpec.tableIndex) {
 			if (!indexSpec.indexName) {
 				throw new CustomError.InvalidParameter("Index can't be found for query.");
@@ -235,7 +218,7 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		}
 	}
 	if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
-		const index = utils.array_flatten(Object.values(mergedIndexes)).find((index) => index.IndexName === object.IndexName) || mergedIndexes.TableIndex;
+		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
 		const {hash, range} = index.KeySchema.reduce((res, item) => {
 			res[item.KeyType.toLowerCase()] = item.AttributeName;
 			return res;
@@ -340,7 +323,7 @@ export class Scan<T> extends ItemRetriever { // eslint-disable-line @typescript-
 	}
 
 	constructor (model: Model<Item>, object?: ConditionInitializer) {
-		super([model], {"type": ItemRetrieverTypes.scan, "pastTense": "scanned"}, object);
+		super(model, {"type": ItemRetrieverTypes.scan, "pastTense": "scanned"}, object);
 	}
 }
 
@@ -359,7 +342,7 @@ export class Query<T> extends ItemRetriever { // eslint-disable-line @typescript
 		return this;
 	}
 
-	constructor (models: Model<Item>[], object?: ConditionInitializer) {
-		super(models, {"type": ItemRetrieverTypes.query, "pastTense": "queried"}, object);
+	constructor (model: Model<Item>, object?: ConditionInitializer) {
+		super(model, {"type": ItemRetrieverTypes.query, "pastTense": "queried"}, object);
 	}
 }

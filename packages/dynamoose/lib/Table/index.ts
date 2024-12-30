@@ -1,15 +1,13 @@
-import {ConditionInitializer} from "../Condition";
 import CustomError from "../Error";
-import {CallbackType, DeepPartial, ModelType, ObjectType} from "../General";
+import {CallbackType, DeepPartial, ObjectType} from "../General";
 import Internal from "../Internal";
-import {Query} from "../ItemRetriever";
 const {internalProperties} = Internal.General;
-import {Model, schemaCorrectnessScoresSettings} from "../Model";
+import {Model} from "../Model";
 import {custom as customDefaults, original as originalDefaults} from "./defaults";
 import utils from "../utils";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {IndexItem, TableIndex} from "../Schema";
-import {Item, Item as ItemCarrier} from "../Item";
+import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
 import {TableClass} from "./types";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
@@ -26,15 +24,15 @@ interface TableInternalProperties {
 	setupFlowRunning: boolean;
 	pendingTasks: any[];
 	pendingTaskPromise: () => Promise<void>;
-	models: ModelType<Item>[];
+	models: any[];
 	// Stores the latest result from `describeTable` for the given table
 	latestTableDetails?: DynamoDB.DescribeTableOutput;
 
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
-	modelForObject: (object: ObjectType, settings?: any) => Promise<ModelType<ItemCarrier>>;
+	modelForObject: (object: ObjectType) => Promise<Model<ItemCarrier>>;
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
 	getHashKey: () => string;
-	getRangeKey: () => string | void;
+	getRangeKey: () => string;
 	runSetupFlow: () => Promise<void>;
 }
 
@@ -171,7 +169,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			}),
 
 			"getIndexes": async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
-				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model.getInternalProperties(internalProperties).getIndexes()))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
+				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model.getInternalProperties(internalProperties).getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
 					Object.entries(indexes).forEach(([key, value]) => {
 						if (key === "TableIndex") {
 							result[key] = value as TableIndex;
@@ -184,14 +182,14 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 				}, {});
 			},
 			// This function returns the best matched model for the given object input
-			"modelForObject": async (object: ObjectType, settings?: schemaCorrectnessScoresSettings): Promise<ModelType<ItemCarrier>> => {
+			"modelForObject": async (object: ObjectType): Promise<Model<ItemCarrier>> => {
 				const models = this.getInternalProperties(internalProperties).models;
 
 				if (models.length === 1) {
 					return models[0];
 				}
 
-				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model.getInternalProperties(internalProperties).schemaCorrectnessScores(object, settings)));
+				const modelSchemaCorrectnessScores = models.map((model) => Math.max(...model.Model.getInternalProperties(internalProperties).schemaCorrectnessScores(object)));
 				const highestModelSchemaCorrectnessScore = Math.max(...modelSchemaCorrectnessScores);
 				const bestModelIndex = modelSchemaCorrectnessScores.indexOf(highestModelSchemaCorrectnessScore);
 
@@ -211,7 +209,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			"getHashKey": (): string => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getHashKey();
 			},
-			"getRangeKey": (): string | void => {
+			"getRangeKey": (): string => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
 			},
 			"runSetupFlow": async (): Promise<void> => {
@@ -360,7 +358,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * ```
 	 * @readonly
 	 */
-	get rangeKey (): string | void {
+	get rangeKey (): string | undefined {
 		return this.getInternalProperties(internalProperties).getRangeKey();
 	}
 	/**
@@ -524,86 +522,9 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			return this.getInternalProperties(internalProperties).runSetupFlow();
 		}
 	}
-
-	/**
-	 * You can query the table to get all the relevant items.
-	 *
-	 * Useful for utilising the single-table approach when you store items of multiple models within same single table,
-	 * and you want to get all the items, for example, with common primary key:
-	 *
-	 * ```js
-	 * const Team = dynamoose.model("Team", {
-	 *   "pk": {
-	 *     "type": String,
-	 *     "index": {
-	 *       "hashKey": true,
-	 *       "index": {
-	 *         "name": "primary",
-	 *         "type": "global"
-	 *       }
-	 *     },
-	 *     "map": "id"
-	 *   },
-	 *   "sk": {
-	 *     "type": String,
-	 *     "rangeKey": true
-	 *   },
-	 *   "name": String,
-	 *   "type": {"type": String, "default": "team"}
-	 * });
-	 * const TeamMember = dynamoose.model("TeamMember", {
-	 *   "pk": {
-	 *     "type": String,
-	 *     "index": {
-	 *       "hashKey": true,
-	 *       "index": {
-	 *         "name": "primary",
-	 *         "type": "global"
-	 *       }
-	 *     },
-	 *     "map": "teamId"
-	 *   },
-	 *   "sk": {
-	 *     "type": String,
-	 *     "rangeKey": true,
-	 *     "map": "id"
-	 *   },
-	 *   "name": String,
-	 *   "type": {"type": String, "default": "member"}
-	 * });
-	 * const table = new dynamoose.Table("teams", [Team, TeamMember]);
-	 *
-	 * const team1 = new Team({"id": "team_1", "name": "Team 1"});
-	 * const member1 = new TeamMember({"teamId": "team_1", "id": "member_1", "name": "Team member 1"});
-	 *
-	 * await table.query({"pk": "team_1"}).exec()
-	 * // will return the following:
-	 * [
-	 *   Team {
-	 *     id: 'team_1',
-	 *     sk: '',
-	 *     name: 'Team 1',
-	 *     type: 'team'
-	 *   },
-	 *   TeamMember {
-	 *     teamId: 'team_1',
-	 *     id: 'member_1',
-	 *     name: 'Team member 1',
-	 *     type: 'member'
-	 *   },
-	 * ]
-	 * ```
-	 *
-	 * Query execution result is all the relevant items with its correct models (Team and TeamMember)
-	 *
-	 * @param conditionInitializer ConditionInitializer
-	 * @returns Query<ItemCarrier>
-	 */
-	query (conditionInitializer?: ConditionInitializer): Query<ItemCarrier> {
-		return new Query(this.getInternalProperties(internalProperties).models.map((model) => model.Model), conditionInitializer);
-	}
 }
 Table.defaults = originalDefaults;
+
 
 interface TableCreateOptions {
 	return: "request" | undefined;

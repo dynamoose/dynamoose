@@ -251,25 +251,21 @@ describe("Condition", () => {
 
 		tests.forEach((test) => {
 			it(`Should ${test.error ? "throw" : "return"} ${JSON.stringify(test.error || test.output)} for ${JSON.stringify(test.input)}`, async () => {
-				function model () {
-					this.Model = this;
-					this.getInternalProperties = () => ({
+				const model = {
+					"getInternalProperties": () => ({
 						"table": () => ({
 							"getInternalProperties": () => ({
-								"instance": Instance.default,
-								"modelForObject": () => this
+								"instance": Instance.default
 							})
 						}),
 						"schemaForObject": () => new dynamoose.Schema({"id": String}),
 						"dynamoPropertyForAttribute": (key) => key
-					});
-
-					return this;
-				}
+					})
+				};
 				if (test.error) {
-					return expect(() => test.input().requestObject([model()], test.settings)).toThrow(test.error);
+					return expect(() => test.input().requestObject(model, test.settings)).toThrow(test.error);
 				} else {
-					return expect(await test.input().getInternalProperties(internalProperties).requestObject([model()], test.settings)).toEqual(test.output);
+					return expect(await test.input().getInternalProperties(internalProperties).requestObject(model, test.settings)).toEqual(test.output);
 				}
 			});
 		});

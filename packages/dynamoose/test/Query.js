@@ -67,11 +67,9 @@ describe("Query", () => {
 			expect(Model.query().exec).toBeInstanceOf(Function);
 		});
 
-		it("Should return a promise", async () => {
+		it("Should return a promise", () => {
 			queryPromiseResolver = () => ({"Items": []});
-			const promise = Model.query("name").eq("Charlie").exec();
-			expect(promise).toBeInstanceOf(Promise);
-			await promise;
+			expect(Model.query("name").eq("Charlie").exec()).toBeInstanceOf(Promise);
 		});
 
 		const functionCallTypes = [
