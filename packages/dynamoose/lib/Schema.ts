@@ -484,7 +484,7 @@ interface AttributeDefinition {
 	 * }
 	 * ```
 	 */
-	default?: ValueType | Promise<ValueType> | (() => (ValueType | Promise<ValueType>));
+	default?: ValueType | (() => (ValueType | Promise<ValueType>));
 	/**
 	 * You can set this property to always use the `default` value, even if a value is already set. This can be used for data that will be used as sort or secondary indexes. The default for this property is false.
 	 *
@@ -1394,7 +1394,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	async defaultCheck (key: string, value: ValueType, settings: any): Promise<ValueType | void> {
 		const isValueUndefined = typeof value === "undefined" || value === null;
 		if (settings.defaults && isValueUndefined || settings.forceDefault && this.getAttributeSettingValue("forceDefault", key)) {
-			const defaultValueRaw = await this.getAttributeSettingValue("default", key);
+			const defaultValueRaw = this.getAttributeSettingValue("default", key);
 
 			let hasMultipleTypes: boolean;
 			try {
