@@ -484,7 +484,7 @@ interface AttributeDefinition {
 	 * }
 	 * ```
 	 */
-	default?: ValueType | (() => ValueType);
+	default?: ValueType | (() => (ValueType | Promise<ValueType>));
 	/**
 	 * You can set this property to always use the `default` value, even if a value is already set. This can be used for data that will be used as sort or secondary indexes. The default for this property is false.
 	 *
