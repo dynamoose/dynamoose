@@ -1331,7 +1331,6 @@ describe("Schema", () => {
 			it(test.name, async () => {
 				const schema = new dynamoose.Schema(test.schema);
 				const output = await schema.getAttributeSettingValue(...test.input);
-				schema.defaultCheck;
 				if (typeof output !== "function") {
 					expect(output).toEqual(test.output);
 				} else {
