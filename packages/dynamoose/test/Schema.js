@@ -1342,6 +1342,67 @@ describe("Schema", () => {
 		});
 	});
 
+	describe("defaultCheck", () => {
+		const tests = [
+			{
+				"name": "Should not return default if value is passed",
+				"input": ["id", "Hello World, Not"],
+				"schema": {"id": {"type": String, "default": "Hello World"}},
+				"output": undefined
+			},
+			{
+				"name": "Should return default as string",
+				"input": ["id"],
+				"schema": {"id": {"type": String, "default": "Hello World"}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as string if default is a function",
+				"input": ["id"],
+				"schema": {"id": {"type": String, "default": () => "Hello World"}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as Promise<string> if default is an async function returning a string",
+				"input": ["id"],
+				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as Promise<T[0]> if type is a multi type and the default returns a array of elements",
+				"input": ["id"],
+				"schema": {"id": {"type": [String, Number], "default": async () => ["Hello World", 7]}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as undefined if default returns a Promise<null | undefined>",
+				"input": ["id"],
+				"schema": {"id": {"type": [String, Number], "default": async () => null}},
+				"output": undefined
+			},
+			{
+				"name": "Should return default as Promise<string> if default is an a Promise<string>",
+				"input": ["id"],
+				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
+				"output": "Hello World"
+			}
+		];
+		tests.forEach((test) => {
+			it(test.name, async () => {
+				const schema = new dynamoose.Schema(test.schema);
+				const [key, value] = test.input;
+				const output = await schema.defaultCheck(key, value, {"defaults": true});
+				if (typeof output !== "function") {
+					expect(output).toEqual(test.output);
+				} else {
+					expect(typeof output).toEqual(typeof test.output);
+					expect(output.toString()).toEqual(test.output.toString());
+					expect(await output()).toEqual(await test.output());
+				}
+			});
+		});
+	});
+
 	describe("getIndexAttributes", () => {
 		const tests = [
 			{
