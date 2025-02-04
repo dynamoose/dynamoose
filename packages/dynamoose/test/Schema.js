@@ -1369,6 +1369,18 @@ describe("Schema", () => {
 				"output": "Hello World"
 			},
 			{
+				"name": "Should return default as Promise<T[0]> if type is a multi type and the default returns a array of elements",
+				"input": ["id"],
+				"schema": {"id": {"type": [String, Number], "default": async () => ["Hello World", 7]}},
+				"output": "Hello World"
+			},
+			{
+				"name": "Should return default as undefined if default returns a Promise<null | undefined>",
+				"input": ["id"],
+				"schema": {"id": {"type": [String, Number], "default": async () => null}},
+				"output": undefined
+			},
+			{
 				"name": "Should return default as Promise<string> if default is an a Promise<string>",
 				"input": ["id"],
 				"schema": {"id": {"type": String, "default": async () => "Hello World"}},
