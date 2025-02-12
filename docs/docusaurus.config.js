@@ -32,6 +32,10 @@ module.exports = {
 							"href": "https://dynamoosejs.com"
 						},
 						{
+							"label": "v3.x.x",
+							"href": "https://v3.dynamoosejs.com"
+						},
+						{
 							"label": "v2.x.x",
 							"href": "https://v2.dynamoosejs.com"
 						},

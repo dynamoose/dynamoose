@@ -100,6 +100,18 @@ const git = require("simple-git");
 					}
 				} while (match);
 
+				// Copy contents from `README.md` to `docs_src/getting_started/Introduction.mdx`
+				if (fileName === path.join(docsPath, "getting_started", "Introduction.mdx")) {
+					const readmeContents = await fs.readFile(path.join(__dirname, "..", "README.md"), "utf8");
+
+					// Find the `<!-- block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->` block uuid in the fileContents
+					const blockUUID = /<!-- block:(.*) -->/gmu.exec(fileContents)[1];
+					// Get the contents in README.md between the `<!-- start-block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->` and `<!-- end-block:end:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->` blocks
+					const readmeBlock = new RegExp(`<!-- start-block:${blockUUID} -->([\\s\\S]*?)<!-- end-block:${blockUUID} -->`, "gmu").exec(readmeContents)[1].replaceAll("##", "#");
+					// Replace the contents in `docs_src/getting_started/Introduction.mdx` with the contents from README.md
+					fileContents = fileContents.replace(`<!-- block:${blockUUID} -->`, readmeBlock);
+				}
+
 				await fs.writeFile(fileName, fileContents);
 			}
 		}
