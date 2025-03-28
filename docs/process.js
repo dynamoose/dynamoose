@@ -104,12 +104,22 @@ const git = require("simple-git");
 				if (fileName === path.join(docsPath, "getting_started", "Introduction.mdx")) {
 					const readmeContents = await fs.readFile(path.join(__dirname, "..", "README.md"), "utf8");
 
-					// Find the `<!-- block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->` block uuid in the fileContents
-					const blockUUID = /<!-- block:(.*) -->/gmu.exec(fileContents)[1];
-					// Get the contents in README.md between the `<!-- start-block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->` and `<!-- end-block:end:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->` blocks
-					const readmeBlock = new RegExp(`<!-- start-block:${blockUUID} -->([\\s\\S]*?)<!-- end-block:${blockUUID} -->`, "gmu").exec(readmeContents)[1].replaceAll("##", "#");
-					// Replace the contents in `docs_src/getting_started/Introduction.mdx` with the contents from README.md
-					fileContents = fileContents.replace(`<!-- block:${blockUUID} -->`, readmeBlock);
+					// Find all block UUIDs and replace them with content from README.md
+					const blockRegex = /<!-- block:(.*?) -->/gmu;
+					let blockMatch;
+
+					while ((blockMatch = blockRegex.exec(fileContents)) !== null) {
+						const blockUUID = blockMatch[1];
+						// Get the contents in README.md between the start and end block tags
+						const readmeBlockRegex = new RegExp(`<!-- start-block:${blockUUID} -->([\\s\\S]*?)<!-- end-block:${blockUUID} -->`, "gmu");
+						const readmeBlockMatch = readmeBlockRegex.exec(readmeContents);
+
+						if (readmeBlockMatch) {
+							const readmeBlock = readmeBlockMatch[1].replaceAll("##", "#");
+							// Replace the block reference with the actual content
+							fileContents = fileContents.replace(`<!-- block:${blockUUID} -->`, readmeBlock);
+						}
+					}
 				}
 
 				await fs.writeFile(fileName, fileContents);
