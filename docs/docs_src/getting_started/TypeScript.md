@@ -16,6 +16,8 @@ In order to get started using Dynamoose in your TypeScript project, simply [inst
 
 There is no need to install any additional `@types` package in order to use Dynamoose with TypeScript since the typings are included with the Dynamoose package.
 
+We highly recommend enabling `strict: true` in your [tsconfig.json](https://www.typescriptlang.org/tsconfig#strict), as some typings will not work correctly unless this option is enabled.
+
 After that, so long as you have TypeScript already setup on your project and text editor you should be ready to start using Dynamoose with TypeScript.
 
 ## FAQ
