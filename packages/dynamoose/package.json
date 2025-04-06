@@ -28,10 +28,10 @@
     "test:types": "tsc --project test/types/tsconfig.json"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.744.0",
-    "@aws-sdk/util-dynamodb": "^3.744.0",
+    "@aws-sdk/client-dynamodb": "^3.782.0",
+    "@aws-sdk/util-dynamodb": "^3.782.0",
     "dynamoose-utils": "^4.0.3",
-    "js-object-utilities": "^2.2.0"
+    "js-object-utilities": "^2.2.1"
   },
   "devDependencies": {
     "dynamoose-logger": "^4.0.3"
