@@ -65,7 +65,9 @@ Dynamoose is a modeling tool for Amazon's DynamoDB. Dynamoose is heavily inspire
 - Powerful Conditional/Filtering Support
 - Callback & Promise support
 - AWS Multi-region support
+<!-- end-block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->
 
+<!-- start-block:1baa7441-d01a-40e2-80d7-71ce05674ec9 -->
 #### Example
 
 ```ts
@@ -129,7 +131,7 @@ await newBook.save();
 const allBooks = await Book.scan().exec();
 console.log(allBooks);
 ```
-<!-- end-block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->
+<!-- end-block:1baa7441-d01a-40e2-80d7-71ce05674ec9 -->
 
 ### Resources
 
