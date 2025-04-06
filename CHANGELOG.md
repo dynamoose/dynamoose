@@ -2,6 +2,28 @@
 
 ---
 
+## Version 4.0.4
+
+This release contains some minor fixes. It is highly recommended to upgrade to this version as soon as possible as it contains a vulnerability fix for a dependency.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### Bug Fixes
+
+- Bump `@aws-sdk/client-dynamodb` & `@aws-sdk/util-dynamodb` to v3.782.0
+- Bump `js-object-utilities` to v2.2.1 (this contains a vulnerability fix)
+
+### Documentation
+
+- Adds example code to README.md & website homepage
+- Adds v3 documentation to website version dropdown
+
+### Other
+
+- Enables npm provenance support to verify package integrity
+
+---
+
 ## Version 4.0.3
 
 This release reverts the previous `table.query` feature due to bugs with it. It also adds a Spanish version of the Dynamoose website (more languages coming soon).
