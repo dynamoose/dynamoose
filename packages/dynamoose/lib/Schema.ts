@@ -2,7 +2,7 @@ import CustomError from "./Error";
 import utils from "./utils";
 import Internal from "./Internal";
 import {Item, ItemObjectFromSchemaSettings} from "./Item";
-import {Model, ModelIndexes, schemaCorrectnessScoresSettings} from "./Model";
+import {Model, ModelIndexes} from "./Model";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {ModelType, ObjectType} from "./General";
 import {InternalPropertiesClass} from "./InternalPropertiesClass";
@@ -637,7 +637,7 @@ export interface AttributeDefinition {
 	 * | type | "global" \| "local" | "global" | If the index should be a global index or local index. Attribute will be the hashKey for the index. |
 	 * | rangeKey | string | undefined | The range key attribute name for a global secondary index. |
 	 * | project | boolean \| [string] | true | Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed. |
-	 * | throughput | number \| {read: number, write: number} | undefined | Sets the throughput for the global secondary index. |
+	 * | throughput | number \| `{read: number, write: number}` | undefined | Sets the throughput for the global secondary index. |
 	 *
 	 *
 	 * If you set `index` to `true`, it will create an index with all of the default settings.
@@ -1423,7 +1423,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			return func(attributeValue);
 		}
 	}
-	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string; includeAllProperties?: boolean } & schemaCorrectnessScoresSettings = {"type": "toDynamo"}): ObjectType {
+	getTypePaths (object: ObjectType, settings: { type: "toDynamo" | "fromDynamo"; previousKey?: string; includeAllProperties?: boolean } = {"type": "toDynamo"}): ObjectType {
 		return Object.entries(object).reduce((result, entry) => {
 			const [key, value] = entry;
 			const fullKey = [settings.previousKey, key].filter((a) => Boolean(a)).join(".");
@@ -1478,8 +1478,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 					result[fullKey] = matchedTypeDetailsIndex;
 				}
 			} else if (settings.includeAllProperties) {
-				const defaultValue = this.getAttributeSettingValue("default", key) || this.getAttributeSettingValue("default", fullKey);
-				const matchCorrectness = typeCheckResult.isValidType ? settings.considerDefaults && value !== undefined && defaultValue !== undefined && value === defaultValue ? 2 : 1 : 0;
+				const matchCorrectness: number = typeCheckResult.isValidType ? 1 : 0;
 				result[fullKey] = {
 					"index": 0,
 					matchCorrectness,

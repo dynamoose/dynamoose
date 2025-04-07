@@ -57,7 +57,3 @@ dyno_jsdoc_dist/Table/index.js|table.create
 ## table.initialize([callback])
 
 dyno_jsdoc_dist/Table/index.js|table.initialize
-
-## table.query([callback])
-
-dyno_jsdoc_dist/Table/index.js|table.query

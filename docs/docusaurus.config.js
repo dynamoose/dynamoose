@@ -32,6 +32,10 @@ module.exports = {
 							"href": "https://dynamoosejs.com"
 						},
 						{
+							"label": "v3.x.x",
+							"href": "https://v3.dynamoosejs.com"
+						},
+						{
 							"label": "v2.x.x",
 							"href": "https://v2.dynamoosejs.com"
 						},
@@ -150,7 +154,7 @@ module.exports = {
 					"sidebarPath": require.resolve("./sidebars.js"),
 					"editUrl": ({docPath}) => `https://github.com/dynamoose/dynamoose/edit/main/docs/docs_src/${docPath}`,
 					"remarkPlugins": [
-						require("./src/plugins/remark-npm2yarn")
+						[require("@docusaurus/remark-plugin-npm2yarn"), {"sync": true}]
 					]
 				},
 				"theme": {
@@ -162,7 +166,8 @@ module.exports = {
 	"i18n": {
 		"defaultLocale": "en",
 		"locales": [
-			"en"
+			"en",
+			"es"
 		]
 	}
 };

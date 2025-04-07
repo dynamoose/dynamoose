@@ -48,7 +48,90 @@ Dynobase helps you accelerate your DynamoDB workflow with code generation, faste
 
 ### Getting Started
 
-Take a look at our [website](https://dynamoosejs.com) for information about how to get started.
+<!-- start-block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->
+#### Description
+
+Dynamoose is a modeling tool for Amazon's DynamoDB. Dynamoose is heavily inspired by [Mongoose](https://mongoosejs.com/), which means if you are coming from Mongoose the syntax will be very familiar.
+
+#### Key Features
+
+- Type safety
+- High level API
+- Easy to use syntax
+- DynamoDB Single Table Design Support
+- Ability to transform data before saving or retrieving items
+- Strict data modeling (validation, required attributes, and more)
+- Support for DynamoDB Transactions
+- Powerful Conditional/Filtering Support
+- Callback & Promise support
+- AWS Multi-region support
+<!-- end-block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->
+
+<!-- start-block:1baa7441-d01a-40e2-80d7-71ce05674ec9 -->
+#### Example
+
+```ts
+import * as dynamoose from "dynamoose";
+import * as crypto from "crypto";
+
+// Create a new Dynamoose model
+const Book = dynamoose.model("Book", {
+	"id": {
+		"type": String,
+		"hashKey": true,
+		"default": () => crypto.randomUUID()
+	},
+	"title": {
+		"type": String,
+		"required": true
+	},
+	"author": {
+		"type": String,
+		"required": true
+	},
+	"publishedDate": {
+		"type": Date,
+		"required": true
+	},
+	"genre": {
+		"type": String,
+		"required": true,
+		"enum": [
+			"fantasy",
+			"sci-fi",
+			"mystery",
+			"thriller",
+			"romance",
+			"non-fiction",
+			"horror",
+			"biography",
+			"autobiography",
+			"poetry",
+			"children's",
+			"young-adult",
+			"other"
+		]
+	},
+	"summary": String,
+	"pageCount": Number
+});
+
+// Add a new item to the Book table
+const newBook = new Book({
+	"title": "Harry Potter and the Philosopher's Stone",
+	"author": "J.K. Rowling",
+	"publishedDate": new Date("1997-06-26"),
+	"genre": "fantasy",
+	"summary": "The story of a young wizard who discovers he is a wizard and attends a magical school.",
+	"pageCount": 223
+});
+await newBook.save();
+
+// Retrieve all items from the Book table
+const allBooks = await Book.scan().exec();
+console.log(allBooks);
+```
+<!-- end-block:1baa7441-d01a-40e2-80d7-71ce05674ec9 -->
 
 ### Resources
 
