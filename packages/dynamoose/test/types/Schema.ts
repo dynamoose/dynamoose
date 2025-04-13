@@ -107,7 +107,7 @@ const shouldSucceedWithAsyncSetMethodSchema = new dynamoose.Schema({
 const shouldSucceedWithSetMethodSecondArgSchema = new dynamoose.Schema({
 	"id": {
 		"type": String,
-		"set": (value, oldValue) => oldValue
+		"set": (value, oldValue) => oldValue ? oldValue : value
 	}
 });
 const shouldSucceedWithAsyncValidateMethodSchema = new dynamoose.Schema({

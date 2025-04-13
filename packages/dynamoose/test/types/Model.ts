@@ -74,9 +74,9 @@ const shouldFailWithInvalidConditionTransaction = model.transaction.condition(0,
 
 // Typed Models
 export class User extends Item {
-	id: string;
-	name: string;
-	age: number;
+	id!: string;
+	name!: string;
+	age!: number;
 }
 const userSchema = new dynamoose.Schema({
 	"id": String,
@@ -108,5 +108,5 @@ UserTypedModel.update({"id": "foo"}, {
 });
 
 UserTypedModel.update({"id": "foo"}, {
-	"$REMOVE":{"age":null}
+	"$REMOVE":{"age":undefined}
 });
