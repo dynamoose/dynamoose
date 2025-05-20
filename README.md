@@ -61,7 +61,7 @@ Dynamoose is a modeling tool for Amazon's DynamoDB. Dynamoose is heavily inspire
 - DynamoDB Single Table Design Support
 - Ability to transform data before saving or retrieving items
 - Strict data modeling (validation, required attributes, and more)
-- Support for DynamoDB Transactions
+- Support for [DynamoDB Transactions](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/transactions.html)
 - Powerful Conditional/Filtering Support
 - Callback & Promise support
 - AWS Multi-region support
