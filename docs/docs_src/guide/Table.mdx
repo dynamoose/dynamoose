@@ -1,0 +1,104 @@
+# Table
+
+Dynamoose Table objects represent a DynamoDB table. For most use cases, you'll work with models rather than tables directly. However, there are some advanced features like replication that require using the Table API.
+
+## Creating a Table
+
+To create a table, use the `Table` constructor:
+
+```javascript
+const table = new dynamoose.Table(name, models, options);
+```
+
+- `name` - Name of the table
+- `models` - Array of models that use this table
+- `options` - Options for the table
+
+## Table Options
+
+### replication
+
+The `replication` option allows you to create a DynamoDB Global Table that is replicated across multiple AWS regions.
+
+```javascript
+const table = new dynamoose.Table("values", [model], {
+  create: true,
+  update: true,
+  replication: { 
+    regions: ["us-west-2", "us-west-1"],
+  },
+  throughput: "ON_DEMAND",
+});
+```
+
+When replication is configured, DynamoDB Streams will be enabled automatically with the `NEW_AND_OLD_IMAGES` setting, which is required for Global Tables.
+
+### create
+
+Boolean representing if Dynamoose should create the table on initialization if it doesn't exist. This is true by default.
+
+### waitForActive
+
+Settings for how DynamoDB should handle waiting for the table to be active before actions on the table can be performed. This can be set to a boolean value or an object for more fine-grained control. The default is true.
+
+```javascript
+const table = new dynamoose.Table("values", [model], {
+  waitForActive: {
+    enabled: true,
+    check: {
+      timeout: 180000, // How many milliseconds to wait for the table to be active
+      frequency: 1000  // How many milliseconds between each check to see if the table is active
+    }
+  }
+});
+```
+
+### update
+
+This object defines if Dynamoose should update the throughput or other properties of the table.
+
+```javascript
+const table = new dynamoose.Table("values", [model], {
+  update: true, // Update all settings (throughput, indexes, etc.)
+  // OR
+  update: ["throughput", "indexes", "ttl", "tableClass", "replication"] // Only update specific properties
+});
+```
+
+### throughput
+
+The throughput for the table. This can be set to one of the following:
+- A number - Both read and write throughput will be set to this number
+- An object with `read` and `write` properties
+- `ON_DEMAND` string - Sets the table to On-Demand mode
+
+```javascript
+const table = new dynamoose.Table("values", [model], {
+  throughput: "ON_DEMAND"
+});
+
+// OR
+
+const table = new dynamoose.Table("values", [model], {
+  throughput: 5 // Sets both read and write to 5
+});
+
+// OR
+
+const table = new dynamoose.Table("values", [model], {
+  throughput: {
+    read: 5,
+    write: 10
+  }
+});
+```
+
+### tableClass
+
+This parameter allows you to choose between the standard table class and the infrequent access table class.
+
+```javascript
+const table = new dynamoose.Table("values", [model], {
+  tableClass: "standard" // or "infrequentAccess"
+});
+```
