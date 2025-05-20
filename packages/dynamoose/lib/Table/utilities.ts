@@ -74,6 +74,15 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 		object.Tags = tags;
 	}
 
+	// Add stream specification if enabled
+	if (table.getInternalProperties(internalProperties).options.streamOptions.enabled) {
+		const streamOptions = table.getInternalProperties(internalProperties).options.streamOptions;
+		object.StreamSpecification = {
+			"StreamEnabled": true,
+			"StreamViewType": streamOptions.type
+		};
+	}
+
 	return object;
 }
 // Setting `force` to true will create the table even if the table is already believed to be active
@@ -240,6 +249,35 @@ export async function updateTable (table: Table): Promise<void> {
 			};
 			await ddb(instance, "updateTable", object);
 			await waitForActive(table)();
+		}
+	}
+	// Streams
+	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.streams)) {
+		const tableDetails = (await getTableDetails(table)).Table;
+		const streamOptions = table.getInternalProperties(internalProperties).options.streamOptions;
+
+		if (streamOptions) {
+			const currentStreamEnabled = !!tableDetails.StreamSpecification?.StreamEnabled;
+			const currentStreamViewType = tableDetails.StreamSpecification?.StreamViewType;
+			const updateStreamEnabled = streamOptions.enabled;
+			const updateStreamViewType = streamOptions.type || undefined;
+
+			// Only update if stream settings are different
+			if (currentStreamEnabled !== updateStreamEnabled || updateStreamEnabled && currentStreamViewType !== updateStreamViewType) {
+				const object: DynamoDB.UpdateTableInput = {
+					"TableName": table.getInternalProperties(internalProperties).name,
+					"StreamSpecification": {
+						"StreamEnabled": updateStreamEnabled
+					}
+				};
+
+				if (updateStreamEnabled && updateStreamViewType) {
+					object.StreamSpecification.StreamViewType = updateStreamViewType;
+				}
+
+				await ddb(instance, "updateTable", object);
+				await waitForActive(table)();
+			}
 		}
 	}
 }

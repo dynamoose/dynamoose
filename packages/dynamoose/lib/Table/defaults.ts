@@ -21,11 +21,11 @@ export const original: TableOptions = {
 	"expires": undefined,
 	"tags": {},
 	"tableClass": TableClass.standard,
-	"initialize": true
-	// "streamOptions": {
-	// 	"enabled": false,
-	// 	"type": undefined
-	// },
+	"initialize": true,
+	"streamOptions": {
+		"enabled": false,
+		"type": undefined
+	}
 	// "serverSideEncryption": false,
 	// "defaultReturnValues": "ALL_NEW",
 };
