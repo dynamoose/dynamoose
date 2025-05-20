@@ -1,5 +1,5 @@
-import {TableOptions, TableOptionsOptional} from "./index";
-import {TableClass} from "./types";
+import {TableOptions, TableOptionsOptional, TableStreamOptions} from "./index";
+import {StreamViewType, TableClass} from "./types";
 
 export const original: TableOptions = {
 	"create": true,
@@ -21,11 +21,11 @@ export const original: TableOptions = {
 	"expires": undefined,
 	"tags": {},
 	"tableClass": TableClass.standard,
-	"initialize": true
-	// "streamOptions": {
-	// 	"enabled": false,
-	// 	"type": undefined
-	// },
+	"initialize": true,
+	"streamOptions": {
+		"enabled": false,
+		"type": undefined
+	}
 	// "serverSideEncryption": false,
 	// "defaultReturnValues": "ALL_NEW",
 };

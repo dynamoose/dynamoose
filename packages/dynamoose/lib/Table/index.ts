@@ -9,7 +9,7 @@ import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
-import {TableClass} from "./types";
+import {StreamViewType, TableClass} from "./types";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
 
@@ -546,8 +546,14 @@ export enum TableUpdateOptions {
 	indexes = "indexes",
 	throughput = "throughput",
 	tags = "tags",
-	tableClass = "tableClass"
+	tableClass = "tableClass",
+	streams = "streams"
 }
+export interface TableStreamOptions {
+	enabled: boolean;
+	type?: StreamViewType;
+}
+
 export interface TableOptions {
 	create: boolean;
 	throughput: "ON_DEMAND" | number | {read: number; write: number};
@@ -560,5 +566,6 @@ export interface TableOptions {
 	tags: {[key: string]: string};
 	tableClass: TableClass;
 	initialize: boolean;
+	streamOptions?: TableStreamOptions;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;
