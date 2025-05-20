@@ -80,9 +80,9 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * | tags | An object containing key value pairs that should be added to the table as tags. | Object | {} |
 	 * | tableClass | A string representing the table class to use. | "standard" \| "infrequentAccess" | "standard" |
 	 * | initialize | If Dynamoose should run it's initialization flow (creating the table, updating the throughput, etc) automatically. | Boolean | true |
-	 * | streamOptions | An object containing settings for DynamoDB streams. | Object | {"enabled": false, "type": undefined} |
-	 * | streamOptions.enabled | If Dynamoose should enable DynamoDB streams for the table. | Boolean | false |
-	 * | streamOptions.type | The type of DynamoDB stream to enable. | "NEW_IMAGE" \| "OLD_IMAGE" \| "NEW_AND_OLD_IMAGES" \| "KEYS_ONLY" | undefined |
+	 * | streamOptions | An object containing settings for [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html). | Object | {"enabled": false, "type": undefined} |
+	 * | streamOptions.enabled | If Dynamoose should enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table. | Boolean | false |
+	 * | streamOptions.type | The type of DynamoDB Stream to enable. | "NEW_IMAGE" \| "OLD_IMAGE" \| "NEW_AND_OLD_IMAGES" \| "KEYS_ONLY" | undefined |
 	 *
 	 * The default object is listed below.
 	 *
