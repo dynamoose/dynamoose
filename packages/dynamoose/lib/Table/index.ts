@@ -9,7 +9,7 @@ import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {IndexItem, TableIndex} from "../Schema";
 import {Item as ItemCarrier} from "../Item";
 import {createTable, createTableRequest, updateTable, updateTimeToLive, waitForActive} from "./utilities";
-import {StreamViewType, TableClass} from "./types";
+import {TableClass} from "./types";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
 

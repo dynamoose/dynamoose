@@ -79,7 +79,7 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 		const streamOptions = table.getInternalProperties(internalProperties).options.streamOptions;
 		object.StreamSpecification = {
 			"StreamEnabled": true,
-			"StreamViewType": streamOptions.type as DynamoDB.StreamViewType
+			"StreamViewType": streamOptions.type
 		};
 	}
 
@@ -260,7 +260,7 @@ export async function updateTable (table: Table): Promise<void> {
 			const currentStreamEnabled = !!tableDetails.StreamSpecification?.StreamEnabled;
 			const currentStreamViewType = tableDetails.StreamSpecification?.StreamViewType;
 			const updateStreamEnabled = streamOptions.enabled;
-			const updateStreamViewType = streamOptions.type as DynamoDB.StreamViewType || undefined;
+			const updateStreamViewType = streamOptions.type || undefined;
 
 			// Only update if stream settings are different
 			if (currentStreamEnabled !== updateStreamEnabled || updateStreamEnabled && currentStreamViewType !== updateStreamViewType) {
