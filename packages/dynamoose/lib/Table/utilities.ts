@@ -69,6 +69,14 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 		object.TableClass = DynamoDB.TableClass.STANDARD_INFREQUENT_ACCESS;
 	}
 
+	// Add stream specification if replication is enabled
+	if (table.getInternalProperties(internalProperties).options.replication) {
+		object.StreamSpecification = {
+			"StreamEnabled": true,
+			"StreamViewType": "NEW_AND_OLD_IMAGES"
+		};
+	}
+
 	const tags = getExpectedTags(table);
 	if (tags) {
 		object.Tags = tags;
@@ -240,6 +248,44 @@ export async function updateTable (table: Table): Promise<void> {
 			};
 			await ddb(instance, "updateTable", object);
 			await waitForActive(table)();
+		}
+	}
+	// Replication
+	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.replication)) {
+		const tableDetails = (await getTableDetails(table)).Table;
+		const replication = table.getInternalProperties(internalProperties).options.replication;
+		
+		if (replication && (!tableDetails.StreamSpecification || !tableDetails.StreamSpecification.StreamEnabled)) {
+			const object: DynamoDB.UpdateTableInput = {
+				"TableName": table.getInternalProperties(internalProperties).name,
+				"StreamSpecification": {
+					"StreamEnabled": true,
+					"StreamViewType": "NEW_AND_OLD_IMAGES"
+				}
+			};
+			await ddb(instance, "updateTable", object);
+			await waitForActive(table)();
+		}
+
+		if (replication && replication.regions && replication.regions.length > 0) {
+			try {
+				// Create Global Table
+				await ddb(instance, "updateTable", {
+					"TableName": table.getInternalProperties(internalProperties).name,
+					"ReplicaUpdates": replication.regions.map(region => ({
+						"Create": {
+							"RegionName": region
+						}
+					}))
+				});
+				await waitForActive(table)();
+			} catch (error) {
+				if (error.name === "UnknownOperationException" && error.message.includes("not supported in DynamoDB Local")) {
+					console.warn(`Replication is not currently supported in DynamoDB Local. Skipping replication update for table: ${table.name}`); // eslint-disable-line no-console
+				} else {
+					throw error;
+				}
+			}
 		}
 	}
 }

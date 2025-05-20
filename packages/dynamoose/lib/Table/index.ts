@@ -80,6 +80,8 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * | tags | An object containing key value pairs that should be added to the table as tags. | Object | {} |
 	 * | tableClass | A string representing the table class to use. | "standard" \| "infrequentAccess" | "standard" |
 	 * | initialize | If Dynamoose should run it's initialization flow (creating the table, updating the throughput, etc) automatically. | Boolean | true |
+	 * | replication | The settings for table replication (DynamoDB Global Tables). If this is `undefined`, no replication will be configured. | Object | undefined |
+	 * | replication.regions | An array of region names to replicate the table to. | [String] | undefined |
 	 *
 	 * The default object is listed below.
 	 *
@@ -103,7 +105,8 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * 	"expires": null,
 	 * 	"tags": {},
 	 * 	"tableClass": "standard",
-	 * 	"initialize": true
+	 * 	"initialize": true,
+	 * 	"replication": undefined
 	 * }
 	 * ```
 	 * @param instance INTERNAL PARAMETER
@@ -541,12 +544,17 @@ export interface TableExpiresSettings {
 		returnExpired: boolean;
 	};
 }
+
+export interface TableReplicationSettings {
+	regions: string[];
+}
 export enum TableUpdateOptions {
 	ttl = "ttl",
 	indexes = "indexes",
 	throughput = "throughput",
 	tags = "tags",
-	tableClass = "tableClass"
+	tableClass = "tableClass",
+	replication = "replication"
 }
 export interface TableOptions {
 	create: boolean;
@@ -560,5 +568,6 @@ export interface TableOptions {
 	tags: {[key: string]: string};
 	tableClass: TableClass;
 	initialize: boolean;
+	replication: TableReplicationSettings;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;

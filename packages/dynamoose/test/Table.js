@@ -1,4 +1,48 @@
 const dynamoose = require("../dist");
+	describe("Replication", () => {
+		let updateTableParams;
+		
+		beforeEach(() => {
+			updateTableParams = null;
+			
+			dynamoose.aws.ddb.set({
+				"createTable": () => Promise.resolve(),
+				"describeTable": () => Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE"
+					}
+				}),
+				"updateTable": (params) => {
+					updateTableParams = params;
+					return Promise.resolve();
+				}
+			});
+		});
+		
+		describe("Table Update", () => {
+			it("Should update StreamSpecification when enabling replication", async () => {
+				const tableName = "Cat";
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"update": ["replication"], "replication": {"regions": ["us-west-2"]}, "waitForActive": false});
+				await utils.set_immediate_promise();
+
+				expect(updateTableParams).toBeDefined();
+				expect(updateTableParams.StreamSpecification).toEqual({
+					"StreamEnabled": true,
+					"StreamViewType": "NEW_AND_OLD_IMAGES"
+				});
+			});
+
+			it("Should not update table when replication is not enabled", async () => {
+				const tableName = "Cat";
+				const model = dynamoose.model(tableName, {"id": String});
+				new dynamoose.Table(tableName, [model], {"update": ["replication"], "waitForActive": false});
+				await utils.set_immediate_promise();
+
+				expect(updateTableParams).toBeNull();
+			});
+		});
+	});
 const Internal = require("../dist/Internal").default;
 const utils = require("../dist/utils").default;
 const CustomError = require("../dist/Error").default;

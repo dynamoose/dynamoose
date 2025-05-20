@@ -21,7 +21,8 @@ export const original: TableOptions = {
 	"expires": undefined,
 	"tags": {},
 	"tableClass": TableClass.standard,
-	"initialize": true
+	"initialize": true,
+	"replication": undefined
 	// "streamOptions": {
 	// 	"enabled": false,
 	// 	"type": undefined
