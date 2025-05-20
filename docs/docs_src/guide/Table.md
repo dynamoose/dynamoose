@@ -77,10 +77,6 @@ You can set the defaults by setting the property to a custom object:
 ```js
 dynamoose.Table.defaults.set({
 	"prefix": "MyApplication_",
-	"streamOptions": {
-		"enabled": true,
-		"type": "NEW_AND_OLD_IMAGES"
-	}
 });
 ```
 
@@ -109,40 +105,3 @@ dyno_jsdoc_dist/Table/index.js|table.create
 ## table.initialize([callback])
 
 dyno_jsdoc_dist/Table/index.js|table.initialize
-
-## Table Update Options
-
-When updating an existing table, you can specify which settings you want to update using the `update` property. This can be set to `true` to update all options, or an array of specific options to update.
-
-The available update options are:
-
-- `throughput` - Update the throughput capacity of the table
-- `indexes` - Update the secondary indexes on the table
-- `ttl` - Update the Time to Live settings
-- `tags` - Update the tags for the table
-- `tableClass` - Update the table class (Standard or Standard-Infrequent Access)
-- `streams` - Update the DynamoDB Stream settings
-
-Example:
-
-```js
-const table = new dynamoose.Table("CatTable", [model], {
-  streamOptions: {
-    enabled: true,
-    type: "NEW_IMAGE"
-  },
-  update: ["streams"]  // Only update the stream settings
-});
-```
-
-Or to update all settings:
-
-```js
-const table = new dynamoose.Table("CatTable", [model], {
-  streamOptions: {
-    enabled: true,
-    type: "NEW_IMAGE"
-  },
-  update: true  // Update all settings
-});
-```
