@@ -1764,6 +1764,118 @@ describe("Table", () => {
 			});
 		});
 
+		describe("Streams", () => {
+			let updateTableParams = [];
+			let describeTableFunction = () => {
+				return Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE"
+					}
+				});
+			};
+			
+			beforeEach(() => {
+				dynamoose.Table.defaults.set({
+					"create": false,
+					"waitForActive": false
+				});
+				updateTableParams = [];
+				dynamoose.aws.ddb.set({
+					"describeTable": () => describeTableFunction(),
+					"updateTable": (params) => {
+						updateTableParams.push(params);
+						return Promise.resolve();
+					}
+				});
+			});
+			
+			const updateOptions = [
+				true,
+				["streams"],
+				["all"]
+			];
+			
+			updateOptions.forEach((updateOption) => {
+				describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
+					it("Should call updateTable with correct parameters when adding streams", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"TableStatus": "ACTIVE"
+							}
+						});
+						const model = dynamoose.model(tableName, {"id": String});
+						new dynamoose.Table(tableName, [model], {"streamOptions": {"enabled": true}, "update": updateOption});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).toEqual([{
+							"TableName": tableName,
+							"StreamSpecification": {
+								"StreamEnabled": true
+							}
+						}]);
+					});
+
+					it("Should call updateTable with correct parameters when adding streams with type", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"TableStatus": "ACTIVE"
+							}
+						});
+						const model = dynamoose.model(tableName, {"id": String});
+						new dynamoose.Table(tableName, [model], {"streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}, "update": updateOption});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).toEqual([{
+							"TableName": tableName,
+							"StreamSpecification": {
+								"StreamEnabled": true,
+								"StreamViewType": "NEW_AND_OLD_IMAGES"
+							}
+						}]);
+					});
+					
+					it("Should call updateTable with correct parameters when disabling streams", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"TableStatus": "ACTIVE",
+								"StreamSpecification": {
+									"StreamEnabled": true,
+									"StreamViewType": "NEW_AND_OLD_IMAGES"
+								}
+							}
+						});
+						const model = dynamoose.model(tableName, {"id": String});
+						new dynamoose.Table(tableName, [model], {"streamOptions": {"enabled": false}, "update": updateOption});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).toEqual([{
+							"TableName": tableName,
+							"StreamSpecification": {
+								"StreamEnabled": false
+							}
+						}]);
+					});
+					
+					it("Should not call updateTable if stream settings match", async () => {
+						const tableName = "Cat";
+						describeTableFunction = () => Promise.resolve({
+							"Table": {
+								"TableStatus": "ACTIVE",
+								"StreamSpecification": {
+									"StreamEnabled": true,
+									"StreamViewType": "NEW_AND_OLD_IMAGES"
+								}
+							}
+						});
+						const model = dynamoose.model(tableName, {"id": String});
+						new dynamoose.Table(tableName, [model], {"streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}, "update": updateOption});
+						await utils.set_immediate_promise();
+						expect(updateTableParams).toEqual([]);
+					});
+				});
+			});
+		});
+
 		describe("Time To Live", () => {
 			let updateTTLParams = [], describeTTL, describeTTLFunction;
 			beforeEach(() => {
