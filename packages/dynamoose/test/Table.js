@@ -451,7 +451,7 @@ describe("Table", () => {
 							"TableClass": "STANDARD_INFREQUENT_ACCESS"
 						});
 					});
-					
+
 					it("Should call createTable with correct parameters when streamOptions is enabled", async () => {
 						const tableName = "Cat";
 						const model = dynamoose.model(tableName, {"id": String});
@@ -480,7 +480,7 @@ describe("Table", () => {
 							"TableName": tableName
 						});
 					});
-					
+
 					it("Should call createTable with correct parameters when streamOptions is enabled with type", async () => {
 						const tableName = "Cat";
 						const model = dynamoose.model(tableName, {"id": String});
@@ -1773,7 +1773,7 @@ describe("Table", () => {
 					}
 				});
 			};
-			
+
 			beforeEach(() => {
 				dynamoose.Table.defaults.set({
 					"create": false,
@@ -1788,13 +1788,13 @@ describe("Table", () => {
 					}
 				});
 			});
-			
+
 			const updateOptions = [
 				true,
 				["streams"],
 				["all"]
 			];
-			
+
 			updateOptions.forEach((updateOption) => {
 				describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
 					it("Should call updateTable with correct parameters when adding streams", async () => {
@@ -1833,7 +1833,7 @@ describe("Table", () => {
 							}
 						}]);
 					});
-					
+
 					it("Should call updateTable with correct parameters when disabling streams", async () => {
 						const tableName = "Cat";
 						describeTableFunction = () => Promise.resolve({
@@ -1855,7 +1855,7 @@ describe("Table", () => {
 							}
 						}]);
 					});
-					
+
 					it("Should not call updateTable if stream settings match", async () => {
 						const tableName = "Cat";
 						describeTableFunction = () => Promise.resolve({

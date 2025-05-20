@@ -1,5 +1,5 @@
-import {TableOptions, TableOptionsOptional, TableStreamOptions} from "./index";
-import {StreamViewType, TableClass} from "./types";
+import {TableOptions, TableOptionsOptional} from "./index";
+import {TableClass} from "./types";
 
 export const original: TableOptions = {
 	"create": true,

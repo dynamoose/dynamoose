@@ -1,4 +1,4 @@
-import {Table, TableExpiresSettings, TableStreamOptions, TableUpdateOptions, TableWaitForActiveSettings} from ".";
+import {Table, TableExpiresSettings, TableUpdateOptions, TableWaitForActiveSettings} from ".";
 import Internal from "../Internal";
 const {internalProperties} = Internal.General;
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
@@ -6,7 +6,7 @@ import ddb from "../aws/ddb/internal";
 import utils from "../utils";
 import CustomError from "../Error";
 import {TableIndexChangeType} from "../utils/dynamoose/index_changes";
-import {StreamViewType, TableClass} from "./types";
+import {TableClass} from "./types";
 import * as defaults from "./defaults";
 
 // Utility functions
@@ -78,8 +78,8 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 	if (table.getInternalProperties(internalProperties).options.streamOptions?.enabled) {
 		const streamOptions = table.getInternalProperties(internalProperties).options.streamOptions;
 		object.StreamSpecification = {
-			StreamEnabled: true,
-			StreamViewType: streamOptions.type as DynamoDB.StreamViewType
+			"StreamEnabled": true,
+			"StreamViewType": streamOptions.type as DynamoDB.StreamViewType
 		};
 	}
 
@@ -255,27 +255,27 @@ export async function updateTable (table: Table): Promise<void> {
 	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.streams)) {
 		const tableDetails = (await getTableDetails(table)).Table;
 		const streamOptions = table.getInternalProperties(internalProperties).options.streamOptions;
-		
+
 		if (streamOptions) {
 			const currentStreamEnabled = !!tableDetails.StreamSpecification?.StreamEnabled;
 			const currentStreamViewType = tableDetails.StreamSpecification?.StreamViewType;
 			const updateStreamEnabled = streamOptions.enabled;
 			const updateStreamViewType = streamOptions.type as DynamoDB.StreamViewType || undefined;
-			
+
 			// Only update if stream settings are different
-			if (currentStreamEnabled !== updateStreamEnabled || 
-				(updateStreamEnabled && currentStreamViewType !== updateStreamViewType)) {
+			if (currentStreamEnabled !== updateStreamEnabled ||
+				updateStreamEnabled && currentStreamViewType !== updateStreamViewType) {
 				const object: DynamoDB.UpdateTableInput = {
 					"TableName": table.getInternalProperties(internalProperties).name,
 					"StreamSpecification": {
 						"StreamEnabled": updateStreamEnabled
 					}
 				};
-				
+
 				if (updateStreamEnabled && updateStreamViewType) {
 					object.StreamSpecification.StreamViewType = updateStreamViewType;
 				}
-				
+
 				await ddb(instance, "updateTable", object);
 				await waitForActive(table)();
 			}
