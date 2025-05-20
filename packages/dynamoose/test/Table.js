@@ -4,6 +4,7 @@ const utils = require("../dist/utils").default;
 const CustomError = require("../dist/Error").default;
 const {internalProperties} = Internal.General;
 const util = require("util");
+const { createTableRequest } = require("../dist/Table/utilities");
 
 describe("Table", () => {
 	beforeEach(() => {
@@ -2418,6 +2419,132 @@ describe("Table", () => {
 
 			const Dog = dynamoose.model("Dog", {"id": String, "name": String}, {"tableName": tableName});
 			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
+		});
+	});
+
+	describe("replication", () => {
+		let createTableParams;
+		beforeEach(() => {
+			createTableParams = undefined;
+			dynamoose.aws.ddb.set({
+				"createTable": (params) => {
+					createTableParams = params;
+					return Promise.resolve({});
+				},
+				"describeTable": () => Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE",
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					}
+				}),
+				"updateTable": () => Promise.resolve({})
+			});
+		});
+
+		it("Should include replication regions in create request", async () => {
+			const model = dynamoose.model("User", {"id": String});
+			const result = await createTableRequest({
+				"getInternalProperties": () => ({
+					"name": "Table",
+					"options": {
+						"throughput": {
+							"read": 1,
+							"write": 1
+						},
+						"replication": {
+							"regions": ["us-west-2", "us-east-1"]
+						},
+						"streamOptions": {
+							"enabled": false
+						},
+						"tags": {}
+					},
+					"getCreateTableAttributeParams": async () => ({
+						"AttributeDefinitions": [
+							{
+								"AttributeName": "id",
+								"AttributeType": "S"
+							}
+						],
+						"KeySchema": [
+							{
+								"AttributeName": "id",
+								"KeyType": "HASH"
+							}
+						]
+					})
+				})
+			});
+
+			expect(result).toEqual({
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				],
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
+				},
+				"StreamSpecification": {
+					"StreamEnabled": true,
+					"StreamViewType": "NEW_AND_OLD_IMAGES"
+				},
+				"ReplicationSpecification": {
+					"Regions": ["us-west-2", "us-east-1"]
+				},
+				"TableName": "Table"
+			});
+		});
+
+		it("Should enable streams when replication is specified even if streams disabled", async () => {
+			const result = await createTableRequest({
+				"getInternalProperties": () => ({
+					"name": "Table",
+					"options": {
+						"throughput": {
+							"read": 1,
+							"write": 1
+						},
+						"replication": {
+							"regions": ["us-west-2", "us-east-1"]
+						},
+						"streamOptions": {
+							"enabled": false
+						},
+						"tags": {}
+					},
+					"getCreateTableAttributeParams": async () => ({
+						"AttributeDefinitions": [
+							{
+								"AttributeName": "id",
+								"AttributeType": "S"
+							}
+						],
+						"KeySchema": [
+							{
+								"AttributeName": "id",
+								"KeyType": "HASH"
+							}
+						]
+					})
+				})
+			});
+
+			expect(result.StreamSpecification).toEqual({
+				"StreamEnabled": true,
+				"StreamViewType": "NEW_AND_OLD_IMAGES"
+			});
 		});
 	});
 });
