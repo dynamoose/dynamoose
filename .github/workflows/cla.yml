@@ -12,7 +12,7 @@ jobs:
       - name: "CLA Assistant"
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I dedicate any and all copyright interest in this software to the public domain. I make this dedication for the benefit of the public at large and to the detriment of my heirs and successors. I intend this dedication to be an overt act of relinquishment in perpetuity of all present and future rights to this software under copyright law.') || github.event_name == 'pull_request_target'
         # Beta Release
-        uses: fishcharlie/github-action@89e7372c3381fb3116788fee4c5cc0b37c827fc2
+        uses: fishcharlie/github-action@6edf8e9a177fb5f31ab506af430f150b7a9cb488
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # the below token should have repo scope and must be manually added by you in the repository's secret
