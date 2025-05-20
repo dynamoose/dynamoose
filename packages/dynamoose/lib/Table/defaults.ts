@@ -25,7 +25,8 @@ export const original: TableOptions = {
 	"streamOptions": {
 		"enabled": false,
 		"type": undefined
-	}
+	},
+	"replication": undefined
 	// "serverSideEncryption": false,
 	// "defaultReturnValues": "ALL_NEW",
 };

@@ -75,11 +75,26 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 	}
 
 	// Add stream specification if enabled
-	if (table.getInternalProperties(internalProperties).options.streamOptions.enabled) {
+	if (table.getInternalProperties(internalProperties).options.streamOptions?.enabled) {
 		const streamOptions = table.getInternalProperties(internalProperties).options.streamOptions;
 		object.StreamSpecification = {
 			"StreamEnabled": true,
 			"StreamViewType": streamOptions.type
+		};
+	}
+
+	// Add replication specification if provided
+	if (table.getInternalProperties(internalProperties).options.replication?.regions?.length > 0) {
+		// Ensure streams are enabled for replication
+		if (!object.StreamSpecification || !object.StreamSpecification.StreamEnabled) {
+			object.StreamSpecification = {
+				"StreamEnabled": true,
+				"StreamViewType": "NEW_AND_OLD_IMAGES"
+			};
+		}
+
+		object.ReplicationSpecification = {
+			"Regions": table.getInternalProperties(internalProperties).options.replication.regions
 		};
 	}
 
@@ -275,6 +290,47 @@ export async function updateTable (table: Table): Promise<void> {
 					object.StreamSpecification.StreamViewType = updateStreamViewType;
 				}
 
+				await ddb(instance, "updateTable", object);
+				await waitForActive(table)();
+			}
+		}
+	}
+	// Replication
+	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.replication)) {
+		const tableDetails = (await getTableDetails(table)).Table;
+		const replicationOptions = table.getInternalProperties(internalProperties).options.replication;
+		
+		if (replicationOptions?.regions?.length > 0) {
+			// Get current replication regions
+			const currentReplicationRegions = tableDetails.ReplicationSpecification?.Regions || [];
+			const desiredReplicationRegions = replicationOptions.regions;
+			
+			// Check if replication settings need to be updated
+			const regionsNeedUpdate = !utils.array_equals(currentReplicationRegions.sort(), desiredReplicationRegions.sort());
+			
+			if (regionsNeedUpdate) {
+				// Ensure streams are enabled for replication
+				if (!tableDetails.StreamSpecification?.StreamEnabled) {
+					// Enable streams first if needed
+					const streamObject: DynamoDB.UpdateTableInput = {
+						"TableName": table.getInternalProperties(internalProperties).name,
+						"StreamSpecification": {
+							"StreamEnabled": true,
+							"StreamViewType": "NEW_AND_OLD_IMAGES"
+						}
+					};
+					await ddb(instance, "updateTable", streamObject);
+					await waitForActive(table)();
+				}
+				
+				// Update replication
+				const object: DynamoDB.UpdateTableInput = {
+					"TableName": table.getInternalProperties(internalProperties).name,
+					"ReplicationSpecification": {
+						"Regions": desiredReplicationRegions
+					}
+				};
+				
 				await ddb(instance, "updateTable", object);
 				await waitForActive(table)();
 			}

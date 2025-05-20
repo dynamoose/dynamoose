@@ -83,6 +83,8 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * | streamOptions | An object containing settings for [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html). | Object | `{"enabled": false, "type": undefined}` |
 	 * | streamOptions.enabled | If Dynamoose should enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table. | Boolean | false |
 	 * | streamOptions.type | The type of DynamoDB Stream to enable. If `streamOptions.enabled` is `true`, this property must be set. | "NEW_IMAGE" \| "OLD_IMAGE" \| "NEW_AND_OLD_IMAGES" \| "KEYS_ONLY" | undefined |
+	 * | replication | An object containing settings for [DynamoDB Global Tables](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html) (replication). | Object | undefined |
+	 * | replication.regions | An array of strings representing the regions to replicate data to. | String[] | undefined |
 	 *
 	 * The default object is listed below.
 	 *
@@ -554,11 +556,16 @@ export enum TableUpdateOptions {
 	throughput = "throughput",
 	tags = "tags",
 	tableClass = "tableClass",
-	streams = "streams"
+	streams = "streams",
+	replication = "replication"
 }
 export interface TableStreamOptions {
 	enabled: boolean;
 	type: "NEW_IMAGE" | "OLD_IMAGE" | "NEW_AND_OLD_IMAGES" | "KEYS_ONLY";
+}
+
+export interface TableReplicationOptions {
+	regions: string[];
 }
 
 export interface TableOptions {
@@ -574,5 +581,6 @@ export interface TableOptions {
 	tableClass: TableClass;
 	initialize: boolean;
 	streamOptions?: TableStreamOptions;
+	replication?: TableReplicationOptions;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;
