@@ -263,8 +263,7 @@ export async function updateTable (table: Table): Promise<void> {
 			const updateStreamViewType = streamOptions.type as DynamoDB.StreamViewType || undefined;
 
 			// Only update if stream settings are different
-			if (currentStreamEnabled !== updateStreamEnabled ||
-				updateStreamEnabled && currentStreamViewType !== updateStreamViewType) {
+			if (currentStreamEnabled !== updateStreamEnabled || updateStreamEnabled && currentStreamViewType !== updateStreamViewType) {
 				const object: DynamoDB.UpdateTableInput = {
 					"TableName": table.getInternalProperties(internalProperties).name,
 					"StreamSpecification": {

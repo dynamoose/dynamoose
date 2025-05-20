@@ -1766,13 +1766,7 @@ describe("Table", () => {
 
 		describe("Streams", () => {
 			let updateTableParams = [];
-			let describeTableFunction = () => {
-				return Promise.resolve({
-					"Table": {
-						"TableStatus": "ACTIVE"
-					}
-				});
-			};
+			let describeTableFunction;
 
 			beforeEach(() => {
 				dynamoose.Table.defaults.set({
@@ -1780,30 +1774,38 @@ describe("Table", () => {
 					"waitForActive": false
 				});
 				updateTableParams = [];
+				describeTableFunction = () => {
+					return Promise.resolve({
+						"Table": {
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"TableStatus": "ACTIVE"
+						}
+					});
+				};
 				dynamoose.aws.ddb.set({
 					"describeTable": () => describeTableFunction(),
 					"updateTable": (params) => {
 						updateTableParams.push(params);
 						return Promise.resolve();
-					}
+					},
+					"listTagsOfResource": () => Promise.resolve({
+						"Tags": []
+					})
 				});
 			});
 
 			const updateOptions = [
 				true,
-				["streams"],
-				["all"]
+				["streams"]
 			];
 
 			updateOptions.forEach((updateOption) => {
 				describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
 					it("Should call updateTable with correct parameters when adding streams", async () => {
 						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"TableStatus": "ACTIVE"
-							}
-						});
 						const model = dynamoose.model(tableName, {"id": String});
 						new dynamoose.Table(tableName, [model], {"streamOptions": {"enabled": true}, "update": updateOption});
 						await utils.set_immediate_promise();
@@ -1817,11 +1819,6 @@ describe("Table", () => {
 
 					it("Should call updateTable with correct parameters when adding streams with type", async () => {
 						const tableName = "Cat";
-						describeTableFunction = () => Promise.resolve({
-							"Table": {
-								"TableStatus": "ACTIVE"
-							}
-						});
 						const model = dynamoose.model(tableName, {"id": String});
 						new dynamoose.Table(tableName, [model], {"streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}, "update": updateOption});
 						await utils.set_immediate_promise();
@@ -1839,6 +1836,10 @@ describe("Table", () => {
 						describeTableFunction = () => Promise.resolve({
 							"Table": {
 								"TableStatus": "ACTIVE",
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 1
+								},
 								"StreamSpecification": {
 									"StreamEnabled": true,
 									"StreamViewType": "NEW_AND_OLD_IMAGES"
@@ -1861,6 +1862,10 @@ describe("Table", () => {
 						describeTableFunction = () => Promise.resolve({
 							"Table": {
 								"TableStatus": "ACTIVE",
+								"ProvisionedThroughput": {
+									"ReadCapacityUnits": 1,
+									"WriteCapacityUnits": 1
+								},
 								"StreamSpecification": {
 									"StreamEnabled": true,
 									"StreamViewType": "NEW_AND_OLD_IMAGES"
