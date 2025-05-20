@@ -451,6 +451,65 @@ describe("Table", () => {
 							"TableClass": "STANDARD_INFREQUENT_ACCESS"
 						});
 					});
+					
+					it("Should call createTable with correct parameters when streamOptions is enabled", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"streamOptions": {"enabled": true}});
+						await utils.set_immediate_promise();
+						expect(createTableParams).toEqual({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"StreamSpecification": {
+								"StreamEnabled": true
+							},
+							"TableName": tableName
+						});
+					});
+					
+					it("Should call createTable with correct parameters when streamOptions is enabled with type", async () => {
+						const tableName = "Cat";
+						const model = dynamoose.model(tableName, {"id": String});
+						new instance.Table(tableName, [model], {"streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}});
+						await utils.set_immediate_promise();
+						expect(createTableParams).toEqual({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							],
+							"ProvisionedThroughput": {
+								"ReadCapacityUnits": 1,
+								"WriteCapacityUnits": 1
+							},
+							"StreamSpecification": {
+								"StreamEnabled": true,
+								"StreamViewType": "NEW_AND_OLD_IMAGES"
+							},
+							"TableName": tableName
+						});
+					});
 
 					it("Shouldn't call createTable if table already exists", async () => {
 						instance.aws.ddb.set({
