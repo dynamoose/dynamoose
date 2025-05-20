@@ -83,7 +83,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * | streamOptions | An object containing settings for [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html). | Object | `{"enabled": false, "type": undefined}` |
 	 * | streamOptions.enabled | If Dynamoose should enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table. | Boolean | false |
 	 * | streamOptions.type | The type of DynamoDB Stream to enable. If `streamOptions.enabled` is `true`, this property must be set. | "NEW_IMAGE" \| "OLD_IMAGE" \| "NEW_AND_OLD_IMAGES" \| "KEYS_ONLY" | undefined |
-	 * | replication | An object containing settings for [DynamoDB Global Tables](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html) (replication). | Object | undefined |
+	 * | replication | An object containing settings for [DynamoDB Global Tables](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html) (replication). Note that enabling replication will automatically enable streams if not already enabled. | Object | undefined |
 	 * | replication.regions | An array of strings representing the regions to replicate data to. | String[] | undefined |
 	 *
 	 * The default object is listed below.
