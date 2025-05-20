@@ -2319,6 +2319,16 @@ describe("Item", () => {
 				"input": {"id": 1, "friends": [[{"name": "Bob", "id": 1}, {"name": "Tim"}]]},
 				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1", "friends.0.0.id", "friends.0.1.id", "friends.0.0.name", "friends.0.1.name"],
 				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema":[{"type":"Object", "schema":{"id":{"type":"Number", "required":true}, "name":"String"}}]}]}}
+			},
+			{
+				"input": {"id": 1, "teams": []},
+				"output": ["id", "teams", "teams.0", "teams.0.name", "teams.0.ref", "teams.0.isPro", "teams.0.profileImageURL", "teams.0.isManager"],
+				"schema": {"id": Number, "teams": {"type": Array, "required": false, "schema": [{"type": "Object", "schema": {"name": {"type": String, "required": true}, "ref": {"type": String, "required": true}, "isPro": {"type": Boolean, "default": false}, "profileImageURL": {"type": String}, "isManager": {"type": Boolean, "default": false}}}]}}
+			},
+			{
+				"input": {"id": 1},
+				"output": ["id", "teams", "teams.0", "teams.0.name", "teams.0.ref", "teams.0.isPro", "teams.0.profileImageURL", "teams.0.isManager"],
+				"schema": {"id": Number, "teams": {"type": Array, "required": false, "schema": [{"type": "Object", "schema": {"name": {"type": String, "required": true}, "ref": {"type": String, "required": true}, "isPro": {"type": Boolean, "default": false}, "profileImageURL": {"type": String}, "isManager": {"type": Boolean, "default": false}}}]}}
 			}
 		];
 
