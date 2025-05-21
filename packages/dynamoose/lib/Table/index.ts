@@ -71,7 +71,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * | waitForActive.check | Settings for how Dynamoose should check if the table is active | Object |  |
 	 * | waitForActive.check.timeout | How many milliseconds before Dynamoose should timeout and stop checking if the table is active. | Number | 180000 |
 	 * | waitForActive.check.frequency | How many milliseconds Dynamoose should delay between checks to see if the table is active. If this number is set to 0 it will use `setImmediate()` to run the check again. | Number | 1000 |
-	 * | update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array of strings can include the following settings to update, `ttl`, `indexes`, `throughput`, `tags`, `tableClass`, `streams`. | Boolean \| [String] | false |
+	 * | update | If Dynamoose should update the capacity of the existing table to match the model throughput. If this is a boolean of `true` all update actions will be run. If this is an array of strings, only the actions in the array will be run. The array of strings can include the following settings to update, `ttl`, `indexes`, `throughput`, `tags`, `tableClass`, `streams`, `replication`. | Boolean \| [String] | false |
 	 * | expires | The setting to describe the time to live for items created. If you pass in a number it will be used for the `expires.ttl` setting, with default values for everything else. If this is `undefined`, no time to live will be active on the model. | Number \| Object | undefined |
 	 * | expires.ttl | The default amount of time the item should stay alive from creation time in milliseconds. | Number | undefined |
 	 * | expires.attribute | The attribute name for where the item time to live attribute. | String | `ttl` |
@@ -83,8 +83,8 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * | streamOptions | An object containing settings for [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html). | Object | `{"enabled": false, "type": undefined}` |
 	 * | streamOptions.enabled | If Dynamoose should enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table. | Boolean | false |
 	 * | streamOptions.type | The type of DynamoDB Stream to enable. If `streamOptions.enabled` is `true`, this property must be set. | "NEW_IMAGE" \| "OLD_IMAGE" \| "NEW_AND_OLD_IMAGES" \| "KEYS_ONLY" | undefined |
-	 * | replication | An object containing settings for [DynamoDB Global Tables](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html) (replication). Note that enabling replication will automatically enable streams if not already enabled. | Object | undefined |
-	 * | replication.regions | An array of strings representing the regions to replicate data to. | [String] | undefined |
+	 * | replication | An object containing settings for [DynamoDB Global Tables](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html) (replication). Note that streams must be enabled before using replication. | Object | undefined |
+	 * | replication.regions | An array of strings representing the AWS regions to replicate data to (e.g., ["us-west-2", "us-east-1"]). Do not include the primary region you are currently using. | [String] | undefined |
 	 *
 	 * The default object is listed below.
 	 *
@@ -112,7 +112,8 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * 	"streamOptions": {
 	 * 		"enabled": false,
 	 * 		"type": undefined
-	 * 	}
+	 * 	},
+	 * 	"replication": undefined
 	 * }
 	 * ```
 	 * @param instance INTERNAL PARAMETER

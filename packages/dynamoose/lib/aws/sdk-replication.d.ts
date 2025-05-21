@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 
 declare module "@aws-sdk/client-dynamodb" {
