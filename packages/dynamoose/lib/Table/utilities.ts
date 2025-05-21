@@ -294,17 +294,18 @@ export async function updateTable (table: Table): Promise<void> {
 	}
 	// Replication
 	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.replication)) {
-		const tableDetails = (await getTableDetails(table)).Table;
 		const replicationOptions = table.getInternalProperties(internalProperties).options.replication;
 
 		if (replicationOptions?.regions?.length > 0) {
 			// First check if streams are enabled - they're required for replication
-			if (!tableDetails.StreamSpecification?.StreamEnabled) {
+			if (!table.getInternalProperties(internalProperties).options.streamOptions.enabled) {
 				throw new CustomError.InvalidParameter("DynamoDB Streams must be enabled (streamOptions.enabled = true) to use Global Tables replication");
 			}
 
+			const tableDetails = (await getTableDetails(table)).Table;
+
 			// Get current replication regions
-			const currentReplicationRegions = tableDetails.ReplicationSpecification?.Regions || [];
+			const currentReplicationRegions = tableDetails.ReplicationSpecification?.Regions ?? [];
 			const desiredReplicationRegions = replicationOptions.regions;
 
 			// Check if replication settings need to be updated
