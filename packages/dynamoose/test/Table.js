@@ -6,7 +6,7 @@ const {internalProperties} = Internal.General;
 const util = require("util");
 const {createTableRequest} = require("../dist/Table/utilities");
 const tableUtilities = require("../dist/Table/utilities");
-const { InvalidParameter } = require("dynamoose-utils/dist/Error");
+const {InvalidParameter} = require("dynamoose-utils/dist/Error");
 
 describe("Table", () => {
 	beforeEach(() => {
