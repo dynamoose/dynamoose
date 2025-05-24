@@ -480,11 +480,16 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 		if (callback) {
 			const localCallback: CallbackType<Item, any> = callback as CallbackType<Item, any>;
-			promise.then(() => {
+			promise.then(async () => {
 				this.getInternalProperties(internalProperties).storedInDynamo = true;
+
+				// First apply custom types conversion to the current item
+				await this.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
 
 				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
+				// Apply custom types conversion to ensure consistent behavior with get
+				await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
 
 				localCallback(null, returnItem);
 			}).catch((error) => callback(error));
@@ -493,8 +498,14 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 				await promise;
 				this.getInternalProperties(internalProperties).storedInDynamo = true;
 
+				// First apply custom types conversion to the current item
+				await this.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
+
 				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
+
+				// Apply custom types conversion to ensure consistent behavior with get
+				await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
 
 				return returnItem;
 			})();
