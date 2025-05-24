@@ -1836,9 +1836,13 @@ describe("Table", () => {
 							new dynamoose.Table(tableName, [model], {"update": updateOption, "replication": {"regions": ["us-east-2"]}, "streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}});
 							await utils.set_immediate_promise();
 							expect(updateTableParams).toEqual([{
-								"ReplicationSpecification": {
-									"Regions": ["us-east-2"]
-								},
+								"ReplicaUpdates": [
+									{
+										"Create": {
+											"RegionName": "us-east-2"
+										}
+									}
+								],
 								"TableName": tableName
 							}]);
 						});
@@ -1865,9 +1869,13 @@ describe("Table", () => {
 							new dynamoose.Table(tableName, [model], {"update": updateOption, "replication": {"regions": ["us-east-2"]}, "streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}});
 							await utils.set_immediate_promise();
 							expect(updateTableParams).toEqual([{
-								"ReplicationSpecification": {
-									"Regions": ["us-east-2"]
-								},
+								"ReplicaUpdates": [
+									{
+										"Create": {
+											"RegionName": "us-east-2"
+										}
+									}
+								],
 								"TableName": tableName
 							}]);
 						});

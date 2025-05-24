@@ -313,15 +313,39 @@ export async function updateTable (table: Table): Promise<void> {
 
 			if (regionsNeedUpdate) {
 				// Update replication
-				const object: DynamoDB.UpdateTableInput = {
-					"TableName": table.getInternalProperties(internalProperties).name,
-					"ReplicationSpecification": {
-						"Regions": desiredReplicationRegions
-					}
-				};
-
-				await ddb(instance, "updateTable", object);
-				await waitForActive(table)();
+				// Identify regions to add and remove
+				const regionsToAdd = desiredReplicationRegions.filter(region => !currentReplicationRegions.includes(region));
+				const regionsToRemove = currentReplicationRegions.filter(region => !desiredReplicationRegions.includes(region));
+				
+				const replicaUpdates: any[] = [];
+				
+				// Add regions that need to be created
+				regionsToAdd.forEach(region => {
+					replicaUpdates.push({
+						Create: {
+							RegionName: region
+						}
+					});
+				});
+				
+				// Remove regions that need to be deleted
+				regionsToRemove.forEach(region => {
+					replicaUpdates.push({
+						Delete: {
+							RegionName: region
+						}
+					});
+				});
+				
+				if (replicaUpdates.length > 0) {
+					const object: DynamoDB.UpdateTableInput = {
+						"TableName": table.getInternalProperties(internalProperties).name,
+						"ReplicaUpdates": replicaUpdates
+					};
+					
+					await ddb(instance, "updateTable", object);
+					await waitForActive(table)();
+				}
 			}
 		}
 	}
