@@ -488,7 +488,6 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-				
 				// Apply custom types conversion to ensure consistent behavior with get
 				await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
 
@@ -501,10 +500,10 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 				// First apply custom types conversion to the current item
 				await this.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
-				
+
 				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-				
+
 				// Apply custom types conversion to ensure consistent behavior with get
 				await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
 

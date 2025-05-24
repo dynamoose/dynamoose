@@ -2035,14 +2035,14 @@ describe("Model", () => {
 			});
 			const DateModel = dynamoose.model("DateModel", dateSchema);
 			new dynamoose.Table("DateModel", [DateModel]);
-			
+
 			// Create with a timestamp number
 			const timestamp = Date.now();
 			const item = await DateModel.create({
 				"id": "test",
 				"someDate": timestamp
 			});
-			
+
 			// Verify item.someDate is a Date object after create
 			expect(item.someDate).toBeInstanceOf(Date);
 			expect(item.someDate.getTime()).toEqual(timestamp);
