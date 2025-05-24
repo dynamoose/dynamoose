@@ -4,6 +4,9 @@ const utils = require("../dist/utils").default;
 const CustomError = require("../dist/Error").default;
 const {internalProperties} = Internal.General;
 const util = require("util");
+const {createTableRequest} = require("../dist/Table/utilities");
+const tableUtilities = require("../dist/Table/utilities");
+const {InvalidParameter} = require("dynamoose-utils/dist/Error");
 
 describe("Table", () => {
 	beforeEach(() => {
@@ -1788,6 +1791,120 @@ describe("Table", () => {
 					});
 				});
 			});
+
+			// Write tests for updating replication settings
+			describe("Replication", () => {
+				const updateOptions = [
+					true,
+					["replication"]
+				];
+				updateOptions.forEach((updateOption) => {
+					describe(`{"update": ${JSON.stringify(updateOption)}}`, () => {
+						it("Should not call updateTable if replication is undefined in describeTable and in model", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).toEqual([]);
+						});
+
+						it("Should call updateTable if replication is set in table initialization and not in describeTable", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE",
+									"StreamSpecification": {
+										"StreamEnabled": true,
+										"StreamViewType": "NEW_AND_OLD_IMAGES"
+									}
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption, "replication": {"regions": ["us-east-2"]}, "streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).toEqual([{
+								"ReplicaUpdates": [
+									{
+										"Create": {
+											"RegionName": "us-east-2"
+										}
+									}
+								],
+								"TableName": tableName
+							}]);
+						});
+
+						it("Should call updateTable if replication is set in table initialization and empty array in describeTable", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE",
+									"StreamSpecification": {
+										"StreamEnabled": true,
+										"StreamViewType": "NEW_AND_OLD_IMAGES"
+									},
+									"ReplicationSpecification": {
+										"Regions": []
+									}
+								}
+							});
+							const model = dynamoose.model(tableName, {"id": String});
+							new dynamoose.Table(tableName, [model], {"update": updateOption, "replication": {"regions": ["us-east-2"]}, "streamOptions": {"enabled": true, "type": "NEW_AND_OLD_IMAGES"}});
+							await utils.set_immediate_promise();
+							expect(updateTableParams).toEqual([{
+								"ReplicaUpdates": [
+									{
+										"Create": {
+											"RegionName": "us-east-2"
+										}
+									}
+								],
+								"TableName": tableName
+							}]);
+						});
+
+						it("Should throw an error if streamOptions.enabled is not set to true and you're trying to use replication", async () => {
+							const tableName = "Cat";
+							describeTableFunction = () => Promise.resolve({
+								"Table": {
+									"ProvisionedThroughput": {
+										"ReadCapacityUnits": 1,
+										"WriteCapacityUnits": 1
+									},
+									"TableStatus": "ACTIVE"
+								}
+							});
+							let error;
+							try {
+								const model = dynamoose.model(tableName, {"id": String});
+								const table = new dynamoose.Table(tableName, [model], {"update": updateOption, "replication": {"regions": ["us-east-2"]}, "initialize": false});
+								await tableUtilities.updateTable(table);
+								await utils.set_immediate_promise();
+							} catch (e) {
+								error = e;
+							}
+							expect(error).toEqual(new InvalidParameter("DynamoDB Streams must be enabled (streamOptions.enabled = true) to use Global Tables replication"));
+						});
+					});
+				});
+			});
 		});
 
 		describe("Streams", () => {
@@ -2418,6 +2535,131 @@ describe("Table", () => {
 
 			const Dog = dynamoose.model("Dog", {"id": String, "name": String}, {"tableName": tableName});
 			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
+		});
+	});
+
+	describe("replication", () => {
+		beforeEach(() => {
+			dynamoose.aws.ddb.set({
+				"createTable": () => {
+					return Promise.resolve({});
+				},
+				"describeTable": () => Promise.resolve({
+					"Table": {
+						"TableStatus": "ACTIVE",
+						"ProvisionedThroughput": {
+							"ReadCapacityUnits": 1,
+							"WriteCapacityUnits": 1
+						}
+					}
+				}),
+				"updateTable": () => Promise.resolve({})
+			});
+		});
+
+		it("Should include replication regions in create request when streams are enabled", async () => {
+			const result = await createTableRequest({
+				"getInternalProperties": () => ({
+					"name": "Table",
+					"options": {
+						"throughput": {
+							"read": 1,
+							"write": 1
+						},
+						"replication": {
+							"regions": ["us-west-2", "us-east-1"]
+						},
+						"streamOptions": {
+							"enabled": true,
+							"type": "NEW_AND_OLD_IMAGES"
+						},
+						"tags": {}
+					},
+					"getCreateTableAttributeParams": async () => ({
+						"AttributeDefinitions": [
+							{
+								"AttributeName": "id",
+								"AttributeType": "S"
+							}
+						],
+						"KeySchema": [
+							{
+								"AttributeName": "id",
+								"KeyType": "HASH"
+							}
+						]
+					})
+				})
+			});
+
+			expect(result).toEqual({
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "id",
+						"AttributeType": "S"
+					}
+				],
+				"KeySchema": [
+					{
+						"AttributeName": "id",
+						"KeyType": "HASH"
+					}
+				],
+				"ProvisionedThroughput": {
+					"ReadCapacityUnits": 1,
+					"WriteCapacityUnits": 1
+				},
+				"StreamSpecification": {
+					"StreamEnabled": true,
+					"StreamViewType": "NEW_AND_OLD_IMAGES"
+				},
+				"ReplicationSpecification": {
+					"Regions": ["us-west-2", "us-east-1"]
+				},
+				"TableName": "Table"
+			});
+		});
+
+		it("Should throw error when replication is specified but streams are disabled", async () => {
+			let error;
+			try {
+				await createTableRequest({
+					"getInternalProperties": () => ({
+						"name": "Table",
+						"options": {
+							"throughput": {
+								"read": 1,
+								"write": 1
+							},
+							"replication": {
+								"regions": ["us-west-2", "us-east-1"]
+							},
+							"streamOptions": {
+								"enabled": false
+							},
+							"tags": {}
+						},
+						"getCreateTableAttributeParams": async () => ({
+							"AttributeDefinitions": [
+								{
+									"AttributeName": "id",
+									"AttributeType": "S"
+								}
+							],
+							"KeySchema": [
+								{
+									"AttributeName": "id",
+									"KeyType": "HASH"
+								}
+							]
+						})
+					})
+				});
+			} catch (e) {
+				error = e;
+			}
+			expect(error).toBeDefined();
+			expect(error.message).toEqual("DynamoDB Streams must be enabled (streamOptions.enabled = true) to use Global Tables replication");
 		});
 	});
 });
