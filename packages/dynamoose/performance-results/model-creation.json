@@ -1,0 +1,27 @@
+{
+  "name": "Model Creation",
+  "date": "2025-05-24T20:02:35.162Z",
+  "version": null,
+  "results": [
+    {
+      "name": "Create Model",
+      "ops": 21955,
+      "margin": 2.46,
+      "percentSlower": 2.57
+    },
+    {
+      "name": "Create Model with Table Options",
+      "ops": 22535,
+      "margin": 1.27,
+      "percentSlower": 0
+    }
+  ],
+  "fastest": {
+    "name": "Create Model with Table Options",
+    "index": 1
+  },
+  "slowest": {
+    "name": "Create Model",
+    "index": 0
+  }
+}
