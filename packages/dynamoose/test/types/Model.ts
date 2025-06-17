@@ -77,6 +77,7 @@ export class User extends Item {
 	id: string;
 	name: string;
 	age: number;
+	friends: string[];
 }
 const userSchema = new dynamoose.Schema({
 	"id": String,
@@ -86,7 +87,11 @@ const userSchema = new dynamoose.Schema({
 			"type": IndexType.global
 		}
 	},
-	"age": Number
+	"age": Number,
+	"friends": {
+		"type": Array,
+		"schema": [String]
+	}
 });
 
 export const UserTypedModel = dynamoose.model<User>(
@@ -105,6 +110,9 @@ UserTypedModel.update({"id": "foo"}, {
 
 UserTypedModel.update({"id": "foo"}, {
 	"$ADD":{"age":1}
+});
+UserTypedModel.update({"id": "foo"}, {
+	"$ADD":{"friends":["test"]}
 });
 
 UserTypedModel.update({"id": "foo"}, {

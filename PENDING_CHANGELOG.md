@@ -2,6 +2,6 @@
 
 ---
 
-### Bug Fixes
+### Features
 
-- Fixed inputs types for Mode.update(), allowing $SET, $ADD, $DELETE and $REMOVE
+- Added support for enabling and configuring DynamoDB Streams through Table options
