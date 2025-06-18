@@ -675,15 +675,36 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 						});
 						validParents.push({key});
 					} else if (value && typeof value === "object") {
-						// For objects, sets, and models, assume they need infinite parent tracking
-						// This is a safe assumption that maintains existing behavior without expensive checks
+						// Check if this is a Set, Model, or dynamooseAny object that needs infinite parent tracking
+						let needsInfiniteTracking = false;
+						
 						try {
 							const schemaValue = schema.getAttributeSettingValue("schema", genericKey);
 							if (schemaValue === dynamooseAny) {
-								validParents.push({key, "infinite": true});
+								needsInfiniteTracking = true;
+							} else {
+								// Check for THIS type (dynamoose.type.THIS) which is used for self-referencing models
+								const attributeValue = schema.getAttributeValue(genericKey);
+								const typeVal = typeof attributeValue === "object" && !Array.isArray(attributeValue) && attributeValue.type ? attributeValue.type : attributeValue;
+								if (typeVal === Internal.Public.this) {
+									needsInfiniteTracking = true;
+								} else {
+									// Check for Set or Model types without expensive getValueTypeCheckResult
+									const attributeType = schema.getAttributeType(genericKey);
+									if (attributeType && (attributeType.includes("Set") || attributeType.includes("Model"))) {
+										needsInfiniteTracking = true;
+									}
+								}
 							}
 						} catch (e) {
-							// If schema access fails, treat as regular object
+							// If schema access fails, check if it's a Set by structure
+							if (value && value.wrapperName === "Set" && value.values) {
+								needsInfiniteTracking = true;
+							}
+						}
+						
+						if (needsInfiniteTracking) {
+							validParents.push({key, "infinite": true});
 						}
 					}
 				} else {
