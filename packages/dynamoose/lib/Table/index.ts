@@ -573,6 +573,7 @@ export interface TableOptions {
 	tags: {[key: string]: string};
 	tableClass: TableClass;
 	initialize: boolean;
+	readStrict: boolean;
 	streamOptions?: TableStreamOptions;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;

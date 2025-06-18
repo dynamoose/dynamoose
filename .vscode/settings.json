@@ -4,5 +4,10 @@
 		"dynamoose",
 		"serializers",
 		"unmarshall"
-	]
+	],
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "never",
+		"source.fixAll.ts": "never",
+		"source.organizeImports": "never"
+	},
 }

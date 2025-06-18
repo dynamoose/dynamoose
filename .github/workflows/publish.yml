@@ -16,7 +16,7 @@ jobs:
         working-directory: ./publish
       - run: node publish/information/index.js
         id: data
-
+  
   publish-npm:
     needs:
       - getinfo
@@ -35,7 +35,7 @@ jobs:
         env:
           TAG: ${{ needs.getinfo.outputs.npmtag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
+  
   publishsite:
     needs: getinfo
     runs-on: ubuntu-latest
