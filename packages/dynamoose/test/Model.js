@@ -1261,7 +1261,7 @@ describe("Model", () => {
 		let User, params, promiseFunction;
 		beforeEach(() => {
 			User = dynamoose.model("User", {"id": Number, "name": String});
-			new dynamoose.Table("User", [User]);
+			new dynamoose.Table("User", [User], {"readStrict": true});
 			params = undefined;
 			promiseFunction = null;
 			dynamoose.aws.ddb.set({
