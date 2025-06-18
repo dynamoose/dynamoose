@@ -665,24 +665,44 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const genericKey = key.replace(/\.\d+/gu, ".0"); // This is a key replacing all list numbers with 0 to standardize things like checking if it exists in the schema
 			const existsInSchema = schemaAttributes.includes(genericKey);
 			if (existsInSchema) {
-				const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
-				if (!isValidType) {
-					throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
-				} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny) {
-					validParents.push({key, "infinite": true});
-				} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
-					// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
-					value.forEach((subValue, index: number, array: any[]) => {
-						if (index === 0 || typeof subValue !== typeof array[0]) {
-							checkTypeFunction([`${key}.${index}`, subValue]);
-						} else if (keysToDelete.includes(`${key}.0`) && typeof subValue === typeof array[0]) {
-							keysToDelete.push(`${key}.${index}`);
+				// For readStrict: false, skip expensive type validation but still handle schema attributes
+				if (settings.readStrict === false && settings.type === "fromDynamo") {
+					// Try to get type details for parent tracking but don't validate
+					try {
+						const {matchedTypeDetails} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
+						if (matchedTypeDetails && (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny)) {
+							validParents.push({key, "infinite": true});
+						} else if (matchedTypeDetails && matchedTypeDetails.dynamodbType === "L") {
+							// Handle arrays without type checking each element
+							value.forEach((subValue, index: number) => {
+								checkTypeFunction([`${key}.${index}`, subValue]);
+							});
+							validParents.push({key});
 						}
-					});
-					validParents.push({key});
+					} catch (e) {
+						// If type checking fails, just continue without throwing error
+					}
+				} else {
+					// Normal strict type checking
+					const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
+					if (!isValidType) {
+						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
+					} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny) {
+						validParents.push({key, "infinite": true});
+					} else if (/*typeDetails.dynamodbType === "M" || */matchedTypeDetails.dynamodbType === "L") {
+						// The code below is an optimization for large array types to speed up the process of not having to check the type for every element but only the ones that are different
+						value.forEach((subValue, index: number, array: any[]) => {
+							if (index === 0 || typeof subValue !== typeof array[0]) {
+								checkTypeFunction([`${key}.${index}`, subValue]);
+							} else if (keysToDelete.includes(`${key}.0`) && typeof subValue === typeof array[0]) {
+								keysToDelete.push(`${key}.${index}`);
+							}
+						});
+						validParents.push({key});
+					}
 				}
 			} else {
-				// Check saveUnknown
+				// Check saveUnknown - this logic remains the same for both strict and non-strict modes
 				if (!settings.saveUnknown || !utils.dynamoose.wildcard_allowed_check(schema.getSettingValue("saveUnknown"), key)) {
 					keysToDelete.push(key);
 				}
@@ -878,13 +898,12 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Item> {
 	// For readStrict: false, we want to skip validation but still apply transformers and getters
 	if (settings.readStrict === false && settings.type === "fromDynamo") {
-		// Modify settings to skip expensive validation and processing but keep essential transformations
+		// Modify settings to skip expensive validation but keep essential transformations
 		settings = {
 			...settings,
 			"validate": false,
 			"required": false,
 			"enum": false,
-			"typeCheck": false, // Skip expensive type checking - allows all unknown properties
 			"defaults": false, // Skip default value processing (not needed for DB reads)
 			"forceDefault": false // Skip forced defaults
 		};

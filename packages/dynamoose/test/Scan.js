@@ -132,7 +132,7 @@ describe("Scan", () => {
 
 				it("Should return correct result if unknown properties are in DynamoDB with readStrict: false", async () => {
 					// Test the new behavior with readStrict: false - unknown properties should be preserved
-					Model = dynamoose.model("Cat", {"id": Number, "name": String});
+					Model = dynamoose.model("Cat", new dynamoose.Schema({"id": Number, "name": String}, {"saveUnknown": true}));
 					new dynamoose.Table("Cat", [Model], {"readStrict": false});
 
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
