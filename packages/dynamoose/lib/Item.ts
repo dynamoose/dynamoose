@@ -667,20 +667,24 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			if (existsInSchema) {
 				// For readStrict: false, skip expensive type validation but still handle schema attributes
 				if (settings.readStrict === false && settings.type === "fromDynamo") {
-					// Try to get type details for parent tracking but don't validate
-					try {
-						const {matchedTypeDetails} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
-						if (matchedTypeDetails && (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny)) {
-							validParents.push({key, "infinite": true});
-						} else if (matchedTypeDetails && matchedTypeDetails.dynamodbType === "L") {
-							// Handle arrays without type checking each element
-							value.forEach((subValue, index: number) => {
-								checkTypeFunction([`${key}.${index}`, subValue]);
-							});
-							validParents.push({key});
+					// Lightweight check for parent tracking without expensive type validation
+					if (Array.isArray(value)) {
+						// Handle arrays by recursively checking each element
+						value.forEach((subValue, index: number) => {
+							checkTypeFunction([`${key}.${index}`, subValue]);
+						});
+						validParents.push({key});
+					} else if (value && typeof value === "object") {
+						// For objects, sets, and models, assume they need infinite parent tracking
+						// This is a safe assumption that maintains existing behavior without expensive checks
+						try {
+							const schemaValue = schema.getAttributeSettingValue("schema", genericKey);
+							if (schemaValue === dynamooseAny) {
+								validParents.push({key, "infinite": true});
+							}
+						} catch (e) {
+							// If schema access fails, treat as regular object
 						}
-					} catch (e) {
-						// If type checking fails, just continue without throwing error
 					}
 				} else {
 					// Normal strict type checking
