@@ -75,7 +75,7 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 	}
 
 	// Add stream specification if enabled
-	if (table.getInternalProperties(internalProperties).options.streamOptions.enabled) {
+	if (table.getInternalProperties(internalProperties).options.streamOptions?.enabled) {
 		const streamOptions = table.getInternalProperties(internalProperties).options.streamOptions;
 		object.StreamSpecification = {
 			"StreamEnabled": true,

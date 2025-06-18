@@ -122,8 +122,21 @@ describe("Query", () => {
 				});
 
 				it("Should return correct result if unknown properties are in DynamoDB", async () => {
+					// Set readStrict: true to maintain existing behavior for backward compatibility
+					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "favoriteNumber": Number});
+					new dynamoose.Table("Cat", [Model], {"readStrict": true});
+					
 					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie"}]);
+				});
+
+				it("Should return correct result if unknown properties are in DynamoDB with readStrict: false", async () => {
+					// Test the new behavior with readStrict: false - unknown properties should be preserved
+					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "favoriteNumber": Number});
+					new dynamoose.Table("Cat", [Model], {"readStrict": false});
+					
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"N": "1"}}]});
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie", "age": 1}]);
 				});
 
 				it("Should return correct result if using custom types", async () => {

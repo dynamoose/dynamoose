@@ -591,6 +591,7 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 };
 export interface ItemObjectFromSchemaSettings {
 	type: "toDynamo" | "fromDynamo";
+	readStrict?: boolean;
 	schema?: Schema;
 	checkExpiredItem?: boolean;
 	saveUnknown?: boolean;
@@ -719,12 +720,14 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
 				const typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails as DynamoDBTypeResult;
-				const {customType} = typeDetails;
-				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
-				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
-				if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
-					const customValue = customType.functions[settings.type](value);
-					utils.object.set(returnObject, key, customValue);
+				if (typeDetails) {
+					const {customType} = typeDetails;
+					const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
+					const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
+					if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
+						const customValue = customType.functions[settings.type](value);
+						utils.object.set(returnObject, key, customValue);
+					}
 				}
 			}
 		});
@@ -734,7 +737,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		const [key, value] = item;
 		let typeDetails;
 		try {
-			typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails;
+			const result = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap});
+			typeDetails = result ? result.matchedTypeDetails : undefined;
 		} catch (e) {
 			const {Schema} = require("./Schema");
 			typeDetails = Schema.attributeTypes.findTypeForValue(value, settings.type, settings);
@@ -872,6 +876,20 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 };
 // This function will modify the item to conform to the Schema
 Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Item> {
+	// For readStrict: false, we want to skip validation but still apply transformers and getters
+	if (settings.readStrict === false && settings.type === "fromDynamo") {
+		// Modify settings to skip expensive validation and processing but keep essential transformations
+		settings = {
+			...settings,
+			"validate": false,
+			"required": false,
+			"enum": false,
+			"typeCheck": false, // Skip expensive type checking - allows all unknown properties
+			"defaults": false, // Skip default value processing (not needed for DB reads)
+			"forceDefault": false // Skip forced defaults
+		};
+	}
+
 	let item = this;
 	if (settings.type === "fromDynamo") {
 		item = await this.prepareForResponse();
