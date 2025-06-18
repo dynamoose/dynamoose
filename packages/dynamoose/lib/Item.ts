@@ -677,7 +677,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 					} else if (value && typeof value === "object") {
 						// Check if this is a Set, Model, or dynamooseAny object that needs infinite parent tracking
 						let needsInfiniteTracking = false;
-						
+
 						try {
 							const schemaValue = schema.getAttributeSettingValue("schema", genericKey);
 							if (schemaValue === dynamooseAny) {
@@ -702,7 +702,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 								needsInfiniteTracking = true;
 							}
 						}
-						
+
 						if (needsInfiniteTracking) {
 							validParents.push({key, "infinite": true});
 						}
