@@ -716,6 +716,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				{"name": "$DELETE", "objectFromSchemaSettings": {"defaults": true}}
 			].reverse();
 
+			// Pre-compute update types map for O(1) lookups
+			const updateTypesMap = new Map(updateTypes.map((type) => [type.name, type]));
+			const updateTypeNames = updateTypes.map((a) => a.name);
+
+			// Pre-compute schema attributes set for O(1) lookups
+			const schemaAttributes = schema.attributes();
+			const schemaAttributesSet = new Set(schemaAttributes);
+
 			if (!updateObj) {
 				updateObj = utils.deep_copy(keyObj) as Partial<T>;
 				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
@@ -725,7 +733,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const accumulator = await accumulatorPromise;
 				let value = updateObj[key];
 
-				if (!(typeof value === "object" && updateTypes.map((a) => a.name).includes(key))) {
+				if (!(typeof value === "object" && updateTypeNames.includes(key))) {
 					value = {[key]: value};
 					key = "$SET";
 				}
@@ -735,7 +743,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					let subKey = valueKeys[i];
 					let subValue = value[subKey];
 
-					let updateType = updateTypes.find((a) => a.name === key);
+					let updateType = updateTypesMap.get(key);
 
 					const expressionKey = `#a${index}`;
 					subKey = Array.isArray(value) ? subValue : subKey;
@@ -744,7 +752,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					try {
 						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 					} catch (e) {} // eslint-disable-line no-empty
-					const attributeExists = schema.attributes().includes(subKey);
+					const attributeExists = schemaAttributesSet.has(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
 						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
@@ -752,7 +760,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 					if (subValue === dynamooseUndefined || subValue === undefined) {
 						if (attributeExists) {
-							updateType = updateTypes.find((a) => a.name === "$REMOVE");
+							updateType = updateTypesMap.get("$REMOVE");
 						} else {
 							continue;
 						}
@@ -762,7 +770,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						const defaultValue = await schema.defaultCheck(subKey, undefined, updateType.objectFromSchemaSettings);
 						if (defaultValue) {
 							subValue = defaultValue;
-							updateType = updateTypes.find((a) => a.name === "$SET");
+							updateType = updateTypesMap.get("$SET");
 						}
 					}
 
@@ -778,7 +786,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 					if (dynamoType === "L" && updateType.name === "$ADD") {
 						expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
-						updateType = updateTypes.find((a) => a.name === "$SET");
+						updateType = updateTypesMap.get("$SET");
 					}
 
 					const operator = updateType.operator || (updateType.attributeOnly ? "" : " ");
@@ -803,7 +811,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const defaultObjectFromSchema = await this.Item.objectFromSchema(await this.Item.prepareForObjectFromSchema({}, this, itemFunctionSettings), this, itemFunctionSettings);
 				Object.keys(defaultObjectFromSchema).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
-					const updateType = updateTypes.find((a) => a.name === "$SET");
+					const updateType = updateTypesMap.get("$SET");
 
 					obj.ExpressionAttributeNames[`#a${index}`] = key;
 					obj.ExpressionAttributeValues[`:v${index}`] = value;
@@ -815,7 +823,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return obj;
 			})()));
 
-			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
+			schemaAttributes.map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
 				return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
 			}).map((details) => {
 				const {type} = details;
@@ -851,10 +859,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			});
 
-			await Promise.all(schema.attributes().map(async (attribute) => {
+			await Promise.all(schemaAttributes.map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
 				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
-					const updateType = updateTypes.find((a) => a.name === "$SET");
+					const updateType = updateTypesMap.get("$SET");
 
 					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
 					returnObject.ExpressionAttributeValues[`:v${index}`] = defaultValue;

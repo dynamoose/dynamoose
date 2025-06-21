@@ -1,6 +1,6 @@
 {
   "name": "@monei-js/dynamoose",
-  "version": "4.0.2",
+  "version": "4.0.9",
   "description": "Dynamoose is a modeling tool for Amazon's DynamoDB (inspired by Mongoose)",
   "homepage": "https://dynamoosejs.com",
   "main": "dist/index.js",
@@ -25,7 +25,8 @@
     "build:sourcemap:watch": "npm run build:sourcemap -- -w",
     "test:nocoverage": "jest",
     "test": "npm run test:nocoverage -- --coverage --transformIgnorePatterns=''",
-    "test:types": "tsc --project test/types/tsconfig.json"
+    "test:types": "tsc --project test/types/tsconfig.json",
+    "benchmark": "node benchmarks/performance-benchmark.js"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.782.0",
