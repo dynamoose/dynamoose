@@ -15,12 +15,12 @@ describe("Condition", () => {
 
 	it("Should display warning when passing undefined into condition", () => {
 		let result;
-		const originalFunction = console.warn; // eslint-disable-line no-console
-		console.warn = (str) => { // eslint-disable-line no-console
+		const originalFunction = console.warn;
+		console.warn = (str) => {
 			result = str;
 		};
 		new Condition("id").eq(undefined);
-		console.warn = originalFunction; // eslint-disable-line no-console
+		console.warn = originalFunction;
 		expect(result).toEqual("Dynamoose Warning: Passing `undefined` into a condition eq is not supported and can lead to behavior where DynamoDB returns an error related to your conditional. In a future version of Dynamoose this behavior will throw an error. If you believe your conditional is valid and you received this message in error, please submit an issue at https://github.com/dynamoose/dynamoose/issues/new/choose.");
 	});
 

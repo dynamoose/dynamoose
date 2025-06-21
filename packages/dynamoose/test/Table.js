@@ -1576,13 +1576,13 @@ describe("Table", () => {
 							let originalConsole = {};
 							beforeEach(async () => {
 								consoleTypes.forEach((type) => {
-									originalConsole[type] = console[type]; // eslint-disable-line no-console
-									console[type] = (str) => logs.push({"message": str, type}); // eslint-disable-line no-console
+									originalConsole[type] = console[type];
+									console[type] = (str) => logs.push({"message": str, type});
 								});
 							});
 							afterEach(() => {
 								consoleTypes.forEach((type) => {
-									console[type] = originalConsole[type]; // eslint-disable-line no-console
+									console[type] = originalConsole[type];
 								});
 								originalConsole = {};
 								logs = [];

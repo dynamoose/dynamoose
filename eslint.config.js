@@ -74,9 +74,24 @@ module.exports = [
 			"@typescript-eslint": typescriptEslint
 		},
 		"rules": {
+			// Disable base ESLint rules that are replaced by TypeScript equivalents
+			"no-unused-vars": "off",
+			"no-redeclare": "off",
+			"no-undef": "off",
+
+			// TypeScript-specific rules
+			"@typescript-eslint/no-unused-vars": ["error", {
+				"args": "none",
+				"varsIgnorePattern": "^_|^e$",
+				"argsIgnorePattern": "^_|^e$",
+				"caughtErrors": "none"
+			}],
+			"@typescript-eslint/no-redeclare": "off",
 			"@typescript-eslint/no-this-alias": "off",
 			"@typescript-eslint/no-var-requires": "off",
 			"@typescript-eslint/no-explicit-any": "off",
+
+			// Disable base rules for TypeScript (TypeScript compiler handles these)
 			"brace-style": "off",
 			"comma-spacing": "off",
 			"keyword-spacing": "off",
@@ -110,7 +125,37 @@ module.exports = [
 			"no-unused-vars": "off"
 		}
 	},
-	
+
+	// TypeScript test files (more permissive rules)
+	{
+		"files": ["**/test/**/*.ts", "**/*.test.ts", "**/*.spec.ts"],
+		"languageOptions": {
+			"parser": tsParser,
+			"globals": {
+				...globals.jest,
+				"describe": "readonly",
+				"it": "readonly",
+				"test": "readonly",
+				"expect": "readonly",
+				"beforeEach": "readonly",
+				"afterEach": "readonly",
+				"beforeAll": "readonly",
+				"afterAll": "readonly",
+				"jest": "readonly"
+			}
+		},
+		"plugins": {
+			"@typescript-eslint": typescriptEslint
+		},
+		"rules": {
+			"no-console": "off",
+			"no-unused-vars": "off",
+			"@typescript-eslint/no-unused-vars": "off",
+			"@typescript-eslint/no-redeclare": "off",
+			"no-redeclare": "off"
+		}
+	},
+
 	// Benchmark files
 	{
 		"files": ["**/benchmarks/**/*.js"],
@@ -126,7 +171,7 @@ module.exports = [
 			"no-unused-vars": "off"
 		}
 	},
-	
+
 	// Utility scripts and logger (console allowed)
 	{
 		"files": ["**/publish/**/*.js", "**/utils/**/*.js", "**/packages/dynamoose-logger/**/*.ts"],

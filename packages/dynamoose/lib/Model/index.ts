@@ -132,7 +132,7 @@ interface ModelInternalProperties {
 	 * This should never be called directly. Use `table()` instead.
 	 */
 	_table?: Table;
-	
+
 	// Performance optimization caches
 	schemaAttributesCache?: Set<string>;
 	updateTypesMapCache?: Map<string, any>;
@@ -749,7 +749,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			if (!updateObj) {
 				updateObj = utils.deep_copy(keyObj) as Partial<T>;
-				
+
 				// Cache convertKeyToObject results for performance
 				const keyObjString = JSON.stringify(keyObj);
 				let convertedKeyObj = this.getInternalProperties(internalProperties).convertKeyToObjectCache?.get(keyObjString);
@@ -760,7 +760,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 					this.getInternalProperties(internalProperties).convertKeyToObjectCache.set(keyObjString, convertedKeyObj);
 				}
-				
+
 				Object.keys(convertedKeyObj).forEach((key) => delete updateObj[key]);
 			}
 
@@ -790,7 +790,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						try {
 							dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 						} catch (e) {} // eslint-disable-line no-empty
-						
+
 						if (!this.getInternalProperties(internalProperties).attributeTypeCache) {
 							this.getInternalProperties(internalProperties).attributeTypeCache = new Map();
 						}
@@ -870,13 +870,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			// Optimize combine type processing - avoid multiple array iterations
 			const expressionAttributeNamesMap = new Map(Object.entries(returnObject.ExpressionAttributeNames));
 			const setAndRemoveExpressions = [...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", ");
-			
+
 			// Single pass through schema attributes to find and process combine types
 			const combineAttributes = [];
 			for (const attribute of schemaAttributes) {
 				const type = schema.getAttributeTypeDetails(attribute);
 				const isCombineType = Array.isArray(type) ? type.some((t) => t.name === "Combine") : type.name === "Combine";
-				
+
 				if (isCombineType) {
 					if (Array.isArray(type)) {
 						throw new CustomError.InvalidParameter("Combine type is not allowed to be used with multiple types.");
@@ -884,17 +884,17 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					combineAttributes.push({attribute, type});
 				}
 			}
-			
+
 			// Process combine attributes efficiently
 			for (const details of combineAttributes) {
 				const invalidAttributes = [];
-				
+
 				// Check validity of all combine attributes
 				for (const attr of details.type.typeSettings.attributes) {
 					const expressionKey = [...expressionAttributeNamesMap].find(([key, value]) => value === attr)?.[0];
 					const doesExist = Boolean(expressionKey);
 					const isValid = doesExist && setAndRemoveExpressions.includes(expressionKey);
-					
+
 					if (!isValid) {
 						invalidAttributes.push(attr);
 					}
@@ -910,9 +910,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						if (indexNum > maxIndex) maxIndex = indexNum;
 					}
 					const nextIndex = maxIndex + 1;
-					
+
 					returnObject.ExpressionAttributeNames[`#a${nextIndex}`] = details.attribute;
-					
+
 					// Efficient value collection using the map we already have
 					const combinedValues = [];
 					for (const attribute of details.type.typeSettings.attributes) {
@@ -925,7 +925,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 							}
 						}
 					}
-					
+
 					returnObject.ExpressionAttributeValues[`:v${nextIndex}`] = combinedValues.join(details.type.typeSettings.separator);
 					returnObject.UpdateExpression.SET.push(`#a${nextIndex} = :v${nextIndex}`);
 				}
@@ -933,7 +933,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			// Optimize default value processing - use Set for O(1) attribute lookup
 			const currentAttributeNamesSet = new Set(Object.values(returnObject.ExpressionAttributeNames));
-			
+
 			await Promise.all(schemaAttributes.map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
 				if (defaultValue && !currentAttributeNamesSet.has(attribute)) {
@@ -951,7 +951,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			const attributeNames = Object.values(returnObject.ExpressionAttributeNames);
 			const attributeValues = Object.values(returnObject.ExpressionAttributeValues);
 			const attributeValueKeys = Object.keys(returnObject.ExpressionAttributeValues);
-			
+
 			attributeNames.forEach((attribute: string, index) => {
 				const value: ValueType = attributeValues[index];
 				const valueKey = attributeValueKeys[index];
@@ -962,7 +962,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					try {
 						dynamoType = schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
 					} catch (e) {} // eslint-disable-line no-empty
-					
+
 					if (!this.getInternalProperties(internalProperties).attributeTypeCache) {
 						this.getInternalProperties(internalProperties).attributeTypeCache = new Map();
 					}

@@ -344,8 +344,8 @@ async function cleanupAllTables (tableInfos) {
 	
 	for (const tableInfo of tableInfos) {
 		// Handle both old format (string) and new format (object)
-		const tableName = typeof tableInfo === 'string' ? tableInfo : tableInfo.tableName;
-		const model = typeof tableInfo === 'object' ? tableInfo.model : null;
+		const tableName = typeof tableInfo === "string" ? tableInfo : tableInfo.tableName;
+		const model = typeof tableInfo === "object" ? tableInfo.model : null;
 		
 		try {
 			// First check if table exists before attempting deletion
@@ -369,7 +369,7 @@ async function cleanupAllTables (tableInfos) {
 			}
 
 			// Try to delete using Dynamoose model if available
-			if (model && typeof model.table === 'function') {
+			if (model && typeof model.table === "function") {
 				try {
 					await model.table().delete();
 					console.log(`    ✅ Deleted table via Dynamoose: ${tableName}`);
