@@ -38,7 +38,7 @@ const path = require("path");
 
 		// For each file in every subdirectory of the `docusaurus-plugin-content-docs/current` directory
 		const currentDirectory = path.join(translationPath, "docusaurus-plugin-content-docs", "current");
-		// eslint-disable-next-line no-inner-declarations
+
 		function runFolder (folder) {
 			const files = fs.readdirSync(folder);
 

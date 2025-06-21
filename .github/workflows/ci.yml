@@ -12,7 +12,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: |
             package-lock.json
@@ -28,6 +28,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: |
             package-lock.json
@@ -41,12 +42,7 @@ jobs:
     strategy:
       matrix:
         node-version: [
-          16.x,
-          17.x,
-          18.x,
-          19.x,
           20.x,
-          21.x,
           22.x,
           23.x
         ]

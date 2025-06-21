@@ -810,7 +810,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -840,7 +840,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -878,7 +878,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -914,7 +914,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -954,7 +954,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -998,7 +998,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -1040,7 +1040,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -1089,7 +1089,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -1130,7 +1130,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");
@@ -1157,7 +1157,7 @@ describe("Item", () => {
 
 					await utils.timeout(5);
 
-					user.name = "Bob"; // eslint-disable-line require-atomic-updates
+					user.name = "Bob";
 					await callType.func(user).bind(user)();
 
 					expect(putParams[1].TableName).toEqual("User");

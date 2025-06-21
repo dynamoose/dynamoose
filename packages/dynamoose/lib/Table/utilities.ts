@@ -13,7 +13,7 @@ import * as defaults from "./defaults";
 export async function getTableDetails (table: Table, settings: {allowError?: boolean; forceRefresh?: boolean} = {}): Promise<DynamoDB.DescribeTableOutput> {
 	const func = async (): Promise<void> => {
 		const tableDetails: DynamoDB.DescribeTableOutput = await ddb(table.getInternalProperties(internalProperties).instance, "describeTable", {"TableName": table.getInternalProperties(internalProperties).name});
-		table.getInternalProperties(internalProperties).latestTableDetails = tableDetails; // eslint-disable-line require-atomic-updates
+		table.getInternalProperties(internalProperties).latestTableDetails = tableDetails;
 	};
 	if (settings.forceRefresh || !table.getInternalProperties(internalProperties).latestTableDetails) {
 		if (settings.allowError) {
