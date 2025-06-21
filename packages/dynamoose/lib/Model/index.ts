@@ -138,6 +138,7 @@ interface ModelInternalProperties {
 	updateTypesMapCache?: Map<string, any>;
 	updateTypeNamesCache?: string[];
 	convertKeyToObjectCache?: Map<string, KeyObject>;
+	attributeTypeCache?: Map<string, any>;
 }
 
 // Model represents a single entity (ex. User, Movie, Video, Order)
@@ -782,10 +783,19 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const expressionKey = `#a${index}`;
 					subKey = Array.isArray(value) ? subValue : subKey;
 
-					let dynamoType;
-					try {
-						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
-					} catch (e) {} // eslint-disable-line no-empty
+					// Cache expensive schema.getAttributeType() calls
+					const attributeTypeKey = `${subKey}:${typeof subValue}`;
+					let dynamoType = this.getInternalProperties(internalProperties).attributeTypeCache?.get(attributeTypeKey);
+					if (dynamoType === undefined) {
+						try {
+							dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
+						} catch (e) {} // eslint-disable-line no-empty
+						
+						if (!this.getInternalProperties(internalProperties).attributeTypeCache) {
+							this.getInternalProperties(internalProperties).attributeTypeCache = new Map();
+						}
+						this.getInternalProperties(internalProperties).attributeTypeCache.set(attributeTypeKey, dynamoType);
+					}
 					const attributeExists = schemaAttributesSet.has(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
@@ -857,45 +867,76 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return obj;
 			})()));
 
-			schemaAttributes.map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
-				return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
-			}).map((details) => {
-				const {type} = details;
-
-				if (Array.isArray(type)) {
-					throw new CustomError.InvalidParameter("Combine type is not allowed to be used with multiple types.");
-				}
-
-				return details;
-			}).forEach((details: any) => {
-				const {invalidAttributes} = details.type.typeSettings.attributes.reduce((result, attribute) => {
-					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
-					const doesExist = Boolean(expressionAttributeNameEntry);
-					const isValid = doesExist && [...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", ").includes(expressionAttributeNameEntry[0]);
-
-					if (!isValid) {
-						result.invalidAttributes.push(attribute);
+			// Optimize combine type processing - avoid multiple array iterations
+			const expressionAttributeNamesMap = new Map(Object.entries(returnObject.ExpressionAttributeNames));
+			const setAndRemoveExpressions = [...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", ");
+			
+			// Single pass through schema attributes to find and process combine types
+			const combineAttributes = [];
+			for (const attribute of schemaAttributes) {
+				const type = schema.getAttributeTypeDetails(attribute);
+				const isCombineType = Array.isArray(type) ? type.some((t) => t.name === "Combine") : type.name === "Combine";
+				
+				if (isCombineType) {
+					if (Array.isArray(type)) {
+						throw new CustomError.InvalidParameter("Combine type is not allowed to be used with multiple types.");
 					}
-
-					return result;
-				}, {"invalidAttributes": []});
+					combineAttributes.push({attribute, type});
+				}
+			}
+			
+			// Process combine attributes efficiently
+			for (const details of combineAttributes) {
+				const invalidAttributes = [];
+				
+				// Check validity of all combine attributes
+				for (const attr of details.type.typeSettings.attributes) {
+					const expressionKey = [...expressionAttributeNamesMap].find(([key, value]) => value === attr)?.[0];
+					const doesExist = Boolean(expressionKey);
+					const isValid = doesExist && setAndRemoveExpressions.includes(expressionKey);
+					
+					if (!isValid) {
+						invalidAttributes.push(attr);
+					}
+				}
 
 				if (invalidAttributes.length > 0) {
 					throw new CustomError.InvalidParameter(`You must update all or none of the combine attributes when running Model.update. Missing combine attributes: ${invalidAttributes.join(", ")}.`);
 				} else {
-					const nextIndex = Math.max(...Object.keys(returnObject.ExpressionAttributeNames).map((key) => parseInt(key.replace("#a", "")))) + 1;
+					// More efficient next index calculation
+					let maxIndex = -1;
+					for (const key of Object.keys(returnObject.ExpressionAttributeNames)) {
+						const indexNum = parseInt(key.replace("#a", ""));
+						if (indexNum > maxIndex) maxIndex = indexNum;
+					}
+					const nextIndex = maxIndex + 1;
+					
 					returnObject.ExpressionAttributeNames[`#a${nextIndex}`] = details.attribute;
-					returnObject.ExpressionAttributeValues[`:v${nextIndex}`] = details.type.typeSettings.attributes.map((attribute) => {
-						const [expressionAttributeNameKey] = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
-						return returnObject.ExpressionAttributeValues[expressionAttributeNameKey.replace("#a", ":v")];
-					}).filter((value) => typeof value !== "undefined" && value !== null).join(details.type.typeSettings.separator);
+					
+					// Efficient value collection using the map we already have
+					const combinedValues = [];
+					for (const attribute of details.type.typeSettings.attributes) {
+						const expressionKey = [...expressionAttributeNamesMap].find(([key, value]) => value === attribute)?.[0];
+						if (expressionKey) {
+							const valueKey = expressionKey.replace("#a", ":v");
+							const value = returnObject.ExpressionAttributeValues[valueKey];
+							if (typeof value !== "undefined" && value !== null) {
+								combinedValues.push(value);
+							}
+						}
+					}
+					
+					returnObject.ExpressionAttributeValues[`:v${nextIndex}`] = combinedValues.join(details.type.typeSettings.separator);
 					returnObject.UpdateExpression.SET.push(`#a${nextIndex} = :v${nextIndex}`);
 				}
-			});
+			}
 
+			// Optimize default value processing - use Set for O(1) attribute lookup
+			const currentAttributeNamesSet = new Set(Object.values(returnObject.ExpressionAttributeNames));
+			
 			await Promise.all(schemaAttributes.map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
-				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
+				if (defaultValue && !currentAttributeNamesSet.has(attribute)) {
 					const updateType = updateTypesMap.get("$SET");
 
 					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
@@ -906,13 +947,27 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			}));
 
-			Object.values(returnObject.ExpressionAttributeNames).map((attribute: string, index) => {
-				const value: ValueType = Object.values(returnObject.ExpressionAttributeValues)[index];
-				const valueKey = Object.keys(returnObject.ExpressionAttributeValues)[index];
-				let dynamoType;
-				try {
-					dynamoType = schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
-				} catch (e) {} // eslint-disable-line no-empty
+			// Optimize final value processing - avoid repeated Object.values/keys calls
+			const attributeNames = Object.values(returnObject.ExpressionAttributeNames);
+			const attributeValues = Object.values(returnObject.ExpressionAttributeValues);
+			const attributeValueKeys = Object.keys(returnObject.ExpressionAttributeValues);
+			
+			attributeNames.forEach((attribute: string, index) => {
+				const value: ValueType = attributeValues[index];
+				const valueKey = attributeValueKeys[index];
+				// Cache expensive schema.getAttributeType() calls
+				const attributeTypeKey = `${attribute}:${typeof value}`;
+				let dynamoType = this.getInternalProperties(internalProperties).attributeTypeCache?.get(attributeTypeKey);
+				if (dynamoType === undefined) {
+					try {
+						dynamoType = schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
+					} catch (e) {} // eslint-disable-line no-empty
+					
+					if (!this.getInternalProperties(internalProperties).attributeTypeCache) {
+						this.getInternalProperties(internalProperties).attributeTypeCache = new Map();
+					}
+					this.getInternalProperties(internalProperties).attributeTypeCache.set(attributeTypeKey, dynamoType);
+				}
 				const attributeType = Schema.attributeTypes.findDynamoDBType(dynamoType) as DynamoDBSetTypeResult;
 
 				if (attributeType?.toDynamo && !attributeType.isOfType(value, "fromDynamo")) {
