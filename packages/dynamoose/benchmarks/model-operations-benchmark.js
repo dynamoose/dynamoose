@@ -334,18 +334,22 @@ async function clearTestItemsArray (testItems) {
 }
 
 // Function to clean up all created tables in local DynamoDB
-async function cleanupAllTables (tableNames) {
-	if (tableNames.length === 0) {
+async function cleanupAllTables (tableInfos) {
+	if (tableInfos.length === 0) {
 		console.log("No tables to clean up.");
 		return;
 	}
 
-	console.log(`Cleaning up ${tableNames.length} tables from local DynamoDB...`);
+	console.log(`Cleaning up ${tableInfos.length} tables from local DynamoDB...`);
 	
-	for (const tableName of tableNames) {
+	for (const tableInfo of tableInfos) {
+		// Handle both old format (string) and new format (object)
+		const tableName = typeof tableInfo === 'string' ? tableInfo : tableInfo.tableName;
+		const model = typeof tableInfo === 'object' ? tableInfo.model : null;
+		
 		try {
-			// Use AWS SDK directly to delete tables from local DynamoDB
-			const { DynamoDBClient, DeleteTableCommand, ListTablesCommand } = require("@aws-sdk/client-dynamodb");
+			// First check if table exists before attempting deletion
+			const { DynamoDBClient, ListTablesCommand } = require("@aws-sdk/client-dynamodb");
 			
 			const client = new DynamoDBClient({
 				endpoint: "http://localhost:8000",
@@ -356,20 +360,34 @@ async function cleanupAllTables (tableNames) {
 				}
 			});
 
-			// Check if table exists first
 			const listCommand = new ListTablesCommand({});
 			const listResult = await client.send(listCommand);
 			
-			if (listResult.TableNames && listResult.TableNames.includes(tableName)) {
-				const deleteCommand = new DeleteTableCommand({
-					TableName: tableName
-				});
-				
-				await client.send(deleteCommand);
-				console.log(`    ✅ Deleted table: ${tableName}`);
-			} else {
-				console.log(`    ⚠️  Table ${tableName} not found (may have been auto-deleted)`);
+			if (!listResult.TableNames || !listResult.TableNames.includes(tableName)) {
+				console.log(`    ✅ Table ${tableName} already cleaned up (auto-deleted)`);
+				continue;
 			}
+
+			// Try to delete using Dynamoose model if available
+			if (model && typeof model.table === 'function') {
+				try {
+					await model.table().delete();
+					console.log(`    ✅ Deleted table via Dynamoose: ${tableName}`);
+					continue;
+				} catch (dynamooseError) {
+					console.log(`    ⚠️  Dynamoose deletion failed for ${tableName}: ${dynamooseError.message}`);
+				}
+			}
+			
+			// Fallback to direct AWS SDK deletion
+			const { DeleteTableCommand } = require("@aws-sdk/client-dynamodb");
+			
+			const deleteCommand = new DeleteTableCommand({
+				TableName: tableName
+			});
+			
+			await client.send(deleteCommand);
+			console.log(`    ✅ Deleted table via AWS SDK: ${tableName}`);
 		} catch (error) {
 			console.log(`    ❌ Failed to delete table ${tableName}:`, error.message);
 		}
@@ -400,7 +418,14 @@ async function benchmarkModelOperations (createdTables = []) {
 
 		const ModelName = `ModelBenchmark${schemaType.charAt(0).toUpperCase() + schemaType.slice(1).replace("-", "")}${Date.now()}`;
 		const Model = dynamoose.model(ModelName, schema);
-		createdTables.push(ModelName);
+		
+		// Store both model and table name for proper cleanup
+		const tableInfo = {
+			modelName: ModelName,
+			tableName: ModelName, // Dynamoose uses model name as table name by default
+			model: Model
+		};
+		createdTables.push(tableInfo);
 		
 		// Ensure table exists by creating first item (will auto-create table)
 		console.log(`    ✅ Table ${ModelName} will be auto-created`);
@@ -487,7 +512,7 @@ async function benchmarkModelOperations (createdTables = []) {
 		await clearTestItemsArray(testItems);
 		
 		// Mark table for cleanup (will be deleted at the end)
-		console.log(`    📋 Table ${ModelName} marked for cleanup`);
+		console.log(`    📋 Table ${tableInfo.tableName} marked for cleanup`);
 
 		results[schemaType] = schemaResults;
 	}
@@ -562,6 +587,10 @@ async function runModelOperations () {
 	// Clean up all created tables from local DynamoDB
 	console.log("\n🧹 CLEANING UP TABLES");
 	console.log("=".repeat(80));
+	
+	// Add a small delay to ensure all operations have completed
+	await new Promise(resolve => setTimeout(resolve, 1000));
+	
 	await cleanupAllTables(createdTables);
 
 	console.log("\n🎉 Model operation benchmarks completed!");
