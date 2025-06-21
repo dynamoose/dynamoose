@@ -6,7 +6,7 @@ class BenchmarkRunner {
 		this.memoryUsage = [];
 		this.failedRuns = 0;
 		this.config = {
-			"warmupRuns": 200,
+			"warmupRuns": 5,
 			"benchmarkRuns": 1000,
 			"modelOperationRuns": 1000,
 			"enableMemoryTracking": true,

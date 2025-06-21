@@ -132,6 +132,12 @@ interface ModelInternalProperties {
 	 * This should never be called directly. Use `table()` instead.
 	 */
 	_table?: Table;
+	
+	// Performance optimization caches
+	schemaAttributesCache?: Set<string>;
+	updateTypesMapCache?: Map<string, any>;
+	updateTypeNamesCache?: string[];
+	convertKeyToObjectCache?: Map<string, KeyObject>;
 }
 
 // Model represents a single entity (ex. User, Movie, Video, Order)
@@ -716,17 +722,45 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				{"name": "$DELETE", "objectFromSchemaSettings": {"defaults": true}}
 			].reverse();
 
-			// Pre-compute update types map for O(1) lookups
-			const updateTypesMap = new Map(updateTypes.map((type) => [type.name, type]));
-			const updateTypeNames = updateTypes.map((a) => a.name);
+			// Use cached update types map for O(1) lookups or create and cache if not exist
+			let updateTypesMap = this.getInternalProperties(internalProperties).updateTypesMapCache;
+			let updateTypeNames = this.getInternalProperties(internalProperties).updateTypeNamesCache;
+			if (!updateTypesMap) {
+				updateTypesMap = new Map(updateTypes.map((type) => [type.name, type]));
+				updateTypeNames = updateTypes.map((a) => a.name);
+				// Cache for future calls
+				this.getInternalProperties(internalProperties).updateTypesMapCache = updateTypesMap;
+				this.getInternalProperties(internalProperties).updateTypeNamesCache = updateTypeNames;
+			}
 
-			// Pre-compute schema attributes set for O(1) lookups
-			const schemaAttributes = schema.attributes();
-			const schemaAttributesSet = new Set(schemaAttributes);
+			// Use cached schema attributes set for O(1) lookups or create and cache if not exist
+			let schemaAttributesSet = this.getInternalProperties(internalProperties).schemaAttributesCache;
+			let schemaAttributes: string[];
+			if (!schemaAttributesSet) {
+				schemaAttributes = schema.attributes();
+				schemaAttributesSet = new Set(schemaAttributes);
+				// Cache for future calls
+				this.getInternalProperties(internalProperties).schemaAttributesCache = schemaAttributesSet;
+			} else {
+				// Convert Set back to array for existing logic that expects an array
+				schemaAttributes = Array.from(schemaAttributesSet);
+			}
 
 			if (!updateObj) {
 				updateObj = utils.deep_copy(keyObj) as Partial<T>;
-				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
+				
+				// Cache convertKeyToObject results for performance
+				const keyObjString = JSON.stringify(keyObj);
+				let convertedKeyObj = this.getInternalProperties(internalProperties).convertKeyToObjectCache?.get(keyObjString);
+				if (!convertedKeyObj) {
+					convertedKeyObj = await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj);
+					if (!this.getInternalProperties(internalProperties).convertKeyToObjectCache) {
+						this.getInternalProperties(internalProperties).convertKeyToObjectCache = new Map();
+					}
+					this.getInternalProperties(internalProperties).convertKeyToObjectCache.set(keyObjString, convertedKeyObj);
+				}
+				
+				Object.keys(convertedKeyObj).forEach((key) => delete updateObj[key]);
 			}
 
 			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {

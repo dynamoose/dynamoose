@@ -1,4 +1,9 @@
 export default function deep_copy<T> (obj: T, refs = new Set()): T {
+	// Fast path for null, undefined, primitives
+	if (obj === null || obj === undefined || typeof obj !== "object") {
+		return obj;
+	}
+
 	let copy: any;
 
 	// Handle Date
@@ -47,14 +52,12 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 	if (obj instanceof Object) {
 		refs.add(obj);
 
-		if (obj.constructor !== Object) {
-			copy = Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
-		} else {
+		// Fast path for plain objects (most common case in Model.update)
+		if (obj.constructor === Object) {
 			copy = {};
-		}
-
-		for (const attr in obj) {
-			if (Object.prototype.hasOwnProperty.call(obj, attr)) {
+			const keys = Object.keys(obj);
+			for (let i = 0; i < keys.length; i++) {
+				const attr = keys[i];
 				const value = obj[attr];
 				const isObjValue = typeof value === "object" && !Array.isArray(value) && value !== null;
 
@@ -67,6 +70,26 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 				}
 
 				copy[attr] = deep_copy(value, refs);
+			}
+		} else {
+			// Slower path for objects with non-Object constructors
+			copy = Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
+
+			for (const attr in obj) {
+				if (Object.prototype.hasOwnProperty.call(obj, attr)) {
+					const value = obj[attr];
+					const isObjValue = typeof value === "object" && !Array.isArray(value) && value !== null;
+
+					if (isObjValue) {
+						const isCircular = refs.has(value);
+						// Omit circular property from copy
+						if (isCircular) continue;
+
+						refs.add(value);
+					}
+
+					copy[attr] = deep_copy(value, refs);
+				}
 			}
 		}
 		return copy;
