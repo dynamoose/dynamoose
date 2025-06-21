@@ -737,7 +737,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		keysToDelete.reverse().forEach((key) => utils.object.delete(returnObject, key));
 	}
 
-	if (settings.defaults || settings.forceDefault) {
+	// Skip defaults when readStrict is false (defaults already applied on create)
+	if ((settings.defaults || settings.forceDefault) && !(settings.readStrict === false && settings.type === "fromDynamo")) {
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			if (value === dynamooseUndefined) {
@@ -836,7 +837,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}));
 	}
-	if (settings.validate) {
+	// Skip validation when readStrict is false (data from DB is assumed valid)
+	if (settings.validate && !(settings.readStrict === false && settings.type === "fromDynamo")) {
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
@@ -868,7 +870,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}
 	}
-	if (settings.required) {
+	// Skip required validation when readStrict is false (data from DB is assumed valid)
+	if (settings.required && !(settings.readStrict === false && settings.type === "fromDynamo")) {
 		let attributesToCheck = await Item.attributesWithSchema(returnObject, model);
 		if (settings.required === "nested") {
 			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute === key || attribute.startsWith(key + ".")));
@@ -892,7 +895,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}));
 	}
-	if (settings.enum) {
+	// Skip enum validation when readStrict is false (data from DB is assumed valid)
+	if (settings.enum && !(settings.readStrict === false && settings.type === "fromDynamo")) {
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
