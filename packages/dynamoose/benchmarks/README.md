@@ -1,183 +1,336 @@
 # Dynamoose Performance Benchmarks
 
-This directory contains performance benchmarks for measuring the speed of Dynamoose operations with different schema sizes.
+This directory contains comprehensive performance benchmarks for Dynamoose, a DynamoDB modeling tool for Node.js.
 
 ## Overview
 
-The benchmarks test Model.update and Model.get operations across four schema complexity levels:
-- **Small**: Basic schema with 5 simple fields
-- **Medium**: Moderate complexity with nested objects and arrays
-- **Large**: High complexity with deep nesting, validations, and multiple data types
-- **Extra Large**: Maximum complexity with analytics data and business objects
+The benchmarks are designed to measure Dynamoose performance across different operations and schema complexities:
 
-## Files
+- **Schema Conversion Benchmarks**: Tests `toDynamo()` and `fromDynamo()` operations
+- **Model Operation Benchmarks**: Tests CRUD operations like `Model.create()`, `Model.update()`, and `Model.get()`
 
-- `schemas.js` - Defines schema definitions of varying complexity
-- `performance-benchmark.js` - Unified benchmark runner with comprehensive testing capabilities
-- `README.md` - This documentation file
+## Benchmark Scripts
+
+### Schema Conversion Benchmarks
+- **File**: `schema-conversions-benchmark.js`
+- **Command**: `npm run benchmark:conversions`
+- **Tests**: 
+  - `toDynamo()` - Convert JavaScript objects to DynamoDB format
+  - `fromDynamo()` - Convert DynamoDB data to JavaScript objects  
+  - `fromDynamo(strict)` - Convert with strict mode enabled
+
+### Model Operation Benchmarks  
+- **File**: `model-operations-benchmark.js`
+- **Command**: `npm run benchmark:models`
+- **Tests**:
+  - `Model.update()` - Update existing items in DynamoDB
+  - `Model.get()` - Retrieve items from DynamoDB
+
+### Run All Benchmarks
+- **Command**: `npm run benchmark`
+- **Description**: Runs both schema conversion and model operation benchmarks sequentially
+
+## Schema Complexity Levels
+
+The benchmarks test four different schema complexity levels:
+
+### Small Schema
+- Simple flat structure with basic types
+- Fields: `id`, `name`, `email`, `age`, `active`
+- Use case: Basic user profiles
+
+### Medium Schema  
+- Nested objects and arrays
+- Validation rules and default values
+- Fields: Profile data, preferences, metadata
+- Use case: User profiles with settings
+
+### Large Schema
+- Complex nested structures 
+- Multiple validation rules
+- Professional info, contact details, social connections
+- Use case: Enterprise user management
+
+### Extra Large Schema
+- Maximum complexity with all DynamoDB data types
+- **Complex Data Types Included**:
+  - **Sets**: String sets, Number sets, Buffer sets
+  - **Binary Data**: Buffer types for binary storage
+  - **Multi-Type Fields**: Fields that accept multiple types (String | Number)
+  - **NULL Values**: Explicit NULL type support
+  - **Constant Values**: Fields with constant values
+  - **Combined Fields**: Automatically generated from other field combinations
+  - **Date Options**: Dates with custom storage formats (ISO, milliseconds, seconds)
+  - **Nested Sets**: Sets within nested objects
+- Use case: Complex enterprise applications with rich data models
+
+## Configuration
+
+### Benchmark Settings
+- **Warmup Runs**: 200 (for JIT optimization)
+- **Benchmark Runs**: 1000 (for statistical accuracy)
+- **Model Operation Test Items**: 1000 per schema type
+
+### Local DynamoDB
+The benchmarks are configured to use local DynamoDB:
+- **Endpoint**: `http://localhost:8000`
+- **Auto Table Management**: Tables are automatically created and cleaned up
+- **Cleanup**: All created tables are deleted after benchmark completion
+
+## Output Metrics
+
+Each benchmark provides comprehensive statistics:
+
+### Performance Metrics
+- **Mean**: Average operation time in milliseconds
+- **Median**: Middle value operation time
+- **Min/Max**: Fastest and slowest operation times
+- **Percentiles**: P90, P95, P99 for latency distribution analysis
+- **Standard Deviation**: Measure of performance consistency
+- **Coefficient of Variation**: Relative variability percentage
+
+### Throughput Metrics
+- **Operations per Second**: Calculated from mean execution time
+- **Memory Usage**: Heap memory tracking throughout benchmark
+
+### Comparison Tables
+- **Performance Table**: Side-by-side latency comparison across schema sizes
+- **Throughput Table**: Operations per second comparison
+
+## Example Output
+
+```
+📊 PERFORMANCE COMPARISON TABLE
+================================================================================
+Schema Size    | Model.update (ms) | Model.get (ms)
+---------------|-------------------|---------------
+small          | 0.809             | 0.437
+medium         | 3.521             | 1.561
+large          | 12.049            | 5.988
+extra-large    | 16.467            | 8.321
+
+📈 THROUGHPUT COMPARISON (ops/sec)
+================================================================================
+Schema Size    | Model.update      | Model.get
+---------------|-------------------|----------
+small          | 1236.01           | 2285.87
+medium         | 283.97            | 640.79
+large          | 82.99             | 167.00
+extra-large    | 60.73             | 120.18
+```
+
+## Prerequisites
+
+### Required Setup
+1. **Local DynamoDB**: Must be running on `http://localhost:8000`
+   ```bash
+   # Download and run DynamoDB Local
+   java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -port 8000
+   ```
+
+2. **Dependencies**: Install all project dependencies
+   ```bash
+   npm install
+   ```
+
+3. **Build**: Ensure Dynamoose is built
+   ```bash
+   npm run build
+   ```
 
 ## Running Benchmarks
 
-### Prerequisites
-
-1. Build the project first:
+### Individual Benchmarks
 ```bash
-npm run build
+# Schema conversion benchmarks only
+npm run benchmark:conversions
+
+# Model operation benchmarks only  
+npm run benchmark:models
 ```
 
-2. Ensure you have access to DynamoDB (local or AWS)
-
-### Available Commands
-
+### All Benchmarks
 ```bash
-# Run all benchmarks
+# Run complete benchmark suite
 npm run benchmark
-
-# Run with custom options (see --help for full list)
-node benchmarks/performance-benchmark.js --help
-node benchmarks/performance-benchmark.js --quick
-node benchmarks/performance-benchmark.js --operations conversion
-node benchmarks/performance-benchmark.js --schemas small,medium
 ```
-
-### Direct Execution
-
-You can also run the benchmark script directly:
-
-```bash
-# From the dynamoose package directory
-node benchmarks/performance-benchmark.js
-```
-
-## Benchmark Configuration
-
-The benchmarks use the following configuration (found in `performance-benchmark.js`):
-
-```javascript
-const BENCHMARK_CONFIG = {
-  warmupRuns: 5,        // Number of warmup iterations
-  benchmarkRuns: 20,    // Number of benchmark iterations
-  operationTimeout: 30000 // Maximum time per operation (30s)
-};
-```
-
-## Output Format
-
-The benchmark produces detailed statistics for each operation:
-
-- **Runs**: Number of successful operations
-- **Mean**: Average execution time
-- **Median**: Middle value execution time
-- **Min/Max**: Fastest and slowest execution times
-- **P95/P99**: 95th and 99th percentile response times
-- **Std Dev**: Standard deviation of execution times
-
-### Sample Output
-
-```
-🔄 UPDATE OPERATION RESULTS:
-Schema Type     Mean (ms)   Median (ms) P95 (ms)   P99 (ms)
-------------------------------------------------------------
-small           45.23       42.18       78.45      89.12
-medium          125.67      118.34      198.23     245.67
-large           342.89      321.45      567.89     623.45
-extra-large     756.23      712.34      1234.56    1345.67
-
-📖 GET OPERATION RESULTS:
-Schema Type     Mean (ms)   Median (ms) P95 (ms)   P99 (ms)
-------------------------------------------------------------
-small           12.45       11.23       18.67      22.34
-medium          28.67       26.45       42.34      48.23
-large           89.34       84.23       134.56     152.34
-extra-large     198.45      187.23      298.67     334.56
-```
-
-## Performance Insights
-
-The benchmark automatically calculates performance ratios:
-- Compares large vs small schema performance
-- Compares update vs get operation performance
-- Identifies potential bottlenecks in schema complexity
-
-## Database Configuration
-
-The benchmark attempts to connect to a local DynamoDB instance first:
-```javascript
-dynamoose.aws.aws.ddb.initialize({
-  endpoint: "http://localhost:8000",
-  region: "us-east-1", 
-  accessKeyId: "local",
-  secretAccessKey: "local"
-});
-```
-
-If local DynamoDB is not available, it falls back to your default AWS configuration.
-
-### Setting up Local DynamoDB
-
-For consistent benchmarking, consider using local DynamoDB:
-
-1. Download DynamoDB Local from AWS
-2. Run: `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb`
-3. This starts DynamoDB on `http://localhost:8000`
 
 ## Interpreting Results
 
-### What to Look For
+### Performance Analysis
+- **Latency Growth**: Notice how operation time increases with schema complexity
+- **Throughput Impact**: Observe how complex schemas reduce operations per second
+- **Memory Usage**: Monitor heap memory consumption patterns
 
-1. **Linear vs Exponential Growth**: Check if performance degradation is proportional to schema complexity
-2. **Outliers**: Look at P95/P99 percentiles for worst-case performance
-3. **Memory Usage**: Monitor if large schemas cause memory pressure
-4. **Consistency**: Low standard deviation indicates consistent performance
+### Use Case Guidance
+- **Small/Medium schemas**: Suitable for high-throughput applications
+- **Large schemas**: Good balance of features and performance  
+- **Extra-large schemas**: Use when rich data modeling is required, plan for lower throughput
 
-### Common Performance Issues
+### Optimization Insights
+- Complex nested objects significantly impact performance
+- Set types and binary data add processing overhead
+- Consider schema simplification for performance-critical applications
 
-- **Schema Validation**: Complex validation rules slow down operations
-- **Deep Nesting**: Deeply nested objects require more processing
-- **Large Arrays**: Arrays with many elements impact serialization
-- **Type Conversions**: Complex type mappings add overhead
+## Schema Files
 
-## Customizing Benchmarks
+- **`schemas.js`**: Contains all schema definitions
+- **Data generators**: Test data creation for each schema complexity level
+- **Complex types**: Examples of all supported DynamoDB data types
 
-### Adding New Schema Types
+## Advanced Data Types
 
-1. Add new schema creation function to `schemas.js`
-2. Add corresponding test data generation in `performance-benchmark.js`
-3. Include the new schema type in the `schemas` object in `runAllBenchmarks()`
+The extra-large schema demonstrates all supported DynamoDB data types:
 
-### Modifying Test Data
+### Basic Types
+- `String`, `Number`, `Boolean`, `Date`, `Buffer`, `Object`, `Array`
 
-Update the `generateTestData()` and `generateUpdateData()` functions in `performance-benchmark.js` to change the data used in benchmarks.
+### Set Types
+```javascript
+"stringSet": {
+  "type": Set,
+  "schema": [String]
+},
+"numberSet": {
+  "type": Set, 
+  "schema": [Number]
+},
+"bufferSet": {
+  "type": Set,
+  "schema": [Buffer]
+}
+```
 
-### Adjusting Configuration
+### Special Types
+```javascript
+// Multiple allowed types
+"multiType": [String, Number],
 
-Modify `BENCHMARK_CONFIG` to change:
-- Number of warmup/benchmark runs
-- Operation timeout
-- Other performance parameters
+// NULL values
+"nullableField": dynamoose.type.NULL,
+
+// Constant values
+"constantValue": {
+  "type": dynamoose.type.CONSTANT,
+  "value": "EXTRA_LARGE_SCHEMA"
+},
+
+// Combined fields
+"combinedIds": {
+  "type": dynamoose.type.COMBINE,
+  "attributes": ["id", "userId"],
+  "separator": "#"
+},
+
+// Date with storage options
+"dateWithOptions": {
+  "type": Date,
+  "storage": "iso"  // or "milliseconds" or "seconds"
+}
+```
+
+## Performance Characteristics
+
+### Typical Results by Schema Size
+
+| Schema | Update (ms) | Get (ms) | Update (ops/sec) | Get (ops/sec) |
+|--------|-------------|----------|------------------|---------------|
+| Small | ~0.8 | ~0.4 | ~1,200 | ~2,300 |
+| Medium | ~3.5 | ~1.6 | ~280 | ~640 |
+| Large | ~12 | ~6 | ~80 | ~170 |
+| Extra-Large | ~16 | ~8 | ~60 | ~120 |
+
+### Performance Factors
+
+**Schema Complexity Impact:**
+- Each level of nesting adds processing overhead
+- Validation rules increase serialization time
+- Set types require additional processing
+- Binary data impacts memory usage
+
+**Operation Type Impact:**
+- `Get` operations are generally 2-3x faster than `Update`
+- `fromDynamo` is typically faster than `toDynamo`
+- Strict mode adds minimal overhead
+
+## Table Management
+
+The benchmarks automatically handle DynamoDB table lifecycle:
+
+1. **Auto-Creation**: Tables are created when first item is saved
+2. **Naming**: Uses timestamp-based unique names to avoid conflicts
+3. **Cleanup**: All tables are deleted after benchmark completion
+4. **Error Handling**: Graceful handling of table creation/deletion failures
+
+## Memory Management
+
+Memory usage patterns:
+- **Small schemas**: ~15-20MB heap usage
+- **Medium schemas**: ~20-30MB heap usage  
+- **Large schemas**: ~30-45MB heap usage
+- **Extra-large schemas**: ~40-50MB heap usage
+
+Memory is tracked throughout benchmarks and reported in results.
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Connection Errors**: Ensure DynamoDB is accessible
-2. **Timeout Errors**: Increase `operationTimeout` for very large schemas
-3. **Memory Errors**: Reduce `benchmarkRuns` if running out of memory
-4. **Permission Errors**: Ensure AWS credentials have DynamoDB access
+1. **DynamoDB Connection**
+   ```bash
+   # Check if local DynamoDB is running
+   curl http://localhost:8000
+   ```
 
-### Debugging
+2. **Build Issues**
+   ```bash
+   # Clean and rebuild
+   npm run build:clean
+   npm run build
+   ```
 
-Enable detailed logging by setting environment variables:
+3. **Memory Issues**
+   ```bash
+   # Reduce benchmark runs if needed
+   # Edit BENCHMARK_CONFIG.modelOperationRuns in benchmark files
+   ```
+
+4. **Timeout Issues**
+   - Large schemas may take longer
+   - Benchmark automatically handles timeouts with 30-second limits
+
+### Debug Mode
+
+Enable detailed logging:
 ```bash
-export DEBUG=dynamoose*
-npm run benchmark
+DEBUG=dynamoose* npm run benchmark
 ```
 
 ## Contributing
 
-When adding new benchmarks:
-1. Follow the existing code structure
-2. Add appropriate error handling
-3. Include documentation for new benchmark types
-4. Test with different schema complexities
-5. Update this README with any new features
+When contributing to benchmarks:
+
+1. **Schema Changes**: Update both schema definitions and test data generators
+2. **New Data Types**: Add examples to extra-large schema
+3. **Performance Tests**: Ensure adequate warmup and sample sizes
+4. **Documentation**: Update README with new features
+5. **Table Cleanup**: Verify proper cleanup of created resources
+
+## Files Structure
+
+```
+benchmarks/
+├── README.md                           # This file
+├── schemas.js                          # Schema definitions
+├── schema-conversions-benchmark.js     # Conversion benchmarks  
+├── model-operations-benchmark.js       # CRUD operation benchmarks
+└── performance-benchmark.js            # Legacy unified benchmark (deprecated)
+```
+
+## Notes
+
+- All benchmarks include proper error handling and timeout management
+- Tables are automatically created and cleaned up to prevent conflicts
+- Memory tracking provides insights into resource usage patterns
+- Statistical accuracy improved with 1000+ runs per test
+- Complex data types demonstrate full DynamoDB feature support
