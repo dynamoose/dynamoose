@@ -609,7 +609,6 @@ module.exports = {
 if (require.main === module) {
 	runModelOperations()
 		.then(() => {
-			console.log("\n🎉 Model operation benchmarks completed!");
 			process.exit(0);
 		})
 		.catch((error) => {
