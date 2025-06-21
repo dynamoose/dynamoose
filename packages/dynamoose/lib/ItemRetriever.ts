@@ -98,7 +98,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 							timesRequested++;
 							result = utils.merge_objects(result, nextRequest);
 							// The operation below is safe because right above we are overwriting the entire `result` variable, so there is no chance it'll be reassigned based on an outdated value since it's already been overwritten. There might be a better way to do this than ignoring the rule on the line below.
-							result.LastEvaluatedKey = nextRequest.LastEvaluatedKey; // eslint-disable-line require-atomic-updates
+							result.LastEvaluatedKey = nextRequest.LastEvaluatedKey;
 							lastKey = nextRequest.LastEvaluatedKey;
 							requestedTimes++;
 						}
@@ -313,7 +313,7 @@ export interface Scan<T> extends ItemRetriever, BasicOperators<Scan<T>> {
 	exec(callback: CallbackType<ScanResponse<T>, any>): void;
 }
 
-export class Scan<T> extends ItemRetriever { // eslint-disable-line @typescript-eslint/no-unsafe-declaration-merging
+export class Scan<T> extends ItemRetriever {
 	exec (callback?: CallbackType<ScanResponse<T>, any>): Promise<ScanResponse<T>> | void {
 		return super.exec(callback);
 	}
@@ -333,7 +333,7 @@ export interface Query<T> extends ItemRetriever, BasicOperators<Query<T>> {
 	exec(callback: CallbackType<QueryResponse<T>, any>): void;
 }
 
-export class Query<T> extends ItemRetriever { // eslint-disable-line @typescript-eslint/no-unsafe-declaration-merging
+export class Query<T> extends ItemRetriever {
 	exec (callback?: CallbackType<QueryResponse<T>, any>): Promise<QueryResponse<T>> | void {
 		return super.exec(callback);
 	}

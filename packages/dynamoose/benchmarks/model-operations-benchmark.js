@@ -572,9 +572,7 @@ async function benchmarkModelOperations (createdTables = []) {
 				const key = schemaType === "large" || schemaType === "extra-large"? {"id": randomItem.id, "userId": randomItem.userId}: {"id": randomItem.id};
 				
 				// Use appropriate field for each schema type
-				const updateData = schemaType === "large" || schemaType === "extra-large" 
-					? {$SET: {"personalInfo.firstName": `Updated-${Date.now()}`}}
-					: {"name": `Updated-${Date.now()}`};
+				const updateData = schemaType === "large" || schemaType === "extra-large"? {$SET: {"personalInfo.firstName": `Updated-${Date.now()}`}}: {"name": `Updated-${Date.now()}`};
 
 				await Model.update(key, updateData);
 			});
@@ -584,9 +582,7 @@ async function benchmarkModelOperations (createdTables = []) {
 				const key = schemaType === "large" || schemaType === "extra-large"? {"id": randomItem.id, "userId": randomItem.userId}: {"id": randomItem.id};
 				
 				// Use appropriate field for each schema type
-				const updateData = schemaType === "large" || schemaType === "extra-large" 
-					? {$SET: {"personalInfo.firstName": `Updated-${Date.now()}`}}
-					: {"name": `Updated-${Date.now()}`};
+				const updateData = schemaType === "large" || schemaType === "extra-large"? {$SET: {"personalInfo.firstName": `Updated-${Date.now()}`}}: {"name": `Updated-${Date.now()}`};
 
 				await Model.update(key, updateData);
 			});

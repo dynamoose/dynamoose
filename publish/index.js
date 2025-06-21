@@ -40,7 +40,7 @@ let package = require("../packages/dynamoose/package.json");
 	await git.checkout(results.branch);
 	package = require("../packages/dynamoose/package.json");
 	const gitCoreEditor = await exec("git config --get core.editor");
-	results = { // eslint-disable-line require-atomic-updates
+	results = {
 		...results,
 		...await inquirer.prompt([
 			{
