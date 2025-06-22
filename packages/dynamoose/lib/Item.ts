@@ -653,7 +653,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	mapAttributes("toDynamo");
 
 	// Type check
-	const typeIndexOptionMap = (settings.readStrict === false && settings.type === "fromDynamo") ? undefined : schema.getTypePaths(returnObject, settings);
+	const skipValidationForNonStrictRead = settings.readStrict === false && settings.type === "fromDynamo";
+	const typeIndexOptionMap = skipValidationForNonStrictRead ? undefined : schema.getTypePaths(returnObject, settings);
 	if (settings.typeCheck === undefined || settings.typeCheck === true) {
 		const validParents = []; // This array is used to allow for set contents to not be type checked
 		const keysToDelete = [];
@@ -666,7 +667,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const existsInSchema = schemaAttributes.includes(genericKey);
 			if (existsInSchema) {
 				// For readStrict: false, skip expensive type validation but still handle schema attributes
-				if (settings.readStrict === false && settings.type === "fromDynamo") {
+				if (skipValidationForNonStrictRead) {
 					// Lightweight check for parent tracking without expensive type validation
 					if (Array.isArray(value)) {
 						// Handle arrays by recursively checking each element
@@ -679,18 +680,18 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 						let needsInfiniteTracking = false;
 
 						try {
-							const schemaValue = schema.getAttributeSettingValue("schema", genericKey);
+							const schemaValue = schema.getAttributeSettingValue("schema", genericKey, {typeIndexOptionMap});
 							if (schemaValue === dynamooseAny) {
 								needsInfiniteTracking = true;
 							} else {
 								// Check for THIS type (dynamoose.type.THIS) which is used for self-referencing models
-								const attributeValue = schema.getAttributeValue(genericKey);
+								const attributeValue = schema.getAttributeValue(genericKey, {typeIndexOptionMap});
 								const typeVal = typeof attributeValue === "object" && !Array.isArray(attributeValue) && attributeValue.type ? attributeValue.type : attributeValue;
 								if (typeVal === Internal.Public.this) {
 									needsInfiniteTracking = true;
 								} else {
 									// Check for Set or Model types without expensive getValueTypeCheckResult
-									const attributeType = schema.getAttributeType(genericKey);
+									const attributeType = schema.getAttributeType(genericKey, {typeIndexOptionMap});
 									if (attributeType && (attributeType.includes("Set") || attributeType.includes("Model"))) {
 										needsInfiniteTracking = true;
 									}
@@ -747,7 +748,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	};
 
 	// Skip defaults when readStrict is false (defaults already applied on create)
-	if ((settings.defaults || settings.forceDefault) && !(settings.readStrict === false && settings.type === "fromDynamo")) {
+	if ((settings.defaults || settings.forceDefault) && !skipValidationForNonStrictRead) {
 		await Promise.all((await getAttributesWithSchema()).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			if (value === dynamooseUndefined) {
@@ -847,7 +848,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		}));
 	}
 	// Skip validation when readStrict is false (data from DB is assumed valid)
-	if (settings.validate && !(settings.readStrict === false && settings.type === "fromDynamo")) {
+	if (settings.validate && !skipValidationForNonStrictRead) {
 		await Promise.all((await getAttributesWithSchema()).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
@@ -880,7 +881,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		}
 	}
 	// Skip required validation when readStrict is false (data from DB is assumed valid)
-	if (settings.required && !(settings.readStrict === false && settings.type === "fromDynamo")) {
+	if (settings.required && !skipValidationForNonStrictRead) {
 		let attributesToCheck = await getAttributesWithSchema();
 		if (settings.required === "nested") {
 			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute === key || attribute.startsWith(key + ".")));
@@ -905,7 +906,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		}));
 	}
 	// Skip enum validation when readStrict is false (data from DB is assumed valid)
-	if (settings.enum && !(settings.readStrict === false && settings.type === "fromDynamo")) {
+	if (settings.enum && !skipValidationForNonStrictRead) {
 		await Promise.all((await getAttributesWithSchema()).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
