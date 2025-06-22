@@ -1,6 +1,6 @@
 // This function is used to merge objects for combining multiple responses.
 
-import type {GeneralObject} from "js-object-utilities";
+import {GeneralObject} from "js-object-utilities";
 import {ArrayItemsMerger} from "../Types";
 import keyBy from "./keyBy";
 
@@ -43,11 +43,11 @@ const main = (settings: MergeObjectsSettings = {"combineMethod": MergeObjectsCom
 					returnObject[key] = settings.arrayItemsMerger ? settings.arrayItemsMerger(returnObject[key], arg[key] as any) : [...returnObject[key], ...(arg[key] as any)];
 				} else if (Array.isArray(returnObject[key])) {
 					returnObject[key] = [...returnObject[key], arg[key]];
-				} else if (Object.prototype.hasOwnProperty.call(returnObject, key)) {
+				} else if (returnObject[key]) {
 					if (settings.combineMethod === MergeObjectsCombineMethod.ArrayMergeNewArray) {
 						returnObject[key] = [returnObject[key], arg[key]];
-					} else if (typeof returnObject[key] === "number" && typeof arg[key] === "number") {
-						returnObject[key] = (returnObject[key] as number) + (arg[key] as number);
+					} else if (typeof returnObject[key] === "number") {
+						(returnObject[key] as number) += (arg[key] as number);
 					} else {
 						returnObject[key] = arg[key];
 					}
