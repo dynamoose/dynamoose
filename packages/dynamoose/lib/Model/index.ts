@@ -762,9 +762,6 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						this.getInternalProperties(internalProperties).convertKeyToObjectCache = new LRUCache(200);
 					}
 					this.getInternalProperties(internalProperties).convertKeyToObjectCache.set(keyObjString, convertedKeyObj);
-				} else {
-					// Deep copy cached object to prevent mutation of cached data
-					convertedKeyObj = utils.deep_copy(convertedKeyObj);
 				}
 
 				Object.keys(convertedKeyObj).forEach((key) => delete updateObj[key]);
