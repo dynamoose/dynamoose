@@ -18,6 +18,7 @@ import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
+import {LRUCache} from "../utils/LRUCache";
 const {internalProperties} = Internal.General;
 
 export type UpdatePartial<T> = Partial<T> & {
@@ -137,8 +138,8 @@ interface ModelInternalProperties {
 	schemaAttributesCache?: Set<string>;
 	updateTypesMapCache?: Map<string, any>;
 	updateTypeNamesCache?: string[];
-	convertKeyToObjectCache?: Map<string, KeyObject>;
-	attributeTypeCache?: Map<string, any>;
+	convertKeyToObjectCache?: LRUCache<string, KeyObject>;
+	attributeTypeCache?: LRUCache<string, any>;
 }
 
 // Model represents a single entity (ex. User, Movie, Video, Order)
@@ -751,14 +752,19 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				updateObj = utils.deep_copy(keyObj) as Partial<T>;
 
 				// Cache convertKeyToObject results for performance
-				const keyObjString = JSON.stringify(keyObj);
+				// Create stable cache key by sorting object keys to avoid collisions
+				const keyObjString = JSON.stringify(keyObj, Object.keys(keyObj).sort());
 				let convertedKeyObj = this.getInternalProperties(internalProperties).convertKeyToObjectCache?.get(keyObjString);
 				if (!convertedKeyObj) {
 					convertedKeyObj = await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj);
 					if (!this.getInternalProperties(internalProperties).convertKeyToObjectCache) {
-						this.getInternalProperties(internalProperties).convertKeyToObjectCache = new Map();
+						// Use LRU cache with reasonable limit (200 entries)
+						this.getInternalProperties(internalProperties).convertKeyToObjectCache = new LRUCache(200);
 					}
 					this.getInternalProperties(internalProperties).convertKeyToObjectCache.set(keyObjString, convertedKeyObj);
+				} else {
+					// Deep copy cached object to prevent mutation of cached data
+					convertedKeyObj = utils.deep_copy(convertedKeyObj);
 				}
 
 				Object.keys(convertedKeyObj).forEach((key) => delete updateObj[key]);
@@ -784,7 +790,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					subKey = Array.isArray(value) ? subValue : subKey;
 
 					// Cache expensive schema.getAttributeType() calls
-					const attributeTypeKey = `${subKey}:${typeof subValue}`;
+					// Use more robust cache key to avoid collisions (escape delimiter)
+					const attributeTypeKey = `${subKey.replace(/:/g, "\\:")}:${typeof subValue}`;
 					let dynamoType = this.getInternalProperties(internalProperties).attributeTypeCache?.get(attributeTypeKey);
 					if (dynamoType === undefined) {
 						try {
@@ -792,7 +799,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						} catch (e) {} // eslint-disable-line no-empty
 
 						if (!this.getInternalProperties(internalProperties).attributeTypeCache) {
-							this.getInternalProperties(internalProperties).attributeTypeCache = new Map();
+							// Use LRU cache with reasonable limit (500 entries)
+							this.getInternalProperties(internalProperties).attributeTypeCache = new LRUCache(500);
 						}
 						this.getInternalProperties(internalProperties).attributeTypeCache.set(attributeTypeKey, dynamoType);
 					}
@@ -956,7 +964,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const value: ValueType = attributeValues[index];
 				const valueKey = attributeValueKeys[index];
 				// Cache expensive schema.getAttributeType() calls
-				const attributeTypeKey = `${attribute}:${typeof value}`;
+				// Use more robust cache key to avoid collisions (escape delimiter)
+				const attributeTypeKey = `${attribute.replace(/:/g, "\\:")}:${typeof value}`;
 				let dynamoType = this.getInternalProperties(internalProperties).attributeTypeCache?.get(attributeTypeKey);
 				if (dynamoType === undefined) {
 					try {
@@ -964,7 +973,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					} catch (e) {} // eslint-disable-line no-empty
 
 					if (!this.getInternalProperties(internalProperties).attributeTypeCache) {
-						this.getInternalProperties(internalProperties).attributeTypeCache = new Map();
+						// Use LRU cache with reasonable limit (500 entries)
+						this.getInternalProperties(internalProperties).attributeTypeCache = new LRUCache(500);
 					}
 					this.getInternalProperties(internalProperties).attributeTypeCache.set(attributeTypeKey, dynamoType);
 				}
@@ -1176,6 +1186,20 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	// Serialize Many
 	serializeMany (itemsArray: ModelType<ItemCarrier>[] = [], nameOrOptions: SerializerOptions | string): any {
 		return this.serializer.getInternalProperties(internalProperties).serializeMany(itemsArray, nameOrOptions);
+	}
+
+	/**
+	 * Clear all performance caches for this model.
+	 * This should be called when schema or model configuration changes
+	 * to prevent stale cached data.
+	 */
+	clearCache (): void {
+		const props = this.getInternalProperties(internalProperties);
+		props.schemaAttributesCache = undefined;
+		props.updateTypesMapCache = undefined;
+		props.updateTypeNamesCache = undefined;
+		props.convertKeyToObjectCache?.clear();
+		props.attributeTypeCache?.clear();
 	}
 }
 
