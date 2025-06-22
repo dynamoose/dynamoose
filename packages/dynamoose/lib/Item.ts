@@ -680,18 +680,18 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 						let needsInfiniteTracking = false;
 
 						try {
-							const schemaValue = schema.getAttributeSettingValue("schema", genericKey, {typeIndexOptionMap});
+							const schemaValue = schema.getAttributeSettingValue("schema", genericKey);
 							if (schemaValue === dynamooseAny) {
 								needsInfiniteTracking = true;
 							} else {
 								// Check for THIS type (dynamoose.type.THIS) which is used for self-referencing models
-								const attributeValue = schema.getAttributeValue(genericKey, {typeIndexOptionMap});
+								const attributeValue = schema.getAttributeValue(genericKey);
 								const typeVal = typeof attributeValue === "object" && !Array.isArray(attributeValue) && attributeValue.type ? attributeValue.type : attributeValue;
 								if (typeVal === Internal.Public.this) {
 									needsInfiniteTracking = true;
 								} else {
 									// Check for Set or Model types without expensive getValueTypeCheckResult
-									const attributeType = schema.getAttributeType(genericKey, {typeIndexOptionMap});
+									const attributeType = schema.getAttributeType(genericKey);
 									if (attributeType && (attributeType.includes("Set") || attributeType.includes("Model"))) {
 										needsInfiniteTracking = true;
 									}
