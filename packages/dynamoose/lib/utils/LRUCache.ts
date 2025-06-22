@@ -1,7 +1,7 @@
 /**
  * Simple LRU (Least Recently Used) Cache implementation
  * Prevents unbounded memory growth while maintaining performance benefits
- * 
+ *
  * Note: This cache stores references to objects. Callers should ensure
  * they do not mutate cached objects to prevent cache corruption.
  */
