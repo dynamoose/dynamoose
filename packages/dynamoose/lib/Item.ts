@@ -653,11 +653,12 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	mapAttributes("toDynamo");
 
 	// Type check
-	const typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
+	const skipValidationForNonStrictRead = settings.readStrict === false && settings.type === "fromDynamo";
+	const typeIndexOptionMap = skipValidationForNonStrictRead ? undefined : schema.getTypePaths(returnObject, settings);
 	if (settings.typeCheck === undefined || settings.typeCheck === true) {
 		const validParents = []; // This array is used to allow for set contents to not be type checked
 		const keysToDelete = [];
-		const checkTypeFunction = (item): void => {
+		const checkTypeFunction = (item: any): void => {
 			const [key, value] = item;
 			if (validParents.find((parent) => key.startsWith(parent.key) && (parent.infinite || key.split(".").length === parent.key.split(".").length + 1))) {
 				return;
@@ -666,7 +667,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const existsInSchema = schemaAttributes.includes(genericKey);
 			if (existsInSchema) {
 				// For readStrict: false, skip expensive type validation but still handle schema attributes
-				if (settings.readStrict === false && settings.type === "fromDynamo") {
+				if (skipValidationForNonStrictRead) {
 					// Lightweight check for parent tracking without expensive type validation
 					if (Array.isArray(value)) {
 						// Handle arrays by recursively checking each element
@@ -836,7 +837,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}));
 	}
-	if (settings.validate) {
+	// Skip validation when readStrict is false (data from DB is assumed valid)
+	if (settings.validate && !skipValidationForNonStrictRead) {
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
@@ -868,7 +870,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}
 	}
-	if (settings.required) {
+	// Skip required validation when readStrict is false (data from DB is assumed valid)
+	if (settings.required && !skipValidationForNonStrictRead) {
 		let attributesToCheck = await Item.attributesWithSchema(returnObject, model);
 		if (settings.required === "nested") {
 			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute === key || attribute.startsWith(key + ".")));
@@ -892,7 +895,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}));
 	}
-	if (settings.enum) {
+	// Skip enum validation when readStrict is false (data from DB is assumed valid)
+	if (settings.enum && !skipValidationForNonStrictRead) {
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;

@@ -797,6 +797,48 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)(1)).rejects.toEqual(new CustomError.TypeMismatch("Expected birthday to be of type date, instead found type string."));
 				});
 
+				it("Should return object with Number for ISO Date when readStrict is false", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": {
+						"type": {
+							"value": Date,
+							"settings": {
+								"storage": "iso"
+							}
+						}
+					}});
+					new dynamoose.Table("User", [User], {"readStrict": false});
+					const date = new Date();
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"N": date.getTime()}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(user.id).toEqual(1);
+					expect(user.name).toEqual("Charlie");
+					expect(user.birthday).toEqual(date.getTime()); // Should preserve raw Number value
+				});
+
+				it("Should return object with ISO Date string when readStrict is false", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					new dynamoose.Table("User", [User], {"readStrict": false});
+					const date = new Date();
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": date.toISOString()}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(user.id).toEqual(1);
+					expect(user.name).toEqual("Charlie");
+					expect(user.birthday).toEqual(date.toISOString()); // Should preserve raw String value
+				});
+
+				it("Should return object with mismatched custom type when readStrict is false", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "birthday": Date});
+					new dynamoose.Table("User", [User], {"readStrict": false});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "birthday": {"S": "Hello World"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(user.id).toEqual(1);
+					expect(user.name).toEqual("Charlie");
+					expect(user.birthday).toEqual("Hello World"); // Should preserve raw String value instead of throwing
+				});
+
 				it("Should return object with correct values with object property", async () => {
 					User = dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
 					new dynamoose.Table("User", [User]);
@@ -833,6 +875,26 @@ describe("Model", () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"BOOL": true}}}}});
 
 					return expect(callType.func(User).bind(User)(1)).rejects.toEqual(new CustomError.TypeMismatch("Expected address.country to be of type string, instead found type boolean."));
+				});
+
+				it("Should return object with wrong type for object when readStrict is false", async () => {
+					User = dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					new dynamoose.Table("User", [User], {"readStrict": false});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"S": "test"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(user.id).toEqual(1);
+					expect(user.address).toEqual("test"); // Should preserve raw String value
+				});
+
+				it("Should return object with wrong type for nested object attribute when readStrict is false", async () => {
+					User = dynamoose.model("User", {"id": Number, "address": {"type": Object, "schema": {"street": String, "country": {"type": String, "required": true}}}});
+					new dynamoose.Table("User", [User], {"readStrict": false});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"country": {"BOOL": true}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(user.id).toEqual(1);
+					expect(user.address).toEqual({"country": true}); // Should preserve raw boolean value
 				});
 
 				it("Should return object with correct values with object property and saveUnknown set to true", async () => {
@@ -1219,6 +1281,17 @@ describe("Model", () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}});
 
 					return expect(callType.func(User).bind(User)(1)).rejects.toEqual(new CustomError.TypeMismatch("Expected age to be of type number, instead found type string."));
+				});
+
+				it("Should return object with type mismatch when readStrict is false", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
+					new dynamoose.Table("User", [User], {"readStrict": false});
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user).toBeInstanceOf(Object);
+					expect(user.id).toEqual(1);
+					expect(user.name).toEqual("Charlie");
+					expect(user.age).toEqual("Hello World"); // Should preserve raw String value
 				});
 
 				it("Should wait for model to be ready prior to running DynamoDB API call", async () => {
