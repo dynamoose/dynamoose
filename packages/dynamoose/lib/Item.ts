@@ -738,18 +738,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		keysToDelete.reverse().forEach((key) => utils.object.delete(returnObject, key));
 	}
 
-	// Cache attributesWithSchema for performance (used multiple times)
-	let attributesWithSchemaCache: string[] | undefined;
-	const getAttributesWithSchema = async (): Promise<string[]> => {
-		if (!attributesWithSchemaCache) {
-			attributesWithSchemaCache = await Item.attributesWithSchema(returnObject, model);
-		}
-		return attributesWithSchemaCache;
-	};
-
-	// Skip defaults when readStrict is false (defaults already applied on create)
-	if ((settings.defaults || settings.forceDefault) && !skipValidationForNonStrictRead) {
-		await Promise.all((await getAttributesWithSchema()).map(async (key) => {
+	if (settings.defaults || settings.forceDefault) {
+		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			if (value === dynamooseUndefined) {
 				utils.object.set(returnObject, key, undefined);
@@ -771,7 +761,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 	// Custom Types
 	if (settings.customTypesDynamo) {
-		(await getAttributesWithSchema()).map((key) => {
+		(await Item.attributesWithSchema(returnObject, model)).map((key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
@@ -831,7 +821,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 	if (settings.modifiers) {
 		await Promise.all(settings.modifiers.map(async (modifier) => {
-			await Promise.all((await getAttributesWithSchema()).map(async (key) => {
+			await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
 				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true, typeIndexOptionMap});
 				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
@@ -849,7 +839,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 	// Skip validation when readStrict is false (data from DB is assumed valid)
 	if (settings.validate && !skipValidationForNonStrictRead) {
-		await Promise.all((await getAttributesWithSchema()).map(async (key) => {
+		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
@@ -882,7 +872,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 	// Skip required validation when readStrict is false (data from DB is assumed valid)
 	if (settings.required && !skipValidationForNonStrictRead) {
-		let attributesToCheck = await getAttributesWithSchema();
+		let attributesToCheck = await Item.attributesWithSchema(returnObject, model);
 		if (settings.required === "nested") {
 			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute === key || attribute.startsWith(key + ".")));
 		}
@@ -907,7 +897,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 	// Skip enum validation when readStrict is false (data from DB is assumed valid)
 	if (settings.enum && !skipValidationForNonStrictRead) {
-		await Promise.all((await getAttributesWithSchema()).map(async (key) => {
+		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
