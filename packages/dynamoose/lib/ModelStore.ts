@@ -31,3 +31,5 @@ returnObject.forTableName = (tableName: string): Model<Item>[] | undefined => {
 };
 
 export default returnObject;
+
+export const ModelStore = returnObject;
