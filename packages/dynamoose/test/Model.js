@@ -3071,6 +3071,133 @@ describe("Model", () => {
 					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"business.companyName.": "ACME Corp"}})).rejects.toThrow("Invalid dot notation path: business.companyName.. Path cannot have empty components.");
 				});
 
+				it("Should send correct params to updateItem with $REMOVE nested attributes using dot notation", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String, "description": String}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["business.description"]});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "description"
+						},
+						"UpdateExpression": "REMOVE #a0.#a1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $REMOVE deep nested attributes using dot notation", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"address": {"type": Object, "schema": {"city": String, "country": String}}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["business.address.city"]});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "address",
+							"#a2": "city"
+						},
+						"UpdateExpression": "REMOVE #a0.#a1.#a2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with multiple $REMOVE nested attributes", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"description": String}}, "user": {"type": Object, "schema": {"avatar": String}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["business.description", "user.avatar"]});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "description",
+							"#a2": "user",
+							"#a3": "avatar"
+						},
+						"UpdateExpression": "REMOVE #a0.#a1, #a2.#a3",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with mixed $REMOVE and $SET with nested attributes", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String, "description": String}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"business.companyName": "ACME Corp"}, "$REMOVE": ["business.description"]});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "companyName",
+							"#a2": "business",
+							"#a3": "description"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "ACME Corp"
+							}
+						},
+						"UpdateExpression": "REMOVE #a2.#a3 SET #a0.#a1 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should throw error for invalid $REMOVE dot notation with empty components", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"description": String}}});
+					new dynamoose.Table("User", [User]);
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["business..description"]})).rejects.toThrow("Invalid dot notation path: business..description. Path cannot have empty components.");
+				});
+
+				it("Should send correct params to updateItem with $REMOVE non-nested attributes", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name", "age"]});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "age"
+						},
+						"UpdateExpression": "REMOVE #a0, #a1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem with $ADD update expression", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}});
