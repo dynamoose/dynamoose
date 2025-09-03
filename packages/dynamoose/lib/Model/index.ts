@@ -784,10 +784,22 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					let updateType = updateTypesMap.get(key);
 
 					const expressionKey = `#a${index}`;
-					subKey = Array.isArray(value) ? subValue : subKey;
+					// Handle array values correctly
+					// For $REMOVE arrays, the actual paths are the values in the array
+					// For other arrays, use the existing logic
+					if (Array.isArray(value)) {
+						if (updateType.name === "$REMOVE") {
+							// For $REMOVE, subValue contains the attribute path
+							subKey = subValue;
+							subValue = undefined; // $REMOVE doesn't have values
+						} else {
+							// For other array operations, use existing pattern
+							subKey = subValue;
+						}
+					}
 
 					// Validate dot notation paths early to provide better error messages
-					if (subKey.includes(".") && !Array.isArray(value)) {
+					if (subKey && typeof subKey === "string" && subKey.includes(".")) {
 						const pathComponents = subKey.split(".");
 						if (pathComponents.some((component) => !component)) {
 							throw new Error(`Invalid dot notation path: ${subKey}. Path cannot have empty components.`);
@@ -838,8 +850,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
 					let finalExpressionKey = expressionKey;
 
-					// Handle dot notation in attribute names for nested updates
-					if (subKey.includes(".") && !Array.isArray(value)) {
+					// Handle dot notation in attribute names for nested updates (including $REMOVE)
+					if (subKey && typeof subKey === "string" && subKey.includes(".")) {
 						// Split the dot notation path into components (already validated above)
 						const pathComponents = subKey.split(".");
 
