@@ -786,6 +786,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const expressionKey = `#a${index}`;
 					subKey = Array.isArray(value) ? subValue : subKey;
 
+					// Validate dot notation paths early to provide better error messages
+					if (subKey.includes('.') && !Array.isArray(value)) {
+						const pathComponents = subKey.split('.');
+						if (pathComponents.some(component => !component)) {
+							throw new Error(`Invalid dot notation path: ${subKey}. Path cannot have empty components.`);
+						}
+					}
+
 					// Cache expensive schema.getAttributeType() calls
 					// Use more robust cache key to avoid collisions (escape delimiter)
 					const attributeTypeKey = `${subKey.replace(/:/g, "\\:")}:${typeof subValue}`;
@@ -828,19 +836,46 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 
 					let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
-					accumulator.ExpressionAttributeNames[expressionKey] = subKey;
+					let finalExpressionKey = expressionKey;
+					
+					// Handle dot notation in attribute names for nested updates
+					if (subKey.includes('.') && !Array.isArray(value)) {
+						// Split the dot notation path into components (already validated above)
+						const pathComponents = subKey.split('.');
+						
+						// Generate expression attribute names for each component
+						const expressionParts = [];
+						let currentIndex = index;
+						
+						for (const component of pathComponents) {
+							const componentKey = `#a${currentIndex}`;
+							accumulator.ExpressionAttributeNames[componentKey] = component;
+							expressionParts.push(componentKey);
+							currentIndex++;
+						}
+						
+						// Build the nested expression key
+						finalExpressionKey = expressionParts.join('.');
+						
+						// Adjust the index for next iteration (we used multiple indices)
+						index = currentIndex - 1; // -1 because index++ happens at the end of the loop
+					} else {
+						// Original behavior for non-dot notation keys
+						accumulator.ExpressionAttributeNames[expressionKey] = subKey;
+					}
+					
 					if (!updateType.attributeOnly) {
 						accumulator.ExpressionAttributeValues[expressionValue] = subValue;
 					}
 
 					if (dynamoType === "L" && updateType.name === "$ADD") {
-						expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
+						expressionValue = `list_append(${finalExpressionKey}, ${expressionValue})`;
 						updateType = updateTypesMap.get("$SET");
 					}
 
 					const operator = updateType.operator || (updateType.attributeOnly ? "" : " ");
 
-					accumulator.UpdateExpression[updateType.name.slice(1)].push(`${expressionKey}${operator}${expressionValue}`);
+					accumulator.UpdateExpression[updateType.name.slice(1)].push(`${finalExpressionKey}${operator}${expressionValue}`);
 
 					index++;
 				}
