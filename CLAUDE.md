@@ -25,6 +25,17 @@ npm run build:sourcemap:watch   # Build with source maps in watch mode
 ```bash
 npm test                        # Run tests with coverage
 npm run test:types              # Run TypeScript type tests
+
+# In packages/dynamoose:
+npm run test:nocoverage         # Run tests without coverage (faster)
+npm test -- --testNamePattern="pattern"  # Run specific tests
+```
+
+**Benchmarking (in packages/dynamoose):**
+```bash
+npm run benchmark               # Run all benchmarks
+npm run benchmark:conversions   # Schema conversions benchmark
+npm run benchmark:models        # Model operations benchmark
 ```
 
 **Linting:**
@@ -77,6 +88,18 @@ The Schema system supports:
 - Nested schemas and dynamic typing
 - Single table design with multiple schema variants
 
+### Key Relationships
+
+**Model-Schema-Item Pattern:**
+- Each `Model` has exactly one `Schema` that defines its structure
+- `Item` instances are created from Models and tracked for changes
+- Items use the parent Model's Schema for validation and serialization
+
+**AWS SDK Integration:**
+- Uses AWS SDK v3 (`@aws-sdk/client-dynamodb` and `@aws-sdk/util-dynamodb`)
+- Internal methods follow pattern: `internal.name()` for DynamoDB operations
+- Converter handles marshalling/unmarshalling between JS and DynamoDB types
+
 ### Package Structure
 
 **dynamoose package:**
@@ -119,3 +142,9 @@ The Schema system supports:
 - Run `npm run prepare` to bootstrap and build all packages
 - Individual packages can be built independently
 - Package versions are managed centrally via `lerna.json`
+
+**Pull Request Requirements:**
+- Add a summary to `PENDING_CHANGELOG.md` when making changes
+- Use `CHANGELOG.md` as a template for formatting
+- Ensure all tests pass and coverage is maintained
+- Run linter before submitting (`npm run lint`)

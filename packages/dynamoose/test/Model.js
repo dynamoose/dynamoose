@@ -2904,6 +2904,173 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem with $SET nested update using dot notation", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String, "address": {"type": Object, "schema": {"city": String, "country": String}}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"business.companyName": "ACME Corp"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "companyName"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "ACME Corp"
+							}
+						},
+						"UpdateExpression": "SET #a0.#a1 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $SET deep nested update using dot notation", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String, "address": {"type": Object, "schema": {"city": String, "country": String}}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"business.address.city": "Madrid"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "address",
+							"#a2": "city"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Madrid"
+							}
+						},
+						"UpdateExpression": "SET #a0.#a1.#a2 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with multiple nested updates using dot notation", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String, "address": {"type": Object, "schema": {"city": String, "country": String}}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"business.companyName": "ACME Corp", "business.address.city": "Madrid"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "companyName",
+							"#a2": "business",
+							"#a3": "address",
+							"#a4": "city"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "ACME Corp"
+							},
+							":v2": {
+								"S": "Madrid"
+							}
+						},
+						"UpdateExpression": "SET #a0.#a1 = :v0, #a2.#a3.#a4 = :v2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with mixed nested and non-nested updates", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "business": {"type": Object, "schema": {"companyName": String}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "John", "business.companyName": "ACME Corp"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "business",
+							"#a2": "companyName"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "John"
+							},
+							":v1": {
+								"S": "ACME Corp"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1.#a2 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with nested update not using $SET object", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"business.companyName": "ACME Corp"});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "business",
+							"#a1": "companyName"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "ACME Corp"
+							}
+						},
+						"UpdateExpression": "SET #a0.#a1 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should throw error for invalid dot notation with empty components", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String}}});
+					new dynamoose.Table("User", [User]);
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"business..companyName": "ACME Corp"}})).rejects.toThrow("Invalid dot notation path: business..companyName. Path cannot have empty components.");
+				});
+
+				it("Should throw error for invalid dot notation starting with dot", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String}}});
+					new dynamoose.Table("User", [User]);
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {".business.companyName": "ACME Corp"}})).rejects.toThrow("Invalid dot notation path: .business.companyName. Path cannot have empty components.");
+				});
+
+				it("Should throw error for invalid dot notation ending with dot", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"companyName": String}}});
+					new dynamoose.Table("User", [User]);
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"business.companyName.": "ACME Corp"}})).rejects.toThrow("Invalid dot notation path: business.companyName.. Path cannot have empty components.");
+				});
+
 				it("Should send correct params to updateItem with $ADD update expression", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}});
