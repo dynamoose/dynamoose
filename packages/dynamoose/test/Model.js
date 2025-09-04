@@ -3198,6 +3198,344 @@ describe("Model", () => {
 					});
 				});
 
+				// Array indexing tests
+				it("Should send correct params to updateItem with $SET array element update using bracket notation", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"keywords[0]": "updated-keyword"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "keywords"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "updated-keyword"
+							}
+						},
+						"UpdateExpression": "SET #a0[0] = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $SET nested property in array element", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "representatives": {"type": Array, "schema": [{"type": Object, "schema": {"firstName": String, "lastName": String, "email": String}}]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"representatives[0].firstName": "John"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "representatives",
+							"#a1": "firstName"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "John"
+							}
+						},
+						"UpdateExpression": "SET #a0[0].#a1 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $SET deep nested array indexing", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"items": {"type": Array, "schema": [{"type": Object, "schema": {"value": Number, "tags": {"type": Array, "schema": [String]}}}]}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"data.items[1].value": 42}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "data",
+							"#a1": "items",
+							"#a2": "value"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": "42"
+							}
+						},
+						"UpdateExpression": "SET #a0.#a1[1].#a2 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with multiple array index updates", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"keywords[0]": "first", "keywords[2]": "third"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "keywords",
+							"#a1": "keywords"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "first"
+							},
+							":v1": {
+								"S": "third"
+							}
+						},
+						"UpdateExpression": "SET #a0[0] = :v0, #a1[2] = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $REMOVE array element", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["keywords[1]"]});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "keywords"
+						},
+						"UpdateExpression": "REMOVE #a0[1]",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $REMOVE multiple array elements", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}, "tags": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["keywords[1]", "tags[0]", "keywords[3]"]});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "keywords",
+							"#a1": "tags",
+							"#a2": "keywords"
+						},
+						"UpdateExpression": "REMOVE #a0[1], #a1[0], #a2[3]",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should throw error when trying to $REMOVE property from array element", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "representatives": {"type": Array, "schema": [{"type": Object, "schema": {"firstName": String, "email": String}}]}});
+					new dynamoose.Table("User", [User]);
+
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["representatives[0].email"]})).rejects.toThrow(
+						"DynamoDB does not support removing properties from objects within lists"
+					);
+				});
+
+				it("Should throw error for invalid array index - empty brackets", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"keywords[]": "test"}})).rejects.toThrow(
+						"array index cannot be empty"
+					);
+				});
+
+				it("Should throw error for invalid array index - non-numeric", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"keywords[abc]": "test"}})).rejects.toThrow(
+						"must be numeric"
+					);
+				});
+
+				it("Should throw error for invalid array index - negative", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"keywords[-1]": "test"}})).rejects.toThrow(
+						"must be numeric"
+					);
+				});
+
+				it("Should throw error for unclosed bracket in path", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+
+					await expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"keywords[0": "test"}})).rejects.toThrow(
+						"unclosed bracket"
+					);
+				});
+
+				it("Should handle mixed dot and bracket notation correctly", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "user": {"type": Object, "schema": {"addresses": {"type": Array, "schema": [{"type": Object, "schema": {"city": String}}]}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"user.addresses[0].city": "Madrid"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "user",
+							"#a1": "addresses",
+							"#a2": "city"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Madrid"
+							}
+						},
+						"UpdateExpression": "SET #a0.#a1[0].#a2 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				// Additional comprehensive tests for array indexing
+				it("Should handle $SET with array element replacement", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "items": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "value": Number}}]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"items[0]": {"name": "newItem", "value": 100}}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0[0] = :v0");
+					expect(updateItemParams.ExpressionAttributeNames["#a0"]).toEqual("items");
+					expect(updateItemParams.ExpressionAttributeValues[":v0"]).toEqual({
+						"M": {
+							"name": {"S": "newItem"},
+							"value": {"N": "100"}
+						}
+					});
+				});
+
+				it("Should handle $SET with multiple nested array indices", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "matrix": {"type": Array, "schema": [{"type": Array, "schema": [Number]}]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"matrix[0][1]": 42}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0[0][1] = :v0");
+					expect(updateItemParams.ExpressionAttributeNames["#a0"]).toEqual("matrix");
+					expect(updateItemParams.ExpressionAttributeValues[":v0"]).toEqual({"N": "42"});
+				});
+
+				it("Should handle combined $SET and $REMOVE with arrays", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "keywords": {"type": Array, "schema": [String]}, "tags": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {
+						"$SET": {"keywords[0]": "updated"},
+						"$REMOVE": ["tags[1]"]
+					});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					// The order of SET and REMOVE can vary, check both parts are present
+					expect(updateItemParams.UpdateExpression).toContain("SET #a0[0] = :v0");
+					expect(updateItemParams.UpdateExpression).toContain("REMOVE #a1[1]");
+					expect(updateItemParams.ExpressionAttributeNames["#a0"]).toEqual("keywords");
+					expect(updateItemParams.ExpressionAttributeNames["#a1"]).toEqual("tags");
+					expect(updateItemParams.ExpressionAttributeValues[":v0"]).toEqual({"S": "updated"});
+				});
+
+				it("Should handle $SET with array index on nested object arrays", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {
+						"id": Number,
+						"department": {
+							"type": Object,
+							"schema": {
+								"teams": {
+									"type": Array,
+									"schema": [{
+										"type": Object,
+										"schema": {
+											"members": {"type": Array, "schema": [String]}
+										}
+									}]
+								}
+							}
+						}
+					});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"department.teams[0].members[1]": "John"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1[0].#a2[1] = :v0");
+					expect(updateItemParams.ExpressionAttributeNames["#a0"]).toEqual("department");
+					expect(updateItemParams.ExpressionAttributeNames["#a1"]).toEqual("teams");
+					expect(updateItemParams.ExpressionAttributeNames["#a2"]).toEqual("members");
+					expect(updateItemParams.ExpressionAttributeValues[":v0"]).toEqual({"S": "John"});
+				});
+
+				it("Should validate array index is within JavaScript safe integer range", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "items": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					// Test with very large index (still valid for DynamoDB)
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"items[999999]": "test"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0[999999] = :v0");
+				});
+
+				it("Should handle $SET with boolean values in array elements", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "flags": {"type": Array, "schema": [Boolean]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"flags[2]": false}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0[2] = :v0");
+					expect(updateItemParams.ExpressionAttributeValues[":v0"]).toEqual({"BOOL": false});
+				});
+
+				it("Should handle $SET with null values in array elements", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "optional": {"type": Array, "schema": [{"type": [String, {"value": "null", "type": dynamoose.type.NULL}]}]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"optional[1]": null}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0[1] = :v0");
+					expect(updateItemParams.ExpressionAttributeValues[":v0"]).toEqual({"NULL": true});
+				});
+
 				it("Should send correct params to updateItem with $ADD update expression", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 5}});

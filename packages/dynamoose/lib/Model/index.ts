@@ -4,6 +4,7 @@ import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, T
 import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
 import utils from "../utils";
 import ddb from "../aws/ddb/internal";
+import awsConverter from "../aws/converter";
 import Internal from "../Internal";
 import {Serializer, SerializerOptions} from "../Serializer";
 import {Condition, ConditionInitializer} from "../Condition";
@@ -20,6 +21,104 @@ import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
 import {LRUCache} from "../utils/LRUCache";
 const {internalProperties} = Internal.General;
+
+// Path parsing types and functions for array indexing support
+interface PathSegment {
+	type: "attribute" | "index";
+	value: string | number;
+}
+
+/**
+ * Parses a path that may contain array indices and dot notation
+ * Examples:
+ * 'keywords[0]' -> [{type: 'attribute', value: 'keywords'}, {type: 'index', value: 0}]
+ * 'reps[0].name' -> [{type: 'attribute', value: 'reps'}, {type: 'index', value: 0}, {type: 'attribute', value: 'name'}]
+ * 'data.items[1].tags[2]' -> [{type: 'attribute', value: 'data'}, {type: 'attribute', value: 'items'},
+ *                              {type: 'index', value: 1}, {type: 'attribute', value: 'tags'}, {type: 'index', value: 2}]
+ */
+function parsePathWithArrayIndices(path: string): PathSegment[] {
+	const segments: PathSegment[] = [];
+	let current = "";
+	let i = 0;
+
+	while (i < path.length) {
+		const char = path[i];
+
+		if (char === "[") {
+			// We've hit an array index, save current attribute if any
+			if (current) {
+				segments.push({"type": "attribute", "value": current});
+				current = "";
+			}
+
+			// Find the closing bracket
+			const closeBracket = path.indexOf("]", i);
+			if (closeBracket === -1) {
+				throw new Error(`Invalid path: unclosed bracket in '${path}'`);
+			}
+
+			// Extract and validate the index
+			const indexStr = path.substring(i + 1, closeBracket);
+			validateArrayIndex(indexStr, path);
+			segments.push({"type": "index", "value": parseInt(indexStr, 10)});
+
+			i = closeBracket + 1;
+
+			// Skip dot after bracket if present
+			if (i < path.length && path[i] === ".") {
+				i++;
+			}
+		} else if (char === ".") {
+			// Dot separator - save current attribute
+			if (current) {
+				segments.push({"type": "attribute", "value": current});
+				current = "";
+			}
+			i++;
+		} else {
+			// Regular character - accumulate
+			current += char;
+			i++;
+		}
+	}
+
+	// Add any remaining attribute
+	if (current) {
+		segments.push({"type": "attribute", "value": current});
+	}
+
+	return segments;
+}
+
+/**
+ * Validates an array index string
+ */
+function validateArrayIndex(indexStr: string, fullPath: string): void {
+	if (!indexStr) {
+		throw new Error(`Invalid array index in path '${fullPath}': array index cannot be empty`);
+	}
+	if (!/^\d+$/.test(indexStr)) {
+		throw new Error(`Invalid array index in path '${fullPath}': '${indexStr}' must be numeric`);
+	}
+	const index = parseInt(indexStr, 10);
+	if (index < 0) {
+		throw new Error(`Invalid array index in path '${fullPath}': index must be non-negative`);
+	}
+}
+
+/**
+ * Validates REMOVE operations for DynamoDB limitations
+ */
+function validateRemoveOperation(path: string, updateType: string): void {
+	// DynamoDB limitation: Cannot REMOVE properties from objects within lists
+	if (updateType === "$REMOVE" && /\[\d+\]\.[^.[]+/.test(path)) {
+		throw new Error(
+			"DynamoDB does not support removing properties from objects within lists. " +
+			`Path '${path}' attempts to remove a property from a list element. ` +
+			"To modify an object in a list, use SET to replace the entire object with the property removed."
+		);
+	}
+}
 
 export type UpdatePartial<T> = Partial<T> & {
 	$SET?: Partial<T>;
@@ -716,6 +815,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
+		// Track which values are already in DynamoDB format to avoid double conversion
+		const alreadyConvertedValues = new Set<string>();
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
@@ -782,6 +883,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					let subValue = value[subKey];
 
 					let updateType = updateTypesMap.get(key);
+					const originalUpdateType = updateType; // Keep track of the original operation type
 
 					const expressionKey = `#a${index}`;
 					// Handle array values correctly
@@ -806,13 +908,36 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						}
 					}
 
+					// For array indexed paths, extract the base attribute name for schema validation
+					let baseAttributeName = subKey;
+
+					if (subKey && typeof subKey === "string" && subKey.includes("[")) {
+						// Check if we're updating a property within an array element
+						// e.g., "reps[0].firstName" means we're updating firstName, not the whole object
+						const bracketIndex = subKey.indexOf("[");
+						const closeBracketIndex = subKey.indexOf("]");
+						if (closeBracketIndex !== -1 && closeBracketIndex < subKey.length - 1 && subKey[closeBracketIndex + 1] === ".") {
+							// This is a nested property in an array element like "reps[0].firstName"
+							// For nested properties, we don't need the array for validation
+							// We're setting a string/number/etc, not an object
+							baseAttributeName = subKey.substring(0, bracketIndex);
+						} else {
+							// Simple array element like "keywords[0]"
+							baseAttributeName = subKey.substring(0, bracketIndex);
+						}
+					} else if (subKey && typeof subKey === "string" && subKey.includes(".")) {
+						// For dot notation, use the first component
+						// e.g., "business.address.city" -> "business"
+						baseAttributeName = subKey.split(".")[0];
+					}
+
 					// Cache expensive schema.getAttributeType() calls
 					// Use more robust cache key to avoid collisions (escape delimiter)
-					const attributeTypeKey = `${subKey.replace(/:/g, "\\:")}:${typeof subValue}`;
+					const attributeTypeKey = `${baseAttributeName.replace(/:/g, "\\:")}:${typeof subValue}`;
 					let dynamoType = this.getInternalProperties(internalProperties).attributeTypeCache?.get(attributeTypeKey);
 					if (dynamoType === undefined) {
 						try {
-							dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
+							dynamoType = schema.getAttributeType(baseAttributeName, subValue, {"unknownAttributeAllowed": true});
 						} catch (e) {} // eslint-disable-line no-empty
 
 						if (!this.getInternalProperties(internalProperties).attributeTypeCache) {
@@ -821,10 +946,30 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						}
 						this.getInternalProperties(internalProperties).attributeTypeCache.set(attributeTypeKey, dynamoType);
 					}
-					const attributeExists = schemaAttributesSet.has(subKey);
+					const attributeExists = schemaAttributesSet.has(baseAttributeName);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
-						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
+						// Check if we're updating a path with array indices or nested dot notation
+						const hasArrayIndex = subKey && typeof subKey === "string" && subKey.includes("[");
+						const hasDotNotation = subKey && typeof subKey === "string" && subKey.includes(".");
+
+						if (hasArrayIndex || hasDotNotation) {
+							// For paths with array indices or dot notation, we're setting a single value at a specific location
+							// Convert the value directly to DynamoDB format using the AWS converter
+							// This handles cases like:
+							// - "keywords[0]" = "value"
+							// - "reps[0].firstName" = "John"
+							// - "business.companyName" = "New Name"
+							// - "business.address.city" = "Madrid"
+							subValue = awsConverter().convertToAttr(subValue);
+							// Mark this value as already converted to prevent double conversion later
+							alreadyConvertedValues.add(`:v${index}`);
+						} else {
+							// Original logic for simple top-level attributes like "name", "age"
+							const schemaObj = {[baseAttributeName]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue};
+							const convertedObj = await this.Item.objectFromSchema(schemaObj, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any);
+							subValue = convertedObj[baseAttributeName];
+						}
 					}
 
 					if (subValue === dynamooseUndefined || subValue === undefined) {
@@ -836,7 +981,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 
 					if (subValue !== dynamooseUndefined) {
-						const defaultValue = await schema.defaultCheck(subKey, undefined, updateType.objectFromSchemaSettings);
+						const defaultValue = await schema.defaultCheck(baseAttributeName, undefined, updateType.objectFromSchemaSettings);
 						if (defaultValue) {
 							subValue = defaultValue;
 							updateType = updateTypesMap.get("$SET");
@@ -844,35 +989,62 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 
 					if (updateType.objectFromSchemaSettings.required === true) {
-						await schema.requiredCheck(subKey, undefined);
+						await schema.requiredCheck(baseAttributeName, undefined);
+					}
+
+					// Validate REMOVE operations for DynamoDB limitations
+					// Only validate if this was originally a REMOVE operation, not if SET switched to REMOVE
+					if (originalUpdateType.name === "$REMOVE" && subKey && typeof subKey === "string") {
+						validateRemoveOperation(subKey, originalUpdateType.name);
 					}
 
 					let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
 					let finalExpressionKey = expressionKey;
 
-					// Handle dot notation in attribute names for nested updates (including $REMOVE)
-					if (subKey && typeof subKey === "string" && subKey.includes(".")) {
-						// Split the dot notation path into components (already validated above)
-						const pathComponents = subKey.split(".");
+					// Handle paths with dot notation and/or array indices
+					if (subKey && typeof subKey === "string" && (subKey.includes(".") || subKey.includes("["))) {
+						// Parse the path to handle both dot notation and array indices
+						const segments = parsePathWithArrayIndices(subKey);
 
-						// Generate expression attribute names for each component
-						const expressionParts = [];
+						// Build expression incrementally for better performance
+						const expressionBuilder: string[] = [];
 						let currentIndex = index;
+						let previousWasAttribute = false;
+						let previousWasIndex = false;
 
-						for (const component of pathComponents) {
-							const componentKey = `#a${currentIndex}`;
-							accumulator.ExpressionAttributeNames[componentKey] = component;
-							expressionParts.push(componentKey);
-							currentIndex++;
+						for (const segment of segments) {
+							if (segment.type === "attribute") {
+								// Add dot separator between consecutive attributes or after an index
+								if (previousWasAttribute || previousWasIndex) {
+									expressionBuilder.push(".");
+								}
+								
+								// Create expression attribute name
+								const componentKey = `#a${currentIndex}`;
+								accumulator.ExpressionAttributeNames[componentKey] = segment.value as string;
+								expressionBuilder.push(componentKey);
+								currentIndex++;
+								
+								// Track state for next iteration
+								previousWasAttribute = true;
+								previousWasIndex = false;
+							} else if (segment.type === "index") {
+								// Array indices remain literal in the expression
+								expressionBuilder.push(`[${segment.value}]`);
+								
+								// Track state for next iteration
+								previousWasAttribute = false;
+								previousWasIndex = true;
+							}
 						}
 
-						// Build the nested expression key
-						finalExpressionKey = expressionParts.join(".");
+						// Join all parts to create the final expression
+						finalExpressionKey = expressionBuilder.join("");
 
-						// Adjust the index for next iteration (we used multiple indices)
+						// Adjust the index for next iteration
 						index = currentIndex - 1; // -1 because index++ happens at the end of the loop
 					} else {
-						// Original behavior for non-dot notation keys
+						// Original behavior for simple keys
 						accumulator.ExpressionAttributeNames[expressionKey] = subKey;
 					}
 
@@ -1029,7 +1201,18 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			});
 
-			returnObject.ExpressionAttributeValues = this.Item.objectToDynamo(returnObject.ExpressionAttributeValues);
+			// Only convert values that aren't already in DynamoDB format
+			const valuesToConvert = {};
+			const alreadyConverted = {};
+			for (const [key, value] of Object.entries(returnObject.ExpressionAttributeValues)) {
+				if (alreadyConvertedValues.has(key)) {
+					alreadyConverted[key] = value;
+				} else {
+					valuesToConvert[key] = value;
+				}
+			}
+			const convertedValues = this.Item.objectToDynamo(valuesToConvert);
+			returnObject.ExpressionAttributeValues = {...convertedValues, ...alreadyConverted};
 			if (Object.keys(returnObject.ExpressionAttributeValues).length === 0) {
 				delete returnObject.ExpressionAttributeValues;
 			}
