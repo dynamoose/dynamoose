@@ -75,7 +75,11 @@ describe("utils.deep_copy", () => {
 		original.c.c = original.c;
 		original.c.f.c = original.c;
 		const copy = utils.deep_copy(original);
-		expect(copy).toStrictEqual({"a": 1, "b": "test", "c": {"d": 100, "e": 200, "f": {"g": 300}}});
+		expect(copy).toStrictEqual({
+			"a": 1,
+			"b": "test",
+			"c": {"d": 100, "e": 200, "f": {"g": 300}}
+		});
 	});
 
 	it("Should return a deep copy of the passed class instances", () => {
@@ -117,7 +121,9 @@ describe("utils.deep_copy", () => {
 		original.name.name = undefined;
 		original.age = 25;
 
-		expect(original).toStrictEqual(new PersonWrapper(new NameWrapper(undefined), 25));
+		expect(original).toStrictEqual(
+			new PersonWrapper(new NameWrapper(undefined), 25)
+		);
 		expect(copy).toStrictEqual(new PersonWrapper(new NameWrapper("Tim"), 20));
 		expect(original.constructor).toStrictEqual(PersonWrapper);
 		expect(copy.constructor).toStrictEqual(PersonWrapper);
@@ -137,15 +143,29 @@ describe("utils.deep_copy", () => {
 	});
 
 	it("Should return a deep copy of the passed DynamoDB set", () => {
-		const original = dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]});
+		const original = dynamoose.aws
+			.converter()
+			.convertToNative({"SS": ["Hello", "World", "Universe"]});
 		const copy = utils.deep_copy(original);
-		expect(copy).toStrictEqual(dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]}));
+		expect(copy).toStrictEqual(
+			dynamoose.aws
+				.converter()
+				.convertToNative({"SS": ["Hello", "World", "Universe"]})
+		);
 
 		original.delete("Hello");
 		original.add("Welcome");
 
-		expect([...original]).toStrictEqual([...dynamoose.aws.converter().convertToNative({"SS": ["World", "Universe", "Welcome"]})]);
-		expect([...copy]).toStrictEqual([...dynamoose.aws.converter().convertToNative({"SS": ["Hello", "World", "Universe"]})]);
+		expect([...original]).toStrictEqual([
+			...dynamoose.aws
+				.converter()
+				.convertToNative({"SS": ["World", "Universe", "Welcome"]})
+		]);
+		expect([...copy]).toStrictEqual([
+			...dynamoose.aws
+				.converter()
+				.convertToNative({"SS": ["Hello", "World", "Universe"]})
+		]);
 		expect(copy.constructor).toStrictEqual(original.constructor);
 	});
 
@@ -155,12 +175,18 @@ describe("utils.deep_copy", () => {
 		original.set("b", 2);
 
 		const copy = utils.deep_copy(original);
-		expect(Array.from(copy.entries())).toStrictEqual([["a", 1], ["b", 2]]);
+		expect(Array.from(copy.entries())).toStrictEqual([
+			["a", 1],
+			["b", 2]
+		]);
 
 		original.delete("b");
 
 		expect(Array.from(original.entries())).toStrictEqual([["a", 1]]);
-		expect(Array.from(copy.entries())).toStrictEqual([["a", 1], ["b", 2]]);
+		expect(Array.from(copy.entries())).toStrictEqual([
+			["a", 1],
+			["b", 2]
+		]);
 	});
 
 	it("Should return a deep copy of the passed Uint8Array", () => {
@@ -183,5 +209,35 @@ describe("utils.deep_copy", () => {
 
 		expect(original.toString()).toEqual("\u0000ello World!");
 		expect(copy.toString()).toEqual("Hello World!");
+	});
+
+	it("Should return a deep copy of object with same Date instance in multiple properties", () => {
+		const now = new Date("Mon, 01 Mar 2021 07:00:00 GMT");
+		const original = {
+			"id": "1",
+			"createdAt": now,
+			"updatedAt": now // Same Date instance
+		};
+
+		const copy = utils.deep_copy(original);
+
+		// Both properties should exist with correct values
+		expect(copy.createdAt).toBeInstanceOf(Date);
+		expect(copy.updatedAt).toBeInstanceOf(Date);
+		expect(copy.createdAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
+		expect(copy.updatedAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
+
+		// Modifying original shouldn't affect copy
+		now.setUTCDate(2);
+		expect(copy.createdAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
+		expect(copy.updatedAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
 	});
 });
