@@ -31,6 +31,8 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: npm install
       - run: node publish/copy-readme.js
+      - run: git commit -am "Release commit" # lerna will fail if there are uncommitted changes; we won't actually push these changes, but we need to commit them
+        continue-on-error: true
       - run: lerna publish from-package --dist-tag $TAG --yes --no-git-tag-version --no-push --no-verify-access --no-git-reset
         env:
           TAG: ${{ needs.getinfo.outputs.npmtag }}
