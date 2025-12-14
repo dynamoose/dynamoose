@@ -31,7 +31,11 @@
     "site:crowdin:sync": "cd docs && npm run crowdin:sync",
     "site:start": "cd docs && npm start",
     "site:build": "cd docs && npm run build",
-    "site:swizzle": "cd docs && npm run swizzle"
+    "site:swizzle": "cd docs && npm run swizzle",
+    "performance": "cd packages/dynamoose && npm run performance",
+    "performance:build": "cd packages/dynamoose && npm run performance:build",
+    "performance:run": "cd packages/dynamoose && npm run performance:run",
+    "performance:compare": "cd packages/dynamoose && npm run performance:compare"
   },
   "repository": {
     "type": "git",
