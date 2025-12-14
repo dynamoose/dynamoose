@@ -48,18 +48,6 @@ module.exports = {
 			"type": "doc",
 			"id": "Community",
 			"label": "Community"
-		},
-		{
-			"type": "category",
-			"label": "Sponsored By",
-			"collapsed": false,
-			"items": [
-				{
-					"type": "link",
-					"label": " ",
-					"href": "https://dynobase.dev/?ref=dynamoose"
-				}
-			]
 		}
 	]
 };
