@@ -2,6 +2,22 @@
 
 ---
 
+## Version 4.1.0
+
+This release adds DynamoDB Streams support through Table options.
+
+Please comment or [contact me](https://charlie.fish/contact) if you have any questions about this release.
+
+### General
+
+- Added DynamoDB Streams support through Table options.
+
+### Other
+
+- Adding Node.js v24 & v25 to CI testing matrix.
+
+---
+
 ## Version 4.0.4
 
 This release contains some minor fixes. It is highly recommended to upgrade to this version as soon as possible as it contains a vulnerability fix for a dependency.
