@@ -57,8 +57,7 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 		for (const attr in obj) {
 			if (Object.prototype.hasOwnProperty.call(obj, attr)) {
 				const value = obj[attr];
-				const isObjValue =
-          typeof value === "object" && !Array.isArray(value) && value !== null;
+				const isObjValue = typeof value === "object" && !Array.isArray(value) && value !== null;
 
 				const isPrimitiveLike =
           value instanceof Date ||
