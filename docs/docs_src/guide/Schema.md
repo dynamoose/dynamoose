@@ -153,6 +153,30 @@ dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.schema
 
 dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.default
 
+<details>
+	<summary>⚠️ Common Pitfall</summary>
+
+	One common issue is if you set the default value to a string instead of a function that returns a string, every item will have the exact same string reference.
+
+	```js
+	// ❌ - This is likely not what you are looking for. Every item will have the same id.
+	{
+		"id": {
+			"type": String,
+			"default": crypto.randomUUID()
+		}
+	}
+
+	// ✅ - This is likely what you are looking for. Every item will have a unique id.
+	{
+		"id": {
+			"type": String,
+			"default": () => crypto.randomUUID()
+		}
+	}
+	```
+</details>
+
 ### forceDefault: boolean
 
 dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.forceDefault
