@@ -156,7 +156,7 @@ dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.default
 <details>
 	<summary>⚠️ Common Pitfall</summary>
 
-	One common issue is if you set the default value to a string instead of a function that returns a string, every item will have the exact same string reference.
+	One common issue is calling the function directly instead of passing a function to be called later. If you use `crypto.randomUUID()` as the default, it is evaluated once when the schema is defined, so every item will get the same value. If you use `() => crypto.randomUUID()`, it is evaluated each time a new item is created, so every item will get a unique value.
 
 	```js
 	// ❌ - This is likely not what you are looking for. Every item will have the same id.
