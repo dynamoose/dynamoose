@@ -43,7 +43,6 @@ jobs:
           npm publish --workspace=packages/dynamoose --tag $TAG --provenance --access public
         env:
           TAG: ${{ needs.getinfo.outputs.npmtag }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publishsite:
     needs: getinfo
