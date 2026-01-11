@@ -74,10 +74,10 @@ const shouldFailWithInvalidConditionTransaction = model.transaction.condition(0,
 
 // Typed Models
 export class User extends Item {
-	id: string;
-	name: string;
-	age: number;
-	friends: string[];
+	id!: string;
+	name!: string;
+	age!: number;
+	friends!: string[];
 }
 const userSchema = new dynamoose.Schema({
 	"id": String,
