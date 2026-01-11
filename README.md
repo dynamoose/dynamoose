@@ -62,6 +62,7 @@ Dynamoose is a modeling tool for Amazon's DynamoDB. Dynamoose is heavily inspire
 - Callback & Promise support
 - AWS Multi-region support
 - [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) support
+- [Global Tables](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html) (multi-Region replication) support
 <!-- end-block:a1507dd3-6aff-4885-a9fd-14d46a4b7743 -->
 
 <!-- start-block:1baa7441-d01a-40e2-80d7-71ce05674ec9 -->

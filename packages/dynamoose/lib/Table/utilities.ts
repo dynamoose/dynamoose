@@ -83,6 +83,18 @@ export async function createTableRequest (table: Table): Promise<DynamoDB.Create
 		};
 	}
 
+	// Add replication specification if provided
+	if (table.getInternalProperties(internalProperties).options.replication?.regions?.length > 0) {
+		// Ensure streams are enabled for replication
+		if (table.getInternalProperties(internalProperties).options.streamOptions.enabled) {
+			object.ReplicationSpecification = {
+				"Regions": table.getInternalProperties(internalProperties).options.replication.regions
+			};
+		} else {
+			throw new CustomError.InvalidParameter("DynamoDB Streams must be enabled (streamOptions.enabled = true) to use Global Tables replication");
+		}
+	}
+
 	return object;
 }
 // Setting `force` to true will create the table even if the table is already believed to be active
@@ -277,6 +289,63 @@ export async function updateTable (table: Table): Promise<void> {
 
 				await ddb(instance, "updateTable", object);
 				await waitForActive(table)();
+			}
+		}
+	}
+	// Replication
+	if (updateAll || (table.getInternalProperties(internalProperties).options.update as TableUpdateOptions[]).includes(TableUpdateOptions.replication)) {
+		const replicationOptions = table.getInternalProperties(internalProperties).options.replication;
+
+		if (replicationOptions?.regions?.length > 0) {
+			// First check if streams are enabled - they're required for replication
+			if (!table.getInternalProperties(internalProperties).options.streamOptions.enabled) {
+				throw new CustomError.InvalidParameter("DynamoDB Streams must be enabled (streamOptions.enabled = true) to use Global Tables replication");
+			}
+
+			const tableDetails = (await getTableDetails(table)).Table;
+
+			// Get current replication regions
+			const currentReplicationRegions = tableDetails.ReplicationSpecification?.Regions ?? [];
+			const desiredReplicationRegions = replicationOptions.regions;
+
+			// Check if replication settings need to be updated
+			const regionsNeedUpdate = !utils.object.equals(currentReplicationRegions.sort(), desiredReplicationRegions.sort());
+
+			if (regionsNeedUpdate) {
+				// Update replication
+				// Identify regions to add and remove
+				const regionsToAdd = desiredReplicationRegions.filter(region => !currentReplicationRegions.includes(region));
+				const regionsToRemove = currentReplicationRegions.filter(region => !desiredReplicationRegions.includes(region));
+				
+				const replicaUpdates: any[] = [];
+				
+				// Add regions that need to be created
+				regionsToAdd.forEach(region => {
+					replicaUpdates.push({
+						Create: {
+							RegionName: region
+						}
+					});
+				});
+				
+				// Remove regions that need to be deleted
+				regionsToRemove.forEach(region => {
+					replicaUpdates.push({
+						Delete: {
+							RegionName: region
+						}
+					});
+				});
+				
+				if (replicaUpdates.length > 0) {
+					const object: DynamoDB.UpdateTableInput = {
+						"TableName": table.getInternalProperties(internalProperties).name,
+						"ReplicaUpdates": replicaUpdates
+					};
+					
+					await ddb(instance, "updateTable", object);
+					await waitForActive(table)();
+				}
 			}
 		}
 	}

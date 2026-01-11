@@ -4,6 +4,26 @@ The Table object represents a single table in DynamoDB. It takes in both a name 
 
 dyno_jsdoc_dist/Table/index.js|new Table
 
+### Global Tables Example
+
+```js
+// Create a table with Global Tables replication enabled
+const table = new dynamoose.Table("MyTable", [MyModel], {
+  create: true,
+  update: true,
+  streamOptions: {
+    enabled: true,
+    type: "NEW_AND_OLD_IMAGES"
+  },
+  replication: {
+    regions: ["us-west-2", "us-east-1"]
+  },
+  throughput: "ON_DEMAND"
+});
+```
+
+Note that streams must be enabled for replication to work. The regions specified in the `replication.regions` array should not include your primary region.
+
 ## dynamoose.Table.defaults.get()
 
 This function is used to get the custom default values that you set with [dynamoose.Table.defaults.set(defaults)].
