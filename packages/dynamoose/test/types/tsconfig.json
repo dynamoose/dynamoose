@@ -4,7 +4,8 @@
 		"moduleResolution": "node",
 		"lib": ["es2015"],
 		"target": "es2017",
-		"noEmit": true
+		"noEmit": true,
+		"strict": true
 	},
 	"include": ["./**/*"]
 }

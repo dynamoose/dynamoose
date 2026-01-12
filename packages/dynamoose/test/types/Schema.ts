@@ -208,3 +208,13 @@ const shouldSucceedWhenUsingTimestampsSetToObjectWithTypes = new dynamoose.Schem
 		}
 	}
 });
+
+const shouldSucceedWhenUsingDirectTypeForValidateFunction = new dynamoose.Schema(
+	{
+		"pk": {
+			"type": String,
+			"hashKey": true,
+			"validate": (v: string) => ["ITEM#"].some((prefix) => v.startsWith(prefix))
+		}
+	}
+);

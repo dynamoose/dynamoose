@@ -47,7 +47,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 	getRequest: (this: ItemRetriever) => Promise<any>;
 	all: (this: ItemRetriever, delay?: number, max?: number) => this;
 	limit: (this: ItemRetriever, value: number) => this;
-	startAt: (this: ItemRetriever, value: ObjectType) => this;
+	startAt: (this: ItemRetriever, value: ObjectType | undefined) => this;
 	attributes: (this: ItemRetriever, value: string[]) => this;
 	count: (this: ItemRetriever) => this;
 	consistent: (this: ItemRetriever) => this;
