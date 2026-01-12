@@ -2156,6 +2156,16 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should return correct result from batchPut with UnprocessedItems with an array of objects property", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": String, "externalIds": {"type": Array, "schema": [{"type": Object, "schema": {"id": Number}}]}});
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"PutRequest": {"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}, "externalIds": {"L": [{"M": {"id": {"N": "436229973"}}}]}}}}]}});
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 3, "name": "Tim", "externalIds":[{"id": 436229973}]}]);
+					expect(result).toEqual({
+						"unprocessedItems": [{"id": 3, "name": "Tim", "externalIds":[{"id": 436229973}]}]
+					});
+				});
+
 				it("Should throw error if error is returned from DynamoDB", () => {
 					promiseFunction = () => Promise.reject({"error": "ERROR"});
 
