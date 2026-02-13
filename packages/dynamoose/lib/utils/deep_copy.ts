@@ -28,7 +28,8 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 
 	// Handle Buffer
 	if (obj instanceof Buffer) {
-		copy = Buffer.from(obj);
+		copy = Buffer.alloc(obj.length);
+		obj.copy(copy);
 		return copy;
 	}
 
@@ -58,7 +59,15 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 				const value = obj[attr];
 				const isObjValue = typeof value === "object" && !Array.isArray(value) && value !== null;
 
-				if (isObjValue) {
+				const isPrimitiveLike =
+          value instanceof Date ||
+          value instanceof Buffer ||
+          value instanceof Uint8Array ||
+          value instanceof Set ||
+          value instanceof Map;
+
+				// For non-primitive-like objects, check for circular references
+				if (!isPrimitiveLike && isObjValue) {
 					const isCircular = refs.has(value);
 					// Omit circular property from copy
 					if (isCircular) continue;
@@ -66,6 +75,7 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 					refs.add(value);
 				}
 
+				// Always copy the property value (primitive-like or not)
 				copy[attr] = deep_copy(value, refs);
 			}
 		}
