@@ -20,6 +20,8 @@ module.exports = {
 				"@typescript-eslint/no-this-alias": "off",
 				"@typescript-eslint/no-var-requires": "off",
 				"@typescript-eslint/no-explicit-any": "off",
+				"indent": "off",
+				"@typescript-eslint/indent": ["error", "tab", {"SwitchCase": 0}],
 				"brace-style": "off",
 				"@typescript-eslint/brace-style": "error",
 				"comma-spacing": "off",
