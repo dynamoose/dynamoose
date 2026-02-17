@@ -479,11 +479,17 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			});
 			return (await Promise.all(keyObjects)).reduce((result, key) => {
 				const keyProperties = Object.keys(key);
-				const item = tmpResult.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
+				const item = tmpResult.find((item) => {
+					const original = item.original();
+					return keyProperties.every((keyProperty) => original[keyProperty] === key[keyProperty]);
+				});
 				if (item) {
 					result.push(item);
 				} else {
-					const item = tmpResultUnprocessed.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
+					const item = tmpResultUnprocessed.find((item) => {
+						const original = item.original();
+						return keyProperties.every((keyProperty) => original[keyProperty] === key[keyProperty]);
+					});
 					if (item) {
 						result.unprocessedKeys.push(item);
 					}
