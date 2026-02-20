@@ -575,7 +575,12 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 		Object.keys(treeNode).forEach((attr) => {
 			if (attr === "0") {
 				// We check for empty objects here (added `typeof node === "object" && Object.keys(node).length == 0`, see PR https://github.com/dynamoose/dynamoose/pull/1034) to handle the use case of 2d arrays, or arrays within arrays. `node` in that case will be an empty object.
-				if (!node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
+				// Some times the node type is String or Boolean
+				// Updated from:
+				//// if (!node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0)
+				// This is to atempt to fix node.forEach is not a funciton
+				// If its not an Array, fake it.
+				if (!Array.isArray(node)) {
 					node = [{}]; // fake the path for arrays
 				}
 				node.forEach((a, index) => {
