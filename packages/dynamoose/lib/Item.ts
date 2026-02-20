@@ -576,7 +576,7 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 			if (attr === "0") {
 				// We check for empty objects here (added `typeof node === "object" && Object.keys(node).length == 0`, see PR https://github.com/dynamoose/dynamoose/pull/1034) to handle the use case of 2d arrays, or arrays within arrays. `node` in that case will be an empty object.
 				// Also adding `!Array.isArray(node)` to the check for non array objects
-				if (!Array.isArray(node) || !node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
+				if (!node || !Array.isArray(node) || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
 					node = [{}]; // fake the path for arrays
 				}
 				node.forEach((a, index) => {
