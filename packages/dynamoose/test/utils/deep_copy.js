@@ -184,4 +184,34 @@ describe("utils.deep_copy", () => {
 		expect(original.toString()).toEqual("\u0000ello World!");
 		expect(copy.toString()).toEqual("Hello World!");
 	});
+
+	it("Should return a deep copy of object with same Date instance in multiple properties", () => {
+		const now = new Date("Mon, 01 Mar 2021 07:00:00 GMT");
+		const original = {
+			"id": "1",
+			"createdAt": now,
+			"updatedAt": now // Same Date instance
+		};
+
+		const copy = utils.deep_copy(original);
+
+		// Both properties should exist with correct values
+		expect(copy.createdAt).toBeInstanceOf(Date);
+		expect(copy.updatedAt).toBeInstanceOf(Date);
+		expect(copy.createdAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
+		expect(copy.updatedAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
+
+		// Modifying original shouldn't affect copy
+		now.setUTCDate(2);
+		expect(copy.createdAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
+		expect(copy.updatedAt.toUTCString()).toEqual(
+			"Mon, 01 Mar 2021 07:00:00 GMT"
+		);
+	});
 });
