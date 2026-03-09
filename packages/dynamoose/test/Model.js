@@ -3509,20 +3509,28 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"friends": ["Bob"]})).resolves.toEqual();
 				});
 
-				it("Should throw error if trying to replace object without nested required property", () => {
+				it("Should merge nested object properties instead of replacing entire object", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
 					new dynamoose.Table("User", [User]);
 
-					return expect(callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}})).rejects.toEqual(new CustomError.ValidationError("data.age is a required property but has no value when trying to save item"));
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}});
 				});
 
-				it("Should throw error if trying to replace object with $SET without nested required property", () => {
+				it("Should merge nested object properties with $SET instead of replacing entire object", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
 					new dynamoose.Table("User", [User]);
 
-					return expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"name": "Charlie"}}})).rejects.toEqual(new CustomError.ValidationError("data.age is a required property but has no value when trying to save item"));
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"name": "Charlie"}}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}});
 				});
 
 				it("Should use default value if deleting property", async () => {
