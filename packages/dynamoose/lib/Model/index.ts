@@ -8,7 +8,7 @@ import Internal from "../Internal";
 import {Serializer, SerializerOptions} from "../Serializer";
 import {Condition, ConditionInitializer} from "../Condition";
 import {Scan, Query} from "../ItemRetriever";
-import {CallbackType, ObjectType, FunctionType, ItemArray, ModelType, KeyObject, InputKey} from "../General";
+import {CallbackType, ObjectType, FunctionType, ItemArray, ModelType, KeyObject, InputKey, DeepPartial} from "../General";
 import {PopulateItems} from "../Populate";
 import {AttributeMap} from "../Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
@@ -21,11 +21,11 @@ import returnModel from "../utils/dynamoose/returnModel";
 const {internalProperties} = Internal.General;
 
 type UpdatePartial<T> =
-  | Partial<T>
-  | { $SET: Partial<T> }
-  | { $ADD: Partial<T> }
+  | DeepPartial<T>
+  | { $SET: DeepPartial<T> }
+  | { $ADD: DeepPartial<T> }
   | { $REMOVE: { [K in keyof T]?: null } | string[] }
-  | { $DELETE: Partial<T> };
+  | { $DELETE: DeepPartial<T> };
 
 // Transactions
 type GetTransactionResult = Promise<GetTransactionInput>;
@@ -712,7 +712,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			].reverse();
 
 			if (!updateObj) {
-				updateObj = utils.deep_copy(keyObj) as Partial<T>;
+				updateObj = utils.deep_copy(keyObj) as DeepPartial<T>;
 				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
 			}
 
