@@ -1,18 +1,27 @@
-import {flushJsonResults} from "./harness";
+import {flushJsonResults, RunSuiteResult} from "./harness";
 import * as path from "path";
 import * as fs from "fs";
 
+interface BenchmarkSuiteModule {
+	default?: () => Promise<RunSuiteResult>;
+}
+
+async function loadSuite (suitePath: string): Promise<() => Promise<RunSuiteResult>> {
+	const suiteMod: BenchmarkSuiteModule = await import(suitePath);
+	return suiteMod.default as () => Promise<RunSuiteResult>;
+}
+
 async function main (): Promise<void> {
-	const args = process.argv.slice(2).filter((arg) => !arg.startsWith("--"));
+	const args = process.argv.slice(2).filter((arg: string) => !arg.startsWith("--"));
 	const benchmarkDir = path.join(__dirname, "benchmarks");
 
 	// Discover all compiled benchmark files
 	const allBenchmarkFiles = fs.readdirSync(benchmarkDir)
-		.filter((f) => f.endsWith(".perf.js"))
-		.map((f) => f.replace(".perf.js", ""));
+		.filter((f: string) => f.endsWith(".perf.js"))
+		.map((f: string) => f.replace(".perf.js", ""));
 
 	// If specific suites were requested via args, filter to those
-	const suitesToRun = args.length > 0 ? allBenchmarkFiles.filter((name) => args.includes(name)) : allBenchmarkFiles;
+	const suitesToRun = args.length > 0 ? allBenchmarkFiles.filter((name: string) => args.includes(name)) : allBenchmarkFiles;
 
 	if (suitesToRun.length === 0) {
 		console.error("No benchmark suites found to run.");
@@ -31,8 +40,7 @@ async function main (): Promise<void> {
 
 	let totalFailures = 0;
 	for (const suite of suitesToRun) {
-		const suiteMod = require(path.join(benchmarkDir, `${suite}.perf.js`));
-		const suiteFn = suiteMod.default || suiteMod;
+		const suiteFn = await loadSuite(path.join(benchmarkDir, `${suite}.perf.js`));
 		const result = await suiteFn();
 		if (result && result.failures) {
 			totalFailures += result.failures;
