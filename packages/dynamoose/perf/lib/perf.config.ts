@@ -1,4 +1,14 @@
-module.exports = {
+export interface PerfConfig {
+	warmupIterations: number;
+	time: number;
+	iterations: number;
+	warningThreshold: number;
+	failureThreshold: number;
+	baselinesDir: string;
+	outputFormat: string;
+}
+
+const config: PerfConfig = {
 	// Number of warm-up iterations before measurement begins
 	"warmupIterations": 10,
 
@@ -20,3 +30,5 @@ module.exports = {
 	// Output format: "cli" for pretty terminal output, "json" for CI consumption
 	"outputFormat": "cli"
 };
+
+export default config;

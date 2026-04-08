@@ -1,17 +1,17 @@
-const {runSuite} = require("../harness");
-const dynamoose = require("../../dist");
-const ModelStore = require("../../dist/ModelStore").default;
+import {runSuite, BenchInstance} from "../harness";
+import dynamoose = require("../../../dist");
+import ModelStore from "../../../dist/ModelStore";
 
-async function run () {
+export default async function run (): Promise<void> {
 	// We need to set defaults to avoid actual DynamoDB table operations
 	dynamoose.Table.defaults.set({"create": false, "waitForActive": false});
 
 	let modelCounter = 0;
-	function uniqueModelName () {
+	function uniqueModelName (): string {
 		return `PerfModel${modelCounter++}`;
 	}
 
-	await runSuite("model", (bench) => {
+	await runSuite("model", (bench: BenchInstance) => {
 		bench.add("Model - simple creation", () => {
 			const name = uniqueModelName();
 			dynamoose.model(name, {"id": String, "name": String});
@@ -65,5 +65,3 @@ async function run () {
 
 	dynamoose.Table.defaults.set({});
 }
-
-module.exports = run;

@@ -1,8 +1,8 @@
-const {runSuite} = require("../harness");
-const {Condition} = require("../../dist");
+import {runSuite, BenchInstance} from "../harness";
+import {Condition} from "../../../dist";
 
-async function run () {
-	await runSuite("condition", (bench) => {
+export default async function run (): Promise<void> {
+	await runSuite("condition", (bench: BenchInstance) => {
 		bench.add("Condition - simple equality", () => {
 			new Condition("id").eq("5");
 		});
@@ -73,5 +73,3 @@ async function run () {
 		});
 	});
 }
-
-module.exports = run;

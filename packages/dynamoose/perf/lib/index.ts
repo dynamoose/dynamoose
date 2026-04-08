@@ -1,12 +1,12 @@
-const {flushJsonResults} = require("./harness");
-const path = require("path");
-const fs = require("fs");
+import {flushJsonResults} from "./harness";
+import * as path from "path";
+import * as fs from "fs";
 
-async function main () {
+async function main (): Promise<void> {
 	const args = process.argv.slice(2).filter((arg) => !arg.startsWith("--"));
 	const benchmarkDir = path.join(__dirname, "benchmarks");
 
-	// Discover all benchmark files
+	// Discover all compiled benchmark files
 	const allBenchmarkFiles = fs.readdirSync(benchmarkDir)
 		.filter((f) => f.endsWith(".perf.js"))
 		.map((f) => f.replace(".perf.js", ""));
@@ -31,7 +31,8 @@ async function main () {
 
 	let totalFailures = 0;
 	for (const suite of suitesToRun) {
-		const suiteFn = require(path.join(benchmarkDir, `${suite}.perf.js`));
+		const suiteMod = require(path.join(benchmarkDir, `${suite}.perf.js`));
+		const suiteFn = suiteMod.default || suiteMod;
 		const result = await suiteFn();
 		if (result && result.failures) {
 			totalFailures += result.failures;

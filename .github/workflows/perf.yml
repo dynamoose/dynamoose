@@ -29,8 +29,11 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+      - name: Build performance tests
+        run: cd packages/dynamoose && npm run perf:build
+
       - name: Run performance tests
-        run: PERF_OUTPUT_FORMAT=json node packages/dynamoose/perf/index.js > perf-results.json
+        run: PERF_OUTPUT_FORMAT=json node packages/dynamoose/perf/dist/index.js > perf-results.json
 
       - name: Store benchmark result
         if: always()

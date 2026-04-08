@@ -1,8 +1,8 @@
-const {runSuite} = require("../harness");
-const {Item} = require("../../dist/Item");
+import {runSuite, BenchInstance} from "../harness";
+import {Item} from "../../../dist/Item";
 
-async function run () {
-	await runSuite("item", (bench) => {
+export default async function run (): Promise<void> {
+	await runSuite("item", (bench: BenchInstance) => {
 		// Item.objectToDynamo benchmarks
 		bench.add("Item.objectToDynamo - simple object", () => {
 			Item.objectToDynamo({"id": "123", "name": "John", "age": 30});
@@ -49,11 +49,11 @@ async function run () {
 			});
 		});
 
-		const largeDynamoObject = {};
+		const largeDynamoObject: Record<string, string> = {};
 		for (let i = 0; i < 50; i++) {
 			largeDynamoObject[`field${i}`] = `value${i}`;
 		}
-		largeDynamoObject.id = "123";
+		largeDynamoObject["id"] = "123";
 		bench.add("Item.objectToDynamo - large object (50 fields)", () => {
 			Item.objectToDynamo(largeDynamoObject);
 		});
@@ -115,5 +115,3 @@ async function run () {
 		});
 	});
 }
-
-module.exports = run;

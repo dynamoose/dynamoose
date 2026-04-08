@@ -1,11 +1,11 @@
-const {runSuite} = require("../harness");
-const dynamoose = require("../../dist");
-const ModelStore = require("../../dist/ModelStore").default;
+import {runSuite, BenchInstance} from "../harness";
+import dynamoose = require("../../../dist");
+import ModelStore from "../../../dist/ModelStore";
 
-async function run () {
+export default async function run (): Promise<void> {
 	ModelStore.clear();
 
-	await runSuite("schema", (bench) => {
+	await runSuite("schema", (bench: BenchInstance) => {
 		bench.add("Schema - simple (3 attributes)", () => {
 			new dynamoose.Schema({
 				"id": String,
@@ -127,5 +127,3 @@ async function run () {
 		});
 	});
 }
-
-module.exports = run;

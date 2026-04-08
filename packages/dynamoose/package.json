@@ -26,8 +26,9 @@
     "test:nocoverage": "jest",
     "test": "npm run test:nocoverage -- --coverage --transformIgnorePatterns=''",
     "test:types": "tsc --project test/types/tsconfig.json",
-    "perf": "node perf/index.js",
-    "perf:baseline": "node perf/index.js --save-baseline"
+    "perf:build": "tsc --project perf/tsconfig.json",
+    "perf": "npm run perf:build && node perf/dist/index.js",
+    "perf:baseline": "npm run perf:build && node perf/dist/index.js --save-baseline"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.782.0",
