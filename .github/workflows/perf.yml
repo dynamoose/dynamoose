@@ -37,7 +37,7 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Dynamoose Performance Benchmarks
-          tool: 'customSmallerIsBetter'
+          tool: 'customBiggerIsBetter'
           output-file-path: perf-results.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Post a comment on PRs with the performance comparison
