@@ -25,7 +25,9 @@
     "build:sourcemap:watch": "npm run build:sourcemap -- -w",
     "test:nocoverage": "jest",
     "test": "npm run test:nocoverage -- --coverage --transformIgnorePatterns=''",
-    "test:types": "tsc --project test/types/tsconfig.json"
+    "test:types": "tsc --project test/types/tsconfig.json",
+    "perf": "node perf/index.js",
+    "perf:baseline": "node perf/index.js --save-baseline"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.782.0",
@@ -34,7 +36,8 @@
     "js-object-utilities": "^2.2.1"
   },
   "devDependencies": {
-    "dynamoose-logger": "^4.1.5"
+    "dynamoose-logger": "^4.1.5",
+    "tinybench": "^6.0.0"
   },
   "license": "Unlicense",
   "funding": [
