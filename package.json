@@ -30,6 +30,7 @@
     "test:types": "lerna run test:types",
     "lint": "eslint . --ext .ts,.js --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
+    "perf": "lerna run perf",
     "site:install": "cd docs && npm install",
     "site:crowdin:sync": "cd docs && npm run crowdin:sync",
     "site:start": "cd docs && npm start",

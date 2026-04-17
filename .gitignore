@@ -10,3 +10,6 @@ docs/docs
 docs/package-lock.json
 publish/package-lock.json
 utils/*/package-lock.json
+
+# Performance test baselines (machine-specific)
+.perf-baselines

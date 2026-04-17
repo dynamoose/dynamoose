@@ -1,0 +1,54 @@
+name: Performance Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/dynamoose/package-lock.json
+            packages/dynamoose-logger/package-lock.json
+            packages/dynamoose-utils/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Build performance tests
+        run: cd packages/dynamoose && npm run perf:build
+
+      - name: Run performance tests
+        run: PERF_OUTPUT_FORMAT=json node packages/dynamoose/perf/dist/index.js > perf-results.json
+
+      - name: Store benchmark result
+        if: always()
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Dynamoose Performance Benchmarks
+          tool: 'customBiggerIsBetter'
+          output-file-path: perf-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Post a comment on PRs with the performance comparison
+          comment-on-alert: true
+          alert-comment-cc-users: '@fishcharlie'
+          # Fail if performance regresses by more than 20%
+          alert-threshold: '120%'
+          fail-on-alert: true
+          # Store results in gh-pages branch for tracking over time
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          benchmark-data-dir-path: dev/bench

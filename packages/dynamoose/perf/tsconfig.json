@@ -1,0 +1,11 @@
+{
+	"extends": "./../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "dist",
+		"lib": ["es2021"],
+		"target": "es2021",
+		"declaration": false,
+		"skipLibCheck": true
+	},
+	"include": ["./lib/**/*"]
+}
