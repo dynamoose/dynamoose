@@ -184,4 +184,61 @@ describe("utils.deep_copy", () => {
 		expect(original.toString()).toEqual("\u0000ello World!");
 		expect(copy.toString()).toEqual("Hello World!");
 	});
+
+	it("Should return a deep copy of object with same Date instance in multiple properties", () => {
+		const now = new Date("Mon, 01 Mar 2021 07:00:00 GMT");
+		const original = {"id": "1", "createdAt": now, "updatedAt": now};
+
+		const copy = utils.deep_copy(original);
+
+		expect(copy.createdAt).toBeInstanceOf(Date);
+		expect(copy.updatedAt).toBeInstanceOf(Date);
+		expect(copy.createdAt.toUTCString()).toEqual("Mon, 01 Mar 2021 07:00:00 GMT");
+		expect(copy.updatedAt.toUTCString()).toEqual("Mon, 01 Mar 2021 07:00:00 GMT");
+
+		now.setUTCDate(2);
+		expect(copy.createdAt.toUTCString()).toEqual("Mon, 01 Mar 2021 07:00:00 GMT");
+		expect(copy.updatedAt.toUTCString()).toEqual("Mon, 01 Mar 2021 07:00:00 GMT");
+	});
+
+	it("Should return a deep copy of object with same plain object reference in multiple properties", () => {
+		const address = {"city": "Cupertino", "country": "US"};
+		const original = {"id": "1", "billingAddress": address, "shippingAddress": address};
+
+		const copy = utils.deep_copy(original);
+
+		expect(copy.billingAddress).toStrictEqual({"city": "Cupertino", "country": "US"});
+		expect(copy.shippingAddress).toStrictEqual({"city": "Cupertino", "country": "US"});
+
+		address.city = "Mountain View";
+		expect(copy.billingAddress.city).toEqual("Cupertino");
+		expect(copy.shippingAddress.city).toEqual("Cupertino");
+	});
+
+	it("Should handle self-referencing arrays without infinite recursion", () => {
+		const arr = [1, 2];
+		arr.push(arr);
+
+		const copy = utils.deep_copy(arr);
+
+		expect(copy[0]).toEqual(1);
+		expect(copy[1]).toEqual(2);
+		expect(copy[2]).toBeUndefined();
+	});
+
+	it("Should omit circular references on class instances", () => {
+		class NodeWrapper {
+			constructor (value) {
+				this.value = value;
+			}
+		}
+		const node = new NodeWrapper(42);
+		node.self = node;
+
+		const copy = utils.deep_copy(node);
+
+		expect(copy.value).toEqual(42);
+		expect(copy.self).toBeUndefined();
+		expect(copy.constructor).toStrictEqual(NodeWrapper);
+	});
 });
