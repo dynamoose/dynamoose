@@ -703,6 +703,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
+		const isObject = (v: any): boolean => typeof v === "object" && v !== null && !Array.isArray(v);
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
@@ -739,6 +740,27 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					try {
 						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 					} catch (e) {} // eslint-disable-line no-empty
+
+					if (dynamoType === "M" && updateType.name === "$SET" && isObject(subValue)
+						&& schema.attributes().some((a) => a.startsWith(`${subKey}.`))) {
+						const schemaSettings = {...updateType.objectFromSchemaSettings, "type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, "required": false};
+						const processed = (await this.Item.objectFromSchema({[subKey]: subValue}, this, schemaSettings as any))[subKey];
+						accumulator.ExpressionAttributeNames[`#a${index}`] = subKey;
+						(function flatten (path: string, obj: ObjectType): void {
+							for (const [attr, val] of Object.entries(obj)) {
+								accumulator.ExpressionAttributeNames[`#a${index}`] = attr;
+								const k = `${path}.#a${index++}`;
+								if (isObject(val)) {
+									flatten(k, val);
+								} else {
+									accumulator.ExpressionAttributeValues[`:v${index}`] = val;
+									accumulator.UpdateExpression["SET"].push(`${k} = :v${index++}`);
+								}
+							}
+						})(`#a${index++}`, processed);
+						continue;
+					}
+
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
