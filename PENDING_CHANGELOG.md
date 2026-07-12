@@ -10,6 +10,11 @@
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
 
+### Performance
+
+- Improved performance of converting items returned from `scan` and `query` (~2x faster on large result sets). `Schema` now memoizes `attributes`, `getAttributeValue`, `getAttributeType`, and `getAttributeTypeDetails` per schema, and object flattening no longer re-walks each nested value's subtree to detect circular references
+- Improved performance of items containing a long list of attributes with multiple possible types (~4x faster for a 800 element list). Building the type paths for such an item no longer copies the accumulated result once per element
+
 ### Bug Fixes
 
 - Fixed `Model.get`, `Model.delete`, `Model.batchGet` and `Model.update` putting the attributes a schema's `set` setting adds into the request's `Key` when the key was passed as a value (`Model.get(1)`), so DynamoDB rejected the request with `The provided key element does not match the schema`. Only the hash key is sent now, as for a key passed as an object
