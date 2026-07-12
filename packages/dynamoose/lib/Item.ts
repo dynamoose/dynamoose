@@ -73,7 +73,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	}
 	static fromDynamo (object: AttributeMap): ObjectType {
 		const result = awsConverter().unmarshall(object);
-		utils.object.entries(result).forEach(([key, value]) => {
+		utils.object_entries(result).forEach(([key, value]) => {
 			if (value instanceof Uint8Array) {
 				utils.object.set(result, key, Buffer.from(value));
 			}
@@ -696,7 +696,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 				}
 			}
 		};
-		utils.object.entries(returnObject).filter((item) => item[1] !== undefined && item[1] !== dynamooseUndefined).map(checkTypeFunction);
+		utils.object_entries(returnObject).filter((item) => item[1] !== undefined && item[1] !== dynamooseUndefined).map(checkTypeFunction);
 		keysToDelete.reverse().forEach((key) => utils.object.delete(returnObject, key));
 	}
 
@@ -739,7 +739,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		});
 	}
 	// DynamoDB Type Handler (ex. converting sets to correct value for toDynamo & fromDynamo)
-	utils.object.entries(returnObject).filter((item) => typeof item[1] === "object").forEach((item) => {
+	utils.object_entries(returnObject).filter((item) => typeof item[1] === "object").forEach((item) => {
 		const [key, value] = item;
 		let typeDetails;
 		try {
