@@ -320,6 +320,7 @@ You can also pass in a `settings` object parameter to define extra settings for 
 | return | What the function should return. Can be `item`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `item` |
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 | returnValues | Set which documents to return after the update. This setting will be passed into the DynamoDB `ReturnValues` parameter. | String | `ALL_NEW`
+| merge | Set to `true` to update nested objects in place using document paths instead of replacing the whole attribute. See [Updating nested objects](#updating-nested-objects) below. | Boolean | `false`
 
 There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
@@ -389,6 +390,40 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 ```
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
+
+### Updating nested objects
+
+By default, setting an object onto an attribute replaces that whole attribute as a map, so any properties you do not pass in are removed from the item.
+
+```js
+// schema: {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": Number}}}
+// existing item: {"id": 1, "data": {"name": "Bob", "age": 30}}
+
+await User.update({"id": 1}, {"data": {"name": "Charlie"}});
+// UpdateExpression: SET #a0 = :v0
+// resulting item:   {"id": 1, "data": {"name": "Charlie"}}
+```
+
+Because the whole attribute is replaced, a nested `required` property that you do not pass in will fail validation.
+
+Passing `{"merge": true}` writes each provided property to its own document path instead, which updates those properties in place and leaves the rest of the map untouched. This is the same shape as a native DynamoDB nested attribute update (`SET data.#name = :value`).
+
+```js
+await User.update({"id": 1}, {"data": {"name": "Charlie"}}, {"merge": true});
+// UpdateExpression: SET #a0.#a1 = :v2
+// resulting item:   {"id": 1, "data": {"name": "Charlie", "age": 30}}
+```
+
+Merging works at any depth, and also applies to plain objects that have no nested schema (for example `saveUnknown` attributes).
+
+```js
+await User.update({"id": 1}, {"$SET": {"data": {"profile": {"name": "Charlie"}}}}, {"merge": true});
+// UpdateExpression: SET #a0.#a1.#a2 = :v3
+```
+
+Only plain objects are flattened. Arrays, Sets, Dates, and Buffers nested inside an object are always written as single leaf values.
+
+A nested document path can only be written when the parent map already exists on the item. If the attribute may not exist yet, leave `merge` unset so the whole map is written in one operation.
 
 ## model.delete(key[, settings][, callback])
 
