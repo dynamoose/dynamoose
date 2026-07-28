@@ -482,8 +482,14 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			await promise;
 			this.getInternalProperties(internalProperties).storedInDynamo = true;
 
+			// First apply custom types conversion to the current item
+			await this.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "typeCheck": false});
+
 			const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 			returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
+
+			// Apply custom types conversion to ensure consistent behavior with get
+			await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
 
 			return returnItem;
 		})();
@@ -723,12 +729,14 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
 				const typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails as DynamoDBTypeResult;
-				const {customType} = typeDetails;
-				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
-				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
-				if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
-					const customValue = customType.functions[settings.type](value);
-					utils.object.set(returnObject, key, customValue);
+				if (typeDetails) {
+					const {customType} = typeDetails;
+					const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
+					const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
+					if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
+						const customValue = customType.functions[settings.type](value);
+						utils.object.set(returnObject, key, customValue);
+					}
 				}
 			}
 		});
