@@ -196,7 +196,10 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		const [key, value] = entry;
 		const filterExpressionIndex = object.FilterExpression.findIndex((item) => item.includes(key));
 		const filterExpression = object.FilterExpression[filterExpressionIndex];
-		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains")) {
+		// Operators that are legal in a FilterExpression but not in a KeyConditionExpression
+		// must stay where they are, otherwise DynamoDB rejects the request with
+		// "Invalid operator used in KeyConditionExpression".
+		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains") || filterExpression.includes(" IN (") || filterExpression.includes("<>")) {
 			return;
 		}
 		object.ExpressionAttributeNames[`#${prefix}a`] = value;
