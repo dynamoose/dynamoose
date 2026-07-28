@@ -2023,6 +2023,7 @@ describe("Model", () => {
 				});
 			});
 		});
+
 	});
 
 	describe("model.batchPut()", () => {
@@ -3509,6 +3510,30 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"friends": ["Bob"]})).resolves.toEqual();
 				});
 
+				it("Should merge nested object properties when {merge: true} is passed", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}});
+				});
+
+				it("Should replace a nested-schema object as a whole map by default", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": Number}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie", "age": 30}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"M": {"name": {"S": "Charlie"}, "age": {"N": "30"}}}});
+				});
+
 				it("Should throw error if trying to replace object without nested required property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
@@ -3523,6 +3548,114 @@ describe("Model", () => {
 					new dynamoose.Table("User", [User]);
 
 					return expect(callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"name": "Charlie"}}})).rejects.toEqual(new CustomError.ValidationError("data.age is a required property but has no value when trying to save item"));
+				});
+
+				it("Should merge nested object properties with $SET when {merge: true} is passed", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"name": "Charlie"}}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}});
+				});
+
+				it("Should treat an array nested in a map as a leaf value", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "tags": {"type": Array, "schema": [String]}}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie", "tags": ["a", "b"]}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2, #a0.#a3 = :v4");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name", "#a3": "tags"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}, ":v4": {"L": [{"S": "a"}, {"S": "b"}]}});
+				});
+
+				it("Should treat a set nested in a map as a leaf value", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "tags": {"type": Set, "schema": [String]}}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie", "tags": new Set(["a", "b"])}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2, #a0.#a3 = :v4");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name", "#a3": "tags"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}, ":v4": {"SS": ["a", "b"]}});
+				});
+
+				it("Should treat a buffer nested in a map as a leaf value", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "blob": Buffer}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie", "blob": Buffer.from("hi")}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2, #a0.#a3 = :v4");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name", "#a3": "blob"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}, ":v4": {"B": Buffer.from("hi")}});
+				});
+
+				it("Should still flatten a map nested inside a map", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "inner": {"type": Object, "schema": {"deep": String}}}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie", "inner": {"deep": "value"}}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2, #a0.#a3.#a4 = :v5");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name", "#a3": "inner", "#a4": "deep"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}, ":v5": {"S": "value"}});
+				});
+
+				it("Should deep-merge a plain object $SET when {merge: true} is passed", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					const schema = new dynamoose.Schema({"id": Number, "data": {"type": Object}}, {"saveUnknown": true});
+					User = dynamoose.model("User", schema);
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"profile": {"name": "Charlie"}, "age": 30}}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1.#a2 = :v2, #a0.#a3 = :v3");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "profile", "#a2": "name", "#a3": "age"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v2": {"S": "Charlie"}, ":v3": {"N": "30"}});
+				});
+
+				it("Should skip nested default attributes when {merge: true} is passed on a typed map", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "default": 5}}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1 = :v2");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data", "#a1": "name"});
+					expect(Object.values(updateItemParams.ExpressionAttributeNames)).not.toContain("age");
+				});
+
+				it("Should treat non-plain-object nested values as leaves when {merge: true} is passed", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					const schema = new dynamoose.Schema({"id": Number, "data": {"type": Object}}, {"saveUnknown": true});
+					User = dynamoose.model("User", schema);
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"data": {"tags": ["a"], "buf": Buffer.from("x"), "u8": new Uint8Array([1])}}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toContain("#a0.#a");
+					expect(Object.values(updateItemParams.ExpressionAttributeNames)).toEqual(expect.arrayContaining(["data", "tags", "buf", "u8"]));
+				});
+
+				it("Should recursively flatten a deeply nested map attribute on $SET", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"profile": {"type": Object, "schema": {"name": String}}}}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"data": {"profile": {"name": "Charlie"}}}, {"merge": true});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams.UpdateExpression).toContain("#a0.#a");
+					expect(Object.values(updateItemParams.ExpressionAttributeNames)).toEqual(expect.arrayContaining(["data", "profile", "name"]));
 				});
 
 				it("Should use default value if deleting property", async () => {
@@ -4732,7 +4865,13 @@ describe("Model", () => {
 
 			it("Should not delete keys from object", () => {
 				const obj = {"id": 1, "name": "Bob"};
-				User.transaction.update(obj, utils.empty_function);
+				const oldWarn = console.warn; // eslint-disable-line no-console
+				console.warn = () => {}; // eslint-disable-line no-console
+				try {
+					User.transaction.update(obj, utils.empty_function);
+				} finally {
+					console.warn = oldWarn; // eslint-disable-line no-console
+				}
 				expect(obj).toEqual({"id": 1, "name": "Bob"});
 			});
 		});

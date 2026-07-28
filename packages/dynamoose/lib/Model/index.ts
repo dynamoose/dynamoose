@@ -87,6 +87,8 @@ interface ModelUpdateSettings {
 	return?: "item" | "request";
 	condition?: Condition;
 	returnValues?: DynamoDB.ReturnValue;
+	// How nested objects passed to `$SET` are applied. `false` (default) replaces the whole attribute as a map (`SET attr = {..}`), `true` flattens the object into document paths (`SET attr.sub = :v`) so subfields that were not passed in are left untouched.
+	merge?: boolean;
 }
 interface ModelBatchGetItemsResponse<T> extends ItemArray<T> {
 	unprocessedKeys: ObjectType[];
@@ -703,6 +705,33 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
+		// `merge: true` opts IN to flattening a nested object into document paths (`SET attr.sub = :v`), which updates the given subfields and leaves the rest of the map alone. By default the whole attribute is replaced as a map (`SET attr = {..}`).
+		const mergeEnabled = typeof settings === "object" && (settings as ModelUpdateSettings).merge === true;
+
+		const flattenForMerge = (
+			parentPathParts: string[],
+			obj: ObjectType,
+			acc: {ExpressionAttributeNames: ObjectType; ExpressionAttributeValues: ObjectType; UpdateExpression: ObjectType},
+			setOperator: string
+		): void => {
+			for (const key of Object.keys(obj)) {
+				const val = obj[key];
+				const nameKey = `#a${index}`;
+				acc.ExpressionAttributeNames[nameKey] = key;
+				const pathParts = [...parentPathParts, nameKey];
+
+				if (utils.is_plain_object(val) && Object.keys(val).length > 0) {
+					index++;
+					flattenForMerge(pathParts, val, acc, setOperator);
+				} else {
+					const valueKey = `:v${index}`;
+					acc.ExpressionAttributeValues[valueKey] = val;
+					acc.UpdateExpression.SET.push(`${pathParts.join(".")}${setOperator}${valueKey}`);
+					index++;
+				}
+			}
+		};
+
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
@@ -739,6 +768,28 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					try {
 						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 					} catch (e) {} // eslint-disable-line no-empty
+
+					if (mergeEnabled && dynamoType === "M" && updateType.name === "$SET" && subValue !== null && typeof subValue === "object"
+						&& schema.attributes().some((a) => a.startsWith(`${subKey}.`))) {
+						const schemaSettings = {...updateType.objectFromSchemaSettings, "type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, "required": false};
+						const processed = (await this.Item.objectFromSchema({[subKey]: subValue}, this, schemaSettings as any))[subKey];
+						accumulator.ExpressionAttributeNames[`#a${index}`] = subKey;
+						(function flatten (path: string, obj: ObjectType): void {
+							for (const [attr, val] of Object.entries(obj)) {
+								accumulator.ExpressionAttributeNames[`#a${index}`] = attr;
+								const k = `${path}.#a${index++}`;
+								// Only plain objects map to a nested document path. Recursing into other objects (arrays, Sets, Buffers) would emit paths keyed by array indices or byte offsets.
+								if (utils.is_plain_object(val) && Object.keys(val).length > 0) {
+									flatten(k, val);
+								} else {
+									accumulator.ExpressionAttributeValues[`:v${index}`] = val;
+									accumulator.UpdateExpression["SET"].push(`${k} = :v${index++}`);
+								}
+							}
+						})(`#a${index++}`, processed);
+						continue;
+					}
+
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
@@ -765,22 +816,30 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						await schema.requiredCheck(subKey, undefined);
 					}
 
-					let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
-					accumulator.ExpressionAttributeNames[expressionKey] = subKey;
-					if (!updateType.attributeOnly) {
-						accumulator.ExpressionAttributeValues[expressionValue] = subValue;
+					const shouldMerge = mergeEnabled && updateType.name === "$SET" && utils.is_plain_object(subValue) && Object.keys(subValue).length > 0;
+
+					if (shouldMerge) {
+						accumulator.ExpressionAttributeNames[expressionKey] = subKey;
+						index++;
+						flattenForMerge([expressionKey], subValue, accumulator, updateType.operator);
+					} else {
+						let expressionValue = updateType.attributeOnly ? "" : `:v${index}`;
+						accumulator.ExpressionAttributeNames[expressionKey] = subKey;
+						if (!updateType.attributeOnly) {
+							accumulator.ExpressionAttributeValues[expressionValue] = subValue;
+						}
+
+						if (dynamoType === "L" && updateType.name === "$ADD") {
+							expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
+							updateType = updateTypes.find((a) => a.name === "$SET");
+						}
+
+						const operator = updateType.operator || (updateType.attributeOnly ? "" : " ");
+
+						accumulator.UpdateExpression[updateType.name.slice(1)].push(`${expressionKey}${operator}${expressionValue}`);
+
+						index++;
 					}
-
-					if (dynamoType === "L" && updateType.name === "$ADD") {
-						expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
-						updateType = updateTypes.find((a) => a.name === "$SET");
-					}
-
-					const operator = updateType.operator || (updateType.attributeOnly ? "" : " ");
-
-					accumulator.UpdateExpression[updateType.name.slice(1)].push(`${expressionKey}${operator}${expressionValue}`);
-
-					index++;
 				}
 
 				return accumulator;
@@ -847,6 +906,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			});
 
 			await Promise.all(schema.attributes().map(async (attribute) => {
+				// In merge mode, nested attributes (e.g. "config.timeout") are already handled
+				// by objectFromSchema on the parent object, so skip them here to avoid duplicates.
+				if (mergeEnabled && attribute.includes(".")) {
+					const rootAttr = attribute.split(".")[0];
+					if (Object.values(returnObject.ExpressionAttributeNames).includes(rootAttr)) {
+						return;
+					}
+				}
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
 				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
@@ -859,9 +926,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			}));
 
-			Object.values(returnObject.ExpressionAttributeNames).map((attribute: string, index) => {
-				const value: ValueType = Object.values(returnObject.ExpressionAttributeValues)[index];
-				const valueKey = Object.keys(returnObject.ExpressionAttributeValues)[index];
+			Object.entries(returnObject.ExpressionAttributeNames).forEach(([nameKey, attribute]: [string, string]) => {
+				const valueKey = nameKey.replace("#a", ":v");
+				const value: ValueType = returnObject.ExpressionAttributeValues[valueKey];
+				if (value === undefined) return; // Skip parent-only names used in merge mode document paths
 				let dynamoType;
 				try {
 					dynamoType = schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
