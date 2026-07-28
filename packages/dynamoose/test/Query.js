@@ -1916,6 +1916,54 @@ describe("Query", () => {
 		});
 	});
 
+	describe("Illegal-in-key operator promotion (IN/NE on a key attribute stays FilterExpression)", () => {
+		let SingleRangeModel, MultiRangeModel;
+
+		beforeEach(() => {
+			// Single-attribute range key: filtering the sort key with an operator that
+			// is illegal in a KeyConditionExpression must remain a FilterExpression.
+			SingleRangeModel = dynamoose.model("SingleRangeCat", {"id": String, "name": {"type": String, "index": {"type": "global", "rangeKey": "age"}}, "age": Number});
+			new dynamoose.Table("SingleRangeCat", [SingleRangeModel]);
+
+			// Multi-attribute range key [round, bracket]: IN on the leading sort attribute
+			// must remain a FilterExpression (validation accepts it; promotion must not move it).
+			const schema = new dynamoose.Schema({
+				"matchId": {"type": String, "hashKey": true},
+				"tournamentId": String, "region": String, "round": String, "bracket": String
+			}, {
+				"indexes": {"global": [
+					{"name": "TRI2", "hashKey": ["tournamentId", "region"], "rangeKey": ["round", "bracket"]}
+				]}
+			});
+			MultiRangeModel = dynamoose.model("MultiRangeMatch", schema);
+			new dynamoose.Table("MultiRangeMatch", [MultiRangeModel]);
+		});
+
+		it("single-attr rangeKey: .filter(sortKey).in(...) stays FilterExpression", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await SingleRangeModel.query("name").eq("Charlie").filter("age").in([10, 20]).exec();
+			expect(queryParams.FilterExpression).toMatch(/IN \(/);
+			expect(queryParams.KeyConditionExpression).toEqual("#qha = :qhv");
+		});
+
+		it("multi-attr rangeKey: .filter(leading sortKey).in(...) stays FilterExpression", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await MultiRangeModel.query({"tournamentId": "T1", "region": "NA"}).filter("round").in(["QF", "SF"]).using("TRI2").exec();
+			expect(queryParams.FilterExpression).toMatch(/IN \(/);
+			expect(queryParams.KeyConditionExpression).not.toMatch(/IN/);
+			// round is rangeKey[0] (prefix "qr" -> "#qra"); it must not be promoted.
+			expect(queryParams.KeyConditionExpression).not.toMatch(/#qra/);
+		});
+
+		it("single-attr rangeKey: .filter(sortKey).not().eq(...) stays FilterExpression", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await SingleRangeModel.query("name").eq("Charlie").filter("age").not().eq(5).exec();
+			// NE renders as "<>" in the emitted expression.
+			expect(queryParams.FilterExpression).toMatch(/<>/);
+			expect(queryParams.KeyConditionExpression).toEqual("#qha = :qhv");
+		});
+	});
+
 	describe("query.using", () => {
 		it("Should be a function", () => {
 			expect(Model.query().using).toBeInstanceOf(Function);
