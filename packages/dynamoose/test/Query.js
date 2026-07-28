@@ -1827,6 +1827,95 @@ describe("Query", () => {
 		});
 	});
 
+	describe("query.multi-attribute partition keys", () => {
+		it("should build a KeyConditionExpression covering all multi-attribute partition keys", async () => {
+			queryPromiseResolver = () => ({"Items": [], "Count": 0});
+			const schema = new dynamoose.Schema({
+				"matchId": {"type": String, "hashKey": true},
+				"tournamentId": String, "region": String, "round": String
+			}, {
+				"indexes": {"global": [{"name": "TRI", "hashKey": ["tournamentId", "region"], "rangeKey": ["round"]}]}
+			});
+			const Match = dynamoose.model("MatchMultiAttrPK", schema);
+			new dynamoose.Table("MatchMultiAttrPK", [Match]);
+			await Match.query({"tournamentId": "T1", "region": "NA"}).where("round").eq("QF").using("TRI").exec();
+			const params = queryParams;
+			expect(params.IndexName).toBe("TRI");
+			// Attribute names live in ExpressionAttributeNames; KeyConditionExpression holds placeholders.
+			const names = params.ExpressionAttributeNames;
+			const placeholderFor = (attr) => Object.keys(names).find((key) => names[key] === attr);
+			["tournamentId", "region", "round"].forEach((attr) => {
+				const placeholder = placeholderFor(attr);
+				expect(placeholder).toBeDefined();
+				expect(params.KeyConditionExpression).toContain(placeholder);
+			});
+		});
+
+		it("should build a KeyConditionExpression for a single-PK multi-attribute sort index with beginsWith", async () => {
+			queryPromiseResolver = () => ({"Items": [], "Count": 0});
+			const schema = new dynamoose.Schema({
+				"matchId": {"type": String, "hashKey": true},
+				"player1Id": String, "matchDate": String, "round": String
+			}, {
+				"indexes": {"global": [{"name": "PlayerMatchHistoryIndex", "hashKey": ["player1Id"], "rangeKey": ["matchDate", "round"]}]}
+			});
+			const Match = dynamoose.model("MatchPlayerHistory", schema);
+			new dynamoose.Table("MatchPlayerHistory", [Match]);
+			await Match.query({"player1Id": "p9"}).where("matchDate").beginsWith("2026-").using("PlayerMatchHistoryIndex").exec();
+			const params = queryParams;
+			expect(params.IndexName).toBe("PlayerMatchHistoryIndex");
+			const names = params.ExpressionAttributeNames;
+			const placeholderFor = (attr) => Object.keys(names).find((key) => names[key] === attr);
+			const playerPlaceholder = placeholderFor("player1Id");
+			const datePlaceholder = placeholderFor("matchDate");
+			expect(playerPlaceholder).toBeDefined();
+			expect(datePlaceholder).toBeDefined();
+			// PK is an equality; the sort condition is a begins_with on the first sort attr.
+			expect(params.KeyConditionExpression).toContain(playerPlaceholder);
+			expect(params.KeyConditionExpression).toContain(`begins_with (${datePlaceholder}`);
+		});
+	});
+
+	describe("Native multi-attribute query rule enforcement", () => {
+		let Match;
+		beforeEach(() => {
+			const schema = new dynamoose.Schema({
+				"matchId": {"type": String, "hashKey": true},
+				"tournamentId": String, "region": String, "round": String, "bracket": String
+			}, {
+				"indexes": {"global": [
+					{"name": "TRI", "hashKey": ["tournamentId", "region"], "rangeKey": ["round", "bracket", "matchId"]}
+				]}
+			});
+			Match = dynamoose.model("MultiAttrEnforceMatch", schema);
+			new dynamoose.Table("MultiAttrEnforceMatch", [Match]);
+		});
+
+		it("rejects a query missing a partition-key attribute (not all PK equality)", () => {
+			return expect(
+				Match.query({"tournamentId": "T1"}).where("round").eq("QF").using("TRI").exec()
+			).rejects.toThrow(/partition key/i);
+		});
+
+		it("rejects a query that skips a sort-key attribute (gap)", () => {
+			return expect(
+				Match.query({"tournamentId": "T1", "region": "NA"}).where("round").eq("QF").where("matchId").eq("m1").using("TRI").exec()
+			).rejects.toThrow(/left-to-right|gap/i);
+		});
+
+		it("rejects a non-equality sort condition that is not last", () => {
+			return expect(
+				Match.query({"tournamentId": "T1", "region": "NA"}).where("round").gt("QF").where("bracket").eq("upper").using("TRI").exec()
+			).rejects.toThrow(/last sort key/i);
+		});
+
+		it("allows a valid query with an inequality as the last sort condition", async () => {
+			queryPromiseResolver = () => ({"Items": [], "Count": 0});
+			// Should NOT throw; build + (mocked) execute succeed.
+			await Match.query({"tournamentId": "T1", "region": "NA"}).where("round").eq("QF").where("bracket").beginsWith("up").using("TRI").exec();
+		});
+	});
+
 	describe("query.using", () => {
 		it("Should be a function", () => {
 			expect(Model.query().using).toBeInstanceOf(Function);
