@@ -138,6 +138,20 @@ describe("Item", () => {
 			expect(user.save).toBeInstanceOf(Function);
 		});
 
+		it("Should only call callback once when the save fails", async () => {
+			putItemFunction = () => Promise.reject(new CustomError.OtherError("putItem failed"));
+			const args = [];
+			await new Promise((resolve) => {
+				user.save((error, item) => {
+					args.push([error, item]);
+					setTimeout(resolve, 10);
+				});
+			});
+			expect(args.length).toEqual(1);
+			expect(args[0][0]).toEqual(new CustomError.OtherError("putItem failed"));
+			expect(args[0][1]).not.toBeDefined();
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (item) => item.save},
 			{"name": "Callback", "func": (item) => util.promisify(item.save)}

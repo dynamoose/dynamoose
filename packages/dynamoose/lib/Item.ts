@@ -478,26 +478,21 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			return ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
 		});
 
+		const resultPromise = (async (): Promise<Item> => {
+			await promise;
+			this.getInternalProperties(internalProperties).storedInDynamo = true;
+
+			const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
+			returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
+
+			return returnItem;
+		})();
+
 		if (callback) {
 			const localCallback: CallbackType<Item, any> = callback as CallbackType<Item, any>;
-			promise.then(() => {
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				localCallback(null, returnItem);
-			}).catch((error) => callback(error));
+			resultPromise.then((returnItem) => localCallback(null, returnItem), (error) => localCallback(error));
 		} else {
-			return (async (): Promise<Item> => {
-				await promise;
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				return returnItem;
-			})();
+			return resultPromise;
 		}
 	}
 
