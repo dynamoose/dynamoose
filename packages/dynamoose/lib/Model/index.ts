@@ -375,7 +375,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				if (modifier) {
 					result = modifier(result);
 				}
-				return {[dynamoKey]: result};
+				const request = {[dynamoKey]: result};
+				// Not enumerable, so the request sent to DynamoDB is unchanged.
+				Object.defineProperty(request, Internal.General.transactionModel, {"value": this});
+				return request;
 			};
 
 			return accumulator;

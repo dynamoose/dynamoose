@@ -7,7 +7,7 @@ import ModelStore from "./ModelStore";
 import {CallbackType} from "./General";
 import {Item} from "./Item";
 import Internal from "./Internal";
-const {internalProperties} = Internal.General;
+const {internalProperties, transactionModel} = Internal.General;
 import {Table} from "./Table";
 import {Instance} from "./Instance";
 
@@ -20,8 +20,13 @@ enum TransactionType {
 	write = "write"
 }
 export interface TransactionSettings {
-	return: TransactionReturnOptions;
+	return?: TransactionReturnOptions;
 	type?: TransactionType;
+	/**
+	 * Resolve a write transaction with the written items, in the same order as the request: a `create` gives the item as written, an `update` gives the
+	 * stored item (read back in one `transactGetItems` call after the write), and a `delete` or `condition` gives `undefined`.
+	 */
+	returnItems?: boolean;
 }
 
 export type GetTransactionInput = {Get: DynamoDB.GetItemInput};
@@ -43,11 +48,15 @@ type Transactions = (Transaction | Promise<Transaction>)[];
 type TransactionCallback = CallbackType<any, any>;
 type TransactionReturnType = any;
 
+// `returnItems` can't be combined with `return: "request"`, which sends nothing to DynamoDB.
+type TransactionSettingsInput = Omit<TransactionSettings, "return" | "returnItems"> & ({return?: TransactionReturnOptions.items; returnItems?: boolean} | {return: TransactionReturnOptions.request; returnItems?: false});
+
 /* Define overloads / signatures for Transaction method */
+function Transaction<T extends (Item | undefined)[] = any[]> (transactions: Transactions, settings: TransactionSettingsInput & {returnItems: true}): Promise<T>;
 function Transaction (transactions: Transactions): TransactionReturnType;
-function Transaction (transactions: Transactions, settings: TransactionSettings): TransactionReturnType;
+function Transaction (transactions: Transactions, settings: TransactionSettingsInput): TransactionReturnType;
 function Transaction (transactions: Transactions, callback: TransactionCallback): TransactionReturnType;
-function Transaction (transaction: Transactions, settings: TransactionSettings, callback: TransactionCallback): TransactionReturnType;
+function Transaction (transaction: Transactions, settings: TransactionSettingsInput, callback: TransactionCallback): TransactionReturnType;
 function Transaction (transactions: Transactions, settings?: TransactionSettings | TransactionCallback, callback?: TransactionCallback): TransactionReturnType {
 	settings = settings ?? {"return": TransactionReturnOptions.items};
 
@@ -72,6 +81,9 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 		};
 
 		if (settings.return === TransactionReturnOptions.request) {
+			if (settings.returnItems) {
+				throw new Error.InvalidParameter("returnItems can't be used when return is set to request, because no request is sent to DynamoDB.");
+			}
 			return transactionParams;
 		}
 
@@ -115,18 +127,43 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 			return instance;
 		}, undefined);
 
-		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-		const result: any = await ddb(instance, transactionType as any, transactionParams as any);
-		return result.Responses ? await Promise.all(result.Responses.map(async (item: any, index: number) => {
+		// Builds the item for a stored attribute map, with the given model or, for requests not built by a model, the model that fits the item.
+		const toItem = async (attributes: any, tableName: string, knownModel?: Model<Item>, checkExpiredItem = true): Promise<Item | undefined> => {
 			// DynamoDB returns an empty response for a key that has no item.
-			if (!item.Item) {
+			if (!attributes) {
 				return undefined;
 			}
-			const tableName: string = tableNames[index];
 			const table: Table = validTables.find((table) => table.name === tableName);
-			const model: Model<Item> = await table.getInternalProperties(internalProperties).modelForObject(Item.fromDynamo(item.Item));
-			return new model.Item(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
-		})) : null;
+			const model: Model<Item> = knownModel ?? await table.getInternalProperties(internalProperties).modelForObject(Item.fromDynamo(attributes));
+			return new model.Item(attributes, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": checkExpiredItem, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+		};
+
+		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
+		const result: any = await ddb(instance, transactionType as any, transactionParams as any);
+		if (result.Responses) {
+			return Promise.all(result.Responses.map((item: any, index: number) => toItem(item.Item, tableNames[index])));
+		}
+		if (!settings.returnItems || transactionType !== "transactWriteItems") {
+			return null;
+		}
+
+		// DynamoDB doesn't return items from a write transaction. A `create` already holds the whole item it wrote; an `update` has to be read back.
+		// The write is saved at this point, so any failure from here on is reported as a `TransactionReadError`, never as a failed write.
+		// Written items are returned even if their expiry time has passed, because they are stored.
+		try {
+			const updates = transactionObjects.map((transaction, index) => ({"update": (transaction as UpdateTransactionInput).Update, index})).filter(({update}) => update);
+			const updatedItems: any[] = updates.length > 0 ? (await ddb(instance, "transactGetItems", {"TransactItems": updates.map(({update}) => ({"Get": {"TableName": update.TableName, "Key": update.Key}}))}) as any).Responses : [];
+			return await Promise.all(transactionObjects.map((transaction, index) => {
+				const model: Model<Item> | undefined = transaction[transactionModel];
+				if ((transaction as CreateTransactionInput).Put) {
+					return toItem((transaction as CreateTransactionInput).Put.Item, tableNames[index], model, false);
+				}
+				const updateIndex = updates.findIndex((update) => update.index === index);
+				return updateIndex >= 0 ? toItem(updatedItems[updateIndex].Item, tableNames[index], model, false) : undefined;
+			}));
+		} catch (error) {
+			throw new Error.TransactionReadError(error);
+		}
 	})();
 
 	if (callback) {

@@ -5,6 +5,7 @@
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
+- Added a `returnItems` setting to `dynamoose.transaction`, so a write transaction resolves with the written items in the same order as the request: a `create` gives the stored item built from the request, an `update` gives the stored item read back in one `transactGetItems` call, and a `delete` or `condition` gives `undefined`. Each item uses the model that built its request and looks as `Model.get` would return it. If the write succeeds but the items can't be returned, the promise rejects with a `TransactionReadError` whose `committed` property is `true`
 
 ### Bug Fixes
 
