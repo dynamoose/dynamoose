@@ -544,6 +544,119 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to getItem if we pass a Date as the hash key", async () => {
+					User = dynamoose.model("User", {"id": {"type": Date, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(new Date(1700000000000));
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"N": "1700000000000"}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass a Date for the hash key in an object", async () => {
+					User = dynamoose.model("User", {"id": {"type": Date, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": new Date(1700000000000)});
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"N": "1700000000000"}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass a Date for the range key", async () => {
+					User = dynamoose.model("User", {"id": Number, "createdAt": {"type": Date, "rangeKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": 1, "createdAt": new Date(1700000000000)});
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"N": "1"},
+							"createdAt": {"N": "1700000000000"}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass a Date for a key stored in seconds", async () => {
+					User = dynamoose.model("User", {"id": {"type": {"value": Date, "settings": {"storage": "seconds"}}, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(new Date(1700000000000));
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"N": "1700000000"}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass a number for a Date hash key", async () => {
+					User = dynamoose.model("User", {"id": {"type": Date, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(1700000000000);
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"N": "1700000000000"}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should pass the stored value of a Date key to its set function, as when saving", async () => {
+					User = dynamoose.model("User", {"id": {"type": Date, "hashKey": true, "set": (val) => val + 1000}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(new Date(1700000000000));
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"N": "1700000001000"}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass a Date for a hash key with multiple types", async () => {
+					User = dynamoose.model("User", {"id": {"type": [Number, Date], "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)({"id": new Date(1700000000000)});
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"N": "1700000000000"}
+						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send correct params to getItem if we pass a Buffer as the hash key", async () => {
+					User = dynamoose.model("User", {"id": {"type": Buffer, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					getItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(Buffer.from("hello"));
+					expect(getItemParams).toEqual({
+						"Key": {
+							"id": {"B": Buffer.from("hello")}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it("Should send correct params to getItem if we use an aliased attribute as the key", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
 					new dynamoose.Table("User", [User]);
@@ -1484,6 +1597,23 @@ describe("Model", () => {
 								"Keys": [
 									{"id": {"N": "2"}},
 									{"id": {"N": "3"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should send correct params to batchGetItem if we pass a Date for the range key", async () => {
+					User = dynamoose.model("User", {"id": Number, "createdAt": {"type": Date, "rangeKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					promiseFunction = () => Promise.resolve({"Responses": {"User": []}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([{"id": 1, "createdAt": new Date(1700000000000)}]);
+					expect(params).toEqual({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}, "createdAt": {"N": "1700000000000"}}
 								]
 							}
 						}
@@ -3324,6 +3454,28 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem if we pass a Date as the hash key", async () => {
+					User = dynamoose.model("User", {"id": {"type": Date, "hashKey": true}, "name": String});
+					new dynamoose.Table("User", [User]);
+
+					updateItemFunction = () => Promise.resolve({});
+					await callType.func(User).bind(User)(new Date(1700000000000), {"name": "Charlie"});
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "Charlie"}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {"N": "1700000000000"}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem if we use an aliased attribute for the key with a separate update object", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}, "name": String});
 					new dynamoose.Table("User", [User]);
@@ -4253,6 +4405,20 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to deleteItem if we pass a Buffer as the hash key", async () => {
+					User = dynamoose.model("User", {"id": {"type": Buffer, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)(Buffer.from("hello"));
+					expect(deleteItemParams).toEqual({
+						"Key": {
+							"id": {"B": Buffer.from("hello")}
+						},
+						"TableName": "User"
+					});
+				});
+
 				it("Should send correct params to deleteItem if we use an aliased attribute as the key", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
 					new dynamoose.Table("User", [User]);
@@ -4444,6 +4610,21 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to batchWriteItem if we pass a Date for the hash key in an object", async () => {
+					User = dynamoose.model("User", {"id": {"type": Date, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
+					await callType.func(User).bind(User)([{"id": new Date(1700000000000)}]);
+					expect(params).toEqual({
+						"RequestItems": {
+							"User": [
+								{"DeleteRequest": {"Key": {"id": {"N": "1700000000000"}}}}
+							]
+						}
+					});
+				});
+
 				it("Should send correct params to batchWriteItem if we use an aliased attribute as the key", async () => {
 					User = dynamoose.model("User", {"pk": {"type": String, "alias": "email"}});
 					new dynamoose.Table("User", [User]);
@@ -4487,6 +4668,16 @@ describe("Model", () => {
 					const result = await callType.func(User).bind(User)([1, 2]);
 					expect(result).toEqual({
 						"unprocessedItems": [{"id": 1}]
+					});
+				});
+
+				it("Should return correct result from batchDelete with UnprocessedItems that have Buffer keys", async () => {
+					User = dynamoose.model("User", {"id": {"type": Buffer, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"DeleteRequest": {"Key": {"id": {"B": Buffer.from("a")}}}}]}});
+					const result = await callType.func(User).bind(User)([Buffer.from("a"), Buffer.from("b")]);
+					expect(result).toEqual({
+						"unprocessedItems": [{"id": Buffer.from("a")}]
 					});
 				});
 
@@ -4569,6 +4760,17 @@ describe("Model", () => {
 					"Get": {
 						"Key": {"id": {"N": "1"}},
 						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result if we pass a Date for the range key", async () => {
+				const Event = dynamoose.model("Event", {"id": Number, "createdAt": {"type": Date, "rangeKey": true}});
+				new dynamoose.Table("Event", [Event]);
+				expect(await Event.transaction.get({"id": 1, "createdAt": new Date(1700000000000)})).toEqual({
+					"Get": {
+						"Key": {"id": {"N": "1"}, "createdAt": {"N": "1700000000000"}},
+						"TableName": "Event"
 					}
 				});
 			});
