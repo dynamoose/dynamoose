@@ -871,6 +871,14 @@ You can also pass an array into the `serializer` parameter, which acts as a shor
 User.serializer.add("myCustomSerializer", ["id"]); // ["id"] is the same as {"include": ["id"]}
 ```
 
+`exclude` accepts nested paths such as `"address.city"` or `"lines.0.cost"`, and does not change the item: the plain objects and lists along an excluded path are copied before the property is removed. Other values on the path, such as a class instance stored in an `Object` attribute, are not copied, so excluding a property inside one still removes it from the item. Other nested values in `serialized` are still shared with the item, so a `modify` function should return new objects (as in the examples above) instead of changing nested values of `serialized` in place. To remove a property from every object in a list attribute, use `modify` rather than an `exclude` path:
+
+```js
+User.serializer.add("withoutLineCosts", {
+	"modify": (serialized) => ({...serialized, "lines": serialized.lines.map(({cost, ...line}) => line)})
+});
+```
+
 ## model.serializer.delete(name)
 
 This function will delete the serializer from the list of serializer on the model. If no existing serializer is assigned for that name, the function will do nothing and no error will be thrown.
