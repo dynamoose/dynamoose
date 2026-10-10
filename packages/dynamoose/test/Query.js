@@ -1910,7 +1910,8 @@ describe("Query", () => {
 			const start = Date.now();
 			await Model.query("name").eq("Charlie").all(10, 2).exec();
 			const end = Date.now();
-			expect(end - start).toBeGreaterThan(19);
+			// Two 10ms delays. A timer can fire about 1ms early measured against `Date.now()`, so allow some slack while still proving the delays ran.
+			expect(end - start).toBeGreaterThanOrEqual(15);
 		});
 
 		it("Should send correct result on query.exec", async () => {
