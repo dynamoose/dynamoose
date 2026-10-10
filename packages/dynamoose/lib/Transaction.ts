@@ -121,7 +121,7 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 			const tableName: string = tableNames[index];
 			const table: Table = validTables.find((table) => table.name === tableName);
 			const model: Model<Item> = await table.getInternalProperties(internalProperties).modelForObject(Item.fromDynamo(item.Item));
-			return new model.Item(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "type": "fromDynamo"});
+			return new model.Item(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 		})) : null;
 	})();
 

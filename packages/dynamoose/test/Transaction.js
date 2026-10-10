@@ -263,6 +263,20 @@ describe("Transaction", () => {
 				});
 			});
 
+			it("Should apply get modifiers to items returned from AWS", async () => {
+				dynamoose.aws.ddb.set({
+					"transactGetItems": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}]})
+				});
+
+				const User = dynamoose.model("User", {"id": Number, "name": {"type": String, "get": (val) => `${val}-get`}});
+				new dynamoose.Table("Table", [User]);
+				const items = await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}]);
+				expect(items[0].toJSON()).toEqual({
+					"id": 1,
+					"name": "Bob-get"
+				});
+			});
+
 			it("Should send correct parameters to AWS for put items", async () => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
