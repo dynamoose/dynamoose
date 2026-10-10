@@ -263,6 +263,21 @@ describe("Transaction", () => {
 				});
 			});
 
+			it("Should map properties on items returned from AWS", async () => {
+				dynamoose.aws.ddb.set({
+					"transactGetItems": () => Promise.resolve({"Responses": [{"Item": {"pk": {"N": "1"}, "name": {"S": "Bob"}, "nm": {"S": ""}}}]})
+				});
+
+				const User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}, "name": String, "nm": {"type": String, "map": "nickname"}});
+				new dynamoose.Table("Table", [User]);
+				const items = await callType.func(dynamoose.transaction)([{"Get": {"Key": {"pk": {"N": "1"}}, "TableName": "Table"}}]);
+				expect(items[0].toJSON()).toEqual({
+					"id": 1,
+					"name": "Bob",
+					"nickname": ""
+				});
+			});
+
 			it("Should apply get modifiers to items returned from AWS", async () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}]})

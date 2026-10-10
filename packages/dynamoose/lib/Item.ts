@@ -901,7 +901,7 @@ Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjec
 
 		for (const key in mapSettingObject) {
 			const expectedObjectValue = utils.object.get(expectedObject, key);
-			if (expectedObjectValue) {
+			if (expectedObjectValue !== undefined) {
 				utils.object.set(this as any, key, expectedObjectValue);
 			}
 		}
