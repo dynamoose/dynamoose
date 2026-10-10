@@ -1998,7 +1998,8 @@ describe("Table", () => {
 					}
 				}]);
 				expect(timesCalledDescribeTTL).toEqual(2);
-				expect(Date.now() - startTime).toBeGreaterThan(1000);
+				// One 1000ms wait between TTL status checks. A timer can fire about 1ms early measured against `Date.now()`, so allow some slack while still proving the wait ran.
+				expect(Date.now() - startTime).toBeGreaterThanOrEqual(990);
 			});
 
 			it("Should call updateTimeToLive with correct parameters for custom attribute if TTL is disabled", async () => {
