@@ -1213,6 +1213,14 @@ describe("Model", () => {
 					expect(user.id).toEqual(1);
 				});
 
+				it("Should map properties with falsy values", async () => {
+					User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}, "sc": {"type": Number, "map": "score"}, "fl": {"type": Boolean, "map": "flag"}, "nm": {"type": String, "map": "name"}});
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"pk": {"N": "1"}, "sc": {"N": "0"}, "fl": {"BOOL": false}, "nm": {"S": ""}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect({...user}).toEqual({"id": 1, "score": 0, "flag": false, "name": ""});
+				});
+
 				it("Should throw error if Dynamo object contains properties that have type mismatch with schema", () => {
 					User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
 					new dynamoose.Table("User", [User]);
@@ -1507,6 +1515,59 @@ describe("Model", () => {
 							}
 						}
 					});
+				});
+
+				it("Should return items with mapped properties in the order of the keys", async () => {
+					User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}, "name": String, "sc": {"type": Number, "map": "score"}});
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"pk": {"N": "2"}, "name": {"S": "Bob"}, "sc": {"N": "0"}}, {"pk": {"N": "1"}, "name": {"S": "Charlie"}, "sc": {"N": "5"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result.map((item) => ({...item}))).toEqual([
+						{"id": 1, "name": "Charlie", "score": 5},
+						{"id": 2, "name": "Bob", "score": 0}
+					]);
+				});
+
+				it("Should not return expired items", async () => {
+					User = dynamoose.model("User", {"id": Number});
+					new dynamoose.Table("User", [User], {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "ttl": {"N": "1"}}, {"id": {"N": "2"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([1, 2]);
+					expect(result.map((item) => ({...item}))).toEqual([
+						{"id": 2}
+					]);
+					expect(result.unprocessedKeys).toEqual([]);
+				});
+
+				it("Should return items whose key attribute has set and get functions", async () => {
+					User = dynamoose.model("User", {"id": {"type": String, "hashKey": true, "set": (val) => `user#${val}`, "get": (val) => val.replace(/^user#/, "")}});
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"S": "user#1"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)(["1"]);
+					expect(result.map((item) => ({...item}))).toEqual([
+						{"id": "1"}
+					]);
+				});
+
+				it("Should return items whose key is a Buffer", async () => {
+					User = dynamoose.model("User", {"id": {"type": Buffer, "hashKey": true}, "name": String});
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"B": Buffer.from("b")}, "name": {"S": "Bob"}}, {"id": {"B": Buffer.from("a")}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([{"id": Buffer.from("a")}, {"id": Buffer.from("b")}]);
+					expect(result.map((item) => ({...item}))).toEqual([
+						{"id": Buffer.from("a"), "name": "Charlie"},
+						{"id": Buffer.from("b"), "name": "Bob"}
+					]);
+				});
+
+				it("Should return unprocessed keys that are Buffers", async () => {
+					User = dynamoose.model("User", {"id": {"type": Buffer, "hashKey": true}});
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"Responses": {"User": []}, "UnprocessedKeys": {"User": {"Keys": [{"id": {"B": Buffer.from("a")}}]}}});
+					const result = await callType.func(User).bind(User)([{"id": Buffer.from("a")}]);
+					expect(result.unprocessedKeys).toEqual([
+						{"id": Buffer.from("a")}
+					]);
 				});
 
 				it.skip("Should throw an error when passing in incorrect type in key", async () => {
@@ -3390,6 +3451,19 @@ describe("Model", () => {
 					expect({...result}).toEqual({
 						"id": 1,
 						"name": "Charlie"
+					});
+				});
+
+				it("Should return updated item with mapped properties upon success", async () => {
+					User = dynamoose.model("User", {"pk": {"type": Number, "map": "id"}, "name": String, "fl": {"type": Boolean, "map": "flag"}});
+					new dynamoose.Table("User", [User]);
+					updateItemFunction = () => Promise.resolve({"Attributes": {"pk": {"N": "1"}, "name": {"S": "Charlie"}, "fl": {"BOOL": false}}});
+					const result = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(result.constructor.name).toEqual("User");
+					expect({...result}).toEqual({
+						"id": 1,
+						"name": "Charlie",
+						"flag": false
 					});
 				});
 
