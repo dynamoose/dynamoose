@@ -263,6 +263,29 @@ describe("Transaction", () => {
 				});
 			});
 
+			it("Should return undefined for an item that does not exist", async () => {
+				dynamoose.aws.ddb.set({
+					"transactGetItems": () => Promise.resolve({
+						"Responses": [
+							{
+								"Item": {
+									"id": {"N": "1"},
+									"name": {"S": "John"}
+								}
+							},
+							{}
+						]
+					})
+				});
+
+				const User = dynamoose.model("User", {"id": Number, "name": String});
+				new dynamoose.Table("Table", [User]);
+				const items = await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}, {"Get": {"Key": {"id": {"N": "2"}}, "TableName": "Table"}}]);
+				expect(items.length).toEqual(2);
+				expect(items[0].toJSON()).toEqual({"id": 1, "name": "John"});
+				expect(items[1]).toEqual(undefined);
+			});
+
 			it("Should apply get modifiers to items returned from AWS", async () => {
 				dynamoose.aws.ddb.set({
 					"transactGetItems": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}}}]})
