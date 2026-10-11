@@ -2021,6 +2021,17 @@ describe("Model", () => {
 						expect(r.updatedAt).toBeWithinRange(date2 - 10, date2 + 10);
 					});
 				});
+
+				it("Should throw error if AWS throws error", async () => {
+					dynamoose.aws.ddb.set({
+						"createTable": () => ({
+							"promise": () => Promise.reject(new Error("AWS ERROR"))
+						})
+					});
+
+					const Model = dynamoose.model("Cat", {"id": String}, {"create": true});
+					await expect(Model.create({"id" : "cat"})).rejects.toThrow("AWS ERROR");
+				});
 			});
 		});
 	});
