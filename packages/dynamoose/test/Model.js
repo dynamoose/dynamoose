@@ -3393,6 +3393,29 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should return updated item with get function applied upon success", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "get": (val) => `${val}-get`}});
+					new dynamoose.Table("User", [User]);
+					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const result = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(result.constructor.name).toEqual("User");
+					expect({...result}).toEqual({
+						"id": 1,
+						"name": "Charlie-get"
+					});
+				});
+
+				it("Should return updated item with async get function applied upon success", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "get": async (val) => `${val}-get`}});
+					new dynamoose.Table("User", [User]);
+					updateItemFunction = () => Promise.resolve({"Attributes": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					const result = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect({...result}).toEqual({
+						"id": 1,
+						"name": "Charlie-get"
+					});
+				});
+
 				it("Should return updated item with object property upon success", async () => {
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": Object}, {"saveUnknown": true}));
 					new dynamoose.Table("User", [User]);
