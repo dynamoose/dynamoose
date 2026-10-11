@@ -10,6 +10,21 @@ const makeError = (defaultMessage: string, errorName: string) => class CustomErr
 	}
 };
 
+/**
+ * Thrown by `dynamoose.transaction` with `returnItems` when the write succeeded but the written items could not be returned (reading them back or
+ * building them failed). The data is saved, so the write must not be retried; `cause` holds the original error.
+ */
+class TransactionReadError extends Error {
+	name = "TransactionReadError";
+	committed = true;
+	cause: unknown;
+
+	constructor (cause: unknown) {
+		super(`The transaction was written, but returning the written items failed${cause instanceof Error ? `: ${cause.message}` : ""}`);
+		this.cause = cause;
+	}
+}
+
 export = {
 	"MissingSchemaError": makeError("Missing Schema", "MissingSchemaError"),
 	"InvalidParameter": makeError("Invalid Parameter", "InvalidParameter"),
@@ -20,5 +35,6 @@ export = {
 	"TypeMismatch": makeError("There was a type mismatch between the schema and document", "TypeMismatch"),
 	"InvalidFilterComparison": makeError("That filter comparison is invalid", "InvalidFilterComparison"),
 	"ValidationError": makeError("There was an validation error with the document", "ValidationError"),
-	"OtherError": makeError("There was an error", "OtherError")
+	"OtherError": makeError("There was an error", "OtherError"),
+	"TransactionReadError": TransactionReadError
 };
