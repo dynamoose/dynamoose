@@ -39,26 +39,4 @@ await dynamoose.transaction([
 
 ## Returning written items
 
-DynamoDB does not return items from a write transaction, so by default a `write` transaction resolves with `null`. Set `returnItems` to `true` to resolve with an array that has one entry per object in `transactions`, in the same order:
-
-- `create` (`Put`): the item as stored, built from the request without reading it from DynamoDB.
-- `update` (`Update`): the item as stored after the transaction. Dynamoose reads every updated item back in one `transactGetItems` call after the write succeeds, which uses read capacity for each of them. The item is read after the write, so a change another request makes in between is included, and an item deleted in between is `undefined`.
-- `delete` (`Delete`) and `condition` (`ConditionCheck`): `undefined`.
-
-Every item looks the same as `Model.get` would return it: an instance of the model whose `Model.transaction` method built that request, with its `get` functions and `map` names applied. That differs from `Model.create`, which returns the item without its `get` functions applied. A written item is returned even if its `expires` time has passed. For an object you build yourself, or a copy of one a `Model.transaction` method returned, Dynamoose uses the first model of that table the item fits.
-
-```js
-const [charge, user, , product] = await dynamoose.transaction([
-	Charge.transaction.create({"id": "charge1", "userid": "user1", "amount": 100}),
-	User.transaction.update({"id": "user1"}, {"$ADD": {"balance": -100}}),
-	Credit.transaction.delete({"id": "credit1"}),
-	Product.transaction.update({"id": "product1"}, {"$ADD": {"inventory": -1}})
-], {"returnItems": true});
-
-console.log(user.balance); // The balance stored after the transaction
-```
-
-In TypeScript, you can pass the item types in the same order: `dynamoose.transaction<[Charge, User, undefined, Product]>(...)`. Dynamoose does not check them against the requests.
-
-If the write succeeds but the written items can't be returned (reading them back fails, or a `get` function throws), the promise rejects with an error whose `name` is `TransactionReadError`. Its `committed` property is `true` and its `cause` property is the original error. The data is saved, so don't retry the write: a retried `create` fails because the item exists, and a retried `$ADD` is applied twice.
-
+dyno_jsdoc_dist/Transaction.d.ts|transactionSettings.returnItems

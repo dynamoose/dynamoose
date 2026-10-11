@@ -18,7 +18,7 @@ The following is a chart of IAM permissions you need in order to run Dynamoose f
 | Model.batchDelete | `batchWriteItem` |  |
 | item.save | `putItem` |  |
 | item.delete | `deleteItem` |  |
-| dynamoose.transaction | `transactGetItems`, `transactWriteItems` |  |
+| dynamoose.transaction | `transactGetItems`, `transactWriteItems` | A `write` transaction with `returnItems` set that includes an `update` also calls `transactGetItems` to read the updated items back. |
 
 ## Why is it recommended to set `create`, `update` & `waitForActive` model options to false for production environments?
 
