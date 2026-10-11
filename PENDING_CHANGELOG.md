@@ -5,6 +5,7 @@
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
+- Added `mergeNestedObjects` setting to `Model.update`, to only update the nested properties passed in instead of replacing the entire object
 
 ### Bug Fixes
 
