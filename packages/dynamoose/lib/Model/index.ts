@@ -119,7 +119,7 @@ interface ModelInternalProperties {
 	dynamoPropertyForAttribute: (attribute: string) => Promise<string>;
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
 	getHashKey: () => string;
-	getRangeKey: () => string | void;
+	getRangeKey: () => string | undefined;
 	table: () => Table;
 	tableName: string;
 
@@ -286,7 +286,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			"getHashKey": (): string => {
 				return this.getInternalProperties(internalProperties).schemas[0].hashKey;
 			},
-			"getRangeKey": (): string | void => {
+			"getRangeKey": (): string | undefined => {
 				return this.getInternalProperties(internalProperties).schemas[0].rangeKey;
 			},
 			"table": (): Table => {
