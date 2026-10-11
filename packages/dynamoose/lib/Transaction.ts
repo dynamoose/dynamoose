@@ -118,6 +118,10 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 		// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
 		const result: any = await ddb(instance, transactionType as any, transactionParams as any);
 		return result.Responses ? await Promise.all(result.Responses.map(async (item: any, index: number) => {
+			// DynamoDB returns an empty response for a key that has no item.
+			if (!item.Item) {
+				return undefined;
+			}
 			const tableName: string = tableNames[index];
 			const table: Table = validTables.find((table) => table.name === tableName);
 			const model: Model<Item> = await table.getInternalProperties(internalProperties).modelForObject(Item.fromDynamo(item.Item));
