@@ -221,8 +221,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			"convertKeyToObject": async (key: InputKey): Promise<KeyObject> => {
 				let keyObject: KeyObject;
 				const hashKey = this.getInternalProperties(internalProperties).getHashKey();
-				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true};
-				if (typeof key === "object") {
+				// `customTypesDynamo` converts custom key types (such as `Date`) to the value DynamoDB stores, as saving an item does.
+				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true, "customTypesDynamo": true};
+				// A `Date` or binary value is the hash key value itself, not an object of key attributes.
+				if (typeof key === "object" && !(key instanceof Date) && !(key instanceof Uint8Array)) {
 					// If we passed aliased attribute names, we need to get them back to the key names
 					const mappedKey = await this.Item.objectFromSchema(key, this, objectFromSchemaSettings);
 					const rangeKey = this.getInternalProperties(internalProperties).getRangeKey();
@@ -624,7 +626,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[table.getInternalProperties(internalProperties).name] ? response.UnprocessedItems[this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name] : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item.DeleteRequest.Key)));
 			return (await Promise.all(keyObjects)).reduce((result, key) => {
-				const item = tmpResultUnprocessed.find((item) => Object.keys(key).every((keyProperty) => item[keyProperty] === key[keyProperty]));
+				// `utils.object.equals` compares binary key values by content; each response holds new `Buffer` instances.
+				const item = tmpResultUnprocessed.find((item) => Object.keys(key).every((keyProperty) => utils.object.equals(item[keyProperty], key[keyProperty])));
 				if (item) {
 					result.unprocessedItems.push(item);
 				}

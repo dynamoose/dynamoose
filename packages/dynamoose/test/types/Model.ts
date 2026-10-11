@@ -45,6 +45,16 @@ const shouldPassUpdateWithCustomReturnValuesSetting = model.update({"id": 1}, {"
 
 const shouldPassGetWithStringAsKey = model.get("id");
 const shouldPassGetWithNumberAsKey = model.get(1);
+const shouldPassGetWithDateAsKey = model.get(new Date());
+const shouldPassGetWithBufferAsKey = model.get(Buffer.from("id"));
+const shouldPassGetWithDateInKeyObject = model.get({"id": 1, "createdAt": new Date()});
+const shouldPassGetWithBufferInKeyObject = model.get({"id": Buffer.from("id")});
+const shouldPassBatchGetWithDateKeys = model.batchGet([new Date(), {"id": 1, "createdAt": new Date()}]);
+const shouldPassDeleteWithBufferAsKey = model.delete(Buffer.from("id"));
+const shouldPassTransactionGetWithDateInKeyObject = model.transaction.get({"id": 1, "createdAt": new Date()});
+
+// @ts-expect-error
+const shouldFailGetWithBooleanAsKey = model.get(true);
 
 const shouldPassUpdateWithStringAsKey = model.update("id", {"value": "hello world"});
 const shouldPassUpdateWithNumberAsKey = model.update(1, {"value": "hello world"});

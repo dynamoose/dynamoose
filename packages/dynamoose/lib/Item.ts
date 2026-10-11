@@ -728,6 +728,10 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
 				const typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails as DynamoDBTypeResult;
+				// With `typeCheck` off, a value can match none of the attribute's types, so there is no custom type to convert it with.
+				if (!typeDetails) {
+					return;
+				}
 				const {customType} = typeDetails;
 				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
 				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");

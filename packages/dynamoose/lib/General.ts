@@ -9,10 +9,12 @@ export type DeepPartial<T> = {[P in keyof T]?: DeepPartial<T[P]>};
 
 // - Dynamoose
 
+// A value of a DynamoDB key attribute
+type KeyValue = string | number | Date | Buffer;
 // An object representing a DynamoDB key
-export type KeyObject = {[attribute: string]: string | number};
+export type KeyObject = {[attribute: string]: KeyValue};
 // An item representing a DynamoDB key
-export type InputKey = string | number | KeyObject;
+export type InputKey = KeyValue | KeyObject;
 
 interface ModelItemConstructor<T extends Item> {
 	/**
