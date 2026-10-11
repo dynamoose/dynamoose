@@ -954,6 +954,77 @@ describe("Schema", () => {
 						}
 					]
 				}
+			},
+			{
+				"name": "Should return correct result with native multi-attribute GSI keys (Number sort attr)",
+				"settings": {"indexes": {"global": [{"name": "TournamentRegionIndex", "hashKey": ["tournamentId", "region"], "rangeKey": ["round", "seq"]}]}},
+				"input": {"matchId": String, "tournamentId": String, "region": String, "round": String, "seq": Number},
+				"output": {
+					"AttributeDefinitions": [
+						{"AttributeName": "matchId", "AttributeType": "S"},
+						{"AttributeName": "tournamentId", "AttributeType": "S"},
+						{"AttributeName": "region", "AttributeType": "S"},
+						{"AttributeName": "round", "AttributeType": "S"},
+						{"AttributeName": "seq", "AttributeType": "N"}
+					],
+					"KeySchema": [{"AttributeName": "matchId", "KeyType": "HASH"}],
+					"GlobalSecondaryIndexes": [{
+						"IndexName": "TournamentRegionIndex",
+						"KeySchema": [
+							{"AttributeName": "tournamentId", "KeyType": "HASH"},
+							{"AttributeName": "region", "KeyType": "HASH"},
+							{"AttributeName": "round", "KeyType": "RANGE"},
+							{"AttributeName": "seq", "KeyType": "RANGE"}
+						],
+						"Projection": {"ProjectionType": "ALL"}
+					}]
+				}
+			},
+			{
+				"name": "Should return correct result with two native multi-attribute GSIs",
+				"settings": {"indexes": {"global": [
+					{"name": "TournamentRegionIndex", "hashKey": ["tournamentId", "region"], "rangeKey": ["round", "bracket", "matchId"]},
+					{"name": "PlayerMatchHistoryIndex", "hashKey": ["player1Id"], "rangeKey": ["matchDate", "round"]}
+				]}},
+				"input": {
+					"matchId": {"type": String, "hashKey": true},
+					"tournamentId": String, "region": String, "round": String, "bracket": String,
+					"player1Id": String, "matchDate": String
+				},
+				"output": {
+					"AttributeDefinitions": [
+						{"AttributeName": "matchId", "AttributeType": "S"},
+						{"AttributeName": "tournamentId", "AttributeType": "S"},
+						{"AttributeName": "region", "AttributeType": "S"},
+						{"AttributeName": "player1Id", "AttributeType": "S"},
+						{"AttributeName": "round", "AttributeType": "S"},
+						{"AttributeName": "bracket", "AttributeType": "S"},
+						{"AttributeName": "matchDate", "AttributeType": "S"}
+					],
+					"KeySchema": [{"AttributeName": "matchId", "KeyType": "HASH"}],
+					"GlobalSecondaryIndexes": [
+						{
+							"IndexName": "TournamentRegionIndex",
+							"KeySchema": [
+								{"AttributeName": "tournamentId", "KeyType": "HASH"},
+								{"AttributeName": "region", "KeyType": "HASH"},
+								{"AttributeName": "round", "KeyType": "RANGE"},
+								{"AttributeName": "bracket", "KeyType": "RANGE"},
+								{"AttributeName": "matchId", "KeyType": "RANGE"}
+							],
+							"Projection": {"ProjectionType": "ALL"}
+						},
+						{
+							"IndexName": "PlayerMatchHistoryIndex",
+							"KeySchema": [
+								{"AttributeName": "player1Id", "KeyType": "HASH"},
+								{"AttributeName": "matchDate", "KeyType": "RANGE"},
+								{"AttributeName": "round", "KeyType": "RANGE"}
+							],
+							"Projection": {"ProjectionType": "ALL"}
+						}
+					]
+				}
 			}
 		];
 
@@ -961,7 +1032,7 @@ describe("Schema", () => {
 			it(test.name, async () => {
 				const table = {"getInternalProperties": () => ({"options": {"throughput": "ON_DEMAND"}})};
 				const model = {"getInternalProperties": () => ({"table": () => table})};
-				expect(await new dynamoose.Schema(test.input).getCreateTableAttributeParams(model)).toEqual(test.output);
+				expect(await new dynamoose.Schema(test.input, test.settings).getCreateTableAttributeParams(model)).toEqual(test.output);
 			});
 		});
 	});
@@ -1478,6 +1549,59 @@ describe("Schema", () => {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
 				expect(new dynamoose.Schema({"id": String}).getInternalProperties(internalProperties).getTimestampAttributes(test.input)).toEqual(test.output);
 			});
+		});
+	});
+
+	describe("indexes (multi-attribute)", () => {
+		// Multi-attribute index declarations are validated synchronously in the Schema
+		// constructor, so these assertions check that constructing the Schema throws.
+
+		it("should reject multi-attribute arrays on a local index", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String, "b": String}, {
+				"indexes": {"local": [{"name": "li", "hashKey": ["id"], "rangeKey": ["a", "b"]}]}
+			})).toThrow(/local/i);
+		});
+
+		it("should reject more than 4 attributes in a key array", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String, "b": String, "c": String, "d": String, "e": String}, {
+				"indexes": {"global": [{"name": "gi", "hashKey": ["a", "b", "c", "d", "e"]}]}
+			})).toThrow(/4/i);
+		});
+
+		it("should reject an array member that is not a declared attribute", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String}, {
+				"indexes": {"global": [{"name": "gi", "hashKey": ["a", "nope"]}]}
+			})).toThrow(/nope/);
+		});
+
+		it("should reject an attribute in both hashKey and rangeKey of one index", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String}, {
+				"indexes": {"global": [{"name": "gi", "hashKey": ["a"], "rangeKey": ["a"]}]}
+			})).toThrow(/hashKey.*rangeKey|rangeKey.*hashKey/);
+		});
+
+		it("should reject a global index with an empty hashKey array", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String}, {
+				"indexes": {"global": [{"name": "gi", "hashKey": []}]}
+			})).toThrow(/hashKey/);
+		});
+
+		it("should construct a valid multi-attribute global index without error", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String, "b": String, "c": String}, {
+				"indexes": {"global": [{"name": "gi", "hashKey": ["a", "b"], "rangeKey": ["c"]}]}
+			})).not.toThrow();
+		});
+
+		it("should construct a valid multi-attribute global index declared without a rangeKey", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String, "b": String}, {
+				"indexes": {"global": [{"name": "gi", "hashKey": ["a", "b"]}]}
+			})).not.toThrow();
+		});
+
+		it("should reject a local index declared without a global index alongside it", () => {
+			expect(() => new dynamoose.Schema({"id": String, "a": String, "b": String}, {
+				"indexes": {"local": [{"name": "li", "hashKey": ["a"], "rangeKey": ["b"]}]}
+			})).toThrow(/local/i);
 		});
 	});
 });
