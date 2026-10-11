@@ -467,9 +467,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		const keyObjects = keys.map(async (key) => this.getInternalProperties(internalProperties).convertKeyToObject(key));
 
-		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true});
 		const prepareResponse = async (response: DynamoDB.BatchGetItemOutput): Promise<ModelBatchGetItemsResponse<ItemCarrier>> => {
-			const tmpResult = await Promise.all(response.Responses[table.getInternalProperties(internalProperties).name].map((item) => itemify(item)));
+			const responseItems = response.Responses[table.getInternalProperties(internalProperties).name];
+			// `keyObjects` use the DynamoDB attribute names, which `mapAttributes` renames on the converted items, so match keys against the raw response instead.
+			const responseKeyObjects = responseItems.map((item) => this.Item.fromDynamo(item));
+			// An expired item converts to `undefined` and is left out of the result, like `Model.get`, `Model.query` and `Model.scan` do.
+			const tmpResult = await Promise.all(responseItems.map((item) => itemify(item)));
 			const unprocessedArray = response.UnprocessedKeys[table.getInternalProperties(internalProperties).name] ? response.UnprocessedKeys[this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name].Keys : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item)));
 			const startArray: ModelBatchGetItemsResponse<ItemCarrier> = Object.assign([], {
@@ -479,11 +483,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			});
 			return (await Promise.all(keyObjects)).reduce((result, key) => {
 				const keyProperties = Object.keys(key);
-				const item = tmpResult.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
-				if (item) {
-					result.push(item);
+				// `utils.object.equals` compares binary key values by content; each response holds new `Buffer` instances.
+				const index = responseKeyObjects.findIndex((item) => keyProperties.every((keyProperty) => utils.object.equals(item[keyProperty], key[keyProperty])));
+				if (index !== -1) {
+					if (tmpResult[index]) {
+						result.push(tmpResult[index]);
+					}
 				} else {
-					const item = tmpResultUnprocessed.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
+					const item = tmpResultUnprocessed.find((item) => keyProperties.every((keyProperty) => utils.object.equals(item[keyProperty], key[keyProperty])));
 					if (item) {
 						result.unprocessedKeys.push(item);
 					}
@@ -892,7 +899,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			};
 		};
 
-		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
+		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true, "mapAttributes": true});
 		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)),
