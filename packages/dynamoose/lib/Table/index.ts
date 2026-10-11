@@ -1,5 +1,5 @@
 import CustomError from "../Error";
-import {CallbackType, DeepPartial, ObjectType} from "../General";
+import {CallbackType, DeepPartial, ModelType, ObjectType} from "../General";
 import Internal from "../Internal";
 const {internalProperties} = Internal.General;
 import {Model} from "../Model";
@@ -24,7 +24,7 @@ interface TableInternalProperties {
 	setupFlowRunning: boolean;
 	pendingTasks: any[];
 	pendingTaskPromise: () => Promise<void>;
-	models: any[];
+	models: ModelType<ItemCarrier>[];
 	// Stores the latest result from `describeTable` for the given table
 	latestTableDetails?: DynamoDB.DescribeTableOutput;
 
@@ -32,7 +32,7 @@ interface TableInternalProperties {
 	modelForObject: (object: ObjectType) => Promise<Model<ItemCarrier>>;
 	getCreateTableAttributeParams: () => Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">>;
 	getHashKey: () => string;
-	getRangeKey: () => string;
+	getRangeKey: () => string | undefined;
 	runSetupFlow: () => Promise<void>;
 }
 
@@ -118,7 +118,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * @param models An array of [Model](/guide/Model.md) instances.
 	 * @param options An optional object used to customize settings for the table.
 	 */
-	constructor (instance: Instance, name: string, models: Model[], options: TableOptionsOptional = {}) {
+	constructor (instance: Instance, name: string, models: ModelType<ItemCarrier>[], options: TableOptionsOptional = {}) {
 		super();
 
 		// Check name argument
@@ -132,7 +132,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 		if (!models) {
 			throw new CustomError.InvalidParameter("Models must be passed into table constructor.");
 		}
-		if (!Array.isArray(models) || !models.every((model: any) => model.Model && model.Model instanceof Model) || models.length === 0) {
+		if (!Array.isArray(models) || !models.every((model) => model.Model && model.Model instanceof Model) || models.length === 0) {
 			throw new CustomError.InvalidParameterType("Models passed into table constructor should be an array of models.");
 		}
 
@@ -162,7 +162,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 					internalPropertiesObject.pendingTasks.push(resolve);
 				});
 			},
-			"models": models.map((model: any) => {
+			"models": models.map((model) => {
 				if (model.Model.getInternalProperties(internalProperties)._table) {
 					throw new CustomError.InvalidParameter(`Model ${model.Model.name} has already been assigned to a table.`);
 				}
@@ -176,7 +176,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			}),
 
 			"getIndexes": async (): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => {
-				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model.getInternalProperties(internalProperties).getIndexes(this)))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
+				return (await Promise.all(this.getInternalProperties(internalProperties).models.map((model): Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}> => model.Model.getInternalProperties(internalProperties).getIndexes()))).reduce((result: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}, indexes: {GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}) => {
 					Object.entries(indexes).forEach(([key, value]) => {
 						if (key === "TableIndex") {
 							result[key] = value as TableIndex;
@@ -203,7 +203,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 				return models[bestModelIndex];
 			},
 			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
-				const models = this.getInternalProperties(internalProperties).models as { Model: Model }[];
+				const models = this.getInternalProperties(internalProperties).models;
 				const createTableAttributeParams = await Promise.all(
 					models.map((model) => model.Model.getInternalProperties(internalProperties).getCreateTableAttributeParams())
 				);
@@ -216,7 +216,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			"getHashKey": (): string => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getHashKey();
 			},
-			"getRangeKey": (): string => {
+			"getRangeKey": (): string | undefined => {
 				return this.getInternalProperties(internalProperties).models[0].Model.getInternalProperties(internalProperties).getRangeKey();
 			},
 			"runSetupFlow": async (): Promise<void> => {
@@ -261,10 +261,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			}
 		});
 
-		if (!utils.all_elements_match(models.map((model: any) => model.Model.getInternalProperties(internalProperties).getHashKey()))) {
+		if (!utils.all_elements_match(models.map((model) => model.Model.getInternalProperties(internalProperties).getHashKey()))) {
 			throw new CustomError.InvalidParameter("hashKey's for all models must match.");
 		}
-		if (!utils.all_elements_match(models.map((model: any) => model.Model.getInternalProperties(internalProperties).getRangeKey()).filter((key) => Boolean(key)))) {
+		if (!utils.all_elements_match(models.map((model) => model.Model.getInternalProperties(internalProperties).getRangeKey()).filter((key) => Boolean(key)))) {
 			throw new CustomError.InvalidParameter("rangeKey's for all models must match.");
 		}
 		if (options.expires) {
@@ -276,7 +276,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			}
 			options.expires = utils.combine_objects(options.expires as any, {"attribute": "ttl"});
 
-			utils.array_flatten(models.map((model: any) => model.Model.getInternalProperties(internalProperties).schemas)).forEach((schema) => {
+			utils.array_flatten(models.map((model) => model.Model.getInternalProperties(internalProperties).schemas)).forEach((schema) => {
 				schema.getInternalProperties(internalProperties).schemaObject[(options.expires as TableExpiresSettings).attribute] = {
 					"type": {
 						"value": Date,
