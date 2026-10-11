@@ -21,6 +21,18 @@ It is highly encouraged to read through the following resources before contribut
 - [README](README.md)
 - [Website](https://dynamoosejs.com)
 
+### AI Policy
+
+Dynamoose welcomes the use of AI to assist in contributing to the project. However, we have a few requirements that ALL users must strictly follow. Not following these requirements will result in you being blocked from the project.
+
+- You as the human contributor MUST review and approve all content (code, issues, PRs, comments, etc) before it is submitted to the project. This includes, but is not limited to, pull requests, issues, and comments. It is acceptable for an AI agent to make code changes locally, then ask for human approval before submitting them to the project. But a human must approve all content (code, issues, PRs, comments, etc) before it is submitted to the project.
+- Your use of AI must be disclosed in your contributions. This includes, but is not limited to, pull requests, issues, and comments. In each of these cases, you must disclose that you are using an AI agent including the name of the agent and the version of the agent. You must also disclose what involvement you had vs the AI agent. For example, "I used an AI agent (GitHub Copilot, GPT-5.6 Sol) to translate this issue from Spanish to English before submission." or "This pull request was created by an AI agent (GitHub Copilot, GPT-5.6 Sol). The human contributor reviewed the changes, ran the relevant tests, and approved the submission." This disclosure must be included at the end of the PR description, issue description, or comment body.
+  - Do not include disclosures in the codebase itself. Only include disclosures in PRs, issues, and comments.
+
+Dynamoose does not restrict how contributors use AI, which AI tools they use, or how extensively AI is used to contribute to the project. However, please remember that AI is a tool, not a substitute for human judgment. You are ultimately responsible for any content submitted to the project by you or your agent.
+
+We also recognize that AI can be a deeply polarizing topic. Some believe it has no place in programming, while others see it as the future of the field. As maintainers, our focus is on keeping Dynamoose a high-quality, well-documented, and well-tested project. Because AI is evolving rapidly, this policy is subject to change over time.
+
 ## How Can I Contribute?
 
 ### Reporting Bugs

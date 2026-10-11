@@ -21,6 +21,9 @@ jobs:
     needs:
       - getinfo
     runs-on: ubuntu-latest
+    # Gate npm publishing on the `release` environment, which requires
+    # fishcharlie's approval before any package is published to npm.
+    environment: release
     permissions:
       id-token: write
       contents: read

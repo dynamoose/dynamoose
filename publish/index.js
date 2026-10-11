@@ -91,7 +91,7 @@ let package = require("../packages/dynamoose/package.json");
 	branchSpinner.succeed(`Created branch ${branch}`);
 	// Update version in package.json
 	const packageUpdateVersionsSpinner = ora("Updating versions").start();
-	await exec(`lerna version ${results.version} --yes --no-git-tag-version --no-push`);
+	await exec(`npx --no-install lerna version ${results.version} --yes --no-git-tag-version --no-push`);
 	packageUpdateVersionsSpinner.succeed("Updated versions");
 	// Add & Commit files to Git
 	const gitCommitPackage = ora("Committing files to Git").start();

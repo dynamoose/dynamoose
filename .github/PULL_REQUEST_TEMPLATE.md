@@ -62,6 +62,15 @@
 - [ ] No
 
 
+### Does at least one test added in this PR fail without the implementation changes in the PR? (select one):
+
+It's important that you write test(s) that fail without the implementation changes in the PR. If you revert all non-test changes, at least one test you added should fail. This ensures that your tests are actually testing the new functionality and protects against regression.
+
+- [ ] Yes
+- [ ] No
+- [ ] N/A
+
+
 ### Other:
 - [ ] I have read through and followed the Contributing Guidelines
 - [ ] I have searched through the GitHub pull requests to ensure this PR has not already been submitted
