@@ -87,6 +87,7 @@ interface ModelUpdateSettings {
 	return?: "item" | "request";
 	condition?: Condition;
 	returnValues?: DynamoDB.ReturnValue;
+	mergeNestedObjects?: boolean;
 }
 interface ModelBatchGetItemsResponse<T> extends ItemArray<T> {
 	unprocessedKeys: ObjectType[];
@@ -703,6 +704,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
+		const localSettings: ModelUpdateSettings = settings;
+		// Only non-empty plain objects with a nested schema are merged, anything else is set as a whole
+		const canMergeNestedObject = (attribute: string, value: any): boolean => Object.prototype.toString.call(value) === "[object Object]" && Object.keys(value).length > 0 && schema.attributes().some((schemaAttribute) => schemaAttribute.startsWith(`${attribute}.`));
+		// Returns the path & value of every nested property to set
+		const getNestedObjectUpdates = (path: string[], value: ObjectType, dynamoValue: ObjectType): {"path": string[]; "value": any}[] => Object.keys(dynamoValue).filter((key) => typeof dynamoValue[key] !== "undefined").flatMap((key) => canMergeNestedObject([...path, key].join("."), value[key]) ? getNestedObjectUpdates([...path, key], value[key], dynamoValue[key]) : [{"path": [...path, key], "value": dynamoValue[key]}]);
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
@@ -739,6 +745,27 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					try {
 						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
 					} catch (e) {} // eslint-disable-line no-empty
+
+					if (localSettings.mergeNestedObjects && updateType.name === "$SET" && dynamoType === "M" && canMergeNestedObject(subKey, subValue)) {
+						// Required nested properties aren't checked, since the ones not passed in are kept in the existing item
+						const dynamoValue = (await this.Item.objectFromSchema({[subKey]: subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings, "required": false} as any))[subKey];
+						// Set each nested property on its own path (ex. `SET #a0.#a1 = :v1`), so DynamoDB keeps the ones not passed in
+						const expressionKeys = {};
+						getNestedObjectUpdates([subKey], subValue, dynamoValue).forEach((update) => {
+							const expressionPath = update.path.map((pathItem, pathIndex) => {
+								const pathKey = JSON.stringify(update.path.slice(0, pathIndex + 1));
+								if (!expressionKeys[pathKey]) {
+									expressionKeys[pathKey] = `#a${index++}`;
+									accumulator.ExpressionAttributeNames[expressionKeys[pathKey]] = pathItem;
+								}
+								return expressionKeys[pathKey];
+							}).join(".");
+							accumulator.ExpressionAttributeValues[`:v${index - 1}`] = update.value;
+							accumulator.UpdateExpression.SET.push(`${expressionPath} = :v${index - 1}`);
+						});
+						continue;
+					}
+
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
@@ -893,7 +920,6 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		};
 
 		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
-		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",

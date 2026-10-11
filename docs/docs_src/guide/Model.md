@@ -320,6 +320,7 @@ You can also pass in a `settings` object parameter to define extra settings for 
 | return | What the function should return. Can be `item`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `item` |
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 | returnValues | Set which documents to return after the update. This setting will be passed into the DynamoDB `ReturnValues` parameter. | String | `ALL_NEW`
+| mergeNestedObjects | If set to `true`, setting an object attribute that has a nested schema will only update the nested properties you pass in, instead of replacing the entire object. Empty objects, arrays & objects without a nested schema are still set as a whole. Required nested properties you don't pass in aren't checked. The object must already exist in the item, otherwise DynamoDB will throw an error. | Boolean | `false`
 
 There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
