@@ -401,7 +401,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			// schema would drop the attribute on every write while DynamoDB still reports TTL as enabled.
 			const expires = table.getInternalProperties(internalProperties).options.expires as TableExpiresSettings | undefined;
 			if (expires) {
-				applyExpiresToSchemas([returnModel(this)], expires);
+				applyExpiresToSchemas(this.getInternalProperties(internalProperties).schemas, expires);
 			}
 		}
 	}
