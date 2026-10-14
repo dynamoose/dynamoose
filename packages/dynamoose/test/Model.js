@@ -3611,6 +3611,23 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should not write a nested forceDefault attribute as a top-level attribute", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "business": {"type": Object, "schema": {"tier": {"type": String, "default": "basic", "forceDefault": true}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "name"});
+				});
+
+				it("Should apply a nested forceDefault attribute when its parent is written", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "business": {"type": Object, "schema": {"tier": {"type": String, "default": "basic", "forceDefault": true}, "name": String}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"business": {"name": "ACME", "tier": "pro"}});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"M": {"name": {"S": "ACME"}, "tier": {"S": "basic"}}}});
+				});
+
 				it("Should use forceDefault value if deleting property", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "default": "Bob", "forceDefault": true}});
