@@ -846,7 +846,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			});
 
-			await Promise.all(schema.attributes().map(async (attribute) => {
+			// A nested forced default is applied when its parent is written. schema.attributes() lists
+			// nested attributes by dotted path, and writing one here would create a top-level
+			// attribute literally named after that path.
+			await Promise.all(schema.attributes().filter((attribute) => !attribute.includes(".")).map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
 				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
