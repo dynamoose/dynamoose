@@ -12,3 +12,4 @@
 - Fixed `dynamoose.transaction` get results skipping schema `get` modifiers. Items returned from a `transactGetItems` transaction now run attribute `get` functions the same as `Model.get`, `Model.batchGet`, `Model.query`, and `Model.scan`
 - Fixed `Model.update` typing a value by another attribute's schema when a `$REMOVE` came before it. For example `{"$REMOVE": ["tags"], "$SET": {"list": ["a", "b"]}}` stored `list` as a string set, because values were paired with attribute names by position
 - Fixed `Model.update` writing a nested `forceDefault` attribute as a top-level attribute named after its dotted path (for example `business.tier`) on every update
+- Fixed `Model.update` throwing "You must update all or none of the combine attributes" when the update writes none of them
