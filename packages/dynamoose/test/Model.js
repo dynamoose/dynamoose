@@ -3877,6 +3877,39 @@ describe("Model", () => {
 					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "name"});
 				});
 
+				it("Shouldn't require combine attributes when the combine attribute is the hashKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"entity": {"type": {"value": "Combine", "settings": {"attributes": ["entityType", "entityId"]}}, "hashKey": true}, "docId": {"type": String, "rangeKey": true}, "entityType": String, "entityId": String, "data": String});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"entity": "ACCOUNT#1", "docId": "doc1"}, {"data": "Charlie"});
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data"});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					expect(updateItemParams.Key).toEqual({"entity": {"S": "ACCOUNT#1"}, "docId": {"S": "doc1"}});
+				});
+
+				it("Shouldn't require combine attributes when the combine attribute is the rangeKey", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "entity": {"type": {"value": "Combine", "settings": {"attributes": ["entityType", "entityId"]}}, "rangeKey": true}, "entityType": String, "entityId": String, "data": String});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1, "entity": "ACCOUNT#1"}, {"data": "Charlie"});
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data"});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
+				it("Should throw error if updating the combine attributes of a key", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"entity": {"type": {"value": "Combine", "settings": {"attributes": ["entityType", "entityId"]}}, "hashKey": true}, "docId": {"type": String, "rangeKey": true}, "entityType": String, "entityId": String, "data": String});
+					new dynamoose.Table("User", [User]);
+					return expect(callType.func(User).bind(User)({"entity": "ACCOUNT#1", "docId": "doc1"}, {"entityType": "IDENTITY", "entityId": "2", "data": "Charlie"})).rejects.toEqual(new CustomError.InvalidParameter("You cannot update the combine attributes of entity because it is part of the key. Remove them from the update: entityType, entityId."));
+				});
+
+				it("Should throw error if updating the combine attributes of a key via $ADD", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"entity": {"type": {"value": "Combine", "settings": {"attributes": ["major", "minor"]}}, "hashKey": true}, "docId": {"type": String, "rangeKey": true}, "major": Number, "minor": Number, "data": String});
+					new dynamoose.Table("User", [User]);
+					return expect(callType.func(User).bind(User)({"entity": "1-2", "docId": "doc1"}, {"$ADD": {"major": 1}})).rejects.toEqual(new CustomError.InvalidParameter("You cannot update the combine attributes of entity because it is part of the key. Remove them from the update: major."));
+				});
+
 				it("Should throw error if updating one combine property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
