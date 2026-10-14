@@ -859,9 +859,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			}));
 
-			Object.values(returnObject.ExpressionAttributeNames).map((attribute: string, index) => {
-				const value: ValueType = Object.values(returnObject.ExpressionAttributeValues)[index];
-				const valueKey = Object.keys(returnObject.ExpressionAttributeValues)[index];
+			// Value :vN belongs to name #aN. Pairing them by position instead breaks as soon as a name
+			// has no value ($REMOVE), and types a value by another attribute's schema.
+			Object.entries(returnObject.ExpressionAttributeValues).forEach(([valueKey, value]: [string, ValueType]) => {
+				const attribute: string = returnObject.ExpressionAttributeNames[valueKey.replace(":v", "#a")];
 				let dynamoType;
 				try {
 					dynamoType = schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
