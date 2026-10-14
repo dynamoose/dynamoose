@@ -821,6 +821,12 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 				return details;
 			}).forEach((details: any) => {
+				// An update that writes none of the sources leaves the combine attribute as it is
+				const writtenAttributes = Object.values(returnObject.ExpressionAttributeNames);
+				if (!details.type.typeSettings.attributes.some((attribute) => writtenAttributes.includes(attribute))) {
+					return;
+				}
+
 				const {invalidAttributes} = details.type.typeSettings.attributes.reduce((result, attribute) => {
 					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 					const doesExist = Boolean(expressionAttributeNameEntry);
