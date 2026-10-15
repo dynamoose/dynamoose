@@ -10,6 +10,10 @@
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
 
+### Performance
+
+- Improved performance of `Model.update` on items with many nested attributes when the schema has nested `required` attributes (~270x faster for a 2,000 element list: 26.8 s to 99 ms). The update flattened the whole item once for every attribute it checked; it now flattens it once
+
 ### Bug Fixes
 
 - Fixed `Model.get`, `Model.delete`, `Model.batchGet` and `Model.update` putting the attributes a schema's `set` setting adds into the request's `Key` when the key was passed as a value (`Model.get(1)`), so DynamoDB rejected the request with `The provided key element does not match the schema`. Only the hash key is sent now, as for a key passed as an object
