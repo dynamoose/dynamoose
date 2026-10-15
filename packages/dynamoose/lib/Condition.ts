@@ -140,7 +140,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 		this.setInternalProperties(internalProperties, {
 			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
-					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true, "customTypesDynamo": true});
 					const newObjKeys = Object.keys(newObj);
 					// TODO: not quite sure how to unit test the error below. Need to figure this out. Maybe by mocking `Item.objectFromSchema`??? We don't currently have a system in place to do that easily tho.
 					/* istanbul ignore next */
@@ -149,7 +149,16 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 						throw new CustomError.OtherError("Error retrieving `requestObject` from Condition. Please submit an issue on the Dynamoose GitHub repository.");
 					}
 
-					const newValue = newObj[newObjKeys[0]];
+					let newValue = newObj[newObjKeys[0]];
+					// A nested path (`meta.when`) is a property name above, so its attribute is only found from the nested object.
+					if (newValue instanceof Date && key.includes(".")) {
+						const nestedObj = await Item.objectFromSchema(utils.object.set({}, key, value), model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true, "customTypesDynamo": true});
+						newValue = utils.object.get(nestedObj, key);
+					}
+					// A Date is converted by the attribute's Date type (milliseconds, seconds or ISO string). Any other attribute has no stored form for it.
+					if (newValue instanceof Date) {
+						throw new CustomError.InvalidParameter(`The condition value for "${key}" is a Date, but "${key}" isn't a Date attribute in the schema, so Dynamoose doesn't know how it is stored. Pass date.getTime() or date.toISOString() instead.`);
+					}
 					return Item.objectToDynamo(newValue, {"type": "value"});
 				};
 
@@ -199,7 +208,10 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 									return finalName;
 								}, []).join(".");
 							}
-							object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							// `IN` and `BETWEEN` convert each of their values, and `EXISTS` has none.
+							if (!["IN", "BETWEEN", "EXISTS", "NOT_EXISTS"].includes(condition.type)) {
+								object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							}
 
 							switch (condition.type) {
 							case "EQ":
@@ -207,7 +219,6 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 								expression = `${keys.name} ${condition.type === "EQ" ? "=" : "<>"} ${keys.value}`;
 								break;
 							case "IN":
-								delete object.ExpressionAttributeValues[keys.value];
 								expression = `${keys.name} IN (${value.map((_v: any, i: number) => `${keys.value}_${i + 1}`).join(", ")})`;
 								await Promise.all(value.map(async (valueItem: any, i: number) => {
 									object.ExpressionAttributeValues[`${keys.value}_${i + 1}`] = await toDynamo(key, valueItem);
@@ -223,7 +234,6 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 								expression = `${keys.name} BETWEEN ${keys.value}_1 AND ${keys.value}_2`;
 								object.ExpressionAttributeValues[`${keys.value}_1`] = await toDynamo(key, value[0]);
 								object.ExpressionAttributeValues[`${keys.value}_2`] = await toDynamo(key, value[1]);
-								delete object.ExpressionAttributeValues[keys.value];
 								break;
 							case "CONTAINS":
 							case "NOT_CONTAINS":
@@ -232,7 +242,6 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 							case "EXISTS":
 							case "NOT_EXISTS":
 								expression = `attribute_${condition.type === "NOT_EXISTS" ? "not_" : ""}exists (${keys.name})`;
-								delete object.ExpressionAttributeValues[keys.value];
 								break;
 							case "BEGINS_WITH":
 								expression = `begins_with (${keys.name}, ${keys.value})`;
