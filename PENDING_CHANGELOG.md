@@ -4,6 +4,7 @@
 
 ### Features
 
+- Added support for nested paths in `Model.update` keys (`address.city`, `tags[0]`, `friends[0].name`) for `$SET`, `$ADD`, `$REMOVE` and `$DELETE`. Nested values go through the schema of their path, including type checks, `enum`, `validate`, `set`, custom types, `default` and `required`
 - Added support for enabling and configuring DynamoDB Streams through Table options
 
 ### Bug Fixes
