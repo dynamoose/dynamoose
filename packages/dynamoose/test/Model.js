@@ -361,6 +361,16 @@ describe("Model", () => {
 			expect(User.get).toBeInstanceOf(Function);
 		});
 
+		it("Should return a large binary attribute as a Buffer", async () => {
+			const File = dynamoose.model("File", {"id": String, "content": Buffer});
+			new dynamoose.Table("File", [File]);
+			// The AWS SDK returns binary values as Uint8Array. One this large overflowed the stack while the item was flattened (#1608).
+			getItemFunction = () => Promise.resolve({"Item": {"id": {"S": "1"}, "content": {"B": new Uint8Array(400000).fill(7)}}});
+			const item = await File.get("1");
+			expect(Buffer.isBuffer(item.content)).toEqual(true);
+			expect(item.content.length).toEqual(400000);
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (Model) => Model.get},
 			{"name": "Callback", "func": (Model) => util.promisify(Model.get)}
