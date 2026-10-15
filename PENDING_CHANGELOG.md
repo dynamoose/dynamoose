@@ -15,3 +15,7 @@
 - Fixed `Model.update` writing a nested `forceDefault` attribute as a top-level attribute named after its dotted path (for example `business.tier`) on every update
 - Fixed `Model.update` throwing "You must update all or none of the combine attributes" when the update writes none of them
 - Fixed `Model.update` being impossible to run against a schema whose hash or range key is a `Combine` attribute. Updating the sources of such a key now throws a clear error instead of a DynamoDB rejection
+
+### Other
+
+- Added a `Model.update` test suite that runs against DynamoDB Local (`npm run test:integration` in `packages/dynamoose`) and checks what DynamoDB stores, not only the request
