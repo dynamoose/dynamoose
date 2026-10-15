@@ -80,11 +80,19 @@ describe("utils.object_delete_copy", () => {
 		}
 	});
 
-	it("Should follow an own __proto__ key on a path", () => {
+	it("Should skip a path through an own __proto__ key", () => {
 		const nested = JSON.parse("{\"__proto__\": {\"a\": 1, \"b\": 2}}");
-		const result = utils.object_delete_copy({nested}, ["nested.__proto__.a"]);
-		expect(result.nested.__proto__).toEqual({"b": 2});
+		const result = utils.object_delete_copy({nested}, ["nested.__proto__.a", "nested.__proto__"]);
+		expect(result.nested.__proto__).toEqual({"a": 1, "b": 2});
+		expect(Object.getOwnPropertyNames(result.nested)).toEqual(["__proto__"]);
 		expect(nested.__proto__).toEqual({"a": 1, "b": 2});
+	});
+
+	it("Should skip a path through an own constructor or prototype key", () => {
+		const input = {"constructor": {"name": "a"}, "prototype": {"name": "b"}, "other": 1};
+		const result = utils.object_delete_copy(input, ["constructor.name", "prototype.name", "other"]);
+		expect(result).toEqual({"constructor": {"name": "a"}, "prototype": {"name": "b"}});
+		expect(input).toEqual({"constructor": {"name": "a"}, "prototype": {"name": "b"}, "other": 1});
 	});
 
 	it("Should accept numbers as paths, the same as utils.object.delete", () => {
