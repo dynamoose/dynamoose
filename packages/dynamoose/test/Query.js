@@ -2038,6 +2038,12 @@ describe("Query", () => {
 			expect(queryParams).toEqual({"TableName": "Cat", "KeyConditionExpression": "id = :id", "ExpressionAttributeValues": {":id": {"N": "1"}}});
 		});
 
+		it("Should leave a part whose placeholder isn't in ExpressionAttributeNames in the FilterExpression", async () => {
+			await Model.query(raw("#id = :id AND #missing = :m", {"#id": "id"}, {":id": 1, ":m": 2})).exec();
+			expect(queryParams.KeyConditionExpression).toEqual("#id = :id");
+			expect(queryParams.FilterExpression).toEqual("#missing = :m");
+		});
+
 		it("Should not split an expression joined with OR", async () => {
 			await expect(Model.query(raw("#id = :id OR #fn = :fn", {"#id": "id", "#fn": "favoriteNumber"}, {":id": 1, ":fn": 5})).exec()).rejects.toEqual(new CustomError.InvalidParameter("Index can't be found for query."));
 		});
