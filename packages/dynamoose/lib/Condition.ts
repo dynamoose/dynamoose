@@ -192,7 +192,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 						return [...indexes, ...rawIndexes(entry)];
 					}
 					const {ExpressionAttributeNames, ExpressionAttributeValues} = entry[RAW_GROUP];
-					return [...indexes, ...[...Object.keys(ExpressionAttributeNames || {}), ...Object.keys(ExpressionAttributeValues || {})].map((key) => (/^(?:#a|:v)(\d+)$/).exec(key)).filter(Boolean).map((match) => parseInt(match[1]) + 1)];
+					return [...indexes, ...[...Object.keys(ExpressionAttributeNames), ...Object.keys(ExpressionAttributeValues || {})].map((key) => (/^(?:#a|:v)(\d+)$/).exec(key)).filter(Boolean).map((match) => parseInt(match[1]) + 1)];
 				}, []);
 
 				const {raw} = this.getInternalProperties(internalProperties).settings;
