@@ -819,9 +819,9 @@ describe("Scan", () => {
 			expect(scan.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "BEGINS_WITH", "value": "test"}}]);
 		});
 
-		it("Should throw error with not()", () => {
-			const scan = () => Model.scan().filter("id").not().beginsWith("test");
-			expect(scan).toThrow("BEGINS_WITH can not follow not()");
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().beginsWith("test");
+			expect(scan.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "NOT_BEGINS_WITH", "value": "test"}}]);
 		});
 	});
 
@@ -859,9 +859,19 @@ describe("Scan", () => {
 			expect(scan.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "IN", "value": "test"}}]);
 		});
 
-		it("Should throw error with not()", () => {
-			const scan = () => Model.scan().filter("id").not().in("test");
-			expect(scan).toThrow("IN can not follow not()");
+		it("Should set correct settings on the scan object with not()", () => {
+			const scan = Model.scan().filter("id").not().in(["a", "b"]);
+			expect(scan.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "NOT_IN", "value": ["a", "b"]}}]);
+		});
+
+		it("Should send NOT (... IN ...) for not().in()", async () => {
+			const request = await Model.scan().filter("name").not().in(["a", "b"]).getRequest();
+			expect(request.FilterExpression).toEqual("NOT (#a0 IN (:v0_1, :v0_2))");
+		});
+
+		it("Should send NOT before a group", async () => {
+			const request = await Model.scan().not().parenthesis((condition) => condition.where("name").eq("a").or().where("name").eq("b")).getRequest();
+			expect(request.FilterExpression).toEqual("NOT (#a0 = :v0 OR #a1 = :v1)");
 		});
 	});
 
@@ -879,9 +889,9 @@ describe("Scan", () => {
 			expect(scan.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "BETWEEN", "value": [1, 2]}}]);
 		});
 
-		it("Should throw error with not()", () => {
-			const scan = () => Model.scan().filter("id").not().between(1, 2);
-			expect(scan).toThrow("BETWEEN can not follow not()");
+		it("Should set NOT_BETWEEN with not()", () => {
+			const scan = Model.scan().filter("id").not().between(1, 2);
+			expect(scan.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "NOT_BETWEEN", "value": [1, 2]}}]);
 		});
 	});
 

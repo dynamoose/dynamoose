@@ -1527,9 +1527,9 @@ describe("Query", () => {
 			expect(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).toEqual({});
 		});
 
-		it("Should throw error with not()", () => {
-			const query = () => Model.query().filter("id").not().beginsWith("test");
-			expect(query).toThrow("BEGINS_WITH can not follow not()");
+		it("Should set NOT_BEGINS_WITH with not()", () => {
+			const query = Model.query().filter("id").not().beginsWith("test");
+			expect(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "NOT_BEGINS_WITH", "value": "test"}}]);
 		});
 
 		it("Should send correct request", async () => {
@@ -1627,9 +1627,9 @@ describe("Query", () => {
 			expect(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).toEqual({});
 		});
 
-		it("Should throw error with not()", () => {
-			const query = () => Model.query().filter("id").not().in(["test", "other"]);
-			expect(query).toThrow("IN can not follow not()");
+		it("Should set NOT_IN with not()", () => {
+			const query = Model.query().filter("id").not().in(["test", "other"]);
+			expect(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "NOT_IN", "value": ["test", "other"]}}]);
 		});
 
 		it("Should send correct request", async () => {
@@ -1690,9 +1690,23 @@ describe("Query", () => {
 			expect(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.pending).toEqual({});
 		});
 
-		it("Should throw error with not()", () => {
-			const query = () => Model.query().filter("id").not().between(1, 2);
-			expect(query).toThrow("BETWEEN can not follow not()");
+		it("Should set NOT_BETWEEN with not()", () => {
+			const query = Model.query().filter("id").not().between(1, 2);
+			expect(query.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).settings.conditions).toEqual([{"id": {"type": "NOT_BETWEEN", "value": [1, 2]}}]);
+		});
+	});
+
+	describe("Negated conditions on key attributes", () => {
+		it("Should not move a negated range key condition into the KeyConditionExpression", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			const Dog = dynamoose.model("Dog", {"id": {"type": Number, "hashKey": true}, "name": {"type": String, "rangeKey": true}});
+			new dynamoose.Table("Dog", [Dog]);
+			await Dog.query("id").eq(1).where("name").not().between("a", "m").exec();
+			expect(queryParams.KeyConditionExpression).toEqual("#qha = :qhv");
+			expect(queryParams.FilterExpression).toEqual("NOT (#a1 BETWEEN :v1_1 AND :v1_2)");
+			await Dog.query("id").eq(1).where("name").not().beginsWith("C").exec();
+			expect(queryParams.KeyConditionExpression).toEqual("#qha = :qhv");
+			expect(queryParams.FilterExpression).toEqual("NOT begins_with (#a1, :v1)");
 		});
 	});
 
