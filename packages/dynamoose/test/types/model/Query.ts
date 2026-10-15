@@ -39,6 +39,10 @@ async function queryCount (): Promise<void> {
 
 // query.consistent()
 isAssignableToQuery = UserTypedModel.query("name").eq("Will").consistent();
+isAssignableToQuery = UserTypedModel.query("name").eq("Will").consistent(false);
+isAssignableToQuery = UserTypedModel.query("name").eq("Will").count(true);
+// @ts-expect-error
+UserTypedModel.query("name").eq("Will").consistent("yes");
 
 // query.using(index)
 isAssignableToQuery = UserTypedModel.query("name").eq("Will").using("name-index");

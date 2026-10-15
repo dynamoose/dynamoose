@@ -105,6 +105,8 @@ Instead of returning the items in the array this function will cause the scan op
 
 Using this option will save bandwidth by setting the DynamoDB `Select` option to `COUNT`.
 
+You can pass `false` to turn it off again; calling it without a value, or more than once, keeps it on.
+
 ```js
 const response = await Cat.scan().count().exec();
 console.log(response); // {"count": 1, "scannedCount": 1}
@@ -112,10 +114,11 @@ console.log(response); // {"count": 1, "scannedCount": 1}
 
 ## scan.consistent()
 
-This will cause the scan to run in a consistent manner as opposed to the default eventually consistent manner.
+This will cause the scan to run in a consistent manner as opposed to the default eventually consistent manner. You can pass `false` to turn it off again; calling it without a value, or more than once, keeps it on.
 
 ```js
 Cat.scan().consistent(); // Run the scan in a consistent manner
+Cat.scan().consistent(false); // Run the scan in the default eventually consistent manner
 ```
 
 ## scan.using(index)

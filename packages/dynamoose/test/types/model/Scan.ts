@@ -44,6 +44,10 @@ async function scanCount (): Promise<void> {
 
 // scan.consistent()
 isAssignableToScan = UserTypedModel.scan().consistent();
+isAssignableToScan = UserTypedModel.scan().consistent(false);
+isAssignableToScan = UserTypedModel.scan().count(true);
+// @ts-expect-error
+UserTypedModel.scan().consistent("yes");
 
 // scan.using(index)
 isAssignableToScan = UserTypedModel.scan().using("name-index");
