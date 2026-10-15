@@ -16,6 +16,8 @@ You can also pass in an object for the optional `settings` parameter that is an 
 |------|-------------|------|---------|
 | return | What the function should return. Can be `items`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `items` |
 | type | If Dynamoose should use `get` (`transactGetItems`) or `write` (`transactWriteItems`) to make the transaction call. | String (`get` \| `write`) | By default, if all `transactions` objects are `Get`, `get` will be run, otherwise `write` will be used. |
+| clientRequestToken | A token that makes a `write` transaction idempotent for 10 minutes. See [Idempotent writes](#idempotent-writes). | String | A new token from the AWS SDK on each call |
+| retry | Send the transaction again when DynamoDB cancels it for a conflict. See [Retrying conflicts](#retrying-conflicts). | Object (`attempts`, `delay`) | No retries |
 
 ```js
 await dynamoose.transaction([
@@ -35,3 +37,11 @@ await dynamoose.transaction([
 	}
 ]);
 ```
+
+## Idempotent writes
+
+dyno_jsdoc_dist/Transaction.d.ts|transactionSettings.clientRequestToken
+
+## Retrying conflicts
+
+dyno_jsdoc_dist/Transaction.d.ts|transactionSettings.retry
