@@ -126,6 +126,13 @@ describe("Query", () => {
 					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie"}]);
 				});
 
+				it("Should return the stored value if Dynamo object has type mismatch with schema and readStrict is false", async () => {
+					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "age": Number});
+					new dynamoose.Table("Cat", [Model], {"readStrict": false});
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}]});
+					expect((await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie", "age": "Hello World"}]);
+				});
+
 				it("Should return correct result if using custom types", async () => {
 					Model = dynamoose.model("Cat", {"id": Number, "name": {"type": String, "index": {"type": "global"}}, "birthday": Date});
 					new dynamoose.Table("Cat", [Model]);

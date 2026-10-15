@@ -80,6 +80,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * | tags | An object containing key value pairs that should be added to the table as tags. | Object | {} |
 	 * | tableClass | A string representing the table class to use. | "standard" \| "infrequentAccess" | "standard" |
 	 * | initialize | If Dynamoose should run it's initialization flow (creating the table, updating the throughput, etc) automatically. | Boolean | true |
+	 * | readStrict | If Dynamoose should type check items read from DynamoDB against the schema. If this is `false`, an attribute whose stored value does not match the schema type is returned as stored instead of throwing a `TypeMismatch` error. The rest of the read path runs as before. See [Reading items that do not match the schema](#reading-items-that-do-not-match-the-schema) for details and risks. | Boolean | true |
 	 * | streamOptions | An object containing settings for [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html). | Object | `{"enabled": false, "type": undefined}` |
 	 * | streamOptions.enabled | If Dynamoose should enable [DynamoDB Streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html) for the table. | Boolean | false |
 	 * | streamOptions.type | The type of DynamoDB Stream to enable. If `streamOptions.enabled` is `true`, this property must be set. | "NEW_IMAGE" \| "OLD_IMAGE" \| "NEW_AND_OLD_IMAGES" \| "KEYS_ONLY" | undefined |
@@ -107,6 +108,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 * 	"tags": {},
 	 * 	"tableClass": "standard",
 	 * 	"initialize": true,
+	 * 	"readStrict": true,
 	 * 	"streamOptions": {
 	 * 		"enabled": false,
 	 * 		"type": undefined
@@ -573,6 +575,7 @@ export interface TableOptions {
 	tags: {[key: string]: string};
 	tableClass: TableClass;
 	initialize: boolean;
+	readStrict: boolean;
 	streamOptions?: TableStreamOptions;
 }
 export type TableOptionsOptional = DeepPartial<TableOptions>;

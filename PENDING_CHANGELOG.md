@@ -5,6 +5,7 @@
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
+- Added `readStrict` Table option. If set to `false`, reads return items whose stored values do not match the schema type as stored, instead of throwing a `TypeMismatch` error. The default (`true`) keeps the current behavior
 
 ### Bug Fixes
 
