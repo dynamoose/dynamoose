@@ -10,6 +10,12 @@ new dynamoose.Condition({"breed": {"contains": "Terrier"}}) // will condition fo
 new dynamoose.Condition(new dynamoose.Condition({"breed": {"contains": "Terrier"}})) // will condition for where the key `breed` contains `Terrier`
 ```
 
+A value is stored the way its attribute stores it. For a `Date` attribute (including `createdAt` and `updatedAt` timestamps) you can pass a `Date`, which is sent as milliseconds, seconds or an ISO string according to the attribute's `storage` setting. A `Date` for an attribute that isn't a `Date` in the schema throws an error; pass `date.getTime()` or `date.toISOString()` instead.
+
+```js
+new dynamoose.Condition("createdAt").gt(new Date("2026-01-01")) // createdAt is after 1 January 2026
+```
+
 For a more advanced use case you pass an object into `new dynamoose.Condition()` the object for each key should contain the comparison type. For example, in the second to last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
 You can also pass in a raw DynamoDB condition object. Which has properties for `ExpressionAttributeNames`, `ExpressionAttributeValues` & either `FilterExpression` or `ComparisonExpression`. In the event you do this, all future condition methods called on this condition instance will be ignored. In the event you don't pass in DynamoDB objects for the `ExpressionAttributeValues` values, Dynamoose will automatically convert them to DynamoDB compatible objects to make the request.
