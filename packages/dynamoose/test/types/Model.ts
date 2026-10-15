@@ -30,6 +30,14 @@ const shouldPassBatchGetWithConsistentTrue = model.batchGet([{"id": 1}, {"id": 2
 const shouldPassBatchGetWithConsistentFalse = model.batchGet([{"id": 1}, {"id": 2}], {"consistent": false});
 const shouldPassBatchPutWithNoReturnSetting = model.batchPut([{"id": 1}, {"id": 2}], {});
 const shouldPassBatchDeleteWithNoReturnSetting = model.batchDelete([{"id": 1}, {"id": 2}], {});
+const shouldPassBatchGetWithRetryUnprocessed = model.batchGet([{"id": 1}], {"retryUnprocessed": {"attempts": 4, "delay": 100}});
+const shouldPassBatchPutWithRetryUnprocessed = model.batchPut([{"id": 1}], {"retryUnprocessed": {"attempts": 4}});
+const shouldPassBatchDeleteWithRetryUnprocessed = model.batchDelete([{"id": 1}], {"retryUnprocessed": {"attempts": 4}});
+const shouldPassBatchGetWithConcurrency = model.batchGet([{"id": 1}], {"concurrency": 5});
+const shouldPassBatchPutWithConcurrency = model.batchPut([{"id": 1}], {"concurrency": 5});
+const shouldPassBatchDeleteWithConcurrency = model.batchDelete([{"id": 1}], {"concurrency": 5});
+// @ts-expect-error
+const shouldFailBatchGetWithRetryUnprocessedWithoutAttempts = model.batchGet([{"id": 1}], {"retryUnprocessed": {"delay": 100}});
 const shouldPassCreateWithNoReturnSettingCallback = model.create({"id": 1}, {"overwrite": true}, () => {});
 const shouldPassGetWithNoReturnSettingCallback = model.get({"id": 1}, {"attributes": ["something"]}, () => {});
 const shouldPassDeleteWithNoReturnSettingCallback = model.delete({"id": 1}, {"condition": new dynamoose.Condition("name").eq("Charlie")}, () => {});

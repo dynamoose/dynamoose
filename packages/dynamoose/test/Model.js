@@ -1289,6 +1289,184 @@ describe("Model", () => {
 
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should send up to concurrency requests at a time", async () => {
+					let inFlight = 0;
+					let maxInFlight = 0;
+					let calls = 0;
+					dynamoose.aws.ddb.set({
+						"batchGetItem": async () => {
+							calls++;
+							maxInFlight = Math.max(maxInFlight, ++inFlight);
+							await new Promise((resolve) => setTimeout(resolve, 5));
+							inFlight--;
+							return {"Responses": {"User": []}, "UnprocessedKeys": {}};
+						}
+					});
+					await callType.func(User).bind(User)(Array.from({"length": 250}, (_, index) => index + 1), {"concurrency": 2});
+					expect(calls).toEqual(3);
+					expect(maxInFlight).toEqual(2);
+				});
+
+				it("Should throw an error for a duplicate key in a batch of more than one request, without sending any of it", async () => {
+					let calls = 0;
+					dynamoose.aws.ddb.set({"batchGetItem": async () => {
+						calls++;
+						return {"Responses": {"User": []}, "UnprocessedKeys": {}};
+					}});
+					await expect(callType.func(User).bind(User)([...Array.from({"length": 100}, (_, index) => index + 1), 5])).rejects.toEqual(new CustomError.InvalidParameter("The batch has more than one request for the key {\"id\":{\"N\":\"5\"}}. DynamoDB rejects a batch with duplicate keys, so none of it was sent."));
+					expect(calls).toEqual(0);
+				});
+
+				it("Should throw an error for an invalid concurrency", () => {
+					return expect(callType.func(User).bind(User)(Array.from({"length": 250}, (_, index) => index + 1), {"concurrency": 0})).rejects.toEqual(new CustomError.InvalidParameter("concurrency must be a whole number of 1 or more."));
+				});
+
+				it("Should retry unprocessed keys with retryUnprocessed", async () => {
+					const calls = [];
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => {
+							calls.push(request);
+							const {Keys} = request.RequestItems.User;
+							const unprocessed = calls.length === 1 ? Keys.filter((key) => key.id.N === "2") : [];
+							return Promise.resolve({
+								"Responses": {"User": Keys.filter((key) => !unprocessed.includes(key)).map((key) => ({"id": key.id, "name": {"S": `n${key.id.N}`}}))},
+								"UnprocessedKeys": unprocessed.length > 0 ? {"User": {"Keys": unprocessed, "ConsistentRead": true}} : {}
+							});
+						}
+					});
+					const result = await callType.func(User).bind(User)([1, 2, 3], {"consistent": true, "retryUnprocessed": {"attempts": 2, "delay": 0}});
+					expect(calls.map((call) => call.RequestItems.User)).toEqual([{"Keys": [{"id": {"N": "1"}}, {"id": {"N": "2"}}, {"id": {"N": "3"}}], "ConsistentRead": true}, {"Keys": [{"id": {"N": "2"}}], "ConsistentRead": true}]);
+					expect(result.map((item) => item.id)).toEqual([1, 2, 3]);
+					expect(result.unprocessedKeys).toEqual([]);
+				});
+
+				it("Should return the keys still unprocessed after the last retry", async () => {
+					let calls = 0;
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => {
+							calls++;
+							return Promise.resolve({"Responses": {"User": []}, "UnprocessedKeys": {"User": {"Keys": request.RequestItems.User.Keys}}});
+						}
+					});
+					const result = await callType.func(User).bind(User)([1], {"retryUnprocessed": {"attempts": 2, "delay": 0}});
+					expect(calls).toEqual(3);
+					expect(result.unprocessedKeys.map((item) => ({...item}))).toEqual([{"id": 1}]);
+				});
+
+				it("Should throw an error for an invalid retryUnprocessed", () => {
+					return expect(callType.func(User).bind(User)([1], {"retryUnprocessed": {"attempts": -1}})).rejects.toEqual(new CustomError.InvalidParameter("retryUnprocessed.attempts must be a whole number of 0 or more, and retryUnprocessed.delay a number of milliseconds of 0 or more."));
+				});
+
+				it("Should split more than 100 keys into requests of 100 and combine the results", async () => {
+					const calls = [];
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => {
+							calls.push(request);
+							const {Keys} = request.RequestItems.User;
+							return Promise.resolve({
+								"Responses": {"User": Keys.filter((key) => key.id.N !== "150").map((key) => ({"id": key.id, "name": {"S": `n${key.id.N}`}}))},
+								"UnprocessedKeys": Keys.some((key) => key.id.N === "150") ? {"User": {"Keys": [{"id": {"N": "150"}}], "ConsistentRead": true}} : {}
+							});
+						}
+					});
+					const keys = Array.from({"length": 150}, (_, index) => index + 1);
+					const result = await callType.func(User).bind(User)(keys, {"consistent": true});
+					expect(calls.map((call) => call.RequestItems.User.Keys.length)).toEqual([100, 50]);
+					expect(calls.map((call) => call.RequestItems.User.ConsistentRead)).toEqual([true, true]);
+					expect(result.map((item) => item.id)).toEqual(keys.slice(0, 149));
+					expect(result.unprocessedKeys.map((item) => ({...item}))).toEqual([{"id": 150}]);
+				});
+
+				it("Should send 100 keys in one request", async () => {
+					const calls = [];
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => {
+							calls.push(request);
+							return Promise.resolve({"Responses": {"User": []}, "UnprocessedKeys": {}});
+						}
+					});
+					await callType.func(User).bind(User)(Array.from({"length": 100}, (_, index) => index + 1));
+					expect(calls.length).toEqual(1);
+				});
+
+				it("Should reject with the error of a later request", async () => {
+					let call = 0;
+					dynamoose.aws.ddb.set({
+						"batchGetItem": () => ++call === 2 ? Promise.reject(new Error("Throttled")) : Promise.resolve({"Responses": {"User": []}, "UnprocessedKeys": {}})
+					});
+					await expect(callType.func(User).bind(User)(Array.from({"length": 101}, (_, index) => index + 1))).rejects.toEqual(new Error("Throttled"));
+				});
+
+				it("Should return one request with every key when return is request", async () => {
+					const result = await callType.func(User).bind(User)(Array.from({"length": 150}, (_, index) => index + 1), {"return": "request"});
+					expect(result.RequestItems.User.Keys.length).toEqual(150);
+				});
+
+				it("Should combine the unprocessed keys of several requests", async () => {
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => {
+							const [first, ...rest] = request.RequestItems.User.Keys;
+							return Promise.resolve({
+								"Responses": {"User": rest.map((key) => ({"id": key.id, "name": {"S": `n${key.id.N}`}}))},
+								"UnprocessedKeys": {"User": {"Keys": [first]}}
+							});
+						}
+					});
+					const result = await callType.func(User).bind(User)(Array.from({"length": 250}, (_, index) => index + 1));
+					expect(result.length).toEqual(247);
+					expect(result.unprocessedKeys.map((item) => item.id)).toEqual([1, 101, 201]);
+				});
+
+				it("Should treat a response without Responses or UnprocessedKeys as returning nothing", async () => {
+					dynamoose.aws.ddb.set({"batchGetItem": () => Promise.resolve({})});
+					const result = await callType.func(User).bind(User)(Array.from({"length": 150}, (_, index) => index + 1));
+					expect(result.length).toEqual(0);
+					expect(result.unprocessedKeys).toEqual([]);
+				});
+
+				it("Should match binary keys by their bytes", async () => {
+					const Binary = dynamoose.model("Binary", {"id": Buffer, "name": String});
+					new dynamoose.Table("Binary", [Binary]);
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => Promise.resolve({
+							// DynamoDB returns new binary values, in any order.
+							"Responses": {"Binary": [...request.RequestItems.Binary.Keys].reverse().map((key) => ({"id": {"B": Buffer.from(key.id.B)}, "name": {"S": `n${Buffer.from(key.id.B).toString()}`}}))},
+							"UnprocessedKeys": {}
+						})
+					});
+					const result = await callType.func(Binary).bind(Binary)([{"id": Buffer.from("a")}, {"id": Buffer.from("b")}]);
+					expect(result.map((item) => item.name)).toEqual(["na", "nb"]);
+				});
+
+				it("Should return the item for a key that leaves out the range key", async () => {
+					const Order = dynamoose.model("Order", {"id": {"type": Number, "hashKey": true}, "sk": {"type": String, "rangeKey": true}, "name": String});
+					new dynamoose.Table("Order", [Order]);
+					dynamoose.aws.ddb.set({"batchGetItem": () => Promise.resolve({"Responses": {"Order": [{"id": {"N": "1"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {}})});
+					const result = await callType.func(Order).bind(Order)([{"id": 1}]);
+					expect(result.map((item) => ({...item}))).toEqual([{"id": 1, "name": "Bob"}]);
+				});
+
+				it("Should wait up to 100 milliseconds before the first retry by default", async () => {
+					let calls = 0;
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => Promise.resolve(++calls === 1 ? {"Responses": {"User": []}, "UnprocessedKeys": {"User": request.RequestItems.User}} : {"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Bob"}}]}, "UnprocessedKeys": {}})
+					});
+					const random = jest.spyOn(Math, "random").mockReturnValue(0.5);
+					try {
+						const start = Date.now();
+						const result = await callType.func(User).bind(User)([1], {"retryUnprocessed": {"attempts": 1}});
+						expect(Date.now() - start).toBeGreaterThanOrEqual(45);
+						expect(calls).toEqual(2);
+						expect(result.map((item) => item.id)).toEqual([1]);
+					} finally {
+						random.mockRestore();
+					}
+				});
+
+				it("Should throw an error for a retryUnprocessed of null", () => {
+					return expect(callType.func(User).bind(User)([1], {"retryUnprocessed": null})).rejects.toEqual(new CustomError.InvalidParameter("retryUnprocessed.attempts must be a whole number of 0 or more, and retryUnprocessed.delay a number of milliseconds of 0 or more."));
+				});
+
 				it("Should should throw an error if table not initialized", async () => {
 					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
 					new dynamoose.Table("Movie", [Movie], {
@@ -2054,6 +2232,100 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should send up to concurrency requests at a time", async () => {
+					let inFlight = 0;
+					let maxInFlight = 0;
+					let calls = 0;
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": async () => {
+							calls++;
+							maxInFlight = Math.max(maxInFlight, ++inFlight);
+							await new Promise((resolve) => setTimeout(resolve, 5));
+							inFlight--;
+							return {"UnprocessedItems": {}};
+						}
+					});
+					await callType.func(User).bind(User)(Array.from({"length": 60}, (_, index) => ({"id": index + 1})), {"concurrency": 2});
+					expect(calls).toEqual(3);
+					expect(maxInFlight).toEqual(2);
+				});
+
+				it("Should throw an error for a duplicate key in a batch of more than one request, without sending any of it", async () => {
+					let calls = 0;
+					dynamoose.aws.ddb.set({"batchWriteItem": async () => {
+						calls++;
+						return {"UnprocessedItems": {}};
+					}});
+					await expect(callType.func(User).bind(User)([...Array.from({"length": 25}, (_, index) => ({"id": index + 1})), {"id": 5}])).rejects.toEqual(new CustomError.InvalidParameter("The batch has more than one request for the key {\"id\":{\"N\":\"5\"}}. DynamoDB rejects a batch with duplicate keys, so none of it was sent."));
+					expect(calls).toEqual(0);
+				});
+
+				it("Should throw an error for an invalid concurrency", () => {
+					return expect(callType.func(User).bind(User)(Array.from({"length": 60}, (_, index) => ({"id": index + 1})), {"concurrency": 0})).rejects.toEqual(new CustomError.InvalidParameter("concurrency must be a whole number of 1 or more."));
+				});
+
+				it("Should retry unprocessed items with retryUnprocessed", async () => {
+					const calls = [];
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": (request) => {
+							calls.push(request);
+							const requests = request.RequestItems.User;
+							const unprocessed = calls.length === 1 ? requests.slice(1) : [];
+							return Promise.resolve({"UnprocessedItems": unprocessed.length > 0 ? {"User": unprocessed} : {}});
+						}
+					});
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "a"}, {"id": 2, "name": "b"}, {"id": 3, "name": "c"}], {"retryUnprocessed": {"attempts": 3, "delay": 0}});
+					expect(calls.map((call) => call.RequestItems.User.length)).toEqual([3, 2]);
+					expect(result.unprocessedItems).toEqual([]);
+				});
+
+				it("Should return the items still unprocessed after the last retry", async () => {
+					let calls = 0;
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": (request) => {
+							calls++;
+							return Promise.resolve({"UnprocessedItems": {"User": request.RequestItems.User}});
+						}
+					});
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "a"}, {"id": 2, "name": "b"}, {"id": 3, "name": "c"}], {"retryUnprocessed": {"attempts": 1, "delay": 0}});
+					expect(calls).toEqual(2);
+					expect(result.unprocessedItems.map((item) => item.id)).toEqual([1, 2, 3]);
+				});
+
+				it("Should split more than 25 items into requests of 25 and combine the unprocessed items", async () => {
+					const calls = [];
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": (request) => {
+							calls.push(request);
+							const requests = request.RequestItems.User;
+							const unprocessed = requests.filter((item) => ["3", "27"].includes((item.PutRequest ? item.PutRequest.Item : item.DeleteRequest.Key).id.N));
+							return Promise.resolve({"UnprocessedItems": unprocessed.length > 0 ? {"User": unprocessed} : {}});
+						}
+					});
+					const result = await callType.func(User).bind(User)(Array.from({"length": 30}, (_, index) => ({"id": index + 1, "name": `n${index + 1}`})));
+					expect(calls.map((call) => call.RequestItems.User.length)).toEqual([25, 5]);
+					expect(result.unprocessedItems.map((item) => item.id)).toEqual([3, 27]);
+				});
+
+				it("Should treat a response without UnprocessedItems as writing everything", async () => {
+					dynamoose.aws.ddb.set({"batchWriteItem": () => Promise.resolve({})});
+					const result = await callType.func(User).bind(User)(Array.from({"length": 30}, (_, index) => ({"id": index + 1})));
+					expect(result).toEqual({"unprocessedItems": []});
+				});
+
+				it("Should reject with the error of a later request", async () => {
+					let call = 0;
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": () => ++call === 2 ? Promise.reject(new Error("Throttled")) : Promise.resolve({"UnprocessedItems": {}})
+					});
+					await expect(callType.func(User).bind(User)(Array.from({"length": 30}, (_, index) => ({"id": index + 1, "name": `n${index + 1}`})))).rejects.toEqual(new Error("Throttled"));
+				});
+
+				it("Should return one request with every item when return is request", async () => {
+					const result = await callType.func(User).bind(User)(Array.from({"length": 30}, (_, index) => ({"id": index + 1, "name": `n${index + 1}`})), {"return": "request"});
+					expect(result.RequestItems.User.length).toEqual(30);
+				});
+
 				it("Should should throw an error if table not initialized", async () => {
 					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
 					new dynamoose.Table("Movie", [Movie], {
@@ -4387,6 +4659,94 @@ describe("Model", () => {
 		];
 		functionCallTypes.forEach((callType) => {
 			describe(callType.name, () => {
+				it("Should send up to concurrency requests at a time", async () => {
+					let inFlight = 0;
+					let maxInFlight = 0;
+					let calls = 0;
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": async () => {
+							calls++;
+							maxInFlight = Math.max(maxInFlight, ++inFlight);
+							await new Promise((resolve) => setTimeout(resolve, 5));
+							inFlight--;
+							return {"UnprocessedItems": {}};
+						}
+					});
+					await callType.func(User).bind(User)(Array.from({"length": 60}, (_, index) => index + 1), {"concurrency": 2});
+					expect(calls).toEqual(3);
+					expect(maxInFlight).toEqual(2);
+				});
+
+				it("Should throw an error for a duplicate key in a batch of more than one request, without sending any of it", async () => {
+					let calls = 0;
+					dynamoose.aws.ddb.set({"batchWriteItem": async () => {
+						calls++;
+						return {"UnprocessedItems": {}};
+					}});
+					await expect(callType.func(User).bind(User)([...Array.from({"length": 25}, (_, index) => index + 1), 5])).rejects.toEqual(new CustomError.InvalidParameter("The batch has more than one request for the key {\"id\":{\"N\":\"5\"}}. DynamoDB rejects a batch with duplicate keys, so none of it was sent."));
+					expect(calls).toEqual(0);
+				});
+
+				it("Should throw an error for an invalid concurrency", () => {
+					return expect(callType.func(User).bind(User)(Array.from({"length": 60}, (_, index) => index + 1), {"concurrency": 0})).rejects.toEqual(new CustomError.InvalidParameter("concurrency must be a whole number of 1 or more."));
+				});
+
+				it("Should retry unprocessed items with retryUnprocessed", async () => {
+					const calls = [];
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": (request) => {
+							calls.push(request);
+							const requests = request.RequestItems.User;
+							const unprocessed = calls.length === 1 ? requests.slice(1) : [];
+							return Promise.resolve({"UnprocessedItems": unprocessed.length > 0 ? {"User": unprocessed} : {}});
+						}
+					});
+					const result = await callType.func(User).bind(User)([1, 2, 3], {"retryUnprocessed": {"attempts": 3, "delay": 0}});
+					expect(calls.map((call) => call.RequestItems.User.length)).toEqual([3, 2]);
+					expect(result.unprocessedItems).toEqual([]);
+				});
+
+				it("Should return the items still unprocessed after the last retry", async () => {
+					let calls = 0;
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": (request) => {
+							calls++;
+							return Promise.resolve({"UnprocessedItems": {"User": request.RequestItems.User}});
+						}
+					});
+					const result = await callType.func(User).bind(User)([1, 2, 3], {"retryUnprocessed": {"attempts": 1, "delay": 0}});
+					expect(calls).toEqual(2);
+					expect(result.unprocessedItems.map((item) => item.id)).toEqual([1, 2, 3]);
+				});
+
+				it("Should split more than 25 items into requests of 25 and combine the unprocessed items", async () => {
+					const calls = [];
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": (request) => {
+							calls.push(request);
+							const requests = request.RequestItems.User;
+							const unprocessed = requests.filter((item) => ["26"].includes((item.PutRequest ? item.PutRequest.Item : item.DeleteRequest.Key).id.N));
+							return Promise.resolve({"UnprocessedItems": unprocessed.length > 0 ? {"User": unprocessed} : {}});
+						}
+					});
+					const result = await callType.func(User).bind(User)(Array.from({"length": 26}, (_, index) => index + 1));
+					expect(calls.map((call) => call.RequestItems.User.length)).toEqual([25, 1]);
+					expect(result.unprocessedItems.map((item) => item.id)).toEqual([26]);
+				});
+
+				it("Should reject with the error of a later request", async () => {
+					let call = 0;
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": () => ++call === 2 ? Promise.reject(new Error("Throttled")) : Promise.resolve({"UnprocessedItems": {}})
+					});
+					await expect(callType.func(User).bind(User)(Array.from({"length": 26}, (_, index) => index + 1))).rejects.toEqual(new Error("Throttled"));
+				});
+
+				it("Should return one request with every item when return is request", async () => {
+					const result = await callType.func(User).bind(User)(Array.from({"length": 26}, (_, index) => index + 1), {"return": "request"});
+					expect(result.RequestItems.User.length).toEqual(26);
+				});
+
 				it("Should should throw an error if table not initialized", async () => {
 					const Movie = dynamoose.model("Movie", {"id": Number, "name": String});
 					new dynamoose.Table("Movie", [Movie], {

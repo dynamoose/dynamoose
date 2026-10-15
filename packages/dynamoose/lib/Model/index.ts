@@ -18,6 +18,136 @@ import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
+
+// DynamoDB takes at most 100 keys in a `BatchGetItem` request and 25 requests in a `BatchWriteItem` request, so a larger batch is sent as several requests, `concurrency` at a time (one by default), and their responses are combined. If a request fails, no more requests are started and its error is thrown; the items of the requests that finished are already read or written.
+const BATCH_GET_ITEM_LIMIT = 100;
+const BATCH_WRITE_ITEM_LIMIT = 25;
+export interface BatchRetryUnprocessedSettings {
+	/**
+	 * How many times to send the keys or items DynamoDB returns as unprocessed again. Whatever is still unprocessed after the last attempt is returned in `unprocessedKeys` or `unprocessedItems`.
+	 */
+	attempts: number;
+	/**
+	 * The base wait in milliseconds before a retry (default `100`). Attempt `n` waits a random time between 0 and `delay * 2^(n - 1)`, but at most 20 seconds, as AWS recommends for unprocessed items.
+	 */
+	delay?: number;
+}
+const validRetryUnprocessed = (retry?: BatchRetryUnprocessedSettings): BatchRetryUnprocessedSettings => {
+	if (retry === undefined) {
+		return {"attempts": 0};
+	}
+	if (!Number.isInteger(retry?.attempts) || retry.attempts < 0 || retry.delay !== undefined && !(typeof retry.delay === "number" && retry.delay >= 0)) {
+		throw new CustomError.InvalidParameter("retryUnprocessed.attempts must be a whole number of 0 or more, and retryUnprocessed.delay a number of milliseconds of 0 or more.");
+	}
+	return retry;
+};
+// The longest wait before one retry, so many attempts don't wait for hours.
+const MAX_RETRY_WAIT = 20000;
+// The same string for two DynamoDB keys only when they name the same item. A number is compared by its value and a binary value by its bytes, as DynamoDB does.
+const keyString = (item: AttributeMap, keyAttributes: string[]): string => JSON.stringify(keyAttributes.map((attribute) => {
+	const value: any = item[attribute];
+	if (value?.N !== undefined) {
+		return {"N": String(Number(value.N))};
+	}
+	if (value?.B !== undefined) {
+		return {"B": Buffer.from(value.B).toString("base64")};
+	}
+	return value ?? null;
+}));
+// DynamoDB rejects a batch request that names one key twice. A batch sent as several requests can't be checked by DynamoDB, so it is checked here before any of it is sent.
+const checkDuplicateKeys = (keys: AttributeMap[], keyAttributes: string[]): void => {
+	const seen = new Set<string>();
+	keys.forEach((key) => {
+		const string = keyString(key, keyAttributes);
+		if (seen.has(string)) {
+			throw new CustomError.InvalidParameter(`The batch has more than one request for the key ${JSON.stringify(utils.object.pick(key, keyAttributes))}. DynamoDB rejects a batch with duplicate keys, so none of it was sent.`);
+		}
+		seen.add(string);
+	});
+};
+interface BatchSendSettings {
+	retryUnprocessed?: BatchRetryUnprocessedSettings;
+	concurrency?: number;
+}
+// Runs `run` once for each chunk index, at most `concurrency` at a time. After a failure no more chunks start, and the first error is thrown once the running ones finish.
+async function forEachChunk (count: number, concurrency = 1, run: (index: number) => Promise<void>): Promise<void> {
+	if (!Number.isInteger(concurrency) || concurrency < 1) {
+		throw new CustomError.InvalidParameter("concurrency must be a whole number of 1 or more.");
+	}
+	let next = 0;
+	const errors: any[] = [];
+	const worker = async (): Promise<void> => {
+		while (errors.length === 0 && next < count) {
+			const index = next++;
+			try {
+				await run(index);
+			} catch (error) {
+				errors.push(error);
+			}
+		}
+	};
+	await Promise.all(Array.from({"length": Math.min(concurrency, count)}, worker));
+	if (errors.length > 0) {
+		throw errors[0];
+	}
+}
+// Sends a request, then sends what DynamoDB returns as unprocessed again, up to `retry.attempts` times, and returns what is still unprocessed.
+async function sendWithRetries<T> (retry: BatchRetryUnprocessedSettings, request: T, send: (request: T) => Promise<T | undefined>): Promise<T | undefined> {
+	let unprocessed = await send(request);
+	for (let attempt = 1; unprocessed && attempt <= retry.attempts; attempt++) {
+		await utils.timeout(Math.random() * Math.min(MAX_RETRY_WAIT, (retry.delay ?? 100) * 2 ** (attempt - 1)));
+		unprocessed = await send(unprocessed);
+	}
+	return unprocessed;
+}
+async function batchGetItemInChunks (instance: Instance, tableName: string, params: DynamoDB.BatchGetItemInput, settings: BatchSendSettings, keyAttributes: string[]): Promise<DynamoDB.BatchGetItemOutput> {
+	const retry = validRetryUnprocessed(settings.retryUnprocessed);
+	const {Keys, ...requestSettings} = params.RequestItems[tableName];
+	if (Keys.length <= BATCH_GET_ITEM_LIMIT && retry.attempts === 0 && settings.concurrency === undefined) {
+		return ddb(instance, "batchGetItem", params);
+	}
+	if (Keys.length > BATCH_GET_ITEM_LIMIT) {
+		checkDuplicateKeys(Keys, keyAttributes);
+	}
+	const output: DynamoDB.BatchGetItemOutput = {"Responses": {[tableName]: []}, "UnprocessedKeys": {}};
+	await forEachChunk(Math.ceil(Keys.length / BATCH_GET_ITEM_LIMIT), settings.concurrency, async (index) => {
+		const start = index * BATCH_GET_ITEM_LIMIT;
+		const unprocessed = await sendWithRetries(retry, {...requestSettings, "Keys": Keys.slice(start, start + BATCH_GET_ITEM_LIMIT)}, async (request) => {
+			const response = await ddb(instance, "batchGetItem", {"RequestItems": {[tableName]: request}});
+			output.Responses[tableName].push(...response.Responses?.[tableName] ?? []);
+			const unprocessedRequest = response.UnprocessedKeys?.[tableName];
+			return unprocessedRequest?.Keys?.length > 0 ? unprocessedRequest : undefined;
+		});
+		if (unprocessed) {
+			output.UnprocessedKeys[tableName] = {...unprocessed, "Keys": [...output.UnprocessedKeys[tableName]?.Keys ?? [], ...unprocessed.Keys]};
+		}
+	});
+	return output;
+}
+async function batchWriteItemInChunks (instance: Instance, tableName: string, params: DynamoDB.BatchWriteItemInput, settings: BatchSendSettings, keyAttributes: string[]): Promise<DynamoDB.BatchWriteItemOutput> {
+	const retry = validRetryUnprocessed(settings.retryUnprocessed);
+	const requests = params.RequestItems[tableName];
+	if (requests.length <= BATCH_WRITE_ITEM_LIMIT && retry.attempts === 0 && settings.concurrency === undefined) {
+		return ddb(instance, "batchWriteItem", params);
+	}
+	if (requests.length > BATCH_WRITE_ITEM_LIMIT) {
+		// Two chunks with the same key would be written in an order that isn't known.
+		checkDuplicateKeys(requests.map((request) => request.PutRequest?.Item ?? request.DeleteRequest.Key), keyAttributes);
+	}
+	const output: DynamoDB.BatchWriteItemOutput = {"UnprocessedItems": {}};
+	await forEachChunk(Math.ceil(requests.length / BATCH_WRITE_ITEM_LIMIT), settings.concurrency, async (index) => {
+		const start = index * BATCH_WRITE_ITEM_LIMIT;
+		const unprocessed = await sendWithRetries(retry, requests.slice(start, start + BATCH_WRITE_ITEM_LIMIT), async (request) => {
+			const response = await ddb(instance, "batchWriteItem", {"RequestItems": {[tableName]: request}});
+			const unprocessedRequests = response.UnprocessedItems?.[tableName] ?? [];
+			return unprocessedRequests.length > 0 ? unprocessedRequests : undefined;
+		});
+		if (unprocessed) {
+			output.UnprocessedItems[tableName] = [...output.UnprocessedItems[tableName] ?? [], ...unprocessed];
+		}
+	});
+	return output;
+}
 const {internalProperties} = Internal.General;
 
 type UpdatePartial<T> =
@@ -82,6 +212,8 @@ interface ModelDeleteSettings {
 }
 interface ModelBatchPutSettings {
 	return?: "response" | "request";
+	retryUnprocessed?: BatchRetryUnprocessedSettings;
+	concurrency?: number;
 }
 interface ModelUpdateSettings {
 	return?: "item" | "request";
@@ -95,9 +227,13 @@ interface ModelBatchGetSettings {
 	return?: "items" | "request";
 	attributes?: string[];
 	consistent?: boolean;
+	retryUnprocessed?: BatchRetryUnprocessedSettings;
+	concurrency?: number;
 }
 interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
+	retryUnprocessed?: BatchRetryUnprocessedSettings;
+	concurrency?: number;
 }
 export interface ModelIndexes {
 	TableIndex?: TableIndex;
@@ -466,27 +602,37 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const {instance} = table.getInternalProperties(internalProperties);
 
 		const keyObjects = keys.map(async (key) => this.getInternalProperties(internalProperties).convertKeyToObject(key));
+		const keyAttributes = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean) as string[];
 
 		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 		const prepareResponse = async (response: DynamoDB.BatchGetItemOutput): Promise<ModelBatchGetItemsResponse<ItemCarrier>> => {
-			const tmpResult = await Promise.all(response.Responses[table.getInternalProperties(internalProperties).name].map((item) => itemify(item)));
+			const responseItems = response.Responses[table.getInternalProperties(internalProperties).name];
+			// Keys are matched against the raw response with a map, which finds each key's item in one step; a batch sent in chunks can have thousands of keys.
+			const responseIndexes = new Map<string, number>();
+			responseItems.forEach((item, index) => {
+				const string = keyString(item, keyAttributes);
+				if (!responseIndexes.has(string)) {
+					responseIndexes.set(string, index);
+				}
+			});
+			const tmpResult = await Promise.all(responseItems.map((item) => itemify(item)));
 			const unprocessedArray = response.UnprocessedKeys[table.getInternalProperties(internalProperties).name] ? response.UnprocessedKeys[this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name].Keys : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item)));
+			const unprocessedIndexes = new Map<string, number>(unprocessedArray.map((item, index) => [keyString(item, keyAttributes), index]));
 			const startArray: ModelBatchGetItemsResponse<ItemCarrier> = Object.assign([], {
 				"unprocessedKeys": [],
 				"populate": PopulateItems,
 				"toJSON": utils.dynamoose.itemToJSON
 			});
 			return (await Promise.all(keyObjects)).reduce((result, key) => {
-				const keyProperties = Object.keys(key);
-				const item = tmpResult.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
-				if (item) {
-					result.push(item);
-				} else {
-					const item = tmpResultUnprocessed.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
+				const string = keyString(this.Item.objectToDynamo(key), keyAttributes);
+				if (responseIndexes.has(string)) {
+					const item = tmpResult[responseIndexes.get(string)];
 					if (item) {
-						result.unprocessedKeys.push(item);
+						result.push(item);
 					}
+				} else if (unprocessedIndexes.has(string)) {
+					result.unprocessedKeys.push(tmpResultUnprocessed[unprocessedIndexes.get(string)]);
 				}
 				return result;
 			}, startArray);
@@ -522,7 +668,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				})();
 			}
 		}
-		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => getParams(settings as ModelBatchGetSettings)).then((params) => ddb(instance, "batchGetItem", params));
+		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => getParams(settings as ModelBatchGetSettings)).then((params) => batchGetItemInChunks(instance, table.getInternalProperties(internalProperties).name, params, settings as ModelBatchGetSettings, keyAttributes));
 
 		if (callback) {
 			const localCallback: CallbackType<ItemCarrier[], any> = callback as CallbackType<ItemCarrier[], any>;
@@ -585,7 +731,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return paramsPromise;
 			}
 		}
-		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => paramsPromise).then((params) => ddb(table.getInternalProperties(internalProperties).instance, "batchWriteItem", params));
+		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => paramsPromise).then((params) => batchWriteItemInChunks(table.getInternalProperties(internalProperties).instance, table.getInternalProperties(internalProperties).name, params, settings as ModelBatchPutSettings, [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean) as string[]));
 
 		if (callback) {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, any> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, any>;
@@ -653,7 +799,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				})();
 			}
 		}
-		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => getParams()).then((params) => ddb(instance, "batchWriteItem", params));
+		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => getParams()).then((params) => batchWriteItemInChunks(instance, table.getInternalProperties(internalProperties).name, params, settings as ModelBatchDeleteSettings, [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean) as string[]));
 
 		if (callback) {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, any> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, any>;
