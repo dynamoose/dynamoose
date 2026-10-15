@@ -21,7 +21,7 @@ console.log(myUser.id); // 1
 
 This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. The result is the saved item in the same form that `Model.get` returns: schema `get` modifiers are applied, and `Date` attributes and timestamps are `Date` objects.
 
 You can also pass a settings object in as the first parameter. The following options are available for settings are:
 
