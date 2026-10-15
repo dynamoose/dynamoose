@@ -11,7 +11,7 @@ import {ObjectType} from "../General";
 // recursion path in a Set and refusing to descend into a value already on that path.
 // For acyclic inputs (every DynamoDB item, and any object that has already been run
 // through `deep_copy`, which strips cycles) the output is identical to the library's,
-// key-for-key and in the same order.
+// key-for-key and in the same order, except that a `Uint8Array` is a leaf here, where the library adds an entry per byte.
 function object_entries (object: ObjectType, existingKey = "", ancestors: Set<unknown> = new Set()): [string, any][] {
 	const accumulator: [string, any][] = [];
 	// Mark this node as being on the current recursion path. Sibling references that share
@@ -21,7 +21,8 @@ function object_entries (object: ObjectType, existingKey = "", ancestors: Set<un
 	for (const [key, value] of Object.entries(object)) {
 		const keyWithExisting = `${existingKey ? `${existingKey}.` : ""}${key}`;
 		accumulator.push([keyWithExisting, value]);
-		if (typeof value === "object" && !(value instanceof Buffer) && value !== null && !ancestors.has(value)) {
+		// Binary values (`Buffer` is a `Uint8Array`, and the AWS SDK returns binary attributes as `Uint8Array`) are leaves: descending would add an entry per byte.
+		if (typeof value === "object" && !(value instanceof Uint8Array) && value !== null && !ancestors.has(value)) {
 			const nested = object_entries(value, keyWithExisting, ancestors);
 			for (let i = 0; i < nested.length; i++) {
 				accumulator.push(nested[i]);
