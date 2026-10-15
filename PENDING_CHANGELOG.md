@@ -8,6 +8,7 @@
 
 ### General
 
+- Improved read and write performance: `utils.object.entries` and `keys` no longer walk each nested object's whole subtree to detect cycles, schema lookups skip the list-index regex for keys without an index, and `Item.attributesWithSchema` reuses a cached tree of the schema's attributes
 - Improved performance by caching attribute lookups per Schema: `Item.save`, `Model.get` and `Model.update` are about 1.5 to 2.8 times as fast on large schemas. A Schema now assumes that its definition is not changed after `new Schema()`: a nested definition object edited in place afterwards is not seen, so create a new Schema instead
 
 ### Bug Fixes

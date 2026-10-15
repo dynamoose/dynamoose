@@ -209,6 +209,22 @@ describe("Schema lookup cache", () => {
 			}
 		});
 
+		// Item.attributesWithSchema reads a cached tree of the attributes, which must not hide a replaced attributes().
+		it("Should call a replaced attributes in every Item.attributesWithSchema call", async () => {
+			const {Item} = require("../dist/Item");
+			const Cat = model("CacheSpyAttributes", {"id": String, "name": String});
+			const item = new Cat({"id": "1", "name": "a"});
+			await Item.attributesWithSchema(item, Cat.Model);
+			const {spy, restore} = replace("attributes");
+			try {
+				expect(await Item.attributesWithSchema(item, Cat.Model)).toEqual(["id", "name"]);
+				await Item.attributesWithSchema(item, Cat.Model);
+				expect(spy.mock.calls).toEqual([[], []]);
+			} finally {
+				restore();
+			}
+		});
+
 		it("Should call a replaced getAttributeType on every attributes() call", () => {
 			const schema = new dynamoose.Schema({"id": String, "address": {"type": Object, "schema": {"city": String}}});
 			const {spy, restore} = replace("getAttributeType");

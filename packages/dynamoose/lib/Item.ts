@@ -555,16 +555,8 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 // https://stackoverflow.com/a/59928314/894067
 Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Promise<string[]> {
 	const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(item);
-	const attributes = schema.attributes();
-	// build a tree out of schema attributes
-	const root = {};
-	attributes.forEach((attribute) => {
-		let node = root;
-		attribute.split(".").forEach((part) => {
-			node[part] = node[part] || {};
-			node = node[part];
-		});
-	});
+	// a tree out of schema attributes
+	const root = schema.getInternalProperties(internalProperties).getSharedAttributeTree();
 	// explore the tree
 	function traverse (node, treeNode, outPath, callback): void {
 		callback(outPath);

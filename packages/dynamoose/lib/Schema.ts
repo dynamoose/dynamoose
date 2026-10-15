@@ -832,6 +832,8 @@ interface SchemaInternalProperties {
 	lookupCache?: SchemaLookupCache;
 	// getAttributeTypeDetails for dynamoose's own callers in lib/, which must only read the result.
 	getSharedAttributeTypeDetails: (key: string, settings?: AttributeLookupSettings) => AttributeTypeDetails;
+	// The attributes as a tree of path parts, for Item.attributesWithSchema, which must only read it.
+	getSharedAttributeTree: () => AttributeTree;
 	// Drops the lookup cache of every schema, not only this one.
 	clearAllLookupCaches: () => void;
 	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
@@ -1167,6 +1169,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			},
 			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps as TimestampObject),
 			"getSharedAttributeTypeDetails": (...args: [key: string, settings?: AttributeLookupSettings]) => getSharedAttributeTypeDetails(this, ...args),
+			"getSharedAttributeTree": () => getSharedAttributeTree(this),
 			"clearAllLookupCaches": clearSchemaLookupCaches
 		});
 
@@ -1804,7 +1807,9 @@ interface SchemaLookupCache {
 	// Only for dynamoose's own callers, see getSharedAttributeTypeDetails.
 	typeDetails: Map<string, AttributeTypeDetails>;
 	attributes?: string[];
+	attributeTree?: AttributeTree;
 }
+type AttributeTree = {[part: string]: AttributeTree};
 // A schema's attributes object can share nested objects with other schemas (a nested Schema instance
 // is embedded by reference), so a write to one schema can change what another resolves. Bumping the
 // epoch drops the lookup cache of every schema.
@@ -1837,7 +1842,16 @@ function getLookupCache (schema: Schema): SchemaLookupCache {
 }
 // The cache key: list indexes become 0, as getAttributeTypeDetails does.
 function standardizeKey (key: string, settings?: AttributeLookupSettings): string {
-	return settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0");
+	if (settings?.standardKey) {
+		return key;
+	}
+	// Most keys have no list index: find one before running the regex, which is the costly part
+	for (let i = 0; i < key.length - 1; i++) {
+		if (key.charCodeAt(i) === 46 && key.charCodeAt(i + 1) >= 48 && key.charCodeAt(i + 1) <= 57) {
+			return key.replace(/\.\d+/gu, ".0");
+		}
+	}
+	return key;
 }
 // A cache hit skips the calls a lookup makes through these public methods. When user code replaces one
 // of them (a spy, a plugin, a subclass), every lookup calls the replacement.
@@ -1855,6 +1869,28 @@ function hasModelSetting (details: AttributeTypeDetails): boolean {
 // getAttributeTypeDetails for dynamoose's own callers in lib/ (through the internal properties), which
 // only read the result: they share one result per path. Other callers use the public method, which
 // builds a new result per call. A replaced method gets the arguments exactly as the caller gave them.
+const builtinAttributes = Schema.prototype.attributes;
+// The tree is built from attributes() and kept while attributes() keeps its own cached result: no
+// replaced method and no side effect took part in it.
+function getSharedAttributeTree (schema: Schema): AttributeTree {
+	const isCacheable = schema.attributes === builtinAttributes && schema.getAttributeType === builtinGetAttributeType && usesBuiltinLookups(schema);
+	const cache = isCacheable ? getLookupCache(schema) : undefined;
+	if (cache?.attributeTree) {
+		return cache.attributeTree;
+	}
+	const tree: AttributeTree = {};
+	schema.attributes().forEach((attribute) => {
+		let node = tree;
+		attribute.split(".").forEach((part) => {
+			node[part] = node[part] || {};
+			node = node[part];
+		});
+	});
+	if (cache?.attributes) {
+		cache.attributeTree = tree;
+	}
+	return tree;
+}
 function getSharedAttributeTypeDetails (schema: Schema, ...args: [key: string, settings?: AttributeLookupSettings]): AttributeTypeDetails {
 	if (!usesBuiltinLookups(schema)) {
 		return schema.getAttributeTypeDetails(...args);
