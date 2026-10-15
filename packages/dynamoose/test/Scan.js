@@ -1025,6 +1025,32 @@ describe("Scan", () => {
 		});
 	});
 
+	describe("scan.consistent and scan.count with a value", () => {
+		[[[], true], [[true], true], [[false], false]].forEach(([args, expected]) => {
+			it(`Should set consistent to ${expected} for ${JSON.stringify(args)}`, () => {
+				expect(Model.scan().consistent(...args).getInternalProperties(internalProperties).settings.consistent).toEqual(expected);
+				expect(Model.scan().count(...args).getInternalProperties(internalProperties).settings.count).toEqual(expected);
+			});
+		});
+
+		it("Should not turn a setting off when called twice", () => {
+			expect(Model.scan().consistent().consistent().getInternalProperties(internalProperties).settings.consistent).toEqual(true);
+			expect(Model.scan().count().count().getInternalProperties(internalProperties).settings.count).toEqual(true);
+		});
+
+		it("Should not send ConsistentRead for consistent(false)", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().consistent(false).exec();
+			expect(scanParams.ConsistentRead).toBeUndefined();
+		});
+
+		it("Should turn consistent off after it was turned on", async () => {
+			scanPromiseResolver = () => ({"Items": []});
+			await Model.scan().consistent().consistent(false).exec();
+			expect(scanParams.ConsistentRead).toBeUndefined();
+		});
+	});
+
 	describe("scan.consistent", () => {
 		it("Should be a function", () => {
 			expect(Model.scan().consistent).toBeInstanceOf(Function);

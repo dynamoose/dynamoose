@@ -1810,6 +1810,32 @@ describe("Query", () => {
 		});
 	});
 
+	describe("query.consistent and query.count with a value", () => {
+		[[[], true], [[true], true], [[false], false]].forEach(([args, expected]) => {
+			it(`Should set consistent to ${expected} for ${JSON.stringify(args)}`, () => {
+				expect(Model.query().consistent(...args).getInternalProperties(internalProperties).settings.consistent).toEqual(expected);
+				expect(Model.query().count(...args).getInternalProperties(internalProperties).settings.count).toEqual(expected);
+			});
+		});
+
+		it("Should not turn a setting off when called twice", () => {
+			expect(Model.query().consistent().consistent().getInternalProperties(internalProperties).settings.consistent).toEqual(true);
+			expect(Model.query().count().count().getInternalProperties(internalProperties).settings.count).toEqual(true);
+		});
+
+		it("Should not send ConsistentRead for consistent(false)", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").consistent(false).exec();
+			expect(queryParams.ConsistentRead).toBeUndefined();
+		});
+
+		it("Should turn consistent off after it was turned on", async () => {
+			queryPromiseResolver = () => ({"Items": []});
+			await Model.query("name").eq("Charlie").consistent().consistent(false).exec();
+			expect(queryParams.ConsistentRead).toBeUndefined();
+		});
+	});
+
 	describe("query.consistent", () => {
 		it("Should be a function", () => {
 			expect(Model.query().consistent).toBeInstanceOf(Function);

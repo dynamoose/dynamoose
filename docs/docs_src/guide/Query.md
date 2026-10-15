@@ -98,6 +98,8 @@ Instead of returning an array of items this function will cause the query operat
 
 Using this option will save bandwidth by setting the DynamoDB `Select` option to `COUNT`.
 
+You can pass `false` to turn it off again; calling it without a value, or more than once, keeps it on.
+
 ```js
 const response = await Cat.query("name").eq("Will").count().exec();
 console.log(response); // {"count": 1, "queriedCount": 1}
@@ -105,10 +107,11 @@ console.log(response); // {"count": 1, "queriedCount": 1}
 
 ## query.consistent()
 
-This will cause the query to run in a consistent manner as opposed to the default eventually consistent manner.
+This will cause the query to run in a consistent manner as opposed to the default eventually consistent manner. You can pass `false` to turn it off again; calling it without a value, or more than once, keeps it on.
 
 ```js
 Cat.query("name").eq("Will").consistent(); // Run the query in a consistent manner
+Cat.query("name").eq("Will").consistent(false); // Run the query in the default eventually consistent manner
 ```
 
 ## query.using(index)
