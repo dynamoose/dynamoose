@@ -3244,6 +3244,96 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should use a raw condition with a FilterExpression as the ConditionExpression", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
+					new dynamoose.Table("User", [User]);
+					const condition = new dynamoose.Condition({"FilterExpression": "#active = :active", "ExpressionAttributeNames": {"#active": "active"}, "ExpressionAttributeValues": {":active": true}});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {condition});
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {"#active": "active", "#a0": "name"},
+						"ExpressionAttributeValues": {":active": {"BOOL": true}, ":v0": {"S": "Charlie"}},
+						"UpdateExpression": "SET #a0 = :v0",
+						"ConditionExpression": "#active = :active",
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should use a raw condition without ExpressionAttributeValues", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
+					new dynamoose.Table("User", [User]);
+					const condition = new dynamoose.Condition({"ConditionExpression": "attribute_exists(#active)", "ExpressionAttributeNames": {"#active": "active"}});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {condition});
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {"#active": "active", "#a0": "name"},
+						"ExpressionAttributeValues": {":v0": {"S": "Charlie"}},
+						"UpdateExpression": "SET #a0 = :v0",
+						"ConditionExpression": "attribute_exists(#active)",
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should number the update's names and values after the ones a raw condition in a group uses", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "status": String}));
+					new dynamoose.Table("User", [User]);
+					const condition = new dynamoose.Condition().where("status").eq("open").parenthesis(new dynamoose.Condition({"ConditionExpression": "#a0 <> :v0", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0": "Bob"}}));
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {condition});
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {"#a0": "name", "#a1": "status", "#a2": "name"},
+						"ExpressionAttributeValues": {":v0": {"S": "Bob"}, ":v1": {"S": "open"}, ":v2": {"S": "Charlie"}},
+						"UpdateExpression": "SET #a2 = :v2",
+						"ConditionExpression": "#a1 = :v1 AND (#a0 <> :v0)",
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should number the update's names and values after the ones a raw condition uses", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "status": String}));
+					new dynamoose.Table("User", [User]);
+					const condition = new dynamoose.Condition({"ConditionExpression": "#a0 = :v0 AND #a2 <> :v1", "ExpressionAttributeNames": {"#a0": "status", "#a2": "name"}, "ExpressionAttributeValues": {":v0": "open", ":v1": "Bob"}});
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {condition});
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {"#a0": "status", "#a2": "name", "#a3": "name"},
+						"ExpressionAttributeValues": {":v0": {"S": "open"}, ":v1": {"S": "Bob"}, ":v3": {"S": "Charlie"}},
+						"UpdateExpression": "SET #a3 = :v3",
+						"ConditionExpression": "#a0 = :v0 AND #a2 <> :v1",
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should not change a raw condition object, so the condition can be used again", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
+					new dynamoose.Table("User", [User]);
+					const raw = {"ConditionExpression": "#active = :active", "ExpressionAttributeNames": {"#active": "active"}, "ExpressionAttributeValues": {":active": true}};
+					const condition = new dynamoose.Condition(raw);
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {condition});
+					expect(raw).toEqual({"ConditionExpression": "#active = :active", "ExpressionAttributeNames": {"#active": "active"}, "ExpressionAttributeValues": {":active": true}});
+					await callType.func(User).bind(User)({"id": 2}, {"name": "Bob"}, {condition});
+					expect(updateItemParams.ConditionExpression).toEqual("#active = :active");
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":active": {"BOOL": true}, ":v0": {"S": "Bob"}});
+				});
+
+				it("Should throw an error for a raw condition without a ConditionExpression or FilterExpression", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
+					new dynamoose.Table("User", [User]);
+					const condition = new dynamoose.Condition({"ComparisonExpression": "#active = :active", "ExpressionAttributeNames": {"#active": "active"}, "ExpressionAttributeValues": {":active": true}});
+					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {condition})).rejects.toEqual(new CustomError.InvalidParameter("A raw condition object must have a \"ConditionExpression\" or \"FilterExpression\" property, but it has \"ComparisonExpression\"."));
+				});
+
 				it("Should send correct params to updateItem with returnValues", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
@@ -4292,6 +4382,37 @@ describe("Model", () => {
 							"#a0": "id"
 						}
 					});
+				});
+
+				it("Should use a raw condition with a FilterExpression as the ConditionExpression", async () => {
+					const condition = new dynamoose.Condition({"FilterExpression": "#n = :n", "ExpressionAttributeNames": {"#n": "name"}, "ExpressionAttributeValues": {":n": "Bob"}});
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1}, {condition});
+					expect(deleteItemParams).toEqual({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ConditionExpression": "#n = :n",
+						"ExpressionAttributeNames": {"#n": "name"},
+						"ExpressionAttributeValues": {":n": {"S": "Bob"}}
+					});
+				});
+
+				it("Should use a raw condition without ExpressionAttributeValues", async () => {
+					const condition = new dynamoose.Condition({"FilterExpression": "attribute_exists(#n)", "ExpressionAttributeNames": {"#n": "name"}});
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)({"id": 1}, {condition});
+					expect(deleteItemParams).toEqual({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User",
+						"ConditionExpression": "attribute_exists(#n)",
+						"ExpressionAttributeNames": {"#n": "name"}
+					});
+				});
+
+				it("Should throw an error for a raw condition without a ConditionExpression or FilterExpression", () => {
+					const condition = new dynamoose.Condition({"ComparisonExpression": "#n = :n", "ExpressionAttributeNames": {"#n": "name"}, "ExpressionAttributeValues": {":n": "Bob"}});
+					deleteItemFunction = () => Promise.resolve();
+					return expect(callType.func(User).bind(User)({"id": 1}, {condition})).rejects.toEqual(new CustomError.InvalidParameter("A raw condition object must have a \"ConditionExpression\" or \"FilterExpression\" property, but it has \"ComparisonExpression\"."));
 				});
 
 				it("Should return request if return request setting is set", async () => {
