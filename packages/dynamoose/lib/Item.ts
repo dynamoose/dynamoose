@@ -831,7 +831,12 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	if (settings.required) {
 		let attributesToCheck = await Item.attributesWithSchema(returnObject, model);
 		if (settings.required === "nested") {
-			attributesToCheck = attributesToCheck.filter((attribute) => utils.object.keys(returnObject).find((key) => attribute === key || attribute.startsWith(key + ".")));
+			// Flatten the item once: an attribute is checked when it, or one of its parents, is in the item.
+			const keys = new Set(utils.object.keys(returnObject));
+			attributesToCheck = attributesToCheck.filter((attribute) => {
+				const parts = attribute.split(".");
+				return parts.some((_part, index) => keys.has(parts.slice(0, index + 1).join(".")));
+			});
 		}
 		await Promise.all(attributesToCheck.map(async (key) => {
 			const check = async (): Promise<void> => {
