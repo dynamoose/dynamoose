@@ -4962,6 +4962,8 @@ describe("Model", () => {
 			{"input": [[{"id": 1, "name": "Bob"}, {"id": 2, "name": "Tim"}], "random"], "error": "Field options is required and should be an object or array"},
 			{"input": [{"id": 1, "name": "Bob"}], "error": "itemsArray must be an array of item objects"}
 		];
+		// Copies of the inputs above, taken before any test runs, so a test that changed the shared inputs can't hide a change in a later test.
+		const serializeTestInputs = serializeTests.map((test) => typeof test.input === "function" ? test.input : JSON.stringify(test.input));
 		describe("Model.serializeMany", () => {
 			it("Should be a function", () => {
 				expect(User.serializeMany).toBeInstanceOf(Function);
@@ -4997,7 +4999,7 @@ describe("Model", () => {
 				expect(new User().serialize).toBeInstanceOf(Function);
 			});
 
-			serializeTests.forEach((test) => {
+			serializeTests.forEach((test, index) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
 					const input = typeof test.input === "function" ? test.input() : test.input;
 
@@ -5015,6 +5017,19 @@ describe("Model", () => {
 				});
 
 				if (!test.error) {
+					it(`Should not modify the item for ${typeof test.input === "function" ? `serializer test case ${index + 1}` : JSON.stringify(test.input)}`, () => {
+						const input = typeof test.input === "function" ? test.input() : JSON.parse(serializeTestInputs[index]);
+
+						if (Array.isArray(input[0])) {
+							input[0].forEach((object) => {
+								const item = new User(object);
+								const before = JSON.stringify(item);
+								item.serialize(input[1]);
+								expect(JSON.stringify(item)).toEqual(before);
+							});
+						}
+					});
+
 					it(`Should return same output as item.toJSON() for ${JSON.stringify(test.input)}`, () => {
 						const input = typeof test.input === "function" ? test.input() : test.input;
 
@@ -5027,6 +5042,63 @@ describe("Model", () => {
 						}
 					});
 				}
+			});
+
+			describe("Should not modify the item", () => {
+				const newUser = () => new User({"id": 1, "name": "Bob", "friend": {"id": 3, "name": "Tom"}});
+
+				it("When excluding a nested property", () => {
+					const item = newUser();
+					expect(item.serialize({"exclude": ["friend.id"]})).toEqual({"id": 1, "name": "Bob", "friend": {"name": "Tom"}});
+					expect(item.friend).toEqual({"id": 3, "name": "Tom"});
+				});
+
+				it("When including and excluding nested properties", () => {
+					const item = newUser();
+					expect(item.serialize({"include": ["friend"], "exclude": ["friend.id"]})).toEqual({"friend": {"name": "Tom"}});
+					expect(item.friend).toEqual({"id": 3, "name": "Tom"});
+				});
+
+				it("When excluding a property of an object in a list", () => {
+					const Order = dynamoose.model("Order", {"id": Number, "lines": {"type": Array, "schema": [{"type": Object, "schema": {"sku": String, "cost": Number}}]}});
+					new dynamoose.Table("Order", [Order], {"create": false, "update": false, "waitForActive": false});
+					const item = new Order({"id": 1, "lines": [{"sku": "A1", "cost": 5}, {"sku": "B2", "cost": 9}]});
+					expect(item.serialize({"exclude": ["lines.0.cost"]}).lines).toEqual([{"sku": "A1"}, {"sku": "B2", "cost": 9}]);
+					item.serialize({"exclude": ["lines.cost"]});
+					expect(item.lines).toEqual([{"sku": "A1", "cost": 5}, {"sku": "B2", "cost": 9}]);
+				});
+
+				it("When an earlier excluded path removes an object from a list", () => {
+					const Order = dynamoose.model("Order", {"id": Number, "lines": {"type": Array, "schema": [{"type": Object, "schema": {"sku": String, "cost": Number}}]}});
+					new dynamoose.Table("Order", [Order], {"create": false, "update": false, "waitForActive": false});
+					const item = new Order({"id": 1, "lines": [{"sku": "A1", "cost": 5}, {"sku": "B2", "cost": 9}, {"sku": "C3", "cost": 7}]});
+					expect(item.serialize({"exclude": ["lines.0", "lines.1.cost"]}).lines).toEqual([{"sku": "B2", "cost": 9}, {"sku": "C3"}]);
+					expect(item.lines).toEqual([{"sku": "A1", "cost": 5}, {"sku": "B2", "cost": 9}, {"sku": "C3", "cost": 7}]);
+				});
+
+				it("When passing a single property to exclude as a string", () => {
+					const item = newUser();
+					expect(item.serialize({"exclude": "friend.id"})).toEqual({"id": 1, "name": "Bob", "friend": {"name": "Tom"}});
+					expect(item.friend).toEqual({"id": 3, "name": "Tom"});
+				});
+
+				it("When passing the item itself to modify as original", () => {
+					const item = newUser();
+					let original;
+					item.serialize({
+						"modify": (serialized, originalItem) => {
+							original = originalItem;
+							return serialized;
+						}
+					});
+					expect(original).toBe(item);
+				});
+
+				it("When serializing many items", () => {
+					const items = [newUser(), newUser()];
+					expect(User.serializeMany(items, {"exclude": ["friend.id"]})).toEqual([{"id": 1, "name": "Bob", "friend": {"name": "Tom"}}, {"id": 1, "name": "Bob", "friend": {"name": "Tom"}}]);
+					items.forEach((item) => expect(item.friend).toEqual({"id": 3, "name": "Tom"}));
+				});
 			});
 		});
 	});

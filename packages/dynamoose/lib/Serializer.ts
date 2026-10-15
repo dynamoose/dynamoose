@@ -69,7 +69,7 @@ export class Serializer extends InternalPropertiesClass<SerializerInternalProper
 					},
 					{
 						"if": Boolean(options.exclude),
-						"function": (serialized: ObjectType): ObjectType => utils.object.delete(serialized, options.exclude)
+						"function": (serialized: ObjectType): ObjectType => utils.object_delete_copy(serialized, options.exclude)
 					},
 					{
 						"if": Boolean(options.modify),

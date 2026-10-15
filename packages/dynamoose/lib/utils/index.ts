@@ -14,6 +14,7 @@ import importPackage from "./importPackage";
 import log from "./log";
 import find_best_index from "./find_best_index";
 import deep_copy from "./deep_copy";
+import object_delete_copy from "./object_delete_copy";
 import childKey from "./childKey";
 import parentKey from "./parentKey";
 import async_reduce from "./async_reduce";
@@ -36,6 +37,7 @@ export default {
 	log,
 	find_best_index,
 	deep_copy,
+	object_delete_copy,
 	childKey,
 	parentKey,
 	async_reduce,
