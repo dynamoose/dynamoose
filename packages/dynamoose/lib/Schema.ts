@@ -829,6 +829,11 @@ interface SchemaGetAttributeSettingValue {
 interface SchemaInternalProperties {
 	schemaObject: SchemaDefinition;
 	settings: SchemaSettings;
+	lookupCache?: SchemaLookupCache;
+	// getAttributeTypeDetails for dynamoose's own callers in lib/, which must only read the result.
+	getSharedAttributeTypeDetails: (key: string, settings?: AttributeLookupSettings) => AttributeTypeDetails;
+	// Drops the lookup cache of every schema, not only this one.
+	clearAllLookupCaches: () => void;
 	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
 	getMapSettingObject: () => {[key: string]: string};
 	getDefaultMapAttribute: (attribute: string) => string;
@@ -888,6 +893,10 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	 * | `get` | function \| async function | undefined | You can use a get function on the schema to be run whenever retrieving an item from DynamoDB. Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to return to the application. This function will be run after all property `get` functions are run.
 	 * | `set` | function \| async function | undefined | You can use a set function on the schema to be run whenever saving an item to DynamoDB. It will also be used when retrieving an item (ie. `get`, `query`, `update`, etc). Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to save to DynamoDB. This function will be run after all property `set` functions are run.
 	 * | `validate` | function \| async function | undefined | You can use a validate function on the schema to ensure the value passes a given validation before saving the item. Dynamoose will pass the entire item into this function and you must return a boolean (`true` if validation passes or `false` if validation fails) or throw an error. This function will be run after all property `validate` functions are run.
+	 *
+	 * :::caution
+	 * Treat the schema definition as immutable once the schema is created. Dynamoose caches attribute lookups per schema, so a change to a nested definition object made after `new Schema()` (for example `definition.address.schema.city = Number`) is not seen by later operations, which keep using the definition as it was when the schema was built. Create a new schema instead of changing a definition in place.
+	 * :::
 	 *
 	 * ```js
 	 * const dynamoose = require("dynamoose");
@@ -1021,67 +1030,80 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 				"updatedAt": "updatedAt"
 			};
 		}
-		if (settings.timestamps) {
-			const combinedArray = getTimestampAttributes(settings.timestamps);
-			combinedArray.forEach((prop) => {
-				if (object[prop.name]) {
-					throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
+		const parseDefinition = (): {parsedSettings: SchemaSettings; parsedObject: SchemaDefinition} => {
+			if (settings.timestamps) {
+				const combinedArray = getTimestampAttributes(settings.timestamps as TimestampObject);
+				combinedArray.forEach((prop) => {
+					if (object[prop.name]) {
+						throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
+					}
+
+					object[prop.name] = prop.value;
+				});
+			}
+
+			let parsedSettings = {...settings};
+			const parsedObject = {...object};
+			utils.object.entries(parsedObject).filter((entry) => entry[1] instanceof Schema).forEach((entry) => {
+				const [key, value] = entry;
+				let newValue = {
+					"type": Object,
+					"schema": (value as any).getInternalProperties(internalProperties).schemaObject
+				};
+				if (key.endsWith(".schema")) {
+					newValue = (value as any).getInternalProperties(internalProperties).schemaObject;
 				}
 
-				object[prop.name] = prop.value;
+				const subSettings = {...(value as any).getInternalProperties(internalProperties).settings};
+				Object.entries(subSettings).forEach((entry) => {
+					const [settingsKey, settingsValue] = entry;
+					switch (settingsKey) {
+					case "saveUnknown":
+						subSettings[settingsKey] = typeof subSettings[settingsKey] === "boolean" ? [`${key}.**`] : (settingsValue as any).map((val) => `${key}.${val}`);
+						break;
+					case "timestamps":
+						subSettings[settingsKey] = Object.entries(subSettings[settingsKey]).reduce((obj, entity) => {
+							const [subKey, subValue] = entity;
+
+							obj[subKey] = Array.isArray(subValue) ? subValue.map((subValue) => `${key}.${subValue}`) : `${key}.${subValue}`;
+
+							return obj;
+						}, {});
+						break;
+					}
+				});
+				parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_array"})(parsedSettings, subSettings);
+
+				utils.object.set(parsedObject, key, newValue);
 			});
+			utils.object.entries(parsedObject).forEach((entry) => {
+				const key = entry[0];
+				const value = entry[1] as any;
+
+				if (!key.endsWith(".type") && !key.endsWith(".0")) {
+					if (value && value.Model && value.Model instanceof Model) {
+						utils.object.set(parsedObject, key, {"type": value});
+					} else if (value && Array.isArray(value)) {
+						value.forEach((item, index) => {
+							if (item && item.Model && item.Model instanceof Model) {
+								utils.object.set(parsedObject, `${key}.${index}`, {"type": item});
+							}
+						});
+					}
+				}
+			});
+			return {parsedSettings, parsedObject};
+		};
+		// parseDefinition writes into the caller's definition objects (timestamps into `object`, nested
+		// Schema instances and models below it), which a schema built earlier can share. The clear runs in
+		// `finally`: the timestamps loop can throw after it wrote some attributes.
+		let parsedDefinition: ReturnType<typeof parseDefinition>;
+		try {
+			parsedDefinition = parseDefinition();
+		} finally {
+			clearSchemaLookupCaches();
 		}
-
-		let parsedSettings = {...settings};
-		const parsedObject = {...object};
-		utils.object.entries(parsedObject).filter((entry) => entry[1] instanceof Schema).forEach((entry) => {
-			const [key, value] = entry;
-			let newValue = {
-				"type": Object,
-				"schema": (value as any).getInternalProperties(internalProperties).schemaObject
-			};
-			if (key.endsWith(".schema")) {
-				newValue = (value as any).getInternalProperties(internalProperties).schemaObject;
-			}
-
-			const subSettings = {...(value as any).getInternalProperties(internalProperties).settings};
-			Object.entries(subSettings).forEach((entry) => {
-				const [settingsKey, settingsValue] = entry;
-				switch (settingsKey) {
-				case "saveUnknown":
-					subSettings[settingsKey] = typeof subSettings[settingsKey] === "boolean" ? [`${key}.**`] : (settingsValue as any).map((val) => `${key}.${val}`);
-					break;
-				case "timestamps":
-					subSettings[settingsKey] = Object.entries(subSettings[settingsKey]).reduce((obj, entity) => {
-						const [subKey, subValue] = entity;
-
-						obj[subKey] = Array.isArray(subValue) ? subValue.map((subValue) => `${key}.${subValue}`) : `${key}.${subValue}`;
-
-						return obj;
-					}, {});
-					break;
-				}
-			});
-			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_array"})(parsedSettings, subSettings);
-
-			utils.object.set(parsedObject, key, newValue);
-		});
-		utils.object.entries(parsedObject).forEach((entry) => {
-			const key = entry[0];
-			const value = entry[1] as any;
-
-			if (!key.endsWith(".type") && !key.endsWith(".0")) {
-				if (value && value.Model && value.Model instanceof Model) {
-					utils.object.set(parsedObject, key, {"type": value});
-				} else if (value && Array.isArray(value)) {
-					value.forEach((item, index) => {
-						if (item && item.Model && item.Model instanceof Model) {
-							utils.object.set(parsedObject, `${key}.${index}`, {"type": item});
-						}
-					});
-				}
-			}
-		});
+		const {parsedSettings, parsedObject} = parsedDefinition;
 
 		const mapSettingNames = [
 			"map",
@@ -1143,7 +1165,9 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 						return accumulator;
 					}, []);
 			},
-			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps as TimestampObject)
+			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps as TimestampObject),
+			"getSharedAttributeTypeDetails": (...args: [key: string, settings?: AttributeLookupSettings]) => getSharedAttributeTypeDetails(this, ...args),
+			"clearAllLookupCaches": clearSchemaLookupCaches
 		});
 
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
@@ -1348,7 +1372,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	}
 	getAttributeType (key: string, value?: ValueType, settings?: SchemaGetAttributeTypeSettings): string | string[] {
 		try {
-			const typeDetails = this.getAttributeTypeDetails(key);
+			const typeDetails = getSharedAttributeTypeDetails(this, key);
 			return Array.isArray(typeDetails) ? (typeDetails as any).map((detail) => detail.dynamodbType) : typeDetails.dynamodbType;
 		} catch (e) {
 			if (settings?.unknownAttributeAllowed && e.message === `Invalid Attribute: ${key}` && value) {
@@ -1414,7 +1438,11 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	getAttributeSettingValue (setting: string, key: string, settings: SchemaGetAttributeSettingValue = {"returnFunction": false}) {
 		function func (attributeValue): any {
 			const defaultPropertyValue = (attributeValue || {})[setting];
-			return typeof defaultPropertyValue === "function" && !settings.returnFunction ? defaultPropertyValue() : defaultPropertyValue;
+			if (typeof defaultPropertyValue === "function" && !settings.returnFunction) {
+				lookupSideEffects++;
+				return defaultPropertyValue();
+			}
+			return defaultPropertyValue;
 		}
 		const attributeValue = this.getAttributeValue(key, {"typeIndexOptionMap": settings.typeIndexOptionMap});
 		if (Array.isArray(attributeValue)) {
@@ -1575,6 +1603,13 @@ interface SchemaAttributesMethodSettings {
 	includeMaps: boolean;
 }
 Schema.prototype.attributes = function (this: Schema, object?: ObjectType, settings?: SchemaAttributesMethodSettings): string[] {
+	const isCacheable = object === undefined && settings === undefined && this.getAttributeType === builtinGetAttributeType && usesBuiltinLookups(this);
+	const cache = isCacheable ? getLookupCache(this) : undefined;
+	// attributes() returns a new array on every call, so the cached array is never handed out.
+	if (cache?.attributes) {
+		return [...cache.attributes];
+	}
+
 	const typePaths = object && this.getTypePaths(object);
 	const main = (object: SchemaDefinition, existingKey = ""): string[] => {
 		return Object.keys(object).reduce((accumulator: string[], key) => {
@@ -1612,13 +1647,34 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 		}, []);
 	};
 
-	return main(this.getInternalProperties(internalProperties).schemaObject);
+	const sideEffectsBefore = lookupSideEffects;
+	const result = main(this.getInternalProperties(internalProperties).schemaObject);
+	if (cache && lookupSideEffects === sideEffectsBefore) {
+		cache.attributes = [...result];
+	}
+	return result;
 };
 
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
+	// A non-string key is never cached. Most such keys throw a TypeError, and V8 builds its message from
+	// the source expression that failed, so the split below keeps the expression of the uncached lookup.
+	const cache = typeof key === "string" ? getLookupCache(this) : undefined;
+	const standardKey = cache ? standardizeKey(key, settings) : undefined;
+	const cached = cache?.values.get(standardKey);
+	if (cached !== undefined) {
+		return cached;
+	}
+
+	// A path through an array of attribute definitions depends on the typeIndexOptionMap, so it is never cached.
+	let reachedDefinitionArray = false;
+	// A key the attributes object only inherits (constructor, toString) is never cached: such keys come
+	// from saveUnknown input, and the cache holds only the schema's own attributes.
+	let isOwnPath = true;
 	const previousKeyParts = [];
-	let result = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part) => {
+	const keyParts: string[] = cache ? standardKey.split(".") : (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".");
+	let result = keyParts.reduce((result, part) => {
 		if (Array.isArray(result)) {
+			reachedDefinitionArray = true;
 			const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
 			if (predefinedIndex !== undefined) {
 				result = result[predefinedIndex];
@@ -1627,16 +1683,24 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 			}
 		}
 		previousKeyParts.push(part);
-		return utils.object.get(result.schema, part);
+		const schema = result.schema;
+		if (isOwnPath && !(schema && Object.prototype.hasOwnProperty.call(schema, part))) {
+			isOwnPath = false;
+		}
+		return utils.object.get(schema, part);
 	}, {"schema": this.getInternalProperties(internalProperties).schemaObject} as any);
 
 	if (Array.isArray(result)) {
+		reachedDefinitionArray = true;
 		const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
 		if (predefinedIndex !== undefined) {
 			result = result[predefinedIndex];
 		}
 	}
 
+	if (cache && isOwnPath && result !== undefined && !reachedDefinitionArray) {
+		cache.values.set(standardKey, result);
+	}
 	return result;
 };
 
@@ -1730,3 +1794,93 @@ Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, 
 	const returnObject = result.length < 2 ? result[0] : result;
 	return returnObject;
 };
+
+// Schema lookup cache. The builtin* captures must stay after the prototype assignments above.
+type AttributeTypeDetails = DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[];
+type AttributeLookupSettings = {standardKey?: boolean; typeIndexOptionMap?: {}};
+interface SchemaLookupCache {
+	epoch: number;
+	values: Map<string, AttributeDefinition>;
+	// Only for dynamoose's own callers, see getSharedAttributeTypeDetails.
+	typeDetails: Map<string, AttributeTypeDetails>;
+	attributes?: string[];
+}
+// A schema's attributes object can share nested objects with other schemas (a nested Schema instance
+// is embedded by reference), so a write to one schema can change what another resolves. Bumping the
+// epoch drops the lookup cache of every schema.
+let lookupCacheEpoch = 0;
+// Counts lookup steps with an effect that a cache hit would skip: a call to a function-valued setting
+// (for example a Set's `schema`), and a type lookup that wrote `typeSettings.model` (THIS and Model
+// types) or threw (it may have made that write first). attributes() and the shared type details are
+// cached only when computing them added nothing here, so these effects happen on every lookup.
+let lookupSideEffects = 0;
+const builtinGetAttributeType = Schema.prototype.getAttributeType;
+const builtinGetAttributeValue = Schema.prototype.getAttributeValue;
+const builtinGetAttributeSettingValue = Schema.prototype.getAttributeSettingValue;
+const builtinGetAttributeTypeDetails = Schema.prototype.getAttributeTypeDetails;
+
+function clearSchemaLookupCaches (): void {
+	lookupCacheEpoch++;
+}
+function getLookupCache (schema: Schema): SchemaLookupCache {
+	const schemaInternalProperties = schema.getInternalProperties(internalProperties);
+	let cache = schemaInternalProperties.lookupCache;
+	if (!cache || cache.epoch !== lookupCacheEpoch) {
+		cache = {
+			"epoch": lookupCacheEpoch,
+			"values": new Map(),
+			"typeDetails": new Map()
+		};
+		schemaInternalProperties.lookupCache = cache;
+	}
+	return cache;
+}
+// The cache key: list indexes become 0, as getAttributeTypeDetails does.
+function standardizeKey (key: string, settings?: AttributeLookupSettings): string {
+	return settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0");
+}
+// A cache hit skips the calls a lookup makes through these public methods. When user code replaces one
+// of them (a spy, a plugin, a subclass), every lookup calls the replacement.
+function usesBuiltinLookups (schema: Schema): boolean {
+	return schema.getAttributeTypeDetails === builtinGetAttributeTypeDetails && schema.getAttributeValue === builtinGetAttributeValue && schema.getAttributeSettingValue === builtinGetAttributeSettingValue;
+}
+// getAttributeTypeDetails writes `typeSettings.model` for THIS and Model types. The settings object can
+// belong to the definition, which other schemas can share, so such a result is built again on each lookup.
+function hasModelSetting (details: AttributeTypeDetails): boolean {
+	return (Array.isArray(details) ? details : [details]).some((detail: DynamoDBTypeResult | DynamoDBSetTypeResult) => {
+		const typeSettings = detail?.typeSettings;
+		return (typeof typeSettings === "object" || typeof typeSettings === "function") && typeSettings !== null && "model" in typeSettings;
+	});
+}
+// getAttributeTypeDetails for dynamoose's own callers in lib/ (through the internal properties), which
+// only read the result: they share one result per path. Other callers use the public method, which
+// builds a new result per call. A replaced method gets the arguments exactly as the caller gave them.
+function getSharedAttributeTypeDetails (schema: Schema, ...args: [key: string, settings?: AttributeLookupSettings]): AttributeTypeDetails {
+	if (!usesBuiltinLookups(schema)) {
+		return schema.getAttributeTypeDetails(...args);
+	}
+	const [key, settings = {}] = args;
+	const standardKey = standardizeKey(key, settings);
+	const cache = getLookupCache(schema);
+	const cached = cache.typeDetails.get(standardKey);
+	if (cached !== undefined) {
+		return cached;
+	}
+	const sideEffectsBefore = lookupSideEffects;
+	let result: AttributeTypeDetails;
+	try {
+		result = schema.getAttributeTypeDetails(...args);
+	} catch (error) {
+		lookupSideEffects++;
+		throw error;
+	}
+	if (hasModelSetting(result)) {
+		lookupSideEffects++;
+	}
+	// Stored only when the attribute value is cached (so no typeIndexOptionMap played a part) and the
+	// lookup had no side effect.
+	if (lookupSideEffects === sideEffectsBefore && cache.values.has(standardKey)) {
+		cache.typeDetails.set(standardKey, result);
+	}
+	return result;
+}
