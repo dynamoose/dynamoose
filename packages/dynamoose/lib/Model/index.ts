@@ -796,7 +796,15 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
 				const defaultObjectFromSchema = await this.Item.objectFromSchema(await this.Item.prepareForObjectFromSchema({}, this, itemFunctionSettings), this, itemFunctionSettings);
-				Object.keys(defaultObjectFromSchema).forEach((key) => {
+				// A timestamp the update sets, adds to or removes itself is left to it. DynamoDB rejects an update expression that names the same attribute twice ("Two document paths overlap").
+				const updatedAttributes = Object.keys(updateObj).flatMap((key) => {
+					const value = updateObj[key];
+					if (typeof value === "object" && updateTypes.map((a) => a.name).includes(key)) {
+						return Array.isArray(value) ? value : Object.keys(value);
+					}
+					return [key];
+				});
+				Object.keys(defaultObjectFromSchema).filter((key) => !updatedAttributes.includes(key)).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 

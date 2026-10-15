@@ -3110,6 +3110,34 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should use the updatedAt value passed in instead of the current time", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "updatedAt": new Date(1000)});
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "name", "#a1": "updatedAt"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "Charlie"}, ":v1": {"N": "1000"}});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+				});
+
+				it("Should not set updatedAt to the current time when it is removed", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["updatedAt"]});
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "updatedAt"});
+					expect(updateItemParams.UpdateExpression).toEqual("REMOVE #a0");
+				});
+
+				it("Should use a custom updatedAt attribute passed in with $SET instead of the current time", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"updatedAt": "modified"}}));
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"modified": new Date(1000)}});
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "modified"});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
 				it("Should send correct params to updateItem for timestamps with updateAt", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
