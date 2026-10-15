@@ -277,7 +277,10 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 			options.expires = utils.combine_objects(options.expires as any, {"attribute": "ttl"});
 
 			utils.array_flatten(models.map((model: any) => model.Model.getInternalProperties(internalProperties).schemas)).forEach((schema) => {
-				schema.getInternalProperties(internalProperties).schemaObject[(options.expires as TableExpiresSettings).attribute] = {
+				// Injects the TTL attribute after schema construction. `setSchemaAttribute` also
+				// invalidates the schema's memoization caches, which would otherwise keep serving
+				// a stale attribute view that omits this attribute.
+				schema.getInternalProperties(internalProperties).setSchemaAttribute((options.expires as TableExpiresSettings).attribute, {
 					"type": {
 						"value": Date,
 						"settings": {
@@ -288,7 +291,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 						const ttl: number | undefined = (options.expires as TableExpiresSettings).ttl;
 						return typeof ttl === "number" ? new Date(Date.now() + ttl) : undefined;
 					}
-				};
+				});
 			});
 		}
 
