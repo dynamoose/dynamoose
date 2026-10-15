@@ -24,7 +24,7 @@ export interface TransactionSettings {
 	return?: TransactionReturnOptions;
 	type?: TransactionType;
 	/**
-	 * A token of 1 to 36 characters that DynamoDB uses to make a `write` transaction idempotent: for 10 minutes after a successful transaction, sending the same transaction again with the same token succeeds without writing anything again. Without it, the AWS SDK sends a new token with every call. Use it when a caller may send the same write again, for example a retried Lambda event, and build it from something that identifies that write (such as an event id). Sending different transaction items with a token that was already used fails with `IdempotentParameterMismatchException`.
+	 * A token of 1 to 36 characters that DynamoDB uses to make a `write` transaction idempotent: for 10 minutes after a successful transaction, sending the same transaction again with the same token succeeds without writing anything again. Without it, the AWS SDK sends a new token with every call. DynamoDB compares the whole request, so the token only helps when exactly the same request is sent again. A model with `timestamps` writes the current time each time a request is built, so a transaction built again (for example by a redelivered Lambda event) and sent with a token that was already used fails with `IdempotentParameterMismatchException` for those 10 minutes, as does sending different transaction items with it. To make a handler idempotent, use a condition instead. With `retry` and no token, Dynamoose already sends its retries of one call with one token.
 	 */
 	clientRequestToken?: string;
 	/**
@@ -33,7 +33,7 @@ export interface TransactionSettings {
 	 * `attempts` is how many times to send it again. Retry `n` waits a random time between 0 and `delay * 2^(n - 1)` milliseconds, but at most 20 seconds; `delay` defaults to `100`. After the last attempt, the last error is thrown.
 	 *
 	 * ```js
-	 * await dynamoose.transaction([...], {"retry": {"attempts": 3, "delay": 500}, "clientRequestToken": eventId});
+	 * await dynamoose.transaction([...], {"retry": {"attempts": 3, "delay": 500}});
 	 * ```
 	 */
 	retry?: {attempts: number; delay?: number};

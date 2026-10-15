@@ -5,7 +5,7 @@
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
-- Added `clientRequestToken` and `retry` settings to `dynamoose.transaction`. `clientRequestToken` is sent as the `ClientRequestToken` of a write transaction, so DynamoDB applies the same transaction only once for 10 minutes. `retry: {attempts, delay}` sends the transaction again, with exponential backoff and full jitter (each wait at most 20 seconds), when DynamoDB cancels it for a `TransactionConflict` or reports `TransactionInProgressException`; any other error is thrown at once. A retry after `TransactionInProgressException` sends the same `ClientRequestToken` as the attempt before it, so the transaction is never applied twice
+- Added `clientRequestToken` and `retry` settings to `dynamoose.transaction`. `clientRequestToken` is sent as the `ClientRequestToken` of a write transaction, so DynamoDB applies the same request only once for 10 minutes (a transaction rebuilt for a model with `timestamps` is a different request, and fails with `IdempotentParameterMismatchException` if it reuses the token). `retry: {attempts, delay}` sends the transaction again, with exponential backoff and full jitter (each wait at most 20 seconds), when DynamoDB cancels it for a `TransactionConflict` or reports `TransactionInProgressException`; any other error is thrown at once. A retry after `TransactionInProgressException` sends the same `ClientRequestToken` as the attempt before it, so the transaction is never applied twice
 
 ### Bug Fixes
 
