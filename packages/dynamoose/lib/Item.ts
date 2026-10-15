@@ -483,13 +483,14 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			this.getInternalProperties(internalProperties).storedInDynamo = true;
 
 			// First apply custom types conversion to the current item
-			await this.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "typeCheck": false});
+			// `saveUnknown` keeps the attributes the schema's saveUnknown setting allows, as `Model.get` does.
+			await this.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "typeCheck": false, "saveUnknown": true});
 
 			const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 			returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
 
 			// Apply custom types conversion to ensure consistent behavior with get
-			await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo"});
+			await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "saveUnknown": true});
 
 			return returnItem;
 		})();

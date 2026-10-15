@@ -2057,6 +2057,34 @@ describe("Model", () => {
 			expect(gotItem.someDate.getTime()).toEqual(timestamp);
 			expect(createdItem.someDate).toEqual(gotItem.someDate);
 		});
+
+		describe("saveUnknown attributes", () => {
+			let OrderModel;
+			const order = {"a": 1, "nested": {"b": 2}};
+			beforeEach(() => {
+				OrderModel = dynamoose.model("Order", new dynamoose.Schema({"id": String, "order": Object}, {"saveUnknown": ["order.**"], "timestamps": true}));
+				new dynamoose.Table("Order", [OrderModel]);
+				dynamoose.aws.ddb.set({
+					"putItem": (params) => {
+						createItemParams = params;
+						return Promise.resolve({});
+					}
+				});
+			});
+
+			it("Should keep saveUnknown attributes on the item create resolves with", async () => {
+				const createdItem = await OrderModel.create({"id": "test", "order": order});
+				expect(createItemParams.Item.order).toEqual({"M": {"a": {"N": "1"}, "nested": {"M": {"b": {"N": "2"}}}}});
+				expect(createdItem.order).toEqual(order);
+			});
+
+			it("Should keep saveUnknown attributes on the item save resolves with and on the item saved", async () => {
+				const item = new OrderModel({"id": "test", "order": order});
+				const savedItem = await item.save();
+				expect(savedItem.order).toEqual(order);
+				expect(item.order).toEqual(order);
+			});
+		});
 	});
 
 	describe("model.batchPut()", () => {
