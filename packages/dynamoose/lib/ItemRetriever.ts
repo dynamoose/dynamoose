@@ -196,7 +196,8 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		const [key, value] = entry;
 		const filterExpressionIndex = object.FilterExpression.findIndex((item) => item.includes(key));
 		const filterExpression = object.FilterExpression[filterExpressionIndex];
-		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains")) {
+		// A negated comparison (`NOT (a IN (...))`, `NOT begins_with (...)`) isn't allowed in a KeyConditionExpression, so it stays in the filter.
+		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains") || filterExpression.startsWith("NOT ")) {
 			return;
 		}
 		object.ExpressionAttributeNames[`#${prefix}a`] = value;

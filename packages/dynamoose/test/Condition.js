@@ -178,7 +178,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("name").not().beginsWith("C"),
-				"error": "BEGINS_WITH can not follow not()"
+				"output": {"ConditionExpression": "NOT begins_with (#a0, :v0)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0": {"S": "C"}}}
 			},
 			{
 				"input": () => new Condition().where("name").contains("C"),
@@ -202,7 +202,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("name").not().in(["Charlie", "Bob"]),
-				"error": "IN can not follow not()"
+				"output": {"ConditionExpression": "NOT (#a0 IN (:v0_1, :v0_2))", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0_1": {"S": "Charlie"}, ":v0_2": {"S": "Bob"}}}
 			},
 			{
 				"input": () => new Condition().where("age").between(13, 18),
@@ -210,7 +210,24 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("age").not().between(13, 18),
-				"error": "BETWEEN can not follow not()"
+				"output": {"ConditionExpression": "NOT (#a0 BETWEEN :v0_1 AND :v0_2)", "ExpressionAttributeNames": {"#a0": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "13"}, ":v0_2": {"N": "18"}}}
+			},
+			{
+				"input": () => new Condition().where("id").eq(1).and().not().parenthesis((condition) => condition.where("name").eq("Bob").or().where("age").eq(5)),
+				"output": {"ConditionExpression": "#a0 = :v0 AND NOT (#a1 = :v1 OR #a2 = :v2)", "ExpressionAttributeNames": {"#a0": "id", "#a1": "name", "#a2": "age"}, "ExpressionAttributeValues": {":v0": {"N": "1"}, ":v1": {"S": "Bob"}, ":v2": {"N": "5"}}}
+			},
+			{
+				"input": () => new Condition().not().group(new Condition().where("name").eq("Bob")).and().where("id").eq(1),
+				"output": {"ConditionExpression": "NOT (#a0 = :v0) AND #a1 = :v1", "ExpressionAttributeNames": {"#a0": "name", "#a1": "id"}, "ExpressionAttributeValues": {":v0": {"S": "Bob"}, ":v1": {"N": "1"}}}
+			},
+			{
+				"input": () => new Condition().not().not().parenthesis((condition) => condition.where("name").eq("Bob")),
+				"output": {"ConditionExpression": "(#a0 = :v0)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0": {"S": "Bob"}}}
+			},
+			{
+				"input": () => new Condition().not().parenthesis((condition) => condition.where("name").eq("Bob")).and().where("id").eq(1),
+				"settings": {"conditionString": "FilterExpression", "conditionStringType": "array"},
+				"output": {"FilterExpression": ["NOT", ["#a0 = :v0"], "AND", "#a1 = :v1"], "ExpressionAttributeNames": {"#a0": "name", "#a1": "id"}, "ExpressionAttributeValues": {":v0": {"S": "Bob"}, ":v1": {"N": "1"}}}
 			},
 			{
 				"input": () => new Condition().where("userID").eq("1").and().where("userID").exists(),
