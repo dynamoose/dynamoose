@@ -67,9 +67,12 @@ describe("Scan", () => {
 			expect(Model.scan().exec).toBeInstanceOf(Function);
 		});
 
-		it("Should return a promise", () => {
+		it("Should return a promise", async () => {
 			scanPromiseResolver = () => ({"Items": []});
-			expect(Model.scan().exec()).toBeInstanceOf(Promise);
+			// Awaited so the request settles before afterEach restores the real DynamoDB client
+			const promise = Model.scan().exec();
+			expect(promise).toBeInstanceOf(Promise);
+			await promise;
 		});
 
 		const functionCallTypes = [
