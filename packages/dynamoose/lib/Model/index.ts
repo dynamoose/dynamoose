@@ -810,7 +810,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return obj;
 			})()));
 
-			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
+			schema.attributes().map((attribute) => ({attribute, "type": schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(attribute)})).filter((item: any) => {
 				return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
 			}).map((details) => {
 				const {type} = details;

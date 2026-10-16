@@ -31,9 +31,9 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 	const localSettings = settings;
 	const schema = model.getInternalProperties(internalProperties).schemaForObject(this);
 	// TODO: uncomment out `/* || detail.name === "Model Set"*/` part and add relevant tests
-	const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model"/* || detail.name === "Model Set"*/) : obj.details.name === "Model" || obj.details.name === "Model Set").map((obj) => obj.prop);
+	const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model"/* || detail.name === "Model Set"*/) : obj.details.name === "Model" || obj.details.name === "Model Set").map((obj) => obj.prop);
 	const promise = Promise.all(modelAttributes.map(async (prop) => {
-		const typeDetails = schema.getAttributeTypeDetails(prop);
+		const typeDetails = schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(prop);
 		const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
 		const {typeSettings} = typeDetail;
 		const subModel: any = typeof typeSettings.model === "object" ? model.Item : typeSettings.model;

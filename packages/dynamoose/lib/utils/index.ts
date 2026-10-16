@@ -6,7 +6,8 @@ import set_immediate_promise from "./set_immediate_promise";
 import unique_array_elements from "./unique_array_elements";
 import array_flatten from "./array_flatten";
 import empty_function from "./empty_function";
-import * as object from "js-object-utilities";
+import * as objectUtilities from "js-object-utilities";
+import * as objectEntries from "./object_entries";
 import dynamoose from "./dynamoose";
 import all_elements_match from "./all_elements_match";
 import type_name from "./type_name";
@@ -18,6 +19,8 @@ import childKey from "./childKey";
 import parentKey from "./parentKey";
 import async_reduce from "./async_reduce";
 import keyBy from "./keyBy";
+
+const object = {...objectUtilities, "entries": objectEntries.entries, "keys": objectEntries.keys};
 
 export default {
 	combine_objects,

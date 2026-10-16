@@ -522,7 +522,7 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 		if (schema.getInternalProperties(internalProperties).settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
 			const timeResult = (prop) => {
-				const typeDetails = schema.getAttributeTypeDetails(prop.name);
+				const typeDetails = schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(prop.name);
 				if (Array.isArray(typeDetails)) {
 					throw new CustomError.InvalidType(`Not allowed to use an array of types for the timestamps attribute "${prop.name}".`);
 				}
@@ -555,16 +555,8 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 // https://stackoverflow.com/a/59928314/894067
 Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Promise<string[]> {
 	const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(item);
-	const attributes = schema.attributes();
-	// build a tree out of schema attributes
-	const root = {};
-	attributes.forEach((attribute) => {
-		let node = root;
-		attribute.split(".").forEach((part) => {
-			node[part] = node[part] || {};
-			node = node[part];
-		});
-	});
+	// a tree out of schema attributes
+	const root = schema.getInternalProperties(internalProperties).getSharedAttributeTree();
 	// explore the tree
 	function traverse (node, treeNode, outPath, callback): void {
 		callback(outPath);
@@ -756,7 +748,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	if (settings.combine) {
 		schemaAttributes.map((key) => {
 			try {
-				const typeDetails = schema.getAttributeTypeDetails(key);
+				const typeDetails = schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(key);
 
 				return {
 					key,
