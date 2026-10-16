@@ -22,6 +22,7 @@ export const original: TableOptions = {
 	"tags": {},
 	"tableClass": TableClass.standard,
 	"initialize": true,
+	"readStrict": true,
 	"streamOptions": {
 		"enabled": false,
 		"type": undefined

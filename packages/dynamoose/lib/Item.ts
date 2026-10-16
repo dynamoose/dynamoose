@@ -600,6 +600,7 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 };
 export interface ItemObjectFromSchemaSettings {
 	type: "toDynamo" | "fromDynamo";
+	readStrict?: boolean;
 	schema?: Schema;
 	checkExpiredItem?: boolean;
 	saveUnknown?: boolean;
@@ -674,7 +675,10 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const existsInSchema = schemaAttributes.includes(genericKey);
 			if (existsInSchema) {
 				const {isValidType, matchedTypeDetails, typeDetailsArray} = utils.dynamoose.getValueTypeCheckResult(schema, value, genericKey, settings, {"standardKey": true, typeIndexOptionMap});
-				if (!isValidType) {
+				if (!isValidType && settings.readStrict === false) {
+					// Return the stored value, and everything below it, unchanged
+					validParents.push({key, "infinite": true});
+				} else if (!isValidType) {
 					throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${utils.type_name(value, typeDetailsArray)}.`);
 				} else if (matchedTypeDetails.isSet || matchedTypeDetails.name.toLowerCase() === "model" || (matchedTypeDetails.name === "Object" || matchedTypeDetails.name === "Array") && schema.getAttributeSettingValue("schema", genericKey) === dynamooseAny) {
 					validParents.push({key, "infinite": true});
@@ -728,12 +732,15 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
 				const typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails as DynamoDBTypeResult;
-				const {customType} = typeDetails;
-				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
-				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
-				if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
-					const customValue = customType.functions[settings.type](value);
-					utils.object.set(returnObject, key, customValue);
+				// No type matches only for a value kept as stored by `readStrict: false`
+				if (typeDetails) {
+					const {customType} = typeDetails;
+					const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
+					const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
+					if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
+						const customValue = customType.functions[settings.type](value);
+						utils.object.set(returnObject, key, customValue);
+					}
 				}
 			}
 		});
@@ -785,7 +792,9 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true, typeIndexOptionMap});
 				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);
 				const isValueUndefined = typeof value === "undefined" || value === null;
-				if (modifierFunctionExists && !isValueUndefined) {
+				// `readStrict: false` returns a value that matches no schema type as stored, so the modifier of that type does not run
+				const isValueKeptAsStored = settings.readStrict === false && !isValueUndefined && !utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).isValidType;
+				if (modifierFunctionExists && !isValueUndefined && !isValueKeptAsStored) {
 					const oldValue = object.original ? utils.object.get(object.original(), key) : undefined;
 					utils.object.set(returnObject, key, await modifierFunction(value, oldValue));
 				}

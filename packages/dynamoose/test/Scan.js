@@ -126,6 +126,13 @@ describe("Scan", () => {
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie"}]);
 				});
 
+				it("Should return the stored value if Dynamo object has type mismatch with schema and readStrict is false", async () => {
+					Model = dynamoose.model("Cat", {"id": Number, "name": String, "age": Number});
+					new dynamoose.Table("Cat", [Model], {"readStrict": false});
+					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}, "age": {"S": "Hello World"}}]});
+					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie", "age": "Hello World"}]);
+				});
+
 				it("Should return correct result if using custom types", async () => {
 					Model = dynamoose.model("Cat", {"id": Number, "name": String, "birthday": Date});
 					new dynamoose.Table("Cat", [Model]);
