@@ -821,6 +821,22 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 				return details;
 			}).forEach((details: any) => {
+				// A combine attribute that is the hash or range key is never written: the key is already in
+				// `Key`, and DynamoDB rejects a SET on a key attribute. Its sources are immutable for the same
+				// reason, so an update to any of them, through any update type, is rejected.
+				if (details.attribute === this.getInternalProperties(internalProperties).getHashKey() || details.attribute === this.getInternalProperties(internalProperties).getRangeKey()) {
+					const expressionText = Object.values(returnObject.UpdateExpression).flat().join(", ");
+					const updatedSources = details.type.typeSettings.attributes.filter((attribute) => {
+						const entry = Object.entries(returnObject.ExpressionAttributeNames).find((nameEntry) => nameEntry[1] === attribute);
+						// `\b` after the digits so that #a1 does not match inside #a10
+						return entry !== undefined && new RegExp(`${entry[0]}\\b`, "u").test(expressionText);
+					});
+					if (updatedSources.length > 0) {
+						throw new CustomError.InvalidParameter(`You cannot update the combine attributes of ${details.attribute} because it is part of the key. Remove them from the update: ${updatedSources.join(", ")}.`);
+					}
+					return;
+				}
+
 				const {invalidAttributes} = details.type.typeSettings.attributes.reduce((result, attribute) => {
 					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 					const doesExist = Boolean(expressionAttributeNameEntry);
