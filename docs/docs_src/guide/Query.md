@@ -63,6 +63,14 @@ The extra properties attached to the array are:
 | `timesQueried` | How many times Dynamoose made a query request to DynamoDB. This will always equal 1, unless you used the `query.all` or `query.parallel` method. |
 | `populate` | A function that is an alias to [`item.populate`](Item#itempopulatesettings-callback) and will populate all items in the array. |
 
+If you only need the items themselves, you can copy them into a standard array using the spread syntax. The new array won't have the extra properties listed above, so read any you need (for example `lastKey`) from `results` first.
+
+```js
+const results = await Cat.query("name").eq("Will").exec();
+const items = [...results];
+// `items` is a standard array of the items, without the extra properties (`lastKey`, `count`, etc.)
+```
+
 ## query.limit(count)
 
 This function will limit the number of items that DynamoDB will query in this request. Unlike most SQL databases this does not guarantee the response will contain 5 items. Instead DynamoDB will only query a maximum of 5 items to see if they match and should be returned. The `count` parameter passed in should be a number representing how many items you wish DynamoDB to query.
