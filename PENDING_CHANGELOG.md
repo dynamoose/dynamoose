@@ -9,6 +9,7 @@
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
+- `$ADD` on a list attribute in `Model.update` and `Model.transaction.update` now creates the list when the item doesn't have it yet, or when the update creates the item. Before, such an update failed with `ValidationException: The provided expression refers to an attribute that does not exist in the item`. A list is now appended with `SET #a0 = list_append(if_not_exists(#a0, :v1), :v0)`, so a missing list starts out empty. When an update appends to a list, the request has one more value, an empty list (`{"L": []}`) numbered after the update's other values
 
 ### Bug Fixes
 
