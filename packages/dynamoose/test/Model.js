@@ -2166,6 +2166,26 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should return correct result from batchPut with UnprocessedItems when retrying items with timestamps", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"PutRequest": {"Item": {"id": {"N": "3"}, "name": {"S": "Tim"}, "createdAt": {"N": "2000"}, "updatedAt": {"N": "2000"}}}}]}});
+					const result = await callType.func(User).bind(User)([{"id": 1, "name": "Charlie", "createdAt": 1000, "updatedAt": 1000}, {"id": 3, "name": "Tim", "createdAt": 1000, "updatedAt": 1000}]);
+					expect(result).toEqual({
+						"unprocessedItems": [{"id": 3, "name": "Tim", "createdAt": 2000, "updatedAt": 2000}]
+					});
+				});
+
+				it("Should return correct result from batchPut with UnprocessedItems when retrying items with timestamps and a range key", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "type": {"type": String, "rangeKey": true}, "name": String}, {"timestamps": true}));
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"PutRequest": {"Item": {"id": {"N": "1"}, "type": {"S": "b"}, "name": {"S": "Tim"}, "createdAt": {"N": "2000"}, "updatedAt": {"N": "2000"}}}}]}});
+					const result = await callType.func(User).bind(User)([{"id": 1, "type": "a", "name": "Charlie", "createdAt": 1000, "updatedAt": 1000}, {"id": 1, "type": "b", "name": "Tim", "createdAt": 1000, "updatedAt": 1000}]);
+					expect(result).toEqual({
+						"unprocessedItems": [{"id": 1, "type": "b", "name": "Tim", "createdAt": 2000, "updatedAt": 2000}]
+					});
+				});
+
 				it("Should throw error if error is returned from DynamoDB", () => {
 					promiseFunction = () => Promise.reject({"error": "ERROR"});
 
