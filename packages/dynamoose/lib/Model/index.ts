@@ -920,14 +920,6 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			});
 
 			await Promise.all(schema.attributes().map(async (attribute) => {
-				// In merge mode, nested attributes (e.g. "config.timeout") are already handled
-				// by objectFromSchema on the parent object, so skip them here to avoid duplicates.
-				if (mergeEnabled && attribute.includes(".")) {
-					const rootAttr = attribute.split(".")[0];
-					if (Object.values(returnObject.ExpressionAttributeNames).includes(rootAttr)) {
-						return;
-					}
-				}
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
 				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
