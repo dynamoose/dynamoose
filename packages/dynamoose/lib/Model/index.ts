@@ -742,7 +742,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
-						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
+						// A single value for a list attribute is wrapped in a list (so `$ADD` appends it). `undefined` is not wrapped, so it is removed below as it is for any other attribute.
+						const wrapInList = dynamoType === "L" && subValue !== undefined && !Array.isArray(subValue);
+						subValue = (await this.Item.objectFromSchema({[subKey]: wrapInList ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
 					}
 
 					if (subValue === dynamooseUndefined || subValue === undefined) {

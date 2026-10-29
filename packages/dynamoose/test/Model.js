@@ -2760,6 +2760,143 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should send correct params to updateItem when using undefined to delete list property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Bob", "friends": undefined});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "name",
+							"#a1": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "Bob"
+							}
+						},
+						"UpdateExpression": "REMOVE #a1 SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using undefined to delete list property in single object update", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1, "friends": undefined});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using undefined to delete list property using $SET", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"friends": undefined}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using undefined to delete list property using $ADD", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": undefined}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using dynamoose.type.UNDEFINED to delete list property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"friends": dynamoose.type.UNDEFINED});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"UpdateExpression": "REMOVE #a0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem when using undefined to restore list property to default", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "friends": {"type": Array, "schema": [String], "default": () => ["Bob"]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"friends": undefined});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"L": [{"S": "Bob"}]
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
 				it("Should send correct params to updateItem with $SET update expression", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "Tim"}});
@@ -3491,6 +3628,14 @@ describe("Model", () => {
 					new dynamoose.Table("User", [User]);
 
 					return expect(callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["name"]})).rejects.toEqual(new CustomError.ValidationError("name is a required property but has no value when trying to save item"));
+				});
+
+				it("Should throw error if trying to remove required list property using undefined", () => {
+					updateItemFunction = () => Promise.reject({"error": "ERROR"});
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [String], "required": true}});
+					new dynamoose.Table("User", [User]);
+
+					return expect(callType.func(User).bind(User)({"id": 1}, {"friends": undefined})).rejects.toEqual(new CustomError.ValidationError("friends is a required property but has no value when trying to save item"));
 				});
 
 				it("Should not throw error if trying to modify required property", () => {
@@ -4715,6 +4860,25 @@ describe("Model", () => {
 							":v0": {"S": "Bob"}
 						},
 						"UpdateExpression": "SET #a0 = :v0",
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should remove a list attribute set to undefined", async () => {
+				User = dynamoose.model("User", {"pk": {"type": String, "hashKey": true}, "sk": {"type": String, "rangeKey": true}, "isActive": Number, "availabilityDays": {"type": Array, "schema": [{"type": String, "enum": ["Mon", "Tue"]}]}});
+				new dynamoose.Table("User", [User]);
+				expect(await User.transaction.update({"pk": "a", "sk": "b"}, {"isActive": 0, "availabilityDays": undefined})).toEqual({
+					"Update": {
+						"Key": {"pk": {"S": "a"}, "sk": {"S": "b"}},
+						"ExpressionAttributeNames": {
+							"#a0": "isActive",
+							"#a1": "availabilityDays"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"N": "0"}
+						},
+						"UpdateExpression": "REMOVE #a1 SET #a0 = :v0",
 						"TableName": "User"
 					}
 				});

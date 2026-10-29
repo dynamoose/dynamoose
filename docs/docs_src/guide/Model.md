@@ -390,6 +390,24 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
+### Attributes set to `undefined`
+
+DynamoDB has no `undefined` value, so a key in the update object whose value is `undefined` (passed directly or in `$SET`, `$ADD` or `$DELETE`) is not written as a value. What Dynamoose does with it depends on the attribute:
+
+- An attribute with a `default` in the schema is set back to its default value (`SET`).
+- Otherwise, an attribute in the schema is removed from the item (`REMOVE`), whatever its type, including lists and sets. If the attribute is `required`, the update throws a `ValidationError` instead, as `$REMOVE` does.
+- An attribute that isn't in the schema is skipped.
+
+```js
+// schema: {"id": Number, "name": String, "friends": {"type": Array, "schema": [String]}, "role": {"type": String, "default": "user"}}
+
+await User.update({"id": 1}, {"name": "Bob", "friends": undefined, "role": undefined});
+// UpdateExpression: REMOVE #a1 SET #a0 = :v0, #a2 = :v2
+// This will set the name to Bob, remove friends, and set role back to "user"
+```
+
+This means that an object built with optional properties (for example `{"name": input.name, "friends": input.friends}`) removes every attribute the input leaves out. To leave an attribute unchanged, leave its key out of the update object. To remove an attribute, say so explicitly with `$REMOVE` or [`dynamoose.type.UNDEFINED`](Dynamoose#dynamoosetypeundefined), which removes the attribute even if it has a `default`.
+
 ## model.delete(key[, settings][, callback])
 
 You can use Model.delete to delete an item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
