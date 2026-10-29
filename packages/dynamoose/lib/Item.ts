@@ -478,26 +478,28 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			return ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
 		});
 
+		const resultPromise = (async (): Promise<Item> => {
+			await promise;
+			this.getInternalProperties(internalProperties).storedInDynamo = true;
+
+			// First apply custom types conversion to the current item
+			// `saveUnknown` keeps the attributes the schema's saveUnknown setting allows, as `Model.get` does.
+			await this.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "typeCheck": false, "saveUnknown": true});
+
+			const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
+			returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
+
+			// Apply custom types conversion to ensure consistent behavior with get
+			await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "saveUnknown": true});
+
+			return returnItem;
+		})();
+
 		if (callback) {
 			const localCallback: CallbackType<Item, any> = callback as CallbackType<Item, any>;
-			promise.then(() => {
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				localCallback(null, returnItem);
-			}).catch((error) => callback(error));
+			resultPromise.then((returnItem) => localCallback(null, returnItem), (error) => localCallback(error));
 		} else {
-			return (async (): Promise<Item> => {
-				await promise;
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				return returnItem;
-			})();
+			return resultPromise;
 		}
 	}
 
@@ -574,8 +576,8 @@ Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Pro
 
 		Object.keys(treeNode).forEach((attr) => {
 			if (attr === "0") {
-				// We check for empty objects here (added `typeof node === "object" && Object.keys(node).length == 0`, see PR https://github.com/dynamoose/dynamoose/pull/1034) to handle the use case of 2d arrays, or arrays within arrays. `node` in that case will be an empty object.
-				if (!node || node.length == 0 || typeof node === "object" && Object.keys(node).length == 0) {
+				// Anything that isn't a non-empty array has no indices to walk, so we fake the path. This covers a missing node, an empty array, a non-array object, and the empty object used for 2d arrays, or arrays within arrays (see PR https://github.com/dynamoose/dynamoose/pull/1034).
+				if (!Array.isArray(node) || node.length == 0) {
 					node = [{}]; // fake the path for arrays
 				}
 				node.forEach((a, index) => {
@@ -728,12 +730,14 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			const isValueUndefined = typeof value === "undefined" || value === null;
 			if (!isValueUndefined) {
 				const typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails as DynamoDBTypeResult;
-				const {customType} = typeDetails;
-				const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
-				const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
-				if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
-					const customValue = customType.functions[settings.type](value);
-					utils.object.set(returnObject, key, customValue);
+				if (typeDetails) {
+					const {customType} = typeDetails;
+					const {"type": typeInfo} = typeDetails.isOfType(value as ValueType);
+					const isCorrectTypeAlready = typeInfo === (settings.type === "toDynamo" ? "underlying" : "main");
+					if (customType && customType.functions[settings.type] && !isCorrectTypeAlready) {
+						const customValue = customType.functions[settings.type](value);
+						utils.object.set(returnObject, key, customValue);
+					}
 				}
 			}
 		});
