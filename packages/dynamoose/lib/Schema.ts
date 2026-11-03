@@ -1862,8 +1862,9 @@ function usesBuiltinLookups (schema: Schema): boolean {
 // belong to the definition, which other schemas can share, so such a result is built again on each lookup.
 function hasModelSetting (details: AttributeTypeDetails): boolean {
 	return (Array.isArray(details) ? details : [details]).some((detail: DynamoDBTypeResult | DynamoDBSetTypeResult) => {
-		const typeSettings = detail?.typeSettings;
-		return (typeof typeSettings === "object" || typeof typeSettings === "function") && typeSettings !== null && "model" in typeSettings;
+		const typeSettings = detail.typeSettings;
+		// True for an object or a function, false for null and primitives, which `in` throws on.
+		return Object(typeSettings) === typeSettings && "model" in typeSettings;
 	});
 }
 // getAttributeTypeDetails for dynamoose's own callers in lib/ (through the internal properties), which
