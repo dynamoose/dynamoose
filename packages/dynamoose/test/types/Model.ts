@@ -42,6 +42,7 @@ const shouldPassBatchDeleteWithNoReturnSettingCallback = model.batchDelete([{"id
 
 const shouldPassUpdateWithDefaultReturnValuesSetting = model.update({"id": 1}, {"attributes": ["something"]}, {"returnValues": "ALL_NEW"});
 const shouldPassUpdateWithCustomReturnValuesSetting = model.update({"id": 1}, {"attributes": ["something"]}, {"returnValues": "NONE"});
+const shouldPassUpdateWithMergeNestedObjectsSetting = model.update({"id": 1}, {"attributes": ["something"]}, {"mergeNestedObjects": true});
 
 const shouldPassGetWithStringAsKey = model.get("id");
 const shouldPassGetWithNumberAsKey = model.get(1);
