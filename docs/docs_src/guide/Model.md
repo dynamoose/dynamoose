@@ -109,7 +109,7 @@ User.get({"id": 1}, (error, myUser) => {
 
 ## model.batchGet(keys[, settings][, callback])
 
-You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object.
+You can use Model.batchGet to retrieve multiple items from DynamoDB. This method uses the `batchGetItem` DynamoDB API call to retrieve the object. DynamoDB takes at most 100 keys in one `batchGetItem` call, so Dynamoose sends more keys as several calls (one at a time, or `concurrency` at a time), and combines their items and `unprocessedKeys`. If a call fails, its error is thrown. With `return` set to `request`, the result is one request with every key.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An array of Item instances will be the result of the promise or callback response. In the event no items can be found in DynamoDB this method will return an empty array.
 
@@ -127,6 +127,8 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | return | What the function should return. Can be `items`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `items` |
 | attributes | What item attributes should be retrieved & returned. This will use the underlying `AttributesToGet` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 | consistent | Whether to perform a strongly consistent read or not. If this value is `undefined`, then no `ConsistentRead` parameter will be included in the request, and DynamoDB will default to an eventually consistent read. | boolean | undefined |
+| retryUnprocessed | Set `attempts` to send the keys that DynamoDB returns as unprocessed (for example when the table is throttled) again, up to that many times. Each retry waits a random time between 0 and `delay * 2^(retry - 1)` milliseconds, but at most 20 seconds; `delay` defaults to `100`. Whatever is still unprocessed after the last retry is returned in `unprocessedKeys`. | Object (`attempts`, `delay`) | undefined (no retries) |
+| concurrency | How many DynamoDB requests to send at a time when the batch is larger than one request (100 keys for `batchGet`, 25 items for `batchPut` and `batchDelete`). If a request fails, no more requests are started and its error is thrown. A batch larger than one request that names the same key twice throws an error before any of it is sent, as DynamoDB does for one request. | Number | 1 |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
@@ -255,7 +257,7 @@ User.create({"id": 1, "name": "Tim"}, (error, user) => {  // If a user with `id=
 
 ## model.batchPut(items, [settings], [callback])
 
-This saves items to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
+This saves items to DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to store your objects in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table. DynamoDB takes at most 25 items in one `batchWriteItem` call, so Dynamoose sends a larger batch as several calls (one at a time, or `concurrency` at a time), and combines their `unprocessedItems`. If a call fails, no more calls are started and its error is thrown; the items of the calls that finished are already written. With `return` set to `request`, the result is one request with every item.
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
 
@@ -264,6 +266,8 @@ You can also pass a settings object in as the second parameter. The following op
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | If the function should return the `response` or `request`. If you set this to `request` the request that would be made to DynamoDB will be returned, but no requests will be made to DynamoDB. | String | `response` |
+| retryUnprocessed | Set `attempts` to send the items that DynamoDB returns as unprocessed (for example when the table is throttled) again, up to that many times. Each retry waits a random time between 0 and `delay * 2^(retry - 1)` milliseconds, but at most 20 seconds; `delay` defaults to `100`. Whatever is still unprocessed after the last retry is returned in `unprocessedItems`. | Object (`attempts`, `delay`) | undefined (no retries) |
+| concurrency | How many DynamoDB requests to send at a time when the batch is larger than one request (100 keys for `batchGet`, 25 items for `batchPut` and `batchDelete`). If a request fails, no more requests are started and its error is thrown. A batch larger than one request that names the same key twice throws an error before any of it is sent, as DynamoDB does for one request. | Number | 1 |
 
 Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in your array of objects as the first parameter, and the second argument as the `callback` function. You are not required to pass in `settings` if you just want to pass in a `callback`.
 
@@ -488,7 +492,7 @@ User.delete({"id": 1}, (error) => {
 
 ## model.batchDelete(keys[, settings][, callback])
 
-You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects.
+You can use Model.batchDelete to delete items from DynamoDB. This method uses the `batchWriteItem` DynamoDB API call to delete the objects. DynamoDB takes at most 25 items in one `batchWriteItem` call, so Dynamoose sends a larger batch as several calls (one at a time, or `concurrency` at a time), and combines their `unprocessedItems`. If a call fails, no more calls are started and its error is thrown; the items of the calls that finished are already deleted. With `return` set to `request`, the result is one request with every item.
 
 `keys` can be an array of strings representing the hashKey and/or an array of objects containing the hashKey & rangeKey.
 
@@ -499,6 +503,8 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `response`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `response` |
+| retryUnprocessed | Set `attempts` to send the items that DynamoDB returns as unprocessed (for example when the table is throttled) again, up to that many times. Each retry waits a random time between 0 and `delay * 2^(retry - 1)` milliseconds, but at most 20 seconds; `delay` defaults to `100`. Whatever is still unprocessed after the last retry is returned in `unprocessedItems`. | Object (`attempts`, `delay`) | undefined (no retries) |
+| concurrency | How many DynamoDB requests to send at a time when the batch is larger than one request (100 keys for `batchGet`, 25 items for `batchPut` and `batchDelete`). If a request fails, no more requests are started and its error is thrown. A batch larger than one request that names the same key twice throws an error before any of it is sent, as DynamoDB does for one request. | Number | 1 |
 
 ```js
 const User = dynamoose.model("User", {"id": Number, "name": String});
