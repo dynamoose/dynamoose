@@ -33,3 +33,13 @@ const shouldFailWithInvalidCallback = dynamoose.transaction(
 const shouldPassWithCallbackInSecondArg = dynamoose.transaction([model.transaction.get("key")], (a, b) => {
 	return;
 });
+
+const shouldPassWithClientRequestToken = dynamoose.transaction([model.transaction.create({"id": 1})], {"clientRequestToken": "token-1"});
+// @ts-expect-error
+const shouldFailWithInvalidClientRequestToken = dynamoose.transaction([model.transaction.create({"id": 1})], {"clientRequestToken": 1});
+const shouldPassWithRetry = dynamoose.transaction([model.transaction.create({"id": 1})], {"retry": {"attempts": 3, "delay": 500}});
+const shouldPassWithRetryAndCallback = dynamoose.transaction([model.transaction.create({"id": 1})], {"retry": {"attempts": 3}}, (a, b) => {
+	return;
+});
+// @ts-expect-error
+const shouldFailWithRetryWithoutAttempts = dynamoose.transaction([model.transaction.create({"id": 1})], {"retry": {"delay": 500}});
