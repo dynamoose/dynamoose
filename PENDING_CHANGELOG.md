@@ -2,6 +2,10 @@
 
 ---
 
+### Maintenance
+
+- Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
+
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
@@ -14,3 +18,5 @@
 ### Other
 
 - Unit tests now fail when they make a real HTTP request. Connections to localhost (for example DynamoDB Local) are still allowed
+- Fixed `Model.update` and `Model.transaction.update` not writing a `Combine` attribute when the model also has a `forceDefault` attribute. Both were given the same placeholder (e.g. `#a2`), so the request set the default value twice and left the combine attribute out
+- Fixed `Model.update` and `Model.transaction.update` counting a combined attribute changed with `$ADD` or `$DELETE` as set when the update also set an attribute whose placeholder starts with its placeholder (`#a1` and `#a10`). The combine value was built from the amount added instead of throwing `You must update all or none of the combine attributes`
