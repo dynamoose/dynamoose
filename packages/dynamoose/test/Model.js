@@ -3349,11 +3349,11 @@ describe("Model", () => {
 
 				it("Should remove a nested path whose set modifier returns undefined, as it removes a top-level attribute", async () => {
 					updateItemFunction = () => Promise.resolve({});
-					User = dynamoose.model("User", {"id": Number, "meta": {"type": Object, "schema": {"name": {"type": String, "set": () => undefined}}}});
+					User = dynamoose.model("User", {"id": Number, "reps": {"type": Array, "schema": [{"type": Object, "schema": {"name": {"type": String, "set": () => undefined}}}]}});
 					new dynamoose.Table("User", [User]);
-					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"meta.name": "abc"}});
-					expect(updateItemParams.UpdateExpression).toEqual("REMOVE #a0.#a1");
-					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "meta", "#a1": "name"});
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"reps[0].name": "abc"}});
+					expect(updateItemParams.UpdateExpression).toEqual("REMOVE #a0[0].#a1");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "reps", "#a1": "name"});
 				});
 
 				it("Should send a string set for nested $ADD of an array to a set attribute", async () => {
