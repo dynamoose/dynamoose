@@ -2,6 +2,10 @@
 
 ---
 
+### Maintenance
+
+- Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
+
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
