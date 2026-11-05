@@ -219,4 +219,70 @@ describe("utils.find_best_index", () => {
 			"attr3": {"type": "EQ"}
 		})).toStrictEqual({"tableIndex": false, "indexName": null});
 	});
+
+	describe("find_best_index (multi-attribute)", () => {
+		it("selects an index only when ALL multi-attribute partition keys are EQ", () => {
+			const indexes = {
+				"GlobalSecondaryIndexes": [{
+					"IndexName": "TRI",
+					"KeySchema": [
+						{"AttributeName": "tournamentId", "KeyType": "HASH"},
+						{"AttributeName": "region", "KeyType": "HASH"},
+						{"AttributeName": "round", "KeyType": "RANGE"}
+					]
+				}]
+			};
+			// Only tournamentId is conditioned -> must NOT pick TRI (region missing)
+			const partial = {"tournamentId": {"type": "EQ"}};
+			expect(find_best_index(indexes, partial).indexName).toBeNull();
+
+			const full = {"tournamentId": {"type": "EQ"}, "region": {"type": "EQ"}};
+			expect(find_best_index(indexes, full).indexName).toBe("TRI");
+		});
+
+		it("prefers the index with the longest left-to-right sort-key prefix conditioned", () => {
+			const indexes = {
+				"GlobalSecondaryIndexes": [
+					{"IndexName": "A", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}]},
+					{"IndexName": "B", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}, {"AttributeName": "sk2", "KeyType": "RANGE"}]}
+				]
+			};
+			const chart = {"pk": {"type": "EQ"}, "sk1": {"type": "EQ"}, "sk2": {"type": "EQ"}};
+			expect(find_best_index(indexes, chart).indexName).toBe("B");
+		});
+
+		it("treats an inequality on a sort attr as a valid last condition but stops the prefix there", () => {
+			const indexes = {"GlobalSecondaryIndexes": [
+				{"IndexName": "C", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}, {"AttributeName": "sk2", "KeyType": "RANGE"}]}
+			]};
+			// sk1 EQ, sk2 GT -> prefix length 2 (sk1 eq, sk2 inequality-last)
+			const chart = {"pk": {"type": "EQ"}, "sk1": {"type": "EQ"}, "sk2": {"type": "GT"}};
+			expect(find_best_index(indexes, chart).indexName).toBe("C");
+		});
+
+		it("does not over-count a second consecutive sort-key inequality", () => {
+			// A's prefix is 1 (sk1 inequality). B's prefix is also 1 once the over-count is
+			// fixed (sk1 inequality ends the prefix; sk2 must not extend it). Before the fix,
+			// B over-counted to 2 and was wrongly selected; after the fix it ties A and the
+			// first-inserted usable index (A) is chosen.
+			const indexes = {"GlobalSecondaryIndexes": [
+				{"IndexName": "A", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}]},
+				{"IndexName": "B", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}, {"AttributeName": "sk2", "KeyType": "RANGE"}]}
+			]};
+			const chart = {"pk": {"type": "EQ"}, "sk1": {"type": "GT"}, "sk2": {"type": "GT"}};
+			expect(find_best_index(indexes, chart).indexName).toBe("A");
+		});
+
+		it("does not extend the prefix when an equality follows a sort-key inequality", () => {
+			// sk1 inequality (GT) sets sawInequality; a following sk2 EQ must break the
+			// prefix loop (an inequality must be the last conditioned sort attr) instead of
+			// wrongly counting sk2 and over-selecting index B.
+			const indexes = {"GlobalSecondaryIndexes": [
+				{"IndexName": "A", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}]},
+				{"IndexName": "B", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}, {"AttributeName": "sk2", "KeyType": "RANGE"}]}
+			]};
+			const chart = {"pk": {"type": "EQ"}, "sk1": {"type": "GT"}, "sk2": {"type": "EQ"}};
+			expect(find_best_index(indexes, chart).indexName).toBe("A");
+		});
+	});
 });

@@ -196,7 +196,10 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		const [key, value] = entry;
 		const filterExpressionIndex = object.FilterExpression.findIndex((item) => item.includes(key));
 		const filterExpression = object.FilterExpression[filterExpressionIndex];
-		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains")) {
+		// Operators that are legal in a FilterExpression but not in a KeyConditionExpression
+		// must stay where they are, otherwise DynamoDB rejects the request with
+		// "Invalid operator used in KeyConditionExpression".
+		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains") || filterExpression.includes(" IN (") || filterExpression.includes("<>")) {
 			return;
 		}
 		object.ExpressionAttributeNames[`#${prefix}a`] = value;
@@ -219,15 +222,53 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 	}
 	if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
 		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
-		const {hash, range} = index.KeySchema.reduce((res, item) => {
-			res[item.KeyType.toLowerCase()] = item.AttributeName;
+		const {"hash": hashKeys, "range": rangeKeys} = index.KeySchema.reduce((res, item) => {
+			res[item.KeyType.toLowerCase()].push(item.AttributeName);
 			return res;
-		}, {});
+		}, {"hash": [], "range": []} as {[key: string]: string[]});
 
-		moveParameterNames(hash, "qh");
-		if (range) {
-			moveParameterNames(range, "qr");
+		// Enforce DynamoDB's native multi-attribute query rules client-side so a malformed
+		// query fails fast with a clear error instead of emitting a request DynamoDB rejects.
+		// Only multi-attribute keys are validated; single-attribute behavior is unchanged.
+		if (hashKeys.length > 1 || rangeKeys.length > 1) {
+			const KEY_CONDITION_TYPES = new Set(["EQ", "LE", "LT", "GE", "GT", "BETWEEN", "BEGINS_WITH"]);
+			const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(model);
+			// Every partition-key attribute must be conditioned with equality.
+			for (const attr of hashKeys) {
+				if (comparisonChart[attr]?.type !== "EQ") {
+					throw new CustomError.InvalidParameter(`Query on multi-attribute index "${object.IndexName}" requires an equality condition on every partition key attribute ("${attr}" is missing or not an equality).`);
+				}
+			}
+			// Sort-key attributes must be conditioned left-to-right with no gaps, and a
+			// non-equality condition may only be the last conditioned sort attribute.
+			let ended = false;
+			let sawInequality = false;
+			for (const attr of rangeKeys) {
+				const t = comparisonChart[attr]?.type;
+				const isKeyCondition = typeof t === "string" && KEY_CONDITION_TYPES.has(t);
+				if (!isKeyCondition) {
+					ended = true;
+					continue;
+				}
+				if (ended) {
+					throw new CustomError.InvalidParameter(`Query on multi-attribute index "${object.IndexName}" must condition sort key attributes left-to-right with no gaps ("${attr}" is conditioned after an unconditioned attribute).`);
+				}
+				if (sawInequality) {
+					throw new CustomError.InvalidParameter(`Query on multi-attribute index "${object.IndexName}" allows a non-equality condition only as the last sort key condition ("${attr}" follows one).`);
+				}
+				if (t !== "EQ") {
+					sawInequality = true;
+				}
+			}
 		}
+
+		// Each key attribute needs a UNIQUE placeholder prefix. The first attribute
+		// keeps the legacy "qh"/"qr" prefix so single-attribute queries emit identical
+		// params; later attributes get a numeric suffix (qh1, qr1, ...).
+		hashKeys.forEach((attr, idx) => moveParameterNames(attr, idx === 0 ? "qh" : `qh${idx}`));
+		// Sort attributes move left-to-right. moveParameterNames is a no-op for any
+		// attribute not present as a condition (verified: early-return at L193-195).
+		rangeKeys.forEach((attr, idx) => moveParameterNames(attr, idx === 0 ? "qr" : `qr${idx}`));
 	}
 	if (this.getInternalProperties(internalProperties).settings.consistent) {
 		object.ConsistentRead = this.getInternalProperties(internalProperties).settings.consistent;
