@@ -2991,6 +2991,14 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should type each value by its own attribute when $REMOVE comes before $SET", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "tags": {"type": Set, "schema": [String]}, "list": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$REMOVE": ["tags"], "$SET": {"list": ["a", "b"]}});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v1": {"L": [{"S": "a"}, {"S": "b"}]}});
+				});
+
 				it("Should send correct params to updateItem with $REMOVE saveUnknown property", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"saveUnknown": ["age"]}));
