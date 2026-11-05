@@ -823,10 +823,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			return result;
 		};
 		const convertNestedValue = async (path: string, value: ValueType, settings: ObjectType): Promise<any> => (await convertNestedValues([[path, value]], settings)).get(path);
-		// Whether an ancestor of a nested path has a set or validate rule these settings apply
+		// Whether an ancestor of a nested path without a list index has a set or validate rule these settings apply
 		const ancestorHasRule = (segments: PathSegment[], settings: ObjectType): boolean => {
 			const rules = [...settings.validate ? ["validate"] : [], ...settings.modifiers ?? []];
-			const parts = segments.map((segment) => segment.type === "index" ? 0 : segment.value);
+			const parts = segments.map((segment) => segment.value);
 			// An ancestor the schema does not declare has no rule of its own, and asking for one throws
 			return parts.slice(0, -1).some((part, i) => {
 				try {
@@ -941,7 +941,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						throw new CustomError.InvalidParameter(`Invalid dot notation path: ${subKey}. Path cannot have empty components.`);
 					}
 					const segments = isNestedPath ? parsePathWithArrayIndices(subKey) : undefined;
-					if (segments && segments[0]?.type !== "attribute") {
+					if (segments && segments[0].type !== "attribute") {
 						throw new CustomError.InvalidParameter(`Invalid path: ${subKey}. Path must start with an attribute name.`);
 					}
 					const attributeName = segments ? segments[0].value as string : subKey;
@@ -1086,10 +1086,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			// after it are nested path components, which can share a name with a top-level attribute.
 			const topLevelNameKeys = new Map<string, string>();
 			for (const term of Object.values(returnObject.UpdateExpression).flat() as string[]) {
-				const nameKey = term.match(/^#a\d+/u)?.[0];
-				if (nameKey) {
-					topLevelNameKeys.set(returnObject.ExpressionAttributeNames[nameKey], nameKey);
-				}
+				const [nameKey] = term.match(/^#a\d+/u);
+				topLevelNameKeys.set(returnObject.ExpressionAttributeNames[nameKey], nameKey);
 			}
 
 			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
