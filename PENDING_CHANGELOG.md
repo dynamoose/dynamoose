@@ -2,6 +2,9 @@
 
 ---
 
+### 🚨 Breaking Changes 🚨
+
+- `item.save` and `Model.create` now resolve with the saved item in the same form as `Model.get`: schema `get` modifiers are applied, and `Date` attributes and timestamps are `Date` objects instead of numbers. Timestamps set on the saved item instance are also `Date` objects now
 ### Maintenance
 
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
