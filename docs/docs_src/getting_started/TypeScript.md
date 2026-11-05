@@ -42,6 +42,31 @@ TypeScript support includes support for all functions/methods, and properties of
 
 At some point we hope to explore the potential of adding typings to ensure your Items conform to your Schemas. However this raises a lot of questions regarding if it's even possible to have such dynamic typings in TypeScript, as well as edge cases that have not been considered yet.
 
+### How do I import the types for settings, schema definitions, and update objects?
+
+Import them from the module that declares them under `dynamoose/dist`. For example:
+
+```ts
+import * as dynamoose from "dynamoose";
+import {Item} from "dynamoose/dist/Item";
+import {AttributeDefinition, SchemaSettings} from "dynamoose/dist/Schema";
+import {ModelUpdateSettings, UpdatePartial} from "dynamoose/dist/Model";
+
+class Cat extends Item {
+	id: number;
+	name: string;
+	lives: number;
+}
+const nameDefinition: AttributeDefinition = {"type": String, "required": true};
+const schemaSettings: SchemaSettings = {"timestamps": true};
+const CatModel = dynamoose.model<Cat>("Cat", new dynamoose.Schema({"id": Number, "name": nameDefinition, "lives": Number}, schemaSettings));
+
+const update: UpdatePartial<Cat> = {"name": "Bob"};
+update.$ADD = {"lives": -1};
+const settings: ModelUpdateSettings = {"returnValues": "ALL_NEW"};
+await CatModel.update({"id": 1}, update, settings);
+```
+
 ### What should I do if I have additional questions?
 
 - [Contact me](https://charlie.fish/contact)
