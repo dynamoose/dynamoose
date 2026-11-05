@@ -80,6 +80,51 @@ jobs:
           path-to-lcov: ./packages/dynamoose/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel: true
+  benchmark-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v2
+        with:
+          path: head
+          persist-credentials: false
+      - name: Checkout base
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: 'npm'
+          cache-dependency-path: |
+            head/package-lock.json
+            base/package-lock.json
+      # npm ci also builds every package (root prepare script).
+      - run: npm ci
+        working-directory: head
+      - run: npm ci
+        working-directory: base
+      - run: npm run benchmark:smoke
+        working-directory: head/packages/dynamoose
+      - name: Benchmark gate (pull request vs base)
+        working-directory: head/packages/dynamoose
+        env:
+          BASELINE: ${{ github.workspace }}/base/packages/dynamoose
+        run: npm run benchmark -- --gate --artifacts "$GITHUB_WORKSPACE/benchmark-gate"
+      - name: Upload profiles of the slowdown
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-gate
+          path: benchmark-gate
+          if-no-files-found: ignore
   finalize:
     runs-on: ubuntu-latest
     needs: [lint, test]
