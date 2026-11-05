@@ -3851,6 +3851,17 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"data1": "Charlie"})).rejects.toEqual(new CustomError.InvalidParameter("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: data2."));
 				});
 
+				it("Should throw error if adding to a combine property whose placeholder starts another placeholder", () => {
+					updateItemFunction = () => Promise.resolve({});
+					// `data1` is #a1, added to, and the update sets #a10 and #a11, which start with "#a1".
+					const otherAttributes = Array.from({"length": 9}, (_, i) => `other${i + 2}`);
+					User = dynamoose.model("User", {"id": Number, "other0": String, "data1": Number, ...Object.fromEntries(otherAttributes.map((attribute) => [attribute, String])), "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					new dynamoose.Table("User", [User]);
+
+					const update = {"other0": "a", "$ADD": {"data1": 1}, ...Object.fromEntries(otherAttributes.map((attribute) => [attribute, "a"])), "data2": "b"};
+					return expect(callType.func(User).bind(User)({"id": 1}, update)).rejects.toEqual(new CustomError.InvalidParameter("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: data1."));
+				});
+
 				it("Shouldn't throw error if update with property allowing multiple types as first type", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data": [String, Number]});
@@ -3937,6 +3948,44 @@ describe("Model", () => {
 							}
 						},
 						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = :v2",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct parameters when updating all combine properties with a forceDefault property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}, "status": {"type": String, "default": "active", "forceDefault": true}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"data1": "hello", "data2": "world"});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "data1",
+							"#a1": "data2",
+							"#a2": "combine",
+							"#a3": "status"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "hello"
+							},
+							":v1": {
+								"S": "world"
+							},
+							":v2": {
+								"S": "hello,world"
+							},
+							":v3": {
+								"S": "active"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = :v2, #a3 = :v3",
 						"Key": {
 							"id": {
 								"N": "1"
@@ -4686,6 +4735,30 @@ describe("Model", () => {
 
 			it("Should return an object", async () => {
 				expect(await User.transaction.update({"id": 1, "name": "Bob"})).toBeInstanceOf(Object);
+			});
+
+			it("Should return correct result when updating all combine properties with a forceDefault property", async () => {
+				User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}, "status": {"type": String, "default": "active", "forceDefault": true}});
+				new dynamoose.Table("User", [User]);
+				expect(await User.transaction.update({"id": 1}, {"data1": "hello", "data2": "world"})).toEqual({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {
+							"#a0": "data1",
+							"#a1": "data2",
+							"#a2": "combine",
+							"#a3": "status"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "hello"},
+							":v1": {"S": "world"},
+							":v2": {"S": "hello,world"},
+							":v3": {"S": "active"}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = :v2, #a3 = :v3",
+						"TableName": "User"
+					}
+				});
 			});
 
 			it("Should return correct result", async () => {
