@@ -3305,6 +3305,17 @@ describe("Model", () => {
 					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "x"}, ":v2": {"N": "2"}});
 				});
 
+				it("Should write a nested path under ancestors the schema does not declare", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "meta": Object}, {"saveUnknown": ["meta.**"]}));
+					new dynamoose.Table("User", [User]);
+					// The schema lookup of `meta.a.b` throws, because `meta.a` is not declared either
+					await callType.func(User).bind(User)({"id": 1}, {"$SET": {"meta.a.b.c": "x"}});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0.#a1.#a2.#a3 = :v0");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "meta", "#a1": "a", "#a2": "b", "#a3": "c"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "x"}});
+				});
+
 				it("Should throw error for a nested value no definition of a multi-type object accepts, instead of removing the path", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					updateItemParams = undefined;
