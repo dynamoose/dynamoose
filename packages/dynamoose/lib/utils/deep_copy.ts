@@ -1,4 +1,10 @@
 export default function deep_copy<T> (obj: T, refs = new Set()): T {
+	// Fast path for null, undefined and every non-object. A function lands here too (`typeof` is
+	// "function"), and is returned as it is, as before: a unit test passes one in.
+	if (obj === null || obj === undefined || typeof obj !== "object") {
+		return obj;
+	}
+
 	let copy: any;
 
 	// Handle Date
@@ -31,11 +37,6 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 		return copy;
 	}
 
-	if (obj instanceof Function) {
-		// This is not technically correct, but required for unit test purposes. We currently have a unit test that passes in a function where it shouldn't. So in order to handle this case we need to do something here. Ideally we would clone the function somehow to create a copy of it. But that is lower priority for now.
-		return obj;
-	}
-
 	// Handle Array
 	if (obj instanceof Array) {
 		refs.add(obj);
@@ -49,15 +50,16 @@ export default function deep_copy<T> (obj: T, refs = new Set()): T {
 		refs.add(obj);
 		copy = obj.constructor !== Object ? Object.create(Object.getPrototypeOf(obj)) : {};
 
-		for (const attr in obj) {
-			if (Object.prototype.hasOwnProperty.call(obj, attr)) {
-				const value = obj[attr];
-				// Omit true circular references: value is an ancestor on the current recursion path.
-				if (value !== null && typeof value === "object" && refs.has(value)) {
-					continue;
-				}
-				copy[attr] = deep_copy(value, refs);
+		// Object.keys lists the same own enumerable keys as for...in with hasOwnProperty, faster
+		const keys = Object.keys(obj);
+		for (let i = 0; i < keys.length; i++) {
+			const attr = keys[i];
+			const value = obj[attr];
+			// Omit true circular references: value is an ancestor on the current recursion path.
+			if (value !== null && typeof value === "object" && refs.has(value)) {
+				continue;
 			}
+			copy[attr] = deep_copy(value, refs);
 		}
 		refs.delete(obj);
 		return copy;
