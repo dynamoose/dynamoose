@@ -522,7 +522,7 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 		if (schema.getInternalProperties(internalProperties).settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
 			const timeResult = (prop) => {
-				const typeDetails = schema.getAttributeTypeDetails(prop.name);
+				const typeDetails = schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(prop.name);
 				if (Array.isArray(typeDetails)) {
 					throw new CustomError.InvalidType(`Not allowed to use an array of types for the timestamps attribute "${prop.name}".`);
 				}
@@ -756,7 +756,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	if (settings.combine) {
 		schemaAttributes.map((key) => {
 			try {
-				const typeDetails = schema.getAttributeTypeDetails(key);
+				const typeDetails = schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(key);
 
 				return {
 					key,
