@@ -3517,6 +3517,21 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"data": {"name": "Charlie"}})).rejects.toEqual(new CustomError.ValidationError("data.age is a required property but has no value when trying to save item"));
 				});
 
+				it("Should flatten the item once when checking nested required attributes", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "lines": {"type": Array, "schema": [{"type": Object, "schema": {"sku": {"type": String, "required": true}, "qty": {"type": Number, "required": true}}}]}});
+					new dynamoose.Table("User", [User]);
+					const lines = Array.from({"length": 50}, (_, index) => ({"sku": `sku-${index}`, "qty": index}));
+					// Flattening the item once per attribute made an update with a long list quadratic.
+					const keys = jest.spyOn(require("js-object-utilities"), "keys");
+					try {
+						await callType.func(User).bind(User)({"id": 1}, {"lines": lines});
+						expect(keys).toHaveBeenCalledTimes(1);
+					} finally {
+						keys.mockRestore();
+					}
+				});
+
 				it("Should throw error if trying to replace object with $SET without nested required property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data": {"type": Object, "schema": {"name": String, "age": {"type": Number, "required": true}}}});
