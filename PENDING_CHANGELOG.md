@@ -2,6 +2,10 @@
 
 ---
 
+### Maintenance
+
+- Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
+
 ### Features
 
 - Added support for nested paths in `Model.update` keys (`address.city`, `tags[0]`, `friends[0].name`) for `$SET`, `$ADD`, `$REMOVE` and `$DELETE`. Nested values go through the schema of their path, including type checks, `enum`, `validate`, `set`, custom types, `default` and `required`
@@ -19,3 +23,5 @@
 ### Other
 
 - Added a `Model.update` test suite that runs against DynamoDB Local (`npm run test:integration` in `packages/dynamoose`) and checks what DynamoDB stores, not only the request
+- Fixed `Model.update` and `Model.transaction.update` not writing a `Combine` attribute when the model also has a `forceDefault` attribute. Both were given the same placeholder (e.g. `#a2`), so the request set the default value twice and left the combine attribute out
+- Fixed `Model.update` and `Model.transaction.update` counting a combined attribute changed with `$ADD` or `$DELETE` as set when the update also set an attribute whose placeholder starts with its placeholder (`#a1` and `#a10`). The combine value was built from the amount added instead of throwing `You must update all or none of the combine attributes`
