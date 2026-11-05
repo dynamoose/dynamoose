@@ -824,7 +824,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const {invalidAttributes} = details.type.typeSettings.attributes.reduce((result, attribute) => {
 					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 					const doesExist = Boolean(expressionAttributeNameEntry);
-					const isValid = doesExist && [...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", ").includes(expressionAttributeNameEntry[0]);
+					// `\b` after the placeholder, so that `#a1` doesn't match inside `#a10`.
+					const isValid = doesExist && new RegExp(`${expressionAttributeNameEntry[0]}\\b`, "u").test([...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", "));
 
 					if (!isValid) {
 						result.invalidAttributes.push(attribute);
@@ -836,13 +837,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				if (invalidAttributes.length > 0) {
 					throw new CustomError.InvalidParameter(`You must update all or none of the combine attributes when running Model.update. Missing combine attributes: ${invalidAttributes.join(", ")}.`);
 				} else {
-					const nextIndex = Math.max(...Object.keys(returnObject.ExpressionAttributeNames).map((key) => parseInt(key.replace("#a", "")))) + 1;
-					returnObject.ExpressionAttributeNames[`#a${nextIndex}`] = details.attribute;
-					returnObject.ExpressionAttributeValues[`:v${nextIndex}`] = details.type.typeSettings.attributes.map((attribute) => {
+					// Numbered from `index` and moves it on, so attributes added after this one (such as `forceDefault` ones) don't reuse the number.
+					returnObject.ExpressionAttributeNames[`#a${index}`] = details.attribute;
+					returnObject.ExpressionAttributeValues[`:v${index}`] = details.type.typeSettings.attributes.map((attribute) => {
 						const [expressionAttributeNameKey] = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 						return returnObject.ExpressionAttributeValues[expressionAttributeNameKey.replace("#a", ":v")];
 					}).filter((value) => typeof value !== "undefined" && value !== null).join(details.type.typeSettings.separator);
-					returnObject.UpdateExpression.SET.push(`#a${nextIndex} = :v${nextIndex}`);
+					returnObject.UpdateExpression.SET.push(`#a${index} = :v${index}`);
+					index++;
 				}
 			});
 
