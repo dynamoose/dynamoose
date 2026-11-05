@@ -883,7 +883,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						throw new CustomError.InvalidParameter(`Invalid dot notation path: ${subKey}. Path cannot have empty components.`);
 					}
 					const segments = isNestedPath ? parsePathWithArrayIndices(subKey) : undefined;
-					if (segments && segments[0]?.type !== "attribute") {
+					if (segments && segments[0].type !== "attribute") {
 						throw new CustomError.InvalidParameter(`Invalid path: ${subKey}. Path must start with an attribute name.`);
 					}
 					const attributeName = segments ? segments[0].value as string : subKey;
@@ -1027,10 +1027,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			// after it are nested path components, which can share a name with a top-level attribute.
 			const topLevelNameKeys = new Map<string, string>();
 			for (const term of Object.values(returnObject.UpdateExpression).flat() as string[]) {
-				const nameKey = term.match(/^#a\d+/u)?.[0];
-				if (nameKey) {
-					topLevelNameKeys.set(returnObject.ExpressionAttributeNames[nameKey], nameKey);
-				}
+				const [nameKey] = term.match(/^#a\d+/u);
+				topLevelNameKeys.set(returnObject.ExpressionAttributeNames[nameKey], nameKey);
 			}
 
 			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
