@@ -716,6 +716,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
 			}
 
+			// The empty list `$ADD` starts from when the item doesn't have the list attribute yet. It is added to the values only if a list is appended to. Its value placeholder is numbered once every other value has one, so until then the expressions hold this marker.
+			const emptyListMarker = "<emptyList>";
+			let usesEmptyList = false;
 			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
 				const accumulator = await accumulatorPromise;
 				let value = updateObj[key];
@@ -772,7 +775,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 
 					if (dynamoType === "L" && updateType.name === "$ADD") {
-						expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
+						// `list_append` fails on an attribute the item doesn't have, so a missing list is appended to as an empty list.
+						expressionValue = `list_append(if_not_exists(${expressionKey}, ${emptyListMarker}), ${expressionValue})`;
+						usesEmptyList = true;
 						updateType = updateTypes.find((a) => a.name === "$SET");
 					}
 
@@ -874,6 +879,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					returnObject.ExpressionAttributeValues[valueKey] = attributeType.toDynamo(value as any);
 				}
 			});
+
+			// Added after the loop above, which pairs each attribute name with the value at the same position. The number follows the highest attribute name number, because a combine attribute takes the number after the attributes without moving `index`.
+			if (usesEmptyList) {
+				const emptyListKey = `:v${Math.max(...Object.keys(returnObject.ExpressionAttributeNames).map((key) => parseInt(key.replace("#a", "")))) + 1}`;
+				returnObject.ExpressionAttributeValues[emptyListKey] = [];
+				returnObject.UpdateExpression.SET = returnObject.UpdateExpression.SET.map((expression: string) => expression.replace(emptyListMarker, emptyListKey));
+			}
 
 			returnObject.ExpressionAttributeValues = this.Item.objectToDynamo(returnObject.ExpressionAttributeValues);
 			if (Object.keys(returnObject.ExpressionAttributeValues).length === 0) {

@@ -361,7 +361,7 @@ User.update({"id": 1}, {"name": "Bob"}, {"condition": condition}, (error, user) 
 The other method you can use is by using specific update types. These update types are as follows.
 
 - `$SET` - This method will set the attribute to the new value (as shown above)
-- `$ADD` - This method will add the value to the attribute. If the attribute is a number it will add the value to the existing number. If the attribute is a list, it will add the value to the list. Although this method only works for sets in DynamoDB, Dynamoose will automatically update this method to work for lists/arrays as well according to your schema. This update type does not work for any other attribute type.
+- `$ADD` - This method will add the value to the attribute. If the attribute is a number it will add the value to the existing number. If the attribute is a list, it will add the value to the list, and if the item doesn't have the list yet, it will create the list with the value. Although this method only works for sets in DynamoDB, Dynamoose will automatically update this method to work for lists/arrays as well according to your schema. This update type does not work for any other attribute type.
 - `$REMOVE` - This method will remove the attribute from the item. Since this method doesn't require values, you can pass in an array of attribute names.
 - `$DELETE` - This method will delete one or more elements from a Set.
 

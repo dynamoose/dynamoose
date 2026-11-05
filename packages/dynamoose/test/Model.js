@@ -2385,9 +2385,12 @@ describe("Model", () => {
 							},
 							":v1": {
 								"L": [{"S": "hello world"}]
+							},
+							":v2": {
+								"L": []
 							}
 						},
-						"UpdateExpression": "SET #a0 = :v0, #a1 = list_append(#a1, :v1)",
+						"UpdateExpression": "SET #a0 = :v0, #a1 = list_append(if_not_exists(#a1, :v2), :v1)",
 						"Key": {
 							"id": {
 								"N": "1"
@@ -2933,9 +2936,12 @@ describe("Model", () => {
 						"ExpressionAttributeValues": {
 							":v0": {
 								"L": [{"S": "Tim"}]
+							},
+							":v1": {
+								"L": []
 							}
 						},
-						"UpdateExpression": "SET #a0 = list_append(#a0, :v0)",
+						"UpdateExpression": "SET #a0 = list_append(if_not_exists(#a0, :v1), :v0)",
 						"Key": {
 							"id": {
 								"N": "1"
@@ -2959,9 +2965,154 @@ describe("Model", () => {
 						"ExpressionAttributeValues": {
 							":v0": {
 								"L": [{"S": "Tim"}, {"S": "Charlie"}]
+							},
+							":v1": {
+								"L": []
 							}
 						},
-						"UpdateExpression": "SET #a0 = list_append(#a0, :v0)",
+						"UpdateExpression": "SET #a0 = list_append(if_not_exists(#a0, :v1), :v0)",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD for list append to multiple list properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}, "enemies": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": "Tim", "enemies": ["Bob"]}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "friends",
+							"#a1": "enemies"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"L": [{"S": "Tim"}]
+							},
+							":v1": {
+								"L": [{"S": "Bob"}]
+							},
+							":v2": {
+								"L": []
+							}
+						},
+						"UpdateExpression": "SET #a0 = list_append(if_not_exists(#a0, :v2), :v0), #a1 = list_append(if_not_exists(#a1, :v2), :v1)",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD for list append followed by a set property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}, "tags": {"type": Set, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": "Tim"}, "$SET": {"tags": ["a", "b"]}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "friends",
+							"#a1": "tags"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"L": [{"S": "Tim"}]
+							},
+							":v1": {
+								"SS": ["a", "b"]
+							},
+							":v2": {
+								"L": []
+							}
+						},
+						"UpdateExpression": "SET #a0 = list_append(if_not_exists(#a0, :v2), :v0), #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD for list append with conditional", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "active": Boolean, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					const condition = new dynamoose.Condition("active").eq(true);
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": "Tim"}}, {condition});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "active",
+							"#a1": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"BOOL": true
+							},
+							":v1": {
+								"L": [{"S": "Tim"}]
+							},
+							":v2": {
+								"L": []
+							}
+						},
+						"UpdateExpression": "SET #a1 = list_append(if_not_exists(#a1, :v2), :v1)",
+						"ConditionExpression": "#a0 = :v0",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+				});
+
+				it("Should send correct params to updateItem with $ADD for list append with combine properties", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"data1": "hello", "data2": "world", "$ADD": {"friends": "Tim"}});
+					expect(updateItemParams).toBeInstanceOf(Object);
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "data1",
+							"#a1": "data2",
+							"#a2": "friends",
+							"#a3": "combine"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"S": "hello"
+							},
+							":v1": {
+								"S": "world"
+							},
+							":v2": {
+								"L": [{"S": "Tim"}]
+							},
+							":v3": {
+								"S": "hello,world"
+							},
+							":v4": {
+								"L": []
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1, #a2 = list_append(if_not_exists(#a2, :v4), :v2), #a3 = :v3",
 						"Key": {
 							"id": {
 								"N": "1"
@@ -4788,6 +4939,25 @@ describe("Model", () => {
 							":v0": {"S": "Bob"}
 						},
 						"UpdateExpression": "SET #a0 = :v0",
+						"TableName": "User"
+					}
+				});
+			});
+
+			it("Should return correct result with $ADD for list append", async () => {
+				User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}});
+				new dynamoose.Table("User", [User]);
+				expect(await User.transaction.update({"id": 1}, {"$ADD": {"friends": "Tim"}})).toEqual({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {
+							"#a0": "friends"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"L": [{"S": "Tim"}]},
+							":v1": {"L": []}
+						},
+						"UpdateExpression": "SET #a0 = list_append(if_not_exists(#a0, :v1), :v0)",
 						"TableName": "User"
 					}
 				});
