@@ -608,6 +608,8 @@ export interface ItemObjectFromSchemaSettings {
 	forceDefault?: boolean;
 	customTypesDynamo?: boolean;
 	validate?: boolean;
+	// `false` runs only the attribute validators, for a caller that runs the schema's own `validate` itself (`Model.update` runs it once with the key and every attribute it sets).
+	schemaValidate?: boolean;
 	required?: boolean | "nested";
 	enum?: boolean;
 	populate?: boolean;
@@ -822,7 +824,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 			}
 		}));
 		const schemaValidator = schema.getInternalProperties(internalProperties).settings.validate;
-		if (schemaValidator) {
+		if (schemaValidator && settings.schemaValidate !== false) {
 			const result = await schemaValidator(returnObject);
 			if (!result) {
 				throw new Error.ValidationError(`${JSON.stringify(returnObject)} had a schema validation error when trying to save the item.`);

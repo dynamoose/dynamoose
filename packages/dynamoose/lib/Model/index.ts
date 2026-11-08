@@ -717,7 +717,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		let index = 0;
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
 			const updateTypes = [
-				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
+				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "schemaValidate": false, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 				{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
 				{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}},
 				{"name": "$DELETE", "objectFromSchemaSettings": {"defaults": true}}
@@ -728,6 +728,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
 			}
 
+			// The values the update sets (`$SET`), as sent to DynamoDB. The schema's `validate` is called once with them and the key, since each attribute is converted on its own.
+			const setAttributes: ObjectType = {};
 			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
 				const accumulator = await accumulatorPromise;
 				let value = updateObj[key];
@@ -755,6 +757,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
 						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
+					}
+					if (updateType.name === "$SET" && subValue !== undefined && subValue !== dynamooseUndefined) {
+						setAttributes[subKey] = subValue;
 					}
 
 					if (subValue === dynamooseUndefined || subValue === undefined) {
@@ -821,6 +826,15 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 				return obj;
 			})()));
+
+			// The schema's `validate` can't see the stored item, so it gets the key and the attributes the update sets. An update that only adds to or removes attributes isn't validated, as it sets no value.
+			const schemaValidator = schema.getInternalProperties(internalProperties).settings.validate;
+			if (schemaValidator && Object.keys(setAttributes).length > 0) {
+				const item = {...await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj), ...setAttributes};
+				if (!await schemaValidator(item)) {
+					throw new CustomError.ValidationError(`${JSON.stringify(item)} had a schema validation error when trying to save the item.`);
+				}
+			}
 
 			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
 				return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
