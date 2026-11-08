@@ -60,6 +60,52 @@ describe("Schema", () => {
 		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": {"a1": Date}, "updatedAt": {"b1": Date}}}).getInternalProperties(internalProperties).settings).toThrow("Timestamp attributes must not be defined in schema.");
 	});
 
+	describe("updatedAt timestamp as a table key", () => {
+		it("Should throw error if an updatedAt timestamp is the rangeKey", () => {
+			expect(() => new dynamoose.Schema({"id": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "rangeKey": true}}}})).toThrow("The updatedAt timestamp attribute \"updatedAt\" must not be a hashKey or rangeKey.");
+		});
+
+		it("Should throw error if an updatedAt timestamp is the hashKey", () => {
+			expect(() => new dynamoose.Schema({"name": String}, {"timestamps": {"updatedAt": {"modified": {"type": Date, "hashKey": true}}}})).toThrow("The updatedAt timestamp attribute \"modified\" must not be a hashKey or rangeKey.");
+		});
+
+		it("Should throw error if one of several updatedAt timestamps is a key", () => {
+			expect(() => new dynamoose.Schema({"id": String}, {"timestamps": {"createdAt": "createdAt", "updatedAt": {"updated": Date, "modified": {"type": Date, "rangeKey": true}}}})).toThrow("The updatedAt timestamp attribute \"modified\" must not be a hashKey or rangeKey.");
+		});
+
+		it("Should throw error if an updatedAt timestamp with a storage setting is the rangeKey", () => {
+			expect(() => new dynamoose.Schema({"id": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": {"value": Date, "settings": {"storage": "iso"}}, "rangeKey": true}}}})).toThrow("The updatedAt timestamp attribute \"updatedAt\" must not be a hashKey or rangeKey.");
+		});
+
+		it("Should not throw error if an updatedAt timestamp is a global index key", () => {
+			expect(() => new dynamoose.Schema({"id": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "index": {"name": "byUpdatedAt", "type": "global"}}}}})).not.toThrow();
+		});
+
+		it("Should not throw error if an updatedAt timestamp is a global index range key", () => {
+			expect(() => new dynamoose.Schema({"id": String, "status": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "index": {"name": "byStatus", "type": "global", "hashKey": "status", "rangeKey": "updatedAt"}}}}})).not.toThrow();
+		});
+
+		it("Should not throw error if an updatedAt timestamp is a local index key", () => {
+			expect(() => new dynamoose.Schema({"id": String, "type": {"type": String, "rangeKey": true}}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "index": {"name": "byUpdatedAt", "type": "local"}}}}})).not.toThrow();
+		});
+
+		it("Should not throw error if a createdAt timestamp is the rangeKey", () => {
+			expect(() => new dynamoose.Schema({"id": String}, {"timestamps": {"createdAt": {"createdAt": {"type": Date, "rangeKey": true}}, "updatedAt": "updatedAt"}})).not.toThrow();
+		});
+
+		it("Should not throw error if a createdAt timestamp is the hashKey", () => {
+			expect(() => new dynamoose.Schema({"name": String}, {"timestamps": {"createdAt": {"createdAt": {"type": Date, "hashKey": true}}, "updatedAt": "updatedAt"}})).not.toThrow();
+		});
+
+		it("Should not throw error for timestamps set to true", () => {
+			expect(() => new dynamoose.Schema({"id": String}, {"timestamps": true})).not.toThrow();
+		});
+
+		it("Should not throw error for a nested schema with timestamps", () => {
+			expect(() => new dynamoose.Schema({"id": String, "address": new dynamoose.Schema({"street": String}, {"timestamps": true})})).not.toThrow();
+		});
+	});
+
 	it("Should throw error if passing multiple schema elements into array", () => {
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [String, Number]}})).toThrow("You must only pass one element into schema array.");
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).toThrow("You must only pass one element into schema array.");

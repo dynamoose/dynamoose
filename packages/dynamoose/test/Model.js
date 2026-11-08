@@ -55,6 +55,11 @@ describe("Model", () => {
 			expect(() => dynamoose.model("User", [{"id": String}, {"id2": String}])).toThrow("hashKey's for all schema's must match.");
 		});
 
+		it("Should throw error and not register the model if a schema's updatedAt timestamp is a key", () => {
+			expect(() => dynamoose.model("Order", [new dynamoose.Schema({"id": String}, {"timestamps": true}), new dynamoose.Schema({"id": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "rangeKey": true}}}})])).toThrow("The updatedAt timestamp attribute \"updatedAt\" must not be a hashKey or rangeKey.");
+			expect(() => dynamoose.model("Order")).toThrow(CustomError.MissingSchemaError);
+		});
+
 		it("Should throw error if rangeKey's don't match for all schema's", () => {
 			expect(() => dynamoose.model("User", [{"id": String, "rangeKey": {"type": String, "rangeKey": true}}, {"id": String, "rangeKey2": {"type": String, "rangeKey": true}}])).toThrow("rangeKey's for all schema's must match.");
 		});
