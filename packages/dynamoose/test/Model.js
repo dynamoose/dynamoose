@@ -655,6 +655,18 @@ describe("Model", () => {
 					expect(user.hello).toEqual("world");
 				});
 
+				it.each([
+					["inside an object attribute", (schema) => ({"info": {"type": Object, "schema": {"address": schema}}}), {"info": {"M": {"address": {"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}}}}, {"info": {"address": {"street": "Main", "floor": 2}}}],
+					["that is the schema of an object attribute", (schema) => ({"address": {"type": Object, "schema": schema}}), {"address": {"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}}, {"address": {"street": "Main", "floor": 2}}],
+					["in a list", (schema) => ({"addresses": {"type": Array, "schema": [schema]}}), {"addresses": {"L": [{"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}, {"M": {"street": {"S": "Side"}, "floor": {"N": "3"}}}]}}, {"addresses": [{"street": "Main", "floor": 2}, {"street": "Side", "floor": 3}]}]
+				])("Should return the unknown properties a Schema %s allows with saveUnknown", async (name, definition, storedItem, expectedItem) => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, ...definition(new dynamoose.Schema({"street": String}, {"saveUnknown": true}))}));
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, ...storedItem}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user.toJSON()).toEqual({"id": 1, ...expectedItem});
+				});
+
 				it("Should return object with correct values for string set", async () => {
 					User = dynamoose.model("User", {"id": Number, "friends": {"type": Set, "schema": [String]}});
 					new dynamoose.Table("User", [User]);
@@ -3324,6 +3336,38 @@ describe("Model", () => {
 							"names": {"#a0": "updatedAt", "#a1": "name"},
 							"expression": "SET #a0 = :v0, #a1 = :v1",
 							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "a nested schema inside an object attribute",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "info": {"type": Object, "schema": {"address": address()}}}, {"timestamps": true}),
+							"update": {"name": "Charlie"},
+							"names": {"#a0": "updatedAt", "#a1": "name"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "a nested schema that is the schema of an object attribute",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "address": {"type": Object, "schema": address()}}, {"timestamps": true}),
+							"update": {"name": "Charlie"},
+							"names": {"#a0": "updatedAt", "#a1": "name"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "an update that sets an object attribute with a nested schema",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "info": {"type": Object, "schema": {"address": address()}}}, {"timestamps": true}),
+							"update": {"info": {"address": {"street": "Main Street"}}},
+							"names": {"#a0": "updatedAt", "#a1": "info"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"M": {"address": {"M": {"street": {"S": "Main Street"}}}}}}
+						},
+						{
+							"description": "an update that sets a list of nested schemas",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "addresses": {"type": Array, "schema": [address()]}}, {"timestamps": true}),
+							"update": {"addresses": [{"street": "Main Street"}]},
+							"names": {"#a0": "updatedAt", "#a1": "addresses"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"L": [{"M": {"street": {"S": "Main Street"}}}]}}
 						},
 						{
 							"description": "an update with only $ADD",

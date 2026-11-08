@@ -1767,6 +1767,131 @@ describe("Item", () => {
 					}]);
 					expect(finishedSavingUser).toEqual(true);
 				});
+
+				describe("Nested Schema inside an attribute", () => {
+					const addressSchema = (settings) => new dynamoose.Schema({"street": String}, settings);
+					// Every timestamp of one save has the same value, within the time of the call.
+					const expectStamps = (stamps, before, after) => {
+						expect(new Set(stamps).size).toEqual(1);
+						expect(parseInt(stamps[0])).toBeWithinRange(before, after);
+					};
+
+					it("Should set the timestamps of a Schema inside an object attribute", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "info": {"type": Object, "schema": {"address": addressSchema({"timestamps": true})}}}, {"timestamps": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "info": {"address": {"street": "Main"}}});
+
+						const before = Date.now();
+						await callType.func(user).bind(user)();
+						const after = Date.now();
+						const stamp = {"N": expect.stringMatching(/^\d+$/)};
+						expect(putParams).toEqual([{
+							"Item": {
+								"id": {"N": "1"},
+								"info": {"M": {"address": {"M": {"street": {"S": "Main"}, "createdAt": stamp, "updatedAt": stamp}}}},
+								"createdAt": stamp,
+								"updatedAt": stamp
+							},
+							"TableName": "User"
+						}]);
+						const {Item} = putParams[0];
+						expectStamps([Item.createdAt.N, Item.updatedAt.N, Item.info.M.address.M.createdAt.N, Item.info.M.address.M.updatedAt.N], before, after);
+					});
+
+					it("Should set the timestamps of a Schema that is the schema of an object attribute", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": {"type": Object, "schema": addressSchema({"timestamps": true})}}, {"timestamps": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "address": {"street": "Main"}});
+
+						const before = Date.now();
+						await callType.func(user).bind(user)();
+						const after = Date.now();
+						const stamp = {"N": expect.stringMatching(/^\d+$/)};
+						expect(putParams).toEqual([{
+							"Item": {
+								"id": {"N": "1"},
+								"address": {"M": {"street": {"S": "Main"}, "createdAt": stamp, "updatedAt": stamp}},
+								"createdAt": stamp,
+								"updatedAt": stamp
+							},
+							"TableName": "User"
+						}]);
+						const {Item} = putParams[0];
+						expectStamps([Item.createdAt.N, Item.updatedAt.N, Item.address.M.createdAt.N, Item.address.M.updatedAt.N], before, after);
+					});
+
+					it("Should set the timestamps of every element of a list of Schemas", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "addresses": {"type": Array, "schema": [addressSchema({"timestamps": true})]}}, {"timestamps": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "addresses": [{"street": "Main"}, {"street": "Side"}]});
+
+						const before = Date.now();
+						await callType.func(user).bind(user)();
+						const after = Date.now();
+						const stamp = {"N": expect.stringMatching(/^\d+$/)};
+						expect(putParams).toEqual([{
+							"Item": {
+								"id": {"N": "1"},
+								"addresses": {"L": [
+									{"M": {"street": {"S": "Main"}, "createdAt": stamp, "updatedAt": stamp}},
+									{"M": {"street": {"S": "Side"}, "createdAt": stamp, "updatedAt": stamp}}
+								]},
+								"createdAt": stamp,
+								"updatedAt": stamp
+							},
+							"TableName": "User"
+						}]);
+						const {Item} = putParams[0];
+						expectStamps([Item.createdAt.N, Item.updatedAt.N, ...Item.addresses.L.flatMap((address) => [address.M.createdAt.N, address.M.updatedAt.N])], before, after);
+					});
+
+					it("Should not add a list of Schemas with timestamps that the item doesn't have", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "addresses": {"type": Array, "schema": [addressSchema({"timestamps": true})]}}, {"timestamps": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1});
+
+						await callType.func(user).bind(user)();
+						expect(putParams).toEqual([{
+							"Item": {
+								"id": {"N": "1"},
+								"createdAt": {"N": expect.stringMatching(/^\d+$/)},
+								"updatedAt": {"N": expect.stringMatching(/^\d+$/)}
+							},
+							"TableName": "User"
+						}]);
+					});
+
+					it("Should throw a type error for an element of a list of Schemas with timestamps that isn't an object", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "addresses": {"type": Array, "schema": [addressSchema({"timestamps": true})]}}, {"timestamps": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "addresses": ["Main"]});
+
+						await expect(callType.func(user).bind(user)()).rejects.toEqual(new CustomError.TypeMismatch("Expected addresses.0 to be of type object, instead found type string."));
+						expect(putParams).toEqual([]);
+					});
+
+					it.each([
+						["inside an object attribute", (schema) => ({"info": {"type": Object, "schema": {"address": schema}}}), {"info": {"address": {"street": "Main", "floor": 2}}}, {"info": {"M": {"address": {"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}}}}],
+						["that is the schema of an object attribute", (schema) => ({"address": {"type": Object, "schema": schema}}), {"address": {"street": "Main", "floor": 2}}, {"address": {"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}}],
+						["in a list", (schema) => ({"addresses": {"type": Array, "schema": [schema]}}), {"addresses": [{"street": "Main", "floor": 2}, {"street": "Side", "floor": 3}]}, {"addresses": {"L": [{"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}, {"M": {"street": {"S": "Side"}, "floor": {"N": "3"}}}]}}]
+					])("Should save the unknown properties a Schema %s allows with saveUnknown", async (name, definition, item, expectedItem) => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, ...definition(addressSchema({"saveUnknown": true}))}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, ...item});
+
+						await callType.func(user).bind(user)();
+						expect(putParams).toEqual([{
+							"Item": {"id": {"N": "1"}, ...expectedItem},
+							"TableName": "User"
+						}]);
+					});
+				});
 			});
 		});
 	});
