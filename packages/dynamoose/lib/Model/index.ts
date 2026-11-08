@@ -566,8 +566,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
 			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[table.getInternalProperties(internalProperties).name] ? response.UnprocessedItems[this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name] : [];
 			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item.PutRequest.Item)));
+			const keyProperties = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean) as string[];
 			return items.reduce((result: {unprocessedItems: ObjectType[]}, item) => {
-				const unprocessedItem = tmpResultUnprocessed.find((searchItem) => Object.keys(item).every((keyProperty) => utils.object.equals(searchItem[keyProperty], item[keyProperty])));
+				const unprocessedItem = tmpResultUnprocessed.find((searchItem) => keyProperties.every((keyProperty) => utils.object.equals(searchItem[keyProperty], item[keyProperty])));
 				if (unprocessedItem) {
 					result.unprocessedItems.push(unprocessedItem);
 				}
