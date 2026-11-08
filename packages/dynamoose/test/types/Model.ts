@@ -2,6 +2,8 @@
 
 import * as dynamoose from "../../dist";
 import {Item} from "../../dist/Item";
+import {ModelItemConstructor} from "../../dist/General";
+import {UpdatePartial, ModelGetSettings, ModelDeleteSettings, ModelBatchPutSettings, ModelUpdateSettings, ModelBatchGetItemsResponse, ModelBatchGetSettings, ModelBatchDeleteSettings} from "../../dist/Model";
 import {IndexType} from "../../dist/Schema";
 
 // @ts-expect-error
@@ -118,3 +120,30 @@ UserTypedModel.update({"id": "foo"}, {
 UserTypedModel.update({"id": "foo"}, {
 	"$REMOVE":{"age":null}
 });
+
+// Exported setting and response types can be declared outside the method call
+const shouldSucceedWithExportedModelGetSettings: ModelGetSettings = {"attributes": ["name"], "consistent": true};
+const shouldPassGetWithExportedSettings = UserTypedModel.get({"id": "foo"}, shouldSucceedWithExportedModelGetSettings);
+const shouldSucceedWithExportedModelDeleteSettings: ModelDeleteSettings = {"condition": new dynamoose.Condition("age").gt(1)};
+const shouldPassDeleteWithExportedSettings = UserTypedModel.delete({"id": "foo"}, shouldSucceedWithExportedModelDeleteSettings);
+const shouldSucceedWithExportedModelBatchPutSettings: ModelBatchPutSettings = {"return": "response"};
+const shouldPassBatchPutWithExportedSettings = UserTypedModel.batchPut([{"id": "foo"}], shouldSucceedWithExportedModelBatchPutSettings);
+const shouldSucceedWithExportedModelUpdateSettings: ModelUpdateSettings = {"returnValues": "ALL_NEW"};
+const shouldPassUpdateWithExportedSettings = UserTypedModel.update({"id": "foo"}, {"name": "bar"}, shouldSucceedWithExportedModelUpdateSettings);
+const shouldSucceedWithExportedModelBatchGetSettings: ModelBatchGetSettings = {"attributes": ["name"]};
+const shouldPassBatchGetWithExportedSettings: Promise<ModelBatchGetItemsResponse<User>> = UserTypedModel.batchGet([{"id": "foo"}], shouldSucceedWithExportedModelBatchGetSettings);
+const shouldSucceedWithExportedModelBatchDeleteSettings: ModelBatchDeleteSettings = {"return": "response"};
+const shouldPassBatchDeleteWithExportedSettings = UserTypedModel.batchDelete([{"id": "foo"}], shouldSucceedWithExportedModelBatchDeleteSettings);
+const shouldSucceedWithExportedModelItemConstructor: ModelItemConstructor<User> = UserTypedModel;
+const shouldReturnTypedItemFromExportedModelItemConstructor: User = new shouldSucceedWithExportedModelItemConstructor({"id": "foo"});
+
+// An update object built step by step can mix plain attributes and several operators
+const shouldSucceedWithMixedUpdateObject: UpdatePartial<User> = {};
+shouldSucceedWithMixedUpdateObject.name = "bar";
+shouldSucceedWithMixedUpdateObject.$SET = {"friends": ["baz"]};
+shouldSucceedWithMixedUpdateObject.$ADD = {"age": 1};
+shouldSucceedWithMixedUpdateObject.$REMOVE = ["nickname"];
+const shouldPassUpdateWithMixedUpdateObject = UserTypedModel.update({"id": "foo"}, shouldSucceedWithMixedUpdateObject);
+// Operator values are still checked against the item type
+// @ts-expect-error
+UserTypedModel.update({"id": "foo"}, {"$SET": {"name": "bar"}, "$ADD": {"age": "1"}});

@@ -14,7 +14,7 @@ export type KeyObject = {[attribute: string]: string | number};
 // An item representing a DynamoDB key
 export type InputKey = string | number | KeyObject;
 
-interface ModelItemConstructor<T extends Item> {
+export interface ModelItemConstructor<T extends Item> {
 	/**
 	 * In order to create a new item you just pass in your object into an instance of your model.
 	 *
