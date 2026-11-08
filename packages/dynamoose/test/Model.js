@@ -4333,6 +4333,99 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Aliases on a model with several schemas", () => {
+		// An item is matched to a schema by its attributes, including ones named by an alias.
+		let Shape, requests;
+		const stored = {"id": {"S": "x"}, "b": {"S": "bb"}, "d": {"S": "dd"}};
+		beforeEach(() => {
+			requests = [];
+			Shape = dynamoose.model("Shape", [
+				new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "a": String}),
+				new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "b": String, "d": {"type": String, "alias": "dee"}})
+			]);
+			new dynamoose.Table("Shape", [Shape], {"create": false, "waitForActive": false});
+			dynamoose.aws.ddb.set({
+				"getItem": async (request) => {
+					requests.push(request);
+					return {"Item": stored};
+				}
+			});
+		});
+		afterEach(() => {
+			dynamoose.aws.ddb.revert();
+		});
+
+		describe("Read results", () => {
+			it("Should return an attribute only the second schema defines by its alias from Model.get", async () => {
+				const item = await Shape.get("x");
+				expect(item.toJSON()).toEqual({"id": "x", "b": "bb", "dee": "dd"});
+			});
+
+			[
+				["query", () => Shape.query("id").eq("x").exec().then((items) => items[0])],
+				["scan", () => Shape.scan().exec().then((items) => items[0])]
+			].forEach(([name, read]) => {
+				it(`Should return it from ${name}`, async () => {
+					dynamoose.aws.ddb.set({
+						"query": async () => ({"Items": [stored]}),
+						"scan": async () => ({"Items": [stored]}),
+						"batchGetItem": async () => ({"Responses": {"Shape": [stored]}, "UnprocessedKeys": {}}),
+						"transactGetItems": async () => ({"Responses": [{"Item": stored}]}),
+						"updateItem": async () => ({"Attributes": stored})
+					});
+					const item = await read();
+					expect(item.toJSON()).toEqual({"id": "x", "b": "bb", "dee": "dd"});
+				});
+			});
+		});
+
+		describe("Write requests", () => {
+			const input = {"id": "x", "b": "bb", "dee": "dd"};
+			[
+				["item.save", () => new Shape(input).save({"return": "request"}).then((request) => request.Item)],
+				["Model.create", () => Shape.create(input, {"return": "request"}).then((request) => request.Item)],
+				["Model.batchPut", () => Shape.batchPut([input], {"return": "request"}).then((request) => request.RequestItems.Shape[0].PutRequest.Item)],
+				["Model.transaction.create", () => Shape.transaction.create(input).then((request) => request.Put.Item)]
+			].forEach(([name, write]) => {
+				it(`Should send the attribute under its name and keep the schema's other attributes with ${name}`, async () => {
+					expect(await write()).toEqual(stored);
+				});
+			});
+
+			it("Should resolve Model.create with every attribute, as a model with one schema does", async () => {
+				// Model.create resolves with the attribute's name, not its alias, on a model with one schema too.
+				dynamoose.aws.ddb.set({"putItem": async () => ({})});
+				const item = await Shape.create(input);
+				expect(item.toJSON()).toEqual({"id": "x", "b": "bb", "d": "dd"});
+			});
+		});
+
+		describe("Guards", () => {
+			it("Should read and write an item of the first schema as before", async () => {
+				dynamoose.aws.ddb.set({"getItem": async () => ({"Item": {"id": {"S": "x"}, "a": {"S": "aa"}}})});
+				expect((await Shape.get("x")).toJSON()).toEqual({"id": "x", "a": "aa"});
+				expect((await new Shape({"id": "x", "a": "aa"}).save({"return": "request"})).Item).toEqual({"id": {"S": "x"}, "a": {"S": "aa"}});
+			});
+
+			it("Should write an attribute named by its name", async () => {
+				expect((await new Shape({"id": "x", "b": "bb", "d": "dd"}).save({"return": "request"})).Item).toEqual(stored);
+			});
+
+			it("Should throw when an item names an attribute both by its alias and by its name", async () => {
+				await expect(new Shape({"id": "x", "b": "bb", "d": "dd", "dee": "ee"}).save({"return": "request"})).rejects.toEqual(new CustomError.InvalidParameter("Cannot map attribute dee to d because both are defined"));
+			});
+
+			it("Should keep the first schema for an item both schemas describe", async () => {
+				const Tied = dynamoose.model("Tied", [
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "kind": {"type": String, "alias": "type"}, "x": {"type": String, "default": "first"}}),
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "kind": {"type": String, "alias": "type"}, "y": {"type": String, "default": "second"}})
+				]);
+				new dynamoose.Table("Tied", [Tied], {"create": false, "waitForActive": false});
+				expect((await new Tied({"id": "x", "type": "k"}).save({"return": "request"})).Item).toEqual({"id": {"S": "x"}, "kind": {"S": "k"}, "x": {"S": "first"}});
+			});
+		});
+	});
+
 	describe("model.delete()", () => {
 		let User, deleteItemParams, deleteItemFunction;
 		beforeEach(() => {

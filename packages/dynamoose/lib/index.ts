@@ -71,7 +71,7 @@ export = {
 	 * const cat = await CatModel.get(1);
 	 * ```
 	 *
-	 * You can also pass in an array of Schema instances or schema objects into the `schema` parameter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your item, and use that schema for all operations pertaining to that item. If no matching schema can be found, it will default to the first schema in the array.
+	 * You can also pass in an array of Schema instances or schema objects into the `schema` parameter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your item, and use that schema for all operations pertaining to that item. If no matching schema can be found, it will default to the first schema in the array. An attribute named by its `alias` (or `aliases` or `map` name) counts as that attribute when matching.
 	 *
 	 * :::note
 	 * If you use multiple schemas in one model, the hash & range keys must match for all schemas.
