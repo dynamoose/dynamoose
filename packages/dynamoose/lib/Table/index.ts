@@ -183,8 +183,8 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 					return Promise.reject(new CustomError.OtherError(`Table ${this.name} has not been initialized.`));
 				}
 
-				return internalPropertiesObject.ready ? Promise.resolve() : new Promise((resolve) => {
-					internalPropertiesObject.pendingTasks.push(resolve);
+				return internalPropertiesObject.ready ? Promise.resolve() : new Promise((resolve, reject) => {
+					internalPropertiesObject.pendingTasks.push({resolve, reject});
 				});
 			},
 			"models": models.map((model: any) => {
@@ -276,13 +276,20 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 					});
 				}, Promise.resolve());
 
-				await setupFlowPromise;
+				try {
+					await setupFlowPromise;
 
-				this.getInternalProperties(internalProperties).ready = true;
-				this.getInternalProperties(internalProperties).setupFlowRunning = false;
+					this.getInternalProperties(internalProperties).ready = true;
+					this.getInternalProperties(internalProperties).setupFlowRunning = false;
 
-				this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task());
-				this.getInternalProperties(internalProperties).pendingTasks = [];
+					this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task.resolve());
+					this.getInternalProperties(internalProperties).pendingTasks = [];
+				} catch (error) {
+					this.getInternalProperties(internalProperties).pendingTasks.forEach((task) => task.reject(error));
+					this.getInternalProperties(internalProperties).pendingTasks = [];
+
+					throw error;
+				}
 			}
 		});
 
