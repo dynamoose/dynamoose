@@ -43,6 +43,16 @@ describe("Schema lookup cache", () => {
 		expect(Object.keys(request.Item)).toEqual(["id", "ttl"]);
 	});
 
+	it("Should add the ttl attribute after a lookup when the model attaches to an existing table", () => {
+		const Cat = model("CacheAttachCat", new dynamoose.Schema({"id": String}), {"tableName": "CacheAttachTable"});
+		new dynamoose.Table("CacheAttachTable", [Cat], {"expires": 1000, "initialize": false});
+		const schema = new dynamoose.Schema({"id": String});
+		expect(schema.attributes()).toEqual(["id"]);
+
+		model("CacheAttachDog", schema, {"tableName": "CacheAttachTable"});
+		expect(schema.attributes()).toEqual(["id", "ttl"]);
+	});
+
 	it("Should add the ttl attribute when the model's own table is made after the lookups", async () => {
 		const schema = new dynamoose.Schema({"id": String});
 		const Cat = model("CacheLazyCat", schema, {"expires": {"ttl": 1000, "attribute": "expiresAt"}});
