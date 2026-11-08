@@ -610,6 +610,8 @@ export interface ItemObjectFromSchemaSettings {
 	validate?: boolean;
 	// `false` runs only the attribute validators, for a caller that runs the schema's own `validate` itself (`Model.update` runs it once with the key and every attribute it sets).
 	schemaValidate?: boolean;
+	// `false` runs only the attribute `set` and `get` functions, for a caller that runs the schema's own `set` itself (`Model.update` runs it once with the key and every attribute it sets).
+	schemaModifiers?: boolean;
 	required?: boolean | "nested";
 	enum?: boolean;
 	populate?: boolean;
@@ -794,7 +796,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 				}
 			}));
 			const schemaModifier = schema.getInternalProperties(internalProperties).settings[modifier];
-			if (schemaModifier) {
+			if (schemaModifier && settings.schemaModifiers !== false) {
 				returnObject = await schemaModifier(returnObject);
 			}
 		}));

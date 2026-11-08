@@ -2,6 +2,10 @@
 
 ---
 
+### 🚨 Breaking Changes 🚨
+
+- `Model.update` and `Model.transaction.update` now call the schema's `set` setting once per update with the key and the attributes the update sets, and write what it returns. Before, it was called once for each attribute with only that attribute, so a function that read the key or another attribute got it missing, and an attribute it added was never written. Now an attribute it adds is set, an attribute it leaves out isn't written, and changing a key attribute throws `InvalidParameter`. The schema's `validate` gets what `set` returns. An update that only uses `$ADD`, `$REMOVE` or `$DELETE` doesn't call it
+
 ### Maintenance
 
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
