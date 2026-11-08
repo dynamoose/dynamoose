@@ -382,9 +382,10 @@ describe("Query", () => {
 
 				it("Should send correct request on query.exec using range key as beginsWith comparison", async () => {
 					queryPromiseResolver = () => ({"Items": []});
-					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"type": "global", "rangeKey": "age"}}, "age": Number});
+					// DynamoDB doesn't allow begins_with on a Number sort key, so the range key is a String.
+					Model = dynamoose.model("Cat", {"id": String, "name": {"type": String, "index": {"type": "global", "rangeKey": "age"}}, "age": String});
 					new dynamoose.Table("Cat", [Model]);
-					await callType.func(Model.query("name").eq("Charlie").where("age").beginsWith(10).exec).bind(Model.query("name").eq("Charlie").where("age").beginsWith(10))();
+					await callType.func(Model.query("name").eq("Charlie").where("age").beginsWith("10").exec).bind(Model.query("name").eq("Charlie").where("age").beginsWith("10"))();
 					expect(queryParams).toEqual({
 						"TableName": "Cat",
 						"IndexName": "nameGlobalIndex",
@@ -394,7 +395,7 @@ describe("Query", () => {
 						},
 						"ExpressionAttributeValues": {
 							":qhv": {"S": "Charlie"},
-							":qrv": {"N": "10"}
+							":qrv": {"S": "10"}
 						},
 						"KeyConditionExpression": "#qha = :qhv AND begins_with (#qra, :qrv)"
 					});

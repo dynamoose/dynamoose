@@ -80,26 +80,26 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		});
 		return result;
 	}
+	// This function returns whether a value is one attribute value in DynamoDB's format, such as `{"S": "Bob"}` or `{"L": [{"N": "1"}]}`.
+	static isDynamoValue (value: any): boolean {
+		if (typeof value === "undefined" || value === null) {
+			return false;
+		}
+		const keys = Object.keys(value);
+		const key = keys[0];
+		const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) && !(value[key] instanceof Uint8Array) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
+		const {Schema} = require("./Schema");
+		const attributeType = Schema.attributeTypes.findDynamoDBType(key);
+		return Boolean(typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet));
+	}
 	// This function will return null if it's unknown if it is a Dynamo object (ex. empty object). It will return true if it is a Dynamo object and false if it's not.
 	static isDynamoObject (object: ObjectType, recursive?: boolean): boolean | null {
-		function isValid (value): boolean {
-			if (typeof value === "undefined" || value === null) {
-				return false;
-			}
-			const keys = Object.keys(value);
-			const key = keys[0];
-			const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) && !(value[key] instanceof Uint8Array) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
-			const {Schema} = require("./Schema");
-			const attributeType = Schema.attributeTypes.findDynamoDBType(key);
-			return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
-		}
-
 		const keys = Object.keys(object);
 		const values = Object.values(object);
 		if (keys.length === 0) {
 			return null;
 		} else {
-			return recursive ? isValid(object) : values.every((value) => isValid(value));
+			return recursive ? Item.isDynamoValue(object) : values.every((value) => Item.isDynamoValue(value));
 		}
 	}
 
@@ -440,6 +440,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 		const localSettings: ItemSaveSettings = settings;
 		const paramsPromise = this.toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true}).then(async (item) => {
+			await this.getInternalProperties(internalProperties).model.getInternalProperties(internalProperties).checkKeyAttributeValues(item, {"requireTableKey": true});
 			savedItem = item;
 			let putItemObj: DynamoDB.PutItemInput = {
 				"Item": item,
@@ -467,7 +468,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.PutItemInput, any> = callback as CallbackType<DynamoDB.PutItemInput, any>;
-				paramsPromise.then((result) => localCallback(null, result));
+				paramsPromise.then((result) => localCallback(null, result)).catch((error) => localCallback(error));
 				return;
 			} else {
 				return paramsPromise;

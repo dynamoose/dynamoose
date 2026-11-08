@@ -18,6 +18,14 @@ import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
+
+// DynamoDB rejects a request whose key, or a put whose item, has no value for a key attribute of the table, or has NULL or an empty string or binary value for one.
+const checkTableKeyValue = (attribute: string, value: DynamoDB.AttributeValue | undefined): void => {
+	const problem = utils.dynamoose.emptyKeyValueProblem(value);
+	if (problem) {
+		throw new CustomError.InvalidParameter(`The key attribute "${attribute}" ${problem}. DynamoDB needs a value for every key attribute of the table, and doesn't allow NULL or an empty string or binary value for one.`);
+	}
+};
 const {internalProperties} = Internal.General;
 
 type UpdatePartial<T> =
@@ -114,6 +122,7 @@ interface ModelInternalProperties {
 	options: TableOptionsOptional;
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
 	convertKeyToObject: (key: InputKey) => Promise<KeyObject>;
+	checkKeyAttributeValues: (values: {[attribute: string]: DynamoDB.AttributeValue}, settings: {requireTableKey: boolean}) => Promise<void>;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
 	schemaForObject: (object: ObjectType) => Schema;
 	dynamoPropertyForAttribute: (attribute: string) => Promise<string>;
@@ -222,14 +231,16 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				let keyObject: KeyObject;
 				const hashKey = this.getInternalProperties(internalProperties).getHashKey();
 				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true};
-				if (typeof key === "object") {
+				// `null` is the hash key value itself, not an object of key attributes, and the check below rejects it.
+				if (key !== null && typeof key === "object") {
 					// If we passed aliased attribute names, we need to get them back to the key names
 					const mappedKey = await this.Item.objectFromSchema(key, this, objectFromSchemaSettings);
 					const rangeKey = this.getInternalProperties(internalProperties).getRangeKey();
 					keyObject = {
 						[hashKey]: mappedKey[hashKey]
 					};
-					if (rangeKey && typeof mappedKey[rangeKey] !== "undefined" && mappedKey[rangeKey] !== null) {
+					// A `null` range key is kept, so the check below reports it as `null`.
+					if (rangeKey && typeof mappedKey[rangeKey] !== "undefined") {
 						keyObject[rangeKey] = mappedKey[rangeKey];
 					}
 				} else {
@@ -241,7 +252,27 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						[hashKey]: convertedKey[hashKey]
 					};
 				}
+				// DynamoDB rejects a key without a value for each key attribute, or with an empty string or binary value, so the request fails here, before it's sent.
+				([hashKey, this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean) as string[]).forEach((attribute) => {
+					const value = keyObject[attribute];
+					checkTableKeyValue(attribute, value === undefined ? undefined : this.Item.objectToDynamo(value, {"type": "value"}));
+				});
 				return keyObject;
+			},
+			// DynamoDB rejects a write that sets a key attribute, of the table or of an index, to NULL or an empty string or binary value, and a put without the table's key attributes. So the write fails here, before it's sent. An index key attribute can be left out, which leaves the item out of the index.
+			"checkKeyAttributeValues": async (values: {[attribute: string]: DynamoDB.AttributeValue}, settings: {requireTableKey: boolean}): Promise<void> => {
+				const {TableIndex, GlobalSecondaryIndexes = [], LocalSecondaryIndexes = []} = await this.getInternalProperties(internalProperties).getIndexes();
+				TableIndex.KeySchema.forEach(({AttributeName}) => {
+					if (settings.requireTableKey || values[AttributeName] !== undefined) {
+						checkTableKeyValue(AttributeName, values[AttributeName]);
+					}
+				});
+				[...GlobalSecondaryIndexes, ...LocalSecondaryIndexes].forEach(({IndexName, KeySchema}) => KeySchema.forEach(({AttributeName}) => {
+					const problem = values[AttributeName] === undefined ? undefined : utils.dynamoose.emptyKeyValueProblem(values[AttributeName]);
+					if (problem) {
+						throw new CustomError.InvalidParameter(`"${AttributeName}", a key attribute of the index "${IndexName}", ${problem}. DynamoDB doesn't allow NULL or an empty string or binary value for a key attribute of an index. Leave the attribute out to leave the item out of the index.`);
+					}
+				}));
 			},
 			"schemaCorrectnessScores": (object: ObjectType): number[] => {
 				const schemaCorrectnessScores: number[] = this.getInternalProperties(internalProperties).schemas.map((schema) => {
@@ -583,7 +614,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			"RequestItems": {
 				[table.getInternalProperties(internalProperties).name]: await Promise.all(items.map(async (item) => ({
 					"PutRequest": {
-						"Item": await new this.Item(item as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true})
+						"Item": await new this.Item(item as any).toDynamo({"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "saveUnknown": true, "combine": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"], "mapAttributes": true}).then(async (dynamoItem) => {
+							await this.getInternalProperties(internalProperties).checkKeyAttributeValues(dynamoItem, {"requireTableKey": true});
+							return dynamoItem;
+						})
 					}
 				})))
 			}
@@ -591,7 +625,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.BatchWriteItemInput, any> = callback as CallbackType<DynamoDB.BatchWriteItemInput, any>;
-				paramsPromise.then((result) => localCallback(null, result));
+				paramsPromise.then((result) => localCallback(null, result)).catch((error) => localCallback(error));
 				return;
 			} else {
 				return paramsPromise;
@@ -888,6 +922,15 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			});
 
 			returnObject.ExpressionAttributeValues = this.Item.objectToDynamo(returnObject.ExpressionAttributeValues);
+			// The top-level attributes the update sets (`#a0 = :v0`), to check the key attributes among them.
+			const setValues = returnObject.UpdateExpression.SET.reduce((values: {[attribute: string]: DynamoDB.AttributeValue}, expression: string) => {
+				const match = (/^(#a\d+) = (:v\d+)$/u).exec(expression);
+				if (match) {
+					values[returnObject.ExpressionAttributeNames[match[1]]] = returnObject.ExpressionAttributeValues[match[2]];
+				}
+				return values;
+			}, {});
+			await this.getInternalProperties(internalProperties).checkKeyAttributeValues(setValues, {"requireTableKey": false});
 			if (Object.keys(returnObject.ExpressionAttributeValues).length === 0) {
 				delete returnObject.ExpressionAttributeValues;
 			}
@@ -919,7 +962,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.UpdateItemInput, any> = callback as CallbackType<DynamoDB.UpdateItemInput, any>;
-				updateItemParamsPromise.then((params) => localCallback(null, params));
+				updateItemParamsPromise.then((params) => localCallback(null, params)).catch((error) => localCallback(error));
 				return;
 			} else {
 				return updateItemParamsPromise;
