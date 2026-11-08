@@ -390,6 +390,24 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
+### Nested paths
+
+An update key can be a path into a nested attribute, using dots for map keys and brackets for list indexes. Only the value at that path is written, and the rest of the attribute stays as it is in the database.
+
+```js
+await User.update({"id": 1}, {"address.city": "Madrid"});
+// SET address.city = "Madrid", the other keys of address are kept
+
+await User.update({"id": 1}, {"$SET": {"friends[0].name": "Tim"}, "$REMOVE": ["address.zip", "tags[2]"]});
+```
+
+A nested value goes through the schema of its path the same way a top-level value does (type check, `enum`, `validate`, `set`, custom types such as `Date` storage, and `default`/`required` of the nested attribute). Some rules depend on the whole parent object, so these cases are handled differently:
+
+- A nested key the schema does not declare, and `saveUnknown` does not cover, is skipped, as it would be if you wrote the whole parent. If every key of the update is skipped, the update throws.
+- If the parent has declared children and its own `set` or `validate` function, the nested write throws, because that function would only see part of the object. Write the whole parent instead.
+- A value that no definition of a multi-type parent accepts throws instead of removing the stored value.
+- `__proto__` and `constructor` are not allowed as nested key names.
+
 ## model.delete(key[, settings][, callback])
 
 You can use Model.delete to delete an item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
