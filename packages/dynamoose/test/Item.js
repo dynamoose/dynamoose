@@ -59,6 +59,10 @@ describe("Item", () => {
 				{
 					"input": {"id": 1, "name": "Charlie"},
 					"output": {"id": {"N": "1"}, "name": {"S": "Charlie"}}
+				},
+				{
+					"input": undefined,
+					"output": undefined
 				}
 			];
 
