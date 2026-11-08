@@ -1848,6 +1848,30 @@ describe("Item", () => {
 						expectStamps([Item.createdAt.N, Item.updatedAt.N, ...Item.addresses.L.flatMap((address) => [address.M.createdAt.N, address.M.updatedAt.N])], before, after);
 					});
 
+					it("Should set the timestamps of every element of a list of lists of Schemas", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "routes": {"type": Array, "schema": [{"type": Array, "schema": [addressSchema({"timestamps": true})]}]}}, {"timestamps": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "routes": [[{"street": "Main"}], [{"street": "Side"}, {"street": "High"}]]});
+
+						const before = Date.now();
+						await callType.func(user).bind(user)();
+						const after = Date.now();
+						const stamp = {"N": expect.stringMatching(/^\d+$/)};
+						const address = (street) => ({"M": {"street": {"S": street}, "createdAt": stamp, "updatedAt": stamp}});
+						expect(putParams).toEqual([{
+							"Item": {
+								"id": {"N": "1"},
+								"routes": {"L": [{"L": [address("Main")]}, {"L": [address("Side"), address("High")]}]},
+								"createdAt": stamp,
+								"updatedAt": stamp
+							},
+							"TableName": "User"
+						}]);
+						const {Item} = putParams[0];
+						expectStamps([Item.createdAt.N, Item.updatedAt.N, ...Item.routes.L.flatMap((route) => route.L.flatMap((stop) => [stop.M.createdAt.N, stop.M.updatedAt.N]))], before, after);
+					});
+
 					it("Should not add a list of Schemas with timestamps that the item doesn't have", async () => {
 						putItemFunction = () => Promise.resolve();
 						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "addresses": {"type": Array, "schema": [addressSchema({"timestamps": true})]}}, {"timestamps": true}));

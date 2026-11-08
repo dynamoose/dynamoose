@@ -523,7 +523,8 @@ function setTimestamp (object: any, path: string, value: string | number): void 
 		utils.object.set(object, path, value);
 		return;
 	}
-	const list = utils.object.get(object, parts.slice(0, listIndex).join("."));
+	// A `*` first, as for the inner list of a list of lists, means `object` is the list.
+	const list = listIndex === 0 ? object : utils.object.get(object, parts.slice(0, listIndex).join("."));
 	if (Array.isArray(list)) {
 		list.filter((element) => element && typeof element === "object").forEach((element) => setTimestamp(element, parts.slice(listIndex + 1).join("."), value));
 	}
