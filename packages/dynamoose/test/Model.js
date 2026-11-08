@@ -4333,6 +4333,219 @@ describe("Model", () => {
 		});
 	});
 
+	describe("model.update() with several schemas", () => {
+		// An update takes the rules of the schema that defines the most attributes it names, and the first schema on a tie.
+		let Shape;
+		beforeEach(() => {
+			Shape = dynamoose.model("Shape", [
+				new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "kind": String, "a": String}),
+				new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "kind": String, "b": {"type": String, "required": true}, "c": {"type": String, "default": "dflt"}, "d": String})
+			]);
+			new dynamoose.Table("Shape", [Shape], {"create": false, "waitForActive": false});
+		});
+
+		it("Should remove an attribute only the second schema defines when it is set to undefined", async () => {
+			const request = await Shape.update({"id": "x"}, {"d": undefined}, {"return": "request"});
+			expect(request).toEqual({
+				"Key": {"id": {"S": "x"}},
+				"TableName": "Shape",
+				"ReturnValues": "ALL_NEW",
+				"UpdateExpression": "REMOVE #a0",
+				"ExpressionAttributeNames": {"#a0": "d"}
+			});
+		});
+
+		it("Should set the default of an attribute only the second schema defines when it is set to undefined", async () => {
+			const request = await Shape.update({"id": "x"}, {"c": undefined}, {"return": "request"});
+			expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+			expect(request.ExpressionAttributeNames).toEqual({"#a0": "c"});
+			expect(request.ExpressionAttributeValues).toEqual({":v0": {"S": "dflt"}});
+		});
+
+		describe("Attributes named by an alias", () => {
+			let Aliased;
+			beforeEach(() => {
+				Aliased = dynamoose.model("Aliased", [
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "a": String}),
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "d": {"type": String, "alias": "dee"}, "b": {"type": String, "required": true, "alias": "bee"}})
+				]);
+				new dynamoose.Table("Aliased", [Aliased], {"create": false, "waitForActive": false});
+			});
+
+			[
+				["set by its alias", {"dee": "y"}, "SET #a0 = :v0", {":v0": {"S": "y"}}],
+				["set by its alias with $SET", {"$SET": {"dee": "y"}}, "SET #a0 = :v0", {":v0": {"S": "y"}}],
+				["set to undefined by its alias", {"dee": undefined}, "REMOVE #a0", undefined],
+				["removed by its alias with $REMOVE", {"$REMOVE": ["dee"]}, "REMOVE #a0", undefined]
+			].forEach(([name, update, updateExpression, values]) => {
+				it(`Should update an attribute ${name}`, async () => {
+					const request = await Aliased.update({"id": "x"}, update, {"return": "request"});
+					expect(request.UpdateExpression).toEqual(updateExpression);
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "d"});
+					expect(request.ExpressionAttributeValues).toEqual(values);
+				});
+			});
+
+			it("Should not read an update name like an Object.prototype property as an alias", async () => {
+				const request = await Aliased.update({"id": "x"}, {"constructor": "y", "$REMOVE": ["toString"]}, {"return": "request"});
+				expect(request.UpdateExpression).toEqual("REMOVE #a1 SET #a0 = :v0");
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "constructor", "#a1": "toString"});
+			});
+
+			it("Should update an attribute named by its alias when the key and the update are one object", async () => {
+				let request;
+				dynamoose.aws.ddb.set({"updateItem": (params) => {
+					request = params;
+					return Promise.resolve({"Attributes": {}});
+				}});
+				try {
+					await Aliased.update({"id": "x", "dee": "y"});
+				} finally {
+					dynamoose.aws.ddb.revert();
+				}
+				expect(request.Key).toEqual({"id": {"S": "x"}});
+				expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "d"});
+			});
+
+			it("Should apply the rules of the schema that has the alias", async () => {
+				await expect(Aliased.update({"id": "x"}, {"bee": undefined}, {"return": "request"})).rejects.toEqual(new CustomError.ValidationError("b is a required property but has no value when trying to save item"));
+			});
+		});
+
+		describe("An update with nothing to change", () => {
+			// DynamoDB rejects an empty UpdateExpression.
+			let requests, User;
+			beforeEach(() => {
+				requests = 0;
+				dynamoose.aws.ddb.set({
+					"updateItem": () => {
+						requests++;
+						return Promise.resolve({"Attributes": {}});
+					}
+				});
+				User = dynamoose.model("Person", {"id": String, "name": String});
+				new dynamoose.Table("Person", [User], {"create": false, "waitForActive": false});
+			});
+			afterEach(() => {
+				dynamoose.aws.ddb.revert();
+			});
+			const emptyError = new CustomError.InvalidParameter("The update has nothing to change. Every attribute it names is undefined and not in the schema, or it names none, and DynamoDB rejects an empty update.");
+
+			[
+				["an empty update", () => User.update({"id": "x"}, {})],
+				["an attribute not in the schema set to undefined", () => User.update({"id": "x"}, {"other": undefined})],
+				["the key alone in one object", () => User.update({"id": "x"})],
+				["an attribute no schema defines set to undefined on a model with several schemas", () => Shape.update({"id": "x"}, {"other": undefined})]
+			].forEach(([name, update]) => {
+				it(`Should reject before sending for ${name}`, async () => {
+					await expect(update()).rejects.toEqual(emptyError);
+					expect(requests).toEqual(0);
+				});
+			});
+
+			it("Should call back with the error", async () => {
+				const error = await new Promise((resolve) => User.update({"id": "x"}, {}, resolve));
+				expect(error).toEqual(emptyError);
+				expect(requests).toEqual(0);
+			});
+
+			it("Should reject for return request and Model.transaction.update", async () => {
+				await expect(User.update({"id": "x"}, {}, {"return": "request"})).rejects.toEqual(emptyError);
+				await expect(User.transaction.update({"id": "x"}, {})).rejects.toEqual(emptyError);
+			});
+
+			it("Should send an update that only sets the timestamps", async () => {
+				const Stamped = dynamoose.model("Stamped", new dynamoose.Schema({"id": String, "name": String}, {"timestamps": true}));
+				new dynamoose.Table("Stamped", [Stamped], {"create": false, "waitForActive": false});
+				await Stamped.update({"id": "x"}, {});
+				expect(requests).toEqual(1);
+			});
+		});
+
+		describe("Model.transaction.update", () => {
+			it("Should remove an attribute only the second schema defines when it is set to undefined", async () => {
+				const request = await Shape.transaction.update({"id": "x"}, {"d": undefined});
+				expect(request).toEqual({
+					"Update": {
+						"Key": {"id": {"S": "x"}},
+						"TableName": "Shape",
+						"UpdateExpression": "REMOVE #a0",
+						"ExpressionAttributeNames": {"#a0": "d"}
+					}
+				});
+			});
+
+			it("Should reject a required attribute only the second schema defines set to undefined", async () => {
+				await expect(Shape.transaction.update({"id": "x"}, {"b": undefined})).rejects.toEqual(new CustomError.ValidationError("b is a required property but has no value when trying to save item"));
+			});
+		});
+
+		describe("Rules for the whole schema", () => {
+			let Forced;
+			beforeEach(() => {
+				Forced = dynamoose.model("Forced", [
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "kind": String, "a": String}),
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "kind": String, "d": String, "e": {"type": String, "default": "forced", "forceDefault": true}})
+				]);
+				new dynamoose.Table("Forced", [Forced], {"create": false, "waitForActive": false});
+			});
+
+			it("Should apply the forced default of the second schema to an update of its attributes", async () => {
+				const request = await Forced.update({"id": "x"}, {"d": "y"}, {"return": "request"});
+				expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "d", "#a1": "e"});
+				expect(request.ExpressionAttributeValues).toEqual({":v0": {"S": "y"}, ":v1": {"S": "forced"}});
+			});
+
+			it("Should not apply it to an update of the first schema's attributes", async () => {
+				const request = await Forced.update({"id": "x"}, {"a": "y"}, {"return": "request"});
+				expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "a"});
+			});
+
+			it("Should keep the first schema when both define every attribute the update names", async () => {
+				const request = await Forced.update({"id": "x"}, {"kind": "y"}, {"return": "request"});
+				expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "kind"});
+			});
+		});
+
+		describe("A required attribute only the second schema defines", () => {
+			let requests;
+			beforeEach(() => {
+				requests = 0;
+				dynamoose.aws.ddb.set({
+					"updateItem": () => {
+						requests++;
+						return Promise.resolve({"Attributes": {}});
+					}
+				});
+			});
+			afterEach(() => {
+				dynamoose.aws.ddb.revert();
+			});
+			const requiredError = new CustomError.ValidationError("b is a required property but has no value when trying to save item");
+
+			[
+				["removed with $REMOVE", {"$REMOVE": ["b"]}],
+				["set to undefined", {"b": undefined}],
+				["set to undefined with $SET", {"$SET": {"b": undefined}}]
+			].forEach(([name, update]) => {
+				it(`Should reject before sending when it is ${name}`, async () => {
+					await expect(Shape.update({"id": "x"}, update)).rejects.toEqual(requiredError);
+					expect(requests).toEqual(0);
+				});
+
+				it(`Should call back with the error when it is ${name}`, async () => {
+					const error = await new Promise((resolve) => Shape.update({"id": "x"}, update, resolve));
+					expect(error).toEqual(requiredError);
+					expect(requests).toEqual(0);
+				});
+			});
+		});
+	});
+
 	describe("model.delete()", () => {
 		let User, deleteItemParams, deleteItemFunction;
 		beforeEach(() => {
