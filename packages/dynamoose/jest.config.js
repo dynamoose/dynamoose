@@ -4,7 +4,7 @@ module.exports = {
 	"testPathIgnorePatterns": ["test/_setup.js", "test/.eslintrc.js", "test/types/"],
 	"coverageReporters": ["json", "lcov", "text", "html"],
 	// The equivalence harness and the benchmark schemas are test tooling, not library code. The
-	// suites load them, so without this they are instrumented and counted.
-	"coveragePathIgnorePatterns": ["<rootDir>/equivalence/", "<rootDir>/benchmarks/"],
+	// suites load them, so without this they are instrumented and counted. "/node_modules/" is Jest's default.
+	"coveragePathIgnorePatterns": ["/node_modules/", "<rootDir>/equivalence/", "<rootDir>/benchmarks/"],
 	"transformIgnorePatterns": ["dist/.+\\.js", "test/.+\\.js"]
 };
