@@ -89,6 +89,17 @@ describe("Schema", () => {
 			expect(definition).toEqual({"id": String, "name": String});
 		});
 
+		it.each([
+			["without a prototype", () => Object.create(null)],
+			["from another realm", () => require("vm").runInNewContext("({})")]
+		])("Should not modify a schema definition object and a settings object %s", (name, makeObject) => {
+			const definition = Object.assign(makeObject(), {"id": String, "name": String});
+			const settings = Object.assign(makeObject(), {"timestamps": true});
+			new dynamoose.Schema(definition, settings);
+			expect(Object.keys(definition)).toEqual(["id", "name"]);
+			expect(settings.timestamps).toEqual(true);
+		});
+
 		it("Should not replace a nested Schema in an object in the schema definition", () => {
 			const address = new dynamoose.Schema({"street": String});
 			const definition = {"id": String, "info": {"type": Object, "schema": {"address": address}}};

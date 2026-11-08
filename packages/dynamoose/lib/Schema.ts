@@ -847,7 +847,9 @@ function copyPlainObjects<T> (value: T): T {
 	if (Array.isArray(value)) {
 		return value.map(copyPlainObjects) as unknown as T;
 	}
-	if (value && Object.getPrototypeOf(value) === Object.prototype) {
+	// A plain object has no prototype, or `Object.prototype` of any realm (whose own prototype is `null`). Class instances, such as a nested Schema, have a longer prototype chain.
+	const prototype = value && typeof value === "object" ? Object.getPrototypeOf(value) : undefined;
+	if (prototype === null || prototype && Object.getPrototypeOf(prototype) === null) {
 		return Object.keys(value).reduce((copy, key) => {
 			copy[key] = copyPlainObjects(value[key]);
 			return copy;
