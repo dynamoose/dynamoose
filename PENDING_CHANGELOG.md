@@ -13,6 +13,7 @@
 
 ### Maintenance
 
+- Built every stored condition comparison with one function, so each holds exactly one attribute, which the code reading them relies on. This replaces a TODO about comparisons that could hold several attributes; no behavior changes
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
 
 ### Features

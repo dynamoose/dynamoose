@@ -13,8 +13,9 @@ const {internalProperties} = Internal.General;
 const isRawConditionObject = (object): boolean => Object.keys(object).length === 3 && ["ExpressionAttributeValues", "ExpressionAttributeNames"].every((item) => Boolean(object[item]) && typeof object[item] === "object");
 
 export type ConditionFunction = (condition: Condition) => Condition;
-// TODO: There is a problem where you can have multiple keys in one `ConditionStorageType`, which will cause problems. We need to fix that. Likely be refactoring it so that the key is part of `ConditionsConditionStorageObject`.
+// One stored comparison: an object with the attribute as its only key. Every comparison is stored by `conditionEntry`, so each has exactly one key, which the code that reads them (`Object.entries(entry)[0]`) relies on.
 type ConditionStorageType = {[key: string]: ConditionsConditionStorageObject} | typeof OR;
+const conditionEntry = (attribute: string, type: ConditionComparisonComparatorDynamoName, value: any): ConditionStorageType => ({[attribute]: {type, value}});
 export type ConditionStorageTypeNested = ConditionStorageType | Array<ConditionStorageTypeNested>;
 type ConditionStorageSettingsConditions = ConditionStorageTypeNested[];
 // TODO: the return value of the function below is incorrect. We need to add a property to the object that is a required string, where the property/key name is always equal to `settings.conditionString`
@@ -314,12 +315,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 							throw new CustomError.InvalidFilterComparison(`The type: ${valueType} is invalid.`);
 						}
 
-						this.getInternalProperties(internalProperties).settings.conditions.push({
-							[key]: {
-								"type": comparisonType.typeName,
-								"value": isComparisonObject ? value[valueType] : value
-							}
-						});
+						this.getInternalProperties(internalProperties).settings.conditions.push(conditionEntry(key, comparisonType.typeName, isComparisonObject ? value[valueType] : value));
 					});
 				}
 			} else if (object) {
@@ -447,12 +443,7 @@ function finalizePending (instance: Condition): void {
 		dynamoNameType = pending.type.typeName;
 	}
 
-	instance.getInternalProperties(internalProperties).settings.conditions.push({
-		[pending.key]: {
-			"type": dynamoNameType,
-			"value": pending.value
-		}
-	});
+	instance.getInternalProperties(internalProperties).settings.conditions.push(conditionEntry(pending.key, dynamoNameType, pending.value));
 
 	instance.getInternalProperties(internalProperties).settings.pending = {};
 }
