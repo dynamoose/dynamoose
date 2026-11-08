@@ -323,6 +323,8 @@ You can also pass in a `settings` object parameter to define extra settings for 
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 | returnValues | Set which documents to return after the update. This setting will be passed into the DynamoDB `ReturnValues` parameter. | String | `ALL_NEW`
 
+If the schema has `timestamps`, `update` sets each `updatedAt` attribute to the current time. DynamoDB creates the item if it doesn't exist, but `update` doesn't set `createdAt` unless the schema has the `createdAtOnUpdate` setting. With that setting, `update` sets each `createdAt` attribute with `if_not_exists`, so an update that creates the item stores both timestamps with the same value, and an update to an existing item keeps its `createdAt`. See the `createdAtOnUpdate` setting in [Schema](Schema.md) for the cases it leaves out.
+
 There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
 ```js

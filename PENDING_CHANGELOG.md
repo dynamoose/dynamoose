@@ -9,6 +9,7 @@
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
+- Added a `createdAtOnUpdate` schema setting. With it, `Model.update` and `Model.transaction.update` set each `createdAt` timestamp with `SET createdAt = if_not_exists(createdAt, :now)`, so an update that creates the item stores `createdAt` with the same value as `updatedAt`, and an update to an existing item keeps its `createdAt`. It is off by default, so updates without it are unchanged
 
 ### Bug Fixes
 

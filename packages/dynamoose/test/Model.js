@@ -3379,6 +3379,167 @@ describe("Model", () => {
 					});
 				});
 
+				describe("createdAtOnUpdate", () => {
+					it("Should set createdAt with if_not_exists to the same time as updatedAt", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const before = Date.now();
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+						const after = Date.now();
+						expect(request).toEqual({
+							"ExpressionAttributeNames": {
+								"#a0": "createdAt",
+								"#a1": "updatedAt",
+								"#a2": "name"
+							},
+							"ExpressionAttributeValues": {
+								":v0": {"N": request.ExpressionAttributeValues[":v0"].N},
+								":v1": {"N": request.ExpressionAttributeValues[":v0"].N},
+								":v2": {"S": "Charlie"}
+							},
+							"UpdateExpression": "SET #a0 = if_not_exists(#a0, :v0), #a1 = :v1, #a2 = :v2",
+							"Key": {"id": {"N": "1"}},
+							"TableName": "User",
+							"ReturnValues": "ALL_NEW"
+						});
+						expect(parseInt(request.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(before, after);
+					});
+
+					it("Should use the createdAt value the update sets", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "createdAt": new Date(1000)}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name", "#a2": "createdAt"});
+						expect(request.ExpressionAttributeValues[":v2"]).toEqual({"N": "1000"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1, #a2 = :v2");
+					});
+
+					it("Should use the createdAt value the update sets with $SET", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"$SET": {"createdAt": new Date(1000)}}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "createdAt"});
+						expect(request.ExpressionAttributeValues[":v1"]).toEqual({"N": "1000"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should not set createdAt when the update removes it", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"$SET": {"name": "Charlie"}, "$REMOVE": ["createdAt"]}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name", "#a2": "createdAt"});
+						expect(request.UpdateExpression).toEqual("REMOVE #a2 SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should not set createdAt when the update sets it to undefined", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie", "createdAt": undefined}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name", "#a2": "createdAt"});
+						expect(request.UpdateExpression).toEqual("REMOVE #a2 SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should not set a createdAt that is the range key", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": {"createdAt": {"type": Date, "rangeKey": true}}, "updatedAt": "updatedAt"}, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1, "createdAt": 1000}, {"name": "Charlie"}, {"return": "request"});
+						expect(request.Key).toEqual({"id": {"N": "1"}, "createdAt": {"N": "1000"}});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should not set a createdAt that is the hash key", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"name": String}, {"timestamps": {"createdAt": {"createdAt": {"type": Date, "hashKey": true}}, "updatedAt": "updatedAt"}, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"createdAt": 1000}, {"name": "Charlie"}, {"return": "request"});
+						expect(request.Key).toEqual({"createdAt": {"N": "1000"}});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should throw for a combine attribute that uses createdAt when the update doesn't set createdAt", async () => {
+						updateItemParams = undefined;
+						updateItemFunction = () => Promise.resolve({});
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "status": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["status", "createdAt"]}}}}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						await expect(callType.func(User).bind(User)({"id": 1}, {"status": "done"})).rejects.toEqual(new CustomError.InvalidParameter("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: createdAt."));
+						expect(updateItemParams).toBeUndefined();
+					});
+
+					it("Should build a combine attribute that uses createdAt from the createdAt the update sets", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "status": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["status", "createdAt"]}}}}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"status": "done", "createdAt": new Date(1000)}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "status", "#a2": "createdAt", "#a3": "combine"});
+						expect(request.ExpressionAttributeValues[":v3"]).toEqual({"S": "done,1000"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1, #a2 = :v2, #a3 = :v3");
+					});
+
+					it("Should set each createdAt name with if_not_exists", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": ["a1", "a2"], "updatedAt": ["b1", "b2"]}, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "a1", "#a1": "a2", "#a2": "b1", "#a3": "b2", "#a4": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = if_not_exists(#a0, :v0), #a1 = if_not_exists(#a1, :v1), #a2 = :v2, #a3 = :v3, #a4 = :v4");
+						expect(new Set([":v0", ":v1", ":v2", ":v3"].map((key) => request.ExpressionAttributeValues[key].N)).size).toEqual(1);
+					});
+
+					it("Should store createdAt in its storage format", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": {"created": {"type": {"value": Date, "settings": {"storage": "iso"}}}}, "updatedAt": {"updated": {"type": {"value": Date, "settings": {"storage": "seconds"}}}}}, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const before = Date.now();
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+						const after = Date.now();
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "created", "#a1": "updated", "#a2": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = if_not_exists(#a0, :v0), #a1 = :v1, #a2 = :v2");
+						expect(request.ExpressionAttributeValues[":v0"].S).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u);
+						expect(new Date(request.ExpressionAttributeValues[":v0"].S).getTime()).toBeWithinRange(before, after);
+						expect(parseInt(request.ExpressionAttributeValues[":v1"].N)).toBeWithinRange(Math.floor(before / 1000), Math.floor(after / 1000));
+					});
+
+					it("Should not set createdAt when the setting is false", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": false}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should not set createdAt when timestamps has no createdAt", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"createdAt": null, "updatedAt": "updatedAt"}, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should not change an update without timestamps", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+					});
+
+					it("Should leave the createdAt of a nested schema as the update does without the setting", async () => {
+						const Address = new dynamoose.Schema({"street": String}, {"timestamps": true});
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "address": Address}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "created", "#a1": "updated", "#a2": "address", "#a3": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = if_not_exists(#a0, :v0), #a1 = :v1, #a2 = :v2, #a3 = :v3");
+						expect(Object.keys(request.ExpressionAttributeValues[":v2"].M)).toEqual(["updatedAt"]);
+					});
+
+					it("Should not set createdAt on item.save for an item that is stored", async () => {
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": true}));
+						new dynamoose.Table("User", [User]);
+						const item = new User({"id": 1, "name": "Charlie"}, {"type": "fromDynamo"});
+						const request = await item.save({"return": "request"});
+						expect(Object.keys(request.Item)).toEqual(["id", "name", "updatedAt"]);
+					});
+				});
+
 				it("Should send correct params to updateItem with conditional", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
@@ -4992,6 +5153,33 @@ describe("Model", () => {
 					}
 				});
 				expect(parseInt(result.Update.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(date - 10, date + 10);
+			});
+
+			it("Should set createdAt with if_not_exists when the schema has createdAtOnUpdate", async () => {
+				User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true, "createdAtOnUpdate": true}));
+				new dynamoose.Table("User", [User]);
+				const before = Date.now();
+				const result = await User.transaction.update({"id": 1}, {"name": "Bob"});
+				const after = Date.now();
+				const time = result.Update.ExpressionAttributeValues[":v0"].N;
+				expect(result).toEqual({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {
+							"#a0": "createdAt",
+							"#a1": "updatedAt",
+							"#a2": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"N": time},
+							":v1": {"N": time},
+							":v2": {"S": "Bob"}
+						},
+						"UpdateExpression": "SET #a0 = if_not_exists(#a0, :v0), #a1 = :v1, #a2 = :v2",
+						"TableName": "User"
+					}
+				});
+				expect(parseInt(time)).toBeWithinRange(before, after);
 			});
 
 			it("Should print warning if passing callback", () => {

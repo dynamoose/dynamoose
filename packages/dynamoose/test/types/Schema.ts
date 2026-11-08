@@ -208,6 +208,19 @@ const shouldSucceedWhenUsingTimestampsSetToObjectWithTypes = new dynamoose.Schem
 		}
 	}
 });
+const shouldSucceedWhenUsingCreatedAtOnUpdate = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": true,
+	"createdAtOnUpdate": true
+});
+const shouldFailWhenUsingCreatedAtOnUpdateThatIsNotABoolean = new dynamoose.Schema({
+	"id": String
+}, {
+	"timestamps": true,
+	// @ts-expect-error
+	"createdAtOnUpdate": "true"
+});
 
 const shouldSucceedWhenUsingDirectTypeForValidateFunction = new dynamoose.Schema(
 	{
