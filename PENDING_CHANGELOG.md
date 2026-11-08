@@ -5,6 +5,7 @@
 ### 🚨 Breaking Changes 🚨
 
 - `item.save` no longer adds an object holding only a nested Schema's timestamps (`"address": {"createdAt": ..., "updatedAt": ...}`) to an item that doesn't have that attribute. A nested Schema's timestamps are now set only when the item has an object for it. Before, an item saved without `address` was stored with an `address` map of just the timestamps, and the save failed if the nested Schema had a `required` property
+- A nested Schema's `get`, `set` and `validate` settings are now passed the object of its attribute (each element of a list), and `get` and `set` replace that object with what they return. They run before the schema's own functions, and aren't run when the item has no object for that attribute. Before, they were passed the whole item, and when the schema also had the same setting, every save or read threw `schemaValidator is not a function` or `schemaModifier is not a function`. A nested Schema's function that reads other attributes of the item should move to the schema's own settings
 
 ### Maintenance
 

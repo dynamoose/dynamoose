@@ -537,6 +537,20 @@ function setTimestamp (object: any, parts: string[], value: string | number, key
 	}
 }
 
+// Calls `func` with each object at the path `parts` in `object`, and with that object's path in the item, and replaces the object with what `func` returns. A `*` part stands for every element of a list. A missing value, or a value that isn't an object (another type of a multi-type attribute), is left as it is.
+async function updateNestedObjects (object: any, parts: string[], func: (value: ObjectType, path: string) => Promise<ObjectType>, pathParts: string[] = []): Promise<void> {
+	const [part, ...rest] = parts;
+	const keys = part === "*" ? Array.isArray(object) ? object.map((_element, index) => `${index}`) : [] : object && typeof object === "object" && !Array.isArray(object) ? [part] : [];
+	for (const key of keys) {
+		const value = object[key];
+		if (rest.length > 0) {
+			await updateNestedObjects(value, rest, func, [...pathParts, key]);
+		} else if (value && typeof value === "object" && !Array.isArray(value)) {
+			object[key] = await func(value, [...pathParts, key].join("."));
+		}
+	}
+}
+
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Item.objectFromSchema (setting timestamps, etc.)
 Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesClass<any>>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
@@ -815,6 +829,12 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 					utils.object.set(returnObject, key, await modifierFunction(value, oldValue));
 				}
 			}));
+			for (const {path, settings} of schema.getInternalProperties(internalProperties).nestedSchemaFunctions) {
+				const nestedModifier = settings[modifier];
+				if (nestedModifier) {
+					await updateNestedObjects(returnObject, path.split("."), async (value) => nestedModifier(value));
+				}
+			}
 			const schemaModifier = schema.getInternalProperties(internalProperties).settings[modifier];
 			if (schemaModifier) {
 				returnObject = await schemaModifier(returnObject);
@@ -845,6 +865,16 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 				}
 			}
 		}));
+		for (const {path, settings} of schema.getInternalProperties(internalProperties).nestedSchemaFunctions) {
+			if (settings.validate) {
+				await updateNestedObjects(returnObject, path.split("."), async (value, valuePath) => {
+					if (!await settings.validate(value)) {
+						throw new Error.ValidationError(`${valuePath} with a value of ${JSON.stringify(value)} had a schema validation error when trying to save the item.`);
+					}
+					return value;
+				});
+			}
+		}
 		const schemaValidator = schema.getInternalProperties(internalProperties).settings.validate;
 		if (schemaValidator) {
 			const result = await schemaValidator(returnObject);

@@ -667,6 +667,22 @@ describe("Model", () => {
 					expect(user.toJSON()).toEqual({"id": 1, ...expectedItem});
 				});
 
+				it("Should return what a nested Schema's get returns for the nested object, and give the schema's get the item with it", async () => {
+					const calls = [];
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": new dynamoose.Schema({"street": String}, {"get": (value) => {
+						calls.push(["address", value]);
+						return {...value, "street": value.street.toUpperCase()};
+					}})}, {"get": (value) => {
+						calls.push(["user", value]);
+						return {...value, "id": value.id + 1};
+					}}));
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "Main"}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(calls).toEqual([["address", {"street": "Main"}], ["user", {"id": 1, "address": {"street": "MAIN"}}]]);
+					expect(user.toJSON()).toEqual({"id": 2, "address": {"street": "MAIN"}});
+				});
+
 				it("Should return object with correct values for string set", async () => {
 					User = dynamoose.model("User", {"id": Number, "friends": {"type": Set, "schema": [String]}});
 					new dynamoose.Table("User", [User]);

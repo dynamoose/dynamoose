@@ -2013,6 +2013,128 @@ describe("Item", () => {
 						}]);
 					});
 				});
+
+				describe("Nested Schema with get, set and validate", () => {
+					it("Should call a nested Schema's validate with the nested object, and the schema's validate with the item", async () => {
+						putItemFunction = () => Promise.resolve();
+						const calls = [];
+						const validate = (name) => (value) => {
+							calls.push([name, value]);
+							return true;
+						};
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": new dynamoose.Schema({"street": String}, {"validate": validate("address")})}, {"validate": validate("user")}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "address": {"street": "Main"}});
+
+						await callType.func(user).bind(user)();
+						expect(calls).toEqual([["address", {"street": "Main"}], ["user", {"id": 1, "address": {"street": "Main"}}]]);
+						expect(putParams).toEqual([{
+							"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "Main"}}}},
+							"TableName": "User"
+						}]);
+					});
+
+					it("Should save what a nested Schema's set returns for the nested object, and give the schema's set the item with it", async () => {
+						putItemFunction = () => Promise.resolve();
+						const calls = [];
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": new dynamoose.Schema({"street": String}, {"set": (value) => {
+							calls.push(["address", value]);
+							return {...value, "street": value.street.toUpperCase()};
+						}})}, {"set": (value) => {
+							calls.push(["user", value]);
+							return value;
+						}}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "address": {"street": "Main"}});
+
+						await callType.func(user).bind(user)();
+						expect(calls).toEqual([["address", {"street": "Main"}], ["user", {"id": 1, "address": {"street": "MAIN"}}]]);
+						expect(putParams).toEqual([{
+							"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "MAIN"}}}},
+							"TableName": "User"
+						}]);
+					});
+
+					const upperCaseStreet = (value) => ({...value, "street": value.street.toUpperCase()});
+					it.each([
+						["inside an object attribute", (schema) => ({"info": {"type": Object, "schema": {"address": schema}}}), {"info": {"address": {"street": "Main"}}}, {"info": {"M": {"address": {"M": {"street": {"S": "MAIN"}}}}}}, ["MAIN"]],
+						["that is the schema of an object attribute", (schema) => ({"address": {"type": Object, "schema": schema}}), {"address": {"street": "Main"}}, {"address": {"M": {"street": {"S": "MAIN"}}}}, ["MAIN"]],
+						["in a list", (schema) => ({"addresses": {"type": Array, "schema": [schema]}}), {"addresses": [{"street": "Main"}, {"street": "Side"}]}, {"addresses": {"L": [{"M": {"street": {"S": "MAIN"}}}, {"M": {"street": {"S": "SIDE"}}}]}}, ["MAIN", "SIDE"]],
+						["in a list of lists", (schema) => ({"routes": {"type": Array, "schema": [{"type": Array, "schema": [schema]}]}}), {"routes": [[{"street": "Main"}], [{"street": "Side"}]]}, {"routes": {"L": [{"L": [{"M": {"street": {"S": "MAIN"}}}]}, {"L": [{"M": {"street": {"S": "SIDE"}}}]}]}}, ["MAIN", "SIDE"]],
+						["mapped to another name", (schema) => ({"address": {"type": Object, "schema": schema, "map": "home"}}), {"home": {"street": "Main"}}, {"address": {"M": {"street": {"S": "MAIN"}}}}, ["MAIN"]]
+					])("Should call a nested Schema's set and validate on each nested object of a Schema %s", async (name, definition, item, expectedItem, expectedValidated) => {
+						putItemFunction = () => Promise.resolve();
+						const validated = [];
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, ...definition(new dynamoose.Schema({"street": String}, {"set": upperCaseStreet, "validate": (value) => {
+							validated.push(value.street);
+							return true;
+						}}))}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, ...item});
+
+						await callType.func(user).bind(user)();
+						expect(validated).toEqual(expectedValidated);
+						expect(putParams).toEqual([{
+							"Item": {"id": {"N": "1"}, ...expectedItem},
+							"TableName": "User"
+						}]);
+					});
+
+					it("Should reject with the path of the list element a nested Schema's validate fails for", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "addresses": {"type": Array, "schema": [new dynamoose.Schema({"street": String}, {"validate": (value) => value.street !== "Side"})]}}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "addresses": [{"street": "Main"}, {"street": "Side"}]});
+
+						await expect(callType.func(user).bind(user)()).rejects.toThrow("addresses.1 with a value of {\"street\":\"Side\"} had a schema validation error when trying to save the item.");
+						expect(putParams).toEqual([]);
+					});
+
+					it("Should call the set of each of three levels of nested Schemas on its own object, the deepest first", async () => {
+						putItemFunction = () => Promise.resolve();
+						const calls = [];
+						const set = (name) => (value) => {
+							calls.push([name, value]);
+							return {...value, "visited": [...value.visited || [], name]};
+						};
+						const address = new dynamoose.Schema({"street": String, "visited": {"type": Array, "schema": [String]}}, {"set": set("address")});
+						const country = new dynamoose.Schema({"name": String, "address": address, "visited": {"type": Array, "schema": [String]}}, {"set": set("country")});
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "country": country, "visited": {"type": Array, "schema": [String]}}, {"set": set("user")}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "country": {"name": "MY", "address": {"street": "Main"}}});
+
+						await callType.func(user).bind(user)();
+						expect(calls.map(([name]) => name)).toEqual(["address", "country", "user"]);
+						expect(calls[1][1]).toEqual({"name": "MY", "address": {"street": "Main", "visited": ["address"]}});
+						expect(putParams).toEqual([{
+							"Item": {"id": {"N": "1"}, "visited": {"L": [{"S": "user"}]}, "country": {"M": {"name": {"S": "MY"}, "visited": {"L": [{"S": "country"}]}, "address": {"M": {"street": {"S": "Main"}, "visited": {"L": [{"S": "address"}]}}}}}},
+							"TableName": "User"
+						}]);
+					});
+
+					it.each([
+						["without the nested objects or list", {"id": 1}, {"id": {"N": "1"}}],
+						["with a string for an attribute that can also be a string", {"id": 1, "data": "Main"}, {"id": {"N": "1"}, "data": {"S": "Main"}}]
+					])("Should not call a nested Schema's set and validate for an item %s", async (name, item, expectedItem) => {
+						putItemFunction = () => Promise.resolve();
+						const calls = [];
+						const record = (value) => {
+							calls.push(value);
+							return value;
+						};
+						const address = new dynamoose.Schema({"street": String}, {"set": record, "validate": record});
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "data": [{"type": Object, "schema": address}, String], "addresses": {"type": Array, "schema": [address]}, "info": {"type": Object, "schema": {"address": address}}}));
+						new dynamoose.Table("User", [User]);
+						user = new User(item);
+
+						await callType.func(user).bind(user)();
+						expect(calls).toEqual([]);
+						expect(putParams).toEqual([{
+							"Item": expectedItem,
+							"TableName": "User"
+						}]);
+					});
+				});
 			});
 		});
 	});

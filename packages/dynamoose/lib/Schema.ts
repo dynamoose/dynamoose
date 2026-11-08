@@ -834,6 +834,13 @@ interface SchemaInternalProperties {
 	getDefaultMapAttribute: (attribute: string) => string;
 	getIndexAttributes: () => {index: IndexDefinition; attribute: string}[];
 	getTimestampAttributes: () => GetTimestampAttributesType;
+	nestedSchemaFunctions: NestedSchemaFunctions[];
+}
+
+// The functions a nested Schema's settings give for its value (`get`, `set` and `validate`), with the path of that value in an item. A `*` part is every element of a list.
+export interface NestedSchemaFunctions {
+	path: string;
+	settings: Pick<SchemaSettings, "get" | "set" | "validate">;
 }
 
 type GetTimestampAttributesType = ({
@@ -908,9 +915,9 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	 * |---|---|---|---|
 	 * | `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep (ex. `["person.*", "friend.**"]` will allow you store a property `person` with 1 level of unknown properties and `friend` with infinitely nested level unknown properties). If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
 	 * | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. You can also set each of the `createdAt` & `updatedAt` properties equal to a Schema object. The keys of this Schema object represent the name of the attributes, with the value allowing for customization such as changing the storage type of the date. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`. When this schema has `timestamps` and contains a nested Schema with `timestamps` (as an attribute, inside an object attribute's `schema`, or as the element of a list), `item.save` also sets the nested Schema's timestamps when the item has an object for it, on every element of a list. `createdAt` is set only when the whole item is new, so an element added to a list of a stored item gets only `updatedAt`.
-	 * | `get` | function \| async function | undefined | You can use a get function on the schema to be run whenever retrieving an item from DynamoDB. Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to return to the application. This function will be run after all property `get` functions are run.
-	 * | `set` | function \| async function | undefined | You can use a set function on the schema to be run whenever saving an item to DynamoDB. It will also be used when retrieving an item (ie. `get`, `query`, `update`, etc). Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to save to DynamoDB. This function will be run after all property `set` functions are run.
-	 * | `validate` | function \| async function | undefined | You can use a validate function on the schema to ensure the value passes a given validation before saving the item. Dynamoose will pass the entire item into this function and you must return a boolean (`true` if validation passes or `false` if validation fails) or throw an error. This function will be run after all property `validate` functions are run.
+	 * | `get` | function \| async function | undefined | You can use a get function on the schema to be run whenever retrieving an item from DynamoDB. Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to return to the application. This function will be run after all property `get` functions are run. A nested Schema's `get` function is passed the object of its attribute instead, and its return value replaces that object (on every element of a list). It runs before this schema's `get` function, and isn't run when the item has no object for that attribute.
+	 * | `set` | function \| async function | undefined | You can use a set function on the schema to be run whenever saving an item to DynamoDB. It will also be used when retrieving an item (ie. `get`, `query`, `update`, etc). Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to save to DynamoDB. This function will be run after all property `set` functions are run. A nested Schema's `set` function is passed the object of its attribute instead, and its return value replaces that object (on every element of a list). It runs before this schema's `set` function, and isn't run when the item has no object for that attribute.
+	 * | `validate` | function \| async function | undefined | You can use a validate function on the schema to ensure the value passes a given validation before saving the item. Dynamoose will pass the entire item into this function and you must return a boolean (`true` if validation passes or `false` if validation fails) or throw an error. This function will be run after all property `validate` functions are run. A nested Schema's `validate` function is passed the object of its attribute instead (each element of a list). It runs before this schema's `validate` function, and isn't run when the item has no object for that attribute.
 	 *
 	 * ```js
 	 * const dynamoose = require("dynamoose");
@@ -1057,6 +1064,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 
 		let parsedSettings = {...settings};
 		const parsedObject = {...object};
+		const nestedSchemaFunctions: NestedSchemaFunctions[] = [];
 		utils.object.entries(parsedObject).filter((entry) => entry[1] instanceof Schema).forEach((entry) => {
 			const [key, value] = entry;
 			let newValue = {
@@ -1069,10 +1077,19 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 
 			// The nested Schema's settings are prefixed with the path of its value in an item, not its path in the definition.
 			const path = definitionPathToItemPath(parsedObject, key);
-			const subSettings = {...(value as any).getInternalProperties(internalProperties).settings};
-			const {timestamps} = subSettings;
+			const nestedProperties = (value as any).getInternalProperties(internalProperties);
+			const subSettings = {...nestedProperties.settings};
+			// The functions of the Schemas nested in the nested Schema come first, so the deepest ones are called first. The nested Schema's own functions take its value, not the item, so they are kept with its path instead of being merged into this schema's settings.
+			nestedSchemaFunctions.push(...(nestedProperties.nestedSchemaFunctions as NestedSchemaFunctions[]).map((functions) => ({"path": `${path}.${functions.path}`, "settings": functions.settings})));
+			const {timestamps, get, set, validate} = subSettings;
+			if (get || set || validate) {
+				nestedSchemaFunctions.push({path, "settings": {get, set, validate}});
+			}
 			// The nested Schema's timestamps are added below.
 			delete subSettings.timestamps;
+			delete subSettings.get;
+			delete subSettings.set;
+			delete subSettings.validate;
 			Object.entries(subSettings).forEach((entry) => {
 				const [settingsKey, settingsValue] = entry;
 				switch (settingsKey) {
@@ -1127,6 +1144,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		this.setInternalProperties(internalProperties, {
 			"schemaObject": parsedObject,
 			"settings": parsedSettings,
+			nestedSchemaFunctions,
 			"getMapSettingValuesForKey": (key: string, settingNames?: string[]): string[] => utils.array_flatten(mapSettingNames.filter((name) => !settingNames || settingNames.includes(name)).map((mapSettingName) => {
 				const result = this.getAttributeSettingValue(mapSettingName, key);
 				if (Array.isArray(result)) {
