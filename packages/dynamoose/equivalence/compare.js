@@ -17,33 +17,47 @@ const ddbMethods = ["describeTable", "createTable", "updateTable", "updateTimeTo
 
 // Deep copy that keeps Date, Set, Map, Buffer and typed array instances, so each build gets the same
 // input without sharing (and mutating) the other build's objects. Other non-plain objects throw.
-function clone (value) {
+// An object that the input holds at two places (the order fixture's address) is one object in the copy too.
+function clone (value, copies = new Map()) {
+	if (!value || typeof value !== "object") {
+		return value;
+	}
+	if (copies.has(value)) {
+		return copies.get(value);
+	}
+	let copy;
 	if (Buffer.isBuffer(value)) {
-		return Buffer.from(value);
-	}
-	if (value instanceof Uint8Array) {
-		return new Uint8Array(value);
-	}
-	if (value instanceof Date) {
-		return new Date(value.getTime());
-	}
-	if (value instanceof Set) {
-		return new Set([...value].map(clone));
-	}
-	if (value instanceof Map) {
-		return new Map([...value].map(([key, entry]) => [clone(key), clone(entry)]));
-	}
-	if (Array.isArray(value)) {
-		return value.map(clone);
-	}
-	if (value && typeof value === "object") {
+		copy = Buffer.from(value);
+	} else if (value instanceof Uint8Array) {
+		copy = new Uint8Array(value);
+	} else if (value instanceof Date) {
+		copy = new Date(value.getTime());
+	} else if (value instanceof Set) {
+		copy = new Set();
+		copies.set(value, copy);
+		value.forEach((entry) => copy.add(clone(entry, copies)));
+	} else if (value instanceof Map) {
+		copy = new Map();
+		copies.set(value, copy);
+		value.forEach((entry, key) => copy.set(clone(key, copies), clone(entry, copies)));
+	} else if (Array.isArray(value)) {
+		copy = [];
+		copies.set(value, copy);
+		value.forEach((entry) => copy.push(clone(entry, copies)));
+	} else {
 		// Any other object would be shared by both builds, so a change one build makes would reach the other.
 		if (Object.getPrototypeOf(value) !== Object.prototype) {
 			throw new Error(`clone cannot copy a ${className(value)} object`);
 		}
-		return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, clone(entry)]));
+		copy = {};
+		copies.set(value, copy);
+		// defineProperty, not assignment: an own "__proto__" key must stay an own key.
+		Object.entries(value).forEach(([key, entry]) => {
+			Object.defineProperty(copy, key, {"value": clone(entry, copies), "enumerable": true, "writable": true, "configurable": true});
+		});
 	}
-	return value;
+	copies.set(value, copy);
+	return copy;
 }
 
 function className (value) {

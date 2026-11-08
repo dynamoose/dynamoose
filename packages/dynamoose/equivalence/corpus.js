@@ -9,6 +9,31 @@ const {"schemas": benchmarkSchemas} = require("../benchmarks/schemas");
 
 const answer = (value) => () => clone(value);
 
+// The benchmark schemas (benchmarks/schemas.js) define their own user functions. A Schema made through
+// this dynamoose wraps each default, set, get and validate function with `ctx.fn`.
+function wrappingDynamoose (ctx) {
+	const wrap = (value, path) => {
+		if (Array.isArray(value)) {
+			return value.map((entry, index) => wrap(entry, `${path}[${index}]`));
+		}
+		if (!value || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype) {
+			return value;
+		}
+		return Object.fromEntries(Object.entries(value).map(([key, entry]) => {
+			if (["default", "set", "get", "validate"].includes(key) && typeof entry === "function") {
+				return [key, ctx.fn(`${path} ${key}`, entry)];
+			}
+			return [key, wrap(entry, path ? `${path}.${key}` : key)];
+		}));
+	};
+	class Schema extends ctx.dynamoose.Schema {
+		constructor (definition, settings) {
+			super(wrap(definition, ""), settings);
+		}
+	}
+	return Object.assign(Object.create(ctx.dynamoose), {Schema});
+}
+
 // `new Model(data)` and `item.save(settings)` as two steps; the input and the Item stay tracked.
 async function save (ctx, Model, label, data, settings) {
 	const input = ctx.track(`${label} input`, data);
@@ -29,7 +54,7 @@ function operationsCase (schemaName) {
 		"fixtures": () => ({"data": config.data(), "other": config.data(), "update": config.update(), "update2": config.update(), "nested": config.nestedUpdate ? config.nestedUpdate() : undefined}),
 		"run": async (ctx) => {
 			const f = ctx.fixtures;
-			const schema = config.create(ctx.dynamoose);
+			const schema = config.create(wrappingDynamoose(ctx));
 			const Model = ctx.model("Model", schema);
 			const request = await save(ctx, Model, "save request", f.data, {"return": "request"});
 			ctx.respond("getItem", answer({"Item": request.Item}));
@@ -59,7 +84,7 @@ function invalidCase (schemaName, breakData, invalidUpdate, failing = ["save inv
 			return {data, "key": config.key(data), "update": invalidUpdate};
 		},
 		"run": async (ctx) => {
-			const Model = ctx.model("Model", config.create(ctx.dynamoose));
+			const Model = ctx.model("Model", config.create(wrappingDynamoose(ctx)));
 			await save(ctx, Model, "save invalid", ctx.fixtures.data);
 			await update(ctx, Model, "update invalid", ctx.fixtures.key, ctx.fixtures.update);
 		}

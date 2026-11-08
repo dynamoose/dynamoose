@@ -2,7 +2,7 @@
 // current dist in the same process, and fails on any observable difference. Nothing is recorded to
 // disk: the baseline is the published package.
 const fs = require("fs");
-const {builds, runCase} = require("../equivalence/compare");
+const {builds, clone, runCase} = require("../equivalence/compare");
 const corpus = require("../equivalence/corpus");
 
 describe("Equivalence with dynamoose-baseline", () => {
@@ -35,6 +35,21 @@ describe("Equivalence with dynamoose-baseline", () => {
 		expect(await record("{\"constructor\": {\"S\": \"old\"}}")).not.toStrictEqual(await record("{\"constructor\": {\"S\": \"new\"}}"));
 		expect(await record("{\"a\": 1, \"b\": 2}")).not.toStrictEqual(await record("{\"b\": 2, \"a\": 1}"));
 		expect(await record("{\"__proto__\": {\"S\": \"same\"}}")).toStrictEqual(await record("{\"__proto__\": {\"S\": \"same\"}}"));
+	});
+
+	// The order fixture uses one address object for billing and shipping; each build must get it that way.
+	it("Should keep an object the input holds at two places as one object in the clone", () => {
+		const address = {"city": "Springfield"};
+		const copy = clone({"billing": {address}, "shipping": {address}});
+		expect(copy.billing.address).toBe(copy.shipping.address);
+		expect(copy.billing.address).not.toBe(address);
+	});
+
+	// Without the calls in the record, a user function that one build skips or reorders goes unseen.
+	it("Should record the user functions of a benchmark schema", async () => {
+		const testCase = corpus.find((entry) => entry.name === "order schema: create, save, get, query and update");
+		const {steps} = await runCase(builds.current, testCase, testCase.fixtures());
+		expect(steps.flatMap((step) => step.events).filter((event) => event.call).length).toBeGreaterThan(0);
 	});
 
 	it.each(corpus.map((testCase) => [testCase.name, testCase]))("%s", async (name, testCase) => {
