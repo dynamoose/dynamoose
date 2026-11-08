@@ -92,6 +92,8 @@ This method will make multiple calls to DynamoDB, which increases latency for yo
 
 This allows you to populate an item with item instances for the subitems you are referencing in your schema. This function will return a promise, or call the `callback` parameter function upon completion.
 
+A reference to a single item is replaced by that item, and a list or Set of references by a list of the items. A referenced item that doesn't exist becomes `undefined`, as `Model.get` resolves with, and is left out of a list, as `Model.batchGet` leaves it out. For an attribute with several types (such as `{"type": [Set, String], "schema": [[User]]}`), a Set is populated as a Set of models, and a value of another type is left as it is.
+
 The `settings` parameter is an object you can pass in with the following properties:
 
 | Name | Type | Description | Default |
