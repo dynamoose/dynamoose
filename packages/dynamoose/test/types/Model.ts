@@ -78,6 +78,10 @@ export class User extends Item {
 	name!: string;
 	age!: number;
 	friends!: string[];
+	settings!: {
+		theme: string;
+		notifications: boolean;
+	};
 }
 const userSchema = new dynamoose.Schema({
 	"id": String,
@@ -117,4 +121,11 @@ UserTypedModel.update({"id": "foo"}, {
 
 UserTypedModel.update({"id": "foo"}, {
 	"$REMOVE":{"age":null}
+});
+
+UserTypedModel.update({"id": "foo"}, {
+	"settings": {"theme": "dark"}
+});
+UserTypedModel.update({"id": "foo"}, {
+	"$SET": {"settings": {"notifications": false}}
 });
