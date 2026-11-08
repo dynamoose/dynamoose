@@ -3843,6 +3843,30 @@ describe("Model", () => {
 					});
 				});
 
+				it("Shouldn't require combine attributes when updating none of them", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "name": String, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "name"});
+				});
+
+				it("Should send correct parameters when adding to a property that isn't a combine property", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "age": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 1}});
+					expect(updateItemParams.UpdateExpression).toEqual("ADD #a0 :v0");
+				});
+
+				it("Should throw error if adding to a combine property", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "data1": Number, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+					new dynamoose.Table("User", [User]);
+					return expect(callType.func(User).bind(User)({"id": 1}, {"$ADD": {"data1": 1}})).rejects.toEqual(new CustomError.InvalidParameter("You must update all or none of the combine attributes when running Model.update. Missing combine attributes: data1, data2."));
+				});
+
 				it("Should throw error if updating one combine property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
@@ -4731,6 +4755,12 @@ describe("Model", () => {
 		describe("Model.transaction.update", () => {
 			it("Should be a function", () => {
 				expect(User.transaction.update).toBeInstanceOf(Function);
+			});
+
+			it("Should return correct result when updating none of the combine properties", async () => {
+				User = dynamoose.model("User", {"id": Number, "name": String, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
+				new dynamoose.Table("User", [User]);
+				expect((await User.transaction.update({"id": 1}, {"name": "Bob"})).Update.UpdateExpression).toEqual("SET #a0 = :v0");
 			});
 
 			it("Should return an object", async () => {
