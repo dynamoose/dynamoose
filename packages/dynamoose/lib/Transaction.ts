@@ -126,7 +126,7 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 	})();
 
 	if (callback) {
-		promise.then((result) => callback(null, result)).catch((error) => callback(error));
+		promise.then((result) => callback(null, result), (error) => callback(error));
 	} else {
 		return promise;
 	}
