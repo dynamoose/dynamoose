@@ -60,6 +60,92 @@ describe("Schema", () => {
 		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": {"a1": Date}, "updatedAt": {"b1": Date}}}).getInternalProperties(internalProperties).settings).toThrow("Timestamp attributes must not be defined in schema.");
 	});
 
+	describe("Objects passed in", () => {
+		beforeEach(() => {
+			dynamoose.Table.defaults.set({
+				"create": false,
+				"update": false,
+				"waitForActive": false
+			});
+		});
+		afterEach(() => {
+			dynamoose.Table.defaults.set({});
+		});
+
+		it.each([
+			["true", () => ({"timestamps": true})],
+			["custom names", () => ({"timestamps": {"createdAt": "created", "updatedAt": "updated"}})],
+			["lists of names", () => ({"timestamps": {"createdAt": ["created", "a1"], "updatedAt": ["updated", "b1"]}})],
+			["attribute definitions", () => ({"timestamps": {"createdAt": {"created": {"type": {"value": Date, "settings": {"storage": "iso"}}}}, "updatedAt": "updated"}})]
+		])("Should not modify the settings object with timestamps set to %s", (name, makeSettings) => {
+			const settings = makeSettings();
+			new dynamoose.Schema({"id": String, "address": new dynamoose.Schema({"street": String}, {"timestamps": true})}, settings);
+			expect(settings).toEqual(makeSettings());
+		});
+
+		it("Should not modify the schema definition object with timestamps", () => {
+			const definition = {"id": String, "name": String};
+			new dynamoose.Schema(definition, {"timestamps": true});
+			expect(definition).toEqual({"id": String, "name": String});
+		});
+
+		it("Should not replace a nested Schema in an object in the schema definition", () => {
+			const address = new dynamoose.Schema({"street": String});
+			const definition = {"id": String, "info": {"type": Object, "schema": {"address": address}}};
+			new dynamoose.Schema(definition);
+			expect(definition.info.schema.address).toBe(address);
+		});
+
+		it("Should not replace a nested Schema in a list in the schema definition", () => {
+			const address = new dynamoose.Schema({"street": String});
+			const definition = {"id": String, "addresses": {"type": Array, "schema": [address]}};
+			new dynamoose.Schema(definition);
+			expect(definition.addresses.schema[0]).toBe(address);
+		});
+
+		it("Should not throw when the settings object is used again for another schema", () => {
+			const settings = {"timestamps": {"createdAt": "created", "updatedAt": "updated"}};
+			new dynamoose.Schema({"id": String, "address": new dynamoose.Schema({"street": String}, {"timestamps": true})}, settings);
+			expect(() => new dynamoose.Schema({"id": String, "billing": new dynamoose.Schema({"street": String}, {"timestamps": true})}, settings)).not.toThrow();
+		});
+
+		it("Should save the timestamps when the schema definition object is used again with timestamps", async () => {
+			const definition = {"id": String, "name": String};
+			new dynamoose.Schema(definition, {"timestamps": true});
+			const User = dynamoose.model("User", new dynamoose.Schema(definition, {"timestamps": true}));
+			new dynamoose.Table("User", [User]);
+
+			const request = await new User({"id": "u1", "name": "Bob"}).save({"return": "request"});
+			expect(request).toEqual({
+				"Item": {
+					"id": {"S": "u1"},
+					"name": {"S": "Bob"},
+					"createdAt": {"N": expect.any(String)},
+					"updatedAt": {"N": expect.any(String)}
+				},
+				"TableName": "User"
+			});
+		});
+
+		it("Should only save the schema's own timestamps when the settings object was used for another schema", async () => {
+			const settings = {"timestamps": true};
+			new dynamoose.Schema({"id": String, "address": new dynamoose.Schema({"street": String}, {"timestamps": true})}, settings);
+			const User = dynamoose.model("User", new dynamoose.Schema({"id": String, "name": String}, settings));
+			new dynamoose.Table("User", [User]);
+
+			const request = await new User({"id": "u1", "name": "Bob"}).save({"return": "request"});
+			expect(request).toEqual({
+				"Item": {
+					"id": {"S": "u1"},
+					"name": {"S": "Bob"},
+					"createdAt": {"N": expect.any(String)},
+					"updatedAt": {"N": expect.any(String)}
+				},
+				"TableName": "User"
+			});
+		});
+	});
+
 	it("Should throw error if passing multiple schema elements into array", () => {
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [String, Number]}})).toThrow("You must only pass one element into schema array.");
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).toThrow("You must only pass one element into schema array.");

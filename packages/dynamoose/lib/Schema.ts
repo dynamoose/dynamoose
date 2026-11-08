@@ -841,6 +841,21 @@ type GetTimestampAttributesType = ({
 	"value": AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
 	"type": "createdAt" | "updatedAt";
 })[];
+
+// Copies the plain objects and arrays of a schema definition or settings object. Everything else, such as a nested Schema, a model, a type or a function, is kept as the same value.
+function copyPlainObjects<T> (value: T): T {
+	if (Array.isArray(value)) {
+		return value.map(copyPlainObjects) as unknown as T;
+	}
+	if (value && Object.getPrototypeOf(value) === Object.prototype) {
+		return Object.keys(value).reduce((copy, key) => {
+			copy[key] = copyPlainObjects(value[key]);
+			return copy;
+		}, {}) as T;
+	}
+	return value;
+}
+
 function getTimestampAttributes (timestamps?: TimestampObject): GetTimestampAttributesType {
 	if (!timestamps) {
 		return [];
@@ -878,6 +893,8 @@ function getTimestampAttributes (timestamps?: TimestampObject): GetTimestampAttr
 export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	/**
 	 * You can use this method to create a schema. The `schema` parameter is an object defining your schema, each value should be a type or object defining the type with additional settings (listed below).
+	 *
+	 * Dynamoose doesn't modify the `schema` and `options` objects you pass in, so you can pass the same object to more than one schema.
 	 *
 	 * The `options` parameter is an optional object with the following options:
 	 *
@@ -1015,25 +1032,26 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			throw new CustomError.InvalidParameter("Schema initialization parameter must not be an empty object.");
 		}
 
-		if (settings.timestamps === true) {
-			settings.timestamps = {
+		// The definition and settings passed in are left as they are, so they can be passed to another schema.
+		const parsedObject = copyPlainObjects(object);
+		let parsedSettings = copyPlainObjects(settings);
+		if (parsedSettings.timestamps === true) {
+			parsedSettings.timestamps = {
 				"createdAt": "createdAt",
 				"updatedAt": "updatedAt"
 			};
 		}
-		if (settings.timestamps) {
-			const combinedArray = getTimestampAttributes(settings.timestamps);
+		if (parsedSettings.timestamps) {
+			const combinedArray = getTimestampAttributes(parsedSettings.timestamps);
 			combinedArray.forEach((prop) => {
-				if (object[prop.name]) {
+				if (parsedObject[prop.name]) {
 					throw new CustomError.InvalidParameter("Timestamp attributes must not be defined in schema.");
 				}
 
-				object[prop.name] = prop.value;
+				parsedObject[prop.name] = prop.value;
 			});
 		}
 
-		let parsedSettings = {...settings};
-		const parsedObject = {...object};
 		utils.object.entries(parsedObject).filter((entry) => entry[1] instanceof Schema).forEach((entry) => {
 			const [key, value] = entry;
 			let newValue = {
@@ -1143,7 +1161,8 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 						return accumulator;
 					}, []);
 			},
-			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps as TimestampObject)
+			// A nested Schema's timestamps are only used when this schema has timestamps of its own.
+			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps ? parsedSettings.timestamps as TimestampObject : undefined)
 		});
 
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {
