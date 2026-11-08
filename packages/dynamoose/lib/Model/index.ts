@@ -816,7 +816,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 					return [key];
 				});
-				Object.keys(defaultObjectFromSchema).filter((key) => !updatedAttributes.includes(key)).forEach((key) => {
+				// DynamoDB rejects an update that sets a key attribute ("This attribute is part of the key"), so a timestamp that is part of the table key is left as the key has it.
+				const keyAttributes = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()];
+				Object.keys(defaultObjectFromSchema).filter((key) => !updatedAttributes.includes(key) && !keyAttributes.includes(key)).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 

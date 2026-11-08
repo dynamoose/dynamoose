@@ -3177,6 +3177,47 @@ describe("Model", () => {
 					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
 				});
 
+				it("Should not set an updatedAt that is the range key", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "rangeKey": true}}}}));
+					new dynamoose.Table("User", [User]);
+					const request = await callType.func(User).bind(User)({"id": 1, "updatedAt": 1000}, {"name": "Charlie"}, {"return": "request"});
+					expect(request.Key).toEqual({"id": {"N": "1"}, "updatedAt": {"N": "1000"}});
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "name"});
+					expect(request.ExpressionAttributeValues).toEqual({":v0": {"S": "Charlie"}});
+					expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
+				it("Should not set an updatedAt that is the hash key", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"name": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "hashKey": true}}}}));
+					new dynamoose.Table("User", [User]);
+					const request = await callType.func(User).bind(User)({"updatedAt": 1000}, {"name": "Charlie"}, {"return": "request"});
+					expect(request.Key).toEqual({"updatedAt": {"N": "1000"}});
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "name"});
+					expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
+				it("Should set the updatedAt that isn't part of the key when another updatedAt is the range key", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "rangeKey": true}, "modified": Date}}}));
+					new dynamoose.Table("User", [User]);
+					const before = Date.now();
+					const request = await callType.func(User).bind(User)({"id": 1, "updatedAt": 1000}, {"name": "Charlie"}, {"return": "request"});
+					const after = Date.now();
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "modified", "#a1": "name"});
+					expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					expect(parseInt(request.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(before, after);
+				});
+
+				it("Should set an updatedAt that is a global index key", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "index": {"name": "byUpdatedAt", "type": "global"}}}}}));
+					new dynamoose.Table("User", [User]);
+					const before = Date.now();
+					const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+					const after = Date.now();
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "name"});
+					expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					expect(parseInt(request.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(before, after);
+				});
+
 				it("Should send correct params to updateItem for timestamps with updateAt", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": true}));
@@ -5020,6 +5061,24 @@ describe("Model", () => {
 					}
 				});
 				expect(parseInt(result.Update.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(date - 10, date + 10);
+			});
+
+			it("Should not set an updatedAt that is the range key", async () => {
+				User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "rangeKey": true}}}}));
+				new dynamoose.Table("User", [User]);
+				expect(await User.transaction.update({"id": 1, "updatedAt": 1000}, {"name": "Bob"})).toEqual({
+					"Update": {
+						"Key": {"id": {"N": "1"}, "updatedAt": {"N": "1000"}},
+						"ExpressionAttributeNames": {
+							"#a0": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"S": "Bob"}
+						},
+						"UpdateExpression": "SET #a0 = :v0",
+						"TableName": "User"
+					}
+				});
 			});
 
 			it("Should print warning if passing callback", () => {

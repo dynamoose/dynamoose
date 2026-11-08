@@ -323,6 +323,8 @@ You can also pass in a `settings` object parameter to define extra settings for 
 | condition | This is an optional instance of a Condition for the update. | [dynamoose.Condition](Condition.md) | `null`
 | returnValues | Set which documents to return after the update. This setting will be passed into the DynamoDB `ReturnValues` parameter. | String | `ALL_NEW`
 
+If the schema has `timestamps`, `update` sets each `updatedAt` attribute to the current time. It doesn't set an `updatedAt` attribute that you set, add to or remove in `updateObj`, or one that is the table's hash or range key, since DynamoDB can't change a key attribute in an update.
+
 There are two different methods for specifying what you'd like to edit in the item. The first is you can just pass in the attribute name as the key, and the new value as the value. This will set the given attribute to the new value.
 
 ```js
