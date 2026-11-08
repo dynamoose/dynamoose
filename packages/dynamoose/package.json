@@ -25,7 +25,8 @@
     "build:sourcemap:watch": "npm run build:sourcemap -- -w",
     "test:nocoverage": "jest",
     "test": "npm run test:nocoverage -- --coverage --transformIgnorePatterns=''",
-    "test:types": "tsc --project test/types/tsconfig.json"
+    "test:types": "tsc --project test/types/tsconfig.json",
+    "test:integration": "jest --config jest.integration.config.js"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.782.0",

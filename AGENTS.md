@@ -28,6 +28,7 @@ Edit source under `packages/*/lib/` and documentation under `docs/docs_src/`. Ne
 - Runtime tests import compiled `dist` output, so rebuild before testing source changes.
 - During iteration, run a focused test without coverage, for example: `npm run test:nocoverage --workspace=dynamoose -- test/Query.js`.
 - Before completion, run the checks relevant to the change: `npm run lint`, `npm run test:types`, `npm run build:sourcemap`, and `npm test`. The full runtime suite expects DynamoDB Local on port 8000.
+- `packages/dynamoose/integration/` runs `Model.update` against DynamoDB Local and reads the stored item back: `npm run test:integration --workspace=dynamoose` after `npm run build` (`DYNAMODB_ENDPOINT` overrides `http://localhost:8000`).
 
 Write the failing regression test before the implementation fix. Runtime tests belong in `packages/dynamoose/test/**/*.js`; public type assertions belong in `packages/dynamoose/test/types/**/*.ts`. Keep tests deterministic, silent, self-contained, and isolated in Jest test or lifecycle blocks. Reset modified clients, defaults, providers, and other shared state in hooks. Cover callback and Promise variants when both are public behavior.
 
