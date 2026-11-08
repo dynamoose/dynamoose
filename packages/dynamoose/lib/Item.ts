@@ -477,19 +477,24 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		const promise: Promise<Item> = Promise.all([paramsPromise, table.getInternalProperties(internalProperties).pendingTaskPromise()]).then(async (promises) => {
 			const [putItemObj] = promises;
 			// Return the saved item in the same form as `Model.get` (get modifiers, Date timestamps, custom types), not in the form stored in DynamoDB
-			const returnItem = await new model.Item(savedItem as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true});
+			// `populate: false`: reading referenced items must not be a condition for the write.
+			const conformSettings: ItemObjectFromSchemaSettings = {"customTypesDynamo": true, "saveUnknown": true, "type": "fromDynamo", "mapAttributes": true, "populate": false};
+			const returnItem = await new model.Item(savedItem as any, {"type": "fromDynamo"}).conformToSchema({...conformSettings, "modifiers": ["get"]});
+			const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(returnItem);
+			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
+			const timestamps = schemaInternalProperties.getTimestampAttributes();
+			// This item takes its timestamps without `get` modifiers. A stored item does not regenerate `createdAt`, so the next save would write the `get` result.
+			const timestampSource = timestamps.length > 0 ? await new model.Item(savedItem as any, {"type": "fromDynamo"}).conformToSchema({...conformSettings}) : returnItem;
 			await ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
 			this.getInternalProperties(internalProperties).storedInDynamo = true;
 
 			// Saving set the timestamps on this item in their storage form. Replace them with the returned form.
 			// Other attributes keep the value the user gave, so a `set` modifier is not applied again on the next save.
 			// A mapped timestamp (`map`, `defaultMap`) is under its mapped name in the returned form.
-			const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(returnItem);
-			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
-			schemaInternalProperties.getTimestampAttributes().forEach((timestamp) => {
+			timestamps.forEach((timestamp) => {
 				const mapValues = schemaInternalProperties.getMapSettingValuesForKey(timestamp.name);
 				const returnedName = mapValues.length > 0 ? schemaInternalProperties.getDefaultMapAttribute(timestamp.name) || mapValues[0] : timestamp.name;
-				const value = utils.object.get(returnItem as any, returnedName);
+				const value = utils.object.get(timestampSource as any, returnedName);
 				if (value !== undefined) {
 					utils.object.set(this as any, returnedName, value);
 					if (returnedName !== timestamp.name) {
@@ -542,18 +547,19 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 			};
 
 			const timestampProperties = schema.getInternalProperties(internalProperties).getTimestampAttributes();
+			// An item read with `Model.get` or returned by `save` holds a mapped timestamp under its mapped name. Remove that name, or mapping to the storage name fails because both are defined.
+			const setTimestamp = (prop): void => {
+				schema.getInternalProperties(internalProperties).getMapSettingValuesForKey(prop.name).forEach((mappedName) => utils.object.delete(object as any, mappedName));
+				utils.object.set(object as any, prop.name, timeResult(prop));
+			};
 
 			const createdAtProperties = timestampProperties.filter((val) => val.type === "createdAt");
 			const updatedAtProperties = timestampProperties.filter((val) => val.type === "updatedAt");
 			if (object.getInternalProperties && object.getInternalProperties(internalProperties) && !object.getInternalProperties(internalProperties).storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
-				createdAtProperties.forEach((prop) => {
-					utils.object.set(object as any, prop.name, timeResult(prop));
-				});
+				createdAtProperties.forEach(setTimestamp);
 			}
 			if (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt) {
-				updatedAtProperties.forEach((prop) => {
-					utils.object.set(object as any, prop.name, timeResult(prop));
-				});
+				updatedAtProperties.forEach(setTimestamp);
 			}
 		}
 	}
@@ -890,7 +896,7 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 // This function will modify the item to conform to the Schema
 Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Item> {
 	let item = this;
-	if (settings.type === "fromDynamo") {
+	if (settings.type === "fromDynamo" && settings.populate !== false) {
 		item = await this.prepareForResponse();
 	}
 	const model = item.getInternalProperties(internalProperties).model;
