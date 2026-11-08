@@ -591,7 +591,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.BatchWriteItemInput, any> = callback as CallbackType<DynamoDB.BatchWriteItemInput, any>;
-				paramsPromise.then((result) => localCallback(null, result));
+				paramsPromise.then((result) => localCallback(null, result)).catch((error) => localCallback(error));
 				return;
 			} else {
 				return paramsPromise;
@@ -919,7 +919,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.UpdateItemInput, any> = callback as CallbackType<DynamoDB.UpdateItemInput, any>;
-				updateItemParamsPromise.then((params) => localCallback(null, params));
+				updateItemParamsPromise.then((params) => localCallback(null, params)).catch((error) => localCallback(error));
 				return;
 			} else {
 				return updateItemParamsPromise;
