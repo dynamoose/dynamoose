@@ -79,6 +79,7 @@ export interface BasicOperators<T = Condition> {
 	filter: (key: string) => T;
 	attribute: (key: string) => T;
 	eq: (value: any) => T;
+	ne: (value: any) => T;
 	lt: (value: any) => T;
 	le: (value: any) => T;
 	gt: (value: any) => T;
@@ -95,6 +96,7 @@ export interface Condition extends BasicOperators { // eslint-disable-line @type
 	filter: (key: string) => Condition;
 	attribute: (key: string) => Condition;
 	eq: (value: any) => Condition;
+	ne: (value: any) => Condition;
 	lt: (value: any) => Condition;
 	le: (value: any) => Condition;
 	gt: (value: any) => Condition;
@@ -444,9 +446,11 @@ Condition.prototype.where = Condition.prototype.filter = Condition.prototype.att
 	this.getInternalProperties(internalProperties).settings.pending = {key};
 	return this;
 };
-// TODO: I don't think this prototypes are being exposed which is gonna cause a lot of problems with our type definition file. Need to figure out a better way to do this since they aren't defined and are dynamic.
+// Each comparison in `types` is added to the prototype here, so TypeScript only knows it from its declaration in `BasicOperators` (which `Condition`, `Query` and `Scan` extend). This type is `never` when a comparison isn't declared there, so the assignment below fails to compile instead of leaving the method untyped.
+type DeclaredComparisonName = Exclude<`${ConditionComparisonComparatorName}`, keyof BasicOperators> extends never ? ConditionComparisonComparatorName : never;
 types.forEach((type) => {
-	Condition.prototype[type.name] = function (this: Condition, ...args: any[]): Condition {
+	const name: DeclaredComparisonName = type.name;
+	Condition.prototype[name] = function (this: Condition, ...args: any[]): Condition {
 		if (args.includes(undefined)) {
 			console.warn(`Dynamoose Warning: Passing \`undefined\` into a condition ${type.name} is not supported and can lead to behavior where DynamoDB returns an error related to your conditional. In a future version of Dynamoose this behavior will throw an error. If you believe your conditional is valid and you received this message in error, please submit an issue at https://github.com/dynamoose/dynamoose/issues/new/choose.`); // eslint-disable-line no-console
 		}

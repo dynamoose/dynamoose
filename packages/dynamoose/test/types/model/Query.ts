@@ -6,6 +6,9 @@ import {Condition} from "../../../dist";
 import {AnyItem} from "../../../dist/Item";
 import {QueryResponse, Query} from "../../../dist/ItemRetriever";
 
+// query.ne(value)
+const queryNe: Query<User> = UserTypedModel.query("id").eq(1).where("name").ne("Bob");
+
 // query.exec([callback])
 async function queryExec (): Promise<User[]> {
 	return await UserTypedModel.query().exec();

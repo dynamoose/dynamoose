@@ -82,6 +82,14 @@ This comparison function will check to see if the given filter key is equal to t
 new dynamoose.Condition().filter("name").eq("Tom"); // Condition all items where `name` equals `Tom`
 ```
 
+## condition.ne(value)
+
+This comparison function will check to see if the given filter key is not equal to the value you pass in as a parameter. It is the same as `condition.not().eq(value)`.
+
+```js
+new dynamoose.Condition().filter("name").ne("Tom"); // Condition all items where `name` doesn't equal `Tom`
+```
+
 ## condition.exists()
 
 This comparison function will check to see if the given filter key exists in the item.

@@ -6,6 +6,9 @@ import {AnyItem} from "../../../dist/Item";
 import {ScanResponse, Scan} from "../../../dist/ItemRetriever";
 import {ObjectType} from "../../../dist/General";
 
+// scan.ne(value)
+const scanNe: Scan<User> = UserTypedModel.scan("name").ne("Bob");
+
 // scan.exec([callback])
 async function scanExec (): Promise<User[]> {
 	return await UserTypedModel.scan().exec();
