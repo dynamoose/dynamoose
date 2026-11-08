@@ -23,6 +23,44 @@
     "uuid": "^9.0.1"
   },
   "license": "Unlicense",
+  "contributors": [
+    {
+      "name": "Brandon Goode"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/dynamoose/dynamoose/issues"
+  },
+  "keywords": [
+    "dynamodb",
+    "dynamo",
+    "mongoose",
+    "aws",
+    "amazon",
+    "document",
+    "model",
+    "schema",
+    "database",
+    "data",
+    "datastore",
+    "query",
+    "scan",
+    "nosql",
+    "db",
+    "nosql",
+    "store",
+    "document store",
+    "table",
+    "json",
+    "object",
+    "storage"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "dist"
+  ],
   "funding": [
     {
       "type": "github-sponsors",
