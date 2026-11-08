@@ -154,8 +154,8 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 		let result: any;
 		for (let attempt = 1; ; attempt++) {
 			try {
-				// TODO: remove `as any` here (https://stackoverflow.com/q/61111476/894067)
-				result = await ddb(instance, transactionType as any, sentParams as any);
+				// One call per method, as TypeScript picks a `ddb` overload by the method name and can't for the union `transactionType`. The items are only known to be all reads or all writes at runtime.
+				result = transactionType === "transactGetItems" ? await ddb(instance, "transactGetItems", sentParams as DynamoDB.TransactGetItemsInput) : await ddb(instance, "transactWriteItems", sentParams as DynamoDB.TransactWriteItemsInput);
 				break;
 			} catch (error) {
 				if (attempt > retry.attempts || !isRetryable(error)) {
