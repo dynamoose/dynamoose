@@ -2126,6 +2126,69 @@ describe("Model", () => {
 		});
 	});
 
+	describe("Aliases in the item Model.create and item.save resolve with", () => {
+		// The item a write resolves with names its attributes as Model.get returns them: by their alias.
+		let Person;
+		beforeEach(() => {
+			Person = dynamoose.model("Person", {"pk": {"type": String, "hashKey": true, "alias": "email"}, "n": {"type": String, "alias": "name"}, "age": Number});
+			new dynamoose.Table("Person", [Person], {"create": false, "waitForActive": false});
+			dynamoose.aws.ddb.set({"putItem": () => Promise.resolve({})});
+		});
+		afterEach(() => {
+			dynamoose.aws.ddb.revert();
+		});
+
+		it("Should resolve Model.create with each attribute under its alias", async () => {
+			const item = await Person.create({"email": "a@b.c", "name": "Bob", "age": 3});
+			expect(item.toJSON()).toEqual({"email": "a@b.c", "name": "Bob", "age": 3});
+		});
+
+		it("Should call back from Model.create with each attribute under its alias", async () => {
+			const item = await new Promise((resolve, reject) => Person.create({"email": "a@b.c", "name": "Bob"}, (error, result) => error ? reject(error) : resolve(result)));
+			expect(item.toJSON()).toEqual({"email": "a@b.c", "name": "Bob"});
+		});
+
+		it("Should resolve item.save with each attribute under its alias", async () => {
+			const item = await new Person({"email": "a@b.c", "name": "Bob"}).save();
+			expect(item.toJSON()).toEqual({"email": "a@b.c", "name": "Bob"});
+		});
+
+		it("Should resolve Model.create with the item Model.get returns for it, for alias, aliases and map names", async () => {
+			const Account = dynamoose.model("Account", {
+				"pk": {"type": String, "hashKey": true, "map": "id"},
+				"n": {"type": String, "aliases": ["name", "fullName"]},
+				"t": {"type": String, "alias": "type"}
+			});
+			new dynamoose.Table("Account", [Account], {"create": false, "waitForActive": false});
+			let stored;
+			dynamoose.aws.ddb.set({
+				"putItem": (params) => {
+					stored = params.Item;
+					return Promise.resolve({});
+				},
+				"getItem": () => Promise.resolve({"Item": stored})
+			});
+			const created = await Account.create({"id": "1", "fullName": "Bob", "type": "admin"});
+			const got = await Account.get("1");
+			expect(stored).toEqual({"pk": {"S": "1"}, "n": {"S": "Bob"}, "t": {"S": "admin"}});
+			expect(created.toJSON()).toEqual(got.toJSON());
+		});
+
+		it("Should still send the attribute names with return request", async () => {
+			const request = await Person.create({"email": "a@b.c", "name": "Bob"}, {"return": "request"});
+			expect(request.Item).toEqual({"pk": {"S": "a@b.c"}, "n": {"S": "Bob"}});
+		});
+
+		it("Should leave the saved item with the names it was given", async () => {
+			const byAlias = new Person({"email": "a@b.c", "name": "Bob"});
+			const byName = new Person({"pk": "a@b.c", "n": "Bob"});
+			await byAlias.save();
+			await byName.save();
+			expect(byAlias.toJSON()).toEqual({"email": "a@b.c", "name": "Bob"});
+			expect(byName.toJSON()).toEqual({"pk": "a@b.c", "n": "Bob"});
+		});
+	});
+
 	describe("model.batchPut()", () => {
 		let User, params, promiseFunction;
 		beforeEach(() => {

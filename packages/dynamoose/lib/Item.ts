@@ -489,8 +489,8 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 			returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
 
-			// Apply custom types conversion to ensure consistent behavior with get
-			await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "saveUnknown": true});
+			// Apply custom types conversion and the schema's alias names, so the item looks as `Model.get` returns it
+			await returnItem.conformToSchema({"customTypesDynamo": true, "type": "fromDynamo", "saveUnknown": true, "mapAttributes": true});
 
 			return returnItem;
 		})();

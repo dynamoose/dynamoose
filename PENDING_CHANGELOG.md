@@ -7,7 +7,7 @@
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
 ### 🚨 Breaking Changes 🚨
 
-- `Item.save` now applies custom type conversion to the item it resolves with, so custom typed attributes (such as `Date`) are returned in the same representation as `Model.get`. Previously `save` resolved with the underlying DynamoDB representation (for example a `number` for `Date` attributes) while `get` resolved with the custom type (a `Date` instance)
+- `Item.save` (and `Model.create`) now applies custom type conversion and the schema's `alias`, `aliases` and `map` names to the item it resolves with, so custom typed attributes (such as `Date`) and aliased attributes are returned in the same representation as `Model.get`. Previously `save` resolved with the underlying DynamoDB representation (for example a `number` for `Date` attributes, and `pk` for an attribute aliased `email`) while `get` resolved with the custom type (a `Date` instance) and the alias
 
 ### Features
 
