@@ -303,6 +303,10 @@ const edgeCases = [
 	},
 	{
 		"name": "get and set modifiers",
+		"differs": {
+			"reason": "main no longer puts the attributes a schema set adds (count) into the Key of Model.get for a key passed as a value. The published release still does.",
+			"steps": ["get whole"]
+		},
 		"run": async (ctx) => {
 			const {Schema} = ctx.dynamoose;
 			const Model = ctx.model("Model", new Schema({
