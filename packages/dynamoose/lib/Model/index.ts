@@ -738,7 +738,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			const updateTypeNames = updateTypes.map((a) => a.name);
 			const setUpdateType = updateTypes.find((a) => a.name === "$SET");
-			// The `$SET` values as the caller passed them, before conversion. They pick the schema whose `validate` runs, as `schemaForObject` does for a save.
+			// The `$SET` values as the caller passed them, before conversion. They pick the schema whose `set` and `validate` run, as `schemaForObject` does for a save.
 			const setInput: ObjectType = {};
 			const attributeType = (attribute: string, value: any): string | string[] => {
 				try {
@@ -759,9 +759,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					setInput[subKey] = subValue;
 				}
 			}
+			// One schema for the schema-level `set` and `validate`, so `validate` checks what that schema's `set` returned.
+			const setInputSchema = Object.keys(setInput).length > 0 ? this.getInternalProperties(internalProperties).schemaForObject(setInput) : schema;
 			const hasValue = ([, value]: [string, any]): boolean => value !== undefined && value !== type.UNDEFINED;
 			let finalSet = convertedSet;
-			const schemaSet = schema.getInternalProperties(internalProperties).settings.set;
+			const schemaSet = setInputSchema.getInternalProperties(internalProperties).settings.set;
 			if (schemaSet && [...convertedSet].some(hasValue)) {
 				const keyObject = await getKeyObject();
 				const result = await schemaSet({...keyObject, ...Object.fromEntries([...convertedSet].filter(hasValue))});
@@ -946,8 +948,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			// The schema's `validate` can't see the stored item, so it runs once, on the key and the values the update sets, after they're final (forced defaults, timestamps and Combine values included). `$ADD`, `$REMOVE` and `$DELETE` and list appends aren't validated, as they set no value that is known here.
 			if (writesValue) {
 				// The schema matching the caller's `$SET` input, as a save and a per-attribute conversion pick it, rather than always the first one.
-				const validatingSchema = Object.keys(setInput).length > 0 ? this.getInternalProperties(internalProperties).schemaForObject(setInput) : schema;
-				const schemaValidator = validatingSchema.getInternalProperties(internalProperties).settings.validate;
+				const schemaValidator = setInputSchema.getInternalProperties(internalProperties).settings.validate;
 				if (schemaValidator) {
 					const item = {...await getKeyObject(), ...setAttributes};
 					if (!await schemaValidator(item)) {

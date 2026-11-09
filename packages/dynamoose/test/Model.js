@@ -3680,6 +3680,21 @@ describe("Model", () => {
 						expect(updateItemParams.UpdateExpression).toEqual("REMOVE #a1 ADD #a0 :v0");
 					});
 
+					it("Should call the set of the schema that matches the attributes the update sets, as validate does", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						User = dynamoose.model("User", [
+							new dynamoose.Schema({"id": Number, "value": String, "from": String}, {"set": (item) => ({...item, "from": "first"})}),
+							new dynamoose.Schema({"id": Number, "value": Number, "from": String}, {"set": (item) => ({...item, "from": "second"}), "validate": (item) => item.from === "second"})
+						]);
+						new dynamoose.Table("User", [User]);
+
+						await callType.func(User).bind(User)({"id": 1}, {"value": 5});
+						expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "value", "#a1": "from"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"N": "5"}, ":v1": {"S": "second"}});
+						await callType.func(User).bind(User)({"id": 1}, {"value": "a"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "a"}, ":v1": {"S": "first"}});
+					});
+
 				});
 
 				describe("Schema validate setting", () => {
