@@ -254,6 +254,18 @@ describe("Item", () => {
 					expect(result.createdAt.getTime()).toEqual(Number(putParams[0].Item.createdAt.N) + 1000);
 				});
 
+				// A stored item does not regenerate createdAt: a set result on the instance would be set again by the next save.
+				it("Should not apply a createdAt set modifier again on the next save", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"timestamps": {"createdAt": {"createdAt": {"type": Date, "set": (value) => value + 1000}}, "updatedAt": null}}));
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+
+					await callType.func(user).bind(user)();
+					await callType.func(user).bind(user)();
+					expect(putParams[1].Item.createdAt).toEqual(putParams[0].Item.createdAt);
+				});
+
 				it("Should not read populated items when the table sets populate", async () => {
 					const getItemParams = [];
 					aws.ddb.set({

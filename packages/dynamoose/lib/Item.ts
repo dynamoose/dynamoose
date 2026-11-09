@@ -483,23 +483,23 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(returnItem);
 			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
 			const timestamps = schemaInternalProperties.getTimestampAttributes();
-			// This item takes its timestamps without `get` modifiers. A stored item does not regenerate `createdAt`, so the next save would write the `get` result.
-			const timestampSource = timestamps.length > 0 ? await new model.Item(savedItem as any, {"type": "fromDynamo"}).conformToSchema({...conformSettings}) : returnItem;
 			await ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
 			this.getInternalProperties(internalProperties).storedInDynamo = true;
 
-			// Saving set the timestamps on this item in their storage form. Replace them with the returned form.
-			// Other attributes keep the value the user gave, so a `set` modifier is not applied again on the next save.
-			// A mapped timestamp (`map`, `defaultMap`) is under its mapped name in the returned form.
+			// Saving set the timestamps on this item in their storage form, before `set` and `get` modifiers run. Only the form changes to a Date, as in
+			// the returned item: a stored item does not regenerate `createdAt`, so a modifier result here would be written again by the next save.
+			// Other attributes keep the value the user gave. A mapped timestamp (`map`, `defaultMap`) is under its mapped name in the returned form.
 			timestamps.forEach((timestamp) => {
+				const value = utils.object.get(this as any, timestamp.name);
+				const typeDetails: any = schema.getAttributeTypeDetails(timestamp.name);
+				if (value === undefined || value instanceof Date || !typeDetails.customType) {
+					return;
+				}
 				const mapValues = schemaInternalProperties.getMapSettingValuesForKey(timestamp.name);
 				const returnedName = mapValues.length > 0 ? schemaInternalProperties.getDefaultMapAttribute(timestamp.name) || mapValues[0] : timestamp.name;
-				const value = utils.object.get(timestampSource as any, returnedName);
-				if (value !== undefined) {
-					utils.object.set(this as any, returnedName, value);
-					if (returnedName !== timestamp.name) {
-						utils.object.delete(this as any, timestamp.name);
-					}
+				utils.object.set(this as any, returnedName, typeDetails.customType.functions.fromDynamo(value));
+				if (returnedName !== timestamp.name) {
+					utils.object.delete(this as any, timestamp.name);
 				}
 			});
 
