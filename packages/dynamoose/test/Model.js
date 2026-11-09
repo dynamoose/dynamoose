@@ -3654,6 +3654,36 @@ describe("Model", () => {
 						expect(updateItemParams.UpdateExpression).toEqual("ADD #a1 :v1 SET #a0 = :v0");
 					});
 
+					it("Should validate the forced default of an attribute the update doesn't set", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate((item) => item.status === "active", {"id": Number, "name": String, "status": {"type": String, "default": "active", "forceDefault": true}});
+
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
+						expect(validateCalls).toEqual([{"id": 1, "name": "Bob", "status": "active"}]);
+					});
+
+					it("Should validate with the schema that matches the attributes the update sets", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						User = dynamoose.model("User", [
+							new dynamoose.Schema({"id": Number, "value": String}),
+							new dynamoose.Schema({"id": Number, "value": Number}, {"validate": (item) => item.value >= 0})
+						]);
+						new dynamoose.Table("User", [User]);
+
+						await expect(callType.func(User).bind(User)({"id": 1}, {"value": -1})).rejects.toEqual(new CustomError.ValidationError("{\"id\":1,\"value\":-1} had a schema validation error when trying to save the item."));
+						await expect(callType.func(User).bind(User)({"id": 1}, {"value": 1})).resolves.toEqual();
+					});
+
+					it("Should validate the same key value that the update's Key uses", async () => {
+						let counter = 0;
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate((item) => item.id === 2, {"id": {"type": Number, "set": (value) => value + ++counter}, "name": String});
+
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
+						expect(updateItemParams.Key).toEqual({"id": {"N": "2"}});
+						expect(validateCalls).toEqual([{"id": 2, "name": "Bob"}]);
+					});
+
 				});
 
 				it("Should throw error if value not in enum", () => {
