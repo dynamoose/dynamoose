@@ -115,6 +115,8 @@ async function batchGetItemInChunks (instance: Instance, tableName: string, para
 		checkDuplicateKeys(Keys, keyAttributes);
 	}
 	const output: DynamoDB.BatchGetItemOutput = {"Responses": {[tableName]: []}, "UnprocessedKeys": {}};
+	// Each chunk's unprocessed keys are added to one list, rather than copying the list for every chunk.
+	const unprocessedKeys: AttributeMap[] = [];
 	await forEachChunk(Math.ceil(Keys.length / BATCH_GET_ITEM_LIMIT), settings.concurrency, async (index, stopped) => {
 		const start = index * BATCH_GET_ITEM_LIMIT;
 		const unprocessed = await sendWithRetries(retry, {...requestSettings, "Keys": Keys.slice(start, start + BATCH_GET_ITEM_LIMIT)}, async (request) => {
@@ -124,7 +126,8 @@ async function batchGetItemInChunks (instance: Instance, tableName: string, para
 			return unprocessedRequest?.Keys?.length > 0 ? unprocessedRequest : undefined;
 		}, stopped);
 		if (unprocessed) {
-			output.UnprocessedKeys[tableName] = {...unprocessed, "Keys": [...output.UnprocessedKeys[tableName]?.Keys ?? [], ...unprocessed.Keys]};
+			unprocessedKeys.push(...unprocessed.Keys);
+			output.UnprocessedKeys[tableName] = {...unprocessed, "Keys": unprocessedKeys};
 		}
 	});
 	return output;
@@ -140,6 +143,8 @@ async function batchWriteItemInChunks (instance: Instance, tableName: string, pa
 		checkDuplicateKeys(requests.map((request) => request.PutRequest?.Item ?? request.DeleteRequest.Key), keyAttributes);
 	}
 	const output: DynamoDB.BatchWriteItemOutput = {"UnprocessedItems": {}};
+	// Each chunk's unprocessed items are added to one list, rather than copying the list for every chunk.
+	const unprocessedItems: DynamoDB.WriteRequest[] = [];
 	await forEachChunk(Math.ceil(requests.length / BATCH_WRITE_ITEM_LIMIT), settings.concurrency, async (index, stopped) => {
 		const start = index * BATCH_WRITE_ITEM_LIMIT;
 		const unprocessed = await sendWithRetries(retry, requests.slice(start, start + BATCH_WRITE_ITEM_LIMIT), async (request) => {
@@ -148,7 +153,8 @@ async function batchWriteItemInChunks (instance: Instance, tableName: string, pa
 			return unprocessedRequests.length > 0 ? unprocessedRequests : undefined;
 		}, stopped);
 		if (unprocessed) {
-			output.UnprocessedItems[tableName] = [...output.UnprocessedItems[tableName] ?? [], ...unprocessed];
+			unprocessedItems.push(...unprocessed);
+			output.UnprocessedItems[tableName] = unprocessedItems;
 		}
 	});
 	return output;
