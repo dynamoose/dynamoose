@@ -1375,6 +1375,54 @@ describe("Model", () => {
 					expect(result.unprocessedKeys.map((item) => ({...item}))).toEqual([{"id": 1}]);
 				});
 
+				it("Should stop retrying a chunk when another chunk fails while it waits", async () => {
+					let firstChunkCalls = 0;
+					dynamoose.aws.ddb.set({
+						"batchGetItem": async (request) => {
+							const {Keys} = request.RequestItems.User;
+							if (Keys[0].id.N === "1") {
+								firstChunkCalls++;
+								return {"Responses": {"User": []}, "UnprocessedKeys": {"User": {"Keys": Keys}}};
+							}
+							// Fails 5 milliseconds in, while the first chunk waits 50 milliseconds to retry.
+							await new Promise((resolve) => setTimeout(resolve, 5));
+							throw new Error("Second chunk failed");
+						}
+					});
+					const random = jest.spyOn(Math, "random").mockReturnValue(1);
+					try {
+						await expect(callType.func(User).bind(User)(Array.from({"length": 200}, (_, index) => index + 1), {"concurrency": 2, "retryUnprocessed": {"attempts": 3, "delay": 50}})).rejects.toEqual(new Error("Second chunk failed"));
+					} finally {
+						random.mockRestore();
+					}
+					expect(firstChunkCalls).toEqual(1);
+				});
+
+				it("Should not wait to retry a chunk when another chunk has already failed", async () => {
+					let firstChunkCalls = 0;
+					dynamoose.aws.ddb.set({
+						"batchGetItem": async (request) => {
+							const {Keys} = request.RequestItems.User;
+							if (Keys[0].id.N === "1") {
+								firstChunkCalls++;
+								// Answers after the second chunk has failed.
+								await new Promise((resolve) => setTimeout(resolve, 5));
+								return {"Responses": {"User": []}, "UnprocessedKeys": {"User": {"Keys": Keys}}};
+							}
+							throw new Error("Second chunk failed");
+						}
+					});
+					const random = jest.spyOn(Math, "random").mockReturnValue(1);
+					try {
+						await expect(callType.func(User).bind(User)(Array.from({"length": 200}, (_, index) => index + 1), {"concurrency": 2, "retryUnprocessed": {"attempts": 3, "delay": 1000}})).rejects.toEqual(new Error("Second chunk failed"));
+						// The wait before a retry is the only use of Math.random, so no wait was started.
+						expect(random).not.toHaveBeenCalled();
+					} finally {
+						random.mockRestore();
+					}
+					expect(firstChunkCalls).toEqual(1);
+				});
+
 				it("Should throw an error for an invalid retryUnprocessed", () => {
 					return expect(callType.func(User).bind(User)([1], {"retryUnprocessed": {"attempts": -1}})).rejects.toEqual(new CustomError.InvalidParameter("retryUnprocessed.attempts must be a whole number of 0 or more, and retryUnprocessed.delay a number of milliseconds of 0 or more."));
 				});
@@ -2329,6 +2377,29 @@ describe("Model", () => {
 					const result = await callType.func(User).bind(User)([{"id": 1, "name": "a"}, {"id": 2, "name": "b"}, {"id": 3, "name": "c"}], {"retryUnprocessed": {"attempts": 1, "delay": 0}});
 					expect(calls).toEqual(2);
 					expect(result.unprocessedItems.map((item) => item.id)).toEqual([1, 2, 3]);
+				});
+
+				it("Should not write a chunk's unprocessed items again after another chunk fails", async () => {
+					let firstChunkCalls = 0;
+					dynamoose.aws.ddb.set({
+						"batchWriteItem": async (request) => {
+							const requests = request.RequestItems.User;
+							if (requests[0].PutRequest.Item.id.N === "1") {
+								firstChunkCalls++;
+								return {"UnprocessedItems": {"User": requests}};
+							}
+							// Fails 5 milliseconds in, while the first chunk waits 50 milliseconds to retry.
+							await new Promise((resolve) => setTimeout(resolve, 5));
+							throw new Error("Second chunk failed");
+						}
+					});
+					const random = jest.spyOn(Math, "random").mockReturnValue(1);
+					try {
+						await expect(callType.func(User).bind(User)(Array.from({"length": 50}, (_, index) => ({"id": index + 1, "name": "a"})), {"concurrency": 2, "retryUnprocessed": {"attempts": 3, "delay": 50}})).rejects.toEqual(new Error("Second chunk failed"));
+					} finally {
+						random.mockRestore();
+					}
+					expect(firstChunkCalls).toEqual(1);
 				});
 
 				it("Should split more than 25 items into requests of 25 and combine the unprocessed items", async () => {

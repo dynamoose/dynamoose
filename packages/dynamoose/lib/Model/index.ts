@@ -70,7 +70,8 @@ interface BatchSendSettings {
 	concurrency?: number;
 }
 // Runs `run` once for each chunk index, at most `concurrency` at a time. After a failure no more chunks start, and the first error is thrown once the running ones finish.
-async function forEachChunk (count: number, concurrency = 1, run: (index: number) => Promise<void>): Promise<void> {
+// `run` gets `stopped`, which is true once any chunk has failed, so a running chunk can stop retrying instead of sending more requests.
+async function forEachChunk (count: number, concurrency = 1, run: (index: number, stopped: () => boolean) => Promise<void>): Promise<void> {
 	if (!Number.isInteger(concurrency) || concurrency < 1) {
 		throw new CustomError.InvalidParameter("concurrency must be a whole number of 1 or more.");
 	}
@@ -80,7 +81,7 @@ async function forEachChunk (count: number, concurrency = 1, run: (index: number
 		while (errors.length === 0 && next < count) {
 			const index = next++;
 			try {
-				await run(index);
+				await run(index, () => errors.length > 0);
 			} catch (error) {
 				errors.push(error);
 			}
@@ -92,10 +93,14 @@ async function forEachChunk (count: number, concurrency = 1, run: (index: number
 	}
 }
 // Sends a request, then sends what DynamoDB returns as unprocessed again, up to `retry.attempts` times, and returns what is still unprocessed.
-async function sendWithRetries<T> (retry: BatchRetryUnprocessedSettings, request: T, send: (request: T) => Promise<T | undefined>): Promise<T | undefined> {
+// Once another chunk has failed (`stopped`), the batch rejects with that error, so it neither waits for nor sends another retry.
+async function sendWithRetries<T> (retry: BatchRetryUnprocessedSettings, request: T, send: (request: T) => Promise<T | undefined>, stopped: () => boolean): Promise<T | undefined> {
 	let unprocessed = await send(request);
-	for (let attempt = 1; unprocessed && attempt <= retry.attempts; attempt++) {
+	for (let attempt = 1; unprocessed && attempt <= retry.attempts && !stopped(); attempt++) {
 		await utils.timeout(Math.random() * Math.min(MAX_RETRY_WAIT, (retry.delay ?? 100) * 2 ** (attempt - 1)));
+		if (stopped()) {
+			break;
+		}
 		unprocessed = await send(unprocessed);
 	}
 	return unprocessed;
@@ -110,14 +115,14 @@ async function batchGetItemInChunks (instance: Instance, tableName: string, para
 		checkDuplicateKeys(Keys, keyAttributes);
 	}
 	const output: DynamoDB.BatchGetItemOutput = {"Responses": {[tableName]: []}, "UnprocessedKeys": {}};
-	await forEachChunk(Math.ceil(Keys.length / BATCH_GET_ITEM_LIMIT), settings.concurrency, async (index) => {
+	await forEachChunk(Math.ceil(Keys.length / BATCH_GET_ITEM_LIMIT), settings.concurrency, async (index, stopped) => {
 		const start = index * BATCH_GET_ITEM_LIMIT;
 		const unprocessed = await sendWithRetries(retry, {...requestSettings, "Keys": Keys.slice(start, start + BATCH_GET_ITEM_LIMIT)}, async (request) => {
 			const response = await ddb(instance, "batchGetItem", {"RequestItems": {[tableName]: request}});
 			output.Responses[tableName].push(...response.Responses?.[tableName] ?? []);
 			const unprocessedRequest = response.UnprocessedKeys?.[tableName];
 			return unprocessedRequest?.Keys?.length > 0 ? unprocessedRequest : undefined;
-		});
+		}, stopped);
 		if (unprocessed) {
 			output.UnprocessedKeys[tableName] = {...unprocessed, "Keys": [...output.UnprocessedKeys[tableName]?.Keys ?? [], ...unprocessed.Keys]};
 		}
@@ -135,13 +140,13 @@ async function batchWriteItemInChunks (instance: Instance, tableName: string, pa
 		checkDuplicateKeys(requests.map((request) => request.PutRequest?.Item ?? request.DeleteRequest.Key), keyAttributes);
 	}
 	const output: DynamoDB.BatchWriteItemOutput = {"UnprocessedItems": {}};
-	await forEachChunk(Math.ceil(requests.length / BATCH_WRITE_ITEM_LIMIT), settings.concurrency, async (index) => {
+	await forEachChunk(Math.ceil(requests.length / BATCH_WRITE_ITEM_LIMIT), settings.concurrency, async (index, stopped) => {
 		const start = index * BATCH_WRITE_ITEM_LIMIT;
 		const unprocessed = await sendWithRetries(retry, requests.slice(start, start + BATCH_WRITE_ITEM_LIMIT), async (request) => {
 			const response = await ddb(instance, "batchWriteItem", {"RequestItems": {[tableName]: request}});
 			const unprocessedRequests = response.UnprocessedItems?.[tableName] ?? [];
 			return unprocessedRequests.length > 0 ? unprocessedRequests : undefined;
-		});
+		}, stopped);
 		if (unprocessed) {
 			output.UnprocessedItems[tableName] = [...output.UnprocessedItems[tableName] ?? [], ...unprocessed];
 		}
