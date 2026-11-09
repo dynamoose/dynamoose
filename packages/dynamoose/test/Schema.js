@@ -100,6 +100,16 @@ describe("Schema", () => {
 			expect(settings.timestamps).toEqual(true);
 		});
 
+		it("Should not enable timestamps from an own __proto__ key in a settings object parsed from JSON", () => {
+			const settings = JSON.parse("{\"__proto__\":{\"timestamps\":true}}");
+			expect(new dynamoose.Schema({"id": String}, settings).attributes()).toEqual(["id"]);
+		});
+
+		it("Should drop an own __proto__ key in a schema definition parsed from JSON, as before", () => {
+			const definition = JSON.parse("{\"id\":\"String\",\"__proto__\":\"String\"}");
+			expect(new dynamoose.Schema(definition).attributes()).toEqual(["id"]);
+		});
+
 		it("Should not replace a nested Schema in an object in the schema definition", () => {
 			const address = new dynamoose.Schema({"street": String});
 			const definition = {"id": String, "info": {"type": Object, "schema": {"address": address}}};

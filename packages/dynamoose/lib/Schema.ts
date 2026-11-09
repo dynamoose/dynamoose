@@ -851,7 +851,10 @@ function copyPlainObjects<T> (value: T): T {
 	const prototype = value && typeof value === "object" ? Object.getPrototypeOf(value) : undefined;
 	if (prototype === null || prototype && Object.getPrototypeOf(prototype) === null) {
 		return Object.keys(value).reduce((copy, key) => {
-			copy[key] = copyPlainObjects(value[key]);
+			// A `__proto__` key is skipped. Assigning it would call the inherited prototype setter, which changes the copy's prototype (for example, enabling timestamps from JSON.parse input). Keeping it as an own property would add an attribute that the previous behaviour dropped.
+			if (key !== "__proto__") {
+				copy[key] = copyPlainObjects(value[key]);
+			}
 			return copy;
 		}, {}) as T;
 	}
