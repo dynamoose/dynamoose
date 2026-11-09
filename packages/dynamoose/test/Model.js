@@ -3526,9 +3526,9 @@ describe("Model", () => {
 						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "address": Address}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}, "createdAtOnUpdate": true}));
 						new dynamoose.Table("User", [User]);
 						const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
-						expect(request.ExpressionAttributeNames).toEqual({"#a0": "created", "#a1": "updated", "#a2": "address", "#a3": "name"});
-						expect(request.UpdateExpression).toEqual("SET #a0 = if_not_exists(#a0, :v0), #a1 = :v1, #a2 = :v2, #a3 = :v3");
-						expect(Object.keys(request.ExpressionAttributeValues[":v2"].M)).toEqual(["updatedAt"]);
+						// The update doesn't name `address`, so it leaves the nested schema, and its own timestamps, as they are stored.
+						expect(request.ExpressionAttributeNames).toEqual({"#a0": "created", "#a1": "updated", "#a2": "name"});
+						expect(request.UpdateExpression).toEqual("SET #a0 = if_not_exists(#a0, :v0), #a1 = :v1, #a2 = :v2");
 					});
 
 					it("Should not set createdAt on item.save for an item that is stored", async () => {
