@@ -7,6 +7,24 @@ const {publishedBaselineDirectory} = require("./builds");
 const benchmark = path.join(__dirname, "benchmark.js");
 const stages = ["getAttributeValue", "getAttributeTypeDetails", "attributes", "getTypePaths", "objectFromSchema-toDynamo", "objectFromSchema-fromDynamo", "save-conform"];
 
+// The benchmark runs under plain Node, where the Jest resolver of the equivalence suite does not apply.
+// With the workspace dynamoose-utils on both sides, a utils change could not show in the comparison.
+describe("published baseline under plain Node", () => {
+	it("Should load the published dynamoose-utils for the published release and the workspace one for this build", () => {
+		const script = `
+			const fs = require("fs");
+			const builds = require(${JSON.stringify(path.join(__dirname, "builds.js"))});
+			builds.loadPublishedBaseline();
+			builds.loadBuild(builds.currentDirectory);
+			const loaded = Object.keys(require.cache).filter((file) => file.endsWith(require("path").join("dist", "index.js")) && fs.realpathSync(file).includes("dynamoose-utils"));
+			console.log(JSON.stringify(loaded.map((file) => fs.realpathSync(file))));
+		`;
+		const loaded = JSON.parse(execFileSync(process.execPath, ["-e", script], {"encoding": "utf8"}));
+		expect(loaded.some((file) => file.split(path.sep).includes("dynamoose-utils-baseline"))).toEqual(true);
+		expect(loaded.some((file) => file.split(path.sep).join("/").includes("packages/dynamoose-utils/"))).toEqual(true);
+	});
+});
+
 describe("benchmark --quick", () => {
 	let directory;
 	let output;

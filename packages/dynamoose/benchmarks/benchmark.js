@@ -14,12 +14,12 @@ const inspector = require("inspector");
 const path = require("path");
 const {performance} = require("perf_hooks");
 const {promisify} = require("util");
-const {loadBuild, publishedBaselineDirectory, currentDirectory} = require("./builds");
+const {loadBuild, loadPublishedBaseline, currentDirectory} = require("./builds");
 const {gate, isGated, gateVerdict, median} = require("./gate");
 const schemas = {...require("./schemas").schemas};
 
 const builds = {
-	"baseline": loadBuild(process.env.BASELINE ? path.resolve(process.env.BASELINE) : publishedBaselineDirectory),
+	"baseline": process.env.BASELINE ? loadBuild(path.resolve(process.env.BASELINE)) : loadPublishedBaseline(),
 	"current": loadBuild(currentDirectory)
 };
 const currentScale = process.env.BENCHMARK_SCALE_CURRENT ? Number(process.env.BENCHMARK_SCALE_CURRENT) : 1;
