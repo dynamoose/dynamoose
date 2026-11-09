@@ -1567,6 +1567,16 @@ describe("Model", () => {
 					]);
 				});
 
+				it("Should return items with mapped properties from a non-first schema", async () => {
+					User = dynamoose.model("User", [new dynamoose.Schema({"pk": Number, "value": {"type": Number, "map": "numeric"}}), new dynamoose.Schema({"pk": Number, "value": {"type": String, "map": "text"}})]);
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"pk": {"N": "1"}, "value": {"S": "Bob"}}]}, "UnprocessedKeys": {}});
+					const result = await callType.func(User).bind(User)([1]);
+					expect(result.map((item) => ({...item}))).toEqual([
+						{"pk": 1, "text": "Bob"}
+					]);
+				});
+
 				it("Should not return expired items", async () => {
 					User = dynamoose.model("User", {"id": Number});
 					new dynamoose.Table("User", [User], {"expires": {"ttl": 1000, "items": {"returnExpired": false}}});
@@ -3618,6 +3628,18 @@ describe("Model", () => {
 					expect({...result}).toEqual({
 						"id": 1,
 						"name": "Charlie"
+					});
+				});
+
+				it("Should return updated item with mapped properties from a non-first schema upon success", async () => {
+					User = dynamoose.model("User", [new dynamoose.Schema({"pk": Number, "value": {"type": Number, "map": "numeric"}}), new dynamoose.Schema({"pk": Number, "value": {"type": String, "map": "text"}})]);
+					new dynamoose.Table("User", [User]);
+					updateItemFunction = () => Promise.resolve({"Attributes": {"pk": {"N": "1"}, "value": {"S": "Bob"}}});
+					const result = await callType.func(User).bind(User)({"pk": 1}, {"value": "Bob"});
+					expect(result.constructor.name).toEqual("User");
+					expect({...result}).toEqual({
+						"pk": 1,
+						"text": "Bob"
 					});
 				});
 

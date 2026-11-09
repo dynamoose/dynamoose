@@ -2147,6 +2147,19 @@ describe("Item", () => {
 				});
 			}
 		});
+
+		it("Should map attributes using the schema passed in settings", async () => {
+			const firstSchema = new dynamoose.Schema({"id": Number, "value": {"type": String, "map": "text"}});
+			const secondSchema = new dynamoose.Schema({"id": Number, "value": {"type": String, "map": "label"}});
+			const User = dynamoose.model("User", [firstSchema, secondSchema]);
+			const settings = {"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true};
+
+			const user = await new User({"id": 1, "value": "Bob"}, {"type": "fromDynamo"}).conformToSchema(settings);
+			expect({...user}).toEqual({"id": 1, "text": "Bob"});
+
+			const labeledUser = await new User({"id": 1, "value": "Bob"}, {"type": "fromDynamo"}).conformToSchema({...settings, "schema": secondSchema});
+			expect({...labeledUser}).toEqual({"id": 1, "label": "Bob"});
+		});
 	});
 
 	describe("Item.isDynamoObject", () => {
