@@ -728,6 +728,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
 			}
 
+			// The createdAt names set with `if_not_exists`. DynamoDB keeps the stored value, so a combine attribute can't be built from the value sent.
+			const ifNotExistsNames: string[] = [];
 			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
 				const accumulator = await accumulatorPromise;
 				let value = updateObj[key];
@@ -806,15 +808,32 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}, {})
 				};
 
-				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
+				// With `createdAtOnUpdate`, the update may create the item, so createdAt is written with `if_not_exists`: DynamoDB keeps the stored value and only sets it on a new item.
+				const createdAtOnUpdate = schema.getInternalProperties(internalProperties).settings.createdAtOnUpdate === true;
+				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true, "createdAt": createdAtOnUpdate}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
 				const defaultObjectFromSchema = await this.Item.objectFromSchema(await this.Item.prepareForObjectFromSchema({}, this, itemFunctionSettings), this, itemFunctionSettings);
-				Object.keys(defaultObjectFromSchema).forEach((key) => {
+				const createdAtAttributes = schema.getInternalProperties(internalProperties).getTimestampAttributes().filter((prop) => prop.type === "createdAt").map((prop) => prop.name);
+				// A createdAt the update sets, adds to or removes itself is left to it. DynamoDB rejects an update expression that names the same attribute twice.
+				const updatedAttributes = Object.keys(updateObj).flatMap((key) => {
+					const value = updateObj[key];
+					if (typeof value === "object" && updateTypes.map((a) => a.name).includes(key)) {
+						return Array.isArray(value) ? value : Object.keys(value);
+					}
+					return [key];
+				});
+				// DynamoDB rejects an update that sets a key attribute, so a createdAt that is part of the key is left as the key has it.
+				const keyAttributes = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()];
+				Object.keys(defaultObjectFromSchema).filter((key) => !(createdAtAttributes.includes(key) && (updatedAttributes.includes(key) || keyAttributes.includes(key)))).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
 					const updateType = updateTypes.find((a) => a.name === "$SET");
+					const expressionValue = createdAtAttributes.includes(key) ? `if_not_exists(#a${index}, :v${index})` : `:v${index}`;
+					if (createdAtAttributes.includes(key)) {
+						ifNotExistsNames.push(`#a${index}`);
+					}
 
 					obj.ExpressionAttributeNames[`#a${index}`] = key;
 					obj.ExpressionAttributeValues[`:v${index}`] = value;
-					obj.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
+					obj.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}${expressionValue}`);
 
 					index++;
 				});
@@ -837,7 +856,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const expressionAttributeNameEntry = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 					const doesExist = Boolean(expressionAttributeNameEntry);
 					// `\b` after the placeholder, so that `#a1` doesn't match inside `#a10`.
-					const isValid = doesExist && new RegExp(`${expressionAttributeNameEntry[0]}\\b`, "u").test([...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", "));
+					const isValid = doesExist && !ifNotExistsNames.includes(expressionAttributeNameEntry[0]) && new RegExp(`${expressionAttributeNameEntry[0]}\\b`, "u").test([...returnObject.UpdateExpression.SET, ...returnObject.UpdateExpression.REMOVE].join(", "));
 
 					if (!isValid) {
 						result.invalidAttributes.push(attribute);

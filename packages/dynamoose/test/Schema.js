@@ -60,6 +60,17 @@ describe("Schema", () => {
 		expect(() => new dynamoose.Schema({"id": String, "a1": Date, "b1": Date}, {"timestamps": {"createdAt": {"a1": Date}, "updatedAt": {"b1": Date}}}).getInternalProperties(internalProperties).settings).toThrow("Timestamp attributes must not be defined in schema.");
 	});
 
+	it("Should throw error if createdAtOnUpdate isn't a boolean", () => {
+		["true", 1, null, {}].forEach((value) => {
+			expect(() => new dynamoose.Schema({"id": String}, {"timestamps": true, "createdAtOnUpdate": value})).toThrow("createdAtOnUpdate must be a boolean.");
+		});
+	});
+
+	it("Should set createdAtOnUpdate setting", () => {
+		expect(new dynamoose.Schema({"id": String}, {"timestamps": true, "createdAtOnUpdate": true}).getInternalProperties(internalProperties).settings.createdAtOnUpdate).toEqual(true);
+		expect(new dynamoose.Schema({"id": String}, {"timestamps": true, "createdAtOnUpdate": false}).getInternalProperties(internalProperties).settings.createdAtOnUpdate).toEqual(false);
+	});
+
 	it("Should throw error if passing multiple schema elements into array", () => {
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [String, Number]}})).toThrow("You must only pass one element into schema array.");
 		expect(() => new dynamoose.Schema({"id": String, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [Buffer, String]}}}]}})).toThrow("You must only pass one element into schema array.");

@@ -281,6 +281,7 @@ export interface TimestampObject {
 }
 interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
+	createdAtOnUpdate?: boolean;
 	saveUnknown?: boolean | string[];
 	set?: (value: ObjectType) => ObjectType;
 	get?: (value: ObjectType) => ObjectType;
@@ -885,6 +886,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	 * |---|---|---|---|
 	 * | `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep (ex. `["person.*", "friend.**"]` will allow you store a property `person` with 1 level of unknown properties and `friend` with infinitely nested level unknown properties). If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
 	 * | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. You can also set each of the `createdAt` & `updatedAt` properties equal to a Schema object. The keys of this Schema object represent the name of the attributes, with the value allowing for customization such as changing the storage type of the date. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
+	 * | `createdAtOnUpdate` | boolean | false | This setting lets you indicate to Dynamoose that `Model.update` and `Model.transaction.update` should also set the `createdAt` timestamps, since an update creates the item if it doesn't exist. Dynamoose sets each `createdAt` attribute with `if_not_exists`, to the same time as `updatedAt`, so DynamoDB stores it only on an item that doesn't have it yet. An existing item that has no `createdAt` attribute gets the time of its next update. A `createdAt` attribute that the update sets or removes itself, that is part of the table key, or that is in a nested schema isn't set. A `Combine` attribute that uses `createdAt` requires the update to set `createdAt` itself. This setting has no effect without `timestamps`.
 	 * | `get` | function \| async function | undefined | You can use a get function on the schema to be run whenever retrieving an item from DynamoDB. Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to return to the application. This function will be run after all property `get` functions are run.
 	 * | `set` | function \| async function | undefined | You can use a set function on the schema to be run whenever saving an item to DynamoDB. It will also be used when retrieving an item (ie. `get`, `query`, `update`, etc). Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to save to DynamoDB. This function will be run after all property `set` functions are run.
 	 * | `validate` | function \| async function | undefined | You can use a validate function on the schema to ensure the value passes a given validation before saving the item. Dynamoose will pass the entire item into this function and you must return a boolean (`true` if validation passes or `false` if validation fails) or throw an error. This function will be run after all property `validate` functions are run.
@@ -1013,6 +1015,9 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		}
 		if (Object.keys(object).length === 0) {
 			throw new CustomError.InvalidParameter("Schema initialization parameter must not be an empty object.");
+		}
+		if (typeof settings.createdAtOnUpdate !== "undefined" && typeof settings.createdAtOnUpdate !== "boolean") {
+			throw new CustomError.InvalidParameter("createdAtOnUpdate must be a boolean.");
 		}
 
 		if (settings.timestamps === true) {
