@@ -2134,6 +2134,21 @@ describe("Query", () => {
 				const request = await Model.scan(new dynamoose.Condition().parenthesis(raw("#fn > :n", {"#fn": "favoriteNumber"}, {":n": 5})).or().parenthesis(raw("#fn = :n", {"#fn": "favoriteNumber"}, {":n": 5}))).getRequest();
 				expect(request).toEqual({"TableName": "Cat", "FilterExpression": "(#fn > :n) OR (#fn = :n)", "ExpressionAttributeNames": {"#fn": "favoriteNumber"}, "ExpressionAttributeValues": {":n": {"N": "5"}}});
 			});
+
+			it("Should allow two raw conditions that use one placeholder for one map with its keys in another order", async () => {
+				const request = await Model.scan(new dynamoose.Condition().parenthesis(raw("#n = :m", {"#n": "name"}, {":m": {"a": 1, "b": 2}})).or().parenthesis(raw("#n <> :m", {"#n": "name"}, {":m": {"b": 2, "a": 1}}))).getRequest();
+				expect(request).toEqual({"TableName": "Cat", "FilterExpression": "(#n = :m) OR (#n <> :m)", "ExpressionAttributeNames": {"#n": "name"}, "ExpressionAttributeValues": {":m": {"M": {"a": {"N": "1"}, "b": {"N": "2"}}}}});
+			});
+
+			it("Should allow two raw conditions that use one placeholder for one set with its elements in another order", async () => {
+				const request = await Model.scan(new dynamoose.Condition().parenthesis(raw("#n = :s", {"#n": "name"}, {":s": {"SS": ["x", "y"]}})).or().parenthesis(raw("#n <> :s", {"#n": "name"}, {":s": {"SS": ["y", "x"]}}))).getRequest();
+				expect(request).toEqual({"TableName": "Cat", "FilterExpression": "(#n = :s) OR (#n <> :s)", "ExpressionAttributeNames": {"#n": "name"}, "ExpressionAttributeValues": {":s": {"SS": ["x", "y"]}}});
+			});
+
+			it("Should throw for two raw conditions that use one placeholder for maps with different values", async () => {
+				const condition = new dynamoose.Condition().parenthesis(raw("#n = :m", {"#n": "name"}, {":m": {"a": 1, "b": 2}})).or().parenthesis(raw("#n <> :m", {"#n": "name"}, {":m": {"b": 3, "a": 1}}));
+				await expect(Model.scan(condition).getRequest()).rejects.toEqual(new CustomError.InvalidParameter("The raw condition uses \":m\" for {\"M\":{\"b\":{\"N\":\"3\"},\"a\":{\"N\":\"1\"}}}, but the condition already uses it for {\"M\":{\"a\":{\"N\":\"1\"},\"b\":{\"N\":\"2\"}}}. Give each raw condition its own placeholders."));
+			});
 		});
 	});
 });

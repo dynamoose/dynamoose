@@ -216,10 +216,10 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 						let expression = "";
 						if (Array.isArray(entry)) {
 							const result = entry[RAW_GROUP] ? await rawRequestObject(entry[RAW_GROUP]) : await main(entry);
-							// Two raw conditions can't give one name or value placeholder different meanings.
+							// Two raw conditions can't give one name or value placeholder different meanings. Equal values may differ in map key or set element order.
 							["ExpressionAttributeNames", "ExpressionAttributeValues"].forEach((property) => {
 								Object.entries(result[property] || {}).forEach(([key, value]) => {
-									if (key in object[property] && JSON.stringify(object[property][key]) !== JSON.stringify(value)) {
+									if (key in object[property] && !utils.dynamoose.attribute_values_equal(object[property][key], value)) {
 										throw new CustomError.InvalidParameter(`The raw condition uses "${key}" for ${JSON.stringify(value)}, but the condition already uses it for ${JSON.stringify(object[property][key])}. Give each raw condition its own placeholders.`);
 									}
 								});
