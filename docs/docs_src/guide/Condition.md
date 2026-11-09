@@ -10,6 +10,8 @@ new dynamoose.Condition({"breed": {"contains": "Terrier"}}) // will condition fo
 new dynamoose.Condition(new dynamoose.Condition({"breed": {"contains": "Terrier"}})) // will condition for where the key `breed` contains `Terrier`
 ```
 
+A comparison needs a value. A request that uses a condition with an `undefined` value (such as `eq(undefined)`, `{"breed": undefined}`, an `undefined` item of `in` or `between`, or a raw condition placeholder without a value) throws an `InvalidParameter` error before it is sent, because DynamoDB rejects it. The condition itself can be built without an error. A `null` value is compared with DynamoDB's `NULL` type, and an empty string, map or binary value is sent as it is.
+
 For a more advanced use case you pass an object into `new dynamoose.Condition()` the object for each key should contain the comparison type. For example, in the second to last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
 You can also pass in a raw DynamoDB condition object. Which has properties for `ExpressionAttributeNames`, `ExpressionAttributeValues` & either `FilterExpression` or `ComparisonExpression`. In the event you do this, all future condition methods called on this condition instance will be ignored. In the event you don't pass in DynamoDB objects for the `ExpressionAttributeValues` values, Dynamoose will automatically convert them to DynamoDB compatible objects to make the request.
@@ -127,6 +129,8 @@ new dynamoose.Condition().filter("age").ge(5); // Represents all items where `ag
 ## condition.beginsWith(value)
 
 This comparison function will check to see if the given filter key begins with the value you pass in as a parameter.
+
+The value must be a string or binary value, as DynamoDB requires; any other value (such as `null` or a number) throws an `InvalidParameter` error before the request is sent. DynamoDB doesn't allow `beginsWith` on a Number sort key in a query.
 
 ```js
 new dynamoose.Condition().filter("name").beginsWith("T"); // Represents all items where `name` begins with `T`

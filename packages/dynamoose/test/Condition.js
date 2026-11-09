@@ -13,15 +13,16 @@ describe("Condition", () => {
 		expect(new Condition()).toBeInstanceOf(Object);
 	});
 
-	it("Should display warning when passing undefined into condition", () => {
-		let result;
-		const originalFunction = console.warn; // eslint-disable-line no-console
-		console.warn = (str) => { // eslint-disable-line no-console
-			result = str;
-		};
-		new Condition("id").eq(undefined);
-		console.warn = originalFunction; // eslint-disable-line no-console
-		expect(result).toEqual("Dynamoose Warning: Passing `undefined` into a condition eq is not supported and can lead to behavior where DynamoDB returns an error related to your conditional. In a future version of Dynamoose this behavior will throw an error. If you believe your conditional is valid and you received this message in error, please submit an issue at https://github.com/dynamoose/dynamoose/issues/new/choose.");
+	it("Should not warn when passing undefined into a condition", () => {
+		// The request built from the condition throws instead (see test/MissingValues.js).
+		const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+		try {
+			new Condition("id").eq(undefined);
+			new Condition({"id": undefined});
+			expect(warnSpy).not.toHaveBeenCalled();
+		} finally {
+			warnSpy.mockRestore();
+		}
 	});
 
 	describe("requestObject", () => {
@@ -49,6 +50,18 @@ describe("Condition", () => {
 			{
 				"input": () => new Condition({"id": {"eq": "5"}}),
 				"output": {"ConditionExpression": "#a0 = :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"S": "5"}}}
+			},
+			{
+				"input": () => new Condition({"id": null}),
+				"output": {"ConditionExpression": "#a0 = :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"NULL": true}}}
+			},
+			{
+				"input": () => new Condition({"id": {"eq": null}}),
+				"output": {"ConditionExpression": "#a0 = :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"NULL": true}}}
+			},
+			{
+				"input": () => new Condition({"id": {"ne": null}}),
+				"output": {"ConditionExpression": "#a0 <> :v0", "ExpressionAttributeNames": {"#a0": "id"}, "ExpressionAttributeValues": {":v0": {"NULL": true}}}
 			},
 			{
 				"input": () => new Condition({"id": {"lt": "5"}}),

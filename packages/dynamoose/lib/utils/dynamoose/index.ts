@@ -3,6 +3,7 @@ import index_changes from "./index_changes";
 import * as convertConditionArrayRequestObjectToString from "./convertConditionArrayRequestObjectToString";
 import getValueTypeCheckResult from "./getValueTypeCheckResult";
 import {itemToJSON} from "./itemToJSON";
+import emptyKeyValueProblem from "./emptyKeyValueProblem";
 import {wildcard_allowed_check} from "dynamoose-utils";
 
 export default {
@@ -11,5 +12,6 @@ export default {
 	convertConditionArrayRequestObjectToString,
 	getValueTypeCheckResult,
 	itemToJSON,
+	emptyKeyValueProblem,
 	wildcard_allowed_check
 };

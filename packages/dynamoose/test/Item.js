@@ -59,6 +59,10 @@ describe("Item", () => {
 				{
 					"input": {"id": 1, "name": "Charlie"},
 					"output": {"id": {"N": "1"}, "name": {"S": "Charlie"}}
+				},
+				{
+					"input": undefined,
+					"output": undefined
 				}
 			];
 
@@ -2146,6 +2150,38 @@ describe("Item", () => {
 					expect(obj).toEqual(user);
 				});
 			}
+		});
+	});
+
+	describe("Item.isDynamoValue", () => {
+		let User;
+		beforeEach(() => {
+			User = dynamoose.model("User", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+		});
+
+		const tests = [
+			[{"S": "Bob"}, true],
+			[{"N": "1"}, true],
+			[{"NULL": true}, true],
+			[{"B": Buffer.from("a")}, true],
+			[{"SS": ["a"]}, true],
+			[{"M": {}}, true],
+			[{"M": {"a": {"S": "b"}}}, true],
+			[{"L": [{"S": "a"}]}, true],
+			[{"L": ["a"]}, false],
+			[{"M": {"a": "b"}}, false],
+			[{"S": "a", "N": "1"}, false],
+			[{"unknown": "a"}, false],
+			[{}, false],
+			["Bob", false],
+			[1, false],
+			[undefined, false],
+			[null, false]
+		];
+		tests.forEach(([input, output]) => {
+			it(`Should return ${output} for ${JSON.stringify(input)}`, () => {
+				expect(User.isDynamoValue(input)).toEqual(output);
+			});
 		});
 	});
 

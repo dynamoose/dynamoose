@@ -18,6 +18,8 @@ You can use Model.get to retrieve an item from DynamoDB. This method uses the `g
 
 This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. An Item instance will be the result of the promise or callback response. In the event no item can be found in DynamoDB this method will return undefined.
 
+A key needs a value for the hashKey and, on a table with one, the rangeKey. A key value that is `undefined`, `null`, an empty string or an empty binary value throws an `InvalidParameter` error before the request is sent, because DynamoDB rejects it. This applies to every method that takes a key: `get`, `delete`, `update`, `batchGet`, `batchDelete` and the `Model.transaction` methods. Saving an item (`create`, `item.save`, `batchPut`, `Model.transaction.create`) throws the same way for a missing or empty key attribute of the table, and `update` and saving throw for an empty string or binary value on a key attribute of an index. An item can leave out an index key attribute, which leaves it out of the index.
+
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
 | Name | Description | Type | Default |

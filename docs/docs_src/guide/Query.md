@@ -13,6 +13,8 @@ If you pass an object into `Model.query` the object for each key should contain 
 
 `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.
 
+A key condition needs a value. If the value of a key condition (on the hashKey or rangeKey of the table or of the index the query uses) is `undefined`, `null`, an empty string or an empty binary value, `query.exec` throws an `InvalidParameter` error before sending the request, for both `Cat.query("breed").eq(value)` and `Cat.query({"breed": value})`. DynamoDB rejects such a query. On any other attribute, a `null` value is compared with DynamoDB's `NULL` type and an empty string is sent as it is.
+
 :::note
 If you use a raw DynamoDB condition object you must specify the index name using [`query.using(index)`](#queryusingindex). This only applies if you pass in a raw condition object (not using the Dynamoose Condition helper methods).
 :::
