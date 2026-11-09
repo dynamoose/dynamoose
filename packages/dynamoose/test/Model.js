@@ -3251,6 +3251,134 @@ describe("Model", () => {
 					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).toEqual(parseInt(updateItemParams.ExpressionAttributeValues[":v1"].N));
 				});
 
+				it("Should send correct params to updateItem for timestamps with a nested schema with timestamps", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "address": new dynamoose.Schema({"street": String}, {"timestamps": true})}, {"timestamps": true}));
+					new dynamoose.Table("User", [User]);
+					const date = Date.now();
+					await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"});
+					expect(updateItemParams).toEqual({
+						"ExpressionAttributeNames": {
+							"#a0": "updatedAt",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {
+								"N": updateItemParams.ExpressionAttributeValues[":v0"].N
+							},
+							":v1": {
+								"S": "Charlie"
+							}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"Key": {
+							"id": {
+								"N": "1"
+							}
+						},
+						"TableName": "User",
+						"ReturnValues": "ALL_NEW"
+					});
+					expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(date - 10, date + 10);
+				});
+
+				describe("Nested schema with timestamps", () => {
+					const address = (timestamps = true) => new dynamoose.Schema({"street": String, "city": String}, {timestamps});
+					const tests = [
+						{
+							"description": "custom timestamp names in the nested schema",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "address": address({"createdAt": "created", "updatedAt": "updated"})}, {"timestamps": true}),
+							"update": {"name": "Charlie"},
+							"names": {"#a0": "updatedAt", "#a1": "name"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "custom timestamp names in the parent schema",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "address": address()}, {"timestamps": {"createdAt": "created", "updatedAt": "updated"}}),
+							"update": {"name": "Charlie"},
+							"names": {"#a0": "updated", "#a1": "name"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "a nested schema inside a nested schema",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "data": new dynamoose.Schema({"address": address()})}, {"timestamps": true}),
+							"update": {"name": "Charlie"},
+							"names": {"#a0": "updatedAt", "#a1": "name"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "two nested schemas",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "home": address(), "work": address()}, {"timestamps": true}),
+							"update": {"name": "Charlie"},
+							"names": {"#a0": "updatedAt", "#a1": "name"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "a list of nested schemas",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "addresses": {"type": Array, "schema": [address()]}}, {"timestamps": true}),
+							"update": {"name": "Charlie"},
+							"names": {"#a0": "updatedAt", "#a1": "name"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"S": "Charlie"}}
+						},
+						{
+							"description": "an update with only $ADD",
+							"schema": () => new dynamoose.Schema({"id": Number, "age": Number, "address": address()}, {"timestamps": true}),
+							"update": {"$ADD": {"age": 1}},
+							"names": {"#a0": "updatedAt", "#a1": "age"},
+							"expression": "ADD #a1 :v1 SET #a0 = :v0",
+							"values": {":v1": {"N": "1"}}
+						},
+						{
+							"description": "an update that sets the nested attribute",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "address": address()}, {"timestamps": true}),
+							"update": {"address": {"street": "Main Street"}},
+							"names": {"#a0": "updatedAt", "#a1": "address"},
+							"expression": "SET #a0 = :v0, #a1 = :v1",
+							"values": {":v1": {"M": {"street": {"S": "Main Street"}}}}
+						},
+						{
+							"description": "an update that removes the nested attribute",
+							"schema": () => new dynamoose.Schema({"id": Number, "name": String, "address": address()}, {"timestamps": true}),
+							"update": {"$REMOVE": ["address"]},
+							"names": {"#a0": "updatedAt", "#a1": "address"},
+							"expression": "REMOVE #a1 SET #a0 = :v0",
+							"values": {}
+						}
+					];
+					tests.forEach((test) => {
+						it(`Should only set the top level timestamps for ${test.description}`, async () => {
+							updateItemFunction = () => Promise.resolve({});
+							User = dynamoose.model("User", test.schema());
+							new dynamoose.Table("User", [User]);
+							const date = Date.now();
+							await callType.func(User).bind(User)({"id": 1}, test.update);
+							expect(updateItemParams).toEqual({
+								"ExpressionAttributeNames": test.names,
+								"ExpressionAttributeValues": {
+									":v0": {
+										"N": expect.any(String)
+									},
+									...test.values
+								},
+								"UpdateExpression": test.expression,
+								"Key": {
+									"id": {
+										"N": "1"
+									}
+								},
+								"TableName": "User",
+								"ReturnValues": "ALL_NEW"
+							});
+							expect(parseInt(updateItemParams.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(date - 10, date + 10);
+						});
+					});
+				});
+
 				it("Should send correct params to updateItem with conditional", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "active": Boolean}));
@@ -4841,6 +4969,29 @@ describe("Model", () => {
 						"TableName": "User"
 					}
 				});
+			});
+
+			it("Should only set the top level timestamps with a nested schema with timestamps", async () => {
+				User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "address": new dynamoose.Schema({"street": String}, {"timestamps": true})}, {"timestamps": true}));
+				new dynamoose.Table("User", [User]);
+				const date = Date.now();
+				const result = await User.transaction.update({"id": 1}, {"name": "Bob"});
+				expect(result).toEqual({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {
+							"#a0": "updatedAt",
+							"#a1": "name"
+						},
+						"ExpressionAttributeValues": {
+							":v0": {"N": expect.any(String)},
+							":v1": {"S": "Bob"}
+						},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"TableName": "User"
+					}
+				});
+				expect(parseInt(result.Update.ExpressionAttributeValues[":v0"].N)).toBeWithinRange(date - 10, date + 10);
 			});
 
 			it("Should print warning if passing callback", () => {
