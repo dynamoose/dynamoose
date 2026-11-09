@@ -106,3 +106,52 @@ describe("Callback that throws", () => {
 		});
 	});
 });
+
+describe("Callback when building the returned item fails", () => {
+	// The converter's unmarshall runs while the saved item is turned into the returned Item. A throw there must reach the callback as its error, not stay unhandled.
+	const converterScript = `
+const dynamoose = require(process.env.DYNAMOOSE_DIST);
+const util = require(process.env.DYNAMOOSE_UTIL);
+dynamoose.Table.defaults.set({"create": false, "update": false, "waitForActive": false});
+dynamoose.aws.ddb.set({"putItem": () => Promise.resolve({})});
+const User = dynamoose.model("User", {"id": String});
+dynamoose.aws.converter.set({...util, "unmarshall": () => { throw new Error("Converter error"); }});
+let unhandled = [];
+process.on("unhandledRejection", (error) => unhandled.push(error && error.message));
+(async () => {
+	const callbackArguments = [];
+	new User({"id": "1"}).save((...args) => callbackArguments.push(args));
+	await new Promise((resolve) => setTimeout(resolve, 20));
+	let promiseResult;
+	try {
+		await new User({"id": "2"}).save();
+		promiseResult = "resolved";
+	} catch (error) {
+		promiseResult = error.message;
+	}
+	process.stdout.write(JSON.stringify({"calls": callbackArguments.length, "firstError": callbackArguments[0] ? callbackArguments[0][0].message : undefined, "unhandled": unhandled, "promiseResult": promiseResult}));
+})();
+`;
+	let results;
+	beforeAll(() => {
+		const output = execFileSync(process.execPath, ["-e", converterScript], {
+			"encoding": "utf8",
+			"env": {...process.env, "DYNAMOOSE_DIST": path.join(__dirname, "..", "dist"), "DYNAMOOSE_UTIL": path.join(__dirname, "..", "..", "..", "node_modules", "@aws-sdk", "util-dynamodb")},
+			"stdio": ["ignore", "pipe", "pipe"]
+		});
+		results = JSON.parse(output);
+	});
+
+	it("Should call the item.save callback once with the converter error", () => {
+		expect(results.calls).toEqual(1);
+		expect(results.firstError).toEqual("Converter error");
+	});
+
+	it("Should not leave the converter error unhandled for item.save with a callback", () => {
+		expect(results.unhandled).toEqual([]);
+	});
+
+	it("Should reject item.save without a callback with the converter error", () => {
+		expect(results.promiseResult).toEqual("Converter error");
+	});
+});
