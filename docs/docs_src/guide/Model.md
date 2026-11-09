@@ -408,7 +408,7 @@ await User.update({"id": 1}, {"name": "Bob", "friends": undefined, "role": undef
 // This will set the name to Bob, remove friends, and set role back to "user"
 ```
 
-This means that an object built with optional properties (for example `{"name": input.name, "friends": input.friends}`) removes every attribute the input leaves out. To leave an attribute unchanged, leave its key out of the update object. To remove an attribute, say so explicitly with `$REMOVE` or [`dynamoose.type.UNDEFINED`](Dynamoose#dynamoosetypeundefined), which removes the attribute even if it has a `default`.
+This means that an object built with optional properties (for example `{"name": input.name, "friends": input.friends}`) changes every schema attribute the input has no value for, as the list above says: it is removed, set back to its default, or the update throws because the attribute is `required`. To leave an attribute unchanged, leave its key out of the update object. `$REMOVE` follows the same rules, so `{"$REMOVE": ["role"]}` sets `role` back to `"user"`. To remove an attribute even if it has a `default`, use [`dynamoose.type.UNDEFINED`](Dynamoose#dynamoosetypeundefined), as the value (`{"role": dynamoose.type.UNDEFINED}`) or in `$REMOVE` (`{"$REMOVE": {"role": dynamoose.type.UNDEFINED}}`).
 
 ## model.delete(key[, settings][, callback])
 
