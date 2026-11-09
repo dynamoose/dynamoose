@@ -680,6 +680,32 @@ describe("Item", () => {
 					}]);
 				});
 
+				it("Should save a list of items of a model as their keys", async () => {
+					putItemFunction = () => Promise.resolve();
+					const Friend = dynamoose.model("Friend", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("Friend", [Friend]);
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [Friend]}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "friends": [new Friend({"id": 1, "name": "Tim"}), new Friend({"id": 2, "name": "Bob"}), new Friend({"id": 3, "name": "Evan"})]});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "friends": {"L": [{"N": "1"}, {"N": "2"}, {"N": "3"}]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save every object of a list of dynamoose.type.ANY objects", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data": {"type": Array, "schema": [{"type": Object, "schema": dynamoose.type.ANY}]}}, {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "data": [{"a": 1}, {"b": 2}, {"c": {"d": 3}}]});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "data": {"L": [{"M": {"a": {"N": "1"}}}, {"M": {"b": {"N": "2"}}}, {"M": {"c": {"M": {"d": {"N": "3"}}}}}]}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save correct object with nested array's", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "data": {"type": Array, "schema": [String]}}}]}}, {"create": false, "waitForActive": false});
@@ -2686,6 +2712,21 @@ describe("Item", () => {
 				"input": {"id": "test", "data": ["hello", {"world": "universe"}]},
 				"output": {"id": "test", "data": ["hello", {"world": "universe"}]},
 				"schema": {"id": {"type": String}, "data": {"type": Array, "schema": dynamoose.type.ANY}}
+			},
+			// Only the first element of a list is type checked when the others have the same JavaScript type, so the others must keep their properties too.
+			{
+				"input": {"id": "test", "data": [{"a": 1}, {"b": 2}, {"c": {"d": 3}}]},
+				"output": {"id": "test", "data": [{"a": 1}, {"b": 2}, {"c": {"d": 3}}]},
+				"schema": {"id": {"type": String}, "data": {"type": Array, "schema": [{"type": Object, "schema": dynamoose.type.ANY}]}}
+			},
+			{
+				"input": [{"id": "test", "friends": [{"id": 1, "name": "Tim"}, {"id": 2, "name": "Bob"}, {"id": 3, "name": "Evan"}]}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"output": {"id": "test", "friends": [1, 2, 3]},
+				"schema": () => {
+					const Friend = dynamoose.model("Friend", {"id": Number, "name": String});
+					new dynamoose.Table("Friend", [Friend], {"create": false, "waitForActive": false});
+					return {"id": {"type": String}, "friends": {"type": Array, "schema": [Friend]}};
+				}
 			},
 			{
 				"input": [{"id": "test"}, {"required": true}],
