@@ -158,6 +158,69 @@ Object.getOwnPropertyNames(Condition.prototype).forEach((key: string) => {
 	}
 });
 
+// A raw condition is one expression string, so a query finds its key conditions in it. The expression is split at its top-level `AND`s (not inside parentheses, and not the `AND` of a `BETWEEN`), and each part that DynamoDB accepts as a key condition can move to the `KeyConditionExpression`. An expression with a top-level `OR` isn't split, because its parts don't all have to be true.
+const RAW_KEY_CONDITION_NAME = "(#\\w+|[A-Za-z_]\\w*)";
+const RAW_KEY_CONDITIONS: {type: string; regex: RegExp; operators?: {[operator: string]: string}}[] = [
+	{"type": "COMPARISON", "regex": new RegExp(`^${RAW_KEY_CONDITION_NAME}\\s*(<=|>=|=|<|>)\\s*(:\\w+)$`, "u"), "operators": {"=": "EQ", "<": "LT", "<=": "LE", ">": "GT", ">=": "GE"}},
+	{"type": "BETWEEN", "regex": new RegExp(`^${RAW_KEY_CONDITION_NAME}\\s+BETWEEN\\s+:\\w+\\s+AND\\s+:\\w+$`, "iu")},
+	{"type": "BEGINS_WITH", "regex": new RegExp(`^begins_with\\s*\\(\\s*${RAW_KEY_CONDITION_NAME}\\s*,\\s*:\\w+\\s*\\)$`, "u")}
+];
+function splitRawExpression (expression: string): string[] {
+	const parts: string[] = [];
+	const tokenRegex = /\(|\)|(?<![#:\w])(?:AND|OR|BETWEEN)(?!\w)/giu;
+	let depth = 0;
+	let start = 0;
+	let betweenPending = false;
+	let match: RegExpExecArray;
+	while ((match = tokenRegex.exec(expression)) !== null) {
+		const token = match[0].toUpperCase();
+		if (token === "(") {
+			depth++;
+		} else if (token === ")") {
+			depth--;
+		} else if (depth === 0) {
+			if (token === "OR") {
+				return [expression.trim()];
+			} else if (token === "BETWEEN") {
+				betweenPending = true;
+			} else if (betweenPending) {
+				betweenPending = false;
+			} else {
+				parts.push(expression.slice(start, match.index).trim());
+				start = match.index + match[0].length;
+			}
+		}
+	}
+	parts.push(expression.slice(start).trim());
+	return parts;
+}
+function removeOuterParentheses (part: string): string {
+	while (part.startsWith("(") && part.endsWith(")")) {
+		let depth = 0;
+		// The first parenthesis must close at the end, as in `(a) AND (b)` it doesn't.
+		const closesAtEnd = [...part].every((character, index) => {
+			depth += character === "(" ? 1 : character === ")" ? -1 : 0;
+			return depth > 0 || index === part.length - 1;
+		});
+		if (!closesAtEnd) {
+			break;
+		}
+		part = part.slice(1, -1).trim();
+	}
+	return part;
+}
+function parseRawKeyCondition (part: string, names: {[name: string]: string}): {attribute: string; type: string; expression: string} | undefined {
+	const expression = removeOuterParentheses(part);
+	for (const keyCondition of RAW_KEY_CONDITIONS) {
+		const match = expression.match(keyCondition.regex);
+		if (match) {
+			const attribute = match[1].startsWith("#") ? names[match[1]] : match[1];
+			const type = keyCondition.operators ? keyCondition.operators[match[2]] : keyCondition.type;
+			return attribute ? {attribute, type, expression} : undefined;
+		}
+	}
+}
+
 ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promise<any> {
 	const {model} = this.getInternalProperties(internalProperties).internalSettings;
 	const table = model.getInternalProperties(internalProperties).table();
@@ -174,11 +237,18 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		object.ExclusiveStartKey = Item.isDynamoObject(this.getInternalProperties(internalProperties).settings.startAt) ? this.getInternalProperties(internalProperties).settings.startAt : model.Item.objectToDynamo(this.getInternalProperties(internalProperties).settings.startAt);
 	}
 	const indexes = await model.getInternalProperties(internalProperties).getIndexes();
+	const isQuery = this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query";
+	// A condition built with methods gives `FilterExpression` as an array of parts. A raw condition gives a string.
+	const rawParts = isQuery && typeof object.FilterExpression === "string" ? splitRawExpression(object.FilterExpression).map((expression) => ({expression, "keyCondition": parseRawKeyCondition(expression, object.ExpressionAttributeNames || {})})) : undefined;
+	const comparisonChart = !isQuery ? undefined : rawParts ? rawParts.reduce((chart, {keyCondition}) => {
+		if (keyCondition && !chart[keyCondition.attribute]) {
+			chart[keyCondition.attribute] = {"type": keyCondition.type};
+		}
+		return chart;
+	}, {}) : await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(model);
 	if (this.getInternalProperties(internalProperties).settings.index) {
 		object.IndexName = this.getInternalProperties(internalProperties).settings.index;
-	} else if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
-		const comparisonChart = await this.getInternalProperties(internalProperties).settings.condition.getInternalProperties(internalProperties).comparisonChart(model);
-
+	} else if (isQuery) {
 		const indexSpec = utils.find_best_index(indexes, comparisonChart);
 		if (!indexSpec.tableIndex) {
 			if (!indexSpec.indexName) {
@@ -189,7 +259,8 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		}
 	}
 	function moveParameterNames (val, prefix): void {
-		const entry = Object.entries(object.ExpressionAttributeNames).find((entry) => entry[1] === val);
+		// Only names Dynamoose made (`#a0`) move; a raw condition in a group keeps its own names in the filter.
+		const entry = Object.entries(object.ExpressionAttributeNames).find((entry) => (/^#a\d+$/).test(entry[0]) && entry[1] === val);
 		if (!entry) {
 			return;
 		}
@@ -199,16 +270,24 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains")) {
 			return;
 		}
-		object.ExpressionAttributeNames[`#${prefix}a`] = value;
+		// A raw condition in a group can already use `#qha` or `:qhv` (or `:qhv_1`), so a number goes after them until neither is taken.
+		const placeholders = (number: number): {name: string; value: string} => ({"name": `#${prefix}a${number || ""}`, "value": `:${prefix}v${number || ""}`});
+		const isTaken = ({name, value}: {name: string; value: string}): boolean => name in object.ExpressionAttributeNames || Object.keys(object.ExpressionAttributeValues).some((key) => key === value || key.startsWith(`${value}_`));
+		let number = 0;
+		while (isTaken(placeholders(number))) {
+			number++;
+		}
+		const {"name": newName, "value": newValue} = placeholders(number);
+		object.ExpressionAttributeNames[newName] = value;
 		delete object.ExpressionAttributeNames[key];
 
 		const valueKey = key.replace("#a", ":v");
 
 		Object.keys(object.ExpressionAttributeValues).filter((key) => key === valueKey || key.startsWith(`${valueKey}_`)).forEach((key) => {
-			object.ExpressionAttributeValues[key.replace(new RegExp(":v\\d+"), `:${prefix}v`)] = object.ExpressionAttributeValues[key];
+			object.ExpressionAttributeValues[key.replace(new RegExp(":v\\d+"), newValue)] = object.ExpressionAttributeValues[key];
 			delete object.ExpressionAttributeValues[key];
 		});
-		const newExpression = filterExpression.replace(key, `#${prefix}a`).replace(new RegExp(valueKey, "g"), `:${prefix}v`);
+		const newExpression = filterExpression.replace(key, newName).replace(new RegExp(valueKey, "g"), newValue);
 
 		object.KeyConditionExpression = `${object.KeyConditionExpression || ""}${object.KeyConditionExpression ? " AND " : ""}${newExpression}`;
 		utils.object.delete(object.FilterExpression, filterExpressionIndex);
@@ -217,16 +296,48 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 			utils.object.delete(object.FilterExpression, previousElementIndex);
 		}
 	}
-	if (this.getInternalProperties(internalProperties).internalSettings.typeInformation.type === "query") {
+	if (isQuery) {
 		const index = utils.array_flatten(Object.values(indexes)).find((index) => index.IndexName === object.IndexName) || indexes.TableIndex;
 		const {hash, range} = index.KeySchema.reduce((res, item) => {
 			res[item.KeyType.toLowerCase()] = item.AttributeName;
 			return res;
 		}, {});
 
-		moveParameterNames(hash, "qh");
-		if (range) {
-			moveParameterNames(range, "qr");
+		if (rawParts) {
+			// A raw condition keeps its own names and values; only its key condition parts move.
+			const keyConditionParts: string[] = [];
+			const movedAttributes: string[] = [];
+			const moveRawKeyCondition = (attribute: string, onlyEquality: boolean): void => {
+				const partIndex = rawParts.findIndex(({keyCondition}) => keyCondition?.attribute === attribute && (!onlyEquality || keyCondition.type === "EQ"));
+				if (partIndex === -1) {
+					return;
+				}
+				const [{keyCondition}] = rawParts.splice(partIndex, 1);
+				keyConditionParts.push(keyCondition.expression);
+				movedAttributes.push(attribute);
+			};
+			moveRawKeyCondition(hash, true);
+			if (range) {
+				moveRawKeyCondition(range, false);
+			}
+			// DynamoDB allows one condition per key attribute, and rejects a key attribute in the filter expression.
+			const extraKeyCondition = rawParts.find(({keyCondition}) => keyCondition && movedAttributes.includes(keyCondition.attribute));
+			if (extraKeyCondition) {
+				throw new CustomError.InvalidParameter(`A query can have only one condition on the key attribute "${extraKeyCondition.keyCondition.attribute}", but the raw condition has "${extraKeyCondition.expression}" as well. Combine them, for example with BETWEEN.`);
+			}
+			if (keyConditionParts.length > 0) {
+				object.KeyConditionExpression = keyConditionParts.join(" AND ");
+			}
+			if (rawParts.length > 0) {
+				object.FilterExpression = rawParts.map(({expression}) => expression).join(" AND ");
+			} else {
+				delete object.FilterExpression;
+			}
+		} else {
+			moveParameterNames(hash, "qh");
+			if (range) {
+				moveParameterNames(range, "qr");
+			}
 		}
 	}
 	if (this.getInternalProperties(internalProperties).settings.consistent) {

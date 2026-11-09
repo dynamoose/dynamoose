@@ -1,5 +1,6 @@
 const dynamoose = require("../dist");
 const {Instance} = require("../dist/Instance");
+const CustomError = require("../dist/Error").default;
 const {Condition} = dynamoose;
 const Internal = require("../dist/Internal").default;
 const {internalProperties} = Internal.General;
@@ -232,7 +233,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
-				"output": {}
+				"output": {"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
 			},
 			{
 				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}),
@@ -245,7 +246,7 @@ describe("Condition", () => {
 			{
 				"input": () => new Condition({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}}),
 				"settings": {"conditionString": "FilterExpression"},
-				"output": {}
+				"output": {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}}
 			}
 		];
 
@@ -267,6 +268,102 @@ describe("Condition", () => {
 				} else {
 					return expect(await test.input().getInternalProperties(internalProperties).requestObject(model, test.settings)).toEqual(test.output);
 				}
+			});
+		});
+
+		describe("Raw condition objects", () => {
+			const model = {
+				"getInternalProperties": () => ({
+					"table": () => ({
+						"getInternalProperties": () => ({
+							"instance": Instance.default
+						})
+					}),
+					"schemaForObject": () => new dynamoose.Schema({"id": String}),
+					"dynamoPropertyForAttribute": (key) => key
+				})
+			};
+
+			["ComparisonExpression", "KeyConditionExpression"].forEach((key) => {
+				["ConditionExpression", "FilterExpression"].forEach((conditionString) => {
+					it(`Should throw an error for a ${key} property when building a ${conditionString}`, () => {
+						const condition = new Condition({[key]: "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}});
+						return expect(condition.getInternalProperties(internalProperties).requestObject(model, {conditionString, "conditionStringType": "string"})).rejects.toEqual(new CustomError.InvalidParameter(`A raw condition object must have a "ConditionExpression" or "FilterExpression" property, but it has "${key}".`));
+					});
+				});
+			});
+
+			[["ConditionExpression", "ConditionExpression"], ["FilterExpression", "ConditionExpression"], ["ConditionExpression", "FilterExpression"], ["FilterExpression", "FilterExpression"]].forEach(([key, conditionString]) => {
+				it(`Should use a ${key} without ExpressionAttributeValues when building a ${conditionString}`, async () => {
+					const condition = new Condition({[key]: "attribute_exists(#id)", "ExpressionAttributeNames": {"#id": "id"}});
+					expect(await condition.getInternalProperties(internalProperties).requestObject(model, {conditionString, "conditionStringType": "string"})).toEqual({[conditionString]: "attribute_exists(#id)", "ExpressionAttributeNames": {"#id": "id"}});
+				});
+			});
+
+			it("Should leave out empty ExpressionAttributeNames and ExpressionAttributeValues", async () => {
+				const condition = new Condition({"ConditionExpression": "attribute_exists(id)", "ExpressionAttributeNames": {}, "ExpressionAttributeValues": {}});
+				expect(await condition.getInternalProperties(internalProperties).requestObject(model)).toEqual({"ConditionExpression": "attribute_exists(id)"});
+			});
+
+			it("Should throw an error for an unknown property without ExpressionAttributeValues", () => {
+				const condition = new Condition({"ComparisonExpression": "attribute_exists(#id)", "ExpressionAttributeNames": {"#id": "id"}});
+				return expect(condition.getInternalProperties(internalProperties).requestObject(model)).rejects.toEqual(new CustomError.InvalidParameter("A raw condition object must have a \"ConditionExpression\" or \"FilterExpression\" property, but it has \"ComparisonExpression\"."));
+			});
+
+			it("Should still treat an object of attributes as a condition on those attributes", async () => {
+				const condition = new Condition({"id": "1", "name": "Bob"});
+				expect(await condition.getInternalProperties(internalProperties).requestObject(model)).toEqual({"ConditionExpression": "#a0 = :v0 AND #a1 = :v1", "ExpressionAttributeNames": {"#a0": "id", "#a1": "name"}, "ExpressionAttributeValues": {":v0": {"S": "1"}, ":v1": {"S": "Bob"}}});
+			});
+
+			it("Should use a raw condition in parenthesis() as a group of the condition expression", async () => {
+				const condition = new Condition().where("id").eq("1").parenthesis(new Condition({"ConditionExpression": "attribute_exists(#n)", "ExpressionAttributeNames": {"#n": "name"}}));
+				expect(await condition.getInternalProperties(internalProperties).requestObject(model)).toEqual({"ConditionExpression": "#a0 = :v0 AND (attribute_exists(#n))", "ExpressionAttributeNames": {"#a0": "id", "#n": "name"}, "ExpressionAttributeValues": {":v0": {"S": "1"}}});
+			});
+
+			it("Should use a raw condition in parenthesis() as a group of one part in an array", async () => {
+				const condition = new Condition().where("id").eq("1").parenthesis(new Condition({"FilterExpression": "#n = :n", "ExpressionAttributeNames": {"#n": "name"}, "ExpressionAttributeValues": {":n": "Bob"}}));
+				expect(await condition.getInternalProperties(internalProperties).requestObject(model, {"conditionString": "FilterExpression", "conditionStringType": "array"})).toEqual({"FilterExpression": ["#a0 = :v0", "AND", ["#n = :n"]], "ExpressionAttributeNames": {"#a0": "id", "#n": "name"}, "ExpressionAttributeValues": {":v0": {"S": "1"}, ":n": {"S": "Bob"}}});
+			});
+
+			it("Should throw an error for a raw condition in parenthesis() with an unknown property", () => {
+				const condition = new Condition().parenthesis(new Condition({"ComparisonExpression": "attribute_exists(#n)", "ExpressionAttributeNames": {"#n": "name"}}));
+				return expect(condition.getInternalProperties(internalProperties).requestObject(model)).rejects.toEqual(new CustomError.InvalidParameter("A raw condition object must have a \"ConditionExpression\" or \"FilterExpression\" property, but it has \"ComparisonExpression\"."));
+			});
+
+			[
+				{
+					"name": "BETWEEN",
+					"raw": () => new Condition({"ConditionExpression": "#ag = :v0_1", "ExpressionAttributeNames": {"#ag": "age"}, "ExpressionAttributeValues": {":v0_1": 5}}),
+					"condition": (condition) => condition.where("age").between(13, 18),
+					"output": {"ConditionExpression": "(#ag = :v0_1) AND #a1 BETWEEN :v1_1 AND :v1_2", "ExpressionAttributeNames": {"#ag": "age", "#a1": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "5"}, ":v1_1": {"N": "13"}, ":v1_2": {"N": "18"}}}
+				},
+				{
+					"name": "IN",
+					"raw": () => new Condition({"ConditionExpression": "#ag = :v0_1", "ExpressionAttributeNames": {"#ag": "age"}, "ExpressionAttributeValues": {":v0_1": 5}}),
+					"condition": (condition) => condition.where("age").in([1, 2]),
+					"output": {"ConditionExpression": "(#ag = :v0_1) AND #a1 IN (:v1_1, :v1_2)", "ExpressionAttributeNames": {"#ag": "age", "#a1": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "5"}, ":v1_1": {"N": "1"}, ":v1_2": {"N": "2"}}}
+				},
+				{
+					"name": "document path",
+					"raw": () => new Condition({"ConditionExpression": "attribute_exists(#a0_0)", "ExpressionAttributeNames": {"#a0_0": "favoriteNumber"}}),
+					"condition": (condition) => condition.where("address.city").eq("KL"),
+					"output": {"ConditionExpression": "(attribute_exists(#a0_0)) AND #a1_0.#a1_1 = :v1", "ExpressionAttributeNames": {"#a0_0": "favoriteNumber", "#a1_0": "address", "#a1_1": "city"}, "ExpressionAttributeValues": {":v1": {"S": "KL"}}}
+				}
+			].forEach((test) => {
+				it(`Should number a ${test.name} condition after the suffixed placeholders a raw condition in parenthesis() uses`, async () => {
+					const condition = test.condition(new Condition().parenthesis(test.raw()).and());
+					expect(await condition.getInternalProperties(internalProperties).requestObject(model)).toEqual(test.output);
+				});
+			});
+
+			it("Should not change the object passed in", async () => {
+				const raw = {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}};
+				const condition = new Condition(raw);
+				const result = await condition.getInternalProperties(internalProperties).requestObject(model);
+				result.ExpressionAttributeNames["#a0"] = "name";
+				result.ExpressionAttributeValues[":v0"] = {"S": "Bob"};
+				expect(raw).toEqual({"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}});
+				expect(await condition.getInternalProperties(internalProperties).requestObject(model)).toEqual({"ConditionExpression": "#id = :id", "ExpressionAttributeValues": {":id": {"S": "5"}}, "ExpressionAttributeNames": {"#id": "id"}});
 			});
 		});
 	});

@@ -4,6 +4,7 @@ import * as convertConditionArrayRequestObjectToString from "./convertConditionA
 import getValueTypeCheckResult from "./getValueTypeCheckResult";
 import {itemToJSON} from "./itemToJSON";
 import {wildcard_allowed_check} from "dynamoose-utils";
+import attribute_values_equal from "./attribute_values_equal";
 
 export default {
 	get_provisioned_throughput,
@@ -11,5 +12,6 @@ export default {
 	convertConditionArrayRequestObjectToString,
 	getValueTypeCheckResult,
 	itemToJSON,
-	wildcard_allowed_check
+	wildcard_allowed_check,
+	attribute_values_equal
 };
