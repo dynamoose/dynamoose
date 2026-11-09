@@ -525,7 +525,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.BatchGetItemInput, any> = callback as CallbackType<DynamoDB.BatchGetItemInput, any>;
-				getParams(settings).then((params) => localCallback(null, params)).catch((err) => localCallback(err));
+				getParams(settings).then((params) => localCallback(null, params), (err) => localCallback(err));
 				return;
 			} else {
 				return (async (): Promise<DynamoDB.BatchGetItemInput> => {
@@ -538,7 +538,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		if (callback) {
 			const localCallback: CallbackType<ItemCarrier[], any> = callback as CallbackType<ItemCarrier[], any>;
-			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => localCallback(error));
+			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response), (error) => localCallback(error));
 		} else {
 			return (async (): Promise<ModelBatchGetItemsResponse<T>> => {
 				const response = await promise;
@@ -591,7 +591,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.BatchWriteItemInput, any> = callback as CallbackType<DynamoDB.BatchWriteItemInput, any>;
-				paramsPromise.then((result) => localCallback(null, result));
+				paramsPromise.then((result) => localCallback(null, result), (error) => localCallback(error));
 				return;
 			} else {
 				return paramsPromise;
@@ -601,7 +601,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		if (callback) {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, any> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, any>;
-			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => callback(error));
+			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response), (error) => callback(error));
 		} else {
 			return (async (): Promise<{unprocessedItems: ObjectType[]}> => {
 				const response = await promise;
@@ -656,7 +656,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.BatchWriteItemInput, any> = callback as CallbackType<DynamoDB.BatchWriteItemInput, any>;
-				getParams().then((result) => localCallback(null, result)).catch((error) => callback(error));
+				getParams().then((result) => localCallback(null, result), (error) => callback(error));
 				return;
 			} else {
 				return (async (): Promise<DynamoDB.BatchWriteItemInput> => {
@@ -669,7 +669,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		if (callback) {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, any> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, any>;
-			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => localCallback(error));
+			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response), (error) => localCallback(error));
 		} else {
 			return (async (): Promise<{unprocessedItems: ObjectType[]}> => {
 				const response = await promise;
@@ -919,7 +919,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.UpdateItemInput, any> = callback as CallbackType<DynamoDB.UpdateItemInput, any>;
-				updateItemParamsPromise.then((params) => localCallback(null, params));
+				updateItemParamsPromise.then((params) => localCallback(null, params), (error) => localCallback(error));
 				return;
 			} else {
 				return updateItemParamsPromise;
@@ -928,7 +928,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const promise = updateItemParamsPromise.then((params) => ddb(instance, "updateItem", params));
 
 		if (callback) {
-			promise.then((response) => response.Attributes ? itemify(response.Attributes) : undefined).then((response) => callback(null, response)).catch((error) => callback(error));
+			promise.then((response) => response.Attributes ? itemify(response.Attributes) : undefined).then((response) => callback(null, response), (error) => callback(error));
 		} else {
 			return (async (): Promise<any> => {
 				const response = await promise;
@@ -997,7 +997,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.DeleteItemInput, any> = callback as CallbackType<DynamoDB.DeleteItemInput, any>;
-				getDeleteItemParams(settings).then((params) => localCallback(null, params)).catch((error) => localCallback(error));
+				getDeleteItemParams(settings).then((params) => localCallback(null, params), (error) => localCallback(error));
 				return;
 			} else {
 				return (async (): Promise<DynamoDB.DeleteItemInput> => {
@@ -1009,7 +1009,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const promise = table.getInternalProperties(internalProperties).pendingTaskPromise().then(() => getDeleteItemParams(settings as ModelDeleteSettings)).then((deleteItemParams) => ddb(table.getInternalProperties(internalProperties).instance, "deleteItem", deleteItemParams));
 
 		if (callback) {
-			promise.then(() => callback()).catch((error) => callback(error));
+			promise.then(() => callback(), (error) => callback(error));
 		} else {
 			return (async (): Promise<void> => {
 				await promise;
@@ -1059,7 +1059,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.GetItemInput, any> = callback as CallbackType<DynamoDB.GetItemInput, any>;
-				getItemParamsMethod(settings).then((getItemParams) => localCallback(null, getItemParams)).catch((error) => localCallback(error));
+				getItemParamsMethod(settings).then((getItemParams) => localCallback(null, getItemParams), (error) => localCallback(error));
 				return;
 			} else {
 				return (async (): Promise<any> => {
@@ -1074,7 +1074,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		if (callback) {
 			const localCallback: CallbackType<ItemCarrier, any> = callback as CallbackType<ItemCarrier, any>;
-			promise.then((response) => response.Item ? itemify(response.Item) : undefined).then((response) => localCallback(null, response)).catch((error) => callback(error));
+			promise.then((response) => response.Item ? itemify(response.Item) : undefined).then((response) => localCallback(null, response), (error) => callback(error));
 		} else {
 			return (async (): Promise<any> => {
 				const response = await promise;
@@ -1110,7 +1110,7 @@ const customMethodFunctions = (type: "model" | "item"): {set: (name: string, fn:
 					if (cb) {
 						const result = fn.bind(bindObject)(...args);
 						if (result instanceof Promise) {
-							result.then((result) => cb(null, result)).catch((err) => cb(err));
+							result.then((result) => cb(null, result), (err) => cb(err));
 						}
 					} else {
 						return new Promise((resolve, reject) => {

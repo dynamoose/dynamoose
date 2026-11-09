@@ -2087,6 +2087,28 @@ describe("Model", () => {
 			expect(User.batchPut).toBeInstanceOf(Function);
 		});
 
+		it("Should not leave an unhandled rejection if callback is passed in, return request setting is set and set function throws error", async () => {
+			const Item = dynamoose.model("Item", {"id": Number, "name": {
+				"type": String,
+				"set": () => {
+					throw new Error("Error");
+				}
+			}});
+			new dynamoose.Table("Item", [Item]);
+			const unhandledRejection = jest.fn();
+			process.on("unhandledRejection", unhandledRejection);
+
+			try {
+				const error = await new Promise((resolve) => Item.batchPut([{"id": 1, "name": "Charlie"}], {"return": "request"}, resolve));
+				// Node reports an unhandled rejection after the microtask queue drains, so wait one macrotask for it.
+				await new Promise((resolve) => setImmediate(resolve));
+				expect(error).toEqual(new Error("Error"));
+				expect(unhandledRejection).not.toHaveBeenCalled();
+			} finally {
+				process.off("unhandledRejection", unhandledRejection);
+			}
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (Model) => Model.batchPut},
 			{"name": "Callback", "func": (Model) => util.promisify(Model.batchPut)}
@@ -2171,6 +2193,19 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should throw error if return request setting is set and set function throws error", async () => {
+					const Item = dynamoose.model("Item", {"id": Number, "name": {
+						"type": String,
+						"set": () => {
+							throw new Error("Error");
+						}
+					}});
+					new dynamoose.Table("Item", [Item]);
+
+					await expect(callType.func(Item).bind(Item)([{"id": 1, "name": "Charlie"}], {"return": "request"})).rejects.toThrow("Error");
+					expect(params).not.toBeDefined();
+				});
+
 				it("Should should send correct parameters to batchWriteItem with combine attribute", async () => {
 					promiseFunction = () => Promise.resolve({"UnprocessedItems": {}});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});
@@ -2235,6 +2270,28 @@ describe("Model", () => {
 			expect(User.update).toBeInstanceOf(Function);
 		});
 
+		it("Should not leave an unhandled rejection if callback is passed in, return request setting is set and set function throws error", async () => {
+			const Item = dynamoose.model("Item", {"id": Number, "name": {
+				"type": String,
+				"set": () => {
+					throw new Error("Error");
+				}
+			}});
+			new dynamoose.Table("Item", [Item]);
+			const unhandledRejection = jest.fn();
+			process.on("unhandledRejection", unhandledRejection);
+
+			try {
+				const error = await new Promise((resolve) => Item.update({"id": 1}, {"name": "Charlie"}, {"return": "request"}, resolve));
+				// Node reports an unhandled rejection after the microtask queue drains, so wait one macrotask for it.
+				await new Promise((resolve) => setImmediate(resolve));
+				expect(error).toEqual(new Error("Error"));
+				expect(unhandledRejection).not.toHaveBeenCalled();
+			} finally {
+				process.off("unhandledRejection", unhandledRejection);
+			}
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (Model) => Model.update},
 			{"name": "Callback", "func": (Model) => util.promisify(Model.update)}
@@ -2273,6 +2330,20 @@ describe("Model", () => {
 						"TableName": "User",
 						"ReturnValues": "ALL_NEW"
 					});
+				});
+
+				it("Should throw error if return request setting is set and set function throws error", async () => {
+					const Item = dynamoose.model("Item", {"id": Number, "name": {
+						"type": String,
+						"set": () => {
+							throw new Error("Error");
+						}
+					}});
+					new dynamoose.Table("Item", [Item]);
+					updateItemParams = undefined;
+
+					await expect(callType.func(Item).bind(Item)({"id": 1}, {"name": "Charlie"}, {"return": "request"})).rejects.toThrow("Error");
+					expect(updateItemParams).not.toBeDefined();
 				});
 
 				it("Should send correct params to updateItem for trying to update unknown properties with saveUnknown", async () => {

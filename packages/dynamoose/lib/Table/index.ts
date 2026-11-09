@@ -469,7 +469,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 		const promise = (settings as TableCreateOptions)?.return === "request" ? createTableRequest(this) : createTable(this, true);
 
 		if (callback) {
-			promise.then((response) => callback(null, response)).catch((error) => callback(error));
+			promise.then((response) => callback(null, response), (error) => callback(error));
 		} else {
 			return promise;
 		}
@@ -536,7 +536,7 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 	 */
 	async initialize (callback?: CallbackType<any, void>): Promise<void> {
 		if (callback) {
-			this.getInternalProperties(internalProperties).runSetupFlow().then(() => callback(null)).catch((error) => callback(error));
+			this.getInternalProperties(internalProperties).runSetupFlow().then(() => callback(null), (error) => callback(error));
 		} else {
 			return this.getInternalProperties(internalProperties).runSetupFlow();
 		}

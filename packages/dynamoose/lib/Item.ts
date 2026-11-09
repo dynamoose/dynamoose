@@ -467,7 +467,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.PutItemInput, any> = callback as CallbackType<DynamoDB.PutItemInput, any>;
-				paramsPromise.then((result) => localCallback(null, result));
+				paramsPromise.then((result) => localCallback(null, result), (error) => localCallback(error));
 				return;
 			} else {
 				return paramsPromise;
@@ -480,14 +480,16 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 
 		if (callback) {
 			const localCallback: CallbackType<Item, any> = callback as CallbackType<Item, any>;
-			promise.then(() => {
+			// The returned item is built in its own stage, so an error from the converter (unmarshall) reaches the callback. Only an error thrown by the callback itself is left unhandled.
+			const returnItemPromise = promise.then(() => {
 				this.getInternalProperties(internalProperties).storedInDynamo = true;
 
 				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
 				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
 
-				localCallback(null, returnItem);
-			}).catch((error) => callback(error));
+				return returnItem;
+			});
+			returnItemPromise.then((returnItem) => localCallback(null, returnItem), (error) => callback(error));
 		} else {
 			return (async (): Promise<Item> => {
 				await promise;

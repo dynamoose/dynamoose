@@ -138,6 +138,29 @@ describe("Item", () => {
 			expect(user.save).toBeInstanceOf(Function);
 		});
 
+		it("Should not leave an unhandled rejection if callback is passed in, return request is set as setting and set function throws error", async () => {
+			const Robot = dynamoose.model("Robot", {"id": Number, "name": {
+				"type": String,
+				"set": () => {
+					throw new Error("Error");
+				}
+			}});
+			new dynamoose.Table("Robot", [Robot]);
+			const robot = new Robot({"id": 2, "name": "Bob"});
+			const unhandledRejection = jest.fn();
+			process.on("unhandledRejection", unhandledRejection);
+
+			try {
+				const error = await new Promise((resolve) => robot.save({"return": "request"}, resolve));
+				// Node reports an unhandled rejection after the microtask queue drains, so wait one macrotask for it.
+				await new Promise((resolve) => setImmediate(resolve));
+				expect(error).toEqual(new Error("Error"));
+				expect(unhandledRejection).not.toHaveBeenCalled();
+			} finally {
+				process.off("unhandledRejection", unhandledRejection);
+			}
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (item) => item.save},
 			{"name": "Callback", "func": (item) => util.promisify(item.save)}
@@ -213,6 +236,20 @@ describe("Item", () => {
 						},
 						"TableName": "User"
 					});
+				});
+
+				it("Should throw error if return request is set as setting and set function throws error", async () => {
+					const Robot = dynamoose.model("Robot", {"id": Number, "name": {
+						"type": String,
+						"set": () => {
+							throw new Error("Error");
+						}
+					}});
+					new dynamoose.Table("Robot", [Robot]);
+					const robot = new Robot({"id": 2, "name": "Bob"});
+
+					await expect(callType.func(robot).bind(robot)({"return": "request"})).rejects.toThrow("Error");
+					expect(putParams).toEqual([]);
 				});
 
 				it("Should save with correct object with undefined as value without required or default as first property", async () => {

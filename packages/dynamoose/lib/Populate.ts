@@ -67,7 +67,7 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 	}));
 
 	if (callback) {
-		promise.then(() => callback(null, this)).catch((err) => callback(err));
+		promise.then(() => callback(null, this), (err) => callback(err));
 	} else {
 		return (async (): Promise<Item> => {
 			await promise;
@@ -91,7 +91,7 @@ export function PopulateItems (this: ItemArray<Item>, settings?: PopulateSetting
 	}));
 
 	if (callback) {
-		promise.then(() => callback(null, this)).catch((err) => callback(err));
+		promise.then(() => callback(null, this), (err) => callback(err));
 	} else {
 		return (async (): Promise<ItemArray<Item>> => {
 			await promise;
