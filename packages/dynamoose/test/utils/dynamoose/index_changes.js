@@ -340,4 +340,54 @@ describe("utils.dynamoose.index_changes", () => {
 		const table = new dynamoose.Table("Table", [Model], {"create": false, "waitForActive": false, "update": false, "throughput": "ON_DEMAND"});
 		expect(await utils.dynamoose.index_changes(table, test.input)).toEqual(test.output);
 	});
+
+	it("Should not recreate a multi-attribute GSI when its KeySchema is unchanged", async () => {
+		const schema = new dynamoose.Schema({
+			"matchId": {"type": String, "hashKey": true},
+			"tournamentId": String, "region": String, "round": String
+		}, {
+			"indexes": {"global": [{"name": "TRI", "hashKey": ["tournamentId", "region"], "rangeKey": ["round"]}]}
+		});
+		const Model = dynamoose.model("MatchIdxModelA", schema);
+		const table = new dynamoose.Table("MatchIdxTableA", [Model], {"create": false, "waitForActive": false, "update": false});
+		const input = [{
+			"IndexName": "TRI",
+			"KeySchema": [
+				{"AttributeName": "tournamentId", "KeyType": "HASH"},
+				{"AttributeName": "region", "KeyType": "HASH"},
+				{"AttributeName": "round", "KeyType": "RANGE"}
+			],
+			"Projection": {"ProjectionType": "ALL"},
+			"ProvisionedThroughput": {"ReadCapacityUnits": 1, "WriteCapacityUnits": 1}
+		}];
+		expect(await utils.dynamoose.index_changes(table, input)).toEqual([]);
+	});
+
+	it("Should detect a change when a multi-attribute GSI KeySchema differs", async () => {
+		const schema = new dynamoose.Schema({
+			"matchId": {"type": String, "hashKey": true},
+			"tournamentId": String, "region": String, "round": String
+		}, {
+			"indexes": {"global": [{"name": "TRI", "hashKey": ["tournamentId", "region"], "rangeKey": ["round"]}]}
+		});
+		const Model = dynamoose.model("MatchIdxModelB", schema);
+		const table = new dynamoose.Table("MatchIdxTableB", [Model], {"create": false, "waitForActive": false, "update": false});
+		// Existing index drops the second partition attribute (region) — a genuine multi-element difference.
+		const input = [{
+			"IndexName": "TRI",
+			"KeySchema": [
+				{"AttributeName": "tournamentId", "KeyType": "HASH"},
+				{"AttributeName": "round", "KeyType": "RANGE"}
+			],
+			"Projection": {"ProjectionType": "ALL"},
+			"ProvisionedThroughput": {"ReadCapacityUnits": 1, "WriteCapacityUnits": 1}
+		}];
+		const result = await utils.dynamoose.index_changes(table, input);
+		// The multi-element difference IS detected: the stale index is marked for deletion.
+		// Production behavior (index_changes.ts L60): a same-named index already present in
+		// existingIndexes is excluded from the "add" list, so it is only deleted here and
+		// recreated on a later reconciliation pass — the emitted diff is delete-only.
+		expect(result).toContainEqual({"name": "TRI", "type": "delete"});
+		expect(result.some((c) => c.type === "add" && c.spec.IndexName === "TRI")).toBe(false);
+	});
 });
