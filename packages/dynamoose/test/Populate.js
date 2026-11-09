@@ -97,4 +97,126 @@ describe("Populate", () => {
 			});
 		});
 	});
+
+	describe("Model references", () => {
+		let Person, requests;
+		const people = {"1": {"id": {"N": "1"}, "name": {"S": "Tim"}}, "2": {"id": {"N": "2"}, "name": {"S": "Bob"}}};
+		beforeEach(() => {
+			requests = [];
+			Person = dynamoose.model("Person", {"id": Number, "name": String});
+			new dynamoose.Table("Person", [Person], {"create": false, "waitForActive": false});
+			dynamoose.aws.ddb.set({
+				"getItem": async (request) => {
+					requests.push(request.Key.id.N);
+					return {"Item": people[request.Key.id.N]};
+				}
+			});
+		});
+		afterEach(() => {
+			dynamoose.aws.ddb.revert();
+		});
+		const gameWith = (definition) => {
+			const Game = dynamoose.model("Game", {"id": Number, "players": definition});
+			new dynamoose.Table("Game", [Game], {"create": false, "waitForActive": false});
+			return Game;
+		};
+
+		responseTypes.forEach((responseType) => {
+			describe(responseType.name, () => {
+				it("Should populate a Set of models in an attribute with several types", async () => {
+					const Game = gameWith({"type": [Set, String], "schema": [[Person]]});
+					const game = new Game({"id": 9, "players": new Set([1, 2])});
+					const result = await responseType.func(game).bind(game)();
+					expect(result.toJSON()).toEqual({"id": 9, "players": [{"id": 1, "name": "Tim"}, {"id": 2, "name": "Bob"}]});
+				});
+
+				it("Should populate it in each item of a scan result", async () => {
+					const Game = gameWith({"type": [Set, String], "schema": [[Person]]});
+					dynamoose.aws.ddb.set({
+						"getItem": async (request) => ({"Item": people[request.Key.id.N]}),
+						"scan": async () => ({"Items": [{"id": {"N": "9"}, "players": {"NS": ["1", "2"]}}, {"id": {"N": "8"}, "players": {"S": "none"}}]})
+					});
+					const games = await Game.scan().exec();
+					const result = await responseType.func(games).bind(games)();
+					expect(result.toJSON()).toEqual([
+						{"id": 9, "players": [{"id": 1, "name": "Tim"}, {"id": 2, "name": "Bob"}]},
+						{"id": 8, "players": "none"}
+					]);
+				});
+
+				describe("Guards", () => {
+					it("Should still populate a Set in an attribute with a model and other types", async () => {
+						const Game = gameWith([Person, String]);
+						const game = new Game({"id": 9, "players": new Set([1, 2])});
+						const result = await responseType.func(game).bind(game)();
+						expect(result.toJSON()).toEqual({"id": 9, "players": [{"id": 1, "name": "Tim"}, {"id": 2, "name": "Bob"}]});
+					});
+
+					it("Should leave a value that isn't a Set in an attribute with a Set of models and other types", async () => {
+						const Game = gameWith({"type": [Set, Number], "schema": [[Person]]});
+						const game = new Game({"id": 9, "players": 1});
+						const result = await responseType.func(game).bind(game)();
+						expect(result.toJSON()).toEqual({"id": 9, "players": 1});
+						expect(requests).toEqual([]);
+					});
+
+					it("Should only populate the properties the properties setting names", async () => {
+						const Game = gameWith({"type": [Set, String], "schema": [[Person]]});
+						const game = new Game({"id": 9, "players": new Set([1, 2])});
+						const result = await responseType.func(game).bind(game)({"properties": ["other"]});
+						expect([...result.players]).toEqual([1, 2]);
+						expect(requests).toEqual([]);
+					});
+
+					it("Should not get a reference that is already populated", async () => {
+						const Game = gameWith(Person);
+						const game = new Game({"id": 9, "players": new Person({"id": 1, "name": "Tim"})});
+						const result = await responseType.func(game).bind(game)();
+						expect(result.toJSON()).toEqual({"id": 9, "players": {"id": 1, "name": "Tim"}});
+						expect(requests).toEqual([]);
+					});
+				});
+
+				describe("A referenced item that doesn't exist", () => {
+					// Its key is kept, so saving the populated item keeps the reference instead of removing it.
+					it("Should keep a single reference as its key", async () => {
+						const Game = gameWith(Person);
+						const game = new Game({"id": 9, "players": 5});
+						const result = await responseType.func(game).bind(game)();
+						expect(result.players).toEqual(5);
+						expect(result.toJSON()).toEqual({"id": 9, "players": 5});
+					});
+
+					it("Should keep a single reference when the item is saved after populate", async () => {
+						const Game = gameWith(Person);
+						const game = new Game({"id": 9, "players": 5});
+						await responseType.func(game).bind(game)();
+						const request = await game.save({"return": "request"});
+						expect(request.Item).toEqual({"id": {"N": "9"}, "players": {"N": "5"}});
+					});
+
+					[
+						["a Set of models", () => ({"type": Set, "schema": [Person]})],
+						["a Set of models in an attribute with several types", () => ({"type": [Set, String], "schema": [[Person]]})],
+						["a model or a Set of models", () => ({"type": [Person, Set], "schema": [null, [Person]]})]
+					].forEach(([name, definition]) => {
+						it(`Should keep its key in its place in ${name}`, async () => {
+							const Game = gameWith(definition());
+							const game = new Game({"id": 9, "players": new Set([1, 5, 2])});
+							const result = await responseType.func(game).bind(game)();
+							expect(result.toJSON()).toEqual({"id": 9, "players": [{"id": 1, "name": "Tim"}, 5, {"id": 2, "name": "Bob"}]});
+						});
+
+						it(`Should keep every reference of ${name} when the item is saved after populate`, async () => {
+							const Game = gameWith(definition());
+							const game = new Game({"id": 9, "players": new Set([1, 5, 2])});
+							await responseType.func(game).bind(game)();
+							const request = await game.save({"return": "request"});
+							expect(request.Item).toEqual({"id": {"N": "9"}, "players": {"NS": ["1", "5", "2"]}});
+						});
+					});
+				});
+			});
+		});
+	});
 });

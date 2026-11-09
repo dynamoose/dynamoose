@@ -30,17 +30,23 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 	const {model} = this.getInternalProperties(internalProperties);
 	const localSettings = settings;
 	const schema = model.getInternalProperties(internalProperties).schemaForObject(this);
-	// TODO: uncomment out `/* || detail.name === "Model Set"*/` part and add relevant tests
-	const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some((detail) => detail.name === "Model"/* || detail.name === "Model Set"*/) : obj.details.name === "Model" || obj.details.name === "Model Set").map((obj) => obj.prop);
+	const isModelType = (detail: DynamoDBTypeResult | DynamoDBSetTypeResult): boolean => detail.name === "Model" || detail.name === "Model Set";
+	const modelAttributes: any[] = utils.array_flatten(schema.attributes().map((prop) => ({prop, "details": schema.getAttributeTypeDetails(prop)}))).filter((obj) => Array.isArray(obj.details) ? obj.details.some(isModelType) : isModelType(obj.details)).map((obj) => obj.prop);
 	const promise = Promise.all(modelAttributes.map(async (prop) => {
 		const typeDetails = schema.getAttributeTypeDetails(prop);
-		const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? (typeDetails as any).find((detail) => detail.name === "Model") : typeDetails;
-		const {typeSettings} = typeDetail;
-		const subModel: any = typeof typeSettings.model === "object" ? model.Item : typeSettings.model;
 
 		prop = prop.endsWith(".0") ? prop.substring(0, prop.length - 2) : prop;
 
 		const itemPropValue = utils.object.get(this as any, prop);
+		// An attribute with several types is populated by the type its value has: a Set by its Set of models (or its model), any other value by its model.
+		const findType = (name: string): DynamoDBTypeResult | DynamoDBSetTypeResult => (typeDetails as any[]).find((detail) => detail.name === name);
+		const typeDetail: DynamoDBTypeResult | DynamoDBSetTypeResult = Array.isArray(typeDetails) ? itemPropValue instanceof Set && findType("Model Set") || findType("Model") : typeDetails;
+		if (!typeDetail) {
+			return;
+		}
+		const {typeSettings} = typeDetail;
+		const subModel: any = typeof typeSettings.model === "object" ? model.Item : typeSettings.model;
+
 		const doesPopulatePropertyExist = !(typeof itemPropValue === "undefined" || itemPropValue === null);
 		if (!doesPopulatePropertyExist || itemPropValue instanceof subModel) {
 			return;
@@ -55,14 +61,15 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 
 		const isArray = Array.isArray(itemPropValue);
 		const isSet = itemPropValue instanceof Set;
+		// A reference to an item that doesn't exist keeps its key (in its place in a list). Populate changes the item itself, so leaving it out would remove the reference when the item is saved afterwards.
+		const populate = async (value: any): Promise<any> => {
+			const subItem = await subModel.get(value);
+			return subItem === undefined ? value : PopulateItem.bind(subItem)(localSettings, null, {"parentKey": key});
+		};
 		if (isArray || isSet) {
-			const subItems = await Promise.all([...itemPropValue as any].map((val) => subModel.get(val)));
-			const saveItems = await Promise.all(subItems.map((doc) => PopulateItem.bind(doc)(localSettings, null, {"parentKey": key})));
-			utils.object.set(this as any, prop, saveItems);
+			utils.object.set(this as any, prop, await Promise.all([...itemPropValue as any].map(populate)));
 		} else {
-			const subItem = await subModel.get(itemPropValue);
-			const saveItem: Item = await PopulateItem.bind(subItem)(localSettings, null, {"parentKey": key});
-			utils.object.set(this as any, prop, saveItem);
+			utils.object.set(this as any, prop, await populate(itemPropValue));
 		}
 	}));
 
