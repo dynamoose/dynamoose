@@ -40,6 +40,21 @@ describe("Item", () => {
 		expect(user.model).toEqual("data");
 	});
 
+	it("Should create an item whose first attribute is an object holding null", async () => {
+		const User = dynamoose.model("User", new dynamoose.Schema({"id": String, "data": Object}, {"saveUnknown": true}));
+		new dynamoose.Table("User", [User], {"create": false, "waitForActive": false});
+		const user = new User({"data": {"key": null}, "id": "123"});
+		expect(user.id).toEqual("123");
+		expect(await user.toDynamo()).toEqual({"data": {"M": {"key": {"NULL": true}}}, "id": {"S": "123"}});
+	});
+
+	it("Should keep an object with a null value under a DynamoDB type name as it is passed", () => {
+		const User = dynamoose.model("User", {"id": Number, "data": Object}, {});
+		new dynamoose.Table("User", [User], {"create": false, "waitForActive": false});
+		const user = new User({"data": {"M": null}});
+		expect(user.data).toEqual({"M": null});
+	});
+
 	describe("DynamoDB Conversation Methods", () => {
 		let User;
 		beforeEach(() => {
@@ -103,6 +118,41 @@ describe("Item", () => {
 			tests.forEach((test) => {
 				it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)} with settings ${JSON.stringify(test.settings)}`, async () => {
 					expect(await new User(test.input).toDynamo(test.settings)).toEqual(test.output);
+				});
+			});
+
+			describe("Attributes the schema doesn't name", () => {
+				const input = {"id": 1, "data": {"key": null, "name": "a"}, "other": "b"};
+				const model = (settings) => {
+					const Model = dynamoose.model("UnknownUser", new dynamoose.Schema({"id": Number, "data": Object}, settings));
+					new dynamoose.Table("UnknownUser", [Model]);
+					return Model;
+				};
+
+				it("Should keep them when the schema's saveUnknown is true, as item.save does", async () => {
+					const Model = model({"saveUnknown": true});
+					expect(await new Model(input).toDynamo()).toEqual({"id": {"N": "1"}, "data": {"M": {"key": {"NULL": true}, "name": {"S": "a"}}}, "other": {"S": "b"}});
+				});
+
+				it("Should send the same item as item.save", async () => {
+					const Model = model({"saveUnknown": true});
+					const item = new Model(input);
+					expect(await item.toDynamo()).toEqual((await item.save({"return": "request"})).Item);
+				});
+
+				it("Should keep only the ones the schema's saveUnknown list allows", async () => {
+					const Model = model({"saveUnknown": ["data.**"]});
+					expect(await new Model(input).toDynamo()).toEqual({"id": {"N": "1"}, "data": {"M": {"key": {"NULL": true}, "name": {"S": "a"}}}});
+				});
+
+				it("Should leave them out when the schema has no saveUnknown", async () => {
+					const Model = model({});
+					expect(await new Model(input).toDynamo()).toEqual({"id": {"N": "1"}, "data": {"M": {}}});
+				});
+
+				it("Should leave them out when saveUnknown is false in the settings", async () => {
+					const Model = model({"saveUnknown": true});
+					expect(await new Model(input).toDynamo({"saveUnknown": false})).toEqual({"id": {"N": "1"}, "data": {"M": {}}});
 				});
 			});
 		});
@@ -542,6 +592,18 @@ describe("Item", () => {
 					await callType.func(user).bind(user)();
 					expect(putParams).toEqual([{
 						"Item": {"id": {"N": "1"}, "address": {"M": {"data": {"M": {"country": {"S": "world"}}}, "name": {"S": "Home"}}}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save null values in an Object attribute with saveUnknown set to true as NULL", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new Schema({"id": Number, "address": Object}, {"saveUnknown": true}), {"create": false, "waitForActive": false});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "address": {"key": null, "data": {"country": null}, "lines": [null, "a"]}, "other": null});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "address": {"M": {"key": {"NULL": true}, "data": {"M": {"country": {"NULL": true}}}, "lines": {"L": [{"NULL": true}, {"S": "a"}]}}}, "other": {"NULL": true}},
 						"TableName": "User"
 					}]);
 				});
@@ -2254,6 +2316,30 @@ describe("Item", () => {
 			{
 				"input": {"id": {"S": "foo"}, "data": {"NULL": true}},
 				"output": true
+			},
+			{
+				"input": {"data": {"key": null}, "id": "123"},
+				"output": false
+			},
+			{
+				"input": {"prop": {"M": null}},
+				"output": false
+			},
+			{
+				"input": {"prop": {"S": null}},
+				"output": false
+			},
+			{
+				"input": {"prop": {"L": [null]}},
+				"output": false
+			},
+			{
+				"input": {"prop": {"L": [undefined]}},
+				"output": false
+			},
+			{
+				"input": {"id": {"N": "1"}, "map": {"M": {"a": {"M": null}}}},
+				"output": false
 			}
 		];
 
