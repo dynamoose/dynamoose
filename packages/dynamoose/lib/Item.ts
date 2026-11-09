@@ -241,7 +241,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
-	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. Nothing will be passed into the result for the promise.
+	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. The result is the saved item in the same form that `Model.get` returns: schema `get` modifiers are applied, and `Date` attributes and timestamps are `Date` objects.
 	 *
 	 * ```js
 	 * const myUser = new User({
@@ -262,7 +262,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
-	 * This method returns nothing. It accepts a function into the `callback` parameter. Nothing will be passed into the result for the callback.
+	 * This method returns nothing. It accepts a function into the `callback` parameter. The result is the saved item in the same form that `Model.get` returns: schema `get` modifiers are applied, and `Date` attributes and timestamps are `Date` objects.
 	 *
 	 * Both `settings` and `callback` parameters are optional. You can pass in a `callback` without `settings`, just by passing in one argument and having that argument be the `callback`. You are not required to pass in `settings` if you just want to pass in a `callback`.
 	 *
@@ -357,7 +357,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
-	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
+	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. The result is the saved item in the same form that `Model.get` returns: schema `get` modifiers are applied, and `Date` attributes and timestamps are `Date` objects.
 	 *
 	 * You can also pass a settings object in as the first parameter. The following options are available for settings are:
 	 *
@@ -392,7 +392,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	/**
 	 * This saves an item to DynamoDB. This method uses the `putItem` DynamoDB API call to store your object in the given table associated with the model. This method is overwriting, and will overwrite the data you currently have in place for the existing key for your table.
 	 *
-	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. Nothing will be passed into the result for the promise or callback.
+	 * This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format. The result is the saved item in the same form that `Model.get` returns: schema `get` modifiers are applied, and `Date` attributes and timestamps are `Date` objects.
 	 *
 	 * You can also pass a settings object in as the first parameter. The following options are available for settings are:
 	 *
@@ -473,31 +473,44 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 				return paramsPromise;
 			}
 		}
-		const promise: Promise<DynamoDB.PutItemOutput> = Promise.all([paramsPromise, table.getInternalProperties(internalProperties).pendingTaskPromise()]).then((promises) => {
+		const model = this.getInternalProperties(internalProperties).model;
+		const promise: Promise<Item> = Promise.all([paramsPromise, table.getInternalProperties(internalProperties).pendingTaskPromise()]).then(async (promises) => {
 			const [putItemObj] = promises;
-			return ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
+			// Return the saved item in the same form as `Model.get` (get modifiers, Date timestamps, custom types), not in the form stored in DynamoDB
+			// `populate: false`: reading referenced items must not be a condition for the write.
+			const conformSettings: ItemObjectFromSchemaSettings = {"customTypesDynamo": true, "saveUnknown": true, "type": "fromDynamo", "mapAttributes": true, "populate": false};
+			const returnItem = await new model.Item(savedItem as any, {"type": "fromDynamo"}).conformToSchema({...conformSettings, "modifiers": ["get"]});
+			const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(returnItem);
+			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
+			const timestamps = schemaInternalProperties.getTimestampAttributes();
+			await ddb(table.getInternalProperties(internalProperties).instance, "putItem", putItemObj);
+			this.getInternalProperties(internalProperties).storedInDynamo = true;
+
+			// Saving set the timestamps on this item in their storage form, before `set` and `get` modifiers run. Only the form changes to a Date, as in
+			// the returned item: a stored item does not regenerate `createdAt`, so a modifier result here would be written again by the next save.
+			// Other attributes keep the value the user gave. A mapped timestamp (`map`, `defaultMap`) is under its mapped name in the returned form.
+			timestamps.forEach((timestamp) => {
+				const value = utils.object.get(this as any, timestamp.name);
+				const typeDetails: any = schema.getAttributeTypeDetails(timestamp.name);
+				if (value === undefined || value instanceof Date || !typeDetails.customType) {
+					return;
+				}
+				const mapValues = schemaInternalProperties.getMapSettingValuesForKey(timestamp.name);
+				const returnedName = mapValues.length > 0 ? schemaInternalProperties.getDefaultMapAttribute(timestamp.name) || mapValues[0] : timestamp.name;
+				utils.object.set(this as any, returnedName, typeDetails.customType.functions.fromDynamo(value));
+				if (returnedName !== timestamp.name) {
+					utils.object.delete(this as any, timestamp.name);
+				}
+			});
+
+			return returnItem;
 		});
 
 		if (callback) {
 			const localCallback: CallbackType<Item, any> = callback as CallbackType<Item, any>;
-			promise.then(() => {
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				localCallback(null, returnItem);
-			}).catch((error) => callback(error));
+			promise.then((returnItem) => localCallback(null, returnItem)).catch((error) => callback(error));
 		} else {
-			return (async (): Promise<Item> => {
-				await promise;
-				this.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				const returnItem = new (this.getInternalProperties(internalProperties).model).Item(savedItem as any);
-				returnItem.getInternalProperties(internalProperties).storedInDynamo = true;
-
-				return returnItem;
-			})();
+			return promise;
 		}
 	}
 
@@ -534,19 +547,20 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 			};
 
 			const timestampProperties = schema.getInternalProperties(internalProperties).getTimestampAttributes();
+			// An item read with `Model.get` or returned by `save` holds a mapped timestamp under its mapped name. Remove that name, or mapping to the storage name fails because both are defined.
+			const setTimestamp = (prop): void => {
+				schema.getInternalProperties(internalProperties).getMapSettingValuesForKey(prop.name).forEach((mappedName) => utils.object.delete(object as any, mappedName));
+				utils.object.set(object as any, prop.name, timeResult(prop));
+			};
 
 			const createdAtProperties = timestampProperties.filter((val) => val.type === "createdAt");
 			const updatedAtProperties = timestampProperties.filter((val) => val.type === "updatedAt");
 			if (object.getInternalProperties && object.getInternalProperties(internalProperties) && !object.getInternalProperties(internalProperties).storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
-				createdAtProperties.forEach((prop) => {
-					utils.object.set(object as any, prop.name, timeResult(prop));
-				});
+				createdAtProperties.forEach(setTimestamp);
 			}
 			if (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt) {
 				// `Model.update` passes the object form. It writes top-level attributes whole, so setting a nested schema's timestamp (`address.updatedAt`) would replace that map with just the timestamp.
-				updatedAtProperties.filter((prop) => typeof settings.updateTimestamps === "boolean" || !prop.name.includes(".")).forEach((prop) => {
-					utils.object.set(object as any, prop.name, timeResult(prop));
-				});
+				updatedAtProperties.filter((prop) => typeof settings.updateTimestamps === "boolean" || !prop.name.includes(".")).forEach(setTimestamp);
 			}
 		}
 	}
@@ -883,7 +897,7 @@ Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObje
 // This function will modify the item to conform to the Schema
 Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjectFromSchemaSettings = {"type": "fromDynamo"}): Promise<Item> {
 	let item = this;
-	if (settings.type === "fromDynamo") {
+	if (settings.type === "fromDynamo" && settings.populate !== false) {
 		item = await this.prepareForResponse();
 	}
 	const model = item.getInternalProperties(internalProperties).model;
