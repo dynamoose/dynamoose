@@ -330,6 +330,32 @@ describe("Condition", () => {
 				return expect(condition.getInternalProperties(internalProperties).requestObject(model)).rejects.toEqual(new CustomError.InvalidParameter("A raw condition object must have a \"ConditionExpression\" or \"FilterExpression\" property, but it has \"ComparisonExpression\"."));
 			});
 
+			[
+				{
+					"name": "BETWEEN",
+					"raw": () => new Condition({"ConditionExpression": "#ag = :v0_1", "ExpressionAttributeNames": {"#ag": "age"}, "ExpressionAttributeValues": {":v0_1": 5}}),
+					"condition": (condition) => condition.where("age").between(13, 18),
+					"output": {"ConditionExpression": "(#ag = :v0_1) AND #a1 BETWEEN :v1_1 AND :v1_2", "ExpressionAttributeNames": {"#ag": "age", "#a1": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "5"}, ":v1_1": {"N": "13"}, ":v1_2": {"N": "18"}}}
+				},
+				{
+					"name": "IN",
+					"raw": () => new Condition({"ConditionExpression": "#ag = :v0_1", "ExpressionAttributeNames": {"#ag": "age"}, "ExpressionAttributeValues": {":v0_1": 5}}),
+					"condition": (condition) => condition.where("age").in([1, 2]),
+					"output": {"ConditionExpression": "(#ag = :v0_1) AND #a1 IN (:v1_1, :v1_2)", "ExpressionAttributeNames": {"#ag": "age", "#a1": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "5"}, ":v1_1": {"N": "1"}, ":v1_2": {"N": "2"}}}
+				},
+				{
+					"name": "document path",
+					"raw": () => new Condition({"ConditionExpression": "attribute_exists(#a0_0)", "ExpressionAttributeNames": {"#a0_0": "favoriteNumber"}}),
+					"condition": (condition) => condition.where("address.city").eq("KL"),
+					"output": {"ConditionExpression": "(attribute_exists(#a0_0)) AND #a1_0.#a1_1 = :v1", "ExpressionAttributeNames": {"#a0_0": "favoriteNumber", "#a1_0": "address", "#a1_1": "city"}, "ExpressionAttributeValues": {":v1": {"S": "KL"}}}
+				}
+			].forEach((test) => {
+				it(`Should number a ${test.name} condition after the suffixed placeholders a raw condition in parenthesis() uses`, async () => {
+					const condition = test.condition(new Condition().parenthesis(test.raw()).and());
+					expect(await condition.getInternalProperties(internalProperties).requestObject(model)).toEqual(test.output);
+				});
+			});
+
 			it("Should not change the object passed in", async () => {
 				const raw = {"FilterExpression": "#id = :id", "ExpressionAttributeValues": {":id": "5"}, "ExpressionAttributeNames": {"#id": "id"}};
 				const condition = new Condition(raw);

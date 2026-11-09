@@ -184,6 +184,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 					});
 				};
 				// Dynamoose numbers its own names and values (`#a0`, `:v0`), so it starts after the ones a raw condition uses, and neither replaces the other.
+				// It also adds suffixes to that number (`#a0_0` for a document path, `:v0_1` for BETWEEN and IN), so a raw `:v0_1` reserves 0 as well.
 				const rawIndexes = (input: ConditionStorageSettingsConditions): number[] => input.reduce((indexes: number[], entry) => {
 					if (!Array.isArray(entry)) {
 						return indexes;
@@ -192,7 +193,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 						return [...indexes, ...rawIndexes(entry)];
 					}
 					const {ExpressionAttributeNames, ExpressionAttributeValues} = entry[RAW_GROUP];
-					return [...indexes, ...[...Object.keys(ExpressionAttributeNames), ...Object.keys(ExpressionAttributeValues || {})].map((key) => (/^(?:#a|:v)(\d+)$/).exec(key)).filter(Boolean).map((match) => parseInt(match[1]) + 1)];
+					return [...indexes, ...[...Object.keys(ExpressionAttributeNames), ...Object.keys(ExpressionAttributeValues || {})].map((key) => (/^(?:#a|:v)(\d+)(?:_\d+)?$/).exec(key)).filter(Boolean).map((match) => parseInt(match[1]) + 1)];
 				}, []);
 
 				const {raw} = this.getInternalProperties(internalProperties).settings;
