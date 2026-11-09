@@ -2,6 +2,10 @@
 
 ---
 
+### 🚨 Breaking Changes 🚨
+
+- `new dynamoose.Schema` now throws `The updatedAt timestamp attribute "updatedAt" must not be a hashKey or rangeKey.` when an `updatedAt` timestamp is the schema's `hashKey` or `rangeKey`. Its value changes on every save, so `item.save()` wrote the item under a new key and left the old item in the table, and `Model.update` failed on DynamoDB because an update can't set a key attribute. An `updatedAt` timestamp can still be an index key, and a `createdAt` timestamp can still be the `hashKey` or `rangeKey`. To keep a version per save, use your own sort key attribute and set it on each save
+
 ### Maintenance
 
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
