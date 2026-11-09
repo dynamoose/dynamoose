@@ -4396,6 +4396,65 @@ describe("Model", () => {
 			});
 		});
 
+		describe("Attribute settings", () => {
+			// Both schemas define `status` and `name`, so each attribute's own object matches either one. The update's other attribute picks the schema.
+			let Ruled;
+			beforeEach(() => {
+				Ruled = dynamoose.model("Ruled", [
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "status": {"type": String, "enum": ["a"]}, "name": {"type": String, "set": (value) => value.toUpperCase()}, "x": String}),
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "status": {"type": String, "enum": ["b"]}, "name": String, "y": String})
+				]);
+				new dynamoose.Table("Ruled", [Ruled], {"create": false, "waitForActive": false});
+			});
+
+			it("Should check an attribute's enum with the schema the update follows", async () => {
+				const request = await Ruled.update({"id": "k"}, {"y": "1", "status": "b"}, {"return": "request"});
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "y", "#a1": "status"});
+				expect(request.ExpressionAttributeValues).toEqual({":v0": {"S": "1"}, ":v1": {"S": "b"}});
+				await expect(Ruled.update({"id": "k"}, {"y": "1", "status": "a"}, {"return": "request"})).rejects.toEqual(new CustomError.ValidationError("status must equal [\"b\"], but is set to a"));
+				await expect(Ruled.update({"id": "k"}, {"x": "1", "status": "b"}, {"return": "request"})).rejects.toEqual(new CustomError.ValidationError("status must equal [\"a\"], but is set to b"));
+			});
+
+			it("Should run an attribute's set function from the schema the update follows", async () => {
+				const second = await Ruled.update({"id": "k"}, {"y": "1", "name": "bob"}, {"return": "request"});
+				expect(second.ExpressionAttributeValues[":v1"]).toEqual({"S": "bob"});
+				const first = await Ruled.update({"id": "k"}, {"x": "1", "name": "bob"}, {"return": "request"});
+				expect(first.ExpressionAttributeValues[":v1"]).toEqual({"S": "BOB"});
+			});
+
+			it("Should check an attribute's enum with the schema a transaction update follows", async () => {
+				await expect(Ruled.transaction.update({"id": "k"}, {"y": "1", "status": "a"})).rejects.toEqual(new CustomError.ValidationError("status must equal [\"b\"], but is set to a"));
+			});
+
+			it("Should follow the schema whose types match the values when two schemas define as many of the attributes", async () => {
+				const Typed = dynamoose.model("Typed", [
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "value": String, "other": String, "label": {"type": String, "alias": "tag"}}),
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "value": Number, "other": String, "label": {"type": Number, "alias": "tag"}}, {"timestamps": {"updatedAt": "updatedAt"}})
+				]);
+				new dynamoose.Table("Typed", [Typed], {"create": false, "waitForActive": false});
+				const number = await Typed.update({"id": "k"}, {"value": 5}, {"return": "request"});
+				expect(number.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "value"});
+				expect(number.ExpressionAttributeValues[":v1"]).toEqual({"N": "5"});
+				const string = await Typed.update({"id": "k"}, {"value": "a"}, {"return": "request"});
+				expect(string.ExpressionAttributeNames).toEqual({"#a0": "value"});
+				expect(string.ExpressionAttributeValues).toEqual({":v0": {"S": "a"}});
+				const set = await Typed.update({"id": "k"}, {"$SET": {"value": 5}}, {"return": "request"});
+				expect(set.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "value"});
+				// `other` set to `undefined` is removed, and matches no type, so it doesn't pull the update to the first schema.
+				const withRemoved = await Typed.update({"id": "k"}, {"value": 5, "other": undefined}, {"return": "request"});
+				expect(withRemoved.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "value", "#a2": "other"});
+				expect(withRemoved.UpdateExpression).toEqual("REMOVE #a2 SET #a0 = :v0, #a1 = :v1");
+				// An attribute named by its alias is scored as that attribute.
+				const aliased = await Typed.update({"id": "k"}, {"tag": 5}, {"return": "request"});
+				expect(aliased.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "label"});
+				expect(aliased.ExpressionAttributeValues[":v1"]).toEqual({"N": "5"});
+				// With no value to score, the first schema is used.
+				const removed = await Typed.update({"id": "k"}, {"$REMOVE": ["value"]}, {"return": "request"});
+				expect(removed.ExpressionAttributeNames).toEqual({"#a0": "value"});
+				expect(removed.UpdateExpression).toEqual("REMOVE #a0");
+			});
+		});
+
 		describe("Attributes named by an alias", () => {
 			let Aliased;
 			const aliasConflictError = new CustomError.InvalidParameter("Model.update names attribute \"d\" more than once (\"d\" and \"dee\"). Name each attribute once.");

@@ -396,7 +396,7 @@ An attribute can be named by its `alias` (or `aliases` or `map` name) in the upd
 
 An update with nothing to write (an empty update object, or only attributes that are skipped, such as an attribute that isn't in the schema set to `undefined`) throws an `InvalidParameter` error before it is sent, because DynamoDB rejects an empty update expression.
 
-On a model with several schemas, an update follows the rules (`required`, `default`, `forceDefault`, timestamps, and removing an attribute set to `undefined`) of the schema that defines the most of the attributes the update names, by name or alias. When two schemas define as many, the first one is used.
+On a model with several schemas, an update follows the rules (`required`, `default`, `forceDefault`, `enum`, `validate` and `set` settings, timestamps, and removing an attribute set to `undefined`) of the schema that defines the most of the attributes the update names, by name or alias. When two schemas define as many, the one whose types match the values the update sets is used (`{"value": 5}` follows the schema where `value` is a `Number`), and the first of those when they match equally.
 
 ```js
 // schemas: [{"id": String, "a": String}, {"id": String, "b": {"type": String, "required": true}, "c": {"type": String, "default": "none"}}]

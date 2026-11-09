@@ -53,16 +53,40 @@ const attributeNamesForAliases = (schema: Schema, updateObj: ObjectType): Object
 	}, {});
 };
 // The schema whose rules an update follows on a model with several schemas: the one that defines the most of the attribute names the update writes, by name or alias, so an attribute only a later schema defines gets that schema's rules. A tie keeps the first schema.
-const schemaForUpdate = (schemas: Schema[], updateObj: ObjectType): Schema => {
+// When several schemas define as many of those names, the values the update sets break the tie, scored as `schemaForObject` scores an item (`{"value": 5}` follows the schema where `value` is a Number), and then the first one wins.
+const schemaForUpdate = (schemas: Schema[], updateObj: ObjectType, correctnessScores: (object: ObjectType) => number[]): Schema => {
 	if (schemas.length === 1) {
 		return schemas[0];
 	}
 	const names = updateAttributeNames(updateObj);
-	const definedCount = (schema: Schema): number => {
+	const definedCounts = schemas.map((schema) => {
 		const aliases = schema.getInternalProperties(internalProperties).getMapSettingObject();
 		return names.filter((name) => schema.attributes().includes(name) || Object.prototype.hasOwnProperty.call(aliases, name)).length;
+	});
+	const mostDefined = Math.max(...definedCounts);
+	const candidates = schemas.map((_, index) => index).filter((index) => definedCounts[index] === mostDefined);
+	if (candidates.length === 1) {
+		return schemas[candidates[0]];
+	}
+	// The values the update sets, plain and under `$SET`. An `undefined` value matches no type, so it is left out rather than scoring every schema 0.
+	const setValues = Object.entries(updateObj).reduce((result: ObjectType, [key, value]) => {
+		const entries = !isUpdateOperator(key, value) ? [[key, value]] : key === "$SET" ? Object.entries(value) : [];
+		entries.filter(([, entryValue]) => entryValue !== undefined && entryValue !== type.UNDEFINED).forEach(([name, entryValue]) => {
+			result[name] = entryValue;
+		});
+		return result;
+	}, {});
+	// Each schema scores the values with its own aliases renamed to its attributes.
+	const score = (index: number): number => {
+		const aliases = schemas[index].getInternalProperties(internalProperties).getMapSettingObject();
+		const withAttributeNames = Object.entries(setValues).reduce((result: ObjectType, [name, value]) => {
+			result[Object.prototype.hasOwnProperty.call(aliases, name) ? aliases[name] : name] = value;
+			return result;
+		}, {});
+		return correctnessScores(withAttributeNames)[index];
 	};
-	return schemas.reduce((best, schema) => definedCount(schema) > definedCount(best) ? schema : best);
+	const scores = candidates.map(score);
+	return schemas[candidates[scores.reduce((best, value, position) => value > scores[best] ? position : best, 0)]];
 };
 
 type UpdatePartial<T> =
@@ -771,7 +795,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			if (isKeyAndUpdate) {
 				updateObj = utils.deep_copy(keyObj) as Partial<T>;
 			}
-			const schema = schemaForUpdate(this.getInternalProperties(internalProperties).schemas, updateObj);
+			const schema = schemaForUpdate(this.getInternalProperties(internalProperties).schemas, updateObj, this.getInternalProperties(internalProperties).schemaCorrectnessScores);
 			updateObj = attributeNamesForAliases(schema, updateObj) as Partial<T>;
 			// The key and the update in one object: the key attributes, which can be named by an alias, are the key, not part of the update.
 			if (isKeyAndUpdate) {
@@ -804,7 +828,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
-						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
+						// Converted with the schema the update follows, so its `enum`, `validate` and `set` settings apply rather than those of whichever schema matches the attribute alone.
+						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"schema": schema, "type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
 					}
 
 					if (subValue === dynamooseUndefined || subValue === undefined) {
