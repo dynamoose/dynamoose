@@ -7,7 +7,13 @@ const path = require("path");
 
 module.exports = (request, options) => {
 	if (request === "dynamoose-utils" || request.startsWith("dynamoose-utils/")) {
-		const baseline = fs.realpathSync(path.dirname(options.defaultResolver("dynamoose-baseline/package.json", {...options, "basedir": options.rootDir})));
+		let baseline;
+		try {
+			baseline = fs.realpathSync(path.dirname(options.defaultResolver("dynamoose-baseline/package.json", {...options, "basedir": options.rootDir})));
+		} catch (error) {
+			// Without the baseline installed, resolve as usual, so only the suites that load the baseline fail, and with its name.
+			return options.defaultResolver(request, options);
+		}
 		const from = fs.realpathSync(options.basedir);
 		if (from === baseline || from.startsWith(baseline + path.sep)) {
 			return options.defaultResolver(request.replace(/^dynamoose-utils/u, "dynamoose-utils-baseline"), options);
