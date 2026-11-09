@@ -3639,6 +3639,29 @@ describe("Model", () => {
 						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1, #a2 = :v2");
 					});
 
+					it("Should give the schema's set the key as the update gets it, so a set that changes the key updates the key Model.get uses", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => ({...item, "id": item.id + 1000}));
+
+						await callType.func(User).bind(User)({"id": 1}, {"first": "Bob"});
+						// The first call converts the key, as it does for every operation that takes a key. The second gets the key before that call changed it.
+						expect(setCalls).toEqual([{"id": 1}, {"id": 1, "first": "Bob"}]);
+						expect(updateItemParams.Key).toEqual({"id": {"N": "1001"}});
+						expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "first"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "Bob"}});
+						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					});
+
+					it("Should give the schema's set the key as the update gets it when the key and the update are one object", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => ({...item, "id": item.id + 1000}));
+
+						await callType.func(User).bind(User)({"id": 1, "first": "Bob"});
+						expect(setCalls[setCalls.length - 1]).toEqual({"id": 1, "first": "Bob"});
+						expect(updateItemParams.Key).toEqual({"id": {"N": "1001"}});
+						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					});
+
 					it("Should not write an attribute the schema's set leaves out", async () => {
 						updateItemFunction = () => Promise.resolve({});
 						modelWithSet((item) => Object.fromEntries(Object.entries(item).filter(([attribute]) => attribute !== "last")));

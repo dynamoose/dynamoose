@@ -113,7 +113,7 @@ interface ModelInternalProperties {
 	name: string;
 	options: TableOptionsOptional;
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
-	convertKeyToObject: (key: InputKey) => Promise<KeyObject>;
+	convertKeyToObject: (key: InputKey, settings?: {schemaModifiers?: boolean}) => Promise<KeyObject>;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
 	schemaForObject: (object: ObjectType) => Schema;
 	dynamoPropertyForAttribute: (attribute: string) => Promise<string>;
@@ -218,10 +218,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					return result;
 				}, {});
 			},
-			"convertKeyToObject": async (key: InputKey): Promise<KeyObject> => {
+			// `schemaModifiers: false` leaves out the schema's own `set`, for `Model.update`, which calls it with the key and the attributes it sets.
+			"convertKeyToObject": async (key: InputKey, settings: {schemaModifiers?: boolean} = {}): Promise<KeyObject> => {
 				let keyObject: KeyObject;
 				const hashKey = this.getInternalProperties(internalProperties).getHashKey();
-				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true};
+				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true, "schemaModifiers": settings.schemaModifiers !== false};
 				if (typeof key === "object") {
 					// If we passed aliased attribute names, we need to get them back to the key names
 					const mappedKey = await this.Item.objectFromSchema(key, this, objectFromSchemaSettings);
@@ -766,8 +767,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			const schemaSet = setInputSchema.getInternalProperties(internalProperties).settings.set;
 			if (schemaSet && [...convertedSet].some(hasValue)) {
 				const keyObject = await getKeyObject();
-				const result = await schemaSet({...keyObject, ...Object.fromEntries([...convertedSet].filter(hasValue))});
-				// An update can't move an item to another key. A key attribute `set` leaves out, or returns as it is, is left as the key has it.
+				// `set` gets the key as the update was given it. `keyObject` is that key after `set` ran on it alone, as `Model.get` makes it, so a `set` that changes the key (such as adding a prefix) would change it twice if it got `keyObject`.
+				const givenKeyObject = await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj, {"schemaModifiers": false});
+				const result = await schemaSet({...givenKeyObject, ...Object.fromEntries([...convertedSet].filter(hasValue))});
+				// An update can't move an item to another key. A key attribute `set` leaves out is left as the key has it, and one it returns must be the key the update writes.
 				Object.keys(keyObject).forEach((attribute) => {
 					if (attribute in result && result[attribute] !== keyObject[attribute]) {
 						throw new CustomError.InvalidParameter(`The schema's set function changed the key attribute ${attribute} from ${JSON.stringify(keyObject[attribute])} to ${JSON.stringify(result[attribute])}, but Model.update can't change an item's key.`);
