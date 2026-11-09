@@ -259,6 +259,7 @@ describe("Condition", () => {
 							})
 						}),
 						"schemaForObject": () => new dynamoose.Schema({"id": String}),
+						"schemas": [new dynamoose.Schema({"id": String})],
 						"dynamoPropertyForAttribute": (key) => key
 					})
 				};

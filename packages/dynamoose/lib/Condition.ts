@@ -192,7 +192,12 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 									return finalName;
 								}, []).join(".");
 							}
-							object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							// `contains` on a list compares one element of it. So a single value is converted as a list holding it (the list's own `set` function gets a list) and the element is sent, rather than converting the value as the whole list.
+							if (["CONTAINS", "NOT_CONTAINS"].includes(condition.type) && !Array.isArray(value) && model.getInternalProperties(internalProperties).schemas.some((schema) => schema.attributes().includes(key) && ([] as string[]).concat(schema.getAttributeType(key)).includes("L"))) {
+								object.ExpressionAttributeValues[keys.value] = (await toDynamo(key, [value])).L[0];
+							} else {
+								object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							}
 
 							switch (condition.type) {
 							case "EQ":
