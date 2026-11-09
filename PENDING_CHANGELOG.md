@@ -2,6 +2,10 @@
 
 ---
 
+### 🚨 Breaking Changes 🚨
+
+- `item.save` no longer adds an object holding only a nested Schema's timestamps (`"address": {"createdAt": ..., "updatedAt": ...}`) to an item that doesn't have that attribute. A nested Schema's timestamps are now set only when the item has an object for it. Before, an item saved without `address` was stored with an `address` map of just the timestamps, and the save failed if the nested Schema had a `required` property
+
 ### Maintenance
 
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
@@ -13,6 +17,10 @@
 ### Bug Fixes
 
 - Fixed `Model.get`, `Model.delete`, `Model.batchGet` and `Model.update` putting the attributes a schema's `set` setting adds into the request's `Key` when the key was passed as a value (`Model.get(1)`), so DynamoDB rejected the request with `The provided key element does not match the schema`. Only the hash key is sent now, as for a key passed as an object
+- Fixed `item.save` not setting the timestamps of a nested Schema when the item used the attribute's mapped name (`map` or `alias`). For an attribute holding a nested Schema it threw `Cannot map attribute addr to address because both are defined`, including when saving an item read with `Model.get`, and for a list of nested Schemas the timestamps were left out
+- Fixed a nested Schema whose `timestamps` names are a list (`{"createdAt": ["created", "added"]}`), `null` or a definition with settings, or a Schema nested in another nested Schema where every level has `timestamps`, making every `item.save`, `Model.update` and `Model.transaction.update` throw `Invalid Attribute: 0` or `Invalid Attribute: address.null`
+- Fixed the `timestamps` and `saveUnknown` settings of a nested Schema used as one of an attribute's types (`{"data": [{"type": Object, "schema": addressSchema}, String]}`) not applying, and `item.save` throwing `Cannot read properties of undefined (reading 'schema')` or `Cannot create property 'createdAt' on string` for such an attribute
+- Fixed the `timestamps` and `saveUnknown` settings of a nested Schema inside an object attribute (`{"type": Object, "schema": {"address": addressSchema}}` or `{"type": Object, "schema": addressSchema}`) or a list (`{"type": Array, "schema": [addressSchema]}`) applying to its path in the schema definition (`info.schema.address`) instead of in the item (`info.address`). Unknown properties the nested Schema allowed were left out when saving and reading the item, its timestamps were never set, and with `timestamps` on the parent schema too, `item.save` threw `Cannot read properties of undefined (reading 'schema')`. `item.save` now sets the nested timestamps, on every element of a list, as it already did for a nested Schema set directly as an attribute
 - Fixed `deep_copy` dropping sibling properties that share the same object reference (e.g. a single `Date` used for both `createdAt` and `updatedAt`, or a single address used for both `billingAddress` and `shippingAddress`). Circular reference detection now tracks only the current ancestor path rather than every object ever visited, which also removes an infinite-recursion risk on self-referencing arrays and a shared-reference leak on class instances containing circular properties
 - Fixed `dynamoose.transaction` get results skipping schema `get` modifiers. Items returned from a `transactGetItems` transaction now run attribute `get` functions the same as `Model.get`, `Model.batchGet`, `Model.query`, and `Model.scan`
 - Fixed `Model.update` and `Model.transaction.update` not writing a `Combine` attribute when the model also has a `forceDefault` attribute. Both were given the same placeholder (e.g. `#a2`), so the request set the default value twice and left the combine attribute out

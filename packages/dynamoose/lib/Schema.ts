@@ -841,6 +841,29 @@ type GetTimestampAttributesType = ({
 	"value": AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
 	"type": "createdAt" | "updatedAt";
 })[];
+// Turns the path of a nested Schema in a schema definition into the path of its value in an item: `info.schema.address` into `info.address`, and `list.schema.0` into `list.*`.
+// The path starts with an attribute. An attribute's definition can be a list of the types it can have (`[{"type": Object, "schema": ...}, String]`), whose index isn't part of the item path. Its `schema` setting is followed by an attribute of that schema or, for a list, the index of its element (`*` in the item path). Its other settings, such as `type`, aren't part of the item path either.
+function definitionPathToItemPath (definition: SchemaDefinition, path: string): string {
+	const parts = path.split(".");
+	const itemParts = [parts[0]];
+	let i = 1;
+	while (i < parts.length) {
+		const attributeDefinition = utils.object.get(definition, parts.slice(0, i).join("."));
+		if (Array.isArray(attributeDefinition)) {
+			// One of the attribute's types.
+			i++;
+		} else if (parts[i] === "schema" && i + 1 < parts.length) {
+			const schemaDefinition = utils.object.get(definition, parts.slice(0, i + 1).join("."));
+			itemParts.push(Array.isArray(schemaDefinition) ? "*" : parts[i + 1]);
+			i += 2;
+		} else {
+			// A setting of the attribute, such as `schema` or `type`, that holds the nested Schema itself.
+			i++;
+		}
+	}
+	return itemParts.join(".");
+}
+
 function getTimestampAttributes (timestamps?: TimestampObject): GetTimestampAttributesType {
 	if (!timestamps) {
 		return [];
@@ -884,7 +907,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 	 * | Name | Type | Default | Information
 	 * |---|---|---|---|
 	 * | `saveUnknown` | array \| boolean | false | This setting lets you specify if the schema should allow properties not defined in the schema. If you pass `true` in for this option all unknown properties will be allowed. If you pass in an array of strings, only properties that are included in that array will be allowed. If you pass in an array of strings, you can use `*` to indicate a wildcard nested property one level deep, or `**` to indicate a wildcard nested property infinite levels deep (ex. `["person.*", "friend.**"]` will allow you store a property `person` with 1 level of unknown properties and `friend` with infinitely nested level unknown properties). If you retrieve items from DynamoDB with `saveUnknown` enabled, all custom Dynamoose types will be returned as the underlying DynamoDB type (ex. Dates will be returned as a Number representing number of milliseconds since Jan 1 1970).
-	 * | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. You can also set each of the `createdAt` & `updatedAt` properties equal to a Schema object. The keys of this Schema object represent the name of the attributes, with the value allowing for customization such as changing the storage type of the date. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`.
+	 * | `timestamps` | boolean \| object | false | This setting lets you indicate to Dynamoose that you would like it to handle storing timestamps in your items for both creation and most recent update times. If you pass in an object for this setting you must specify two keys `createdAt` & `updatedAt`, each with a value of a string or array of strings being the name of the attribute(s) for each timestamp. You can also set each of the `createdAt` & `updatedAt` properties equal to a Schema object. The keys of this Schema object represent the name of the attributes, with the value allowing for customization such as changing the storage type of the date. If you pass in `null` for either of those keys that specific timestamp won't be added to the schema. If you set this option to `true` it will use the default attribute names of `createdAt` & `updatedAt`. When this schema has `timestamps` and contains a nested Schema with `timestamps` (as an attribute, inside an object attribute's `schema`, or as the element of a list), `item.save` also sets the nested Schema's timestamps when the item has an object for it, on every element of a list. `createdAt` is set only when the whole item is new, so an element added to a list of a stored item gets only `updatedAt`.
 	 * | `get` | function \| async function | undefined | You can use a get function on the schema to be run whenever retrieving an item from DynamoDB. Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to return to the application. This function will be run after all property `get` functions are run.
 	 * | `set` | function \| async function | undefined | You can use a set function on the schema to be run whenever saving an item to DynamoDB. It will also be used when retrieving an item (ie. `get`, `query`, `update`, etc). Dynamoose will pass the entire item into this function and you must return the new value of the entire object you want Dynamoose to save to DynamoDB. This function will be run after all property `set` functions are run.
 	 * | `validate` | function \| async function | undefined | You can use a validate function on the schema to ensure the value passes a given validation before saving the item. Dynamoose will pass the entire item into this function and you must return a boolean (`true` if validation passes or `false` if validation fails) or throw an error. This function will be run after all property `validate` functions are run.
@@ -1044,24 +1067,33 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 				newValue = (value as any).getInternalProperties(internalProperties).schemaObject;
 			}
 
+			// The nested Schema's settings are prefixed with the path of its value in an item, not its path in the definition.
+			const path = definitionPathToItemPath(parsedObject, key);
 			const subSettings = {...(value as any).getInternalProperties(internalProperties).settings};
+			const {timestamps} = subSettings;
+			// The nested Schema's timestamps are added below.
+			delete subSettings.timestamps;
 			Object.entries(subSettings).forEach((entry) => {
 				const [settingsKey, settingsValue] = entry;
 				switch (settingsKey) {
 				case "saveUnknown":
-					subSettings[settingsKey] = typeof subSettings[settingsKey] === "boolean" ? [`${key}.**`] : (settingsValue as any).map((val) => `${key}.${val}`);
-					break;
-				case "timestamps":
-					subSettings[settingsKey] = Object.entries(subSettings[settingsKey]).reduce((obj, entity) => {
-						const [subKey, subValue] = entity;
-
-						obj[subKey] = Array.isArray(subValue) ? subValue.map((subValue) => `${key}.${subValue}`) : `${key}.${subValue}`;
-
-						return obj;
-					}, {});
+					subSettings[settingsKey] = typeof subSettings[settingsKey] === "boolean" ? [`${path}.**`] : (settingsValue as any).map((val) => `${path}.${val}`);
 					break;
 				}
 			});
+			// The nested Schema's timestamps (its own, and those of the Schemas nested in it) are added to this schema's lists of timestamp names. A `null` name, a list of names and a name with a definition are all read as `getTimestampAttributes` reads them. A new object is made, so the settings passed in aren't changed.
+			if (timestamps) {
+				const parsedTimestamps = {...parsedSettings.timestamps as TimestampObject};
+				const nestedNames = getTimestampAttributes(timestamps);
+				(["createdAt", "updatedAt"] as const).forEach((type) => {
+					const names = nestedNames.filter((prop) => prop.type === type).map((prop) => `${path}.${prop.name}`);
+					if (names.length > 0) {
+						const current = parsedTimestamps[type];
+						parsedTimestamps[type] = [...Array.isArray(current) ? current : current ? [current] : [], ...names] as string[];
+					}
+				});
+				parsedSettings.timestamps = parsedTimestamps;
+			}
 			parsedSettings = utils.merge_objects.main({"combineMethod": "array_merge_new_array"})(parsedSettings, subSettings);
 
 			utils.object.set(parsedObject, key, newValue);
@@ -1143,7 +1175,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 						return accumulator;
 					}, []);
 			},
-			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps as TimestampObject)
+			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps ? parsedSettings.timestamps as TimestampObject : undefined)
 		});
 
 		const checkAttributeNameDots = (object: SchemaDefinition/*, existingKey = ""*/): void => {

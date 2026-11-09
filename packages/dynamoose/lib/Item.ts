@@ -515,6 +515,28 @@ export class AnyItem extends Item {
 	[key: string]: any;
 }
 
+// Sets a timestamp at the path `parts` in `object`. A `*` part stands for every element of a list, as in the timestamps of a nested Schema in a list (`addresses.*.createdAt`).
+// Nothing is created on the way: a nested Schema's timestamps are only set when the item has an object for that Schema, so an item without it (or with a value of another type) is saved as it is.
+// `keysFor` gives the keys the object can use for a top-level attribute: its name and the names it is mapped to (`map` or `alias`).
+function setTimestamp (object: any, parts: string[], value: string | number, keysFor: (attribute: string) => string[], isTopLevel = true): void {
+	const [part, ...rest] = parts;
+	if (part === "*") {
+		if (Array.isArray(object)) {
+			object.forEach((element) => setTimestamp(element, rest, value, keysFor, false));
+		}
+		return;
+	}
+	if (!object || typeof object !== "object" || Array.isArray(object)) {
+		return;
+	}
+	const key = (isTopLevel ? keysFor(part) : [part]).find((name) => object[name] !== undefined) ?? part;
+	if (rest.length === 0) {
+		object[key] = value;
+	} else {
+		setTimestamp(object[key], rest, value, keysFor, false);
+	}
+}
+
 // This function will mutate the object passed in to run any actions to conform to the schema that cannot be achieved through non mutating methods in Item.objectFromSchema (setting timestamps, etc.)
 Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesClass<any>>(object: T, model: Model<Item>, settings: ItemObjectFromSchemaSettings): Promise<T> {
 	if (settings.updateTimestamps) {
@@ -522,7 +544,8 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 		if (schema.getInternalProperties(internalProperties).settings.timestamps && settings.type === "toDynamo") {
 			const date = new Date();
 			const timeResult = (prop) => {
-				const typeDetails = schema.getAttributeTypeDetails(prop.name);
+				// The schema names the element of a list `0`.
+				const typeDetails = schema.getAttributeTypeDetails(prop.name.split(".").map((part) => part === "*" ? "0" : part).join("."));
 				if (Array.isArray(typeDetails)) {
 					throw new CustomError.InvalidType(`Not allowed to use an array of types for the timestamps attribute "${prop.name}".`);
 				}
@@ -534,18 +557,19 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 			};
 
 			const timestampProperties = schema.getInternalProperties(internalProperties).getTimestampAttributes();
+			const keysFor = (attribute: string): string[] => [attribute, ...schema.getInternalProperties(internalProperties).getMapSettingValuesForKey(attribute)];
 
 			const createdAtProperties = timestampProperties.filter((val) => val.type === "createdAt");
 			const updatedAtProperties = timestampProperties.filter((val) => val.type === "updatedAt");
 			if (object.getInternalProperties && object.getInternalProperties(internalProperties) && !object.getInternalProperties(internalProperties).storedInDynamo && (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.createdAt)) {
 				createdAtProperties.forEach((prop) => {
-					utils.object.set(object as any, prop.name, timeResult(prop));
+					setTimestamp(object, prop.name.split("."), timeResult(prop), keysFor);
 				});
 			}
 			if (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt) {
 				// `Model.update` passes the object form. It writes top-level attributes whole, so setting a nested schema's timestamp (`address.updatedAt`) would replace that map with just the timestamp.
 				updatedAtProperties.filter((prop) => typeof settings.updateTimestamps === "boolean" || !prop.name.includes(".")).forEach((prop) => {
-					utils.object.set(object as any, prop.name, timeResult(prop));
+					setTimestamp(object, prop.name.split("."), timeResult(prop), keysFor);
 				});
 			}
 		}
