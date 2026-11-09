@@ -547,7 +547,8 @@ Table.defaults = originalDefaults;
 
 
 interface TableCreateOptions {
-	return?: "request";
+	// `| undefined` lets an explicit `return: undefined` compile under exactOptionalPropertyTypes, as it did before this overload change.
+	return?: "request" | undefined;
 }
 
 export interface TableWaitForActiveSettings {

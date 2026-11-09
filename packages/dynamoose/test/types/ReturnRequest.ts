@@ -25,3 +25,14 @@ const shouldResolveItemSaveRequest: Promise<DynamoDB.PutItemInput> = requestUser
 const shouldResolveTableCreate: Promise<void> = requestTable.create();
 const shouldResolveTableCreateWithSettings: Promise<void> = requestTable.create({});
 const shouldResolveModelGet: Promise<RequestUser> = RequestUserModel.get(1);
+
+// An explicit `undefined` for the optional `return` is accepted (exactOptionalPropertyTypes is on for this project).
+const shouldResolveTableCreateUndefinedReturn: Promise<void> = requestTable.create({"return": undefined});
+
+// The callback forms: the request callback receives the request type, and the call returns void.
+const shouldReturnVoidForTableCreateRequestCallback: void = requestTable.create({"return": "request"}, (error, response) => {
+	const shouldBeCreateTableInput: DynamoDB.CreateTableInput | undefined = response;
+});
+const shouldReturnVoidForTableCreateWithSettingsCallback: void = requestTable.create({}, (error, response) => {
+	const shouldBeVoidResult: void | undefined = response;
+});
