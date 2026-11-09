@@ -3883,6 +3883,21 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"entity": "ACCOUNT#1", "docId": "doc1"}, {"$REMOVE": ["meta"]})).rejects.toEqual(new CustomError.InvalidParameter("You cannot update the combine attributes of entity because it is part of the key. Remove them from the update: meta.entityType, meta.entityId."));
 				});
 
+				// The key check runs for the key attribute and the combine write for `slug`, in schema order, so both orders must throw.
+				it("Should throw error if updating the sources of a combine attribute that is a combine attribute of a key, declared after the key", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"entity": {"type": {"value": "Combine", "settings": {"attributes": ["slug"]}}, "hashKey": true}, "docId": {"type": String, "rangeKey": true}, "slug": {"type": {"value": "Combine", "settings": {"attributes": ["prefix", "suffix"]}}}, "prefix": String, "suffix": String});
+					new dynamoose.Table("User", [User]);
+					return expect(callType.func(User).bind(User)({"entity": "a-b", "docId": "doc1"}, {"prefix": "x", "suffix": "y"})).rejects.toEqual(new CustomError.InvalidParameter("You cannot update the combine attributes of entity because it is part of the key. Remove them from the update: slug."));
+				});
+
+				it("Should throw error if updating the sources of a combine attribute that is a combine attribute of a key, declared before the key", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"docId": {"type": String, "rangeKey": true}, "slug": {"type": {"value": "Combine", "settings": {"attributes": ["prefix", "suffix"]}}}, "entity": {"type": {"value": "Combine", "settings": {"attributes": ["slug"]}}, "hashKey": true}, "prefix": String, "suffix": String});
+					new dynamoose.Table("User", [User]);
+					return expect(callType.func(User).bind(User)({"entity": "a-b", "docId": "doc1"}, {"prefix": "x", "suffix": "y"})).rejects.toEqual(new CustomError.InvalidParameter("You cannot update the combine attributes of entity because it is part of the key. Remove them from the update: slug."));
+				});
+
 				// Writing the forced default would leave the stored source different from the unchanged key.
 				it("Shouldn't write a forceDefault combine attribute of a key", async () => {
 					updateItemFunction = () => Promise.resolve({});

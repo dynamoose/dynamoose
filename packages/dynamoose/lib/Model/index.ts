@@ -811,9 +811,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			})()));
 
 			// The sources of a hash or range key that is a combine attribute. They must stay equal to the key, so update never writes them.
-			const keyCombineSources: string[] = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean).flatMap((key: string) => {
+			const keyCombineSources: {key: string; source: string}[] = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean).flatMap((key: string) => {
 				const type: any = schema.getAttributeTypeDetails(key);
-				return !Array.isArray(type) && type.name === "Combine" ? type.typeSettings.attributes : [];
+				return !Array.isArray(type) && type.name === "Combine" ? type.typeSettings.attributes.map((source: string) => ({key, source})) : [];
 			});
 			// Setting or removing `meta` changes the source `meta.entityType`, and the other way around.
 			const pathsOverlap = (a: string, b: string): boolean => a === b || a.startsWith(`${b}.`) || b.startsWith(`${a}.`);
@@ -859,6 +859,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				if (invalidAttributes.length > 0) {
 					throw new CustomError.InvalidParameter(`You must update all or none of the combine attributes when running Model.update. Missing combine attributes: ${invalidAttributes.join(", ")}.`);
 				} else {
+					// A combine attribute that is itself a key source. The key check above may already have run, depending on the order of the schema attributes.
+					const keySource = keyCombineSources.find(({source}) => pathsOverlap(details.attribute, source));
+					if (keySource) {
+						throw new CustomError.InvalidParameter(`You cannot update the combine attributes of ${keySource.key} because it is part of the key. Remove them from the update: ${details.attribute}.`);
+					}
 					// Numbered from `index` and moves it on, so attributes added after this one (such as `forceDefault` ones) don't reuse the number.
 					returnObject.ExpressionAttributeNames[`#a${index}`] = details.attribute;
 					returnObject.ExpressionAttributeValues[`:v${index}`] = details.type.typeSettings.attributes.map((attribute) => {
@@ -872,7 +877,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			await Promise.all(schema.attributes().map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
-				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute) && !keyCombineSources.some((source) => pathsOverlap(attribute, source))) {
+				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute) && !keyCombineSources.some(({source}) => pathsOverlap(attribute, source))) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 
 					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
