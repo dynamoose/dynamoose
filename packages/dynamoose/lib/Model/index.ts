@@ -856,7 +856,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}, {})
 				};
 
-				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
+				// The timestamps are those of the schema the update follows. Picked from the empty object instead, a model with several schemas would get the first schema's.
+				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"schema": schema, "updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
 				const defaultObjectFromSchema = await this.Item.objectFromSchema(await this.Item.prepareForObjectFromSchema({}, this, itemFunctionSettings), this, itemFunctionSettings);
 				Object.keys(defaultObjectFromSchema).forEach((key) => {
 					const value = defaultObjectFromSchema[key];

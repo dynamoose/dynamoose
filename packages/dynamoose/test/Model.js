@@ -4362,6 +4362,40 @@ describe("Model", () => {
 			expect(request.ExpressionAttributeValues).toEqual({":v0": {"S": "dflt"}});
 		});
 
+		describe("Timestamps", () => {
+			let Stamped;
+			beforeEach(() => {
+				Stamped = dynamoose.model("Stamped", [
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "a": String}, {"timestamps": {"createdAt": "aCreated", "updatedAt": "aUpdated"}}),
+					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "b": String}, {"timestamps": {"createdAt": "createdAt", "updatedAt": {"updatedAt": {"type": {"value": Date, "settings": {"storage": "iso"}}}}}})
+				]);
+				new dynamoose.Table("Stamped", [Stamped], {"create": false, "waitForActive": false});
+			});
+
+			it("Should set the updatedAt timestamp of the second schema for an update that follows it", async () => {
+				const before = Date.now();
+				const request = await Stamped.update({"id": "x"}, {"b": "y"}, {"return": "request"});
+				const after = Date.now();
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "b"});
+				expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+				expect(new Date(request.ExpressionAttributeValues[":v0"].S).getTime()).toBeWithinRange(before, after);
+			});
+
+			it("Should set the updatedAt timestamp of the first schema for an update that follows it", async () => {
+				const request = await Stamped.update({"id": "x"}, {"a": "y"}, {"return": "request"});
+				expect(request.ExpressionAttributeNames).toEqual({"#a0": "aUpdated", "#a1": "a"});
+				expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+				expect(request.ExpressionAttributeValues[":v0"].N).toBeDefined();
+			});
+
+			it("Should set the updatedAt timestamp of the schema a transaction update follows", async () => {
+				const result = await Stamped.transaction.update({"id": "x"}, {"b": "y"});
+				expect(result.Update.ExpressionAttributeNames).toEqual({"#a0": "updatedAt", "#a1": "b"});
+				expect(result.Update.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+				expect(result.Update.ExpressionAttributeValues[":v0"].S).toBeDefined();
+			});
+		});
+
 		describe("Attributes named by an alias", () => {
 			let Aliased;
 			const aliasConflictError = new CustomError.InvalidParameter("Model.update names attribute \"d\" more than once (\"d\" and \"dee\"). Name each attribute once.");
