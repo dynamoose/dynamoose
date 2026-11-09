@@ -2150,6 +2150,53 @@ describe("Model", () => {
 					});
 				});
 
+				describe("Unprocessed items whose stored form differs from the input", () => {
+					// DynamoDB returns every item it was sent as unprocessed.
+					const allUnprocessed = () => Promise.resolve({"UnprocessedItems": params.RequestItems});
+
+					it("Should return an unprocessed item with a Date attribute", async () => {
+						User = dynamoose.model("User", {"id": Number, "born": Date});
+						new dynamoose.Table("User", [User]);
+						promiseFunction = allUnprocessed;
+						const result = await callType.func(User).bind(User)([{"id": 1, "born": new Date(1000)}, {"id": 2, "born": new Date(2000)}]);
+						expect(result.unprocessedItems.map((item) => item.id)).toEqual([1, 2]);
+					});
+
+					it("Should return an unprocessed item with a Set attribute given as an array", async () => {
+						User = dynamoose.model("User", {"id": Number, "tags": {"type": Set, "schema": [String]}});
+						new dynamoose.Table("User", [User]);
+						promiseFunction = allUnprocessed;
+						const result = await callType.func(User).bind(User)([{"id": 1, "tags": ["a", "b"]}]);
+						expect(result.unprocessedItems.map((item) => item.id)).toEqual([1]);
+					});
+
+					it("Should return each unprocessed item once when the hash key comes from a default", async () => {
+						let counter = 0;
+						User = dynamoose.model("User", {"id": {"type": String, "default": () => `id${++counter}`}, "tags": {"type": Set, "schema": [String]}});
+						new dynamoose.Table("User", [User]);
+						promiseFunction = allUnprocessed;
+						const result = await callType.func(User).bind(User)([{"tags": ["a"]}, {"tags": ["b"]}]);
+						expect(result.unprocessedItems.map((item) => item.id)).toEqual(["id1", "id2"]);
+					});
+
+					it("Should return only the unprocessed items whose binary hash key matches", async () => {
+						User = dynamoose.model("User", {"id": Buffer, "name": String});
+						new dynamoose.Table("User", [User]);
+						// The response holds new binary values, as the SDK reads them back as Uint8Array.
+						promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [{"PutRequest": {"Item": {"id": {"B": new Uint8Array([2])}, "name": {"S": "Bob"}}}}]}});
+						const result = await callType.func(User).bind(User)([{"id": Buffer.from([1]), "name": "Charlie"}, {"id": Buffer.from([2]), "name": "Bob"}]);
+						expect(result.unprocessedItems.map((item) => item.name)).toEqual(["Bob"]);
+					});
+
+					it("Should match unprocessed items by the hash and range key", async () => {
+						User = dynamoose.model("User", {"id": Number, "sk": {"type": String, "rangeKey": true}, "born": Date});
+						new dynamoose.Table("User", [User]);
+						promiseFunction = () => Promise.resolve({"UnprocessedItems": {"User": [params.RequestItems.User[1]]}});
+						const result = await callType.func(User).bind(User)([{"id": 1, "sk": "a", "born": new Date(1000)}, {"id": 1, "sk": "b", "born": new Date(1000)}]);
+						expect(result.unprocessedItems.map((item) => item.sk)).toEqual(["b"]);
+					});
+				});
+
 				it("Should return request if return request setting is set", async () => {
 					const result = await callType.func(User).bind(User)([{"id": 1, "name": "Charlie"}, {"id": 2, "name": "Bob"}], {"return": "request"});
 					expect(params).not.toBeDefined();

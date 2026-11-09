@@ -567,16 +567,19 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		const table = this.getInternalProperties(internalProperties).table();
 
-		const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput): Promise<{unprocessedItems: ObjectType[]}> => {
-			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[table.getInternalProperties(internalProperties).name] ? response.UnprocessedItems[this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name] : [];
-			const tmpResultUnprocessed = await Promise.all(unprocessedArray.map((item) => this.Item.fromDynamo(item.PutRequest.Item)));
-			return items.reduce((result: {unprocessedItems: ObjectType[]}, item) => {
-				const unprocessedItem = tmpResultUnprocessed.find((searchItem) => Object.keys(item).every((keyProperty) => utils.object.equals(searchItem[keyProperty], item[keyProperty])));
-				if (unprocessedItem) {
-					result.unprocessedItems.push(unprocessedItem);
-				}
-				return result;
-			}, {"unprocessedItems": []}) as {unprocessedItems: ObjectType[]};
+		const prepareResponse = async (response: DynamoDB.BatchWriteItemOutput, params: DynamoDB.BatchWriteItemInput): Promise<{unprocessedItems: ObjectType[]}> => {
+			const tableName = table.getInternalProperties(internalProperties).name;
+			const unprocessedArray = response.UnprocessedItems && response.UnprocessedItems[tableName] ? response.UnprocessedItems[tableName] : [];
+			// Unprocessed items are matched to the items sent by their key. The input can't be compared with them: a Date, a Set given as an array or a default key is stored in another form.
+			const keyAttributes = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter((attribute) => attribute !== undefined) as string[];
+			const keyString = (item: AttributeMap): string => JSON.stringify(keyAttributes.map((attribute) => {
+				const value: any = item[attribute];
+				// The response holds new binary values (Uint8Array), so they are compared by their bytes.
+				return value.B !== undefined ? {"B": Buffer.from(value.B).toString("base64")} : value;
+			}));
+			const unprocessedByKey = new Map(unprocessedArray.map((request) => [keyString(request.PutRequest.Item), request.PutRequest.Item]));
+			const unprocessedItems = params.RequestItems[tableName].map((request) => unprocessedByKey.get(keyString(request.PutRequest.Item))).filter((item) => item !== undefined);
+			return {"unprocessedItems": await Promise.all(unprocessedItems.map((item) => this.Item.fromDynamo(item)))};
 		};
 
 		const paramsPromise: Promise<DynamoDB.BatchWriteItemInput> = (async (): Promise<DynamoDB.BatchWriteItemInput> => ({
@@ -601,11 +604,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		if (callback) {
 			const localCallback: CallbackType<{"unprocessedItems": ObjectType[]}, any> = callback as CallbackType<{"unprocessedItems": ObjectType[]}, any>;
-			promise.then((response) => prepareResponse(response)).then((response) => localCallback(null, response)).catch((error) => callback(error));
+			promise.then(async (response) => prepareResponse(response, await paramsPromise)).then((response) => localCallback(null, response)).catch((error) => callback(error));
 		} else {
 			return (async (): Promise<{unprocessedItems: ObjectType[]}> => {
 				const response = await promise;
-				return prepareResponse(response);
+				return prepareResponse(response, await paramsPromise);
 			})();
 		}
 	}
