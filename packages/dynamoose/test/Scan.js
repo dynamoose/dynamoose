@@ -93,6 +93,24 @@ describe("Scan", () => {
 					expect((await callType.func(Model.scan().exec).bind(Model.scan())()).map((item) => ({...item}))).toEqual([{"id": 1, "name": "Charlie"}]);
 				});
 
+				it("Should send the attribute name when the schema's set setting adds attributes", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const User = dynamoose.model("User", new dynamoose.Schema({"id": String, "name": {"type": String, "alias": "nick"}}, {"set": (item) => ({"extra": "x", ...item})}));
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.scan("nick").eq("Bob").exec).bind(User.scan("nick").eq("Bob"))();
+					expect(scanParams.ExpressionAttributeNames).toEqual({"#a0": "name"});
+					expect(scanParams.ExpressionAttributeValues).toEqual({":v0": {"S": "Bob"}});
+				});
+
+				it("Should not call an attribute's set function to find its name", async () => {
+					scanPromiseResolver = () => ({"Items": []});
+					const User = dynamoose.model("User", {"id": String, "email": {"type": String, "set": (value) => value.toLowerCase()}});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User.scan("email").eq("A@B.C").exec).bind(User.scan("email").eq("A@B.C"))();
+					expect(scanParams.ExpressionAttributeNames).toEqual({"#a0": "email"});
+					expect(scanParams.ExpressionAttributeValues).toEqual({":v0": {"S": "a@b.c"}});
+				});
+
 				it("Should return correct result when passing in raw condition", async () => {
 					scanPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]});
 					const condition = new dynamoose.Condition({
