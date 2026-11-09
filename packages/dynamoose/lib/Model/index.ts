@@ -275,7 +275,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			},
 			// This function returns the DynamoDB property name for a given attribute (alias or property name). For example if you have a `pk` with an alias of `userID` and pass in `userID` it will return `pk`. If you pass in `pk` it will return `pk`.
 			"dynamoPropertyForAttribute": async (attribute: string): Promise<string> => {
-				const obj = await Item.objectFromSchema({[attribute]: true}, this, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+				// Only the name is mapped. `set` functions aren't run: `true` stands in for the value, and a schema's `set` can add attributes, either of which gave the wrong name or threw (`value.toLowerCase is not a function`).
+				const obj = await Item.objectFromSchema({[attribute]: true}, this, {"type": "toDynamo", "typeCheck": false, "mapAttributes": true});
 				return Object.keys(obj)[0];
 			},
 			"getCreateTableAttributeParams": async (): Promise<Pick<DynamoDB.CreateTableInput, "AttributeDefinitions" | "KeySchema" | "GlobalSecondaryIndexes" | "LocalSecondaryIndexes">> => {
