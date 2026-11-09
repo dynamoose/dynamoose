@@ -125,7 +125,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | return | What the function should return. Can be `items`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. If this is `request`, the function will not be async anymore. | String | `items` |
-| attributes | What item attributes should be retrieved & returned. This will use the underlying `AttributesToGet` DynamoDB option to ensure only the attributes you request will be sent over the wire. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
+| attributes | What item attributes should be retrieved & returned. This will use the underlying `AttributesToGet` DynamoDB option to ensure only the attributes you request will be sent over the wire. The table's hash and range key are requested too, so each item can be matched to its key, but they are left out of the returned items unless you list them. If this value is `undefined`, then all attributes will be returned. | [String] | undefined |
 | consistent | Whether to perform a strongly consistent read or not. If this value is `undefined`, then no `ConsistentRead` parameter will be included in the request, and DynamoDB will default to an eventually consistent read. | boolean | undefined |
 
 ```js
