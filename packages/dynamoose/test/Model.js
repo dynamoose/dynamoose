@@ -655,6 +655,14 @@ describe("Model", () => {
 					expect(user.hello).toEqual("world");
 				});
 
+				it("Should not return an unknown nested property of a Schema with saveUnknown set to false", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "address": new dynamoose.Schema({"street": String}, {"saveUnknown": false})}));
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}}});
+					const user = await callType.func(User).bind(User)(1);
+					expect(user.toJSON()).toEqual({"id": 1, "address": {"street": "Main"}});
+				});
+
 				it("Should return object with correct values for string set", async () => {
 					User = dynamoose.model("User", {"id": Number, "friends": {"type": Set, "schema": [String]}});
 					new dynamoose.Table("User", [User]);

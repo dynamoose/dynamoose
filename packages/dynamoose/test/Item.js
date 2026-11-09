@@ -1767,6 +1767,58 @@ describe("Item", () => {
 					}]);
 					expect(finishedSavingUser).toEqual(true);
 				});
+
+				describe("Nested Schema with saveUnknown", () => {
+					const userSchema = (nestedSettings, settings) => new dynamoose.Schema({"id": Number, "address": new dynamoose.Schema({"street": String}, nestedSettings)}, settings);
+
+					it.each([
+						["no saveUnknown setting", {}, {"id": {"N": "1"}}],
+						["saveUnknown set to false", {"saveUnknown": false}, {"id": {"N": "1"}}],
+						["saveUnknown set to a list", {"saveUnknown": ["floor"]}, {"id": {"N": "1"}, "floor": {"N": "2"}}]
+					])("Should not save an unknown nested property of a Schema with saveUnknown set to false, in a schema with %s", async (name, settings, expectedTopLevel) => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", userSchema({"saveUnknown": false}, settings));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "floor": 2, "address": {"street": "Main", "floor": 2}});
+
+						await callType.func(user).bind(user)();
+						expect(putParams).toEqual([{
+							"Item": {...expectedTopLevel, "address": {"M": {"street": {"S": "Main"}}}},
+							"TableName": "User"
+						}]);
+					});
+
+					it.each([
+						["false", {"saveUnknown": false}],
+						["true", {"saveUnknown": true}],
+						["a list", {"saveUnknown": ["floor"]}],
+						["an empty list", {"saveUnknown": []}]
+					])("Should save every unknown property in a schema with saveUnknown set to true and a nested Schema with saveUnknown set to %s", async (name, nestedSettings) => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", userSchema(nestedSettings, {"saveUnknown": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "floor": 2, "address": {"street": "Main", "floor": 2, "door": 3}});
+
+						await callType.func(user).bind(user)();
+						expect(putParams).toEqual([{
+							"Item": {"id": {"N": "1"}, "floor": {"N": "2"}, "address": {"M": {"street": {"S": "Main"}, "floor": {"N": "2"}, "door": {"N": "3"}}}},
+							"TableName": "User"
+						}]);
+					});
+
+					it("Should save an unknown nested property of a Schema with saveUnknown set to true", async () => {
+						putItemFunction = () => Promise.resolve();
+						User = dynamoose.model("User", userSchema({"saveUnknown": true}));
+						new dynamoose.Table("User", [User]);
+						user = new User({"id": 1, "floor": 2, "address": {"street": "Main", "floor": 2}});
+
+						await callType.func(user).bind(user)();
+						expect(putParams).toEqual([{
+							"Item": {"id": {"N": "1"}, "address": {"M": {"street": {"S": "Main"}, "floor": {"N": "2"}}}},
+							"TableName": "User"
+						}]);
+					});
+				});
 			});
 		});
 	});
