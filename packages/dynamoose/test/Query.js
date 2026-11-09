@@ -141,7 +141,7 @@ describe("Query", () => {
 				});
 
 				it("Should return correct metadata in result", async () => {
-					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1});
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1});
 					const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
 					expect(result.lastKey).toEqual(undefined);
 					expect(result.count).toEqual(1);
@@ -150,7 +150,7 @@ describe("Query", () => {
 				});
 
 				it("Should return correct lastKey", async () => {
-					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+					queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
 					const result = await callType.func(Model.query("name").eq("Charlie").exec).bind(Model.query("name").eq("Charlie"))();
 					expect(result.lastKey).toEqual({"id": 5});
 				});
@@ -1804,7 +1804,7 @@ describe("Query", () => {
 		});
 
 		it("Should return correct result on query.exec", async () => {
-			queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "QueriedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
+			queryPromiseResolver = () => ({"Items": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}], "Count": 1, "ScannedCount": 1, "LastEvaluatedKey": {"id": {"N": "5"}}});
 			const result = await Model.query("name").eq("Charlie").count().exec();
 			expect(result).toEqual({"count": 1, "queriedCount": 1});
 		});
@@ -1916,7 +1916,7 @@ describe("Query", () => {
 		it("Should send correct result on query.exec", async () => {
 			let count = 0;
 			queryPromiseResolver = async () => {
-				const obj = {"Items": [{"id": ++count}], "Count": 1, "QueriedCount": 2};
+				const obj = {"Items": [{"id": ++count}], "Count": 1, "ScannedCount": 2};
 				if (count < 2) {
 					obj["LastEvaluatedKey"] = {"id": {"N": `${count}`}};
 				}
