@@ -715,7 +715,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
-		const getUpdateExpressionObject: () => Promise<any> = async () => {
+		// `conditionValueKeys` are the value placeholders the condition uses. A raw condition doesn't take its numbers from the update, so the update's own placeholders can match them.
+		const getUpdateExpressionObject = async (conditionValueKeys: string[]): Promise<any> => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 				{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
@@ -728,6 +729,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
 			}
 
+			// The empty list `$ADD` starts from when the item doesn't have the list attribute yet. It is added to the values only if a list is appended to. Its value placeholder is numbered once every other value has one, so until then the expressions hold this marker.
+			const emptyListMarker = "<emptyList>";
+			let usesEmptyList = false;
 			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
 				const accumulator = await accumulatorPromise;
 				let value = updateObj[key];
@@ -784,7 +788,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 
 					if (dynamoType === "L" && updateType.name === "$ADD") {
-						expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
+						// `list_append` fails on an attribute the item doesn't have, so a missing list is appended to as an empty list.
+						expressionValue = `list_append(if_not_exists(${expressionKey}, ${emptyListMarker}), ${expressionValue})`;
+						usesEmptyList = true;
 						updateType = updateTypes.find((a) => a.name === "$SET");
 					}
 
@@ -887,6 +893,18 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			});
 
+			// Added after the loop above, which pairs each attribute name with the value at the same position. The number follows the highest attribute name number, because a combine attribute takes the number after the attributes without moving `index`.
+			if (usesEmptyList) {
+				let emptyListNumber = Math.max(...Object.keys(returnObject.ExpressionAttributeNames).map((key) => parseInt(key.replace("#a", "")))) + 1;
+				// Merged with the condition's values afterwards, so a number a raw condition uses would replace its value.
+				while (conditionValueKeys.includes(`:v${emptyListNumber}`)) {
+					emptyListNumber++;
+				}
+				const emptyListKey = `:v${emptyListNumber}`;
+				returnObject.ExpressionAttributeValues[emptyListKey] = [];
+				returnObject.UpdateExpression.SET = returnObject.UpdateExpression.SET.map((expression: string) => expression.replace(emptyListMarker, emptyListKey));
+			}
+
 			returnObject.ExpressionAttributeValues = this.Item.objectToDynamo(returnObject.ExpressionAttributeValues);
 			if (Object.keys(returnObject.ExpressionAttributeValues).length === 0) {
 				delete returnObject.ExpressionAttributeValues;
@@ -911,9 +929,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",
-			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
-				index = i;
-			}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}, await getUpdateExpressionObject()),
+			...await (async (): Promise<ObjectType> => {
+				// The condition comes first: a generated one sets `index`, so the update's placeholders follow its own.
+				const conditionObject: ObjectType = localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
+					index = i;
+				}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {};
+				return utils.merge_objects.main({"combineMethod": "object_combine"})(conditionObject, await getUpdateExpressionObject(Object.keys(conditionObject.ExpressionAttributeValues || {})));
+			})(),
 			"TableName": this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
 		}));
 		if (settings.return === "request") {
