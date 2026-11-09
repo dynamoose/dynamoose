@@ -37,7 +37,8 @@
   },
   "devDependencies": {
     "dynamoose-baseline": "npm:dynamoose@4.2.0",
-    "dynamoose-logger": "^4.2.0"
+    "dynamoose-logger": "^4.2.0",
+    "dynamoose-utils-baseline": "npm:dynamoose-utils@4.2.0"
   },
   "license": "Unlicense",
   "funding": [
