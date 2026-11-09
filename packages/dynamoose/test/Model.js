@@ -4364,6 +4364,7 @@ describe("Model", () => {
 
 		describe("Attributes named by an alias", () => {
 			let Aliased;
+			const aliasConflictError = new CustomError.InvalidParameter("Model.update names attribute \"d\" more than once (\"d\" and \"dee\"). Name each attribute once.");
 			beforeEach(() => {
 				Aliased = dynamoose.model("Aliased", [
 					new dynamoose.Schema({"id": {"type": String, "hashKey": true}, "a": String}),
@@ -4411,6 +4412,21 @@ describe("Model", () => {
 			it("Should apply the rules of the schema that has the alias", async () => {
 				await expect(Aliased.update({"id": "x"}, {"bee": undefined}, {"return": "request"})).rejects.toEqual(new CustomError.ValidationError("b is a required property but has no value when trying to save item"));
 			});
+
+			[
+				["an attribute and its alias in one object", {"d": "x", "dee": "y"}],
+				["an attribute and its alias with $SET", {"$SET": {"d": "x", "dee": "y"}}],
+				["an attribute with $SET and its alias with $REMOVE", {"$SET": {"d": "x"}, "$REMOVE": ["dee"]}]
+			].forEach(([name, update]) => {
+				it(`Should reject ${name} instead of writing the last value`, async () => {
+					await expect(Aliased.update({"id": "x"}, update, {"return": "request"})).rejects.toEqual(aliasConflictError);
+				});
+			});
+
+			it("Should pass the alias conflict error to the callback", async () => {
+				const error = await new Promise((resolve) => Aliased.update({"id": "x"}, {"d": "x", "dee": "y"}, {"return": "request"}, resolve));
+				expect(error).toEqual(aliasConflictError);
+			});
 		});
 
 		describe("An update with nothing to change", () => {
@@ -4446,6 +4462,12 @@ describe("Model", () => {
 
 			it("Should call back with the error", async () => {
 				const error = await new Promise((resolve) => User.update({"id": "x"}, {}, resolve));
+				expect(error).toEqual(emptyError);
+				expect(requests).toEqual(0);
+			});
+
+			it("Should call back with the error for return request", async () => {
+				const error = await new Promise((resolve) => User.update({"id": "x"}, {}, {"return": "request"}, resolve));
 				expect(error).toEqual(emptyError);
 				expect(requests).toEqual(0);
 			});

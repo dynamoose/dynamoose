@@ -30,14 +30,24 @@ const updateAttributeNames = (updateObj: ObjectType): string[] => Object.entries
 	return Array.isArray(value) ? value : Object.keys(value);
 });
 // The update with each attribute named by an alias (`alias`, `aliases` or `map`) renamed to the attribute, as the update looks up attributes by name.
+// Two names for one attribute (an attribute and its alias, in any operator) are rejected, as `Item` rejects them on save, rather than letting the last one win.
 const attributeNamesForAliases = (schema: Schema, updateObj: ObjectType): ObjectType => {
 	const aliases = schema.getInternalProperties(internalProperties).getMapSettingObject();
 	const attributeName = (name: string): string => Object.prototype.hasOwnProperty.call(aliases, name) ? aliases[name] : name;
+	const namedBy = new Map<string, string>();
+	const claim = (name: string): string => {
+		const attribute = attributeName(name);
+		if (namedBy.has(attribute)) {
+			throw new CustomError.InvalidParameter(`Model.update names attribute "${attribute}" more than once ("${namedBy.get(attribute)}" and "${name}"). Name each attribute once.`);
+		}
+		namedBy.set(attribute, name);
+		return attribute;
+	};
 	return Object.entries(updateObj).reduce((result: ObjectType, [key, value]) => {
 		if (!isUpdateOperator(key, value)) {
-			result[attributeName(key)] = value;
+			result[claim(key)] = value;
 		} else {
-			result[key] = Array.isArray(value) ? value.map(attributeName) : Object.fromEntries(Object.entries(value).map(([name, nameValue]) => [attributeName(name), nameValue]));
+			result[key] = Array.isArray(value) ? value.map(claim) : Object.fromEntries(Object.entries(value).map(([name, nameValue]) => [claim(name), nameValue]));
 		}
 		return result;
 	}, {});
@@ -964,7 +974,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.UpdateItemInput, any> = callback as CallbackType<DynamoDB.UpdateItemInput, any>;
-				updateItemParamsPromise.then((params) => localCallback(null, params));
+				updateItemParamsPromise.then((params) => localCallback(null, params), (error) => localCallback(error));
 				return;
 			} else {
 				return updateItemParamsPromise;
