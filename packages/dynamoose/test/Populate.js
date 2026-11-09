@@ -178,13 +178,21 @@ describe("Populate", () => {
 				});
 
 				describe("A referenced item that doesn't exist", () => {
-					// As Model.get resolves with undefined for it, and Model.batchGet leaves it out.
-					it("Should make a single reference undefined", async () => {
+					// Its key is kept, so saving the populated item keeps the reference instead of removing it.
+					it("Should keep a single reference as its key", async () => {
 						const Game = gameWith(Person);
 						const game = new Game({"id": 9, "players": 5});
 						const result = await responseType.func(game).bind(game)();
-						expect(result.players).toBeUndefined();
-						expect(result.toJSON()).toEqual({"id": 9});
+						expect(result.players).toEqual(5);
+						expect(result.toJSON()).toEqual({"id": 9, "players": 5});
+					});
+
+					it("Should keep a single reference when the item is saved after populate", async () => {
+						const Game = gameWith(Person);
+						const game = new Game({"id": 9, "players": 5});
+						await responseType.func(game).bind(game)();
+						const request = await game.save({"return": "request"});
+						expect(request.Item).toEqual({"id": {"N": "9"}, "players": {"N": "5"}});
 					});
 
 					[
@@ -192,11 +200,19 @@ describe("Populate", () => {
 						["a Set of models in an attribute with several types", () => ({"type": [Set, String], "schema": [[Person]]})],
 						["a model or a Set of models", () => ({"type": [Person, Set], "schema": [null, [Person]]})]
 					].forEach(([name, definition]) => {
-						it(`Should leave it out of ${name}`, async () => {
+						it(`Should keep its key in its place in ${name}`, async () => {
 							const Game = gameWith(definition());
 							const game = new Game({"id": 9, "players": new Set([1, 5, 2])});
 							const result = await responseType.func(game).bind(game)();
-							expect(result.toJSON()).toEqual({"id": 9, "players": [{"id": 1, "name": "Tim"}, {"id": 2, "name": "Bob"}]});
+							expect(result.toJSON()).toEqual({"id": 9, "players": [{"id": 1, "name": "Tim"}, 5, {"id": 2, "name": "Bob"}]});
+						});
+
+						it(`Should keep every reference of ${name} when the item is saved after populate`, async () => {
+							const Game = gameWith(definition());
+							const game = new Game({"id": 9, "players": new Set([1, 5, 2])});
+							await responseType.func(game).bind(game)();
+							const request = await game.save({"return": "request"});
+							expect(request.Item).toEqual({"id": {"N": "9"}, "players": {"NS": ["1", "5", "2"]}});
 						});
 					});
 				});

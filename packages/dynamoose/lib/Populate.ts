@@ -61,15 +61,15 @@ export function PopulateItem (this: Item, settings?: PopulateSettings | Callback
 
 		const isArray = Array.isArray(itemPropValue);
 		const isSet = itemPropValue instanceof Set;
-		// A referenced item that doesn't exist is left out of a list, and a single reference to one becomes undefined, as `Model.batchGet` and `Model.get` do.
+		// A reference to an item that doesn't exist keeps its key (in its place in a list). Populate changes the item itself, so leaving it out would remove the reference when the item is saved afterwards.
+		const populate = async (value: any): Promise<any> => {
+			const subItem = await subModel.get(value);
+			return subItem === undefined ? value : PopulateItem.bind(subItem)(localSettings, null, {"parentKey": key});
+		};
 		if (isArray || isSet) {
-			const subItems = (await Promise.all([...itemPropValue as any].map((val) => subModel.get(val)))).filter((doc) => doc !== undefined);
-			const saveItems = await Promise.all(subItems.map((doc) => PopulateItem.bind(doc)(localSettings, null, {"parentKey": key})));
-			utils.object.set(this as any, prop, saveItems);
+			utils.object.set(this as any, prop, await Promise.all([...itemPropValue as any].map(populate)));
 		} else {
-			const subItem = await subModel.get(itemPropValue);
-			const saveItem: Item = subItem === undefined ? undefined : await PopulateItem.bind(subItem)(localSettings, null, {"parentKey": key});
-			utils.object.set(this as any, prop, saveItem);
+			utils.object.set(this as any, prop, await populate(itemPropValue));
 		}
 	}));
 
