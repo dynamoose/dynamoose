@@ -870,9 +870,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			});
 
+			// DynamoDB rejects an update that sets a key attribute of the table, so a forced default on one isn't written. The item keeps the key it has.
+			const tableKeyAttributes = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()];
 			await Promise.all(schema.attributes().map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
-				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
+				if (defaultValue && !tableKeyAttributes.includes(attribute) && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 
 					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;

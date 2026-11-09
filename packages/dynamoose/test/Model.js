@@ -3187,6 +3187,32 @@ describe("Model", () => {
 					expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
 				});
 
+				it("Should not set a range key that has a forced default", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": {"type": Number, "hashKey": true}, "updatedAt": {"type": Number, "rangeKey": true, "default": 1000, "forceDefault": true}, "name": String}));
+					new dynamoose.Table("User", [User]);
+					const request = await callType.func(User).bind(User)({"id": 1, "updatedAt": 5}, {"name": "Charlie"}, {"return": "request"});
+					expect(request.Key).toEqual({"id": {"N": "1"}, "updatedAt": {"N": "5"}});
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "name"});
+					expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
+				it("Should not set a hash key that has a forced default", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": {"type": String, "hashKey": true, "default": "x", "forceDefault": true}, "name": String}));
+					new dynamoose.Table("User", [User]);
+					const request = await callType.func(User).bind(User)({"id": "a"}, {"name": "Charlie"}, {"return": "request"});
+					expect(request.Key).toEqual({"id": {"S": "a"}});
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "name"});
+					expect(request.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
+				it("Should still set an index key that has a forced default", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "status": {"type": String, "default": "active", "forceDefault": true, "index": {"type": "global"}}, "name": String}));
+					new dynamoose.Table("User", [User]);
+					const request = await callType.func(User).bind(User)({"id": 1}, {"name": "Charlie"}, {"return": "request"});
+					expect(request.ExpressionAttributeNames).toEqual({"#a0": "name", "#a1": "status"});
+					expect(request.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+				});
+
 				it("Should not set an updatedAt that is the hash key", async () => {
 					User = dynamoose.model("User", new dynamoose.Schema({"name": String}, {"timestamps": {"updatedAt": {"updatedAt": {"type": Date, "hashKey": true}}}}));
 					new dynamoose.Table("User", [User]);
