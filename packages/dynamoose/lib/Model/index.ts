@@ -478,6 +478,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const {instance} = table.getInternalProperties(internalProperties);
 
 		const keyObjects = keys.map(async (key) => this.getInternalProperties(internalProperties).convertKeyToObject(key));
+		// DynamoDB returns only the attributes it is asked for, and each returned item is matched to its key by the key attributes. So a key attribute that `attributes` leaves out is asked for too, and removed from the item again once it is matched, as `Model.get` leaves it out.
+		const requestedAttributes = (settings as ModelBatchGetSettings).attributes;
+		const addedKeyAttributes = requestedAttributes ? [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter((attribute): attribute is string => typeof attribute === "string" && !requestedAttributes.includes(attribute)) : [];
 
 		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 		const prepareResponse = async (response: DynamoDB.BatchGetItemOutput): Promise<ModelBatchGetItemsResponse<ItemCarrier>> => {
@@ -493,6 +496,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const keyProperties = Object.keys(key);
 				const item = tmpResult.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
 				if (item) {
+					addedKeyAttributes.forEach((attribute) => delete item[attribute]);
 					result.push(item);
 				} else {
 					const item = tmpResultUnprocessed.find((item) => keyProperties.every((keyProperty) => item[keyProperty] === key[keyProperty]));
@@ -517,7 +521,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				params.RequestItems[table.getInternalProperties(internalProperties).name].ConsistentRead = settings.consistent;
 			}
 			if (settings.attributes) {
-				params.RequestItems[table.getInternalProperties(internalProperties).name].AttributesToGet = settings.attributes;
+				params.RequestItems[table.getInternalProperties(internalProperties).name].AttributesToGet = [...settings.attributes, ...addedKeyAttributes];
 			}
 
 			return params;

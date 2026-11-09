@@ -1370,6 +1370,38 @@ describe("Model", () => {
 					});
 				});
 
+				describe("attributes that leave out a key attribute", () => {
+					// DynamoDB only returns the attributes it is asked for, and each returned item is matched to its key by the key attributes. So they are asked for too, and left out of the result, as Model.get leaves them out.
+					it("Should also ask batchGetItem for the hash key", async () => {
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						await callType.func(User).bind(User)([1], {"attributes": ["name"]});
+						expect(params.RequestItems.User.AttributesToGet).toEqual(["name", "id"]);
+					});
+
+					it("Should also ask batchGetItem for the hash and range key", async () => {
+						User = dynamoose.model("User", {"id": Number, "sort": {"type": String, "rangeKey": true}, "name": String});
+						new dynamoose.Table("User", [User]);
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "sort": {"S": "a"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						await callType.func(User).bind(User)([{"id": 1, "sort": "a"}], {"attributes": ["name"]});
+						expect(params.RequestItems.User.AttributesToGet).toEqual(["name", "id", "sort"]);
+					});
+
+					it("Should return each item with only the attributes asked for", async () => {
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "2"}, "name": {"S": "Tim"}}, {"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						const result = await callType.func(User).bind(User)([1, 2], {"attributes": ["name"]});
+						expect(result.toJSON()).toEqual([{"name": "Charlie"}, {"name": "Tim"}]);
+					});
+
+					it("Should keep a key attribute that is asked for", async () => {
+						User = dynamoose.model("User", {"id": Number, "sort": {"type": String, "rangeKey": true}, "name": String});
+						new dynamoose.Table("User", [User]);
+						promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "sort": {"S": "a"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
+						const result = await callType.func(User).bind(User)([{"id": 1, "sort": "a"}], {"attributes": ["sort", "name"]});
+						expect(params.RequestItems.User.AttributesToGet).toEqual(["sort", "name", "id"]);
+						expect(result.toJSON()).toEqual([{"sort": "a", "name": "Charlie"}]);
+					});
+				});
+
 				it("Should return correct request if setting option return to request", async () => {
 					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}, "name": {"S": "Charlie"}}]}, "UnprocessedKeys": {}});
 					const paramsB = await callType.func(User).bind(User)([1], {"return": "request"});
