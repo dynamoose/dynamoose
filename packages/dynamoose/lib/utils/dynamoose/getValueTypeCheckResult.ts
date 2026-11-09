@@ -1,4 +1,6 @@
 import {Schema, DynamoDBTypeResult, DynamoDBSetTypeResult} from "../../Schema";
+import Internal from "../../Internal";
+const {internalProperties} = Internal.General;
 import {ObjectType} from "../../General";
 
 // export = (schema: Schema, value: any, key: string, settings: {"type": "toDynamo" | "fromDynamo"}, options = {}): {typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult; isValidType: boolean} => {
@@ -8,7 +10,7 @@ import {ObjectType} from "../../General";
 // };
 
 export default (schema: Schema, value: any, key: string, settings: { "type": "toDynamo" | "fromDynamo" }, options: { standardKey?: boolean; typeIndexOptionMap?: ObjectType }): {typeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[]; matchedTypeDetailsIndex: number; matchedTypeDetailsIndexes: number[]; matchedTypeDetails: DynamoDBTypeResult | DynamoDBSetTypeResult; typeDetailsArray: (DynamoDBTypeResult | DynamoDBSetTypeResult)[]; isValidType: boolean} => {
-	const typeDetails = schema.getAttributeTypeDetails(key, options);
+	const typeDetails = schema.getInternalProperties(internalProperties).getSharedAttributeTypeDetails(key, options);
 	const typeDetailsArray = Array.isArray(typeDetails) ? typeDetails : [typeDetails];
 	const matchedTypeDetailsIndexes = typeDetailsArray.map((details, index) => {
 		if ([details.customType?.functions?.isOfType, details.isOfType].filter((a) => Boolean(a)).some((func) => func(value, settings.type))) {
