@@ -379,6 +379,28 @@ describe("Model", () => {
 					expect(getItemParams).toBeUndefined();
 				});
 
+				it("Should send the key the schema's set returns to getItem for a key value", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": String, "name": String, "label": String}, {"set": (item) => ({...item, "id": item.id.toLowerCase(), "label": "user"})}));
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"S": "bob"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)("BOB");
+					expect(getItemParams).toEqual({
+						"Key": {"id": {"S": "bob"}},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send only the key to getItem for a key value when the schema's set adds attributes", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "label": String}, {"set": (item) => ({...item, "label": "user"})}));
+					new dynamoose.Table("User", [User]);
+					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
+					await callType.func(User).bind(User)(1);
+					expect(getItemParams).toEqual({
+						"Key": {"id": {"N": "1"}},
+						"TableName": "User"
+					});
+				});
+
 				it("Should send correct params to getItem", async () => {
 					getItemFunction = () => Promise.resolve({"Item": {"id": {"N": "1"}, "name": {"S": "Charlie"}}});
 					await callType.func(User).bind(User)(1);
@@ -1309,6 +1331,23 @@ describe("Model", () => {
 							"User": {
 								"Keys": [
 									{"id": {"N": "1"}}
+								]
+							}
+						}
+					});
+				});
+
+				it("Should send only the key of each key value to batchGetItem when the schema's set adds attributes", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "label": String}, {"set": (item) => ({...item, "label": "user"})}));
+					new dynamoose.Table("User", [User]);
+					promiseFunction = () => Promise.resolve({"Responses": {"User": [{"id": {"N": "1"}}, {"id": {"N": "2"}}]}, "UnprocessedKeys": {}});
+					await callType.func(User).bind(User)([1, 2]);
+					expect(params).toEqual({
+						"RequestItems": {
+							"User": {
+								"Keys": [
+									{"id": {"N": "1"}},
+									{"id": {"N": "2"}}
 								]
 							}
 						}
@@ -4215,6 +4254,17 @@ describe("Model", () => {
 								"N": "1"
 							}
 						},
+						"TableName": "User"
+					});
+				});
+
+				it("Should send only the key to deleteItem for a key value when the schema's set adds attributes", async () => {
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "label": String}, {"set": (item) => ({...item, "label": "user"})}));
+					new dynamoose.Table("User", [User]);
+					deleteItemFunction = () => Promise.resolve();
+					await callType.func(User).bind(User)(1);
+					expect(deleteItemParams).toEqual({
+						"Key": {"id": {"N": "1"}},
 						"TableName": "User"
 					});
 				});

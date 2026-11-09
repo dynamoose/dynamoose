@@ -233,9 +233,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						keyObject[rangeKey] = mappedKey[rangeKey];
 					}
 				} else {
-					keyObject = await this.Item.objectFromSchema({
+					// Only the hash key is kept, as for a key object: the schema's `set` can add attributes, and DynamoDB rejects a key with any other attribute.
+					const convertedKey = await this.Item.objectFromSchema({
 						[hashKey]: key
 					}, this, objectFromSchemaSettings);
+					keyObject = {
+						[hashKey]: convertedKey[hashKey]
+					};
 				}
 				return keyObject;
 			},
