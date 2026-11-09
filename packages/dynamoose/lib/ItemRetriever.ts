@@ -49,8 +49,8 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 	limit: (this: ItemRetriever, value: number) => this;
 	startAt: (this: ItemRetriever, value: ObjectType | undefined) => this;
 	attributes: (this: ItemRetriever, value: string[]) => this;
-	count: (this: ItemRetriever) => this;
-	consistent: (this: ItemRetriever) => this;
+	count: (this: ItemRetriever, value?: boolean) => this;
+	consistent: (this: ItemRetriever, value?: boolean) => this;
 	using: (this: ItemRetriever, value: string) => this ;
 	exec (this: ItemRetriever, callback?: any): any {
 		let timesRequested = 0;
@@ -298,7 +298,8 @@ const settings: (SettingDefinition | string)[] = [
 settings.forEach((item) => {
 	ItemRetriever.prototype[(item as SettingDefinition).name || (item as string)] = function (value): ItemRetriever {
 		const key: string = (item as SettingDefinition).settingsName || (item as SettingDefinition).name || (item as string);
-		this.getInternalProperties(internalProperties).settings[key] = (item as SettingDefinition).boolean ? !this.getInternalProperties(internalProperties).settings[key] : value;
+		// A boolean setting is turned on when called without a value.
+		this.getInternalProperties(internalProperties).settings[key] = (item as SettingDefinition).boolean ? value !== false : value;
 		return this;
 	};
 });
