@@ -47,7 +47,10 @@ interface TableInternalProperties {
  */
 export function applyExpiresToSchemas (schemas: Schema[], expires: TableExpiresSettings): void {
 	schemas.forEach((schema) => {
-		schema.getInternalProperties(internalProperties).schemaObject[expires.attribute] = {
+		// Injects the TTL attribute after schema construction. `setSchemaAttribute` also
+		// invalidates the schema's memoization caches, which would otherwise keep serving
+		// a stale attribute view that omits this attribute.
+		schema.getInternalProperties(internalProperties).setSchemaAttribute(expires.attribute, {
 			"type": {
 				"value": Date,
 				"settings": {
@@ -58,7 +61,7 @@ export function applyExpiresToSchemas (schemas: Schema[], expires: TableExpiresS
 				const ttl: number | undefined = expires.ttl;
 				return typeof ttl === "number" ? new Date(Date.now() + ttl) : undefined;
 			}
-		};
+		});
 	});
 }
 
