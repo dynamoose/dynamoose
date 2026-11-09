@@ -270,16 +270,24 @@ ItemRetriever.prototype.getRequest = async function (this: ItemRetriever): Promi
 		if (filterExpression.includes("attribute_exists") || filterExpression.includes("contains")) {
 			return;
 		}
-		object.ExpressionAttributeNames[`#${prefix}a`] = value;
+		// A raw condition in a group can already use `#qha` or `:qhv` (or `:qhv_1`), so a number goes after them until neither is taken.
+		const placeholders = (number: number): {name: string; value: string} => ({"name": `#${prefix}a${number || ""}`, "value": `:${prefix}v${number || ""}`});
+		const isTaken = ({name, value}: {name: string; value: string}): boolean => name in object.ExpressionAttributeNames || Object.keys(object.ExpressionAttributeValues).some((key) => key === value || key.startsWith(`${value}_`));
+		let number = 0;
+		while (isTaken(placeholders(number))) {
+			number++;
+		}
+		const {"name": newName, "value": newValue} = placeholders(number);
+		object.ExpressionAttributeNames[newName] = value;
 		delete object.ExpressionAttributeNames[key];
 
 		const valueKey = key.replace("#a", ":v");
 
 		Object.keys(object.ExpressionAttributeValues).filter((key) => key === valueKey || key.startsWith(`${valueKey}_`)).forEach((key) => {
-			object.ExpressionAttributeValues[key.replace(new RegExp(":v\\d+"), `:${prefix}v`)] = object.ExpressionAttributeValues[key];
+			object.ExpressionAttributeValues[key.replace(new RegExp(":v\\d+"), newValue)] = object.ExpressionAttributeValues[key];
 			delete object.ExpressionAttributeValues[key];
 		});
-		const newExpression = filterExpression.replace(key, `#${prefix}a`).replace(new RegExp(valueKey, "g"), `:${prefix}v`);
+		const newExpression = filterExpression.replace(key, newName).replace(new RegExp(valueKey, "g"), newValue);
 
 		object.KeyConditionExpression = `${object.KeyConditionExpression || ""}${object.KeyConditionExpression ? " AND " : ""}${newExpression}`;
 		utils.object.delete(object.FilterExpression, filterExpressionIndex);

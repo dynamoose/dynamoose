@@ -2087,6 +2087,39 @@ describe("Query", () => {
 				});
 			});
 
+			it("Should give the hash key condition a free value placeholder when the raw condition uses :qhv", async () => {
+				await Model.query(new dynamoose.Condition().where("id").eq(1).parenthesis(raw("#fn > :qhv", {"#fn": "favoriteNumber"}, {":qhv": 5}))).exec();
+				expect(queryParams).toEqual({
+					"TableName": "Cat",
+					"KeyConditionExpression": "#qha1 = :qhv1",
+					"FilterExpression": "(#fn > :qhv)",
+					"ExpressionAttributeNames": {"#qha1": "id", "#fn": "favoriteNumber"},
+					"ExpressionAttributeValues": {":qhv1": {"N": "1"}, ":qhv": {"N": "5"}}
+				});
+			});
+
+			it("Should give the hash key condition a free name placeholder when the raw condition uses #qha", async () => {
+				await Model.query(new dynamoose.Condition().where("id").eq(1).parenthesis(raw("#qha > :fn", {"#qha": "favoriteNumber"}, {":fn": 5}))).exec();
+				expect(queryParams).toEqual({
+					"TableName": "Cat",
+					"KeyConditionExpression": "#qha1 = :qhv1",
+					"FilterExpression": "(#qha > :fn)",
+					"ExpressionAttributeNames": {"#qha1": "id", "#qha": "favoriteNumber"},
+					"ExpressionAttributeValues": {":qhv1": {"N": "1"}, ":fn": {"N": "5"}}
+				});
+			});
+
+			it("Should give the range key condition free value placeholders when the raw condition uses :qrv_1", async () => {
+				await RangeModel.query(new dynamoose.Condition().where("id").eq(1).and().where("name").between("a", "m").and().parenthesis(raw("#c = :qrv_1", {"#c": "color"}, {":qrv_1": "red"}))).exec();
+				expect(queryParams).toEqual({
+					"TableName": "Dog",
+					"KeyConditionExpression": "#qha = :qhv AND #qra1 BETWEEN :qrv1_1 AND :qrv1_2",
+					"FilterExpression": "(#c = :qrv_1)",
+					"ExpressionAttributeNames": {"#qha": "id", "#qra1": "name", "#c": "color"},
+					"ExpressionAttributeValues": {":qhv": {"N": "1"}, ":qrv1_1": {"S": "a"}, ":qrv1_2": {"S": "m"}, ":qrv_1": {"S": "red"}}
+				});
+			});
+
 			it("Should use a raw condition in parenthesis() in a scan", async () => {
 				const request = await Model.scan(new dynamoose.Condition().where("name").eq("Bob").or().parenthesis(new dynamoose.Condition({"FilterExpression": "attribute_exists(#fn)", "ExpressionAttributeNames": {"#fn": "favoriteNumber"}}))).getRequest();
 				expect(request).toEqual({"TableName": "Cat", "FilterExpression": "#a0 = :v0 OR (attribute_exists(#fn))", "ExpressionAttributeNames": {"#a0": "name", "#fn": "favoriteNumber"}, "ExpressionAttributeValues": {":v0": {"S": "Bob"}}});
