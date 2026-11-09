@@ -1205,7 +1205,9 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			throw new CustomError.InvalidParameter(`Attribute ${hashRangeKeys.hashAndRangeKeyAttributes[0]} must not be both hashKey and rangeKey`);
 		}
 		// An updatedAt timestamp changes on every save, which would write the item under a new key and leave the old item behind. DynamoDB also rejects an update that sets a key attribute.
-		const updatedAtKeyAttribute = this.getInternalProperties(internalProperties).getTimestampAttributes().find((prop) => prop.type === "updatedAt" && [...hashRangeKeys.hashKeys, ...hashRangeKeys.rangeKeys].includes(prop.name));
+		// The resolved hashKey and rangeKey are included, because with no explicit hashKey the first attribute in Object.keys order is used (integer-like names such as "0" sort first).
+		const resolvedKeyAttributes = [...hashRangeKeys.hashKeys, ...hashRangeKeys.rangeKeys, this.hashKey, this.rangeKey];
+		const updatedAtKeyAttribute = this.getInternalProperties(internalProperties).getTimestampAttributes().find((prop) => prop.type === "updatedAt" && resolvedKeyAttributes.includes(prop.name));
 		if (updatedAtKeyAttribute) {
 			throw new CustomError.InvalidParameter(`The updatedAt timestamp attribute "${updatedAtKeyAttribute.name}" must not be a hashKey or rangeKey.`);
 		}
