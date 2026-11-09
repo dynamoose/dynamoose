@@ -686,6 +686,9 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 							checkTypeFunction([`${key}.${index}`, subValue]);
 						} else if (keysToDelete.includes(`${key}.0`) && typeof subValue === typeof array[0]) {
 							keysToDelete.push(`${key}.${index}`);
+						} else if (validParents.some((parent) => parent.key === `${key}.0` && parent.infinite)) {
+							// An element that isn't checked has the type of the first one. When that type's properties aren't checked (a model item, a Set or a `dynamoose.type.ANY` object), neither are the element's, which would otherwise be removed as properties the schema doesn't name.
+							validParents.push({"key": `${key}.${index}`, "infinite": true});
 						}
 					});
 					validParents.push({key});
