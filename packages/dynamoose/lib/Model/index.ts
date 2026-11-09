@@ -13,7 +13,7 @@ import {PopulateItems} from "../Populate";
 import {AttributeMap} from "../Types";
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, UpdateTransactionInput, ConditionTransactionInput} from "../Transaction";
-import {Table, TableOptionsOptional} from "../Table";
+import {applyExpiresToSchemas, Table, TableExpiresSettings, TableOptionsOptional} from "../Table";
 import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
 import {Instance} from "../Instance";
@@ -233,9 +233,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 						keyObject[rangeKey] = mappedKey[rangeKey];
 					}
 				} else {
-					keyObject = await this.Item.objectFromSchema({
+					// Only the hash key is kept, as for a key object: the schema's `set` can add attributes, and DynamoDB rejects a key with any other attribute.
+					const convertedKey = await this.Item.objectFromSchema({
 						[hashKey]: key
 					}, this, objectFromSchemaSettings);
+					keyObject = {
+						[hashKey]: convertedKey[hashKey]
+					};
 				}
 				return keyObject;
 			},
@@ -395,6 +399,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			});
 
 			this.getInternalProperties(internalProperties)._table = table;
+
+			// The `Table` constructor injects the TTL attribute into the schemas it was built with. A model
+			// that attaches to an ALREADY-constructed table never runs through that path, so without this its
+			// schema would drop the attribute on every write while DynamoDB still reports TTL as enabled.
+			const expires = table.getInternalProperties(internalProperties).options.expires as TableExpiresSettings | undefined;
+			if (expires) {
+				applyExpiresToSchemas(this.getInternalProperties(internalProperties).schemas, expires);
+			}
 		}
 	}
 
