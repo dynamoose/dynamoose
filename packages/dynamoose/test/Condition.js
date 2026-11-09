@@ -1,5 +1,6 @@
 const dynamoose = require("../dist");
 const {Instance} = require("../dist/Instance");
+const CustomError = require("../dist/Error").default;
 const {Condition} = dynamoose;
 const Internal = require("../dist/Internal").default;
 const {internalProperties} = Internal.General;
@@ -177,7 +178,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("name").not().beginsWith("C"),
-				"error": "BEGINS_WITH can not follow not()"
+				"output": {"ConditionExpression": "NOT begins_with (#a0, :v0)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0": {"S": "C"}}}
 			},
 			{
 				"input": () => new Condition().where("name").contains("C"),
@@ -201,7 +202,7 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("name").not().in(["Charlie", "Bob"]),
-				"error": "IN can not follow not()"
+				"output": {"ConditionExpression": "NOT (#a0 IN (:v0_1, :v0_2))", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0_1": {"S": "Charlie"}, ":v0_2": {"S": "Bob"}}}
 			},
 			{
 				"input": () => new Condition().where("age").between(13, 18),
@@ -209,7 +210,24 @@ describe("Condition", () => {
 			},
 			{
 				"input": () => new Condition().where("age").not().between(13, 18),
-				"error": "BETWEEN can not follow not()"
+				"output": {"ConditionExpression": "NOT (#a0 BETWEEN :v0_1 AND :v0_2)", "ExpressionAttributeNames": {"#a0": "age"}, "ExpressionAttributeValues": {":v0_1": {"N": "13"}, ":v0_2": {"N": "18"}}}
+			},
+			{
+				"input": () => new Condition().where("id").eq(1).and().not().parenthesis((condition) => condition.where("name").eq("Bob").or().where("age").eq(5)),
+				"output": {"ConditionExpression": "#a0 = :v0 AND NOT (#a1 = :v1 OR #a2 = :v2)", "ExpressionAttributeNames": {"#a0": "id", "#a1": "name", "#a2": "age"}, "ExpressionAttributeValues": {":v0": {"N": "1"}, ":v1": {"S": "Bob"}, ":v2": {"N": "5"}}}
+			},
+			{
+				"input": () => new Condition().not().group(new Condition().where("name").eq("Bob")).and().where("id").eq(1),
+				"output": {"ConditionExpression": "NOT (#a0 = :v0) AND #a1 = :v1", "ExpressionAttributeNames": {"#a0": "name", "#a1": "id"}, "ExpressionAttributeValues": {":v0": {"S": "Bob"}, ":v1": {"N": "1"}}}
+			},
+			{
+				"input": () => new Condition().not().not().parenthesis((condition) => condition.where("name").eq("Bob")),
+				"output": {"ConditionExpression": "(#a0 = :v0)", "ExpressionAttributeNames": {"#a0": "name"}, "ExpressionAttributeValues": {":v0": {"S": "Bob"}}}
+			},
+			{
+				"input": () => new Condition().not().parenthesis((condition) => condition.where("name").eq("Bob")).and().where("id").eq(1),
+				"settings": {"conditionString": "FilterExpression", "conditionStringType": "array"},
+				"output": {"FilterExpression": ["NOT", ["#a0 = :v0"], "AND", "#a1 = :v1"], "ExpressionAttributeNames": {"#a0": "name", "#a1": "id"}, "ExpressionAttributeValues": {":v0": {"S": "Bob"}, ":v1": {"N": "1"}}}
 			},
 			{
 				"input": () => new Condition().where("userID").eq("1").and().where("userID").exists(),
@@ -268,6 +286,42 @@ describe("Condition", () => {
 					return expect(await test.input().getInternalProperties(internalProperties).requestObject(model, test.settings)).toEqual(test.output);
 				}
 			});
+		});
+	});
+
+	describe("Date values", () => {
+		const date = new Date(1700000000000);
+		const later = new Date(1800000000000);
+		let Cat;
+		beforeEach(() => {
+			Cat = dynamoose.model("Cat", new dynamoose.Schema({"id": String, "born": Date, "seen": {"type": {"value": Date, "settings": {"storage": "iso"}}}, "age": Number, "meta": {"type": Object, "schema": {"when": Date, "at": {"type": {"value": Date, "settings": {"storage": "iso"}}}}}}, {"timestamps": true}));
+		});
+		const request = (condition) => condition.getInternalProperties(internalProperties).requestObject(Cat.Model);
+
+		[
+			["eq", (c) => c.where("born").eq(date), "#a0 = :v0", {":v0": {"N": "1700000000000"}}],
+			["lt on a timestamp", (c) => c.where("createdAt").lt(date), "#a0 < :v0", {":v0": {"N": "1700000000000"}}],
+			["ge with iso storage", (c) => c.where("seen").ge(date), "#a0 >= :v0", {":v0": {"S": "2023-11-14T22:13:20.000Z"}}],
+			["lt on a nested attribute", (c) => c.where("meta.when").lt(date), "#a0_0.#a0_1 < :v0", {":v0": {"N": "1700000000000"}}],
+			["between on a nested attribute with iso storage", (c) => c.where("meta.at").between(date, later), "#a0_0.#a0_1 BETWEEN :v0_1 AND :v0_2", {":v0_1": {"S": "2023-11-14T22:13:20.000Z"}, ":v0_2": {"S": "2027-01-15T08:00:00.000Z"}}],
+			["between", (c) => c.where("born").between(date, later), "#a0 BETWEEN :v0_1 AND :v0_2", {":v0_1": {"N": "1700000000000"}, ":v0_2": {"N": "1800000000000"}}],
+			["between with iso storage", (c) => c.where("seen").between(date, later), "#a0 BETWEEN :v0_1 AND :v0_2", {":v0_1": {"S": "2023-11-14T22:13:20.000Z"}, ":v0_2": {"S": "2027-01-15T08:00:00.000Z"}}],
+			["in", (c) => c.where("born").in([date, later]), "#a0 IN (:v0_1, :v0_2)", {":v0_1": {"N": "1700000000000"}, ":v0_2": {"N": "1800000000000"}}]
+		].forEach(([label, build, expression, values]) => {
+			it(`Should store a Date the way the attribute stores it for ${label}`, async () => {
+				const result = await request(build(new Condition()));
+				expect(result.ConditionExpression).toEqual(expression);
+				expect(result.ExpressionAttributeValues).toEqual(values);
+			});
+		});
+
+		it("Should still accept a number for a Date attribute", async () => {
+			expect((await request(new Condition().where("born").eq(1700000000000))).ExpressionAttributeValues).toEqual({":v0": {"N": "1700000000000"}});
+		});
+
+		it("Should throw a clear error for a Date on an attribute that isn't a Date", async () => {
+			const error = await request(new Condition().where("age").eq(date)).catch((e) => e);
+			expect(error).toEqual(new CustomError.InvalidParameter("The condition value for \"age\" is a Date, but \"age\" isn't a Date attribute in the schema, so Dynamoose doesn't know how it is stored. Pass date.getTime() or date.toISOString() instead."));
 		});
 	});
 });

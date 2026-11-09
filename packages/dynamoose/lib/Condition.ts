@@ -2,6 +2,8 @@ import {Item} from "./Item";
 import CustomError from "./Error";
 import utils from "./utils";
 const OR = Symbol("OR");
+// Marks a group (an array of conditions) that `not()` came before.
+const NOT_GROUP = Symbol("NOT_GROUP");
 import * as DynamoDB from "@aws-sdk/client-dynamodb";
 import {ObjectType} from "./General";
 import {ExpressionAttributeNameMap, ExpressionAttributeValueMap} from "./Types";
@@ -23,7 +25,7 @@ type ConditionRequestObjectResult = {ExpressionAttributeNames?: ExpressionAttrib
 interface ConditionComparisonType {
 	name: ConditionComparisonComparatorName;
 	typeName: ConditionComparisonComparatorDynamoName;
-	not?: ConditionComparisonComparatorDynamoName;
+	not: ConditionComparisonComparatorDynamoName;
 	multipleArguments?: boolean;
 }
 enum ConditionComparisonComparatorName {
@@ -52,7 +54,10 @@ enum ConditionComparisonComparatorDynamoName {
 	exists = "EXISTS",
 	notExists = "NOT_EXISTS",
 	in = "IN",
-	between = "BETWEEN"
+	notIn = "NOT_IN",
+	between = "BETWEEN",
+	notBetween = "NOT_BETWEEN",
+	notBeginsWith = "NOT_BEGINS_WITH"
 }
 const types: ConditionComparisonType[] = [
 	{"name": ConditionComparisonComparatorName.equals, "typeName": ConditionComparisonComparatorDynamoName.equals, "not": ConditionComparisonComparatorDynamoName.notEquals},
@@ -61,11 +66,11 @@ const types: ConditionComparisonType[] = [
 	{"name": ConditionComparisonComparatorName.lessThanEquals, "typeName": ConditionComparisonComparatorDynamoName.lessThanEquals, "not": ConditionComparisonComparatorDynamoName.greaterThan},
 	{"name": ConditionComparisonComparatorName.greaterThan, "typeName": ConditionComparisonComparatorDynamoName.greaterThan, "not": ConditionComparisonComparatorDynamoName.lessThanEquals},
 	{"name": ConditionComparisonComparatorName.greaterThanEquals, "typeName": ConditionComparisonComparatorDynamoName.greaterThanEquals, "not": ConditionComparisonComparatorDynamoName.lessThan},
-	{"name": ConditionComparisonComparatorName.beginsWith, "typeName": ConditionComparisonComparatorDynamoName.beginsWith},
+	{"name": ConditionComparisonComparatorName.beginsWith, "typeName": ConditionComparisonComparatorDynamoName.beginsWith, "not": ConditionComparisonComparatorDynamoName.notBeginsWith},
 	{"name": ConditionComparisonComparatorName.contains, "typeName": ConditionComparisonComparatorDynamoName.contains, "not": ConditionComparisonComparatorDynamoName.notContains},
 	{"name": ConditionComparisonComparatorName.exists, "typeName": ConditionComparisonComparatorDynamoName.exists, "not": ConditionComparisonComparatorDynamoName.notExists},
-	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in},
-	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "multipleArguments": true}
+	{"name": ConditionComparisonComparatorName.in, "typeName": ConditionComparisonComparatorDynamoName.in, "not": ConditionComparisonComparatorDynamoName.notIn},
+	{"name": ConditionComparisonComparatorName.between, "typeName": ConditionComparisonComparatorDynamoName.between, "not": ConditionComparisonComparatorDynamoName.notBetween, "multipleArguments": true}
 ];
 export type ConditionInitializer = Condition | ObjectType | string;
 
@@ -140,7 +145,7 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 		this.setInternalProperties(internalProperties, {
 			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
-					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
+					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true, "customTypesDynamo": true});
 					const newObjKeys = Object.keys(newObj);
 					// TODO: not quite sure how to unit test the error below. Need to figure this out. Maybe by mocking `Item.objectFromSchema`??? We don't currently have a system in place to do that easily tho.
 					/* istanbul ignore next */
@@ -149,7 +154,16 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 						throw new CustomError.OtherError("Error retrieving `requestObject` from Condition. Please submit an issue on the Dynamoose GitHub repository.");
 					}
 
-					const newValue = newObj[newObjKeys[0]];
+					let newValue = newObj[newObjKeys[0]];
+					// A nested path (`meta.when`) is a property name above, so its attribute is only found from the nested object.
+					if (newValue instanceof Date && key.includes(".")) {
+						const nestedObj = await Item.objectFromSchema(utils.object.set({}, key, value), model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true, "customTypesDynamo": true});
+						newValue = utils.object.get(nestedObj, key);
+					}
+					// A Date is converted by the attribute's Date type (milliseconds, seconds or ISO string). Any other attribute has no stored form for it.
+					if (newValue instanceof Date) {
+						throw new CustomError.InvalidParameter(`The condition value for "${key}" is a Date, but "${key}" isn't a Date attribute in the schema, so Dynamoose doesn't know how it is stored. Pass date.getTime() or date.toISOString() instead.`);
+					}
 					return Item.objectToDynamo(newValue, {"type": "value"});
 				};
 
@@ -179,6 +193,9 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 							const returnObject = utils.object.pick(newData, ["ExpressionAttributeNames", "ExpressionAttributeValues"]);
 
 							expression = settings.conditionStringType === "array" ? result[settings.conditionString] : `(${result[settings.conditionString]})`;
+							if (entry[NOT_GROUP] && settings.conditionStringType !== "array") {
+								expression = `NOT ${expression}`;
+							}
 							object = {...object, ...returnObject};
 						} else if (entry !== OR) {
 							const keyConditionObj = Object.entries(entry)[0];
@@ -199,7 +216,10 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 									return finalName;
 								}, []).join(".");
 							}
-							object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							// `IN` and `BETWEEN` convert each of their values, and `EXISTS` has none.
+							if (!["IN", "NOT_IN", "BETWEEN", "NOT_BETWEEN", "EXISTS", "NOT_EXISTS"].includes(condition.type)) {
+								object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							}
 
 							switch (condition.type) {
 							case "EQ":
@@ -207,8 +227,10 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 								expression = `${keys.name} ${condition.type === "EQ" ? "=" : "<>"} ${keys.value}`;
 								break;
 							case "IN":
-								delete object.ExpressionAttributeValues[keys.value];
+							case "NOT_IN":
 								expression = `${keys.name} IN (${value.map((_v: any, i: number) => `${keys.value}_${i + 1}`).join(", ")})`;
+								// DynamoDB has no `NOT IN`, so the comparison is negated as a whole. The same goes for `BETWEEN` and `begins_with` below.
+								expression = condition.type === "NOT_IN" ? `NOT (${expression})` : expression;
 								await Promise.all(value.map(async (valueItem: any, i: number) => {
 									object.ExpressionAttributeValues[`${keys.value}_${i + 1}`] = await toDynamo(key, valueItem);
 								}));
@@ -220,10 +242,10 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 								expression = `${keys.name} ${condition.type.startsWith("G") ? ">" : "<"}${condition.type.endsWith("E") ? "=" : ""} ${keys.value}`;
 								break;
 							case "BETWEEN":
-								expression = `${keys.name} BETWEEN ${keys.value}_1 AND ${keys.value}_2`;
+							case "NOT_BETWEEN":
+								expression = `${condition.type === "NOT_BETWEEN" ? "NOT (" : ""}${keys.name} BETWEEN ${keys.value}_1 AND ${keys.value}_2${condition.type === "NOT_BETWEEN" ? ")" : ""}`;
 								object.ExpressionAttributeValues[`${keys.value}_1`] = await toDynamo(key, value[0]);
 								object.ExpressionAttributeValues[`${keys.value}_2`] = await toDynamo(key, value[1]);
-								delete object.ExpressionAttributeValues[keys.value];
 								break;
 							case "CONTAINS":
 							case "NOT_CONTAINS":
@@ -232,17 +254,18 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 							case "EXISTS":
 							case "NOT_EXISTS":
 								expression = `attribute_${condition.type === "NOT_EXISTS" ? "not_" : ""}exists (${keys.name})`;
-								delete object.ExpressionAttributeValues[keys.value];
 								break;
 							case "BEGINS_WITH":
-								expression = `begins_with (${keys.name}, ${keys.value})`;
+							case "NOT_BEGINS_WITH":
+								expression = `${condition.type === "NOT_BEGINS_WITH" ? "NOT " : ""}begins_with (${keys.name}, ${keys.value})`;
 								break;
 							}
 						} else {
 							return object;
 						}
 
-						const conditionStringNewItems: string[] = [expression];
+						// In an array, a negated group is the item "NOT" followed by the group, which is joined as `NOT (...)`.
+						const conditionStringNewItems: string[] = Array.isArray(entry) && entry[NOT_GROUP] && settings.conditionStringType === "array" ? ["NOT", expression] : [expression];
 						if (object[settings.conditionString].length > 0) {
 							conditionStringNewItems.unshift(` ${arr[i - 1] === OR ? "OR" : "AND"} `);
 						}
@@ -355,18 +378,18 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 	 * | null (NULL) | not null (NOT_NULL) |
 	 * | contains (CONTAINS) | not contains (NOT_CONTAINS) |
 	 * | exists (EXISTS) | not exists (NOT_EXISTS) |
+	 * | in (IN) | `NOT (attribute IN (...))` |
+	 * | between (BETWEEN) | `NOT (attribute BETWEEN a AND b)` |
+	 * | begins with (BEGINS_WITH) | `NOT begins_with (attribute, value)` |
 	 *
-	 * The following comparisons do not have an opposite comparison type, and will throw an error if you try to use condition.not() with them.
+	 * Used before `condition.parenthesis()` or `condition.group()`, `not()` negates the whole group: `NOT (...)`.
 	 *
-	 * | Original |
-	 * |---|
-	 * | in (IN) |
-	 * | between (BETWEEN) |
-	 * | begins with (BEGINS_WITH) |
+	 * A negated condition can't be a key condition, so on a key attribute of the index a query uses it goes in the `FilterExpression`, which DynamoDB rejects (`Filter Expression can only contain non-primary key attributes`). Use it on other attributes, or in a scan.
 	 *
 	 * ```js
 	 * new dynamoose.Condition().where("id").not().eq(1); // Retrieve all objects where id does NOT equal 1
-	 * new dynamoose.Condition().where("id").not().between(1, 2); // Will throw error since between does not have an opposite comparison type
+	 * new dynamoose.Condition().where("id").not().in([1, 2]); // NOT (id IN (1, 2))
+	 * new dynamoose.Condition().not().parenthesis((condition) => condition.where("status").eq("closed").or().where("archived").eq(true)); // NOT (status = closed OR archived = true)
 	 * ```
 	 * @returns Condition
 	 */
@@ -391,7 +414,10 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 	parenthesis (condition: Condition | ConditionFunction): Condition {
 		condition = typeof condition === "function" ? condition(new Condition()) : condition;
 		const conditions = condition.getInternalProperties(internalProperties).settings.conditions;
-		this.getInternalProperties(internalProperties).settings.conditions.push(conditions as any);
+		const {pending} = this.getInternalProperties(internalProperties).settings;
+		// `not()` before a group negates the whole group.
+		this.getInternalProperties(internalProperties).settings.conditions.push((pending.not ? Object.assign([...conditions], {[NOT_GROUP]: true}) : conditions) as any);
+		delete pending.not;
 		return this;
 	}
 	/**
@@ -420,15 +446,8 @@ interface ConditionsConditionStorageObject {
 function finalizePending (instance: Condition): void {
 	const pending = instance.getInternalProperties(internalProperties).settings.pending;
 
-	let dynamoNameType: ConditionComparisonComparatorDynamoName;
-	if (pending.not === true) {
-		if (!pending.type.not) {
-			throw new CustomError.InvalidFilterComparison(`${pending.type.typeName} can not follow not()`);
-		}
-		dynamoNameType = pending.type.not;
-	} else {
-		dynamoNameType = pending.type.typeName;
-	}
+	// Every comparison has an opposite, so `not()` can come before any of them.
+	const dynamoNameType: ConditionComparisonComparatorDynamoName = pending.not === true ? pending.type.not : pending.type.typeName;
 
 	instance.getInternalProperties(internalProperties).settings.conditions.push({
 		[pending.key]: {
