@@ -1528,4 +1528,43 @@ describe("Schema", () => {
 			});
 		});
 	});
+	describe("Cached attribute lookups", () => {
+		beforeEach(() => {
+			dynamoose.Table.defaults.set({"create": false, "waitForActive": false});
+		});
+		afterEach(() => {
+			dynamoose.Table.defaults.set({});
+		});
+
+		it("Should not mix up an attribute whose name contains | and = with a type choice of another attribute", async () => {
+			const User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "a": [String, Number], "a|a=0": Boolean}));
+			new dynamoose.Table("User", [User]);
+			expect(await new User({"id": 1, "a": "x"}).toDynamo()).toEqual({"id": {"N": "1"}, "a": {"S": "x"}});
+		});
+
+		it("Should not remember that an attribute is missing", () => {
+			const schema = new dynamoose.Schema({"id": Number});
+			expect(schema.getAttributeValue("name")).toEqual(undefined);
+			schema.getInternalProperties(internalProperties).schemaObject.name = String;
+			expect(schema.getAttributeValue("name")).toEqual(String);
+		});
+
+		it("Should use a type choice added to a map after the map was first checked", () => {
+			const schema = new dynamoose.Schema({"id": Number, "a": [String, Number]});
+			const typeIndexOptionMap = {};
+			expect(schema.getAttributeValue("a", {typeIndexOptionMap})).toEqual([String, Number]);
+			typeIndexOptionMap.a = 1;
+			expect(schema.getAttributeValue("a", {typeIndexOptionMap})).toEqual(Number);
+		});
+
+		it("Should include an attribute added to a nested schema after the parent was built", () => {
+			const Address = new dynamoose.Schema({"id": String, "street": String});
+			const userSchema = new dynamoose.Schema({"id": String, "address": Address});
+			expect(userSchema.attributes()).not.toContain("address.ttl");
+			const AddressModel = dynamoose.model("Address", Address);
+			new dynamoose.Table("Address", [AddressModel], {"expires": 1000});
+			expect(Address.attributes()).toContain("ttl");
+			expect(userSchema.attributes()).toContain("address.ttl");
+		});
+	});
 });

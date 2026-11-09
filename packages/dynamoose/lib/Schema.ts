@@ -1109,7 +1109,8 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			// Adds an attribute after construction. Writing to `schemaObject` directly would leave the caches below holding a stale view of the schema.
 			"setSchemaAttribute": (attribute: string, definition: AttributeDefinition): void => {
 				this.getInternalProperties(internalProperties).schemaObject[attribute] = definition;
-				this.getInternalProperties(internalProperties).clearCaches();
+				// Other schemas can use this one as a nested schema, and their caches hold its attributes too, so every schema's caches are now stale.
+				schemaGeneration++;
 			},
 			"getMapSettingValuesForKey": (key: string, settingNames?: string[]): string[] => utils.array_flatten(mapSettingNames.filter((name) => !settingNames || settingNames.includes(name)).map((mapSettingName) => {
 				const result = this.getAttributeSettingValue(mapSettingName, key);
@@ -1366,6 +1367,7 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		try {
 			// The cache below is keyed on the standardized key alone since this branch never uses `value` or `settings`. The value dependent `unknownAttributeAllowed` path in the `catch` below is left uncached.
 			const standardKey = key.replace(/\.\d+/gu, ".0");
+			dropStaleCaches(this);
 			let cache = getAttributeTypeCache.get(this);
 			if (!cache) {
 				cache = new Map();
@@ -1608,6 +1610,7 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 	// can be memoized per schema. A fresh copy is returned so callers keep a private array.
 	const cacheable = !object && !settings;
 	if (cacheable) {
+		dropStaleCaches(this);
 		const cached = attributesNoArgCache.get(this);
 		if (cached) {
 			return cached.slice();
@@ -1669,6 +1672,15 @@ const getAttributeTypeDetailsCache = new WeakMap<Schema, Map<string, DynamoDBTyp
 const getAttributeTypeCache = new WeakMap<Schema, Map<string, string | string[]>>();
 const attributesNoArgCache = new WeakMap<Schema, string[]>();
 // Remembers whether a `typeIndexOptionMap` has any entries, so the common empty case skips the ancestor walk below without inspecting the map more than once.
+// `setSchemaAttribute` moves this generation on. A schema drops its caches the first time it is used after that, because the attribute may belong to a schema it nests.
+let schemaGeneration = 0;
+const cacheGeneration = new WeakMap<Schema, number>();
+function dropStaleCaches (schema: Schema): void {
+	if (cacheGeneration.get(schema) !== schemaGeneration) {
+		schema.getInternalProperties(internalProperties).clearCaches();
+		cacheGeneration.set(schema, schemaGeneration);
+	}
+}
 const emptyTypeIndexOptionMapCache = new WeakMap<object, boolean>();
 function isEmptyTypeIndexOptionMap (typeIndexOptionMap: object): boolean {
 	const cached = emptyTypeIndexOptionMapCache.get(typeIndexOptionMap);
@@ -1680,29 +1692,34 @@ function isEmptyTypeIndexOptionMap (typeIndexOptionMap: object): boolean {
 		isEmpty = false;
 		break;
 	}
-	emptyTypeIndexOptionMapCache.set(typeIndexOptionMap, isEmpty);
+	// Only a map with entries is remembered: an empty map can still get entries later, and checking an empty map again is cheap.
+	if (!isEmpty) {
+		emptyTypeIndexOptionMapCache.set(typeIndexOptionMap, isEmpty);
+	}
 	return isEmpty;
 }
 function schemaMemoKey (standardKey: string, typeIndexOptionMap?: {}): string {
 	if (!typeIndexOptionMap || isEmptyTypeIndexOptionMap(typeIndexOptionMap)) {
-		return standardKey;
+		return `#${standardKey}`;
 	}
 	// Only the entries for this key's own ancestor paths can change the result, so the key is built from those alone, incrementally. Inspecting the map as a whole instead (serializing it, counting its keys, or even a `for...in`) costs O(map size) per call, and `getTypePaths` produces one entry per list element, which makes converting a long list quadratic.
-	let relevant = "";
+	// The key is `<choices>#<standardKey>`. `choices` lists the type index chosen for each ancestor path by its position (`,0=1,2=0`), so it holds only digits, `=` and `,`, and the first `#` ends it. An attribute name can contain `|`, `=` or `#`, so naming the paths themselves could make two different lookups share a key.
+	let choices = "";
 	let prefix = "";
 	const parts = standardKey.split(".");
 	for (let i = 0; i < parts.length; i++) {
 		prefix = i === 0 ? parts[0] : `${prefix}.${parts[i]}`;
 		const value = typeIndexOptionMap[prefix];
 		if (value !== undefined) {
-			relevant += `|${prefix}=${value}`;
+			choices += `,${i}=${value}`;
 		}
 	}
-	return relevant ? `${standardKey}${relevant}` : standardKey;
+	return `${choices}#${standardKey}`;
 }
 
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
 	const standardKey = settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0");
+	dropStaleCaches(this);
 	let cache = getAttributeValueCache.get(this);
 	if (!cache) {
 		cache = new Map();
@@ -1734,7 +1751,10 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 		}
 	}
 
-	cache.set(memoKey, result);
+	// A missing attribute isn't remembered, so looking up many unknown names (such as an item's `saveUnknown` properties) doesn't grow the cache without bound.
+	if (result !== undefined) {
+		cache.set(memoKey, result);
+	}
 	return result;
 };
 
@@ -1752,6 +1772,7 @@ function retrieveTypeInfo (type: string, isSet: boolean, key: string, typeSettin
 // TODO: using too many `as` statements in the function below. We should clean this up.
 Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, settings: {standardKey?: boolean; typeIndexOptionMap?: {}} = {}): DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[] {
 	const standardKey = settings.standardKey ? key : key.replace(/\.\d+/gu, ".0");
+	dropStaleCaches(this);
 	let cache = getAttributeTypeDetailsCache.get(this);
 	if (!cache) {
 		cache = new Map();
