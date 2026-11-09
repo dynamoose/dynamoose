@@ -141,15 +141,8 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
 					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
-					const newObjKeys = Object.keys(newObj);
-					// TODO: not quite sure how to unit test the error below. Need to figure this out. Maybe by mocking `Item.objectFromSchema`??? We don't currently have a system in place to do that easily tho.
-					/* istanbul ignore next */
-					if (newObjKeys.length > 1) {
-						/* istanbul ignore next */
-						throw new CustomError.OtherError("Error retrieving `requestObject` from Condition. Please submit an issue on the Dynamoose GitHub repository.");
-					}
-
-					const newValue = newObj[newObjKeys[0]];
+					// The schema's `set` setting can add attributes to the object, so the value is the one under `key`. `key` is a raw condition's placeholder or an attribute name already resolved from its alias, so `mapAttributes` doesn't rename it.
+					const newValue = newObj[key];
 					return Item.objectToDynamo(newValue, {"type": "value"});
 				};
 
@@ -199,7 +192,12 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 									return finalName;
 								}, []).join(".");
 							}
-							object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							// `contains` on a list compares one element of it. So a single value is converted as a list holding it (the list's own `set` function gets a list) and the element is sent, rather than converting the value as the whole list.
+							if (["CONTAINS", "NOT_CONTAINS"].includes(condition.type) && !Array.isArray(value) && model.getInternalProperties(internalProperties).schemas.some((schema) => schema.attributes().includes(key) && ([] as string[]).concat(schema.getAttributeType(key)).includes("L"))) {
+								object.ExpressionAttributeValues[keys.value] = (await toDynamo(key, [value])).L[0];
+							} else {
+								object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
+							}
 
 							switch (condition.type) {
 							case "EQ":
