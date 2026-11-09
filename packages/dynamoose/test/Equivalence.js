@@ -2,6 +2,7 @@
 // current dist in the same process, and fails on any observable difference. Nothing is recorded to
 // disk: the baseline is the published package.
 const fs = require("fs");
+const path = require("path");
 const {builds, clone, runCase} = require("../equivalence/compare");
 const corpus = require("../equivalence/corpus");
 
@@ -21,6 +22,14 @@ describe("Equivalence with dynamoose-baseline", () => {
 		const {devDependencies} = require("../package.json");
 		expect(fs.realpathSync(builds.baseline.directory)).not.toEqual(fs.realpathSync(builds.current.directory));
 		expect(`npm:dynamoose@${builds.baseline.version}`).toEqual(devDependencies["dynamoose-baseline"]);
+	});
+
+	// With the workspace dynamoose-utils on both sides, a change to it could not show in the comparison.
+	it("Should give the published release the published dynamoose-utils", () => {
+		const fromBaseline = fs.realpathSync(require.resolve("dynamoose-utils", {"paths": [path.join(builds.baseline.directory, "dist")]}));
+		const fromCurrent = fs.realpathSync(require.resolve("dynamoose-utils", {"paths": [path.join(builds.current.directory, "dist")]}));
+		expect(fromBaseline).not.toEqual(fromCurrent);
+		expect(fromBaseline.split(path.sep)).toContain("dynamoose-utils-baseline");
 	});
 
 	it("Should have unique case names", () => {
