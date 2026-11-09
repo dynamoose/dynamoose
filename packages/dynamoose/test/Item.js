@@ -53,6 +53,10 @@ describe("Item", () => {
 		describe("toDynamo", () => {
 			const tests = [
 				{
+					"input": undefined,
+					"output": undefined
+				},
+				{
 					"input": {},
 					"output": {}
 				},

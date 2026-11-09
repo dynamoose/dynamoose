@@ -67,9 +67,12 @@ describe("Query", () => {
 			expect(Model.query().exec).toBeInstanceOf(Function);
 		});
 
-		it("Should return a promise", () => {
+		it("Should return a promise", async () => {
 			queryPromiseResolver = () => ({"Items": []});
-			expect(Model.query("name").eq("Charlie").exec()).toBeInstanceOf(Promise);
+			const promise = Model.query("name").eq("Charlie").exec();
+			expect(promise).toBeInstanceOf(Promise);
+			// Wait for the request, which would otherwise reach DynamoDB after this test removes the mock.
+			await promise;
 		});
 
 		const functionCallTypes = [
