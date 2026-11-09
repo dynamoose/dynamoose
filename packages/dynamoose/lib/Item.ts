@@ -895,13 +895,14 @@ Item.prototype.conformToSchema = async function (this: Item, settings: ItemObjec
 	const expectedKeys = Object.keys(expectedObject);
 
 	if (settings.mapAttributes) {
-		const schema = model.getInternalProperties(internalProperties).schemaForObject(expectedObject);
+		// Use the schema the conversion above used. Selecting it from `expectedObject` (already renamed) can tie-break onto another schema, which skips the renamed attributes.
+		const schema: Schema = settings.schema || model.getInternalProperties(internalProperties).schemaForObject(item);
 		const schemaInternalProperties = schema.getInternalProperties(internalProperties);
 		const mapSettingObject = schemaInternalProperties.getMapSettingObject();
 
 		for (const key in mapSettingObject) {
 			const expectedObjectValue = utils.object.get(expectedObject, key);
-			if (expectedObjectValue) {
+			if (expectedObjectValue !== undefined) {
 				utils.object.set(this as any, key, expectedObjectValue);
 			}
 		}
