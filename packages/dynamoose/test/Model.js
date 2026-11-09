@@ -3121,6 +3121,18 @@ describe("Model", () => {
 					});
 				});
 
+				it("Should not give the empty list for list append a placeholder a raw condition uses", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "active": Boolean, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+					// A raw condition doesn't take placeholder numbers from the update, so the update numbers its own from 0.
+					const condition = new dynamoose.Condition({"ConditionExpression": "#active = :v1", "ExpressionAttributeNames": {"#active": "active"}, "ExpressionAttributeValues": {":v1": true}});
+					await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"friends": "Tim"}}, {condition});
+					expect(updateItemParams.ConditionExpression).toEqual("#active = :v1");
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = list_append(if_not_exists(#a0, :v2), :v0)");
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"L": [{"S": "Tim"}]}, ":v1": {"BOOL": true}, ":v2": {"L": []}});
+				});
+
 				it("Should send correct params to updateItem with $ADD for list append with combine properties", async () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}, "friends": {"type": Array, "schema": [String]}});

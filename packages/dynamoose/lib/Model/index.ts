@@ -715,7 +715,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
-		const getUpdateExpressionObject: () => Promise<any> = async () => {
+		// `conditionValueKeys` are the value placeholders the condition uses. A raw condition doesn't take its numbers from the update, so the update's own placeholders can match them.
+		const getUpdateExpressionObject = async (conditionValueKeys: string[]): Promise<any> => {
 			const updateTypes = [
 				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 				{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
@@ -894,7 +895,12 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			// Added after the loop above, which pairs each attribute name with the value at the same position. The number follows the highest attribute name number, because a combine attribute takes the number after the attributes without moving `index`.
 			if (usesEmptyList) {
-				const emptyListKey = `:v${Math.max(...Object.keys(returnObject.ExpressionAttributeNames).map((key) => parseInt(key.replace("#a", "")))) + 1}`;
+				let emptyListNumber = Math.max(...Object.keys(returnObject.ExpressionAttributeNames).map((key) => parseInt(key.replace("#a", "")))) + 1;
+				// Merged with the condition's values afterwards, so a number a raw condition uses would replace its value.
+				while (conditionValueKeys.includes(`:v${emptyListNumber}`)) {
+					emptyListNumber++;
+				}
+				const emptyListKey = `:v${emptyListNumber}`;
 				returnObject.ExpressionAttributeValues[emptyListKey] = [];
 				returnObject.UpdateExpression.SET = returnObject.UpdateExpression.SET.map((expression: string) => expression.replace(emptyListMarker, emptyListKey));
 			}
@@ -923,9 +929,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",
-			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
-				index = i;
-			}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {}, await getUpdateExpressionObject()),
+			...await (async (): Promise<ObjectType> => {
+				// The condition comes first: a generated one sets `index`, so the update's placeholders follow its own.
+				const conditionObject: ObjectType = localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
+					index = i;
+				}}, "conditionString": "ConditionExpression", "conditionStringType": "string"}) : {};
+				return utils.merge_objects.main({"combineMethod": "object_combine"})(conditionObject, await getUpdateExpressionObject(Object.keys(conditionObject.ExpressionAttributeValues || {})));
+			})(),
 			"TableName": this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name
 		}));
 		if (settings.return === "request") {
