@@ -392,6 +392,16 @@ await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
 
 The `validate` Schema attribute property will only be run on `$SET` values. This is due to the fact that Dynamoose is unaware of what the existing value is in the database for `$ADD` properties.
 
+The schema's own `validate` setting is called once per update with the item's key and the values the update sets (including forced defaults and timestamps), since Dynamoose doesn't read the stored item. An update that only uses `$ADD`, `$REMOVE` or `$DELETE` doesn't call it. An attribute the update doesn't set is missing from that object, so a schema `validate` function used with `update` should only check the attributes it's given.
+
+```js
+const User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "age": Number}, {
+	"validate": (user) => user.id > 0 && (user.age === undefined || user.age >= 18)
+}));
+await User.update({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
+// `validate` is called with {"id": 1, "name": "Bob"}
+```
+
 ## model.delete(key[, settings][, callback])
 
 You can use Model.delete to delete an item from DynamoDB. This method uses the `deleteItem` DynamoDB API call to delete the object.
