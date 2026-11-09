@@ -3681,6 +3681,31 @@ describe("Model", () => {
 						expect(updateItemParams).toBeUndefined();
 					});
 
+					describe("Binary key", () => {
+						const modelWithBinaryKey = (set) => {
+							User = dynamoose.model("User", new dynamoose.Schema({"id": Buffer, "name": String}, {set}));
+							new dynamoose.Table("User", [User]);
+						};
+
+						it("Should accept a copy of the key with the same bytes from the schema's set", async () => {
+							updateItemFunction = () => Promise.resolve({});
+							modelWithBinaryKey((item) => ({...item, "id": Buffer.from(item.id)}));
+
+							await callType.func(User).bind(User)({"id": Buffer.from("ab")}, {"name": "Bob"});
+							expect(updateItemParams.Key).toEqual({"id": {"B": Buffer.from("ab")}});
+							expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+						});
+
+						it("Should reject and send nothing when the schema's set returns a key with other bytes", async () => {
+							updateItemParams = undefined;
+							updateItemFunction = () => Promise.resolve({});
+							modelWithBinaryKey((item) => item.name ? {...item, "id": Buffer.from("ba")} : item);
+
+							await expect(callType.func(User).bind(User)({"id": Buffer.from("ab")}, {"name": "Bob"})).rejects.toEqual(new CustomError.InvalidParameter("The schema's set function changed the key attribute id from {\"type\":\"Buffer\",\"data\":[97,98]} to {\"type\":\"Buffer\",\"data\":[98,97]}, but Model.update can't change an item's key."));
+							expect(updateItemParams).toBeUndefined();
+						});
+					});
+
 					it("Should give the schema's validate what the schema's set returns", async () => {
 						updateItemFunction = () => Promise.resolve({});
 						const validateCalls = [];

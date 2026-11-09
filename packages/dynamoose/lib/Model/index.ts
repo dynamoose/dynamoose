@@ -771,8 +771,10 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const givenKeyObject = await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj, {"schemaModifiers": false});
 				const result = await schemaSet({...givenKeyObject, ...Object.fromEntries([...convertedSet].filter(hasValue))});
 				// An update can't move an item to another key. A key attribute `set` leaves out is left as the key has it, and one it returns must be the key the update writes.
+				// A key attribute holds a string, a number or a binary value. A binary value is compared by its bytes, so a copy of a binary key with the same bytes is the same key.
+				const isSameKeyValue = (a: any, b: any): boolean => a instanceof Uint8Array && b instanceof Uint8Array ? Buffer.compare(a, b) === 0 : a === b;
 				Object.keys(keyObject).forEach((attribute) => {
-					if (attribute in result && result[attribute] !== keyObject[attribute]) {
+					if (attribute in result && !isSameKeyValue(result[attribute], keyObject[attribute])) {
 						throw new CustomError.InvalidParameter(`The schema's set function changed the key attribute ${attribute} from ${JSON.stringify(keyObject[attribute])} to ${JSON.stringify(result[attribute])}, but Model.update can't change an item's key.`);
 					}
 				});
