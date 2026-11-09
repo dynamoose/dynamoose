@@ -543,7 +543,8 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 				});
 			}
 			if (typeof settings.updateTimestamps === "boolean" || settings.updateTimestamps.updatedAt) {
-				updatedAtProperties.forEach((prop) => {
+				// `Model.update` passes the object form. It writes top-level attributes whole, so setting a nested schema's timestamp (`address.updatedAt`) would replace that map with just the timestamp.
+				updatedAtProperties.filter((prop) => typeof settings.updateTimestamps === "boolean" || !prop.name.includes(".")).forEach((prop) => {
 					utils.object.set(object as any, prop.name, timeResult(prop));
 				});
 			}

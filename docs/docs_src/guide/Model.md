@@ -313,6 +313,8 @@ await User.update({"id": 1, "name": "Bob"}); // This code will set `name` to Bob
 
 If you do not pass in a `callback` parameter a promise will be returned.
 
+If the schema has `timestamps`, the update sets its `updatedAt` attributes. It doesn't set the timestamps of a nested schema (for example `address.updatedAt` for an `address` attribute that is a Schema with `timestamps`), because the update writes each attribute whole and would replace `address` with just the timestamp.
+
 You can also pass in a `settings` object parameter to define extra settings for the update call. If you pass in a `settings` parameter, the `updateObj` parameter is required. The table below represents the options for the `settings` object.
 
 | Name | Description | Type | Default |
