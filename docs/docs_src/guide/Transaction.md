@@ -8,7 +8,7 @@ The `transactions` parameter must be an array of transaction objects that will b
 
 If you pass RAW objects into the `transactions` array (without using `Model.transaction`) you must be sure that the given model has been registered with Dynamoose at some point so we can convert the response to Item instances of that Model.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. For a `get` transaction, the promise resolves with an array of items in the same order as `transactions`, with `undefined` in place of an item that does not exist. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
