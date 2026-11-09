@@ -1,5 +1,14 @@
 const ModelStore = require("../dist/ModelStore").default;
 
+// The network guard is in test/_environment.js.
+afterEach(() => {
+	// Thrown instead of `expect` so tests that use `expect.assertions` keep their count
+	const requests = global.takeBlockedRequests();
+	if (requests.length > 0) {
+		throw new Error(`Real HTTP requests are not allowed in unit tests. Blocked: ${requests.join(", ")}`);
+	}
+});
+
 beforeEach(() => {
 	ModelStore.clear();
 });
