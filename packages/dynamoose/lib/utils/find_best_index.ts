@@ -51,15 +51,36 @@ export default function (modelIndexes: ModelIndexes, comparisonChart: ConditionS
 				}
 				index._sortPrefix = prefix;
 
+				// Mirrors the sort-key rules the query validator in ItemRetriever enforces: no condition
+				// after an unconditioned attribute, and no condition after an inequality.
+				let sortKeysValid = true;
+				let unconditionedSeen = false;
+				let inequalitySeen = false;
+				for (const attr of range) {
+					const t = comparisonChart[attr]?.type;
+					if (!t || !RANGE_TYPES.has(t)) {
+						unconditionedSeen = true;
+					} else if (unconditionedSeen || inequalitySeen) {
+						sortKeysValid = false;
+					} else if (t !== "EQ") {
+						inequalitySeen = true;
+					}
+				}
+				index._sortKeysValid = sortKeysValid;
+
 				return index;
 			});
 		}));
 
+	// Prefer indexes the query validator accepts. A rejected index stays only when no index passes,
+	// so the validator reports the problem instead of the lookup failing with "Index can't be found".
 	const usable = annotated.filter((index) => index._usable);
+	const validUsable = usable.filter((index) => index._sortKeysValid);
+	const candidates = validUsable.length > 0 ? validUsable : usable;
 	// Rank by the longest left-to-right sort-key prefix conditioned. On a tie, prefer the table
 	// index (matching legacy selection), then fall back to insertion order.
-	const bestPrefix = usable.reduce((max, index) => Math.max(max, index._sortPrefix), 0);
-	const topUsable = usable.filter((index) => index._sortPrefix === bestPrefix);
+	const bestPrefix = candidates.reduce((max, index) => Math.max(max, index._sortPrefix), 0);
+	const topUsable = candidates.filter((index) => index._sortPrefix === bestPrefix);
 	const chosen = topUsable.find((index) => index._tableIndex) || topUsable[0];
 
 	return {"tableIndex": chosen?._tableIndex ?? false, "indexName": chosen?.IndexName ?? null};

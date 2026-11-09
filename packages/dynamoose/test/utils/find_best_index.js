@@ -284,5 +284,32 @@ describe("utils.find_best_index", () => {
 			const chart = {"pk": {"type": "EQ"}, "sk1": {"type": "GT"}, "sk2": {"type": "EQ"}};
 			expect(find_best_index(indexes, chart).indexName).toBe("A");
 		});
+
+		it("does not pick an index whose sort-key condition follows an inequality, whatever the index order", () => {
+			// The query validator rejects sk2 EQ after the sk1 inequality. B on [pk; sk1] can run the
+			// query with sk2 as a filter, so B is chosen in both orders.
+			const indexA = {"IndexName": "A", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}, {"AttributeName": "sk2", "KeyType": "RANGE"}]};
+			const indexB = {"IndexName": "B", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}]};
+			const chart = {"pk": {"type": "EQ"}, "sk1": {"type": "GT"}, "sk2": {"type": "EQ"}};
+			expect(find_best_index({"GlobalSecondaryIndexes": [indexA, indexB]}, chart).indexName).toBe("B");
+			expect(find_best_index({"GlobalSecondaryIndexes": [indexB, indexA]}, chart).indexName).toBe("B");
+		});
+
+		it("does not pick an index whose sort-key conditions have a gap, whatever the index order", () => {
+			// The query validator rejects d EQ after the unconditioned c. A on [pk; a] can run the
+			// query with b and d as filters, so A is chosen in both orders.
+			const indexA = {"IndexName": "A", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "a", "KeyType": "RANGE"}]};
+			const indexB = {"IndexName": "B", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "a", "KeyType": "RANGE"}, {"AttributeName": "b", "KeyType": "RANGE"}, {"AttributeName": "c", "KeyType": "RANGE"}, {"AttributeName": "d", "KeyType": "RANGE"}]};
+			const chart = {"pk": {"type": "EQ"}, "a": {"type": "EQ"}, "b": {"type": "EQ"}, "d": {"type": "EQ"}};
+			expect(find_best_index({"GlobalSecondaryIndexes": [indexA, indexB]}, chart).indexName).toBe("A");
+			expect(find_best_index({"GlobalSecondaryIndexes": [indexB, indexA]}, chart).indexName).toBe("A");
+		});
+
+		it("still returns an index the query validator rejects when no index can run the query", () => {
+			// The validator then reports the error, instead of the lookup failing with "Index can't be found".
+			const indexA = {"IndexName": "A", "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk1", "KeyType": "RANGE"}, {"AttributeName": "sk2", "KeyType": "RANGE"}]};
+			const chart = {"pk": {"type": "EQ"}, "sk1": {"type": "GT"}, "sk2": {"type": "EQ"}};
+			expect(find_best_index({"GlobalSecondaryIndexes": [indexA]}, chart)).toStrictEqual({"tableIndex": false, "indexName": "A"});
+		});
 	});
 });

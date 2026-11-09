@@ -1916,6 +1916,31 @@ describe("Query", () => {
 		});
 	});
 
+	describe("Native multi-attribute index selection", () => {
+		const wideIndex = {"name": "TRIWide", "hashKey": ["tournamentId", "region"], "rangeKey": ["round", "bracket", "matchId"]};
+		const narrowIndex = {"name": "TRINarrow", "hashKey": ["tournamentId", "region"], "rangeKey": ["round"]};
+
+		[
+			{"description": "wide index first", "globalIndexes": [wideIndex, narrowIndex]},
+			{"description": "narrow index first", "globalIndexes": [narrowIndex, wideIndex]}
+		].forEach(({description, globalIndexes}) => {
+			it(`uses the index the query validator accepts when another index has a condition after an inequality (${description})`, async () => {
+				const schema = new dynamoose.Schema({
+					"matchId": {"type": String, "hashKey": true},
+					"tournamentId": String, "region": String, "round": String, "bracket": String
+				}, {"indexes": {"global": globalIndexes}});
+				const Match = dynamoose.model("MultiAttrSelectMatch", schema);
+				new dynamoose.Table("MultiAttrSelectMatch", [Match]);
+				queryPromiseResolver = () => ({"Items": [], "Count": 0});
+
+				// `bracket EQ` follows the `round GT` inequality on TRIWide, which the validator rejects.
+				// TRINarrow can run the query with `bracket` as a filter.
+				await Match.query({"tournamentId": "T1", "region": "NA"}).where("round").gt("QF").where("bracket").eq("upper").exec();
+				expect(queryParams.IndexName).toEqual("TRINarrow");
+			});
+		});
+	});
+
 	describe("Illegal-in-key operator promotion (IN/NE on a key attribute stays FilterExpression)", () => {
 		let SingleRangeModel, MultiRangeModel;
 
