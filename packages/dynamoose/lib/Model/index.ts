@@ -113,7 +113,7 @@ interface ModelInternalProperties {
 	name: string;
 	options: TableOptionsOptional;
 	getIndexes: () => Promise<{GlobalSecondaryIndexes?: IndexItem[]; LocalSecondaryIndexes?: IndexItem[]; TableIndex?: any}>;
-	convertKeyToObject: (key: InputKey) => Promise<KeyObject>;
+	convertKeyToObject: (key: InputKey, settings?: {schemaModifiers?: boolean}) => Promise<KeyObject>;
 	schemaCorrectnessScores: (object: ObjectType) => number[];
 	schemaForObject: (object: ObjectType) => Schema;
 	dynamoPropertyForAttribute: (attribute: string) => Promise<string>;
@@ -218,10 +218,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					return result;
 				}, {});
 			},
-			"convertKeyToObject": async (key: InputKey): Promise<KeyObject> => {
+			// `schemaModifiers: false` leaves out the schema's own `set`, for `Model.update`, which calls it with the key and the attributes it sets.
+			"convertKeyToObject": async (key: InputKey, settings: {schemaModifiers?: boolean} = {}): Promise<KeyObject> => {
 				let keyObject: KeyObject;
 				const hashKey = this.getInternalProperties(internalProperties).getHashKey();
-				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true};
+				const objectFromSchemaSettings: ItemObjectFromSchemaSettings = {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true, "schemaModifiers": settings.schemaModifiers !== false};
 				if (typeof key === "object") {
 					// If we passed aliased attribute names, we need to get them back to the key names
 					const mappedKey = await this.Item.objectFromSchema(key, this, objectFromSchemaSettings);
@@ -715,9 +716,17 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
+		// The key is converted once, so the schema's `set` (which converting a key runs) is called once for it.
+		let keyObjectPromise: Promise<KeyObject>;
+		const getKeyObject = (): Promise<KeyObject> => {
+			if (!keyObjectPromise) {
+				keyObjectPromise = this.getInternalProperties(internalProperties).convertKeyToObject(keyObj);
+			}
+			return keyObjectPromise;
+		};
 		const getUpdateExpressionObject: () => Promise<any> = async () => {
 			const updateTypes = [
-				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
+				{"name": "$SET", "operator": " = ", "objectFromSchemaSettings": {"validate": true, "schemaValidate": false, "schemaModifiers": false, "enum": true, "forceDefault": true, "required": "nested", "modifiers": ["set"]}},
 				{"name": "$ADD", "objectFromSchemaSettings": {"forceDefault": true}},
 				{"name": "$REMOVE", "attributeOnly": true, "objectFromSchemaSettings": {"required": true, "defaults": true}},
 				{"name": "$DELETE", "objectFromSchemaSettings": {"defaults": true}}
@@ -725,12 +734,65 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			if (!updateObj) {
 				updateObj = utils.deep_copy(keyObj) as Partial<T>;
-				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
+				Object.keys(await getKeyObject()).forEach((key) => delete updateObj[key]);
 			}
 
-			const returnObject = await Object.keys(updateObj).reduce(async (accumulatorPromise, key) => {
+			const updateTypeNames = updateTypes.map((a) => a.name);
+			const setUpdateType = updateTypes.find((a) => a.name === "$SET");
+			// The `$SET` values as the caller passed them, before conversion. They pick the schema whose `set` and `validate` run, as `schemaForObject` does for a save.
+			const setInput: ObjectType = {};
+			const attributeType = (attribute: string, value: any): string | string[] => {
+				try {
+					return schema.getAttributeType(attribute, value, {"unknownAttributeAllowed": true});
+				} catch (e) {} // eslint-disable-line no-empty
+			};
+			// Each value the update sets (`$SET` or a plain value) is converted on its own as it is written, running its attribute's `set`. The schema's `set` is then called once with them and the key, and the update writes what it returns.
+			const convertedSet = new Map<string, any>();
+			for (const key of Object.keys(updateObj)) {
+				const value = updateObj[key];
+				const entries = !(typeof value === "object" && updateTypeNames.includes(key)) ? [[key, value]] : key === "$SET" ? Object.entries(value) : [];
+				for (const [subKey, subValue] of entries) {
+					if (subValue === undefined || subValue === type.UNDEFINED) {
+						continue;
+					}
+					const wrapInList = attributeType(subKey, subValue) === "L" && !Array.isArray(subValue);
+					convertedSet.set(subKey, (await this.Item.objectFromSchema({[subKey]: wrapInList ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...setUpdateType.objectFromSchemaSettings} as any))[subKey]);
+					setInput[subKey] = subValue;
+				}
+			}
+			// One schema for the schema-level `set` and `validate`, so `validate` checks what that schema's `set` returned.
+			const setInputSchema = Object.keys(setInput).length > 0 ? this.getInternalProperties(internalProperties).schemaForObject(setInput) : schema;
+			const hasValue = ([, value]: [string, any]): boolean => value !== undefined && value !== type.UNDEFINED;
+			let finalSet = convertedSet;
+			const schemaSet = setInputSchema.getInternalProperties(internalProperties).settings.set;
+			if (schemaSet && [...convertedSet].some(hasValue)) {
+				const keyObject = await getKeyObject();
+				// `set` gets the key as the update was given it. `keyObject` is that key after `set` ran on it alone, as `Model.get` makes it, so a `set` that changes the key (such as adding a prefix) would change it twice if it got `keyObject`.
+				const givenKeyObject = await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj, {"schemaModifiers": false});
+				const result = await schemaSet({...givenKeyObject, ...Object.fromEntries([...convertedSet].filter(hasValue))});
+				// An update can't move an item to another key. A key attribute `set` leaves out is left as the key has it, and one it returns must be the key the update writes.
+				// A key attribute holds a string, a number or a binary value. A binary value is compared by its bytes, so a copy of a binary key with the same bytes is the same key.
+				const isSameKeyValue = (a: any, b: any): boolean => a instanceof Uint8Array && b instanceof Uint8Array ? Buffer.compare(a, b) === 0 : a === b;
+				Object.keys(keyObject).forEach((attribute) => {
+					if (attribute in result && !isSameKeyValue(result[attribute], keyObject[attribute])) {
+						throw new CustomError.InvalidParameter(`The schema's set function changed the key attribute ${attribute} from ${JSON.stringify(keyObject[attribute])} to ${JSON.stringify(result[attribute])}, but Model.update can't change an item's key.`);
+					}
+				});
+				// An attribute `set` leaves out isn't written, so the stored value is kept.
+				finalSet = new Map([...[...convertedSet].filter((entry) => !hasValue(entry)), ...Object.entries(result).filter(([attribute]) => !(attribute in keyObject))]);
+			}
+			// The values the update finally sets (`$SET`, including forced defaults, timestamps and Combine values), as JS values before the DynamoDB conversion. The schema's `validate` runs on them with the key.
+			const setAttributes: ObjectType = {};
+			// Set when the update writes a value itself, not only `$ADD`, `$REMOVE` or `$DELETE`. Only then does the schema's `validate` run.
+			let writesValue = false;
+			// Attributes the schema's `set` adds are written after the others.
+			const addedSetAttributes = Object.fromEntries([...finalSet].filter(([attribute]) => !convertedSet.has(attribute)));
+			const addedSetKey = Symbol("addedSetAttributes");
+			const updateKeys: (string | symbol)[] = [...Object.keys(updateObj), ...Object.keys(addedSetAttributes).length > 0 ? [addedSetKey] : []];
+			const returnObject = await updateKeys.reduce(async (accumulatorPromise, updateKey) => {
 				const accumulator = await accumulatorPromise;
-				let value = updateObj[key];
+				let key = updateKey === addedSetKey ? "$SET" : updateKey as string;
+				let value = updateKey === addedSetKey ? addedSetAttributes : updateObj[key];
 
 				if (!(typeof value === "object" && updateTypes.map((a) => a.name).includes(key))) {
 					value = {[key]: value};
@@ -747,13 +809,19 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const expressionKey = `#a${index}`;
 					subKey = Array.isArray(value) ? subValue : subKey;
 
-					let dynamoType;
-					try {
-						dynamoType = schema.getAttributeType(subKey, subValue, {"unknownAttributeAllowed": true});
-					} catch (e) {} // eslint-disable-line no-empty
+					// A value the update sets was converted above, and the schema's `set` was called with it.
+					const isConvertedSet = updateType.name === "$SET" && (convertedSet.has(subKey) || finalSet.has(subKey));
+					if (isConvertedSet) {
+						if (!finalSet.has(subKey)) {
+							continue;
+						}
+						subValue = finalSet.get(subKey);
+					}
+
+					const dynamoType = attributeType(subKey, subValue);
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
-					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
+					if (!updateType.attributeOnly && subValue !== dynamooseUndefined && !isConvertedSet) {
 						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
 					}
 
@@ -784,8 +852,13 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}
 
 					if (dynamoType === "L" && updateType.name === "$ADD") {
+						// A list append stores the old list plus the new items, so its stored value isn't known here and isn't validated.
 						expressionValue = `list_append(${expressionKey}, ${expressionValue})`;
 						updateType = updateTypes.find((a) => a.name === "$SET");
+					} else if (updateType.name === "$SET") {
+						// The final value, so a forced default that replaces the input or a removal is what's validated.
+						setAttributes[subKey] = subValue;
+						writesValue = true;
 					}
 
 					const operator = updateType.operator || (updateType.attributeOnly ? "" : " ");
@@ -814,6 +887,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 					obj.ExpressionAttributeNames[`#a${index}`] = key;
 					obj.ExpressionAttributeValues[`:v${index}`] = value;
+					setAttributes[key] = value;
 					obj.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
 
 					index++;
@@ -851,10 +925,12 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				} else {
 					// Numbered from `index` and moves it on, so attributes added after this one (such as `forceDefault` ones) don't reuse the number.
 					returnObject.ExpressionAttributeNames[`#a${index}`] = details.attribute;
-					returnObject.ExpressionAttributeValues[`:v${index}`] = details.type.typeSettings.attributes.map((attribute) => {
+					const combinedValue = details.type.typeSettings.attributes.map((attribute) => {
 						const [expressionAttributeNameKey] = Object.entries(returnObject.ExpressionAttributeNames).find((entry) => entry[1] === attribute);
 						return returnObject.ExpressionAttributeValues[expressionAttributeNameKey.replace("#a", ":v")];
 					}).filter((value) => typeof value !== "undefined" && value !== null).join(details.type.typeSettings.separator);
+					returnObject.ExpressionAttributeValues[`:v${index}`] = combinedValue;
+					setAttributes[details.attribute] = combinedValue;
 					returnObject.UpdateExpression.SET.push(`#a${index} = :v${index}`);
 					index++;
 				}
@@ -867,11 +943,24 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
 					returnObject.ExpressionAttributeValues[`:v${index}`] = defaultValue;
+					setAttributes[attribute] = defaultValue;
 					returnObject.UpdateExpression[updateType.name.slice(1)].push(`#a${index}${updateType.operator}:v${index}`);
 
 					index++;
 				}
 			}));
+
+			// The schema's `validate` can't see the stored item, so it runs once, on the key and the values the update sets, after they're final (forced defaults, timestamps and Combine values included). `$ADD`, `$REMOVE` and `$DELETE` and list appends aren't validated, as they set no value that is known here.
+			if (writesValue) {
+				// The schema matching the caller's `$SET` input, as a save and a per-attribute conversion pick it, rather than always the first one.
+				const schemaValidator = setInputSchema.getInternalProperties(internalProperties).settings.validate;
+				if (schemaValidator) {
+					const item = {...await getKeyObject(), ...setAttributes};
+					if (!await schemaValidator(item)) {
+						throw new CustomError.ValidationError(`${JSON.stringify(item)} had a schema validation error when trying to save the item.`);
+					}
+				}
+			}
 
 			Object.values(returnObject.ExpressionAttributeNames).map((attribute: string, index) => {
 				const value: ValueType = Object.values(returnObject.ExpressionAttributeValues)[index];
@@ -909,7 +998,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
 		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
-			"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)),
+			"Key": this.Item.objectToDynamo(await getKeyObject()),
 			"ReturnValues": localSettings.returnValues || "ALL_NEW",
 			...utils.merge_objects.main({"combineMethod": "object_combine"})(localSettings.condition ? await localSettings.condition.getInternalProperties(internalProperties).requestObject(this, {"index": {"start": index, "set": (i): void => {
 				index = i;

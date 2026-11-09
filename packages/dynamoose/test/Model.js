@@ -3606,6 +3606,225 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"id": 1}, {"name": "Bob"})).rejects.toEqual(new CustomError.ValidationError("name with a value of Bob had a validation error when trying to save the item"));
 				});
 
+				it("Should wrap a single value set on a list attribute in a list", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"id": Number, "friends": {"type": Array, "schema": [String]}});
+					new dynamoose.Table("User", [User]);
+
+					await callType.func(User).bind(User)({"id": 1}, {"friends": "Bob"});
+					expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"L": [{"S": "Bob"}]}});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
+				describe("Schema set setting", () => {
+					let setCalls;
+					const modelWithSet = (set, settings = {}) => {
+						setCalls = [];
+						User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "first": {"type": String, "set": (value) => value.trim()}, "last": String, "fullName": String, "age": Number, "data": {"type": Object, "schema": {"city": String, "zip": String}}}, {...settings, "set": (item) => {
+							setCalls.push(item);
+							return set(item);
+						}}));
+						new dynamoose.Table("User", [User]);
+					};
+
+					it("Should call the schema's set once with the key and the attributes the update sets, and write what it returns", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => ({...item, "fullName": `${item.first} ${item.last}`}));
+
+						await callType.func(User).bind(User)({"id": 1}, {"first": " Bob ", "last": "Smith"});
+						// The first call converts the key, as it does for every operation that takes a key.
+						expect(setCalls).toEqual([{"id": 1}, {"id": 1, "first": "Bob", "last": "Smith"}]);
+						expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "first", "#a1": "last", "#a2": "fullName"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "Bob"}, ":v1": {"S": "Smith"}, ":v2": {"S": "Bob Smith"}});
+						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1, #a2 = :v2");
+					});
+
+					it("Should give the schema's set the key as the update gets it, so a set that changes the key updates the key Model.get uses", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => ({...item, "id": item.id + 1000}));
+
+						await callType.func(User).bind(User)({"id": 1}, {"first": "Bob"});
+						// The first call converts the key, as it does for every operation that takes a key. The second gets the key before that call changed it.
+						expect(setCalls).toEqual([{"id": 1}, {"id": 1, "first": "Bob"}]);
+						expect(updateItemParams.Key).toEqual({"id": {"N": "1001"}});
+						expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "first"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "Bob"}});
+						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					});
+
+					it("Should give the schema's set the key as the update gets it when the key and the update are one object", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => ({...item, "id": item.id + 1000}));
+
+						await callType.func(User).bind(User)({"id": 1, "first": "Bob"});
+						expect(setCalls[setCalls.length - 1]).toEqual({"id": 1, "first": "Bob"});
+						expect(updateItemParams.Key).toEqual({"id": {"N": "1001"}});
+						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					});
+
+					it("Should not write an attribute the schema's set leaves out", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => Object.fromEntries(Object.entries(item).filter(([attribute]) => attribute !== "last")));
+
+						await callType.func(User).bind(User)({"id": 1}, {"first": "Bob", "last": "Smith"});
+						expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "first"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "Bob"}});
+						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+					});
+
+					it("Should reject and send nothing when the schema's set changes the key", async () => {
+						updateItemParams = undefined;
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => item.first ? {...item, "id": 99} : item);
+
+						await expect(callType.func(User).bind(User)({"id": 1}, {"first": "Bob"})).rejects.toEqual(new CustomError.InvalidParameter("The schema's set function changed the key attribute id from 1 to 99, but Model.update can't change an item's key."));
+						expect(updateItemParams).toBeUndefined();
+					});
+
+					describe("Binary key", () => {
+						const modelWithBinaryKey = (set) => {
+							User = dynamoose.model("User", new dynamoose.Schema({"id": Buffer, "name": String}, {set}));
+							new dynamoose.Table("User", [User]);
+						};
+
+						it("Should accept a copy of the key with the same bytes from the schema's set", async () => {
+							updateItemFunction = () => Promise.resolve({});
+							modelWithBinaryKey((item) => ({...item, "id": Buffer.from(item.id)}));
+
+							await callType.func(User).bind(User)({"id": Buffer.from("ab")}, {"name": "Bob"});
+							expect(updateItemParams.Key).toEqual({"id": {"B": Buffer.from("ab")}});
+							expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+						});
+
+						it("Should reject and send nothing when the schema's set returns a key with other bytes", async () => {
+							updateItemParams = undefined;
+							updateItemFunction = () => Promise.resolve({});
+							modelWithBinaryKey((item) => item.name ? {...item, "id": Buffer.from("ba")} : item);
+
+							await expect(callType.func(User).bind(User)({"id": Buffer.from("ab")}, {"name": "Bob"})).rejects.toEqual(new CustomError.InvalidParameter("The schema's set function changed the key attribute id from {\"type\":\"Buffer\",\"data\":[97,98]} to {\"type\":\"Buffer\",\"data\":[98,97]}, but Model.update can't change an item's key."));
+							expect(updateItemParams).toBeUndefined();
+						});
+					});
+
+					it("Should give the schema's validate what the schema's set returns", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						const validateCalls = [];
+						modelWithSet((item) => ({...item, "fullName": `${item.first} ${item.last}`}), {"validate": (item) => {
+							validateCalls.push(item);
+							return true;
+						}});
+
+						await callType.func(User).bind(User)({"id": 1}, {"first": "Bob", "last": "Smith"});
+						expect(validateCalls).toEqual([{"id": 1, "first": "Bob", "last": "Smith", "fullName": "Bob Smith"}]);
+					});
+
+					it("Should not call the schema's set for an update that only adds to or removes attributes", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithSet((item) => ({...item, "fullName": "x"}));
+
+						await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 1}, "$REMOVE": ["last"]});
+						// The only call converts the key.
+						expect(setCalls).toEqual([{"id": 1}]);
+						expect(updateItemParams.UpdateExpression).toEqual("REMOVE #a1 ADD #a0 :v0");
+					});
+
+					it("Should call the set of the schema that matches the attributes the update sets, as validate does", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						User = dynamoose.model("User", [
+							new dynamoose.Schema({"id": Number, "value": String, "from": String}, {"set": (item) => ({...item, "from": "first"})}),
+							new dynamoose.Schema({"id": Number, "value": Number, "from": String}, {"set": (item) => ({...item, "from": "second"}), "validate": (item) => item.from === "second"})
+						]);
+						new dynamoose.Table("User", [User]);
+
+						await callType.func(User).bind(User)({"id": 1}, {"value": 5});
+						expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "value", "#a1": "from"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"N": "5"}, ":v1": {"S": "second"}});
+						await callType.func(User).bind(User)({"id": 1}, {"value": "a"});
+						expect(updateItemParams.ExpressionAttributeValues).toEqual({":v0": {"S": "a"}, ":v1": {"S": "first"}});
+					});
+
+				});
+
+				describe("Schema validate setting", () => {
+					let validateCalls;
+					const modelWithValidate = (validate, definition = {"id": Number, "name": String, "age": Number}) => {
+						validateCalls = [];
+						User = dynamoose.model("User", new dynamoose.Schema(definition, {"validate": (item) => {
+							validateCalls.push(item);
+							return validate(item);
+						}}));
+						new dynamoose.Table("User", [User]);
+					};
+
+					it("Should call the schema's validate once with the key and the attributes the update sets", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate((item) => item.id === 1);
+
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob", "age": 2});
+						expect(validateCalls).toEqual([{"id": 1, "name": "Bob", "age": 2}]);
+						expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0, #a1 = :v1");
+					});
+
+					it("Should reject with a ValidationError and send nothing when the schema's validate fails", async () => {
+						updateItemParams = undefined;
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate((item) => item.age > 10);
+
+						await expect(callType.func(User).bind(User)({"id": 1}, {"name": "Bob", "age": 2})).rejects.toEqual(new CustomError.ValidationError("{\"id\":1,\"name\":\"Bob\",\"age\":2} had a schema validation error when trying to save the item."));
+						expect(validateCalls).toEqual([{"id": 1, "name": "Bob", "age": 2}]);
+						expect(updateItemParams).toBeUndefined();
+					});
+
+					it("Should not call the schema's validate for an update that only adds to or removes attributes", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate(() => false);
+
+						await callType.func(User).bind(User)({"id": 1}, {"$ADD": {"age": 1}, "$REMOVE": ["name"]});
+						expect(validateCalls).toEqual([]);
+						expect(updateItemParams.UpdateExpression).toEqual("REMOVE #a1 ADD #a0 :v0");
+					});
+
+					it("Should not pass the values an update adds to the schema's validate", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate((item) => item.id === 1);
+
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob", "$ADD": {"age": 1}});
+						expect(validateCalls).toEqual([{"id": 1, "name": "Bob"}]);
+						expect(updateItemParams.UpdateExpression).toEqual("ADD #a1 :v1 SET #a0 = :v0");
+					});
+
+					it("Should validate the forced default of an attribute the update doesn't set", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate((item) => item.status === "active", {"id": Number, "name": String, "status": {"type": String, "default": "active", "forceDefault": true}});
+
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
+						expect(validateCalls).toEqual([{"id": 1, "name": "Bob", "status": "active"}]);
+					});
+
+					it("Should validate with the schema that matches the attributes the update sets", async () => {
+						updateItemFunction = () => Promise.resolve({});
+						User = dynamoose.model("User", [
+							new dynamoose.Schema({"id": Number, "value": String}),
+							new dynamoose.Schema({"id": Number, "value": Number}, {"validate": (item) => item.value >= 0})
+						]);
+						new dynamoose.Table("User", [User]);
+
+						await expect(callType.func(User).bind(User)({"id": 1}, {"value": -1})).rejects.toEqual(new CustomError.ValidationError("{\"id\":1,\"value\":-1} had a schema validation error when trying to save the item."));
+						await expect(callType.func(User).bind(User)({"id": 1}, {"value": 1})).resolves.toEqual();
+					});
+
+					it("Should validate the same key value that the update's Key uses", async () => {
+						let counter = 0;
+						updateItemFunction = () => Promise.resolve({});
+						modelWithValidate((item) => item.id === 2, {"id": {"type": Number, "set": (value) => value + ++counter}, "name": String});
+
+						await callType.func(User).bind(User)({"id": 1}, {"name": "Bob"});
+						expect(updateItemParams.Key).toEqual({"id": {"N": "2"}});
+						expect(validateCalls).toEqual([{"id": 2, "name": "Bob"}]);
+					});
+
+				});
+
 				it("Should throw error if value not in enum", () => {
 					updateItemFunction = () => Promise.reject({"error": "ERROR"});
 					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "enum": ["Bob", "Tim"]}});
@@ -4909,6 +5128,45 @@ describe("Model", () => {
 		describe("Model.transaction.update", () => {
 			it("Should be a function", () => {
 				expect(User.transaction.update).toBeInstanceOf(Function);
+			});
+
+			it("Should call the schema's set once with the key and the attributes the update sets, and write what it returns", async () => {
+				const setCalls = [];
+				User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "first": String, "fullName": String}, {"set": (item) => {
+					setCalls.push(item);
+					return {...item, "fullName": `${item.first}!`};
+				}}));
+				new dynamoose.Table("User", [User]);
+				expect(await User.transaction.update({"id": 1}, {"first": "Bob"})).toEqual({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {"#a0": "first", "#a1": "fullName"},
+						"ExpressionAttributeValues": {":v0": {"S": "Bob"}, ":v1": {"S": "Bob!"}},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"TableName": "User"
+					}
+				});
+				// The first call converts the key, as it does for every operation that takes a key.
+				expect(setCalls).toEqual([{"id": 1}, {"id": 1, "first": "Bob"}]);
+			});
+
+			it("Should call the schema's validate once with the key and the attributes the update sets", async () => {
+				const validateCalls = [];
+				User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "name": String, "age": Number}, {"validate": (item) => {
+					validateCalls.push(item);
+					return item.id === 1;
+				}}));
+				new dynamoose.Table("User", [User]);
+				expect(await User.transaction.update({"id": 1}, {"name": "Bob", "age": 2})).toEqual({
+					"Update": {
+						"Key": {"id": {"N": "1"}},
+						"ExpressionAttributeNames": {"#a0": "name", "#a1": "age"},
+						"ExpressionAttributeValues": {":v0": {"S": "Bob"}, ":v1": {"N": "2"}},
+						"UpdateExpression": "SET #a0 = :v0, #a1 = :v1",
+						"TableName": "User"
+					}
+				});
+				expect(validateCalls).toEqual([{"id": 1, "name": "Bob", "age": 2}]);
 			});
 
 			it("Should return an object", async () => {
