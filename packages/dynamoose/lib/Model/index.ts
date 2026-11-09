@@ -20,6 +20,75 @@ import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
 const {internalProperties} = Internal.General;
 
+const updateOperators = ["$SET", "$ADD", "$REMOVE", "$DELETE"];
+const isUpdateOperator = (key: string, value: any): boolean => updateOperators.includes(key) && typeof value === "object" && value !== null;
+// The attribute names an update writes. A name under `$SET`, `$ADD` or `$DELETE` is a key of its object, and under `$REMOVE` an item of its list.
+const updateAttributeNames = (updateObj: ObjectType): string[] => Object.entries(updateObj).flatMap(([key, value]) => {
+	if (!isUpdateOperator(key, value)) {
+		return [key];
+	}
+	return Array.isArray(value) ? value : Object.keys(value);
+});
+// The update with each attribute named by an alias (`alias`, `aliases` or `map`) renamed to the attribute, as the update looks up attributes by name.
+// Two names for one attribute (an attribute and its alias, in any operator) are rejected, as `Item` rejects them on save, rather than letting the last one win.
+const attributeNamesForAliases = (schema: Schema, updateObj: ObjectType): ObjectType => {
+	const aliases = schema.getInternalProperties(internalProperties).getMapSettingObject();
+	const attributeName = (name: string): string => Object.prototype.hasOwnProperty.call(aliases, name) ? aliases[name] : name;
+	const namedBy = new Map<string, string>();
+	const claim = (name: string): string => {
+		const attribute = attributeName(name);
+		if (namedBy.has(attribute)) {
+			throw new CustomError.InvalidParameter(`Model.update names attribute "${attribute}" more than once ("${namedBy.get(attribute)}" and "${name}"). Name each attribute once.`);
+		}
+		namedBy.set(attribute, name);
+		return attribute;
+	};
+	return Object.entries(updateObj).reduce((result: ObjectType, [key, value]) => {
+		if (!isUpdateOperator(key, value)) {
+			result[claim(key)] = value;
+		} else {
+			result[key] = Array.isArray(value) ? value.map(claim) : Object.fromEntries(Object.entries(value).map(([name, nameValue]) => [claim(name), nameValue]));
+		}
+		return result;
+	}, {});
+};
+// The schema whose rules an update follows on a model with several schemas: the one that defines the most of the attribute names the update writes, by name or alias, so an attribute only a later schema defines gets that schema's rules. A tie keeps the first schema.
+// When several schemas define as many of those names, the values the update sets break the tie, scored as `schemaForObject` scores an item (`{"value": 5}` follows the schema where `value` is a Number), and then the first one wins.
+const schemaForUpdate = (schemas: Schema[], updateObj: ObjectType, correctnessScores: (object: ObjectType) => number[]): Schema => {
+	if (schemas.length === 1) {
+		return schemas[0];
+	}
+	const names = updateAttributeNames(updateObj);
+	const definedCounts = schemas.map((schema) => {
+		const aliases = schema.getInternalProperties(internalProperties).getMapSettingObject();
+		return names.filter((name) => schema.attributes().includes(name) || Object.prototype.hasOwnProperty.call(aliases, name)).length;
+	});
+	const mostDefined = Math.max(...definedCounts);
+	const candidates = schemas.map((_, index) => index).filter((index) => definedCounts[index] === mostDefined);
+	if (candidates.length === 1) {
+		return schemas[candidates[0]];
+	}
+	// The values the update sets, plain and under `$SET`. An `undefined` value matches no type, so it is left out rather than scoring every schema 0.
+	const setValues = Object.entries(updateObj).reduce((result: ObjectType, [key, value]) => {
+		const entries = !isUpdateOperator(key, value) ? [[key, value]] : key === "$SET" ? Object.entries(value) : [];
+		entries.filter(([, entryValue]) => entryValue !== undefined && entryValue !== type.UNDEFINED).forEach(([name, entryValue]) => {
+			result[name] = entryValue;
+		});
+		return result;
+	}, {});
+	// Each schema scores the values with its own aliases renamed to its attributes.
+	const score = (index: number): number => {
+		const aliases = schemas[index].getInternalProperties(internalProperties).getMapSettingObject();
+		const withAttributeNames = Object.entries(setValues).reduce((result: ObjectType, [name, value]) => {
+			result[Object.prototype.hasOwnProperty.call(aliases, name) ? aliases[name] : name] = value;
+			return result;
+		}, {});
+		return correctnessScores(withAttributeNames)[index];
+	};
+	const scores = candidates.map(score);
+	return schemas[candidates[scores.reduce((best, value, position) => value > scores[best] ? position : best, 0)]];
+};
+
 type UpdatePartial<T> =
   | Partial<T>
   | { $SET: Partial<T> }
@@ -711,7 +780,6 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			settings = {"return": "item"};
 		}
 
-		const schema: Schema = this.getInternalProperties(internalProperties).schemas[0]; // TODO: fix this to get correct schema
 		const table = this.getInternalProperties(internalProperties).table();
 		const {instance} = table.getInternalProperties(internalProperties);
 		let index = 0;
@@ -723,8 +791,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				{"name": "$DELETE", "objectFromSchemaSettings": {"defaults": true}}
 			].reverse();
 
-			if (!updateObj) {
+			const isKeyAndUpdate = !updateObj;
+			if (isKeyAndUpdate) {
 				updateObj = utils.deep_copy(keyObj) as Partial<T>;
+			}
+			const schema = schemaForUpdate(this.getInternalProperties(internalProperties).schemas, updateObj, this.getInternalProperties(internalProperties).schemaCorrectnessScores);
+			updateObj = attributeNamesForAliases(schema, updateObj) as Partial<T>;
+			// The key and the update in one object: the key attributes, which can be named by an alias, are the key, not part of the update.
+			if (isKeyAndUpdate) {
 				Object.keys(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)).forEach((key) => delete updateObj[key]);
 			}
 
@@ -754,7 +828,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					const attributeExists = schema.attributes().includes(subKey);
 					const dynamooseUndefined = type.UNDEFINED;
 					if (!updateType.attributeOnly && subValue !== dynamooseUndefined) {
-						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
+						// Converted with the schema the update follows, so its `enum`, `validate` and `set` settings apply rather than those of whichever schema matches the attribute alone.
+						subValue = (await this.Item.objectFromSchema({[subKey]: dynamoType === "L" && !Array.isArray(subValue) ? [subValue] : subValue}, this, {"schema": schema, "type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true, "mapAttributes": true, ...updateType.objectFromSchemaSettings} as any))[subKey];
 					}
 
 					if (subValue === dynamooseUndefined || subValue === undefined) {
@@ -806,7 +881,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 					}, {})
 				};
 
-				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
+				// The timestamps are those of the schema the update follows. Picked from the empty object instead, a model with several schemas would get the first schema's.
+				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"schema": schema, "updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
 				const defaultObjectFromSchema = await this.Item.objectFromSchema(await this.Item.prepareForObjectFromSchema({}, this, itemFunctionSettings), this, itemFunctionSettings);
 				Object.keys(defaultObjectFromSchema).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
@@ -892,17 +968,22 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				delete returnObject.ExpressionAttributeValues;
 			}
 
+			const updateExpression = Object.keys(returnObject.UpdateExpression).reduce((accumulator, key) => {
+				const value = returnObject.UpdateExpression[key];
+
+				if (value.length > 0) {
+					return `${accumulator}${accumulator.length > 0 ? " " : ""}${key} ${value.join(", ")}`;
+				} else {
+					return accumulator;
+				}
+			}, "");
+			// DynamoDB rejects an empty update expression, so an update with nothing to change fails here, before it's sent.
+			if (updateExpression === "") {
+				throw new CustomError.InvalidParameter("The update has nothing to change. Every attribute it names is undefined and not in the schema, or it names none, and DynamoDB rejects an empty update.");
+			}
 			return {
 				...returnObject,
-				"UpdateExpression": Object.keys(returnObject.UpdateExpression).reduce((accumulator, key) => {
-					const value = returnObject.UpdateExpression[key];
-
-					if (value.length > 0) {
-						return `${accumulator}${accumulator.length > 0 ? " " : ""}${key} ${value.join(", ")}`;
-					} else {
-						return accumulator;
-					}
-				}, "")
+				"UpdateExpression": updateExpression
 			};
 		};
 
@@ -919,7 +1000,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		if (settings.return === "request") {
 			if (callback) {
 				const localCallback: CallbackType<DynamoDB.UpdateItemInput, any> = callback as CallbackType<DynamoDB.UpdateItemInput, any>;
-				updateItemParamsPromise.then((params) => localCallback(null, params));
+				updateItemParamsPromise.then((params) => localCallback(null, params), (error) => localCallback(error));
 				return;
 			} else {
 				return updateItemParamsPromise;
