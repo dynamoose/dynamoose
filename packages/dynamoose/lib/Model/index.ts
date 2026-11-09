@@ -261,7 +261,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			},
 			// DynamoDB rejects a write that sets a key attribute, of the table or of an index, to NULL or an empty string or binary value, and a put without the table's key attributes. So the write fails here, before it's sent. An index key attribute can be left out, which leaves the item out of the index.
 			"checkKeyAttributeValues": async (values: {[attribute: string]: DynamoDB.AttributeValue}, settings: {requireTableKey: boolean}): Promise<void> => {
-				const {TableIndex, GlobalSecondaryIndexes = [], LocalSecondaryIndexes = []} = await this.getInternalProperties(internalProperties).getIndexes();
+				// The table's indexes, which combine those of every model of the table, so an index another model declares is checked too.
+				const {TableIndex, GlobalSecondaryIndexes = [], LocalSecondaryIndexes = []} = await this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).getIndexes();
 				TableIndex.KeySchema.forEach(({AttributeName}) => {
 					if (settings.requireTableKey || values[AttributeName] !== undefined) {
 						checkTableKeyValue(AttributeName, values[AttributeName]);

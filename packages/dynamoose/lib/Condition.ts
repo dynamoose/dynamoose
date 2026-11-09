@@ -142,8 +142,8 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 			"requestObject": async (model: Model<Item>, settings: ConditionRequestObjectSettings = {"conditionString": "ConditionExpression", "conditionStringType": "string"}): Promise<ConditionRequestObjectResult> => {
 				const toDynamo = async (key: string, value: ObjectType): Promise<DynamoDB.AttributeValue> => {
 					const newObj = await Item.objectFromSchema({[key]: value}, model, {"type": "toDynamo", "modifiers": ["set"], "typeCheck": false, "mapAttributes": true});
-					// `objectFromSchema` returns at most the one attribute it is given, as these settings add none (no defaults, timestamps or combine attributes).
-					const newValue = newObj[Object.keys(newObj)[0]];
+					// The schema's `set` setting can add attributes to the object, so the value is the one under `key`. `key` is a raw condition's placeholder or an attribute name already resolved from its alias, so `mapAttributes` doesn't rename it.
+					const newValue = newObj[key];
 					// DynamoDB rejects an expression that uses a value placeholder without a value.
 					if (newValue === undefined) {
 						throw new CustomError.InvalidParameter(`The condition on "${key}" has no value (it is undefined).`);
@@ -203,7 +203,12 @@ export class Condition extends InternalPropertiesClass<ConditionInternalProperti
 								}, []).join(".");
 							}
 							// `IN` and `BETWEEN` convert each of their values, and `EXISTS` has none.
-							if (!["IN", "BETWEEN", "EXISTS", "NOT_EXISTS"].includes(condition.type)) {
+							if (["IN", "BETWEEN"].includes(condition.type)) {
+								// Without a list there are no values to convert, which DynamoDB would otherwise reject.
+								if (value === undefined) {
+									throw new CustomError.InvalidParameter(`The condition on "${key}" has no value (it is undefined).`);
+								}
+							} else if (!["EXISTS", "NOT_EXISTS"].includes(condition.type)) {
 								object.ExpressionAttributeValues[keys.value] = await toDynamo(key, value);
 							}
 

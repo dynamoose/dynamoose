@@ -87,7 +87,9 @@ describe("Missing and empty values", () => {
 			["in with an undefined item", (c) => c.in(["a", undefined])],
 			["between with an undefined first value", (c) => c.between(undefined, "z")],
 			["between with an undefined second value", (c) => c.between("a", undefined)],
-			["between with one value", (c) => c.between("a")]
+			["between with one value", (c) => c.between("a")],
+			["in with no list", (c) => c.in(undefined)],
+			["between with no values", (c) => c.between()]
 		];
 		chained.forEach(([name, apply]) => {
 			it(`Should throw for a scan filter ${name}`, async () => {
@@ -101,7 +103,9 @@ describe("Missing and empty values", () => {
 			["ne", {"note": {"ne": undefined}}],
 			["beginsWith", {"note": {"beginsWith": undefined}}],
 			["in", {"note": {"in": [undefined]}}],
-			["between", {"note": {"between": ["a"]}}]
+			["between", {"note": {"between": ["a"]}}],
+			["in and no list", {"note": {"in": undefined}}],
+			["between and no list", {"note": {"between": undefined}}]
 		];
 		objects.forEach(([name, object]) => {
 			it(`Should throw for an object scan filter with ${name}, instead of a TypeError when it is built`, async () => {
@@ -217,6 +221,13 @@ describe("Missing and empty values", () => {
 			it("Should allow a null value in a filter", async () => {
 				await Account.scan(raw("#note = :note", {":note": null})).exec();
 				expect(requests[0].request.ExpressionAttributeValues).toEqual({":note": {"NULL": true}});
+			});
+
+			it("Should send each value as given when the schema's set setting adds attributes", async () => {
+				const Note = dynamoose.model("Note", new dynamoose.Schema({"pk": String, "note": String}, {"set": (item) => ({"extra": "x", ...item})}));
+				new dynamoose.Table("Note", [Note]);
+				await Note.scan(raw("#note = :note AND #pk = :pk", {":note": "a", ":pk": "b"})).exec();
+				expect(requests[0].request.ExpressionAttributeValues).toEqual({":note": {"S": "a"}, ":pk": {"S": "b"}});
 			});
 		});
 	});
@@ -499,6 +510,23 @@ describe("Missing and empty values", () => {
 					await expect(put(item({"note": ""}))).resolves.not.toThrow();
 					expect(requests.length).toEqual(operation.includes("return request") ? 0 : 1);
 				});
+			});
+		});
+
+		describe("An index another model of the table declares", () => {
+			let Other;
+			beforeEach(() => {
+				Account = dynamoose.model("Account", new dynamoose.Schema({"pk": {"type": String, "hashKey": true}, "sk": {"type": String, "rangeKey": true}, "gpk": String}));
+				Other = dynamoose.model("Other", new dynamoose.Schema({"pk": {"type": String, "hashKey": true}, "sk": {"type": String, "rangeKey": true}, "gpk": {"type": String, "index": {"name": "gsi", "type": "global"}}}));
+				new dynamoose.Table("Shared", [Account, Other]);
+			});
+
+			it("Should throw before sending for a put with an empty value", async () => {
+				await expectRejectedBeforeSending(Account.create({"pk": "a", "sk": "b", "gpk": ""}), indexKeyError("gpk", "gsi", "empty"));
+			});
+
+			it("Should throw before sending for an update with an empty value", async () => {
+				await expectRejectedBeforeSending(Account.update({"pk": "a", "sk": "b"}, {"gpk": ""}), indexKeyError("gpk", "gsi", "empty"));
 			});
 		});
 
