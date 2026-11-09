@@ -9,6 +9,7 @@
 ### Features
 
 - Added support for enabling and configuring DynamoDB Streams through Table options
+- Added a `returnItems` setting to `dynamoose.transaction`, so a write transaction resolves with the written items in the same order as the request: a `create` gives the stored item built from the request, an `update` gives the stored item read back in one `transactGetItems` call, and a `delete` or `condition` gives `undefined`. Each item uses the model that built its request and looks as `Model.get` would return it. If the write succeeds but the items can't be returned, the promise rejects with a `TransactionReadError` whose `committed` property is `true`
 
 ### Bug Fixes
 
@@ -19,3 +20,4 @@
 - Fixed `Model.update` and `Model.transaction.update` replacing an attribute that is a nested Schema with `timestamps` with just its `updatedAt` (`SET address = {"updatedAt": ...}`) when the parent schema also has `timestamps`, which deleted every other property of that attribute. Updates now set only the top-level timestamps. This also fixes such an update sending the attribute twice when it sets or removes it, and throwing `Cannot read properties of undefined (reading 'schema')` for a list of nested Schemas with `timestamps`
 - Fixed `Model.update` and `Model.transaction.update` counting a combined attribute changed with `$ADD` or `$DELETE` as set when the update also set an attribute whose placeholder starts with its placeholder (`#a1` and `#a10`). The combine value was built from the amount added instead of throwing `You must update all or none of the combine attributes`
 - Fixed the `expires` TTL attribute being silently dropped from every model registered against a table after the first. A model attaching to an already-constructed table did not receive the TTL attribute injection the `Table` constructor performs, so its writes stored no TTL attribute at all while DynamoDB continued to report `TimeToLiveStatus: ENABLED`. Affected every table shared by two or more distinct `Schema` objects, across `create`, `transaction.create`, and `update`
+- Fixed `dynamoose.transaction` rejecting with `No value defined: {}` when a `Get` asked for an item that does not exist. The result now has `undefined` at that position, in the same order as the request

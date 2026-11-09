@@ -8,7 +8,7 @@ The `transactions` parameter must be an array of transaction objects that will b
 
 If you pass RAW objects into the `transactions` array (without using `Model.transaction`) you must be sure that the given model has been registered with Dynamoose at some point so we can convert the response to Item instances of that Model.
 
-This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format.
+This method returns a promise that will resolve when the operation is complete, this promise will reject upon failure. For a `get` transaction, the promise resolves with an array of items in the same order as `transactions`, with `undefined` in place of an item that does not exist. You can also pass in a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format.
 
 You can also pass in an object for the optional `settings` parameter that is an object. The table below represents the options for the `settings` object.
 
@@ -16,6 +16,7 @@ You can also pass in an object for the optional `settings` parameter that is an 
 |------|-------------|------|---------|
 | return | What the function should return. Can be `items`, or `request`. In the event this is set to `request` the request Dynamoose will make to DynamoDB will be returned, and no request to DynamoDB will be made. | String | `items` |
 | type | If Dynamoose should use `get` (`transactGetItems`) or `write` (`transactWriteItems`) to make the transaction call. | String (`get` \| `write`) | By default, if all `transactions` objects are `Get`, `get` will be run, otherwise `write` will be used. |
+| returnItems | If a `write` transaction should resolve with the written items. See [Returning written items](#returning-written-items). Can't be used when `return` is set to `request`. | Boolean | `false` |
 
 ```js
 await dynamoose.transaction([
@@ -35,3 +36,7 @@ await dynamoose.transaction([
 	}
 ]);
 ```
+
+## Returning written items
+
+dyno_jsdoc_dist/Transaction.d.ts|transactionSettings.returnItems
