@@ -402,12 +402,13 @@ export class Table extends InternalPropertiesClass<TableInternalProperties> {
 		return this.getInternalProperties(internalProperties).name;
 	}
 
+	// The `return: "request"` overloads come first: TypeScript picks the first overload that matches, and `TableCreateOptions` also allows `return: "request"`.
+	create (settings: TableCreateOptions & {return: "request"}): Promise<DynamoDB.CreateTableInput>;
+	create (settings: TableCreateOptions & {return: "request"}, callback: CallbackType<DynamoDB.CreateTableInput, any>): void;
 	create (): Promise<void>;
 	create (callback: CallbackType<void, any>): void;
 	create (settings: TableCreateOptions): Promise<void>;
 	create (settings: TableCreateOptions, callback: CallbackType<void, any>): void;
-	create (settings: TableCreateOptions & {return: "request"}): Promise<DynamoDB.CreateTableInput>;
-	create (settings: TableCreateOptions & {return: "request"}, callback: CallbackType<DynamoDB.CreateTableInput, any>): void;
 	/**
 	 * This method can be used to manually create the given table. You can also pass a function into the `callback` parameter to have it be used in a callback format as opposed to a promise format.
 	 *
@@ -546,7 +547,8 @@ Table.defaults = originalDefaults;
 
 
 interface TableCreateOptions {
-	return: "request" | undefined;
+	// `| undefined` lets an explicit `return: undefined` compile under exactOptionalPropertyTypes, as it did before this overload change.
+	return?: "request" | undefined;
 }
 
 export interface TableWaitForActiveSettings {
