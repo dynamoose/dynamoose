@@ -808,7 +808,17 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 				const itemFunctionSettings: ItemObjectFromSchemaSettings = {"updateTimestamps": {"updatedAt": true}, "customTypesDynamo": true, "type": "toDynamo", "mapAttributes": true};
 				const defaultObjectFromSchema = await this.Item.objectFromSchema(await this.Item.prepareForObjectFromSchema({}, this, itemFunctionSettings), this, itemFunctionSettings);
-				Object.keys(defaultObjectFromSchema).forEach((key) => {
+				// A timestamp the update sets, adds to or removes itself is left to it. DynamoDB rejects an update expression that names the same attribute twice ("Two document paths overlap").
+				const updatedAttributes = Object.keys(updateObj).flatMap((key) => {
+					const value = updateObj[key];
+					if (typeof value === "object" && updateTypes.map((a) => a.name).includes(key)) {
+						return Array.isArray(value) ? value : Object.keys(value);
+					}
+					return [key];
+				});
+				// DynamoDB rejects an update that sets a key attribute ("This attribute is part of the key"), so a timestamp that is part of the table key is left as the key has it.
+				const keyAttributes = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()];
+				Object.keys(defaultObjectFromSchema).filter((key) => !updatedAttributes.includes(key) && !keyAttributes.includes(key)).forEach((key) => {
 					const value = defaultObjectFromSchema[key];
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 
@@ -860,9 +870,11 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				}
 			});
 
+			// DynamoDB rejects an update that sets a key attribute of the table, so a forced default on one isn't written. The item keeps the key it has.
+			const tableKeyAttributes = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()];
 			await Promise.all(schema.attributes().map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
-				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
+				if (defaultValue && !tableKeyAttributes.includes(attribute) && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 
 					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
