@@ -173,7 +173,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 	 * const cat = await CatModel.get(1);
 	 * ```
 	 *
-	 * You can also pass in an array of Schema instances or schema objects into the `schema` parameter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your item, and use that schema for all operations pertaining to that item. If no matching schema can be found, it will default to the first schema in the array.
+	 * You can also pass in an array of Schema instances or schema objects into the `schema` parameter. This is useful for cases of single table design where you want one model to have multiple options for a schema. Behind the scenes Dynamoose will automatically pick the closest schema to match to your item, and use that schema for all operations pertaining to that item. If no matching schema can be found, it will default to the first schema in the array. An attribute named by its `alias` (or `aliases` or `map` name) counts as that attribute when matching.
 	 *
 	 * :::note
 	 * If you use multiple schemas in one model, the hash & range keys must match for all schemas.
@@ -244,8 +244,16 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return keyObject;
 			},
 			"schemaCorrectnessScores": (object: ObjectType): number[] => {
+				// An attribute can be named by its alias (`alias`, `aliases` or `map`), so each schema scores the object with its own aliases renamed to its attributes.
+				const withAttributeNames = (schema: Schema): ObjectType => {
+					const aliases = schema.getInternalProperties(internalProperties).getMapSettingObject();
+					return Object.entries(object).reduce((result: ObjectType, [key, value]) => {
+						result[Object.prototype.hasOwnProperty.call(aliases, key) ? aliases[key] : key] = value;
+						return result;
+					}, {});
+				};
 				const schemaCorrectnessScores: number[] = this.getInternalProperties(internalProperties).schemas.map((schema) => {
-					const typePaths = schema.getTypePaths(object, {"type": "toDynamo", "includeAllProperties": true});
+					const typePaths = schema.getTypePaths(withAttributeNames(schema), {"type": "toDynamo", "includeAllProperties": true});
 					const multipleTypeKeys: string[] = Object.keys(typePaths).filter((key) => typeof typePaths[key] === "number");
 					multipleTypeKeys.forEach((key) => {
 						// TODO: Ideally at some point we'd move this code into the `schema.getTypePaths` method, but that breaks some other things, so holding off on that for now.
