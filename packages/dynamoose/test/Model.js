@@ -3876,6 +3876,23 @@ describe("Model", () => {
 					return expect(callType.func(User).bind(User)({"entity": "1-2", "docId": "doc1"}, {"$ADD": {"major": 1}})).rejects.toEqual(new CustomError.InvalidParameter("You cannot update the combine attributes of entity because it is part of the key. Remove them from the update: major."));
 				});
 
+				it("Should throw error if removing the parent of a nested combine attribute of a key", () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"entity": {"type": {"value": "Combine", "settings": {"attributes": ["meta.entityType", "meta.entityId"]}}, "hashKey": true}, "docId": {"type": String, "rangeKey": true}, "meta": {"type": Object, "schema": {"entityType": String, "entityId": String}}, "data": String});
+					new dynamoose.Table("User", [User]);
+					return expect(callType.func(User).bind(User)({"entity": "ACCOUNT#1", "docId": "doc1"}, {"$REMOVE": ["meta"]})).rejects.toEqual(new CustomError.InvalidParameter("You cannot update the combine attributes of entity because it is part of the key. Remove them from the update: meta.entityType, meta.entityId."));
+				});
+
+				// Writing the forced default would leave the stored source different from the unchanged key.
+				it("Shouldn't write a forceDefault combine attribute of a key", async () => {
+					updateItemFunction = () => Promise.resolve({});
+					User = dynamoose.model("User", {"entity": {"type": {"value": "Combine", "settings": {"attributes": ["entityType", "entityId"]}}, "hashKey": true}, "docId": {"type": String, "rangeKey": true}, "entityType": {"type": String, "default": "IDENTITY", "forceDefault": true}, "entityId": String, "data": String});
+					new dynamoose.Table("User", [User]);
+					await callType.func(User).bind(User)({"entity": "ACCOUNT#1", "docId": "doc1"}, {"data": "Charlie"});
+					expect(updateItemParams.ExpressionAttributeNames).toEqual({"#a0": "data"});
+					expect(updateItemParams.UpdateExpression).toEqual("SET #a0 = :v0");
+				});
+
 				it("Should throw error if updating one combine property", () => {
 					updateItemFunction = () => Promise.resolve({});
 					User = dynamoose.model("User", {"id": Number, "data1": String, "data2": String, "combine": {"type": {"value": "Combine", "settings": {"attributes": ["data1", "data2"]}}}});

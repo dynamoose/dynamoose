@@ -810,6 +810,14 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				return obj;
 			})()));
 
+			// The sources of a hash or range key that is a combine attribute. They must stay equal to the key, so update never writes them.
+			const keyCombineSources: string[] = [this.getInternalProperties(internalProperties).getHashKey(), this.getInternalProperties(internalProperties).getRangeKey()].filter(Boolean).flatMap((key: string) => {
+				const type: any = schema.getAttributeTypeDetails(key);
+				return !Array.isArray(type) && type.name === "Combine" ? type.typeSettings.attributes : [];
+			});
+			// Setting or removing `meta` changes the source `meta.entityType`, and the other way around.
+			const pathsOverlap = (a: string, b: string): boolean => a === b || a.startsWith(`${b}.`) || b.startsWith(`${a}.`);
+
 			schema.attributes().map((attribute) => ({attribute, "type": schema.getAttributeTypeDetails(attribute)})).filter((item: any) => {
 				return Array.isArray(item.type) ? item.type.some((type) => type.name === "Combine") : item.type.name === "Combine";
 			}).map((details) => {
@@ -826,11 +834,9 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				// reason, so an update to any of them, through any update type, is rejected.
 				if (details.attribute === this.getInternalProperties(internalProperties).getHashKey() || details.attribute === this.getInternalProperties(internalProperties).getRangeKey()) {
 					const expressionText = Object.values(returnObject.UpdateExpression).flat().join(", ");
-					const updatedSources = details.type.typeSettings.attributes.filter((attribute) => {
-						const entry = Object.entries(returnObject.ExpressionAttributeNames).find((nameEntry) => nameEntry[1] === attribute);
-						// `\b` after the digits so that #a1 does not match inside #a10
-						return entry !== undefined && new RegExp(`${entry[0]}\\b`, "u").test(expressionText);
-					});
+					// `\b` after the digits so that #a1 does not match inside #a10
+					const updatedNames = Object.entries(returnObject.ExpressionAttributeNames).filter(([placeholder]) => new RegExp(`${placeholder}\\b`, "u").test(expressionText)).map(([, name]) => name);
+					const updatedSources = details.type.typeSettings.attributes.filter((attribute) => updatedNames.some((name) => pathsOverlap(name, attribute)));
 					if (updatedSources.length > 0) {
 						throw new CustomError.InvalidParameter(`You cannot update the combine attributes of ${details.attribute} because it is part of the key. Remove them from the update: ${updatedSources.join(", ")}.`);
 					}
@@ -866,7 +872,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 			await Promise.all(schema.attributes().map(async (attribute) => {
 				const defaultValue = await schema.defaultCheck(attribute, undefined, {"forceDefault": true});
-				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute)) {
+				if (defaultValue && !Object.values(returnObject.ExpressionAttributeNames).includes(attribute) && !keyCombineSources.some((source) => pathsOverlap(attribute, source))) {
 					const updateType = updateTypes.find((a) => a.name === "$SET");
 
 					returnObject.ExpressionAttributeNames[`#a${index}`] = attribute;
