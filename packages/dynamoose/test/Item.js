@@ -138,6 +138,20 @@ describe("Item", () => {
 			expect(user.save).toBeInstanceOf(Function);
 		});
 
+		it("Should only call callback once when the save fails", async () => {
+			putItemFunction = () => Promise.reject(new CustomError.OtherError("putItem failed"));
+			const args = [];
+			await new Promise((resolve) => {
+				user.save((error, item) => {
+					args.push([error, item]);
+					setTimeout(resolve, 10);
+				});
+			});
+			expect(args.length).toEqual(1);
+			expect(args[0][0]).toEqual(new CustomError.OtherError("putItem failed"));
+			expect(args[0][1]).not.toBeDefined();
+		});
+
 		const functionCallTypes = [
 			{"name": "Promise", "func": (item) => item.save},
 			{"name": "Callback", "func": (item) => util.promisify(item.save)}
@@ -2319,6 +2333,16 @@ describe("Item", () => {
 				"input": {"id": 1, "friends": [[{"name": "Bob", "id": 1}, {"name": "Tim"}]]},
 				"output": ["id", "friends", "friends.0", "friends.0.0", "friends.0.1", "friends.0.0.id", "friends.0.1.id", "friends.0.0.name", "friends.0.1.name"],
 				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Array, "schema":[{"type":"Object", "schema":{"id":{"type":"Number", "required":true}, "name":"String"}}]}]}}
+			},
+			{
+				"input": {"id": 1, "friends": {"name": "Bob"}},
+				"output": ["id", "friends", "friends.0", "friends.0.id", "friends.0.name"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"id": {"type": Number, "required": true}, "name": String}}]}}
+			},
+			{
+				"input": {"id": 1, "friends": [{"name": "Bob", "addresses": {"country": "world"}}]},
+				"output": ["id", "friends", "friends.0", "friends.0.name", "friends.0.addresses", "friends.0.addresses.0", "friends.0.addresses.0.country", "friends.0.addresses.0.zip"],
+				"schema": {"id": Number, "friends": {"type": Array, "schema": [{"type": Object, "schema": {"name": String, "addresses": {"type": Array, "schema": [{"type": Object, "schema": {"country": {"type": String, "required": true}, "zip": Number}}]}}}]}}
 			}
 		];
 
