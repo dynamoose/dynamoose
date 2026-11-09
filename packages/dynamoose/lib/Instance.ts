@@ -1,10 +1,11 @@
 import {AWS} from "./aws";
-import {Model} from "./Model";
+import {ModelType} from "./General";
+import {Item} from "./Item";
 import {Table as PrimaryTable, TableOptionsOptional} from "./Table";
 import {TableOptionsAccessor} from "./Table/defaults";
 
 export interface PrimaryTableInterface extends PrimaryTable {
-	new (name: string, models: Model[], options?: TableOptionsOptional): PrimaryTable;
+	new (name: string, models: ModelType<Item>[], options?: TableOptionsOptional): PrimaryTable;
 }
 
 export class Instance {
@@ -30,7 +31,7 @@ export class Instance {
 
 function getInstanceTable (instance: Instance) {
 	class Table extends PrimaryTable {
-		constructor (name: string, models: Model[], options: TableOptionsOptional) {
+		constructor (name: string, models: ModelType<Item>[], options: TableOptionsOptional) {
 			super(instance, name, models, options);
 		}
 	}
