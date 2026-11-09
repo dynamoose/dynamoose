@@ -88,10 +88,18 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			}
 			const keys = Object.keys(value);
 			const key = keys[0];
+			// No attribute type holds null (`NULL` holds `true`), and `typeof null` is "object", so it is ruled out before it reaches `Object.keys`.
+			if (value[key] === null) {
+				return false;
+			}
 			const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) && !(value[key] instanceof Uint8Array) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
 			const {Schema} = require("./Schema");
 			const attributeType = Schema.attributeTypes.findDynamoDBType(key);
 			return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
+		}
+		// A list can hold null or undefined, as `{"L": [null]}`, which is not a DynamoDB value.
+		if (object === null || object === undefined) {
+			return false;
 		}
 
 		const keys = Object.keys(object);
@@ -107,6 +115,11 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	static objectFromSchema: (object: any, model: Model<Item>, settings?: ItemObjectFromSchemaSettings) => Promise<any>;
 	static prepareForObjectFromSchema: (object: any, model: Model<Item>, settings: ItemObjectFromSchemaSettings) => any;
 	conformToSchema: (this: Item, settings?: ItemObjectFromSchemaSettings) => Promise<Item>;
+	/**
+	 * Converts the item into DynamoDB's format. Attributes the schema doesn't name are kept as the schema's `saveUnknown` setting allows, as `item.save` stores them, unless `settings.saveUnknown` is `false`.
+	 * @param settings Optional settings for the conversion.
+	 * @returns Promise<AttributeMap>
+	 */
 	toDynamo: (this: Item, settings?: Partial<ItemObjectFromSchemaSettings>) => Promise<any>;
 
 	// This function handles actions that should take place before every response (get, scan, query, batchGet, etc.)
@@ -873,6 +886,8 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 };
 Item.prototype.toDynamo = async function (this: Item, settings: Partial<ItemObjectFromSchemaSettings> = {}): Promise<any> {
 	const newSettings: ItemObjectFromSchemaSettings = {
+		// The schema's `saveUnknown` setting applies unless the caller turns it off, so `item.toDynamo()` keeps the attributes `item.save` stores.
+		"saveUnknown": true,
 		...settings,
 		"type": "toDynamo"
 	};
