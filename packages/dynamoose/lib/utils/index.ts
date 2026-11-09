@@ -18,6 +18,7 @@ import childKey from "./childKey";
 import parentKey from "./parentKey";
 import async_reduce from "./async_reduce";
 import keyBy from "./keyBy";
+import normalize_number from "./normalize_number";
 
 export default {
 	combine_objects,
@@ -39,5 +40,6 @@ export default {
 	childKey,
 	parentKey,
 	async_reduce,
-	keyBy
+	keyBy,
+	normalize_number
 };

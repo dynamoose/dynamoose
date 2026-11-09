@@ -43,11 +43,11 @@ const validRetryUnprocessed = (retry?: BatchRetryUnprocessedSettings): BatchRetr
 };
 // The longest wait before one retry, so many attempts don't wait for hours.
 const MAX_RETRY_WAIT = 20000;
-// The same string for two DynamoDB keys only when they name the same item. A number is compared by its value and a binary value by its bytes, as DynamoDB does.
+// The same string for two DynamoDB keys only when they name the same item. A number is compared by its exact value and a binary value by its bytes, as DynamoDB does.
 const keyString = (item: AttributeMap, keyAttributes: string[]): string => JSON.stringify(keyAttributes.map((attribute) => {
 	const value: any = item[attribute];
 	if (value?.N !== undefined) {
-		return {"N": String(Number(value.N))};
+		return {"N": utils.normalize_number(value.N)};
 	}
 	if (value?.B !== undefined) {
 		return {"B": Buffer.from(value.B).toString("base64")};

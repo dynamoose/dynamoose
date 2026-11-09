@@ -1375,6 +1375,17 @@ describe("Model", () => {
 					expect(result.unprocessedKeys.map((item) => ({...item}))).toEqual([{"id": 1}]);
 				});
 
+				it("Should return the item for each of two number keys that only differ past the precision of a JavaScript number", async () => {
+					const Big = dynamoose.model("Big", new dynamoose.Schema({"id": dynamoose.type.ANY, "name": String}));
+					new dynamoose.Table("Big", [Big]);
+					const names = {"9007199254740992": "A", "9007199254740993": "B"};
+					dynamoose.aws.ddb.set({
+						"batchGetItem": (request) => Promise.resolve({"Responses": {"Big": request.RequestItems.Big.Keys.map((key) => ({"id": key.id, "name": {"S": names[key.id.N]}}))}, "UnprocessedKeys": {}})
+					});
+					const result = await callType.func(Big).bind(Big)([global.BigInt("9007199254740992"), global.BigInt("9007199254740993")]);
+					expect(result.map((item) => item.name)).toEqual(["A", "B"]);
+				});
+
 				it("Should stop retrying a chunk when another chunk fails while it waits", async () => {
 					let firstChunkCalls = 0;
 					dynamoose.aws.ddb.set({
