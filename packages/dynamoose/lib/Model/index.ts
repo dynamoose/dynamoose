@@ -1,7 +1,7 @@
 import CustomError from "../Error";
 import ModelStore from "../ModelStore";
 import {Schema, SchemaDefinition, DynamoDBSetTypeResult, ValueType, IndexItem, TableIndex} from "../Schema";
-import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem} from "../Item";
+import {Item as ItemCarrier, ItemSaveSettings, ItemSettings, ItemObjectFromSchemaSettings, AnyItem, returnedByDynamo, itemFromDynamoResponse} from "../Item";
 import utils from "../utils";
 import ddb from "../aws/ddb/internal";
 import Internal from "../Internal";
@@ -16,8 +16,12 @@ import {GetTransactionInput, CreateTransactionInput, DeleteTransactionInput, Upd
 import {applyExpiresToSchemas, Table, TableExpiresSettings, TableOptionsOptional} from "../Table";
 import type from "../type";
 import {InternalPropertiesClass} from "../InternalPropertiesClass";
-import {Instance} from "../Instance";
+import type {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
+// Instance is required when used, never at load: Instance creates its default instance at load, which defines a class extending Table. Required here at load,
+// a program whose first dynamoose module is Table (Table loads Model) would reach Instance while Table is still loading, and fail with
+// "Class extends value undefined is not a constructor or null".
+const defaultInstance = (): Instance => require("../Instance").Instance.default;
 const {internalProperties} = Internal.General;
 
 type UpdatePartial<T> =
@@ -297,7 +301,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 				const table = this.getInternalProperties(internalProperties)._table;
 				if (!table) {
 					const modelObject = returnModel(this);
-					const createdTable = new Table(Instance.default, this.getInternalProperties(internalProperties).tableName, [modelObject], this.getInternalProperties(internalProperties).options);
+					const createdTable = new Table(defaultInstance(), this.getInternalProperties(internalProperties).tableName, [modelObject], this.getInternalProperties(internalProperties).options);
 					this.getInternalProperties(internalProperties)._table = createdTable;
 					return createdTable;
 				}
@@ -336,7 +340,8 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		class Item extends ItemCarrier {
 			static Model: Model<ItemCarrier>;
 			constructor (object: AttributeMap | ObjectType = {}, settings: ItemSettings = {}) {
-				super(self, utils.deep_copy(object), settings);
+				// An item DynamoDB returned is converted into new objects, so only an object passed in is copied.
+				super(self, settings[returnedByDynamo] ? object : utils.deep_copy(object), settings);
 			}
 		}
 		Item.Model = self;
@@ -479,7 +484,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 
 		const keyObjects = keys.map(async (key) => this.getInternalProperties(internalProperties).convertKeyToObject(key));
 
-		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+		const itemify = (item: AttributeMap): Promise<ItemCarrier> => itemFromDynamoResponse(this, item).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 		const prepareResponse = async (response: DynamoDB.BatchGetItemOutput): Promise<ModelBatchGetItemsResponse<ItemCarrier>> => {
 			const tmpResult = await Promise.all(response.Responses[table.getInternalProperties(internalProperties).name].map((item) => itemify(item)));
 			const unprocessedArray = response.UnprocessedKeys[table.getInternalProperties(internalProperties).name] ? response.UnprocessedKeys[this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).name].Keys : [];
@@ -906,7 +911,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 			};
 		};
 
-		const itemify = (item): Promise<any> => new this.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
+		const itemify = (item): Promise<any> => itemFromDynamoResponse(this, item).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "type": "fromDynamo", "saveUnknown": true});
 		const localSettings: ModelUpdateSettings = settings;
 		const updateItemParamsPromise: Promise<DynamoDB.UpdateItemInput> = this.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).pendingTaskPromise().then(async () => ({
 			"Key": this.Item.objectToDynamo(await this.getInternalProperties(internalProperties).convertKeyToObject(keyObj)),
@@ -1036,7 +1041,7 @@ export class Model<T extends ItemCarrier = AnyItem> extends InternalPropertiesCl
 		}
 
 		const conformToSchemaSettings: ItemObjectFromSchemaSettings = {"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true};
-		const itemify = (item: AttributeMap): Promise<ItemCarrier> => new this.Item(item as any, {"type": "fromDynamo"}).conformToSchema(conformToSchemaSettings);
+		const itemify = (item: AttributeMap): Promise<ItemCarrier> => itemFromDynamoResponse(this, item).conformToSchema(conformToSchemaSettings);
 		const table = this.getInternalProperties(internalProperties).table();
 
 		const getItemParamsMethod = async (settings: ModelGetSettings): Promise<DynamoDB.GetItemInput> => {

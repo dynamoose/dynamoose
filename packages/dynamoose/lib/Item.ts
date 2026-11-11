@@ -4,8 +4,12 @@ import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
 import {Model} from "./Model";
-import {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult} from "./Schema";
+import type {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
+// Schema is required when used, never at load: Schema loads Model, which loads ItemRetriever, which reads `Condition.prototype` at load. Required here at load,
+// a program whose first dynamoose module is Condition (Condition loads Item) would reach ItemRetriever while Condition is still loading, and fail with
+// "Cannot read properties of undefined (reading 'prototype')".
+const attributeTypes = (): typeof Schema.attributeTypes => require("./Schema").Schema.attributeTypes;
 const dynamooseUndefined = Internal.Public.undefined;
 const dynamooseAny = Internal.Public.any;
 
@@ -26,8 +30,11 @@ export interface ItemSaveSettings {
 	return?: "request" | "item";
 	condition?: Condition;
 }
+// Set by `itemFromDynamoResponse` for an item a read returned whose attributes are DynamoDB attribute values. Converting it builds new objects, so it is neither walked for that format nor copied first. A symbol, so an object passed to a model can't set it.
+export const returnedByDynamo = Symbol("returnedByDynamo");
 export interface ItemSettings {
 	type?: "fromDynamo" | "toDynamo";
+	[returnedByDynamo]?: boolean;
 }
 
 interface ItemInternalProperties {
@@ -48,7 +55,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 	constructor (model: Model<Item>, object?: AttributeMap | ObjectType, settings?: ItemSettings) {
 		super();
 
-		const itemObject = Item.isDynamoObject(object) ? Item.fromDynamo(object) : object;
+		const itemObject = settings[returnedByDynamo] || Item.isDynamoObject(object) ? Item.fromDynamo(object as AttributeMap) : object;
 		Object.keys(itemObject).forEach((key) => this[key] = itemObject[key]);
 
 		this.setInternalProperties(internalProperties, {
@@ -89,8 +96,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			const keys = Object.keys(value);
 			const key = keys[0];
 			const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) && !(value[key] instanceof Uint8Array) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
-			const {Schema} = require("./Schema");
-			const attributeType = Schema.attributeTypes.findDynamoDBType(key);
+			const attributeType = attributeTypes().findDynamoDBType(key);
 			return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
 		}
 
@@ -552,20 +558,28 @@ Item.prepareForObjectFromSchema = async function<T extends InternalPropertiesCla
 	}
 	return object;
 };
+// Whether each of an item's attributes is one DynamoDB attribute value (`{"S": "Bob"}`), looking one level deep only. DynamoDB always returns items this way, but a client given to `dynamoose.aws.ddb.set` can return plain objects (`{"name": "Bob"}`).
+function hasAttributeValues (item: AttributeMap): boolean {
+	// Every read path checks it has an item before converting it.
+	const values = Object.values(item);
+	return values.length > 0 && values.every((value) => {
+		const keys = value && typeof value === "object" ? Object.keys(value) : [];
+		return keys.length === 1 && Boolean(attributeTypes().findDynamoDBType(keys[0]));
+	});
+}
+// Builds a model's item from one a read returned, for `Model.get`, `Model.batchGet`, `Model.update`, `Scan`, `Query` and transaction gets. An item in DynamoDB's format skips the recursive format check and the copy (see `returnedByDynamo`); any other goes through them as before.
+export function itemFromDynamoResponse (model: Model<Item>, item: AttributeMap): Item {
+	// `Model.Item` is typed as this class, but a model's item class takes the object and the settings, without the model.
+	const ModelItem = model.Item as unknown as new (object: AttributeMap, settings: ItemSettings) => Item;
+	return new ModelItem(item, hasAttributeValues(item) ? {"type": "fromDynamo", [returnedByDynamo]: true} : {"type": "fromDynamo"});
+}
+
 // This function will return a list of attributes combining both the schema attributes with the item attributes. This also takes into account all attributes that could exist (ex. properties in sets that don't exist in item), adding the indexes for each item in the item set.
 // https://stackoverflow.com/a/59928314/894067
 Item.attributesWithSchema = async function (item: Item, model: Model<Item>): Promise<string[]> {
 	const schema: Schema = model.getInternalProperties(internalProperties).schemaForObject(item);
-	const attributes = schema.attributes();
-	// build a tree out of schema attributes
-	const root = {};
-	attributes.forEach((attribute) => {
-		let node = root;
-		attribute.split(".").forEach((part) => {
-			node[part] = node[part] || {};
-			node = node[part];
-		});
-	});
+	// A tree of the schema's attributes, built once per schema. It is only read here.
+	const root = schema.getInternalProperties(internalProperties).getAttributeTree();
 	// explore the tree
 	function traverse (node, treeNode, outPath, callback): void {
 		callback(outPath);
@@ -625,25 +639,11 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 
 	let returnObject = utils.deep_copy(object);
 	const schema: Schema = settings.schema || model.getInternalProperties(internalProperties).schemaForObject(returnObject);
-	const schemaAttributes = schema.attributes(returnObject);
 
 	function mapAttributes (type: "toDynamo" | "fromDynamo") {
 		if (settings.mapAttributes && settings.type === type) {
-			const schemaInternalProperties = schema.getInternalProperties(internalProperties);
-			const mappedAttributesObject: GeneralObject<string> = type === "toDynamo" ? schemaInternalProperties.getMapSettingObject() : schema.attributes().reduce((obj, attribute) => {
-				const mapValues = schemaInternalProperties.getMapSettingValuesForKey(attribute);
-				if (mapValues && mapValues.length > 0) {
-					const defaultMapAttribute = schema.getInternalProperties(internalProperties).getDefaultMapAttribute(attribute);
-					if (defaultMapAttribute) {
-						if (defaultMapAttribute !== attribute) {
-							obj[attribute] = defaultMapAttribute;
-						}
-					} else {
-						obj[attribute] = mapValues[0];
-					}
-				}
-				return obj;
-			}, {});
+			// Built once per schema; empty when no attribute has an alias.
+			const mappedAttributesObject: GeneralObject<string> = schema.getInternalProperties(internalProperties).getAttributeMap(type);
 
 			Object.entries(mappedAttributesObject).forEach(([oldKey, newKey]) => {
 				if (returnObject[oldKey] !== undefined && returnObject[newKey] !== undefined) {
@@ -662,7 +662,9 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	mapAttributes("toDynamo");
 
 	// Type check
-	const typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
+	let typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
+	// The value of an attribute with several types picks the type that applies, and so which nested attributes the schema names. This walk follows the direction of the conversion: a Set accepts an array only when saving, so a list read from DynamoDB matched as a Set would lose its elements as attributes the schema doesn't name.
+	const schemaAttributes = schema.getInternalProperties(internalProperties).getAttributesForTypePaths(typeIndexOptionMap);
 	if (settings.typeCheck === undefined || settings.typeCheck === true) {
 		const validParents = []; // This array is used to allow for set contents to not be type checked
 		const keysToDelete = [];
@@ -702,6 +704,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 
 	if (settings.defaults || settings.forceDefault) {
+		let isDefaultSet = false;
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			if (value === dynamooseUndefined) {
@@ -717,13 +720,18 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof defaultValue}.`);
 					} else if (typeof parentValue !== "undefined" && parentValue !== null) {
 						utils.object.set(returnObject, key, defaultValue);
+						isDefaultSet = true;
 					}
 				}
 			}
 		}));
+		// A default value picks the type of an attribute with several types, which the steps below look up its settings (`set`, `validate`, `enum`) in.
+		if (isDefaultSet) {
+			typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
+		}
 	}
 	// Custom Types
-	if (settings.customTypesDynamo) {
+	if (settings.customTypesDynamo && schema.getInternalProperties(internalProperties).hasCustomTypeFunction(settings.type)) {
 		(await Item.attributesWithSchema(returnObject, model)).map((key) => {
 			const value = utils.object.get(returnObject, key);
 			const isValueUndefined = typeof value === "undefined" || value === null;
@@ -746,8 +754,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		try {
 			typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails;
 		} catch (e) {
-			const {Schema} = require("./Schema");
-			typeDetails = Schema.attributeTypes.findTypeForValue(value, settings.type, settings);
+			typeDetails = attributeTypes().findTypeForValue(value, settings.type, settings);
 		}
 
 		if (typeDetails && typeDetails[settings.type]) {
@@ -781,7 +788,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 	if (settings.modifiers) {
 		await Promise.all(settings.modifiers.map(async (modifier) => {
-			await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
+			await Promise.all((schema.getInternalProperties(internalProperties).hasAttributeSetting(modifier) ? await Item.attributesWithSchema(returnObject, model) : []).map(async (key) => {
 				const value = utils.object.get(returnObject, key);
 				const modifierFunction = await schema.getAttributeSettingValue(modifier, key, {"returnFunction": true, typeIndexOptionMap});
 				const modifierFunctionExists: boolean = Array.isArray(modifierFunction) ? modifierFunction.some((val) => Boolean(val)) : Boolean(modifierFunction);

@@ -3,7 +3,7 @@ import CustomError from "./Error";
 import utils from "./utils";
 import {Condition, ConditionInitializer, BasicOperators} from "./Condition";
 import {Model} from "./Model";
-import {Item} from "./Item";
+import {Item, itemFromDynamoResponse} from "./Item";
 import {CallbackType, ObjectType, ItemArray, SortOrder} from "./General";
 import {PopulateItems} from "./Populate";
 import Internal from "./Internal";
@@ -66,7 +66,7 @@ abstract class ItemRetriever extends InternalPropertiesClass<ItemRetrieverIntern
 					[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`]: result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`]
 				};
 			}
-			const array: any = (await Promise.all(result.Items.map(async (item) => await new model.Item(item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})))).filter((a) => Boolean(a));
+			const array: any = (await Promise.all(result.Items.map(async (item) => await itemFromDynamoResponse(model, item).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo", "mapAttributes": true})))).filter((a) => Boolean(a));
 			array.lastKey = result.LastEvaluatedKey ? Array.isArray(result.LastEvaluatedKey) ? result.LastEvaluatedKey.map((key) => model.Item.fromDynamo(key)) : model.Item.fromDynamo(result.LastEvaluatedKey) : undefined;
 			array.count = result.Count;
 			array[`${this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense}Count`] = result[`${utils.capitalize_first_letter(this.getInternalProperties(internalProperties).internalSettings.typeInformation.pastTense)}Count`];
