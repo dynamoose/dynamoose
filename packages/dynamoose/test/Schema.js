@@ -1032,6 +1032,11 @@ describe("Schema", () => {
 				"name": "Should work for multiple nested types",
 				"input": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
 				"output": ["id", "data", "data.0", "data.name"]
+			},
+			{
+				"name": "Should list the nested attributes of the type that has them when an earlier type holds a different value at the same path",
+				"input": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": ["id", "data", "data.0", "data.0.name"]
 			}
 		];
 
