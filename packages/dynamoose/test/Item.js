@@ -3192,6 +3192,12 @@ describe("Item", () => {
 				"output": {"id": 1, "data": {"b": "x"}}
 			},
 			{
+				// A type setting of plain types has no nested attributes, so a map is the wrong type.
+				"input": [{"id": 1, "data": {"x": 1}}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": {"type": [String, Number]}},
+				"error": new CustomError.TypeMismatch("Expected data to be of type string, number, instead found type object.")
+			},
+			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
 				"output": {"id": 1, "data": ["hello", "world"]}
