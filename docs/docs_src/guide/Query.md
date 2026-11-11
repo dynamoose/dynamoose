@@ -2,14 +2,20 @@ Dynamoose provides the ability to query a model by using the `Model.query` funct
 
 ## Model.query([filter])
 
-This is the basic entry point to construct a query request. When running a query you must specify at least the hashKey of the item(s). This can either be the hashKey of the table, or the hashKey of an index. The filter property is optional and can either be an object or a string representing the key you which to first filter on. In the event you don't pass in any parameters and don't call any other methods on the query object it will query with no filters or options.
+This is the basic entry point to construct a query request. When running a query you must specify the hashKey of the item(s). This can either be the hashKey of the table, or the hashKey of an index. The filter property is optional and can either be an object or a string representing the key you wish to first filter on.
+
+:::warning
+The hashKey must be compared with `eq`. DynamoDB doesn't support any other comparison on the hashKey (such as `contains` or `beginsWith`). A query without an `eq` condition on a hashKey will reject with `Index can't be found for query.`, or with an error from DynamoDB if you pass the index with [`query.using(index)`](#queryusingindex).
+:::
 
 ```js
-Cat.query("breed").contains("Terrier").exec() // will query all items where the hashKey `breed` contains `Terrier`
-Cat.query({"breed": {"contains": "Terrier"}}).exec() // will query all items where the hashKey `breed` contains `Terrier`
+// In these examples `name` is the hashKey and `breed` is the rangeKey
+Cat.query("name").eq("Will").exec() // will query all items where the hashKey `name` is `Will`
+Cat.query({"name": {"eq": "Will"}}).exec() // will query all items where the hashKey `name` is `Will`
+Cat.query("name").eq("Will").where("breed").beginsWith("Terr").exec() // will query all items where the hashKey `name` is `Will` and the rangeKey `breed` begins with `Terr`
 ```
 
-If you pass an object into `Model.query` the object for each key should contain the comparison type. For example, in the last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
+If you pass an object into `Model.query` the object for each key should contain the comparison type. For example, in the second example above, `eq` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
 `Model.query()` combines both the `KeyConditionExpression` and the `FilterExpression` from DynamoDB. If you query for an attribute that you defined as your hashKey or rangeKey DynamoDB will use `KeyConditionExpression`. This could be the most performant and cost efficient way to query for. If querying for attributes that are not defined as your hashKey or rangeKey DynamoDB might select more items at first and then filter the result which could have a bad impact on performance and costs.
 
@@ -47,7 +53,7 @@ Cat.query("name").eq("Will").exec((error, results) => {
 ```
 
 ```js
-const results = await Cat.query().exec();
+const results = await Cat.query("name").eq("Will").exec();
 // `results` is identical to what is listed in the callback version of this function.
 ```
 
