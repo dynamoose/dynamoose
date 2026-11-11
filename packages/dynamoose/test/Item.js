@@ -3143,6 +3143,12 @@ describe("Item", () => {
 				"output": {"id": 1, "data": [{"name": "Bob"}]}
 			},
 			{
+				// No type has `data.0.extra`, so it is removed as an attribute the schema doesn't name.
+				"input": [{"id": 1, "data": [{"name": "Bob", "extra": "x"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
 				"output": {"id": 1, "data": ["hello", "world"]}
