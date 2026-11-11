@@ -3143,6 +3143,12 @@ describe("Item", () => {
 				"output": {"id": 1, "data": [{"name": "Bob"}]}
 			},
 			{
+				// No type has `data.0.extra`, so it is removed as an attribute the schema doesn't name.
+				"input": [{"id": 1, "data": [{"name": "Bob", "extra": "x"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
 				// An attribute with several types has a value of each setting for each type, and the setting applies when any type has it.
 				"input": [{"id": 1, "data": {"b": "x"}}, {"type": "fromDynamo", "mapAttributes": true}],
 				"schema": {"id": Number, "data": [{"type": Object, "schema": {"a": String}, "alias": "payload"}, {"type": Object, "schema": {"b": String}, "alias": "payload"}]},
