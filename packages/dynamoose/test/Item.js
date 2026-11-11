@@ -3143,6 +3143,49 @@ describe("Item", () => {
 				"output": {"id": 1, "data": [{"name": "Bob"}]}
 			},
 			{
+				// An attribute with several types has a value of each setting for each type, and the setting applies when any type has it.
+				"input": [{"id": 1, "data": {"b": "x"}}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"a": String}, "alias": "payload"}, {"type": Object, "schema": {"b": String}, "alias": "payload"}]},
+				"output": {"id": 1, "payload": {"b": "x"}}
+			},
+			{
+				"input": [{"id": 1, "data": "x"}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": {"id": Number, "data": [{"type": String, "aliases": ["p", "q"], "defaultAlias": "q"}, {"type": Number, "aliases": ["p", "q"], "defaultAlias": "q"}]},
+				"output": {"id": 1, "q": "x"}
+			},
+			{
+				"input": [{"id": 1, "q": "x"}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": {"id": Number, "data": [{"type": String, "aliases": ["p", "q"]}, {"type": Number, "aliases": ["p", "q"]}]},
+				"output": {"id": 1, "data": "x"}
+			},
+			{
+				// A default picks the type of an attribute with several types, so its settings apply to it.
+				"input": [{"id": 1}, {"type": "toDynamo", "defaults": true, "validate": true}],
+				"schema": {"id": Number, "data": [{"type": String, "default": "dflt"}, Number]},
+				"output": {"id": 1, "data": "dflt"}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "defaults": true, "modifiers": ["set"]}],
+				"schema": {"id": Number, "data": [{"type": String, "default": "dflt", "set": (value) => value.toUpperCase()}, Number]},
+				"output": {"id": 1, "data": "DFLT"}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "defaults": true, "enum": true}],
+				"schema": {"id": Number, "data": [{"type": String, "default": "a", "enum": ["a", "b"]}, Number]},
+				"output": {"id": 1, "data": "a"}
+			},
+			{
+				// Types given as the type setting work as types given as a list.
+				"input": [{"id": 1, "data": {"b": "x"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": {"type": [{"type": Object, "schema": {"a": String}}, {"type": Object, "schema": {"b": String}}]}},
+				"output": {"id": 1, "data": {"b": "x"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"b": "x"}}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": {"type": [{"type": Object, "schema": {"a": String}}, {"type": Object, "schema": {"b": String}}]}},
+				"output": {"id": 1, "data": {"b": "x"}}
+			},
+			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Object, "schema": {"name": String}}]},
 				"output": {"id": 1, "data": ["hello", "world"]}

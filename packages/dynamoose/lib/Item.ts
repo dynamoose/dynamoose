@@ -662,7 +662,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	mapAttributes("toDynamo");
 
 	// Type check
-	const typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
+	let typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
 	if (settings.typeCheck === undefined || settings.typeCheck === true) {
 		const validParents = []; // This array is used to allow for set contents to not be type checked
 		const keysToDelete = [];
@@ -702,6 +702,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 	}
 
 	if (settings.defaults || settings.forceDefault) {
+		let isDefaultSet = false;
 		await Promise.all((await Item.attributesWithSchema(returnObject, model)).map(async (key) => {
 			const value = utils.object.get(returnObject, key);
 			if (value === dynamooseUndefined) {
@@ -717,10 +718,15 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 						throw new Error.TypeMismatch(`Expected ${key} to be of type ${typeDetailsArray.map((detail) => detail.dynamicName ? detail.dynamicName() : detail.name.toLowerCase()).join(", ")}, instead found type ${typeof defaultValue}.`);
 					} else if (typeof parentValue !== "undefined" && parentValue !== null) {
 						utils.object.set(returnObject, key, defaultValue);
+						isDefaultSet = true;
 					}
 				}
 			}
 		}));
+		// A default value picks the type of an attribute with several types, which the steps below look up its settings (`set`, `validate`, `enum`) in.
+		if (isDefaultSet) {
+			typeIndexOptionMap = schema.getTypePaths(returnObject, settings);
+		}
 	}
 	// Custom Types
 	if (settings.customTypesDynamo) {

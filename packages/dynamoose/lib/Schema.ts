@@ -1098,7 +1098,8 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			"getMapSettingValuesForKey": (key: string, settingNames?: string[]): string[] => utils.array_flatten(mapSettingNames.filter((name) => !settingNames || settingNames.includes(name)).map((mapSettingName) => {
 				const result = this.getAttributeSettingValue(mapSettingName, key);
 				if (Array.isArray(result)) {
-					const filteredArray = result.filter((item) => Boolean(item));
+					// A list of names, or for an attribute with several types one value for each type, which can itself be a list.
+					const filteredArray = utils.array_flatten(result.map((item) => Array.isArray(item) ? item : [item])).filter((item) => Boolean(item));
 					return filteredArray.length === 0 ? undefined : [...new Set(filteredArray)];
 				}
 				return result;
@@ -1117,8 +1118,10 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			"getDefaultMapAttribute": (attribute: string): string => {
 				for (const name of defaultMapSettingNames) {
 					const result = this.getAttributeSettingValue(name, attribute);
-					if (result) {
-						return result;
+					// An attribute with several types has a value for each type, set or not.
+					const value = Array.isArray(result) ? result.find((item) => Boolean(item)) : result;
+					if (value) {
+						return value;
 					}
 				}
 			},
@@ -1230,19 +1233,18 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 		});
 
 		this.attributes().forEach((key) => {
-			const defaultMapSettingValues = utils.array_flatten(defaultMapSettingNames.map((mapSettingName) => {
+			// The values each setting has, one for each type of an attribute with several types.
+			const defaultMapSettings = defaultMapSettingNames.map((mapSettingName) => {
 				const result = this.getAttributeSettingValue(mapSettingName, key);
-				if (Array.isArray(result)) {
-					const filteredArray = result.filter((item) => Boolean(item));
-					return filteredArray.length === 0 ? undefined : filteredArray;
-				}
-				return result;
-			}).filter((v) => Boolean(v)));
-			if (defaultMapSettingValues.length > 1) {
+				return {"name": mapSettingName, "values": (Array.isArray(result) ? result : [result]).filter((item) => Boolean(item))};
+			}).filter((setting) => setting.values.length > 0);
+			const defaultMapSettingValues = [...new Set(utils.array_flatten(defaultMapSettings.map((setting) => setting.values)))];
+			// Both settings, or a different value for different types. The same value on each type is one default.
+			if (defaultMapSettings.length > 1 || defaultMapSettingValues.length > 1) {
 				throw new CustomError.InvalidParameter("Only defaultMap or defaultAlias can be specified per attribute.");
 			}
 			const defaultMapSettingValue = defaultMapSettingValues[0];
-			const defaultMapAttribute = defaultMapSettingNames.find((mapSettingName) => this.getAttributeSettingValue(mapSettingName, key));
+			const defaultMapAttribute = defaultMapSettings[0]?.name;
 			if (defaultMapSettingValue) {
 				if (!this.getInternalProperties(internalProperties).getMapSettingValuesForKey(key).includes(defaultMapSettingValue) && defaultMapSettingValue !== key) {
 					throw new CustomError.InvalidParameter(`${defaultMapAttribute} must exist in map, alias, or aliases property or be equal to attribute name.`);
@@ -1594,9 +1596,11 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 
 			// TODO: using too many `as` statements in the few lines below. Clean that up.
 			function recursive (type, arrayTypeIndex): void {
-				if ((type === "M" || type === "L") && ((object[key][arrayTypeIndex] || object[key]) as AttributeDefinition).schema) {
-					const nestedTypeIndexOptionMap = Array.isArray(object[key]) ? {...typeIndexOptionMap, [keyWithExisting]: arrayTypeIndex} : typeIndexOptionMap;
-					accumulator.push(...main(((object[key][arrayTypeIndex] || object[key]) as AttributeDefinition).schema as SchemaDefinition, keyWithExisting, nestedTypeIndexOptionMap));
+				const definitions = typeDefinitions(object[key]);
+				const definition = (definitions ? definitions[arrayTypeIndex] : object[key]) as AttributeDefinition;
+				if ((type === "M" || type === "L") && definition && definition.schema) {
+					const nestedTypeIndexOptionMap = definitions ? {...typeIndexOptionMap, [keyWithExisting]: arrayTypeIndex} : typeIndexOptionMap;
+					accumulator.push(...main(definition.schema as SchemaDefinition, keyWithExisting, nestedTypeIndexOptionMap));
 				}
 			}
 			if (attributeType) {
@@ -1617,6 +1621,13 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 	return main(this.getInternalProperties(internalProperties).schemaObject);
 };
 
+// The definitions of an attribute's types when it has several, given as a list (`[defA, defB]`) or as its `type` setting (`{"type": [defA, defB]}`).
+function typeDefinitions (definition: any): any[] | undefined {
+	if (Array.isArray(definition)) {
+		return definition;
+	}
+	return definition && typeof definition === "object" && Array.isArray(definition.type) ? definition.type : undefined;
+}
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
 	const parts = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".");
 	const resolve = (result: any, index: number): any => {
@@ -1624,14 +1635,15 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 			return result;
 		}
 		const part = parts[index];
-		if (Array.isArray(result)) {
+		const types = typeDefinitions(result);
+		if (types) {
 			const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[parts.slice(0, index).join(".")];
 			if (predefinedIndex !== undefined) {
-				result = result[predefinedIndex];
+				result = types[predefinedIndex];
 			} else {
 				// An attribute with several types: the first type whose schema has the rest of the key. Two types can both have the next part (a Set's `[String]` and an Array of maps both have `0`), and only one of them the parts after it. When none has the whole key, the first with the next part is used, as before.
-				const types = result.filter((item) => item.schema && item.schema[part]);
-				for (const type of types) {
+				const typesWithPart = types.filter((item) => item && item.schema && item.schema[part]);
+				for (const type of typesWithPart) {
 					let found;
 					try {
 						found = resolve(type, index);
@@ -1640,7 +1652,10 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 						return found;
 					}
 				}
-				result = types[0];
+				// A `type` setting of plain types (`{"type": [String, Number]}`) has no nested attributes, and is looked into as before.
+				if (Array.isArray(result) || typesWithPart.length > 0) {
+					result = typesWithPart[0];
+				}
 			}
 		}
 		return resolve(utils.object.get(result.schema, part), index + 1);

@@ -153,6 +153,10 @@ describe("Schema", () => {
 				expect(() => new dynamoose.Schema({"id": [{"type": Number, "map": ["_id", "userID"], [settingName]: "userID"}, {"type": String, "map": ["_id", "userID"], [settingName]: "_id"}]})).toThrow("Only defaultMap or defaultAlias can be specified per attribute.");
 			});
 
+			it(`Should not throw error if the same ${settingName} is set on each type`, () => {
+				expect(() => new dynamoose.Schema({"id": [{"type": Number, "map": ["_id", "userID"], [settingName]: "userID"}, {"type": String, "map": ["_id", "userID"], [settingName]: "userID"}]})).not.toThrow();
+			});
+
 			const additionalDefaultMapSettingName = defaultMapSettingNames.find((name) => name !== settingName);
 			it(`Should throw error if ${settingName} & ${additionalDefaultMapSettingName} are passed in`, () => {
 				expect(() => new dynamoose.Schema({"id": {"type": Number, "map": ["_id", "userID"], [settingName]: "_id", [additionalDefaultMapSettingName]: "userID"}})).toThrow("Only defaultMap or defaultAlias can be specified per attribute.");
@@ -1037,6 +1041,11 @@ describe("Schema", () => {
 				"name": "Should list the nested attributes of the type that has them when an earlier type holds a different value at the same path",
 				"input": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
 				"output": ["id", "data", "data.0", "data.0.name"]
+			},
+			{
+				"name": "Should list the nested attributes of each type when the types are given as the type setting",
+				"input": {"id": Number, "data": {"type": [{"type": Object, "schema": {"a": String}}, {"type": Object, "schema": {"b": String}}]}},
+				"output": ["id", "data", "data.a", "data.b"]
 			}
 		];
 
