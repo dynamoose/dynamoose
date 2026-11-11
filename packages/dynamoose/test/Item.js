@@ -40,6 +40,36 @@ describe("Item", () => {
 		expect(user.model).toEqual("data");
 	});
 
+	describe("Attribute whose type setting lists plain types with one schema for them", () => {
+		const model = (settings) => {
+			const Model = dynamoose.model("MultiTypeUser", new dynamoose.Schema({"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": {"type": Date, "required": true}, "count": Number}}}, settings));
+			new dynamoose.Table("MultiTypeUser", [Model], {"create": false, "waitForActive": false});
+			return Model;
+		};
+		const input = () => ({"id": 1, "data": {"createdAt": new Date(1000), "count": 2}});
+		const expected = {"id": {"N": "1"}, "data": {"M": {"createdAt": {"N": "1000"}, "count": {"N": "2"}}}};
+
+		it("Should save the nested attributes", async () => {
+			const Model = model({});
+			expect((await new Model(input()).save({"return": "request"})).Item).toEqual(expected);
+		});
+
+		it("Should save the nested attributes when the schema's saveUnknown covers them", async () => {
+			const Model = model({"saveUnknown": ["data.**"]});
+			expect((await new Model(input()).save({"return": "request"})).Item).toEqual(expected);
+		});
+
+		it("Should save null", async () => {
+			const Model = model({});
+			expect((await new Model({"id": 1, "data": null}).save({"return": "request"})).Item).toEqual({"id": {"N": "1"}, "data": {"NULL": true}});
+		});
+
+		it("Should throw for a missing required nested attribute", () => {
+			const Model = model({});
+			return expect(new Model({"id": 1, "data": {"count": 2}}).save({"return": "request"})).rejects.toEqual(new CustomError.ValidationError("data.createdAt is a required property but has no value when trying to save item"));
+		});
+	});
+
 	describe("DynamoDB Conversation Methods", () => {
 		let User;
 		beforeEach(() => {
@@ -333,6 +363,18 @@ describe("Item", () => {
 					await callType.func(user).bind(user)();
 					expect(putParams).toEqual([{
 						"Item": {"id": {"N": "1"}, "data": {"BS": [Buffer.from("testdata"), Buffer.from("testdata2")]}},
+						"TableName": "User"
+					}]);
+				});
+
+				it("Should save the maps in a list for an attribute whose first type is a Set", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "data": [{"name": "Bob"}]});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "data": {"L": [{"M": {"name": {"S": "Bob"}}}]}},
 						"TableName": "User"
 					}]);
 				});
@@ -3113,6 +3155,98 @@ describe("Item", () => {
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
 				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				// The nested attributes come from the type the value has, not from the first type with something at the same path (the Set's `[String]` at `data.0`).
+				"input": [{"id": 1, "data": [{"name": "Bob"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
+				"input": [{"id": 1, "data": [{"name": "Bob"}]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
+				"input": [{"id": 1, "data": [{"name": "Bob"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
+				// No type has `data.0.extra`, so it is removed as an attribute the schema doesn't name.
+				"input": [{"id": 1, "data": [{"name": "Bob", "extra": "x"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
+				// An attribute with several types has a value of each setting for each type, and the setting applies when any type has it.
+				"input": [{"id": 1, "data": {"b": "x"}}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": {"id": Number, "data": [{"type": Object, "schema": {"a": String}, "alias": "payload"}, {"type": Object, "schema": {"b": String}, "alias": "payload"}]},
+				"output": {"id": 1, "payload": {"b": "x"}}
+			},
+			{
+				"input": [{"id": 1, "data": "x"}, {"type": "fromDynamo", "mapAttributes": true}],
+				"schema": {"id": Number, "data": [{"type": String, "aliases": ["p", "q"], "defaultAlias": "q"}, {"type": Number, "aliases": ["p", "q"], "defaultAlias": "q"}]},
+				"output": {"id": 1, "q": "x"}
+			},
+			{
+				"input": [{"id": 1, "q": "x"}, {"type": "toDynamo", "mapAttributes": true}],
+				"schema": {"id": Number, "data": [{"type": String, "aliases": ["p", "q"]}, {"type": Number, "aliases": ["p", "q"]}]},
+				"output": {"id": 1, "data": "x"}
+			},
+			{
+				// A default picks the type of an attribute with several types, so its settings apply to it.
+				"input": [{"id": 1}, {"type": "toDynamo", "defaults": true, "validate": true}],
+				"schema": {"id": Number, "data": [{"type": String, "default": "dflt"}, Number]},
+				"output": {"id": 1, "data": "dflt"}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "defaults": true, "modifiers": ["set"]}],
+				"schema": {"id": Number, "data": [{"type": String, "default": "dflt", "set": (value) => value.toUpperCase()}, Number]},
+				"output": {"id": 1, "data": "DFLT"}
+			},
+			{
+				"input": [{"id": 1}, {"type": "toDynamo", "defaults": true, "enum": true}],
+				"schema": {"id": Number, "data": [{"type": String, "default": "a", "enum": ["a", "b"]}, Number]},
+				"output": {"id": 1, "data": "a"}
+			},
+			{
+				// Types given as the type setting work as types given as a list.
+				"input": [{"id": 1, "data": {"b": "x"}}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": {"type": [{"type": Object, "schema": {"a": String}}, {"type": Object, "schema": {"b": String}}]}},
+				"output": {"id": 1, "data": {"b": "x"}}
+			},
+			{
+				"input": [{"id": 1, "data": {"b": "x"}}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": {"type": [{"type": Object, "schema": {"a": String}}, {"type": Object, "schema": {"b": String}}]}},
+				"output": {"id": 1, "data": {"b": "x"}}
+			},
+			{
+				// A type setting of plain types has no nested attributes, so a map is the wrong type.
+				"input": [{"id": 1, "data": {"x": 1}}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": {"type": [String, Number]}},
+				"error": new CustomError.TypeMismatch("Expected data to be of type string, number, instead found type object.")
+			},
+			{
+				// A type setting of plain types with a schema: the schema is the nested attributes of each type that has any.
+				"input": [{"id": 1, "data": {"createdAt": new Date(1000), "count": 2}}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}},
+				"output": {"id": 1, "data": {"createdAt": 1000, "count": 2}}
+			},
+			{
+				"input": [{"id": 1, "data": {"createdAt": new Date(1000), "count": 2}}, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true}],
+				"schema": () => new dynamoose.Schema({"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}}, {"saveUnknown": ["data.**"]}),
+				"output": {"id": 1, "data": {"createdAt": 1000, "count": 2}}
+			},
+			{
+				"input": [{"id": 1, "data": {"createdAt": 1000, "count": 2}}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}},
+				"output": {"id": 1, "data": {"createdAt": new Date(1000), "count": 2}}
+			},
+			{
+				"input": [{"id": 1, "data": {"createdAt": "x"}}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}},
+				"error": new CustomError.TypeMismatch("Expected data.createdAt to be of type date, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
