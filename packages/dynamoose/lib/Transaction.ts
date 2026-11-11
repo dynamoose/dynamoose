@@ -5,7 +5,7 @@ import Error from "./Error";
 import {Model} from "./Model";
 import ModelStore from "./ModelStore";
 import {CallbackType} from "./General";
-import {Item} from "./Item";
+import {Item, itemFromDynamoResponse} from "./Item";
 import Internal from "./Internal";
 const {internalProperties} = Internal.General;
 import {Table} from "./Table";
@@ -121,7 +121,7 @@ function Transaction (transactions: Transactions, settings?: TransactionSettings
 			const tableName: string = tableNames[index];
 			const table: Table = validTables.find((table) => table.name === tableName);
 			const model: Model<Item> = await table.getInternalProperties(internalProperties).modelForObject(Item.fromDynamo(item.Item));
-			return new model.Item(item.Item, {"type": "fromDynamo"}).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
+			return itemFromDynamoResponse(model, item.Item).conformToSchema({"customTypesDynamo": true, "checkExpiredItem": true, "saveUnknown": true, "modifiers": ["get"], "type": "fromDynamo"});
 		})) : null;
 	})();
 

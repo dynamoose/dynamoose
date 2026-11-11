@@ -777,6 +777,22 @@ describe("Item", () => {
 					expect(parseInt(putParams[0].Item.expires.N)).toBeWithinRange(expectedTTL - 1000, expectedTTL + 1000);
 				});
 
+				it("Should save the expires attribute a table adds to a schema that already saved an item", async () => {
+					putItemFunction = () => Promise.resolve();
+					const schema = new Schema({"id": Number, "name": String});
+					const Cat = dynamoose.model("Cat", schema);
+					new dynamoose.Table("Cat", [Cat], {"create": false, "waitForActive": false});
+					await callType.func(new Cat({"id": 1, "name": "Tom"})).bind(new Cat({"id": 1, "name": "Tom"}))();
+					putParams = [];
+					// The second table adds its `expires` attribute (a Date stored in seconds) to the same schema.
+					User = dynamoose.model("User", schema);
+					new dynamoose.Table("User", [User], {"create": false, "waitForActive": false, "expires": {"attribute": "expires", "ttl": 10000}});
+					user = new User({"id": 1, "name": "Charlie"});
+					await callType.func(user).bind(user)();
+					const expectedTTL = (Date.now() + 10000) / 1000;
+					expect(parseInt(putParams[0].Item.expires.N)).toBeWithinRange(expectedTTL - 1000, expectedTTL + 1000);
+				});
+
 				it("Should save with correct object with expires set to object with no attribute", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", new Schema({"id": Number, "name": String}));
@@ -2342,6 +2358,65 @@ describe("Item", () => {
 		});
 	});
 
+	describe("Items DynamoDB returns", () => {
+		let User, returned, isDynamoObject, deepCopy;
+		beforeEach(() => {
+			dynamoose.Table.defaults.set({"create": false, "waitForActive": false});
+			User = dynamoose.model("User", {"id": Number, "name": String, "address": {"type": Object, "schema": {"city": String}}});
+			new dynamoose.Table("User", [User]);
+			returned = {"id": {"N": "1"}, "name": {"S": "Bob"}, "address": {"M": {"city": {"S": "KL"}}}};
+			aws.ddb.set({
+				"getItem": () => Promise.resolve({"Item": returned}),
+				"batchGetItem": () => Promise.resolve({"Responses": {"User": [returned]}, "UnprocessedKeys": {}}),
+				"query": () => Promise.resolve({"Items": [returned], "Count": 1, "ScannedCount": 1}),
+				"scan": () => Promise.resolve({"Items": [returned], "Count": 1, "ScannedCount": 1}),
+				"updateItem": () => Promise.resolve({"Attributes": returned}),
+				"transactGetItems": () => Promise.resolve({"Responses": [{"Item": returned}]})
+			});
+			isDynamoObject = jest.spyOn(Item, "isDynamoObject");
+			deepCopy = jest.spyOn(utils, "deep_copy");
+		});
+		afterEach(() => {
+			isDynamoObject.mockRestore();
+			deepCopy.mockRestore();
+			aws.ddb.revert();
+			dynamoose.Table.defaults.set({});
+		});
+
+		const reads = [
+			{"name": "Model.get", "read": async () => [await User.get(1)]},
+			{"name": "Model.batchGet", "read": () => User.batchGet([1])},
+			{"name": "Model.query", "read": () => User.query("id").eq(1).exec()},
+			{"name": "Model.scan", "read": () => User.scan().exec()},
+			{"name": "Model.update", "read": async () => [await User.update({"id": 1}, {"name": "Bob"})]},
+			{"name": "dynamoose.transaction", "read": () => dynamoose.transaction([User.transaction.get(1)])}
+		];
+		reads.forEach((test) => {
+			// An item DynamoDB returned is always in its format, and converting it builds new objects, so it is neither checked nor copied first.
+			it(`Should convert the item ${test.name} returns without checking its format or copying it`, async () => {
+				const items = await test.read();
+				expect(items.map((item) => item.toJSON())).toEqual([{"id": 1, "name": "Bob", "address": {"city": "KL"}}]);
+				// The constructor would check a copy, so the check is matched by value.
+				expect(isDynamoObject).not.toHaveBeenCalledWith(returned);
+				expect(deepCopy.mock.calls.some(([object]) => object === returned)).toEqual(false);
+			});
+		});
+
+		it("Should still read a plain item that a client given to dynamoose returns", async () => {
+			// Such a client can return items that aren't in DynamoDB's format, which are read as they are.
+			returned = {"id": 1, "name": "Bob", "address": {"city": "KL"}};
+			expect((await User.get(1)).toJSON()).toEqual({"id": 1, "name": "Bob", "address": {"city": "KL"}});
+		});
+
+		it("Should still copy an object passed to a model", () => {
+			const object = {"id": 1, "address": {"city": "KL"}};
+			const item = new User(object);
+			item.address.city = "Penang";
+			expect(object).toEqual({"id": 1, "address": {"city": "KL"}});
+			expect(deepCopy.mock.calls.some(([value]) => value === object)).toEqual(true);
+		});
+	});
+
 	describe("Item.objectFromSchema", () => {
 		beforeEach(() => {
 			dynamoose.Table.defaults.set({
@@ -2380,6 +2455,60 @@ describe("Item", () => {
 				await model.objectFromSchema(object, model.Model);
 				expect(object).toEqual(JSON.parse(test.input));
 			});
+		});
+
+		it("Should walk the item once to find the type of each attribute with several types", async () => {
+			const model = dynamoose.model("User", {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]}, {"create": false, "waitForActive": false});
+			new dynamoose.Table("User", [model]);
+			const getTypePaths = jest.spyOn(dynamoose.Schema.prototype, "getTypePaths");
+			try {
+				await model.objectFromSchema({"id": 1, "data": [{"name": "Bob"}]}, model.Model, {"type": "fromDynamo"});
+				// Nested values are walked by recursive calls, which carry `previousKey`.
+				expect(getTypePaths.mock.calls.filter(([, settings]) => !settings || !settings.previousKey).length).toEqual(1);
+			} finally {
+				getTypePaths.mockRestore();
+			}
+		});
+
+		it("Should not walk an item for custom types, get functions or aliases when the schema has none", async () => {
+			const model = dynamoose.model("User", {"id": Number, "name": String, "address": {"type": Object, "schema": {"city": String}}}, {"create": false, "waitForActive": false});
+			new dynamoose.Table("User", [model]);
+			const attributesWithSchema = jest.spyOn(Item, "attributesWithSchema");
+			try {
+				expect(await model.objectFromSchema({"id": 1, "name": "Bob", "address": {"city": "KL"}}, model.Model, {"type": "fromDynamo", "customTypesDynamo": true, "saveUnknown": true, "modifiers": ["get"], "mapAttributes": true})).toEqual({"id": 1, "name": "Bob", "address": {"city": "KL"}});
+				expect(attributesWithSchema).not.toHaveBeenCalled();
+			} finally {
+				attributesWithSchema.mockRestore();
+			}
+		});
+
+		it("Should list a schema's attributes once, not for each item", async () => {
+			const model = dynamoose.model("User", {"id": Number, "name": {"type": String, "alias": "fullName", "get": (value) => value.toUpperCase()}, "born": {"type": {"value": Date, "settings": {"storage": "seconds"}}}}, {"create": false, "waitForActive": false});
+			new dynamoose.Table("User", [model]);
+			const read = () => model.objectFromSchema({"id": 1, "name": "Bob", "born": 1}, model.Model, {"type": "fromDynamo", "customTypesDynamo": true, "saveUnknown": true, "modifiers": ["get"], "mapAttributes": true});
+			await read();
+			const attributes = jest.spyOn(dynamoose.Schema.prototype, "attributes");
+			try {
+				expect(await read()).toEqual({"id": 1, "fullName": "BOB", "born": new Date(1000)});
+				expect(attributes).not.toHaveBeenCalled();
+			} finally {
+				attributes.mockRestore();
+			}
+		});
+
+		it("Should convert custom types when the type of another attribute can't be found", async () => {
+			// A Set of Booleans isn't a type DynamoDB has, so its type can't be looked up. The schema is then treated as having custom types, and none is skipped.
+			const model = dynamoose.model("User", {"id": Number, "born": Date, "flags": {"type": Set, "schema": [Boolean]}}, {"create": false, "waitForActive": false});
+			new dynamoose.Table("User", [model]);
+			expect(await model.objectFromSchema({"id": 1, "born": 1000}, model.Model, {"type": "fromDynamo", "customTypesDynamo": true})).toEqual({"id": 1, "born": new Date(1000)});
+		});
+
+		it("Should run a get function on one type of an attribute with several types only for a value", async () => {
+			const model = dynamoose.model("User", {"id": Number, "data": [{"type": String, "get": (value) => value.toUpperCase()}, Number]}, {"create": false, "waitForActive": false});
+			new dynamoose.Table("User", [model]);
+			// Without a value, no type is chosen, so the function is looked up for both types.
+			expect(await model.objectFromSchema({"id": 1}, model.Model, {"type": "fromDynamo", "modifiers": ["get"]})).toEqual({"id": 1});
+			expect(await model.objectFromSchema({"id": 1, "data": "x"}, model.Model, {"type": "fromDynamo", "modifiers": ["get"]})).toEqual({"id": 1, "data": "X"});
 		});
 
 		const basicTests = [
@@ -3196,6 +3325,12 @@ describe("Item", () => {
 				"input": [{"id": 1, "data": {"x": 1}}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": {"type": [String, Number]}},
 				"error": new CustomError.TypeMismatch("Expected data to be of type string, number, instead found type object.")
+			},
+			{
+				// A list read from DynamoDB is never a Set, though a Set accepts an array when saving.
+				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [String]}]},
+				"output": {"id": 1, "data": ["hello", "world"]}
 			},
 			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],

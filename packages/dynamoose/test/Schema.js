@@ -1055,6 +1055,11 @@ describe("Schema", () => {
 			});
 		});
 
+		it("Should list the nested attributes of the type an object's value has", () => {
+			const schema = new dynamoose.Schema({"id": Number, "data": [{"type": Object, "schema": {"a": String}}, {"type": Object, "schema": {"b": String}}]});
+			expect(schema.attributes({"id": 1, "data": {"b": "x"}})).toEqual(["id", "data", "data.b"]);
+		});
+
 		describe("Mapped Attributes", () => {
 			const tests = [
 				{

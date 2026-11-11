@@ -47,7 +47,7 @@ interface TableInternalProperties {
  */
 export function applyExpiresToSchemas (schemas: Schema[], expires: TableExpiresSettings): void {
 	schemas.forEach((schema) => {
-		schema.getInternalProperties(internalProperties).schemaObject[expires.attribute] = {
+		schema.getInternalProperties(internalProperties).setSchemaAttribute(expires.attribute, {
 			"type": {
 				"value": Date,
 				"settings": {
@@ -58,7 +58,7 @@ export function applyExpiresToSchemas (schemas: Schema[], expires: TableExpiresS
 				const ttl: number | undefined = expires.ttl;
 				return typeof ttl === "number" ? new Date(Date.now() + ttl) : undefined;
 			}
-		};
+		});
 	});
 }
 

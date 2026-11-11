@@ -831,6 +831,12 @@ interface SchemaInternalProperties {
 	settings: SchemaSettings;
 	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
 	getMapSettingObject: () => {[key: string]: string};
+	getAttributesForTypePaths: (typePaths: ObjectType) => string[];
+	setSchemaAttribute: (attribute: string, definition: AttributeDefinition) => void;
+	getAttributeTree: () => AttributeTree;
+	getAttributeMap: (type: "toDynamo" | "fromDynamo") => {[key: string]: string};
+	hasCustomTypeFunction: (type: "toDynamo" | "fromDynamo") => boolean;
+	hasAttributeSetting: (setting: string) => boolean;
 	getDefaultMapAttribute: (attribute: string) => string;
 	getIndexAttributes: () => {index: IndexDefinition; attribute: string}[];
 	getTimestampAttributes: () => GetTimestampAttributesType;
@@ -1104,6 +1110,46 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 				}
 				return result;
 			}).filter((v) => Boolean(v))),
+			"getAttributesForTypePaths": (typePaths: ObjectType): string[] => attributesForTypePaths(this, typePaths),
+			// Adds an attribute after construction, as a table does for its `expires` attribute. Writing to `schemaObject` directly would leave the caches below holding the schema as it was.
+			"setSchemaAttribute": (attribute: string, definition: AttributeDefinition): void => {
+				this.getInternalProperties(internalProperties).schemaObject[attribute] = definition;
+				// Other schemas can hold this one as a nested schema, and their caches hold its attributes too, so every cache is now stale.
+				schemaGeneration++;
+			},
+			"getAttributeTree": (): AttributeTree => cachedForSchema(this, "attributeTree", () => {
+				const root: AttributeTree = {};
+				this.attributes().forEach((attribute) => {
+					let node = root;
+					attribute.split(".").forEach((part) => {
+						node[part] = node[part] || {};
+						node = node[part];
+					});
+				});
+				return root;
+			}),
+			// The names to rename when converting an item: aliases to attribute names (`toDynamo`), or attribute names to their default alias (`fromDynamo`).
+			"getAttributeMap": (type: "toDynamo" | "fromDynamo"): {[key: string]: string} => cachedForSchema(this, `attributeMap:${type}`, () => {
+				const schemaInternalProperties = this.getInternalProperties(internalProperties);
+				return type === "toDynamo" ? schemaInternalProperties.getMapSettingObject() : this.attributes().reduce((obj, attribute) => {
+					const mapValues = schemaInternalProperties.getMapSettingValuesForKey(attribute);
+					if (mapValues && mapValues.length > 0) {
+						const defaultMapAttribute = schemaInternalProperties.getDefaultMapAttribute(attribute);
+						if (defaultMapAttribute) {
+							if (defaultMapAttribute !== attribute) {
+								obj[attribute] = defaultMapAttribute;
+							}
+						} else {
+							obj[attribute] = mapValues[0];
+						}
+					}
+					return obj;
+				}, {});
+			}),
+			// Whether any attribute, in any of its types, has a custom type that converts values in this direction (such as a Date stored as a number).
+			"hasCustomTypeFunction": (type: "toDynamo" | "fromDynamo"): boolean => schemaFacts(this).customTypeFunctions.has(type),
+			// Whether any attribute, in any of its types, has this setting (such as `get` or `set`).
+			"hasAttributeSetting": (setting: string): boolean => schemaFacts(this).attributeSettings.has(setting),
 			"getMapSettingObject": (): {[key: string]: string} => {
 				const attributes = this.attributes();
 				return attributes.reduce((obj, attribute) => {
@@ -1576,21 +1622,60 @@ Schema.prototype.getSettingValue = function (this: Schema, setting: string): any
 interface SchemaAttributesMethodSettings {
 	includeMaps: boolean;
 }
-Schema.prototype.attributes = function (this: Schema, object?: ObjectType, settings?: SchemaAttributesMethodSettings): string[] {
-	const typePaths = object && this.getTypePaths(object);
+type AttributeTree = {[part: string]: AttributeTree};
+// Bumped whenever an attribute is added to a schema after construction (`setSchemaAttribute`). Caches made under an older generation are rebuilt.
+let schemaGeneration = 0;
+const schemaCaches = new WeakMap<Schema, {generation: number; values: Map<string, unknown>}>();
+// Values that depend only on the schema, computed once instead of for each item converted.
+function cachedForSchema<T> (schema: Schema, key: string, compute: () => T): T {
+	let cache = schemaCaches.get(schema);
+	if (!cache || cache.generation !== schemaGeneration) {
+		cache = {"generation": schemaGeneration, "values": new Map()};
+		schemaCaches.set(schema, cache);
+	}
+	if (!cache.values.has(key)) {
+		cache.values.set(key, compute());
+	}
+	return cache.values.get(key) as T;
+}
+function schemaFacts (schema: Schema): {customTypeFunctions: Set<string>; attributeSettings: Set<string>} {
+	return cachedForSchema(schema, "facts", () => {
+		const customTypeFunctions = new Set<string>();
+		const attributeSettings = new Set<string>();
+		// Every attribute in every one of its types, so a function in a type other than the first is found too.
+		attributesForTypePaths(schema, undefined, undefined, (key, typeIndexOptionMap) => {
+			try {
+				const typeDetails = schema.getAttributeTypeDetails(key, {typeIndexOptionMap});
+				(Array.isArray(typeDetails) ? typeDetails : [typeDetails]).forEach((detail: DynamoDBTypeResult | DynamoDBSetTypeResult) => {
+					const functions = detail.customType?.functions || {};
+					["toDynamo", "fromDynamo"].filter((type) => functions[type]).forEach((type) => customTypeFunctions.add(type));
+				});
+			} catch (e) {
+				// An attribute whose type can't be found here might still convert, so nothing is skipped.
+				customTypeFunctions.add("toDynamo").add("fromDynamo");
+			}
+			const definition = schema.getAttributeValue(key, {typeIndexOptionMap});
+			(Array.isArray(definition) ? definition : [definition]).filter((item) => item && typeof item === "object").forEach((item) => Object.keys(item).forEach((setting) => attributeSettings.add(setting)));
+		});
+		return {customTypeFunctions, attributeSettings};
+	});
+}
+// Lists the schema's attribute paths. `typePaths` (from `getTypePaths`) holds the type index each value of an attribute with several types matched: such an attribute then adds only the nested attributes of that type, and without an entry it adds those of every type.
+function attributesForTypePaths (schema: Schema, typePaths: ObjectType | undefined, settings?: SchemaAttributesMethodSettings, visit?: (key: string, typeIndexOptionMap: {[key: string]: number}) => void): string[] {
 	// `typeIndexOptionMap` holds the type index walked for each ancestor attribute with several types. The types of nested attributes are looked up within those types: looked up without them, the first type with anything at the same path wins, such as a Set's `[String]` at `data.0` for an Array of maps listed after it.
 	const main = (object: SchemaDefinition, existingKey = "", typeIndexOptionMap: {[key: string]: number} = {}): string[] => {
 		return Object.keys(object).reduce((accumulator: string[], key) => {
 			const keyWithExisting = `${existingKey ? `${existingKey}.` : ""}${key}`;
 			accumulator.push(keyWithExisting);
+			visit?.(keyWithExisting, typeIndexOptionMap);
 
 			if (settings?.includeMaps) {
-				accumulator.push(...this.getInternalProperties(internalProperties).getMapSettingValuesForKey(keyWithExisting));
+				accumulator.push(...schema.getInternalProperties(internalProperties).getMapSettingValuesForKey(keyWithExisting));
 			}
 
 			let attributeType: string[];
 			try {
-				const typeDetails = this.getAttributeTypeDetails(keyWithExisting, {typeIndexOptionMap});
+				const typeDetails = schema.getAttributeTypeDetails(keyWithExisting, {typeIndexOptionMap});
 				attributeType = (Array.isArray(typeDetails) ? typeDetails : [typeDetails]).map((detail: DynamoDBTypeResult | DynamoDBSetTypeResult) => detail.dynamodbType as string);
 			} catch (e) {} // eslint-disable-line no-empty
 
@@ -1618,7 +1703,10 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 		}, []);
 	};
 
-	return main(this.getInternalProperties(internalProperties).schemaObject);
+	return main(schema.getInternalProperties(internalProperties).schemaObject);
+}
+Schema.prototype.attributes = function (this: Schema, object?: ObjectType, settings?: SchemaAttributesMethodSettings): string[] {
+	return attributesForTypePaths(this, object && this.getTypePaths(object), settings);
 };
 
 // The definitions of an attribute's types when it has several, given as a list (`[defA, defB]`) or as its `type` setting (`{"type": [defA, defB]}`).
