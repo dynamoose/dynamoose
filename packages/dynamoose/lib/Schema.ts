@@ -1622,11 +1622,12 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 };
 
 // The definitions of an attribute's types when it has several, given as a list (`[defA, defB]`) or as its `type` setting (`{"type": [defA, defB]}`).
+// A `type` setting next to a `schema` setting (`{"type": [dynamoose.type.NULL, Object], "schema": {...}}`) lists plain types that share that schema, so the attribute's own definition holds the nested attributes, as for a single type.
 function typeDefinitions (definition: any): any[] | undefined {
 	if (Array.isArray(definition)) {
 		return definition;
 	}
-	return definition && typeof definition === "object" && Array.isArray(definition.type) ? definition.type : undefined;
+	return definition && typeof definition === "object" && Array.isArray(definition.type) && !definition.schema ? definition.type : undefined;
 }
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
 	const parts = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".");

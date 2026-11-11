@@ -40,6 +40,36 @@ describe("Item", () => {
 		expect(user.model).toEqual("data");
 	});
 
+	describe("Attribute whose type setting lists plain types with one schema for them", () => {
+		const model = (settings) => {
+			const Model = dynamoose.model("MultiTypeUser", new dynamoose.Schema({"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": {"type": Date, "required": true}, "count": Number}}}, settings));
+			new dynamoose.Table("MultiTypeUser", [Model], {"create": false, "waitForActive": false});
+			return Model;
+		};
+		const input = () => ({"id": 1, "data": {"createdAt": new Date(1000), "count": 2}});
+		const expected = {"id": {"N": "1"}, "data": {"M": {"createdAt": {"N": "1000"}, "count": {"N": "2"}}}};
+
+		it("Should save the nested attributes", async () => {
+			const Model = model({});
+			expect((await new Model(input()).save({"return": "request"})).Item).toEqual(expected);
+		});
+
+		it("Should save the nested attributes when the schema's saveUnknown covers them", async () => {
+			const Model = model({"saveUnknown": ["data.**"]});
+			expect((await new Model(input()).save({"return": "request"})).Item).toEqual(expected);
+		});
+
+		it("Should save null", async () => {
+			const Model = model({});
+			expect((await new Model({"id": 1, "data": null}).save({"return": "request"})).Item).toEqual({"id": {"N": "1"}, "data": {"NULL": true}});
+		});
+
+		it("Should throw for a missing required nested attribute", () => {
+			const Model = model({});
+			return expect(new Model({"id": 1, "data": {"count": 2}}).save({"return": "request"})).rejects.toEqual(new CustomError.ValidationError("data.createdAt is a required property but has no value when trying to save item"));
+		});
+	});
+
 	describe("DynamoDB Conversation Methods", () => {
 		let User;
 		beforeEach(() => {
@@ -3196,6 +3226,27 @@ describe("Item", () => {
 				"input": [{"id": 1, "data": {"x": 1}}, {"type": "toDynamo"}],
 				"schema": {"id": Number, "data": {"type": [String, Number]}},
 				"error": new CustomError.TypeMismatch("Expected data to be of type string, number, instead found type object.")
+			},
+			{
+				// A type setting of plain types with a schema: the schema is the nested attributes of each type that has any.
+				"input": [{"id": 1, "data": {"createdAt": new Date(1000), "count": 2}}, {"type": "toDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}},
+				"output": {"id": 1, "data": {"createdAt": 1000, "count": 2}}
+			},
+			{
+				"input": [{"id": 1, "data": {"createdAt": new Date(1000), "count": 2}}, {"type": "toDynamo", "customTypesDynamo": true, "saveUnknown": true}],
+				"schema": () => new dynamoose.Schema({"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}}, {"saveUnknown": ["data.**"]}),
+				"output": {"id": 1, "data": {"createdAt": 1000, "count": 2}}
+			},
+			{
+				"input": [{"id": 1, "data": {"createdAt": 1000, "count": 2}}, {"type": "fromDynamo", "customTypesDynamo": true}],
+				"schema": {"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}},
+				"output": {"id": 1, "data": {"createdAt": new Date(1000), "count": 2}}
+			},
+			{
+				"input": [{"id": 1, "data": {"createdAt": "x"}}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}},
+				"error": new CustomError.TypeMismatch("Expected data.createdAt to be of type date, instead found type string.")
 			},
 			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],

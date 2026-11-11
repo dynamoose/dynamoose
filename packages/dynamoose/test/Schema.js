@@ -1046,6 +1046,11 @@ describe("Schema", () => {
 				"name": "Should list the nested attributes of each type when the types are given as the type setting",
 				"input": {"id": Number, "data": {"type": [{"type": Object, "schema": {"a": String}}, {"type": Object, "schema": {"b": String}}]}},
 				"output": ["id", "data", "data.a", "data.b"]
+			},
+			{
+				"name": "Should list the nested attributes of a schema shared by the plain types of the type setting",
+				"input": {"id": Number, "data": {"type": [dynamoose.type.NULL, Object], "schema": {"createdAt": Date, "count": Number}}},
+				"output": ["id", "data", "data.createdAt", "data.count"]
 			}
 		];
 
