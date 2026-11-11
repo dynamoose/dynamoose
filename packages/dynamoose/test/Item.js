@@ -337,6 +337,18 @@ describe("Item", () => {
 					}]);
 				});
 
+				it("Should save the maps in a list for an attribute whose first type is a Set", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "data": [{"name": "Bob"}]});
+					await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "data": {"L": [{"M": {"name": {"S": "Bob"}}}]}},
+						"TableName": "User"
+					}]);
+				});
+
 				it("Should save with correct object with buffer set using saveUnknown", async () => {
 					putItemFunction = () => Promise.resolve();
 					User = dynamoose.model("User", new Schema({"id": Number}, {"saveUnknown": true}));
@@ -3113,6 +3125,22 @@ describe("Item", () => {
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],
 				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Set, "schema": [String]}]},
 				"output": {"id": 1, "data": ["hello", "world"]}
+			},
+			{
+				// The nested attributes come from the type the value has, not from the first type with something at the same path (the Set's `[String]` at `data.0`).
+				"input": [{"id": 1, "data": [{"name": "Bob"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
+				"input": [{"id": 1, "data": [{"name": "Bob"}]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Set, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
+			},
+			{
+				"input": [{"id": 1, "data": [{"name": "Bob"}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": [{"type": Array, "schema": [String]}, {"type": Array, "schema": [{"type": Object, "schema": {"name": String}}]}]},
+				"output": {"id": 1, "data": [{"name": "Bob"}]}
 			},
 			{
 				"input": [{"id": 1, "data": ["hello", "world"]}, {"type": "fromDynamo"}],

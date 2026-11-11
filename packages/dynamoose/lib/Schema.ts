@@ -1576,7 +1576,8 @@ interface SchemaAttributesMethodSettings {
 }
 Schema.prototype.attributes = function (this: Schema, object?: ObjectType, settings?: SchemaAttributesMethodSettings): string[] {
 	const typePaths = object && this.getTypePaths(object);
-	const main = (object: SchemaDefinition, existingKey = ""): string[] => {
+	// `typeIndexOptionMap` holds the type index walked for each ancestor attribute with several types. The types of nested attributes are looked up within those types: looked up without them, the first type with anything at the same path wins, such as a Set's `[String]` at `data.0` for an Array of maps listed after it.
+	const main = (object: SchemaDefinition, existingKey = "", typeIndexOptionMap: {[key: string]: number} = {}): string[] => {
 		return Object.keys(object).reduce((accumulator: string[], key) => {
 			const keyWithExisting = `${existingKey ? `${existingKey}.` : ""}${key}`;
 			accumulator.push(keyWithExisting);
@@ -1587,14 +1588,15 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 
 			let attributeType: string[];
 			try {
-				const tmpAttributeType = this.getAttributeType(keyWithExisting);
-				attributeType = Array.isArray(tmpAttributeType) ? tmpAttributeType : [tmpAttributeType];
+				const typeDetails = this.getAttributeTypeDetails(keyWithExisting, {typeIndexOptionMap});
+				attributeType = (Array.isArray(typeDetails) ? typeDetails : [typeDetails]).map((detail: DynamoDBTypeResult | DynamoDBSetTypeResult) => detail.dynamodbType as string);
 			} catch (e) {} // eslint-disable-line no-empty
 
 			// TODO: using too many `as` statements in the few lines below. Clean that up.
 			function recursive (type, arrayTypeIndex): void {
 				if ((type === "M" || type === "L") && ((object[key][arrayTypeIndex] || object[key]) as AttributeDefinition).schema) {
-					accumulator.push(...main(((object[key][arrayTypeIndex] || object[key]) as AttributeDefinition).schema as SchemaDefinition, keyWithExisting));
+					const nestedTypeIndexOptionMap = Array.isArray(object[key]) ? {...typeIndexOptionMap, [keyWithExisting]: arrayTypeIndex} : typeIndexOptionMap;
+					accumulator.push(...main(((object[key][arrayTypeIndex] || object[key]) as AttributeDefinition).schema as SchemaDefinition, keyWithExisting, nestedTypeIndexOptionMap));
 				}
 			}
 			if (attributeType) {
@@ -1616,22 +1618,37 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 };
 
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
-	const previousKeyParts = [];
-	let result = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part) => {
+	const parts = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".");
+	const resolve = (result: any, index: number): any => {
+		if (index === parts.length) {
+			return result;
+		}
+		const part = parts[index];
 		if (Array.isArray(result)) {
-			const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
+			const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[parts.slice(0, index).join(".")];
 			if (predefinedIndex !== undefined) {
 				result = result[predefinedIndex];
 			} else {
-				result = result.find((item) => item.schema && item.schema[part]);
+				// An attribute with several types: the first type whose schema has the rest of the key. Two types can both have the next part (a Set's `[String]` and an Array of maps both have `0`), and only one of them the parts after it. When none has the whole key, the first with the next part is used, as before.
+				const types = result.filter((item) => item.schema && item.schema[part]);
+				for (const type of types) {
+					let found;
+					try {
+						found = resolve(type, index);
+					} catch (e) {} // eslint-disable-line no-empty
+					if (found !== undefined) {
+						return found;
+					}
+				}
+				result = types[0];
 			}
 		}
-		previousKeyParts.push(part);
-		return utils.object.get(result.schema, part);
-	}, {"schema": this.getInternalProperties(internalProperties).schemaObject} as any);
+		return resolve(utils.object.get(result.schema, part), index + 1);
+	};
+	let result = resolve({"schema": this.getInternalProperties(internalProperties).schemaObject}, 0);
 
 	if (Array.isArray(result)) {
-		const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
+		const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[parts.join(".")];
 		if (predefinedIndex !== undefined) {
 			result = result[predefinedIndex];
 		}
