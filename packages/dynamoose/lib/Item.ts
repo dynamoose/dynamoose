@@ -4,9 +4,12 @@ import utils from "./utils";
 import Error from "./Error";
 import Internal from "./Internal";
 import {Model} from "./Model";
-// Item and Schema import each other. `Schema` is read only inside functions, once both modules have loaded, so it is imported here rather than required on every call.
-import {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult} from "./Schema";
+import type {DynamoDBTypeResult, Schema, DynamoDBSetTypeResult} from "./Schema";
 const {internalProperties} = Internal.General;
+// Schema is required when used, never at load: Schema loads Model, which loads ItemRetriever, which reads `Condition.prototype` at load. Required here at load,
+// a program whose first dynamoose module is Condition (Condition loads Item) would reach ItemRetriever while Condition is still loading, and fail with
+// "Cannot read properties of undefined (reading 'prototype')".
+const attributeTypes = (): typeof Schema.attributeTypes => require("./Schema").Schema.attributeTypes;
 const dynamooseUndefined = Internal.Public.undefined;
 const dynamooseAny = Internal.Public.any;
 
@@ -93,7 +96,7 @@ export class Item extends InternalPropertiesClass<ItemInternalProperties> {
 			const keys = Object.keys(value);
 			const key = keys[0];
 			const nestedResult = typeof value[key] === "object" && !(value[key] instanceof Buffer) && !(value[key] instanceof Uint8Array) ? Array.isArray(value[key]) ? value[key].every((value) => Item.isDynamoObject(value, true)) : Item.isDynamoObject(value[key]) : true;
-			const attributeType = Schema.attributeTypes.findDynamoDBType(key);
+			const attributeType = attributeTypes().findDynamoDBType(key);
 			return typeof value === "object" && keys.length === 1 && attributeType && (nestedResult || Object.keys(value[key]).length === 0 || attributeType.isSet);
 		}
 
@@ -561,7 +564,7 @@ function hasAttributeValues (item: AttributeMap): boolean {
 	const values = Object.values(item);
 	return values.length > 0 && values.every((value) => {
 		const keys = value && typeof value === "object" ? Object.keys(value) : [];
-		return keys.length === 1 && Boolean(Schema.attributeTypes.findDynamoDBType(keys[0]));
+		return keys.length === 1 && Boolean(attributeTypes().findDynamoDBType(keys[0]));
 	});
 }
 // Builds a model's item from one a read returned, for `Model.get`, `Model.batchGet`, `Model.update`, `Scan`, `Query` and transaction gets. An item in DynamoDB's format skips the recursive format check and the copy (see `returnedByDynamo`); any other goes through them as before.
@@ -751,7 +754,7 @@ Item.objectFromSchema = async function (object: any, model: Model<Item>, setting
 		try {
 			typeDetails = utils.dynamoose.getValueTypeCheckResult(schema, value, key, settings, {typeIndexOptionMap}).matchedTypeDetails;
 		} catch (e) {
-			typeDetails = Schema.attributeTypes.findTypeForValue(value, settings.type, settings);
+			typeDetails = attributeTypes().findTypeForValue(value, settings.type, settings);
 		}
 
 		if (typeDetails && typeDetails[settings.type]) {

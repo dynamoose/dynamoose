@@ -11,6 +11,17 @@ describe("Load order", () => {
 		});
 	});
 
+	it("Should load ../dist/Condition first and then build an Item from a DynamoDB response", () => {
+		jest.isolateModules(() => {
+			require("../dist/Condition");
+			const dynamoose = require("../dist");
+			const model = dynamoose.model("LoadOrderCat", {"id": Number, "name": String}, {"create": false, "waitForActive": false});
+			const {itemFromDynamoResponse} = require("../dist/Item");
+			const item = itemFromDynamoResponse(model, {"id": {"N": "1"}, "name": {"S": "Bob"}});
+			expect(item.toJSON()).toEqual({"id": 1, "name": "Bob"});
+		});
+	});
+
 	it("Should load ../dist/Table first and then create a model's table", () => {
 		jest.isolateModules(() => {
 			const {Table} = require("../dist/Table");
