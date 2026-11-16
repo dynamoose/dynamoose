@@ -2419,5 +2419,18 @@ describe("Table", () => {
 			const Dog = dynamoose.model("Dog", {"id": String, "name": String}, {"tableName": tableName});
 			expect(table.getInternalProperties(internalProperties).models).toEqual([Cat, Dog]);
 		});
+
+		it("Should inject the expires attribute into the schema of a model that attaches to an existing table", () => {
+			const tableName = "ttlPets";
+			const catSchema = new dynamoose.Schema({"id": String, "name": String});
+			const dogSchema = new dynamoose.Schema({"id": String, "name": String});
+			const Cat = dynamoose.model("TTLCat", catSchema, {"tableName": tableName});
+			new dynamoose.Table(tableName, [Cat], {"expires": {"ttl": 1000, "attribute": "expires"}});
+
+			dynamoose.model("TTLDog", dogSchema, {"tableName": tableName});
+
+			expect(catSchema.attributes()).toContain("expires");
+			expect(dogSchema.attributes()).toContain("expires");
+		});
 	});
 });
