@@ -1616,8 +1616,10 @@ Schema.prototype.attributes = function (this: Schema, object?: ObjectType, setti
 };
 
 Schema.prototype.getAttributeValue = function (this: Schema, key: string, settings?: {standardKey?: boolean; typeIndexOptionMap?: {}}): AttributeDefinition {
+	// The schema is walked with list indexes standardized to `0`, but types are looked up in `typeIndexOptionMap` by the key as passed in, so each list element uses the type matched for that element.
+	const keyParts = key.split(".");
 	const previousKeyParts = [];
-	let result = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part) => {
+	let result = (settings?.standardKey ? key : key.replace(/\.\d+/gu, ".0")).split(".").reduce((result, part, index) => {
 		if (Array.isArray(result)) {
 			const predefinedIndex = settings && settings.typeIndexOptionMap && settings.typeIndexOptionMap[previousKeyParts.join(".")];
 			if (predefinedIndex !== undefined) {
@@ -1626,7 +1628,7 @@ Schema.prototype.getAttributeValue = function (this: Schema, key: string, settin
 				result = result.find((item) => item.schema && item.schema[part]);
 			}
 		}
-		previousKeyParts.push(part);
+		previousKeyParts.push(keyParts[index]);
 		return utils.object.get(result.schema, part);
 	}, {"schema": this.getInternalProperties(internalProperties).schemaObject} as any);
 
@@ -1653,8 +1655,7 @@ function retrieveTypeInfo (type: string, isSet: boolean, key: string, typeSettin
 }
 // TODO: using too many `as` statements in the function below. We should clean this up.
 Schema.prototype.getAttributeTypeDetails = function (this: Schema, key: string, settings: {standardKey?: boolean; typeIndexOptionMap?: {}} = {}): DynamoDBTypeResult | DynamoDBSetTypeResult | DynamoDBTypeResult[] | DynamoDBSetTypeResult[] {
-	const standardKey = settings.standardKey ? key : key.replace(/\.\d+/gu, ".0");
-	const val = this.getAttributeValue(standardKey, {...settings, "standardKey": true});
+	const val = this.getAttributeValue(key, settings);
 	if (typeof val === "undefined") {
 		throw new CustomError.UnknownAttribute(`Invalid Attribute: ${key}`);
 	}

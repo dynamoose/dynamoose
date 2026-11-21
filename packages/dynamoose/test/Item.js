@@ -3266,6 +3266,21 @@ describe("Item", () => {
 				"error": new CustomError.ValidationError("Expected data to be of type string, instead found type null.")
 			},
 			{
+				"input": [{"id": 1, "data": [{"foo": 1}, {"foo": null}]}, {"type": "fromDynamo"}],
+				"schema": {"id": Number, "data": {"type": Array, "schema": [{"type": Object, "schema": {"foo": [Number, dynamoose.type.NULL]}}]}},
+				"output": {"id": 1, "data": [{"foo": 1}, {"foo": null}]}
+			},
+			{
+				"input": [{"id": 1, "data": [{"foo": null}, {"foo": 1}]}, {"type": "toDynamo"}],
+				"schema": {"id": Number, "data": {"type": Array, "schema": [{"type": Object, "schema": {"foo": [Number, dynamoose.type.NULL]}}]}},
+				"output": {"id": 1, "data": [{"foo": null}, {"foo": 1}]}
+			},
+			{
+				"input": [{"id": 1, "data": [{"foo": 1}, {"foo": "bar"}]}, {"type": "toDynamo", "validate": true}],
+				"schema": {"id": Number, "data": {"type": Array, "schema": [{"type": Object, "schema": {"foo": [{"type": Number, "validate": (value) => value > 0}, {"type": String, "validate": (value) => value === "bar"}]}}]}},
+				"output": {"id": 1, "data": [{"foo": 1}, {"foo": "bar"}]}
+			},
+			{
 				"input": [{"id": 1, "model": ["hello", "world"]}, {"defaults": true, "validate": true, "required": true, "enum": true, "forceDefault": true, "combine": true, "saveUnknown": true, "customTypesDynamo": true, "updateTimestamps": true, "modifiers": ["set"]}],
 				"schema": {"id": Number, "model": {"type": Array, "schema": [String]}},
 				"output": {"id": 1, "model": ["hello", "world"]}
