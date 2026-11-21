@@ -12,6 +12,7 @@
 
 ### Bug Fixes
 
+- Fixed an attribute with several types inside a list of objects being type checked, validated and modified with the type matched for the first element of the list, so a list such as `[{"foo": 1}, {"foo": null}]` for `foo: [Number, dynamoose.type.NULL]` threw `Expected data.1.foo to be of type number, instead found type null`. Each element now uses the type it matches
 - Fixed `Model.get`, `Model.delete`, `Model.batchGet` and `Model.update` putting the attributes a schema's `set` setting adds into the request's `Key` when the key was passed as a value (`Model.get(1)`), so DynamoDB rejected the request with `The provided key element does not match the schema`. Only the hash key is sent now, as for a key passed as an object
 - Fixed `deep_copy` dropping sibling properties that share the same object reference (e.g. a single `Date` used for both `createdAt` and `updatedAt`, or a single address used for both `billingAddress` and `shippingAddress`). Circular reference detection now tracks only the current ancestor path rather than every object ever visited, which also removes an infinite-recursion risk on self-referencing arrays and a shared-reference leak on class instances containing circular properties
 - Fixed `dynamoose.transaction` get results skipping schema `get` modifiers. Items returned from a `transactGetItems` transaction now run attribute `get` functions the same as `Model.get`, `Model.batchGet`, `Model.query`, and `Model.scan`

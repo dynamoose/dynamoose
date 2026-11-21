@@ -1146,6 +1146,18 @@ describe("Schema", () => {
 			const result = new dynamoose.Schema({"id": {"type": [String, Buffer]}}).getAttributeTypeDetails("id");
 			expect(result.map((item) => ({"name": item.name, "dynamodbType": item.dynamodbType}))).toEqual([{"name": "String", "dynamodbType": "S"}, {"name": "Buffer", "dynamodbType": "B"}]);
 		});
+
+		it("Should use the type index of the list element in the key for multiple types", () => {
+			const schema = new dynamoose.Schema({"id": String, "data": {"type": Array, "schema": [{"type": Object, "schema": {"foo": [String, Number]}}]}});
+			const typeIndexOptionMap = {"data.0.foo": 0, "data.1.foo": 1};
+			expect(schema.getAttributeTypeDetails("data.0.foo", {typeIndexOptionMap}).name).toEqual("String");
+			expect(schema.getAttributeTypeDetails("data.1.foo", {typeIndexOptionMap}).name).toEqual("Number");
+		});
+
+		it("Should use the type index of the key as passed in with standardKey for multiple types", () => {
+			const schema = new dynamoose.Schema({"id": String, "data": {"type": Array, "schema": [{"type": Object, "schema": {"foo": [String, Number]}}]}});
+			expect(schema.getAttributeTypeDetails("data.0.foo", {"standardKey": true, "typeIndexOptionMap": {"data.0.foo": 1}}).name).toEqual("Number");
+		});
 	});
 
 	describe("getAttributeSettingValue", () => {
