@@ -102,7 +102,14 @@ jobs:
           node-version: lts/*
       - run: npm install
       - run: npm run site:install
-      - run: npm run site:crowdin:sync
+      - name: Sync Crowdin translations
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == macOS && "$RUNNER_ARCH" == ARM64 ]]; then
+            # The locked Crowdin launcher otherwise downloads an Intel runtime on macOS.
+            export JDEPLOY_JAVA_HOME_OVERRIDE="${JAVA_HOME_17_arm64:?The runner must provide ARM Java 17}"
+          fi
+          npm run site:crowdin:sync
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
       - name: Prepare Pages routes
