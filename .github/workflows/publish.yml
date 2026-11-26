@@ -3,21 +3,44 @@ name: Publish
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   getinfo:
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     outputs:
       npmtag: ${{ steps.data.outputs.npmtag }}
       websites3bucket: ${{ steps.data.outputs.websites3bucket }}
+      release_ref: ${{ steps.release.outputs.ref }}
+      release_sha: ${{ steps.checkout.outputs.commit }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Resolve the release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ref="$GITHUB_REF"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            tag="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')"
+            test -n "$tag"
+            ref="refs/tags/$tag"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        id: checkout
+        with:
+          ref: ${{ steps.release.outputs.ref }}
+          persist-credentials: false
       - run: npm i
         working-directory: ./publish
       - run: node publish/information/index.js
         id: data
 
   publish-npm:
+    if: github.event_name == 'release'
     needs:
       - getinfo
     runs-on: ubuntu-latest
@@ -49,11 +72,32 @@ jobs:
 
   publishsite:
     needs: getinfo
-    runs-on: ubuntu-latest
-    if: needs.getinfo.outputs.websites3bucket != ''
+    if: >
+      needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com' ||
+      (github.event_name == 'release' && needs.getinfo.outputs.websites3bucket != '')
+    runs-on: ${{ needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com' && 'macos-15' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    concurrency:
+      group: ${{ needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com' && 'dynamoose-apex-pages' || format('publishsite-{0}-{1}', github.run_id, github.run_attempt) }}
+      # An obsolete rerun must not evict a pending newer release.
+      queue: max
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.getinfo.outputs.release_sha }}
+          persist-credentials: false
+      # A manual deploy can build a release that predates the Pages tooling.
+      - name: Check out Pages build tooling
+        if: needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: pages-tools
+          sparse-checkout: publish/pages.js
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-node@v4
         with:
           node-version: lts/*
       - run: npm install
@@ -61,8 +105,92 @@ jobs:
       - run: npm run site:crowdin:sync
         env:
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+      - name: Prepare Pages routes
+        if: needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com'
+        run: node pages-tools/publish/pages.js prepare
       - run: npm run site:build
+      - name: Check the Pages bundle
+        if: needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com'
+        run: node pages-tools/publish/pages.js bundle
+      - name: Install rrainn CLI
+        if: needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com'
+        shell: bash
+        run: |
+          install_dir="$(mktemp -d)"
+          archive="$install_dir/rrainn.tar.gz"
+          curl --fail --silent --show-error --location --retry 3 \
+            --output "$archive" \
+            https://github.com/rrainn/homebrew-tap/releases/download/rrainn-v1.0.0/rrainn-1.0.0-macos-arm64.tar.gz
+          echo "1ad1cc0fc9c1f73fafdb8e1f0f41450e81b56fa38f171c3f27c2a95760ceaa9a  $archive" | shasum -a 256 -c
+          tar -xzf "$archive" -C "$install_dir" rrainn
+          test "$("$install_dir/rrainn" --version)" = 1.0.0
+          echo "$install_dir" >> "$GITHUB_PATH"
+      - name: Check that the release is current
+        id: current
+        if: needs.getinfo.outputs.websites3bucket == 'dynamoosejs.com'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REF: ${{ needs.getinfo.outputs.release_ref }}
+        run: |
+          latest="$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')"
+          if [[ "$RELEASE_REF" == "refs/tags/$latest" ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipping $RELEASE_REF because $latest is the current release."
+          fi
+      - name: Publish to rrainn Cloud Pages
+        if: steps.current.outputs.publish == 'true'
+        id: pages
+        shell: bash
+        env:
+          RRAINN_PAGES_SITE_ID: ${{ secrets.RRAINN_PAGES_SITE_ID }}
+          RRAINN_API_KEY: ${{ secrets.RRAINN_API_KEY }}
+        run: |
+          : "${RRAINN_PAGES_SITE_ID:?Configure the Pages site ID in Actions secrets}"
+          : "${RRAINN_API_KEY:?Configure the rrainn Account API key in Actions secrets}"
+          if [[ ! "$RRAINN_PAGES_SITE_ID" =~ ^[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}$ ]]; then
+            echo "::error::RRAINN_PAGES_SITE_ID must be the Cloud Pages site UUID."
+            exit 1
+          fi
+          receipt="$(rrainn pages publish "$RRAINN_PAGES_SITE_ID" docs/build --prune --json)"
+          version="$(jq -er '.version | numbers' <<< "$receipt")"
+          jq -e '.state != "superseded"' <<< "$receipt" > /dev/null
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Cloud Pages accepted version $version."
+      - name: Wait for Pages delivery
+        if: steps.current.outputs.publish == 'true'
+        shell: bash
+        timeout-minutes: 10
+        env:
+          RRAINN_PAGES_SITE_ID: ${{ secrets.RRAINN_PAGES_SITE_ID }}
+          RRAINN_API_KEY: ${{ secrets.RRAINN_API_KEY }}
+          PAGES_VERSION: ${{ steps.pages.outputs.version }}
+        run: |
+          # Acceptance saves the revision. Ready confirms delivery to the site's hostnames.
+          deadline=$((SECONDS + 570))
+          state=pending
+          while (( SECONDS < deadline )); do
+            if response="$(curl --fail --silent --show-error --max-time 15 \
+                --header "Authorization: Bearer $RRAINN_API_KEY" \
+                "https://cloud.rrainn.com/api/pages/$RRAINN_PAGES_SITE_ID")"; then
+              version="$(jq -er '.data.version | numbers' <<< "$response")"
+              state="$(jq -er '.data.state' <<< "$response")"
+              if (( version > PAGES_VERSION )); then
+                echo "::error::Pages version $PAGES_VERSION was superseded by $version."
+                exit 1
+              fi
+              if (( version == PAGES_VERSION )) && [[ "$state" == ready ]]; then
+                echo "Cloud Pages version $PAGES_VERSION is ready."
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "::error::Cloud Pages version $PAGES_VERSION is not ready after polling (last state: $state). Check Cloud before retrying."
+          exit 1
       - uses: jakejarvis/s3-sync-action@v0.5.1
+        if: needs.getinfo.outputs.websites3bucket != 'dynamoosejs.com'
         with:
           args: --follow-symlinks --delete --cache-control 's-maxage=604800, max-age=0'
         env:
@@ -72,6 +200,7 @@ jobs:
           AWS_REGION: 'us-west-2'
           SOURCE_DIR: 'docs/build'
       - name: Purge Cloudflare Cache
+        if: needs.getinfo.outputs.websites3bucket != 'dynamoosejs.com'
         run: |
           curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE/purge_cache" \
             -H "Authorization: Bearer $TOKEN" \

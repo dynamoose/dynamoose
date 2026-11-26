@@ -4,6 +4,8 @@
 
 ### Maintenance
 
+- Publish stable documentation releases to rrainn Cloud Pages
+
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
 
 ### Features

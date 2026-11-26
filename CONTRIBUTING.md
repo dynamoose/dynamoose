@@ -117,3 +117,25 @@ The following section is unlikely to be useful to general contributors to Dynamo
 In order to release a version of Dynamoose you can kick off this process by running `node publish`. This will kick off the release process. Following the steps it guides you through should lead to a successful release. Please [contact me](https://charlie.fish/contact) or message me on the Dynamoose Slack (Charlie Fish) if you have questions or run into any issues.
 
 It is important to note that you must have write permissions to the `main` branch in order for this process to be successful.
+
+#### Publish the production documentation
+
+The Publish workflow sends the latest stable release's docs to rrainn Cloud
+Pages. To seed Pages or retry a deployment, run **Publish** manually on
+`main`. It rebuilds the latest stable release tag and skips npm publishing.
+Maintenance and prerelease docs use the existing S3 targets.
+
+Configure `RRAINN_PAGES_SITE_ID` and `RRAINN_API_KEY` as repository Actions secrets.
+Use the subscribed Pages site's UUID and a rrainn Account API key, respectively.
+The workflow logs the accepted Pages version and waits for Cloud to report
+delivery. Check **Deployments** in Cloud if it times out after acceptance.
+
+Run `node --test publish/pages.test.js` to verify the Pages build tooling.
+It preserves the document IDs for the two docs with spaces in their original
+URLs and emits redirects for their English and Spanish routes. To validate
+the real bundle, run `node publish/pages.js prepare` in a disposable checkout,
+build with the usual `npm run site:build` command, then run
+`node publish/pages.js bundle`. The preparation step edits the checkout's
+docs source for that build. Follow the DNS runbook in
+[dynamoose/infrastructure](https://github.com/dynamoose/infrastructure) to
+prepare the custom domain and switch public traffic.
