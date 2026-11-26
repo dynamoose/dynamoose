@@ -14,13 +14,13 @@ function setSlug (file, slug) {
 		writeFileSync(file, "---\n" + route + "\n---\n\n" + source);
 		return;
 	}
-	const end = source.indexOf("\n---\n", 4);
+	const end = source.indexOf("\n---\n", 3);
 	if (end === -1) {
 		throw new Error("Invalid front matter in " + file);
 	}
 	const frontMatter = source.slice(4, end);
 	const slugLine = /^slug:[^\n]*$/mu;
-	const updated = slugLine.test(frontMatter) ? frontMatter.replace(slugLine, route) : route + "\n" + frontMatter;
+	const updated = slugLine.test(frontMatter) ? frontMatter.replace(slugLine, route) : [route, frontMatter].filter(Boolean).join("\n");
 	writeFileSync(file, "---\n" + updated + source.slice(end));
 }
 

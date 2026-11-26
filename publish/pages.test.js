@@ -26,12 +26,15 @@ test("Pages builds preserve doc IDs and redirect the URLs containing spaces", (c
 	}
 	const translatedPage = join(translated, "Version Requirements.md");
 	writeFileSync(translatedPage, "---\ntitle: Requisitos de versión\nslug: /other/legacy\n---\n\nContenido\n");
+	const emptyFrontMatter = join(translated, "Maintained Versions.md");
+	writeFileSync(emptyFrontMatter, "---\n---\n\nVersiones\n");
 	const prepare = run("prepare");
 	assert.equal(prepare.status, 0, prepare.stderr);
 	for (const [title, slug] of pages) {
 		assert.match(readFileSync(join(source, title + ".md"), "utf8"), new RegExp("slug: /other/" + slug));
 	}
 	assert.equal(readFileSync(translatedPage, "utf8"), "---\ntitle: Requisitos de versión\nslug: /other/version-requirements\n---\n\nContenido\n");
+	assert.equal(readFileSync(emptyFrontMatter, "utf8"), "---\nslug: /other/maintained-versions\n---\n\nVersiones\n");
 	assert.notEqual(run("bundle").status, 0, "a missing localized page must fail the build");
 	for (const [title, slug] of pages) {
 		for (const locale of ["", "/es"]) {
