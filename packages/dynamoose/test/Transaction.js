@@ -277,6 +277,21 @@ describe("Transaction", () => {
 				});
 			});
 
+			it("Should return the stored value if item has type mismatch with schema and readStrict is false", async () => {
+				dynamoose.aws.ddb.set({
+					"transactGetItems": () => Promise.resolve({"Responses": [{"Item": {"id": {"N": "1"}, "name": {"S": "Bob"}, "age": {"S": "Hello World"}}}]})
+				});
+
+				const User = dynamoose.model("User", {"id": Number, "name": String, "age": Number});
+				new dynamoose.Table("Table", [User], {"readStrict": false});
+				const items = await callType.func(dynamoose.transaction)([{"Get": {"Key": {"id": {"N": "1"}}, "TableName": "Table"}}]);
+				expect(items[0].toJSON()).toEqual({
+					"id": 1,
+					"name": "Bob",
+					"age": "Hello World"
+				});
+			});
+
 			it("Should send correct parameters to AWS for put items", async () => {
 				let transactParams = {};
 				dynamoose.aws.ddb.set({
