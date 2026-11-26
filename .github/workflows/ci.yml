@@ -21,6 +21,7 @@ jobs:
             packages/dynamoose-utils/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: node --test publish/pages.test.js
   test-types:
     runs-on: ubuntu-latest
     steps:
