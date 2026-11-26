@@ -4,6 +4,8 @@
 
 ### Maintenance
 
+- Use ARM Java 17 for Crowdin when publishing release documentation to rrainn Cloud Pages
+
 - Publish stable documentation releases to rrainn Cloud Pages
 
 - Store CLA signatures on a dedicated branch so protected main does not block contributors from signing
