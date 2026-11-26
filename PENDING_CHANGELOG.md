@@ -10,6 +10,7 @@
 
 ### Features
 
+- Added support for nested paths in `Model.update` keys (`address.city`, `tags[0]`, `friends[0].name`) for `$SET`, `$ADD`, `$REMOVE` and `$DELETE`. Nested values go through the schema of their path, including type checks, `enum`, `validate`, `set`, custom types, `default` and `required`
 - Added support for enabling and configuring DynamoDB Streams through Table options
 
 ### Bug Fixes
@@ -17,6 +18,14 @@
 - Fixed `Model.get`, `Model.delete`, `Model.batchGet` and `Model.update` putting the attributes a schema's `set` setting adds into the request's `Key` when the key was passed as a value (`Model.get(1)`), so DynamoDB rejected the request with `The provided key element does not match the schema`. Only the hash key is sent now, as for a key passed as an object
 - Fixed `deep_copy` dropping sibling properties that share the same object reference (e.g. a single `Date` used for both `createdAt` and `updatedAt`, or a single address used for both `billingAddress` and `shippingAddress`). Circular reference detection now tracks only the current ancestor path rather than every object ever visited, which also removes an infinite-recursion risk on self-referencing arrays and a shared-reference leak on class instances containing circular properties
 - Fixed `dynamoose.transaction` get results skipping schema `get` modifiers. Items returned from a `transactGetItems` transaction now run attribute `get` functions the same as `Model.get`, `Model.batchGet`, `Model.query`, and `Model.scan`
+- Fixed `Model.update` typing a value by another attribute's schema when a `$REMOVE` came before it. For example `{"$REMOVE": ["tags"], "$SET": {"list": ["a", "b"]}}` stored `list` as a string set, because values were paired with attribute names by position
+- Fixed `Model.update` writing a nested `forceDefault` attribute as a top-level attribute named after its dotted path (for example `business.tier`) on every update
+- Fixed `Model.update` throwing "You must update all or none of the combine attributes" when the update writes none of them
+- Fixed `Model.update` being impossible to run against a schema whose hash or range key is a `Combine` attribute. Updating the sources of such a key now throws a clear error instead of a DynamoDB rejection
+
+### Other
+
+- Added a `Model.update` test suite that runs against DynamoDB Local (`npm run test:integration` in `packages/dynamoose`) and checks what DynamoDB stores, not only the request
 - Fixed `Model.update` and `Model.transaction.update` not writing a `Combine` attribute when the model also has a `forceDefault` attribute. Both were given the same placeholder (e.g. `#a2`), so the request set the default value twice and left the combine attribute out
 - Fixed `Model.update` and `Model.transaction.update` replacing an attribute that is a nested Schema with `timestamps` with just its `updatedAt` (`SET address = {"updatedAt": ...}`) when the parent schema also has `timestamps`, which deleted every other property of that attribute. Updates now set only the top-level timestamps. This also fixes such an update sending the attribute twice when it sets or removes it, and throwing `Cannot read properties of undefined (reading 'schema')` for a list of nested Schemas with `timestamps`
 - Fixed `Model.update` and `Model.transaction.update` counting a combined attribute changed with `$ADD` or `$DELETE` as set when the update also set an attribute whose placeholder starts with its placeholder (`#a1` and `#a10`). The combine value was built from the amount added instead of throwing `You must update all or none of the combine attributes`
