@@ -203,6 +203,135 @@ describe("Item", () => {
 					expect(result.toJSON()).toEqual({"id": 1, "name": "Charlie", "defaultValue": "Hello World"});
 				});
 
+				it("Should return Date attributes as Date objects after saving", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "birthday": Date});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "birthday": new Date(10000)});
+
+					const result = await callType.func(user).bind(user)();
+					expect(putParams).toEqual([{
+						"Item": {"id": {"N": "1"}, "birthday": {"N": "10000"}},
+						"TableName": "User"
+					}]);
+					expect(result.birthday).toBeInstanceOf(Date);
+					expect(result.birthday.getTime()).toEqual(10000);
+				});
+
+				it("Should set a mapped timestamp on the saved item under its mapped name", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"timestamps": {"createdAt": {"created_at": {"type": {"value": Date, "settings": {"storage": "seconds"}}, "map": "createdAt"}}, "updatedAt": null}}));
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+
+					const result = await callType.func(user).bind(user)();
+					expect(result.createdAt).toBeInstanceOf(Date);
+					expect(user.createdAt).toEqual(result.createdAt);
+					expect(user.created_at).toBeUndefined();
+				});
+
+				it("Should save an item with a mapped updatedAt timestamp twice", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"timestamps": {"createdAt": null, "updatedAt": {"updated_at": {"type": Date, "map": "updatedAt"}}}}));
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+
+					await callType.func(user).bind(user)();
+					await callType.func(user).bind(user)();
+					expect(putParams.map((params) => Object.keys(params.Item).sort())).toEqual([["id", "updated_at"], ["id", "updated_at"]]);
+				});
+
+				// A stored item does not regenerate createdAt, so a get result on the instance would be written by the next save.
+				it("Should not write a createdAt get modifier result on the next save", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"timestamps": {"createdAt": {"createdAt": {"type": Date, "get": (value) => new Date(value.getTime() + 1000)}}, "updatedAt": null}}));
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+
+					const result = await callType.func(user).bind(user)();
+					await callType.func(user).bind(user)();
+					expect(putParams[1].Item.createdAt).toEqual(putParams[0].Item.createdAt);
+					expect(result.createdAt.getTime()).toEqual(Number(putParams[0].Item.createdAt.N) + 1000);
+				});
+
+				// A stored item does not regenerate createdAt: a set result on the instance would be set again by the next save.
+				it("Should not apply a createdAt set modifier again on the next save", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", new dynamoose.Schema({"id": Number}, {"timestamps": {"createdAt": {"createdAt": {"type": Date, "set": (value) => value + 1000}}, "updatedAt": null}}));
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1});
+
+					await callType.func(user).bind(user)();
+					await callType.func(user).bind(user)();
+					expect(putParams[1].Item.createdAt).toEqual(putParams[0].Item.createdAt);
+				});
+
+				it("Should not read populated items when the table sets populate", async () => {
+					const getItemParams = [];
+					aws.ddb.set({
+						"putItem": (params) => {
+							putParams.push(params);
+							return Promise.resolve();
+						},
+						"getItem": (params) => {
+							getItemParams.push(params);
+							return Promise.reject(new Error("getItem must not be called"));
+						}
+					});
+					const Parent = dynamoose.model("Parent", {"id": Number});
+					User = dynamoose.model("User", {"id": Number, "parent": Parent});
+					new dynamoose.Table("Parent", [Parent]);
+					new dynamoose.Table("User", [User], {"populate": "*"});
+					user = new User({"id": 1, "parent": 2});
+
+					const result = await callType.func(user).bind(user)();
+					expect(getItemParams).toEqual([]);
+					expect(putParams.length).toEqual(1);
+					expect(result.parent).toEqual(2);
+				});
+
+				it("Should return item with get modifiers applied after saving", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": (value) => `${value}-set`, "get": (value) => value.replace(/-set$/, "")}});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "name": "Charlie"});
+
+					const result = await callType.func(user).bind(user)();
+					expect(putParams[0].Item.name).toEqual({"S": "Charlie-set"});
+					expect(result.toJSON()).toEqual({"id": 1, "name": "Charlie"});
+				});
+
+				it("Should not apply set modifier twice when saving the same item twice", async () => {
+					putItemFunction = () => Promise.resolve();
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "set": (value) => `${value}-set`, "get": (value) => `${value}-get`}});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "name": "Charlie"});
+
+					await callType.func(user).bind(user)();
+					await callType.func(user).bind(user)();
+					expect(putParams.map((params) => params.Item.name)).toEqual([{"S": "Charlie-set"}, {"S": "Charlie-set"}]);
+					expect(user.name).toEqual("Charlie");
+				});
+
+				it("Should not modify the item if return request is set", async () => {
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "get": (value) => value.toUpperCase()}});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "name": "Charlie"});
+
+					await callType.func(user).bind(user)({"return": "request"});
+					expect(user.toJSON()).toEqual({"id": 1, "name": "Charlie"});
+				});
+
+				it("Should not modify the item if saving fails", async () => {
+					putItemFunction = () => Promise.reject({"error": "Error"});
+					User = dynamoose.model("User", {"id": Number, "name": {"type": String, "get": (value) => value.toUpperCase()}});
+					new dynamoose.Table("User", [User]);
+					user = new User({"id": 1, "name": "Charlie"});
+
+					await expect(callType.func(user).bind(user)()).rejects.toEqual({"error": "Error"});
+					expect(user.toJSON()).toEqual({"id": 1, "name": "Charlie"});
+				});
+
 				it("Should return request if return request is set as setting", async () => {
 					const result = await callType.func(user).bind(user)({"return": "request"});
 					expect(putParams).toEqual([]);
