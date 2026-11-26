@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-unused-vars: 0 */
 
 import * as dynamoose from "../../dist";
-import {IndexType} from "../../dist/Schema";
+import {IndexType, AttributeType, SchemaSettings, IndexDefinition, AttributeDefinitionTypeSettings, AttributeDefinition, SchemaGetAttributeTypeSettings, SchemaGetAttributeSettingValue} from "../../dist/Schema";
 
 // @ts-expect-error
 const shouldFailWithNothingPassedIn = new dynamoose.Schema();
@@ -218,3 +218,18 @@ const shouldSucceedWhenUsingDirectTypeForValidateFunction = new dynamoose.Schema
 		}
 	}
 );
+
+// Exported schema types can build a schema definition outside the Schema call
+const shouldSucceedWithExportedAttributeType: AttributeType = Number;
+const shouldSucceedWithExportedIndexDefinition: IndexDefinition = {"name": "nameIndex", "type": IndexType.global, "rangeKey": "age"};
+const shouldSucceedWithExportedAttributeDefinitionTypeSettings: AttributeDefinitionTypeSettings = {"storage": "seconds"};
+const shouldSucceedWithExportedAttributeDefinition: AttributeDefinition = {
+	"type": {"value": Date, "settings": shouldSucceedWithExportedAttributeDefinitionTypeSettings},
+	"index": shouldSucceedWithExportedIndexDefinition
+};
+const shouldSucceedWithExportedSchemaSettings: SchemaSettings = {"timestamps": true, "saveUnknown": ["metadata"]};
+const shouldSucceedWithExportedSchemaTypes = new dynamoose.Schema({"id": shouldSucceedWithExportedAttributeType, "birthday": shouldSucceedWithExportedAttributeDefinition}, shouldSucceedWithExportedSchemaSettings);
+const shouldSucceedWithExportedSchemaGetAttributeTypeSettings: SchemaGetAttributeTypeSettings = {"unknownAttributeAllowed": true};
+const shouldSucceedWithGetAttributeTypeSettings = shouldSucceedWithExportedSchemaTypes.getAttributeType("id", undefined, shouldSucceedWithExportedSchemaGetAttributeTypeSettings);
+const shouldSucceedWithExportedSchemaGetAttributeSettingValue: SchemaGetAttributeSettingValue = {"returnFunction": true};
+const shouldSucceedWithGetAttributeSettingValue = shouldSucceedWithExportedSchemaTypes.getAttributeSettingValue("default", "id", shouldSucceedWithExportedSchemaGetAttributeSettingValue);

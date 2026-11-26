@@ -20,12 +20,12 @@ import {Instance} from "../Instance";
 import returnModel from "../utils/dynamoose/returnModel";
 const {internalProperties} = Internal.General;
 
-type UpdatePartial<T> =
-  | Partial<T>
-  | { $SET: Partial<T> }
-  | { $ADD: Partial<T> }
-  | { $REMOVE: { [K in keyof T]?: null } | string[] }
-  | { $DELETE: Partial<T> };
+export type UpdatePartial<T> = Partial<T> & {
+	$SET?: Partial<T>;
+	$ADD?: Partial<T>;
+	$REMOVE?: { [K in keyof T]?: null } | string[];
+	$DELETE?: Partial<T>;
+};
 
 // Transactions
 type GetTransactionResult = Promise<GetTransactionInput>;
@@ -71,32 +71,32 @@ type TransactionType = {
 	condition: ConditionTransaction;
 };
 
-interface ModelGetSettings {
+export interface ModelGetSettings {
 	return?: "item" | "request";
 	attributes?: string[];
 	consistent?: boolean;
 }
-interface ModelDeleteSettings {
+export interface ModelDeleteSettings {
 	return?: null | "request";
 	condition?: Condition;
 }
-interface ModelBatchPutSettings {
+export interface ModelBatchPutSettings {
 	return?: "response" | "request";
 }
-interface ModelUpdateSettings {
+export interface ModelUpdateSettings {
 	return?: "item" | "request";
 	condition?: Condition;
 	returnValues?: DynamoDB.ReturnValue;
 }
-interface ModelBatchGetItemsResponse<T> extends ItemArray<T> {
+export interface ModelBatchGetItemsResponse<T> extends ItemArray<T> {
 	unprocessedKeys: ObjectType[];
 }
-interface ModelBatchGetSettings {
+export interface ModelBatchGetSettings {
 	return?: "items" | "request";
 	attributes?: string[];
 	consistent?: boolean;
 }
-interface ModelBatchDeleteSettings {
+export interface ModelBatchDeleteSettings {
 	return?: "response" | "request";
 }
 export interface ModelIndexes {

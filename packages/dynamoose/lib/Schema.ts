@@ -273,13 +273,13 @@ const attributeTypes: (DynamoDBTypeResult | DynamoDBSetTypeResult)[] = utils.arr
 
 type GeneralValueType = string | boolean | number | Buffer | Date;
 export type ValueType = GeneralValueType | {[key: string]: ValueType} | ValueType[];
-type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
+export type AttributeType = string | StringConstructor | BooleanConstructor | NumberConstructor | typeof Buffer | DateConstructor | ObjectConstructor | ArrayConstructor | SetConstructor | symbol | Schema | ModelType<Item>;
 
 export interface TimestampObject {
 	createdAt?: string | string[] | SchemaDefinition;
 	updatedAt?: string | string[] | SchemaDefinition;
 }
-interface SchemaSettings {
+export interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
 	saveUnknown?: boolean | string[];
 	set?: (value: ObjectType) => ObjectType;
@@ -296,7 +296,7 @@ export enum IndexType {
 	 */
 	local = "local"
 }
-interface IndexDefinition {
+export interface IndexDefinition {
 	/**
 	 * The name of the index.
 	 * @default `${attribute}${type == "global" ? "GlobalIndex" : "LocalIndex"}`
@@ -322,14 +322,14 @@ interface IndexDefinition {
 	 */
 	throughput?: "ON_DEMAND" | number | {read: number; write: number};
 }
-interface AttributeDefinitionTypeSettings {
+export interface AttributeDefinitionTypeSettings {
 	storage?: "milliseconds" | "seconds" | "iso";
 	model?: ModelType<Item>;
 	attributes?: string[];
 	separator?: string;
 	value?: string | boolean | number;
 }
-interface AttributeDefinition {
+export interface AttributeDefinition {
 	/**
 	 * The type attribute can either be a type (ex. `Object`, `Number`, etc.) or an object that has additional information for the type. In the event you set it as an object you must pass in a `value` for the type, and can optionally pass in a `settings` object.
 	 *
@@ -818,10 +818,10 @@ interface AttributeDefinition {
 export interface SchemaDefinition {
 	[attribute: string]: AttributeType | AttributeType[] | AttributeDefinition | AttributeDefinition[];
 }
-interface SchemaGetAttributeTypeSettings {
+export interface SchemaGetAttributeTypeSettings {
 	unknownAttributeAllowed: boolean;
 }
-interface SchemaGetAttributeSettingValue {
+export interface SchemaGetAttributeSettingValue {
 	returnFunction: boolean;
 	typeIndexOptionMap?: any;
 }
