@@ -241,4 +241,27 @@ describe("utils.deep_copy", () => {
 		expect(copy.self).toBeUndefined();
 		expect(copy.constructor).toStrictEqual(NodeWrapper);
 	});
+
+	it("Should return primitives, null, undefined and functions unchanged", () => {
+		const func = () => {};
+		expect(utils.deep_copy(42)).toEqual(42);
+		expect(utils.deep_copy(false)).toEqual(false);
+		expect(utils.deep_copy(null)).toBeNull();
+		expect(utils.deep_copy(undefined)).toBeUndefined();
+		expect(utils.deep_copy(func)).toBe(func);
+	});
+
+	it("Should copy only own enumerable properties of class instances", () => {
+		class Animal {}
+		Animal.prototype.sound = "generic";
+		const original = new Animal();
+		original.name = "Bob";
+		Object.defineProperty(original, "secret", {"value": "hidden", "enumerable": false});
+
+		const copy = utils.deep_copy(original);
+
+		expect(Object.keys(copy)).toEqual(["name"]);
+		expect(copy.sound).toEqual("generic");
+		expect(copy.secret).toBeUndefined();
+	});
 });
