@@ -12,7 +12,7 @@ new dynamoose.Condition(new dynamoose.Condition({"breed": {"contains": "Terrier"
 
 For a more advanced use case you pass an object into `new dynamoose.Condition()` the object for each key should contain the comparison type. For example, in the second to last example above, `contains` was our comparison type. This comparison type must match one of the comparison type functions listed on this page.
 
-You can also pass in a raw DynamoDB condition object. Which has properties for `ExpressionAttributeNames`, `ExpressionAttributeValues` & either `FilterExpression` or `ComparisonExpression`. In the event you do this, all future condition methods called on this condition instance will be ignored. In the event you don't pass in DynamoDB objects for the `ExpressionAttributeValues` values, Dynamoose will automatically convert them to DynamoDB compatible objects to make the request.
+You can also pass in a raw DynamoDB condition object. Which has properties for `ExpressionAttributeNames`, `ExpressionAttributeValues` & either `FilterExpression` (for a query or scan) or `ConditionExpression` (for the `condition` setting). In the event you do this, all future condition methods called on this condition instance will be ignored. In the event you don't pass in DynamoDB objects for the `ExpressionAttributeValues` values, Dynamoose will automatically convert them to DynamoDB compatible objects to make the request.
 
 ```js
 new dynamoose.Condition({
@@ -64,6 +64,26 @@ You will use this function with a comparison function which will complete the fi
 ```js
 new dynamoose.Condition().filter("id"); // Currently this condition has no filter behavior and will represent an empty conditional
 new dynamoose.Condition().filter("id").eq(1); // Since this condition has a comparison function (eq) after the filter it will complete the filter conditional and only represent items where `id` = 1
+```
+
+How a conditional is sent to DynamoDB depends on where it is used:
+
+- With [`Model.query`](Query.md), Dynamoose first picks the index to query. Only an index whose hashKey has an `eq` conditional can be used. If more than one index matches, Dynamoose prefers one whose rangeKey also has a conditional, then the table itself. If no index matches, the query fails with `Index can't be found for query.` You can skip this step by passing an index to [`query.using(index)`](Query.md#queryusingindex). The conditional on that index's hashKey and the first conditional on its rangeKey are sent in the `KeyConditionExpression`, which decides which items DynamoDB reads. Every other conditional is sent in the `FilterExpression`, which DynamoDB applies after reading the items.
+- With [`Model.scan`](Scan.md), every conditional is sent in the `FilterExpression`.
+- When used as the `condition` setting (for example in `item.save`, `Model.update`, `Model.delete` or `Model.transaction.condition`), the condition is sent in the `ConditionExpression`.
+
+In a query, combine the key conditionals with the other conditionals using AND (the default), not inside `or()` or `parenthesis()`. A `contains`, `not().contains()` or `exists` conditional on a key is sent in the `FilterExpression`, and DynamoDB doesn't allow key attributes there. Any other conditional on a key is sent in the `KeyConditionExpression`, so it has to be one that DynamoDB accepts there: `eq` for the hashKey, and `eq`, `lt`, `le`, `gt`, `ge`, `between` or `beginsWith` for the rangeKey.
+
+A `FilterExpression` doesn't reduce the number of items DynamoDB reads, so it doesn't lower the read capacity a request consumes. It only removes items from the response. Since the `limit` setting applies to the items read, a response can have fewer items than the limit.
+
+```js
+// `id` is the hashKey and `name` is the rangeKey of the table
+Cat.query("id").eq(1).where("name").beginsWith("W").where("age").gt(2);
+// KeyConditionExpression: `id` = 1 AND begins_with(`name`, "W")
+// FilterExpression: `age` > 2
+
+Cat.scan("id").eq(1).where("age").gt(2);
+// FilterExpression: `id` = 1 AND `age` > 2
 ```
 
 ## condition.where(key)
