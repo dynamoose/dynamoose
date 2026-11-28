@@ -1081,6 +1081,23 @@ describe("Schema", () => {
 				});
 			});
 		});
+
+		it("Should include the TTL attribute after it is injected by Table expires (cache invalidation, issue #1719)", () => {
+			const schema = new dynamoose.Schema({"id": Number, "name": String});
+			const model = dynamoose.model("Cache1719", schema, {});
+			// Populate the memoized attribute list before the TTL attribute is injected.
+			expect(schema.attributes()).not.toContain("ttl");
+			new dynamoose.Table("Cache1719", [model], {"create": false, "waitForActive": false, "expires": {"ttl": 1000, "attribute": "ttl"}});
+			// The Table injects the TTL attribute into the schema after construction, so the
+			// cached attribute list must be invalidated to now reflect the new attribute.
+			expect(schema.attributes()).toContain("ttl");
+		});
+
+		it("Should not let a caller mutating the returned array corrupt the memoized list", () => {
+			const schema = new dynamoose.Schema({"id": Number, "name": String});
+			schema.attributes().push("injected");
+			expect(schema.attributes()).toEqual(["id", "name"]);
+		});
 	});
 
 	describe("getSettingValue", () => {
@@ -1145,6 +1162,24 @@ describe("Schema", () => {
 		it("Should have correct result for multiple types", () => {
 			const result = new dynamoose.Schema({"id": {"type": [String, Buffer]}}).getAttributeTypeDetails("id");
 			expect(result.map((item) => ({"name": item.name, "dynamodbType": item.dynamodbType}))).toEqual([{"name": "String", "dynamodbType": "S"}, {"name": "Buffer", "dynamodbType": "B"}]);
+		});
+
+		// `typeIndexOptionMap` holds one entry per list element, so keying the memoization
+		// cache on the entire map made converting a large list quadratic (issue #1719). Only
+		// the entries for the requested key's own ancestor paths may affect the result.
+		const multipleTypesSchema = {"id": String, "data": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item1": Number}}]};
+
+		it("Should reuse the cached result when typeIndexOptionMap differs only in unrelated keys", () => {
+			const schema = new dynamoose.Schema(multipleTypesSchema);
+			const first = schema.getAttributeTypeDetails("data.item1", {"typeIndexOptionMap": {"data": 0}});
+			const second = schema.getAttributeTypeDetails("data.item1", {"typeIndexOptionMap": {"data": 0, "other.1": 1, "other.2": 0}});
+			expect(second).toBe(first);
+		});
+
+		it("Should not reuse the cached result when typeIndexOptionMap changes the matched type", () => {
+			const schema = new dynamoose.Schema(multipleTypesSchema);
+			expect(schema.getAttributeTypeDetails("data.item1", {"typeIndexOptionMap": {"data": 0}}).name).toEqual("String");
+			expect(schema.getAttributeTypeDetails("data.item1", {"typeIndexOptionMap": {"data": 1}}).name).toEqual("Number");
 		});
 	});
 
@@ -1463,6 +1498,19 @@ describe("Schema", () => {
 				expect(new dynamoose.Schema(test.schema).getTypePaths(test.input, test.settings)).toEqual(test.output);
 			});
 		});
+
+		// The nested results used to be merged by spreading the accumulated object once per
+		// entry, which made this quadratic in the length of the list (issue #1719). Every
+		// element's own entry must survive the switch to an in-place merge.
+		it("Should return an entry for every element of a long list of multiple types", () => {
+			const schema = new dynamoose.Schema({"id": String, "list": {"type": Array, "schema": [{"type": [{"type": Object, "schema": {"item1": String}}, {"type": Object, "schema": {"item1": Number}}]}]}});
+			const length = 50;
+			const result = schema.getTypePaths({"id": "id1", "list": Array.from({length}, (_, index) => ({"item1": index % 2 ? "hello" : index}))});
+			expect(Object.keys(result)).toHaveLength(length);
+			for (let index = 0; index < length; index++) {
+				expect(result[`list.${index}`]).toBeDefined();
+			}
+		});
 	});
 
 	describe("getTimestampAttributes", () => {
@@ -1478,6 +1526,45 @@ describe("Schema", () => {
 			it(`Should return ${JSON.stringify(test.output)} for ${JSON.stringify(test.input)}`, () => {
 				expect(new dynamoose.Schema({"id": String}).getInternalProperties(internalProperties).getTimestampAttributes(test.input)).toEqual(test.output);
 			});
+		});
+	});
+	describe("Cached attribute lookups", () => {
+		beforeEach(() => {
+			dynamoose.Table.defaults.set({"create": false, "waitForActive": false});
+		});
+		afterEach(() => {
+			dynamoose.Table.defaults.set({});
+		});
+
+		it("Should not mix up an attribute whose name contains | and = with a type choice of another attribute", async () => {
+			const User = dynamoose.model("User", new dynamoose.Schema({"id": Number, "a": [String, Number], "a|a=0": Boolean}));
+			new dynamoose.Table("User", [User]);
+			expect(await new User({"id": 1, "a": "x"}).toDynamo()).toEqual({"id": {"N": "1"}, "a": {"S": "x"}});
+		});
+
+		it("Should not remember that an attribute is missing", () => {
+			const schema = new dynamoose.Schema({"id": Number});
+			expect(schema.getAttributeValue("name")).toEqual(undefined);
+			schema.getInternalProperties(internalProperties).schemaObject.name = String;
+			expect(schema.getAttributeValue("name")).toEqual(String);
+		});
+
+		it("Should use a type choice added to a map after the map was first checked", () => {
+			const schema = new dynamoose.Schema({"id": Number, "a": [String, Number]});
+			const typeIndexOptionMap = {};
+			expect(schema.getAttributeValue("a", {typeIndexOptionMap})).toEqual([String, Number]);
+			typeIndexOptionMap.a = 1;
+			expect(schema.getAttributeValue("a", {typeIndexOptionMap})).toEqual(Number);
+		});
+
+		it("Should include an attribute added to a nested schema after the parent was built", () => {
+			const Address = new dynamoose.Schema({"id": String, "street": String});
+			const userSchema = new dynamoose.Schema({"id": String, "address": Address});
+			expect(userSchema.attributes()).not.toContain("address.ttl");
+			const AddressModel = dynamoose.model("Address", Address);
+			new dynamoose.Table("Address", [AddressModel], {"expires": 1000});
+			expect(Address.attributes()).toContain("ttl");
+			expect(userSchema.attributes()).toContain("address.ttl");
 		});
 	});
 });
