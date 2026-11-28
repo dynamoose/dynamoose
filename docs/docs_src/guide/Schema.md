@@ -232,3 +232,57 @@ dyno_jsdoc_dist/Schema.d.ts|AttributeDefinition.defaultMap
 ### defaultAlias: string
 
 This property is the same as [`defaultMap`](#defaultmap-string) and used as an alias for that property.
+
+## Multi-attribute GSI keys
+
+The per-attribute [`index`](#index-boolean--object--array) setting lets you declare a secondary index whose partition key (and optionally range key) is a single attribute. If you need a global secondary index whose partition key and/or range key is composed of **multiple** attributes, declare it at the top level of your schema settings using `indexes.global`.
+
+`indexes.global` is an array of index declarations. Each declaration has a `name`, a `hashKey` array, and an optional `rangeKey` array. The attributes are listed in `KeySchema` order (the order the composite key is built from).
+
+```js
+const schema = new dynamoose.Schema({
+	"matchId": {"type": String, "hashKey": true},
+	"tournamentId": String,
+	"region": String,
+	"round": String,
+	"bracket": String
+}, {
+	"indexes": {
+		"global": [
+			{
+				"name": "TournamentRegionIndex",
+				"hashKey": ["tournamentId", "region"],
+				"rangeKey": ["round", "bracket", "matchId"]
+			}
+		]
+	}
+});
+```
+
+Unlike the [`Combine`](#attribute-types) type, which concatenates multiple attributes into a single synthetic string attribute, multi-attribute GSI keys map directly onto DynamoDB's native composite key support. Each key attribute keeps its declared type (String, Number, or Binary), so a Number key sorts numerically (no zero-padding) and a Binary key stays binary.
+
+### Rules & limits
+
+- **Global secondary indexes only.** Multi-attribute keys are supported on global secondary indexes only — not on the base table and not on local secondary indexes. Declaring one under `indexes.local` throws an `InvalidParameter` error: `Multi-attribute keys are only supported on global secondary indexes, not local indexes.`
+- **Up to 4 attributes per key.** Each of `hashKey` and `rangeKey` may list at most 4 attributes (up to 8 attributes total per index). Exceeding 4 throws an `InvalidParameter` error.
+- **Every member must be a declared schema attribute.** An attribute named in `hashKey` or `rangeKey` that is not declared in the schema throws an `InvalidParameter` error.
+- **No attribute in both keys.** The same attribute cannot appear in both the `hashKey` and `rangeKey` of a single index. Doing so throws an `InvalidParameter` error.
+
+### Querying a multi-attribute index
+
+When querying a multi-attribute index:
+
+- Every partition-key attribute must be matched with an equality condition.
+- Sort-key attributes are matched left-to-right with no skipping.
+- A non-equality condition (`>`, `<`, `>=`, `<=`, `between`, or `beginsWith`) may only be used on the **last** condition in the query.
+
+```js
+await Match.query({"tournamentId": "T1", "region": "NA"})
+	.where("round").eq("QF")
+	.using("TournamentRegionIndex")
+	.exec();
+```
+
+### Backward compatibility
+
+The existing per-attribute [`index`](#index-boolean--object--array) syntax (including a single-string `rangeKey`) is unchanged and continues to work. Multi-attribute key arrays are an additive opt-in; you only use `indexes.global` when you need a composite key with more than one attribute.

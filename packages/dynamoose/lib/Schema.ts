@@ -279,12 +279,21 @@ export interface TimestampObject {
 	createdAt?: string | string[] | SchemaDefinition;
 	updatedAt?: string | string[] | SchemaDefinition;
 }
+export type IndexDeclaration = Omit<IndexDefinition, "rangeKey"> & {
+	name: string;
+	hashKey: string[];
+	rangeKey?: string[];
+};
 interface SchemaSettings {
 	timestamps?: boolean | TimestampObject;
 	saveUnknown?: boolean | string[];
 	set?: (value: ObjectType) => ObjectType;
 	get?: (value: ObjectType) => ObjectType;
 	validate?: (value: ObjectType) => boolean;
+	indexes?: {
+		global?: IndexDeclaration[];
+		local?: IndexDeclaration[];
+	};
 }
 export enum IndexType {
 	/**
@@ -311,6 +320,11 @@ interface IndexDefinition {
 	 * The range key attribute name for a global secondary index.
 	 */
 	rangeKey?: string;
+	/**
+	 * Multi-attribute partition key for a GLOBAL secondary index (AWS native multi-attribute keys).
+	 * Attribute names in AWS KeySchema order. GSI only; max 4 attributes.
+	 */
+	hashKey?: string[];
 	/**
 	 * Sets the attributes to be projected for the index. `true` projects all attributes, `false` projects only the key attributes, and an array of strings projects the attributes listed.
 	 * @default true
@@ -832,7 +846,7 @@ interface SchemaInternalProperties {
 	getMapSettingValuesForKey: (key: string, settingNames?: string[]) => string[];
 	getMapSettingObject: () => {[key: string]: string};
 	getDefaultMapAttribute: (attribute: string) => string;
-	getIndexAttributes: () => {index: IndexDefinition; attribute: string}[];
+	getIndexAttributes: () => {index: IndexDefinition | IndexDeclaration; attribute: string}[];
 	getTimestampAttributes: () => GetTimestampAttributesType;
 }
 
@@ -1122,8 +1136,8 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 					}
 				}
 			},
-			"getIndexAttributes": (): {index: IndexDefinition; attribute: string}[] => {
-				return this.attributes()
+			"getIndexAttributes": (): {index: IndexDefinition | IndexDeclaration; attribute: string}[] => {
+				const accumulator: {index: IndexDefinition | IndexDeclaration; attribute: string}[] = this.attributes()
 					.map((attribute: string) => ({
 						"index": this.getAttributeSettingValue("index", attribute) as IndexDefinition,
 						attribute
@@ -1142,6 +1156,19 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 						}
 						return accumulator;
 					}, []);
+
+				// Merge top-level multi-attribute index declarations (settings.indexes).
+				// These are not attached to a single attribute, so `attribute` is empty;
+				// the key composition lives entirely in the IndexDeclaration arrays.
+				// Only global indexes are considered: the constructor rejects a local
+				// multi-attribute declaration outright, so none can reach this point.
+				const topLevelGlobal = this.getInternalProperties(internalProperties).settings.indexes?.global;
+				if (topLevelGlobal) {
+					topLevelGlobal.forEach((decl) => {
+						accumulator.push({"index": decl, "attribute": ""});
+					});
+				}
+				return accumulator;
 			},
 			"getTimestampAttributes": () => getTimestampAttributes(settings.timestamps as TimestampObject)
 		});
@@ -1159,6 +1186,41 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			});
 		};
 		checkAttributeNameDots(this.getInternalProperties(internalProperties).schemaObject);
+
+		const validateMultiAttributeIndexes = (schema: Schema): void => {
+			const settingsIndexes = schema.getInternalProperties(internalProperties).settings.indexes;
+			if (!settingsIndexes) {
+				return;
+			}
+			const declared = new Set(schema.attributes());
+			const entries: {def: IndexDeclaration; type: "global" | "local"}[] = [
+				...(settingsIndexes.global || []).map((def) => ({"def": def, "type": "global" as const})),
+				...(settingsIndexes.local || []).map((def) => ({"def": def, "type": "local" as const}))
+			];
+			for (const {"def": def, "type": indexType} of entries) {
+				if (indexType === "local") {
+					throw new CustomError.InvalidParameter("Multi-attribute keys are only supported on global secondary indexes, not local indexes.");
+				}
+				if (!Array.isArray(def.hashKey) || def.hashKey.length === 0) {
+					throw new CustomError.InvalidParameter(`Multi-attribute index "${def.name}" must declare a non-empty hashKey array.`);
+				}
+				for (const arr of [def.hashKey, def.rangeKey || []]) {
+					if (arr.length > 4) {
+						throw new CustomError.InvalidParameter(`Multi-attribute keys support a maximum of 4 attributes per key, got ${arr.length}.`);
+					}
+					for (const attr of arr) {
+						if (!declared.has(attr)) {
+							throw new CustomError.InvalidParameter(`Attribute "${attr}" is used in a multi-attribute index but is not declared in the schema.`);
+						}
+					}
+				}
+				const overlap = def.hashKey.filter((attr) => (def.rangeKey || []).includes(attr));
+				if (overlap.length > 0) {
+					throw new CustomError.InvalidParameter(`Attribute(s) ${overlap.join(", ")} cannot be in both hashKey and rangeKey of the same index.`);
+				}
+			}
+		};
+		validateMultiAttributeIndexes(this);
 
 		const checkMultipleArraySchemaElements = (key: string): void => {
 			let attributeType: string[] = [];
@@ -1310,8 +1372,19 @@ export class Schema extends InternalPropertiesClass<SchemaInternalProperties> {
 			});
 		}
 
-		utils.array_flatten(await Promise.all([this.getInternalProperties(internalProperties).getIndexAttributes(), this.getIndexRangeKeyAttributes()])).map((obj) => obj.attribute).forEach((index) => {
-			if (AttributeDefinitionsNames.includes(index)) {
+		const indexAttributeEntries = await this.getInternalProperties(internalProperties).getIndexAttributes();
+		// Expand each index entry to its hash-key attribute name(s): a multi-attribute
+		// hashKey array (top-level declarations) or the single attached attribute (legacy).
+		const indexHashKeyAttributes = indexAttributeEntries.flatMap((entry) => {
+			const def = entry.index;
+			if (Array.isArray(def.hashKey) && def.hashKey.length > 0) {
+				return def.hashKey.map((attribute) => ({attribute}));
+			}
+			return [{"attribute": entry.attribute}];
+		});
+
+		utils.array_flatten([indexHashKeyAttributes, await this.getIndexRangeKeyAttributes()]).map((obj) => obj.attribute).forEach((index) => {
+			if (!index || AttributeDefinitionsNames.includes(index)) {
 				return;
 			}
 
@@ -1509,8 +1582,16 @@ Schema.prototype.requiredCheck = async function (this: Schema, key: string, valu
 };
 
 Schema.prototype.getIndexRangeKeyAttributes = async function (this: Schema): Promise<{attribute: string}[]> {
-	const indexes: ({index: IndexDefinition; attribute: string})[] = await this.getInternalProperties(internalProperties).getIndexAttributes();
-	return indexes.map((index) => index.index.rangeKey).filter((a) => Boolean(a)).map((a) => ({"attribute": a}));
+	const indexes: ({index: IndexDefinition | IndexDeclaration; attribute: string})[] = await this.getInternalProperties(internalProperties).getIndexAttributes();
+	return indexes.flatMap((entry) => {
+		const def = entry.index;
+		// Legacy single-string rangeKey
+		if (typeof def.rangeKey === "string") {
+			return [{"attribute": def.rangeKey}];
+		}
+		// New multi-attribute rangeKey array
+		return (def.rangeKey || []).map((attribute) => ({attribute}));
+	});
 };
 export interface TableIndex {
 	KeySchema: ({AttributeName: string; KeyType: "HASH" | "RANGE"})[];
@@ -1536,10 +1617,14 @@ Schema.prototype.getIndexes = async function (this: Schema, model: Model<Item>):
 			dynamoIndexObject.Projection = Array.isArray(indexValue.project) ? {"ProjectionType": "INCLUDE", "NonKeyAttributes": indexValue.project} : {"ProjectionType": "ALL"};
 		}
 		if (isGlobalIndex) {
-			dynamoIndexObject.KeySchema.push({"AttributeName": attributeValue, "KeyType": "HASH"});
-			if (indexValue.rangeKey) {
-				dynamoIndexObject.KeySchema.push({"AttributeName": indexValue.rangeKey, "KeyType": "RANGE"});
-			}
+			// Partition key: multi-attribute array (new) or the single attached attribute (legacy).
+			const hashAttrs = Array.isArray(indexValue.hashKey) && indexValue.hashKey.length > 0 ? indexValue.hashKey : [attributeValue];
+			hashAttrs.forEach((attr) => dynamoIndexObject.KeySchema.push({"AttributeName": attr, "KeyType": "HASH"}));
+
+			// Sort key: multi-attribute array (new) or legacy single string.
+			const rangeAttrs = Array.isArray(indexValue.rangeKey) ? indexValue.rangeKey : typeof indexValue.rangeKey === "string" ? [indexValue.rangeKey] : [];
+			rangeAttrs.forEach((attr) => dynamoIndexObject.KeySchema.push({"AttributeName": attr, "KeyType": "RANGE"}));
+
 			const throughputObject = utils.dynamoose.get_provisioned_throughput(indexValue.throughput ? indexValue : model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options.throughput === "ON_DEMAND" ? {} : model.getInternalProperties(internalProperties).table().getInternalProperties(internalProperties).options);
 			if ("ProvisionedThroughput" in throughputObject) {
 				dynamoIndexObject.ProvisionedThroughput = throughputObject.ProvisionedThroughput;
